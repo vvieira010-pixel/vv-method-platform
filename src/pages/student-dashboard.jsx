@@ -1,0 +1,383 @@
+/**
+ * student-dashboard.jsx — Student portal showing only teacher-approved content
+ *
+ * Rules:
+ * - Student feedback visible only if sections.studentFeedback.approved === true
+ * - Homework visible only after teacher assigns it
+ * - Scores/diagnosis only from approved diagnoses
+ */
+import { useState, useEffect } from 'react';
+import { Icon, Avatar, Button } from '../components/shared.jsx';
+import { getHomework, submitHomework, getDiagnoses, getProgressNotes, getReviews, getAllSubmissions } from '../lib/workflow.js';
+import { MessageTeacherDock, StudentInbox } from '../components/message-center.jsx';
+import '../styles/logbook.css';
+
+const TABS = [
+  { id: 'home',     label: 'Home',     icon: <Icon.home size={16} /> },
+  { id: 'homework', label: 'Homework', icon: <Icon.homework size={16} /> },
+  { id: 'progress', label: 'Progress', icon: <Icon.progress size={16} /> },
+  { id: 'messages', label: 'Messages', icon: <Icon.inbox size={16} /> },
+];
+
+export default function StudentDashboard({ student, onSignOut }) {
+  const [tab, setTab] = useState('home');
+
+  if (!student) {
+    return <div style={{ padding: 40, textAlign: 'center', color: 'var(--muted)' }}>
+      <p>Loading your dashboard…</p>
+    </div>;
+  }
+
+  return (
+    <div className="dash">
+      <header className="dash-topbar">
+        <div className="dash-brand">
+          <span className="dash-brand-name">MET Preparation</span>
+        </div>
+        <div className="dash-topbar-right">
+          <span className="dash-topbar-name">{student.firstName}</span>
+          <Avatar name={student.name} size={30} tone="auto" />
+          <button onClick={onSignOut} style={{ background: 'none', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: '5px 10px', fontSize: 11.5, fontWeight: 500, color: 'var(--muted)', cursor: 'pointer', fontFamily: 'inherit' }}>
+            Sign out
+          </button>
+        </div>
+      </header>
+
+      <div className="dash-body">
+        {tab === 'home' && <HomeView student={student} onTab={setTab} />}
+        {tab === 'homework' && <HomeworkView student={student} />}
+        {tab === 'progress' && <ProgressView student={student} />}
+        {tab === 'messages' && <StudentInbox student={student} />}
+      </div>
+
+      <nav className="dash-bottom-nav">
+        {TABS.map(t => (
+          <button key={t.id} onClick={() => setTab(t.id)} className={'dash-nav-btn' + (tab === t.id ? ' active' : '')}>
+            <span className="dash-nav-icon">{t.icon}</span>
+            <span className="dash-nav-label">{t.label}</span>
+          </button>
+        ))}
+      </nav>
+      <MessageTeacherDock student={student} onSent={() => setTab('messages')} />
+    </div>
+  );
+}
+
+/* ─── HOME ─── */
+function HomeView({ student, onTab }) {
+  const [latestFeedback, setLatestFeedback] = useState(null);
+  const [pendingHw, setPendingHw] = useState([]);
+  const [snapshot, setSnapshot] = useState([]);
+
+  useEffect(() => {
+    (async () => {
+      const [hw, diagnoses] = await Promise.all([
+        getHomework(student.id),
+        getDiagnoses(student.id),
+      ]);
+      setPendingHw((hw || []).filter(h => h.status === 'not-started' || h.status === 'in-progress'));
+
+      // Only show feedback from approved diagnoses
+      const approvedDx = (diagnoses || []).filter(dx => dx.status === 'approved' && dx.sections?.studentFeedback?.approved);
+      if (approvedDx.length > 0) {
+        const dx = approvedDx[0];
+        setLatestFeedback(dx.sections.studentFeedback.content);
+        setSnapshot(dx.content?.section_snapshot || []);
+      }
+    })();
+  }, [student.id]);
+
+  function timeOfDay() {
+    const h = new Date().getHours();
+    return h < 12 ? 'morning' : h < 17 ? 'afternoon' : 'evening';
+  }
+
+  return (
+    <div style={{ padding: '20px 16px', maxWidth: 680, margin: '0 auto' }}>
+      <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-2xl)', fontWeight: 700, color: 'var(--accent-deep)', margin: '0 0 4px' }}>
+        Good {timeOfDay()}, {student.firstName}.
+      </h1>
+      <p style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', margin: '0 0 20px' }}>
+        {student.currentLevel || student.band} → {student.targetLevel || student.bandTarget} · Session {student.session || 1}/{student.totalSessions || 24}
+      </p>
+
+      {/* Latest approved feedback */}
+      {latestFeedback && typeof latestFeedback === 'object' ? (
+        <div style={{ padding: 18, borderRadius: 'var(--radius-md)', background: 'var(--success-bg)', border: '1px solid var(--success-soft)', marginBottom: 16 }}>
+          <div style={{ fontWeight: 700, fontSize: 'var(--text-md)', color: 'var(--success)', marginBottom: 10 }}>
+            Latest Feedback from Teacher
+          </div>
+          {latestFeedback.whatImproved && <p style={{ fontSize: 'var(--text-sm)', lineHeight: 1.7, marginBottom: 6 }}><strong>What's improving:</strong> {latestFeedback.whatImproved}</p>}
+          {latestFeedback.whatNeedsAttention && <p style={{ fontSize: 'var(--text-sm)', lineHeight: 1.7, marginBottom: 6 }}><strong>Focus on:</strong> {latestFeedback.whatNeedsAttention}</p>}
+          {latestFeedback.whatToPracticeNext && <p style={{ fontSize: 'var(--text-sm)', lineHeight: 1.7, marginBottom: 6 }}><strong>Your next step:</strong> {latestFeedback.whatToPracticeNext}</p>}
+          {latestFeedback.closingNote && <p style={{ fontSize: 'var(--text-sm)', fontStyle: 'italic', color: 'var(--text-2)', marginTop: 8 }}>{latestFeedback.closingNote}</p>}
+        </div>
+      ) : (
+        <div style={{ padding: 16, borderRadius: 'var(--radius-md)', background: 'var(--bg)', border: '1px solid var(--border)', marginBottom: 16 }}>
+          <p style={{ color: 'var(--muted)', fontSize: 'var(--text-sm)', margin: 0 }}>No feedback available yet. Your teacher will send feedback after your next diagnosis.</p>
+        </div>
+      )}
+
+      {/* Pending homework */}
+      {pendingHw.length > 0 && (
+        <div style={{ padding: 16, borderRadius: 'var(--radius-md)', background: 'var(--accent-subtle)', border: '1px solid var(--accent-soft)', marginBottom: 16, cursor: 'pointer' }} onClick={() => onTab('homework')}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div>
+              <div style={{ fontWeight: 700, color: 'var(--accent-deep)' }}>
+                {pendingHw.length === 1 ? 'Homework assigned' : `${pendingHw.length} homework sets`}
+              </div>
+              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: 2 }}>
+                {pendingHw[0]?.title}
+                {pendingHw[0]?.dueDate ? ` · Due ${new Date(pendingHw[0].dueDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}` : ''}
+              </div>
+            </div>
+            <Icon.arrowR size={16} />
+          </div>
+        </div>
+      )}
+
+      {/* Skill snapshot (from approved diagnosis) */}
+      {snapshot.length > 0 && (
+        <div style={{ marginBottom: 16 }}>
+          <div style={{ fontWeight: 600, fontSize: 'var(--text-sm)', marginBottom: 10, color: 'var(--text-2)' }}>Your Current Skills</div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+            {snapshot.map(s => (
+              <div key={s.section} style={{ padding: 10, borderRadius: 'var(--radius-sm)', background: 'var(--surface)', border: '1px solid var(--border)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 'var(--text-xs)', marginBottom: 4 }}>
+                  <span style={{ fontWeight: 600 }}>{s.section}</span>
+                  {s.score_0_80 > 0 && <span style={{ color: 'var(--muted)' }}>{s.score_0_80}/80</span>}
+                </div>
+                {s.score_0_80 > 0 && (
+                  <div style={{ width: '100%', height: 6, borderRadius: 99, background: 'var(--bg-deep)', overflow: 'hidden' }}>
+                    <div style={{ width: `${Math.min(100, (s.score_0_80 / 80) * 100)}%`, height: '100%', borderRadius: 99, background: 'var(--accent)', transition: 'width 0.4s' }} />
+                  </div>
+                )}
+                {s.score_0_80 === 0 && <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontStyle: 'italic' }}>Not evaluated yet</div>}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Stats */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
+        <MiniStat label="Session" value={`${student.session || 1}/${student.totalSessions || 24}`} />
+        <MiniStat label="Pending HW" value={pendingHw.length} />
+        <MiniStat label="Level" value={student.currentLevel || student.band || 'B1'} />
+      </div>
+    </div>
+  );
+}
+
+function MiniStat({ label, value }) {
+  return (
+    <div style={{ padding: 10, borderRadius: 'var(--radius-sm)', background: 'var(--surface)', border: '1px solid var(--border)', textAlign: 'center' }}>
+      <div style={{ fontSize: 'var(--text-xl)', fontWeight: 700, color: 'var(--accent-deep)' }}>{value}</div>
+      <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>{label}</div>
+    </div>
+  );
+}
+
+/* ─── HOMEWORK ─── */
+function HomeworkView({ student }) {
+  const [homework, setHomework] = useState([]);
+  const [reviews, setReviews] = useState([]);
+  const [expanded, setExpanded] = useState(null);
+  const [answer, setAnswer] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      const [hw, revs] = await Promise.all([getHomework(student.id), getReviews(student.id)]);
+      setHomework(hw || []);
+      setReviews(revs || []);
+    })();
+  }, [student.id]);
+
+  async function handleSubmit(hwId) {
+    if (!answer.trim()) { window.toast?.('Please write your answer.', 'warn'); return; }
+    setSubmitting(true);
+    await submitHomework(hwId, student.id, answer);
+    const hw = await getHomework(student.id);
+    setHomework(hw || []);
+    setAnswer('');
+    setExpanded(null);
+    setSubmitting(false);
+    window.toast?.('Submitted! Your teacher will review soon.', 'ok');
+  }
+
+  return (
+    <div style={{ padding: '20px 16px', maxWidth: 680, margin: '0 auto' }}>
+      <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-xl)', fontWeight: 700, margin: '0 0 16px' }}>My Homework</h2>
+      {homework.length === 0 && <p style={{ color: 'var(--muted)', padding: '16px 0' }}>No homework assigned yet. Your teacher will assign homework after your next class.</p>}
+      {homework.map(h => {
+        const review = reviews.find(r => r.homeworkId === h.id);
+        const isExpanded = expanded === h.id;
+        const submitted = h.status === 'submitted';
+        const statusTone = review ? 'success' : submitted ? 'warning' : 'muted';
+        const statusLabel = review ? 'Reviewed' : submitted ? 'Submitted' : h.status;
+
+        return (
+          <div key={h.id} style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', marginBottom: 10, overflow: 'hidden' }}>
+            <div style={{ padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', background: isExpanded ? 'var(--bg)' : 'var(--surface)' }} onClick={() => setExpanded(isExpanded ? null : h.id)}>
+              <div>
+                <div style={{ fontWeight: 600 }}>{h.title}</div>
+                <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: 2 }}>
+                  {h.type}{h.dueDate ? ` · Due ${new Date(h.dueDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}` : ''}
+                </div>
+              </div>
+              <span style={{ padding: '3px 10px', borderRadius: 99, fontSize: 'var(--text-xs)', fontWeight: 600, background: statusTone === 'success' ? 'var(--success-bg)' : statusTone === 'warning' ? 'var(--warning-bg)' : 'var(--bg-deep)', color: statusTone === 'success' ? 'var(--success)' : statusTone === 'warning' ? 'var(--warning)' : 'var(--muted)' }}>{statusLabel}</span>
+            </div>
+
+            {isExpanded && (
+              <div style={{ padding: 16, borderTop: '1px solid var(--divider)' }}>
+                {h.objective && <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-2)', marginBottom: 10 }}><strong>Goal:</strong> {h.objective}</p>}
+                {h.description && <div style={{ fontSize: 'var(--text-sm)', lineHeight: 1.7, whiteSpace: 'pre-wrap', marginBottom: 12 }}>{h.description}</div>}
+                {(h.activities || []).map((a, i) => (
+                  <div key={i} style={{ fontSize: 'var(--text-sm)', marginBottom: 8, padding: 10, background: 'var(--bg)', borderRadius: 'var(--radius-sm)', lineHeight: 1.6 }}>{a.instruction}</div>
+                ))}
+                {h.selfCheck?.length > 0 && (
+                  <div style={{ marginTop: 12, padding: 12, background: 'var(--bg)', borderRadius: 'var(--radius-sm)' }}>
+                    <div style={{ fontWeight: 600, fontSize: 'var(--text-sm)', marginBottom: 8 }}>Self-check:</div>
+                    {h.selfCheck.map((c, i) => (
+                      <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: 6 }}>
+                        <input type="checkbox" style={{ marginTop: 3 }} />
+                        <span style={{ fontSize: 'var(--text-sm)' }}>{c}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Submit form */}
+                {!submitted && !review && (
+                  <div style={{ marginTop: 14 }}>
+                    <textarea value={answer} onChange={e => setAnswer(e.target.value)} rows={5} placeholder="Write your answer here…" style={{ width: '100%', padding: 10, borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)', fontSize: 'var(--text-sm)', resize: 'vertical' }} />
+                    <Button variant="primary" size="sm" onClick={() => handleSubmit(h.id)} disabled={submitting || !answer.trim()} style={{ marginTop: 8 }}>
+                      {submitting ? 'Submitting…' : 'Submit Homework'}
+                    </Button>
+                  </div>
+                )}
+
+                {submitted && !review && (
+                  <div style={{ marginTop: 12, padding: 12, background: 'var(--warning-bg)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-sm)', color: 'var(--warning)', fontWeight: 500 }}>
+                    Submitted ✓ — Waiting for your teacher to review.
+                  </div>
+                )}
+
+                {/* Teacher review */}
+                {review && (
+                  <div style={{ marginTop: 14, padding: 14, background: 'var(--success-bg)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--success-soft)' }}>
+                    <div style={{ fontWeight: 700, color: 'var(--success)', marginBottom: 8 }}>
+                      Teacher Review {review.score != null ? `· ${review.score}/10` : ''}
+                    </div>
+                    {review.overallNote && <p style={{ fontSize: 'var(--text-sm)', lineHeight: 1.7 }}>{review.overallNote}</p>}
+                    {review.corrections?.length > 0 && (
+                      <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                        {review.corrections.map((c, i) => (
+                          <div key={i} style={{ fontSize: 'var(--text-sm)', padding: 8, background: 'rgba(255,255,255,0.6)', borderRadius: 'var(--radius-sm)' }}>
+                            <span style={{ color: 'var(--danger)', textDecoration: 'line-through' }}>{c.original}</span>
+                            {' → '}
+                            <span style={{ color: 'var(--success)', fontWeight: 600 }}>{c.improved}</span>
+                            {c.note && <span style={{ color: 'var(--muted)', marginLeft: 6 }}>({c.note})</span>}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+/* ─── PROGRESS ─── */
+function ProgressView({ student }) {
+  const [diagnoses, setDiagnoses] = useState([]);
+  const [notes, setNotes] = useState([]);
+
+  useEffect(() => {
+    (async () => {
+      const [dx, pn] = await Promise.all([getDiagnoses(student.id), getProgressNotes(student.id)]);
+      setDiagnoses((dx || []).filter(d => d.status === 'approved'));
+      setNotes(pn || []);
+    })();
+  }, [student.id]);
+
+  return (
+    <div style={{ padding: '20px 16px', maxWidth: 680, margin: '0 auto' }}>
+      <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-xl)', fontWeight: 700, margin: '0 0 16px' }}>My Progress</h2>
+
+      {diagnoses.length === 0 ? (
+        <p style={{ color: 'var(--muted)' }}>No diagnoses yet. After your first class, your progress will appear here.</p>
+      ) : (
+        <>
+          {/* Current skills from latest diagnosis */}
+          {diagnoses[0]?.content?.section_snapshot?.length > 0 && (
+            <div style={{ marginBottom: 20 }}>
+              <div style={{ fontWeight: 600, fontSize: 'var(--text-sm)', marginBottom: 10 }}>Current Skills</div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                {diagnoses[0].content.section_snapshot.map(s => (
+                  <div key={s.section} style={{ padding: 10, borderRadius: 'var(--radius-sm)', background: 'var(--surface)', border: '1px solid var(--border)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 'var(--text-xs)', marginBottom: 4 }}>
+                      <span style={{ fontWeight: 600 }}>{s.section}</span>
+                      {s.score_0_80 > 0 && <span style={{ color: 'var(--accent)' }}>{s.score_0_80}/80</span>}
+                    </div>
+                    {s.score_0_80 > 0 && (
+                      <div style={{ width: '100%', height: 6, borderRadius: 99, background: 'var(--bg-deep)', overflow: 'hidden' }}>
+                        <div style={{ width: `${(s.score_0_80 / 80) * 100}%`, height: '100%', borderRadius: 99, background: s.trend === 'improving' ? 'var(--success)' : 'var(--accent)' }} />
+                      </div>
+                    )}
+                    {s.next_step && <div style={{ fontSize: 10, color: 'var(--muted)', marginTop: 4 }}>Next: {s.next_step}</div>}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Diagnosis timeline */}
+          <div style={{ fontWeight: 600, fontSize: 'var(--text-sm)', marginBottom: 10 }}>Diagnosis History</div>
+          {diagnoses.map((dx, i) => (
+            <div key={dx.id} style={{ padding: 14, border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', marginBottom: 10, background: 'var(--surface)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                <span style={{ fontWeight: 600, fontSize: 'var(--text-sm)' }}>Class #{diagnoses.length - i}</span>
+                <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>{new Date(dx.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+              </div>
+              {dx.sections?.profileUpdateSuggestions?.content?.progressNote && (
+                <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-2)', fontStyle: 'italic' }}>{dx.sections.profileUpdateSuggestions.content.progressNote}</p>
+              )}
+              {dx.content?.section_snapshot?.length > 0 && (
+                <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+                  {dx.content.section_snapshot.filter(s => s.score_0_80 > 0).map(s => (
+                    <div key={s.section} style={{ textAlign: 'center', flex: 1 }}>
+                      <div style={{ fontSize: 10, color: 'var(--muted)' }}>{s.section}</div>
+                      <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--accent-deep)' }}>{s.score_0_80}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          ))}
+        </>
+      )}
+
+      {/* Progress notes */}
+      {notes.length > 0 && (
+        <div style={{ marginTop: 20 }}>
+          <div style={{ fontWeight: 600, fontSize: 'var(--text-sm)', marginBottom: 10 }}>Notes from Teacher</div>
+          {notes.map(n => (
+            <div key={n.id} style={{ padding: '10px 14px', background: 'var(--bg)', borderRadius: 'var(--radius-sm)', marginBottom: 8, fontSize: 'var(--text-sm)', lineHeight: 1.6 }}>
+              <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginRight: 8 }}>
+                {new Date(n.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+              </span>
+              {n.note}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}

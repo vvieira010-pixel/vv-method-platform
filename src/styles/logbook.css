@@ -1,0 +1,262 @@
+/* logbook.css — Student dashboard layout & component styles */
+
+/* ── Dashboard shell ── */
+.dash {
+  min-height: 100dvh;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  font-family: var(--font-ui);
+}
+.dash-topbar {
+  height: 52px;
+  background: var(--surface);
+  border-bottom: 2px solid var(--text);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  flex-shrink: 0;
+}
+.dash-brand-name { font-size: 14px; font-weight: 800; color: var(--text); letter-spacing: -0.01em; }
+.dash-topbar-right { display: flex; align-items: center; gap: 10px; }
+.dash-topbar-name  { font-size: 13px; font-weight: 600; color: var(--text); }
+.dash-body { flex: 1; overflow-y: auto; padding-bottom: 72px; }
+
+/* ── Bottom nav ── */
+.dash-bottom-nav {
+  position: fixed; bottom: 0; left: 0; right: 0; height: 56px;
+  background: var(--surface); border-top: 2px solid var(--text);
+  display: flex; z-index: 20;
+}
+.dash-nav-btn {
+  flex: 1; display: flex; flex-direction: column; align-items: center;
+  justify-content: center; gap: 3px; border: none; background: none;
+  cursor: pointer; font-family: var(--font-ui); color: var(--muted);
+  transition: color 0.15s; padding: 6px 0;
+}
+.dash-nav-btn.active { color: var(--text); font-weight: 700; }
+.dash-nav-icon { display: flex; }
+.dash-nav-label { font-size: 10px; font-weight: 600; letter-spacing: 0.02em; }
+
+/* ── Page layout ── */
+.dash-page { padding: 24px 16px; max-width: 700px; margin: 0 auto; }
+.dash-header { margin-bottom: 20px; }
+.dash-greeting h1 { font-size: 24px; font-weight: 800; color: var(--text); margin: 0 0 4px; }
+.dash-greeting p { font-size: 13.5px; color: var(--text-2); margin: 0; line-height: 1.55; }
+.dash-date     { font-size: 13px; color: var(--text-2); font-weight: 500; }
+.dash-section-label {
+  font-size: 11px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.08em; color: var(--text); margin-bottom: 10px;
+  border-bottom: 1px solid var(--border); padding-bottom: 6px;
+}
+
+.dash-home-glance {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 12px 0 16px;
+}
+.dash-glance-card {
+  background: var(--surface);
+  border: 1.5px solid var(--text);
+  border-radius: 4px;
+  padding: 14px 14px;
+}
+.dash-glance-card--wide {
+  grid-column: 1 / -1;
+}
+.dash-glance-card strong {
+  display: block;
+  font-size: 11px;
+  color: var(--text);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 6px;
+  font-weight: 800;
+}
+.dash-glance-card p {
+  font-size: 13px;
+  color: var(--text-2);
+  line-height: 1.55;
+  margin: 0;
+}
+
+/* ── Stats row ── */
+.dash-stats { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 18px; }
+.dash-stat   { flex: 1; min-width: 80px; background: var(--surface);
+  border: 1.5px solid var(--text); border-radius: 4px; padding: 14px 14px; }
+.dash-stat-value { font-size: 22px; font-weight: 800; color: var(--text); line-height: 1; }
+.dash-stat-label { font-size: 11px; color: var(--text-2); margin-top: 4px; font-weight: 500; }
+
+/* ── Card ── */
+.dash-card {
+  background: var(--surface); border: 1.5px solid var(--border);
+  border-radius: 4px; padding: 16px; margin-bottom: 12px;
+}
+.dash-card-header {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  margin-bottom: 12px;
+}
+.dash-card-title { font-size: 14px; font-weight: 700; color: var(--text); }
+.dash-card-sub   { font-size: 12px; color: var(--text-2); margin-top: 2px; }
+.dash-card-meta  { font-size: 11px; color: var(--muted); }
+.dash-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+.dash-col-card {
+  background: var(--surface); border: 1.5px solid var(--border);
+  border-radius: 4px; padding: 14px;
+}
+.dash-col-card h3 {
+  font-size: 12px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.06em; color: var(--text); margin: 0 0 10px;
+}
+
+/* ── Gamification ── */
+.dash-gam-hero {
+  background: var(--text); border-radius: 4px; padding: 20px;
+  color: #fff; margin-bottom: 12px;
+}
+.dash-gam-level  { font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.5);
+  text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; }
+.dash-gam-name   { font-size: 20px; font-weight: 800; margin-bottom: 12px; }
+.dash-gam-bar-track { height: 8px; background: rgba(255,255,255,0.15); border-radius: 2px; overflow: hidden; }
+.dash-gam-bar-fill  { height: 100%; background: #60A5FA; border-radius: 2px; transition: width 0.6s; }
+.dash-gam-bar-labels { display: flex; justify-content: space-between; margin-top: 5px;
+  font-size: 11px; color: rgba(255,255,255,0.5); }
+.dash-gam-stat-label { font-size: 11px; color: rgba(255,255,255,0.6); }
+
+/* ── Homework items ── */
+.dash-hw-item {
+  display: flex; gap: 12px; align-items: flex-start;
+  padding: 12px 0; border-bottom: 1px solid var(--divider);
+}
+.dash-hw-item:last-child { border-bottom: none; }
+.dash-hw-num  { width: 28px; height: 28px; border-radius: 4px; background: var(--accent-soft);
+  color: var(--accent); font-size: 11px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.dash-hw-title { font-size: 13.5px; font-weight: 600; color: var(--text); margin-bottom: 3px; }
+.dash-hw-meta  { font-size: 11.5px; color: var(--muted); }
+
+/* ── Feedback items ── */
+.dash-feedback-card { border: 1.5px solid var(--border); border-radius: 4px; padding: 16px; margin-bottom: 10px; background: var(--surface); }
+.dash-feedback-text { font-size: 13.5px; color: var(--text-2); line-height: 1.7; }
+
+/* ── Today task list ── */
+.dash-tasks { display: grid; gap: 8px; }
+.dash-task {
+  display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center;
+  border: 1.5px solid var(--border); background: var(--surface); border-radius: 4px; padding: 12px 14px;
+}
+.dash-task-check {
+  width: 28px; height: 28px; border-radius: 4px; background: var(--text); color: #fff;
+  display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700;
+}
+.dash-task-label { font-size: 13.5px; font-weight: 600; color: var(--text); }
+.dash-task-sub { font-size: 11.5px; color: var(--text-2); margin-top: 2px; }
+.dash-task-pill {
+  font-size: 11px; font-weight: 700; border-radius: 2px; padding: 4px 8px;
+  background: var(--warning-bg); color: var(--warning);
+}
+.dash-task-pill.urgent { background: var(--warning-bg); color: var(--warning); }
+
+/* ── Homework set cards ── */
+.dash-hw-set {
+  border: 1.5px solid var(--border); border-radius: 4px; padding: 16px; background: var(--surface);
+  margin-bottom: 10px; cursor: pointer; transition: border-color 0.15s, background 0.15s;
+}
+.dash-hw-set:hover { border-color: var(--text); background: var(--bg); }
+.dash-hw-set.completed { border-color: var(--success); }
+.dash-hw-set.in-progress { border-color: var(--warning); }
+.dash-hw-set-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 8px; }
+.dash-hw-set-num { font-size: 11px; font-weight: 700; color: var(--text); text-transform: uppercase; letter-spacing: 0.06em; }
+.dash-hw-set-status { font-size: 11px; font-weight: 700; border-radius: 2px; padding: 3px 8px; background: var(--divider); color: var(--text-2); }
+.dash-hw-set-status.not-started { background: var(--divider); color: var(--text-2); }
+.dash-hw-set-status.in-progress { background: var(--warning-bg); color: var(--warning); }
+.dash-hw-set-status.completed { background: var(--success-bg); color: var(--success); }
+.dash-hw-set-title { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+.dash-hw-set-desc { font-size: 13px; color: var(--text-2); line-height: 1.6; margin-bottom: 8px; }
+.dash-hw-set-meta { display: flex; gap: 6px; flex-wrap: wrap; font-size: 11.5px; color: var(--text-2); }
+
+/* ── Practice wall ── */
+.dash-wall { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.dash-wall-card { border: 1.5px solid var(--border); border-radius: 4px; background: var(--surface); padding: 16px; }
+.dash-wall-card-title { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+.dash-wall-card-desc { font-size: 13px; color: var(--text-2); line-height: 1.6; }
+
+/* ── Chapter / Section ── */
+.dash-chapter-eyebrow { font-size: 11px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.08em; color: var(--text); margin-bottom: 5px; }
+.dash-chapter-title   { font-size: 20px; font-weight: 800; color: var(--text); margin-bottom: 3px; }
+.dash-chapter-head    { margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+.dash-chapter-sub     { font-size: 13px; color: var(--text-2); line-height: 1.5; }
+
+/* ── Section head ── */
+.dash-sect-head { display: flex; align-items: baseline; gap: 8px; }
+.dash-sect-num { font-size: 12px; font-weight: 700; color: var(--text); }
+.dash-sect-title { font-size: 14px; font-weight: 700; color: var(--text); }
+.dash-sect-sub { font-size: 12px; color: var(--text-2); margin-left: auto; }
+
+/* ── Actions ── */
+.dash-actions  { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+.dash-action   { flex: 1; min-width: 80px; background: var(--surface); border: 1.5px solid var(--border);
+  border-radius: 4px; padding: 14px 12px; text-align: center; cursor: pointer;
+  transition: border-color 0.14s, background 0.14s; font-family: var(--font-ui);
+  font-size: 12px; font-weight: 600; color: var(--text); }
+.dash-action:hover { border-color: var(--text); background: var(--bg); }
+.dash-action-icon  { font-size: 20px; margin-bottom: 6px; }
+.dash-action svg { color: var(--text); }
+
+/* ── Chart card ── */
+.dash-chart-card { background: var(--surface); border: 1.5px solid var(--border);
+  border-radius: 4px; padding: 18px; margin-bottom: 12px; }
+
+.dash-empty-state {
+  border: 1.5px dashed var(--border);
+  border-radius: 4px;
+  background: var(--surface);
+  padding: 16px;
+  font-size: 13px;
+  color: var(--text-2);
+  line-height: 1.6;
+}
+
+/* ── Scrollable list ── */
+.dash-list { display: flex; flex-direction: column; gap: 8px; }
+.dash-list-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px; background: var(--bg);
+  border-radius: 4px; font-size: 13.5px;
+}
+.dash-list-item-label { flex: 1; font-weight: 500; color: var(--text); }
+.dash-list-item-value { font-size: 12px; color: var(--text-2); }
+
+/* ── Progress bar ── */
+.dash-progress-bar { height: 6px; background: var(--bg-deep); border-radius: 2px; overflow: hidden; }
+.dash-progress-fill { height: 100%; background: var(--accent); border-radius: 2px; transition: width 0.4s; }
+
+/* ── KPI grid ── */
+.dash-kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 14px; }
+.dash-kpi { background: var(--surface); border: 1.5px solid var(--border); border-radius: 4px; padding: 14px; }
+.dash-kpi-eyebrow { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-2); margin-bottom: 6px; }
+.dash-kpi-value { font-size: 22px; font-weight: 800; color: var(--text); line-height: 1; }
+.dash-kpi-sub { font-size: 11px; color: var(--text-2); margin-top: 4px; }
+
+/* ── Link ── */
+.dash-link {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 13px; font-weight: 600; color: var(--text);
+  background: none; border: none; cursor: pointer;
+  font-family: var(--font-ui); text-decoration: underline;
+}
+
+/* ── Responsive ── */
+@media (max-width: 480px) {
+  .dash-cols { grid-template-columns: 1fr; }
+  .dash-stats { gap: 8px; }
+  .dash-wall { grid-template-columns: 1fr; }
+  .dash-home-glance { grid-template-columns: 1fr; }
+  .dash-kpi-grid { grid-template-columns: repeat(2, 1fr); }
+}

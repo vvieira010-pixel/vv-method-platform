@@ -1,0 +1,14 @@
+[build]
+  command = "npm run build"
+  publish = "dist-build"
+  functions = "netlify/functions"
+
+[[redirects]]
+  from = "/api/anthropic"
+  to = "/.netlify/functions/anthropic"
+  status = 200
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
