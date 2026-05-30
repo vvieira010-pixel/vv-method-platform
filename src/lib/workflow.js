@@ -37,6 +37,40 @@ function uid() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 }
 
+/**
+ * upsert — safe create-or-update for id-keyed list records.
+ * Guarantees a valid id even when callers pass `{ id: undefined }`, by
+ * applying id/timestamps AFTER the data spread (so they can never be clobbered).
+ * Matches an existing record only when data.id is truthy.
+ */
+function upsert(key, data, defaults = {}) {
+  const all = load(key);
+  const now = new Date().toISOString();
+  const id = (data && data.id) || uid();
+  const idx = (data && data.id) ? all.findIndex(r => r.id === data.id) : -1;
+  if (idx >= 0) {
+    const merged = { ...all[idx], ...data, id, updatedAt: now };
+    all[idx] = merged;
+    save(key, all);
+    return merged;
+  }
+  const record = { ...defaults, ...data, id, createdAt: (data && data.createdAt) || now, updatedAt: now };
+  all.unshift(record);
+  save(key, all);
+  return record;
+}
+
+/** Backfill ids for any legacy records persisted without one, then return the list. */
+function loadWithIds(key) {
+  const all = load(key);
+  let changed = false;
+  for (const r of all) {
+    if (r && !r.id) { r.id = uid(); changed = true; }
+  }
+  if (changed) save(key, all);
+  return all;
+}
+
 /* ─── SESSIONS ───────────────────────────────────────────────── */
 export async function getSessions(studentId) {
   const all = load(K.sessions);
@@ -69,7 +103,7 @@ export async function clearWorkflowData() {
 
 /* ─── DIAGNOSES ─────────────────────────────────────────────── */
 export async function getDiagnoses(studentId) {
-  const all = load(K.diagnoses);
+  const all = loadWithIds(K.diagnoses);
   return studentId ? all.filter(d => d.studentId === studentId) : all;
 }
 export async function getLatestDiagnosis(studentId) {
@@ -77,29 +111,18 @@ export async function getLatestDiagnosis(studentId) {
   return all[0] || null;
 }
 export async function saveDiagnosis(data) {
-  const all = load(K.diagnoses);
-  const now = new Date().toISOString();
-  const record = {
-    id: data?.id || uid(),
-    studentId: data?.studentId || null,
-    sessionId: data?.sessionId || null,
-    strengths: data?.strengths || [],
-    weaknesses: data?.weaknesses || [],
-    grammarIssues: data?.grammarIssues || [],
-    vocabularyIssues: data?.vocabularyIssues || [],
-    skillIssues: data?.skillIssues || [],
-    metConnections: data?.metConnections || [],
-    nextSteps: data?.nextSteps || [],
-    content: data?.content || null,
-    createdAt: data?.createdAt || now,
-    updatedAt: now,
-    ...data,
-  };
-  const idx = all.findIndex(d => d.id === record.id);
-  if (idx >= 0) all[idx] = { ...all[idx], ...record };
-  else all.unshift(record);
-  save(K.diagnoses, all);
-  return record;
+  return upsert(K.diagnoses, data, {
+    studentId: null,
+    sessionId: null,
+    strengths: [],
+    weaknesses: [],
+    grammarIssues: [],
+    vocabularyIssues: [],
+    skillIssues: [],
+    metConnections: [],
+    nextSteps: [],
+    content: null,
+  });
 }
 
 /* ─── FEEDBACK ───────────────────────────────────────────────── */
@@ -108,19 +131,7 @@ export async function getFeedback(studentId) {
   return studentId ? all.filter(f => f.studentId === studentId) : all;
 }
 export async function saveFeedback(data) {
-  const all = load(K.feedback);
-  const existing = all.findIndex(f => f.id === data.id);
-  const record = {
-    id: data?.id || uid(),
-    diagnosisId: data?.diagnosisId || null,
-    status: data?.status || 'draft',
-    createdAt: data?.createdAt || new Date().toISOString(),
-    ...data
-  };
-  if (existing >= 0) { all[existing] = { ...all[existing], ...data }; }
-  else { all.unshift(record); }
-  save(K.feedback, all);
-  return record;
+  return upsert(K.feedback, data, { diagnosisId: null, status: 'draft' });
 }
 export async function deleteFeedback(id) {
   save(K.feedback, load(K.feedback).filter(f => f.id !== id));
@@ -132,21 +143,12 @@ export async function getHomework(studentId) {
   return studentId ? all.filter(h => h.studentId === studentId) : all;
 }
 export async function saveHomework(data) {
-  const all = load(K.homework);
-  const existing = all.findIndex(h => h.id === data.id);
-  const record = {
-    id: data?.id || uid(),
-    diagnosisId: data?.diagnosisId || null,
-    assignedAt: data?.assignedAt || new Date().toISOString(),
-    createdAt: data?.createdAt || new Date().toISOString(),
-    status: data?.status || 'not-started',
+  return upsert(K.homework, data, {
+    diagnosisId: null,
+    assignedAt: new Date().toISOString(),
+    status: 'not-started',
     activities: data?.activities || data?.tasks || [],
-    ...data
-  };
-  if (existing >= 0) { all[existing] = { ...all[existing], ...data }; }
-  else { all.unshift(record); }
-  save(K.homework, all);
-  return record;
+  });
 }
 export async function deleteHomework(id) {
   save(K.homework, load(K.homework).filter(h => h.id !== id));
@@ -158,22 +160,13 @@ export async function getPracticeAssignments(studentId) {
   return studentId ? all.filter(p => p.studentId === studentId) : all;
 }
 export async function savePracticeAssignment(data) {
-  const all = load(K.practiceAssignments);
-  const existing = all.findIndex(p => p.id === data.id);
-  const record = {
-    id: data?.id || uid(),
-    studentId: data?.studentId || null,
-    diagnosisId: data?.diagnosisId || null,
+  return upsert(K.practiceAssignments, data, {
+    studentId: null,
+    diagnosisId: null,
     resourceIds: data?.resourceIds || [],
     skillFocus: data?.skillFocus || data?.type || '',
-    status: data?.status || 'assigned',
-    createdAt: data?.createdAt || new Date().toISOString(),
-    ...data
-  };
-  if (existing >= 0) all[existing] = { ...all[existing], ...record };
-  else all.unshift(record);
-  save(K.practiceAssignments, all);
-  return record;
+    status: 'assigned',
+  });
 }
 export async function deletePracticeAssignment(id) {
   save(K.practiceAssignments, load(K.practiceAssignments).filter(p => p.id !== id));
@@ -184,9 +177,13 @@ export async function getSubmissions(studentId) {
   const all = load(K.submissions);
   return studentId ? all.filter(s => s.studentId === studentId) : all;
 }
-export async function submitHomework(homeworkId, studentId, content) {
+export async function submitHomework(homeworkId, studentId, content, responses) {
   const all = load(K.submissions);
-  const sub = { id: uid(), homeworkId, studentId, content, submittedAt: new Date().toISOString(), status: 'submitted' };
+  const sub = {
+    id: uid(), homeworkId, studentId, content,
+    responses: responses || null,
+    submittedAt: new Date().toISOString(), status: 'submitted',
+  };
   all.unshift(sub);
   save(K.submissions, all);
   // Update homework status
@@ -272,22 +269,13 @@ export async function getReports(studentId) {
   return studentId ? all.filter(r => r.studentId === studentId) : all;
 }
 export async function saveReport(data) {
-  const all = load(K.reports);
-  const existing = all.findIndex(r => r.id === data.id);
-  const record = {
-    id: data?.id || uid(),
-    studentId: data?.studentId || null,
+  return upsert(K.reports, data, {
+    studentId: null,
     diagnosisIds: data?.diagnosisIds || [],
     feedbackIds: data?.feedbackIds || [],
     homeworkIds: data?.homeworkIds || [],
     content: data?.content || data?.report || null,
-    createdAt: data?.createdAt || new Date().toISOString(),
-    ...data
-  };
-  if (existing >= 0) all[existing] = { ...all[existing], ...record };
-  else all.unshift(record);
-  save(K.reports, all);
-  return record;
+  });
 }
 
 /* ─── LATE STATUS ────────────────────────────────────────────── */
@@ -760,6 +748,7 @@ export async function saveClassEvidence(data) {
     evaluatedVocabulary: data.evaluatedVocabulary ?? false,
     evaluatedTestStrategy: data.evaluatedTestStrategy ?? false,
     // Evidence counts
+    testStrategyEvidenceCount: data.testStrategyEvidenceCount ?? 0,
     speakingEvidenceCount: data.speakingEvidenceCount ?? 0,
     writingEvidenceCount: data.writingEvidenceCount ?? 0,
     readingEvidenceCount: data.readingEvidenceCount ?? 0,

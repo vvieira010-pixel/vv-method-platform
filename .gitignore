@@ -16,8 +16,8 @@ dist-build/
 .claude/
 .cursor/
 
-# netlify build artifacts
-netlify/
+# netlify build cache/state only — keep netlify/functions source committed
+.netlify/
 
 # OS
 Thumbs.db

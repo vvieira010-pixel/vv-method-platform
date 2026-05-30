@@ -7,30 +7,31 @@ import { useState, useRef, useEffect } from 'react';
 
 /* ─── CSS CUSTOM PROPERTIES (injected once) ─────────────────── */
 const GLOBAL_CSS = `
-  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@500;700;800&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@500;700;800&family=JetBrains+Mono:wght@500&display=swap');
   :root {
-    --accent:       #165DFF;
-    --accent-deep:  #0D1B4A;
-    --accent-soft:  #DCE8FF;
-    --accent-subtle:#EEF4FF;
-    --primary:      #05B8F6;
-    --primary-ink:  #0A7ABF;
-    --on-dark:      #FFFFFF;
-    --on-dark-muted:rgba(255,255,255,0.72);
-    --bg:           #F2F5FF;
-    --bg-deep:      #E6EDFF;
+    /* ── Ocean Depths theme ── */
+    --accent:       #2d8b8b;
+    --accent-deep:  #1a2332;
+    --accent-soft:  #a8dadc;
+    --accent-subtle:#e4f2f2;
+    --primary:      #3da6a6;
+    --primary-ink:  #247070;
+    --on-dark:      #f1faee;
+    --on-dark-muted:rgba(241,250,238,0.68);
+    --bg:           #f0f6f6;
+    --bg-deep:      #dceeed;
     --surface:      #FFFFFF;
-    --border:       #D8E0F8;
-    --divider:      #EAF0FF;
-    --faint:        #5B6D9D;
-    --text:         #111833;
-    --text-2:       #283661;
-    --muted:        #5D6C96;
+    --border:       #c2d9d9;
+    --divider:      #e2efef;
+    --faint:        #5a7a7a;
+    --text:         #1a2332;
+    --text-2:       #2a3d4e;
+    --muted:        #5c7585;
     --success:      #059669;
     --success-bg:   #ECFDF5;
     --success-soft: #D1FAE5;
-    --info:         #2563EB;
-    --info-bg:      #EFF6FF;
+    --info:         #2d8b8b;
+    --info-bg:      #e4f2f2;
     --warning:      #D97706;
     --warning-bg:   #FFFBEB;
     --warning-soft: #FDE68A;
@@ -39,7 +40,7 @@ const GLOBAL_CSS = `
     --danger-soft:  #FECACA;
     --orange:       #F97316;
     --orange-deep:  #EA580C;
-    --dark-accent-border: rgba(255,255,255,0.12);
+    --dark-accent-border: rgba(168,218,220,0.15);
     --radius-sm:    8px;
     --radius-md:    14px;
     --radius-lg:    22px;
@@ -51,21 +52,33 @@ const GLOBAL_CSS = `
     --text-xl:      18px;
     --text-2xl:     22px;
     --text-3xl:     28px;
-    --font-ui:      'Manrope', 'Segoe UI', sans-serif;
-    --font-display: 'Syne', 'Manrope', sans-serif;
+    --font-ui:      'DM Sans', 'Segoe UI', sans-serif;
+    --font-display: 'Plus Jakarta Sans', 'DM Sans', sans-serif;
     --font-mono:    'JetBrains Mono', 'Fira Mono', monospace;
     --ease:         cubic-bezier(0.16, 1, 0.3, 1);
-    --shadow-card:  0 16px 35px -20px rgba(14, 31, 92, 0.25), 0 3px 8px rgba(18, 40, 121, 0.08);
-    --shadow-modal: 0 24px 58px -24px rgba(15, 37, 114, 0.35), 0 8px 20px rgba(20, 45, 133, 0.12);
-    --shadow-toast: 0 4px 16px rgba(0,0,0,0.18);
+    --shadow-card:  0 16px 35px -20px rgba(26, 35, 50, 0.2), 0 3px 8px rgba(26, 35, 50, 0.06);
+    --shadow-modal: 0 24px 58px -24px rgba(26, 35, 50, 0.3), 0 8px 20px rgba(26, 35, 50, 0.1);
+    --shadow-toast: 0 4px 16px rgba(26, 35, 50, 0.18);
+    --space-1:  4px;
+    --space-2:  6px;
+    --space-3:  8px;
+    --space-4:  10px;
+    --space-5:  12px;
+    --space-6:  14px;
+    --space-7:  16px;
+    --space-8:  20px;
+    --space-9:  24px;
+    --space-10: 28px;
+    --space-11: 32px;
+    --space-12: 40px;
   }
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   body {
     font-family: var(--font-ui);
     background:
-      radial-gradient(1300px 460px at 105% -10%, rgba(5,184,246,0.18), transparent 55%),
-      radial-gradient(800px 360px at -15% 20%, rgba(22,93,255,0.12), transparent 60%),
-      linear-gradient(140deg, #F6F8FF 0%, #EEF3FF 50%, #F8F9FF 100%);
+      radial-gradient(1300px 460px at 105% -10%, rgba(45,139,139,0.12), transparent 55%),
+      radial-gradient(800px 360px at -15% 20%, rgba(168,218,220,0.15), transparent 60%),
+      linear-gradient(140deg, #f3f8f8 0%, #edf5f5 50%, #f6fafa 100%);
     color: var(--text);
     -webkit-font-smoothing: antialiased;
     font-size: var(--text-md);
@@ -84,10 +97,10 @@ const GLOBAL_CSS = `
   }
   .btn:hover:not(:disabled) { transform: translateY(-1px); }
   .btn:disabled { opacity: 0.45; cursor: not-allowed; }
-  .btn-primary  { background: linear-gradient(120deg, #05B8F6 0%, #165DFF 100%); color: #fff; box-shadow: 0 10px 24px -14px rgba(22,93,255,0.7); }
-  .btn-primary:hover:not(:disabled) { background: linear-gradient(120deg, #0BA8FF 0%, #114FE0 100%); }
-  .btn-accent   { background: linear-gradient(120deg, #165DFF 0%, #0D1B4A 100%); color: #fff; }
-  .btn-accent:hover:not(:disabled) { background: linear-gradient(120deg, #1153F0 0%, #081232 100%); }
+  .btn-primary  { background: linear-gradient(120deg, #3da6a6 0%, #2d8b8b 100%); color: #fff; box-shadow: 0 10px 24px -14px rgba(45,139,139,0.55); }
+  .btn-primary:hover:not(:disabled) { background: linear-gradient(120deg, #349a9a 0%, #257878 100%); }
+  .btn-accent   { background: linear-gradient(120deg, #2d8b8b 0%, #1a2332 100%); color: #fff; }
+  .btn-accent:hover:not(:disabled) { background: linear-gradient(120deg, #257878 0%, #131a28 100%); }
   .btn-ghost    { background: transparent; color: var(--text-2); border: 1px solid var(--border); }
   .btn-ghost:hover:not(:disabled) { background: var(--bg-deep); }
   .btn-quiet    { background: transparent; color: var(--muted); }
@@ -101,7 +114,7 @@ const GLOBAL_CSS = `
   .card {
     background: linear-gradient(165deg, rgba(255,255,255,0.96) 0%, rgba(255,255,255,0.85) 100%);
     backdrop-filter: blur(6px);
-    border: 1px solid rgba(153, 176, 255, 0.35);
+    border: 1px solid rgba(168, 218, 220, 0.35);
     border-radius: var(--radius-lg); padding: 20px;
     box-shadow: var(--shadow-card);
   }
@@ -121,16 +134,16 @@ const GLOBAL_CSS = `
   .shell { display: flex; height: 100dvh; overflow: hidden; background: transparent; }
   .shell-sidebar {
     width: 248px; flex-shrink: 0; background:
-      radial-gradient(620px 240px at -30% -20%, rgba(70,124,255,0.34), transparent 60%),
-      linear-gradient(180deg, #09153C 0%, #121C46 55%, #090F2E 100%);
+      radial-gradient(620px 240px at -30% -20%, rgba(45,139,139,0.25), transparent 60%),
+      linear-gradient(180deg, #131d2a 0%, #1a2332 55%, #0f1720 100%);
     display: flex; flex-direction: column; overflow-y: auto; overflow-x: hidden;
-    border-right: 1px solid rgba(116, 145, 255, 0.2);
+    border-right: 1px solid rgba(168,218,220,0.15);
   }
   .shell-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
   .shell-topbar {
     height: 58px; flex-shrink: 0; background: rgba(255,255,255,0.78);
     backdrop-filter: blur(8px);
-    border-bottom: 1px solid rgba(149, 175, 255, 0.25);
+    border-bottom: 1px solid rgba(168, 218, 220, 0.25);
     display: flex; align-items: center; padding: 0 20px; gap: 12px;
   }
   .shell-main { flex: 1; overflow-y: auto; overflow-x: hidden; }
@@ -148,15 +161,15 @@ const GLOBAL_CSS = `
   }
   .shell-nav-btn:hover  { background: rgba(255,255,255,0.14); color: #fff; transform: translateX(2px); }
   .shell-nav-btn.active {
-    background: linear-gradient(120deg, rgba(5,184,246,0.25) 0%, rgba(22,93,255,0.22) 100%);
+    background: linear-gradient(120deg, rgba(61,166,166,0.28) 0%, rgba(45,139,139,0.22) 100%);
     color: #fff;
     font-weight: 700;
-    border: 1px solid rgba(151, 196, 255, 0.35);
+    border: 1px solid rgba(168,218,220,0.35);
   }
   .shell-user { padding: 12px 14px; border-top: 1px solid var(--dark-accent-border); display: flex; align-items: center; gap: 9px; }
   .shell-user-name { font-size: var(--text-xs); color: #fff; font-weight: 600; }
   .shell-user-role { font-size: 10.5px; color: var(--on-dark-muted); }
-  .workflow-strip { display: flex; align-items: center; padding: 0 20px; height: 36px; background: linear-gradient(90deg, rgba(240,245,255,0.82), rgba(244,248,255,0.4)); border-bottom: 1px solid rgba(151, 175, 255, 0.25); overflow-x: auto; scrollbar-width: none; }
+  .workflow-strip { display: flex; align-items: center; padding: 0 20px; height: 36px; background: linear-gradient(90deg, rgba(240,248,248,0.82), rgba(244,250,250,0.4)); border-bottom: 1px solid rgba(168,218,220,0.25); overflow-x: auto; scrollbar-width: none; }
   .workflow-strip::-webkit-scrollbar { display: none; }
   .workflow-step { display: flex; align-items: center; gap: 6px; font-size: var(--text-xs); font-weight: 600; color: var(--muted); padding: 0 10px; cursor: pointer; white-space: nowrap; border: none; background: none; font-family: var(--font-ui); height: 100%; transition: color 0.12s; }
   .workflow-step:hover { color: var(--accent); }
@@ -304,14 +317,11 @@ export const Icon = {
   trash:    (p) => <SvgIcon d="M3 6h18 M8 6V4h8v2 M19 6l-1 14H6L5 6" {...p} />,
   chevronRight: (p) => <SvgIcon d="M9 18l6-6-6-6" {...p} />,
   chevronDown:  (p) => <SvgIcon d="M6 9l6 6 6-6" {...p} />,
-  arrowRight:   (p) => <SvgIcon d="M5 12h14 M12 5l7 7-7 7" {...p} />,
-  arrowLeft:    (p) => <SvgIcon d="M19 12H5 M12 19l-7-7 7-7" {...p} />,
   search:   (p) => <SvgIcon {...p}><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></SvgIcon>,
   filter:   (p) => <SvgIcon d="M22 3H2l8 9.46V19l4 2v-8.54L22 3" {...p} />,
   send:     (p) => <SvgIcon d="M22 2L11 13 M22 2L15 22l-4-9-9-4 22-7z" {...p} />,
   mic:      (p) => <SvgIcon {...p}><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></SvgIcon>,
   star:     (p) => <SvgIcon d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" {...p} />,
-  bolt:     (p) => <SvgIcon d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" {...p} />,
   spark:    (p) => <SvgIcon d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" {...p} />,
   info:     (p) => <SvgIcon {...p}><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></SvgIcon>,
   warning:  (p) => <SvgIcon {...p}><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></SvgIcon>,
@@ -328,10 +338,10 @@ export const Icon = {
 
 /* ─── AVATAR ─────────────────────────────────────────────────── */
 const AVATAR_PALETTES = {
-  auto:  ['#1E4E8C','#0D9488','#D97706','#E11D48','#7C3AED'],
-  ink:   ['#0F172A'],
-  blue:  ['#1E4E8C'],
-  teal:  ['#0D9488'],
+  auto:  ['#1a2332','#2d8b8b','#247070','#3da6a6','#5a7a7a'],
+  ink:   ['#1a2332'],
+  blue:  ['#1a2332'],
+  teal:  ['#2d8b8b'],
   amber: ['#D97706'],
   rose:  ['#E11D48'],
 };
@@ -346,7 +356,7 @@ export function Avatar({ name = '?', size = 36, tone = 'auto' }) {
   const bg = pickColor(name, tone);
   const initials = (name || '?').split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
   return (
-    <div style={{
+    <div role="img" aria-label={name} style={{
       width: size, height: size, borderRadius: '50%',
       background: bg, color: '#fff',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -422,11 +432,12 @@ export function SectionHeader({ title, sub, action, right }) {
 }
 
 /* ─── PILL NAV ───────────────────────────────────────────────── */
-export function PillNav({ tabs, active, onChange }) {
+export function PillNav({ tabs, active, onChange, label = 'Tabs' }) {
   return (
-    <div className="pill-nav">
+    <div className="pill-nav" role="tablist" aria-label={label}>
       {tabs.map(t => (
-        <button key={t.id} className={`pill-nav-btn ${active === t.id ? 'active' : ''}`}
+        <button key={t.id} role="tab" aria-selected={active === t.id}
+          className={`pill-nav-btn ${active === t.id ? 'active' : ''}`}
           onClick={() => onChange(t.id)}>
           {t.label}
         </button>
@@ -451,10 +462,92 @@ const RS = {
 export function ReviewStatusBadge({ status }) {
   const s = RS[status] || RS['not-started'];
   return (
-    <span className="review-badge" style={{ background: s.bg, color: s.fg }}>
-      <span style={{ width:6, height:6, borderRadius:'50%', background:s.dot, flexShrink:0 }} />
+    <span className="review-badge" role="status" aria-label={`Status: ${s.label}`} style={{ background: s.bg, color: s.fg }}>
+      <span aria-hidden="true" style={{ width:6, height:6, borderRadius:'50%', background:s.dot, flexShrink:0 }} />
       {s.label}
     </span>
+  );
+}
+
+/* ─── STUDENT FEEDBACK VIEW ──────────────────────────────────── */
+/**
+ * Renders the structured studentFeedback object as a clean, student-facing report:
+ * opening paragraph → What you did well → What to improve → Final note.
+ * Shared by the teacher review (diagnostic-create) and the student dashboard.
+ */
+export function StudentFeedbackView({ feedback }) {
+  if (!feedback || typeof feedback !== 'object') return null;
+  const wins = Array.isArray(feedback.whatYouDidWell) ? feedback.whatYouDidWell : [];
+  const fixes = Array.isArray(feedback.whatToImprove) ? feedback.whatToImprove : [];
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+      {feedback.classFocus && (
+        <p style={{ fontSize: 'var(--text-md)', lineHeight: 1.7, color: 'var(--text)', margin: 0 }}>{feedback.classFocus}</p>
+      )}
+
+      {wins.length > 0 && (
+        <div>
+          <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 'var(--text-lg)', color: 'var(--success)', marginBottom: 10 }}>What you did well</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {wins.map((w, i) => (
+              <div key={i} style={{ padding: 14, background: 'var(--success-bg)', border: '1px solid var(--success-soft)', borderRadius: 'var(--radius-md)' }}>
+                <div style={{ fontSize: 'var(--text-md)', fontWeight: 700, color: 'var(--text)', marginBottom: 6 }}>{i + 1}. {w.strength}</div>
+                {w.explanation && <p style={{ fontSize: 'var(--text-sm)', lineHeight: 1.6, margin: '0 0 4px' }}>{w.explanation}</p>}
+                {w.metConnection && <p style={{ fontSize: 'var(--text-sm)', lineHeight: 1.6, margin: '0 0 6px', color: 'var(--text-2)' }}>{w.metConnection}</p>}
+                {w.example && (
+                  <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-2)', fontStyle: 'italic', borderLeft: '3px solid var(--success)', paddingLeft: 10 }}>
+                    <strong style={{ fontStyle: 'normal', color: 'var(--success)' }}>Example: </strong>{w.example}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {fixes.length > 0 && (
+        <div>
+          <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 'var(--text-lg)', color: 'var(--warning)', marginBottom: 10 }}>What to improve</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {fixes.map((f, i) => (
+              <div key={i} style={{ padding: 14, background: 'var(--warning-bg)', border: '1px solid var(--warning-soft)', borderRadius: 'var(--radius-md)' }}>
+                <div style={{ fontSize: 'var(--text-md)', fontWeight: 700, color: 'var(--text)', marginBottom: 6 }}>{i + 1}. {f.area}</div>
+                {f.metImportance && <p style={{ fontSize: 'var(--text-sm)', lineHeight: 1.6, margin: '0 0 8px', color: 'var(--text-2)' }}>{f.metImportance}</p>}
+                {(f.insteadOf || f.sayInstead) && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 8 }}>
+                    {f.insteadOf && (
+                      <div style={{ fontSize: 'var(--text-sm)' }}>
+                        <span style={{ color: 'var(--muted)', fontWeight: 600 }}>Instead of: </span>
+                        <span style={{ color: 'var(--danger)' }}>"{f.insteadOf}"</span>
+                      </div>
+                    )}
+                    {f.sayInstead && (
+                      <div style={{ fontSize: 'var(--text-sm)' }}>
+                        <span style={{ color: 'var(--muted)', fontWeight: 600 }}>Say: </span>
+                        <span style={{ color: 'var(--success)', fontWeight: 600 }}>"{f.sayInstead}"</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+                {f.howToImprove && (
+                  <div style={{ fontSize: 'var(--text-sm)', lineHeight: 1.6 }}>
+                    <strong style={{ color: 'var(--accent)' }}>How to improve: </strong>{f.howToImprove}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {feedback.finalNote && (
+        <div style={{ padding: 14, background: 'var(--accent-subtle)', border: '1px solid var(--accent-soft)', borderRadius: 'var(--radius-md)' }}>
+          <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Final note</div>
+          <p style={{ fontSize: 'var(--text-sm)', lineHeight: 1.7, margin: 0, color: 'var(--text)' }}>{feedback.finalNote}</p>
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -500,20 +593,21 @@ export function WorkflowStageStrip({ active, onStage, stages, onStageClick }) {
   const list = stages || WORKFLOW_STAGES;
   const activeIdx = list.findIndex(s => s.id === active);
   return (
-    <div className="workflow-strip">
+    <nav className="workflow-strip" aria-label="Workflow steps">
       {list.map((s, i) => (
         <span key={s.id} style={{ display:'flex', alignItems:'center' }}>
           <button
             className={`workflow-step ${active === s.id ? 'active' : ''} ${i < activeIdx ? 'done' : ''}`}
+            aria-current={active === s.id ? 'step' : undefined}
             onClick={() => (onStage || onStageClick)?.(s.id)}
           >
             {i < activeIdx && <Icon.check size={11} />}
             {s.label}
           </button>
-          {i < list.length - 1 && <span className="workflow-sep">›</span>}
+          {i < list.length - 1 && <span className="workflow-sep" aria-hidden="true">›</span>}
         </span>
       ))}
-    </div>
+    </nav>
   );
 }
 
@@ -606,7 +700,7 @@ const LEGACY_NAV_SECTIONS = [
 // New section map for Phase 1 IDs
 const NEW_NAV_SECTIONS = [
   { label: 'Main',     ids: ['dashboard', 'students', 'calendar'] },
-  { label: 'Teaching', ids: ['diagnostics', 'homework', 'submissions', 'error-bank'] },
+  { label: 'Teaching', ids: ['diagnostics', 'homework', 'submissions', 'inbox', 'error-bank'] },
   { label: 'Reports',  ids: ['reports', 'settings'] },
 ];
 
@@ -624,7 +718,7 @@ export function Shell({ tabs = [], active, onTab, children, rightSlot, workflowA
           <span className="shell-brand-name">V.V. Method</span>
           <span className="shell-brand-sub">MET Preparation</span>
         </div>
-        <nav className="shell-nav">
+        <nav className="shell-nav" aria-label="Main navigation">
           {NAV_SECTIONS.map(sec => {
             const items = sec.ids.map(id => tabMap[id]).filter(Boolean);
             if (!items.length) return null;
@@ -634,6 +728,7 @@ export function Shell({ tabs = [], active, onTab, children, rightSlot, workflowA
                 {items.map(tab => (
                   <button key={tab.id}
                     className={`shell-nav-btn ${active === tab.id ? 'active' : ''}`}
+                    aria-current={active === tab.id ? 'page' : undefined}
                     onClick={() => onTab(tab.id)}>
                     <span style={{ opacity:0.85, flexShrink:0 }}>{tab.icon}</span>
                     {tab.label}
@@ -650,13 +745,6 @@ export function Shell({ tabs = [], active, onTab, children, rightSlot, workflowA
             );
           })}
         </nav>
-        <div className="shell-user">
-          <Avatar name="Vini V" size={30} tone="ink" />
-          <div>
-            <div className="shell-user-name">Vini V.</div>
-            <div className="shell-user-role">Teacher</div>
-          </div>
-        </div>
       </aside>
       <div className="shell-content">
         <header className="shell-topbar">
@@ -676,147 +764,137 @@ const API_KEY_LS = 'vv:anthropic_api_key';
 const ANTHROPIC_MODEL = import.meta.env.VITE_ANTHROPIC_MODEL || 'claude-sonnet-4-5';
 const OPENAI_MODEL = import.meta.env.VITE_OPENAI_MODEL || 'gpt-4.1-mini';
 const GROQ_MODEL = import.meta.env.VITE_GROQ_MODEL || 'llama-3.3-70b-versatile';
+const GEMINI_MODEL = import.meta.env.VITE_GEMINI_MODEL || 'gemini-2.5-flash';
 
 export async function callAI(prompt, { max_tokens = 2048, system } = {}) {
-  const groqKey = import.meta.env.VITE_GROQ_API_KEY || localStorage.getItem('vv:groq_api_key');
+  const sys = system || 'You are a helpful MET English teaching assistant.';
+  const errors = []; // collect every provider failure so the real cause is surfaced
 
+  // ── 1. Groq (cascade across all chat models) ──
+  const groqKey = import.meta.env.VITE_GROQ_API_KEY || localStorage.getItem('vv:groq_api_key');
   if (groqKey) {
-    // Cascade ordered by speed and capacity to maximize availability and performance.
     const candidateModels = [
-      'openai/gpt-oss-20b',                        // 1000 T/s, 250K TPM
-      'meta-llama/llama-4-scout-17b-16e-instruct', // 750 T/s, 300K TPM
-      'llama-3.1-8b-instant',                      // 560 T/s, 250K TPM
-      'openai/gpt-oss-120b',                       // 500 T/s, 250K TPM
-      'qwen/qwen3-32b',                            // 400 T/s, 300K TPM
-      GROQ_MODEL,                                  // Llama 3.3 70B - 280 T/s, 300K TPM (Heavy lifter fallback)
-    ]
-      .filter(Boolean)
-      .filter((model, idx, arr) => arr.indexOf(model) === idx);
-    let primaryError = null;
+      GROQ_MODEL,
+      'meta-llama/llama-4-scout-17b-16e-instruct', // 300K TPM — preview, strongest reasoning
+      'llama-3.3-70b-versatile',                   // 300K TPM — production, very capable
+      'qwen/qwen3-32b',                            // 300K TPM — preview, strong multilingual
+      'openai/gpt-oss-120b',                       // 250K TPM — production, large
+      'openai/gpt-oss-20b',                        // 250K TPM — production, fast
+      'llama-3.1-8b-instant',                      // 250K TPM — production, fastest fallback
+    ].filter(Boolean).filter((m, i, arr) => arr.indexOf(m) === i);
 
     for (const model of candidateModels) {
-      const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      try {
+        const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${groqKey}` },
+          body: JSON.stringify({
+            model, temperature: 0.3, max_tokens,
+            messages: [{ role: 'system', content: sys }, { role: 'user', content: prompt }],
+          }),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          return { content: [{ text: data?.choices?.[0]?.message?.content || '' }] };
+        }
+        const err = await res.json().catch(() => ({}));
+        errors.push(`Groq/${model}: ${err.error?.message || res.status}`);
+      } catch (e) {
+        errors.push(`Groq/${model}: ${e.message}`);
+      }
+    }
+  }
+
+  // ── 2. Gemini ──
+  const geminiKey = import.meta.env.VITE_GEMINI_API_KEY || localStorage.getItem('vv:gemini_api_key');
+  if (geminiKey) {
+    try {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${geminiKey}`;
+      const res = await fetch(url, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${groqKey}`,
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          model,
-          temperature: 0.3,
-          max_tokens,
-          messages: [
-            { role: 'system', content: system || 'You are a helpful MET English teaching assistant.' },
-            { role: 'user', content: prompt },
-          ],
+          systemInstruction: { parts: [{ text: sys }] },
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { temperature: 0.3, maxOutputTokens: max_tokens },
         }),
       });
       if (res.ok) {
         const data = await res.json();
-        const text = data?.choices?.[0]?.message?.content || '';
-        return { content: [{ text }] };
+        const text = data?.candidates?.[0]?.content?.parts?.map(p => p.text).join('') || '';
+        if (text) return { content: [{ text }] };
+        errors.push(`Gemini/${GEMINI_MODEL}: empty response (${data?.candidates?.[0]?.finishReason || 'no candidates'})`);
+      } else {
+        const err = await res.json().catch(() => ({}));
+        errors.push(`Gemini/${GEMINI_MODEL}: ${err.error?.message || res.status}`);
       }
-      const err = await res.json().catch(() => ({}));
-      const msg = err.error?.message || `Groq API error ${res.status}`;
-      // Preserve the FIRST informative error (usually the most useful — quota, auth, etc.)
-      // rather than letting a later 400 on a dead model overwrite it.
-      if (!primaryError) primaryError = msg;
-      // Don't waste calls on decommissioned models — stop the loop.
-      if (res.status === 400 && /decommissioned|no longer supported/i.test(msg)) continue;
-    }
-    throw new Error(primaryError || 'Groq request failed.');
-  }
-
-  const geminiKey = import.meta.env.VITE_GEMINI_API_KEY || localStorage.getItem('vv:gemini_api_key');
-  if (geminiKey) {
-    const geminiModel = import.meta.env.VITE_GEMINI_MODEL || 'gemini-1.5-pro';
-    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${geminiKey}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{
-          role: 'user',
-          parts: [{ text: (system ? `${system}\n\n${prompt}` : prompt) }]
-        }],
-        generationConfig: { maxOutputTokens: max_tokens, temperature: 0.3 }
-      }),
-    });
-    if (res.ok) {
-      const data = await res.json();
-      const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
-      return { content: [{ text }] };
+    } catch (e) {
+      errors.push(`Gemini/${GEMINI_MODEL}: ${e.message}`);
     }
   }
 
-  const payload = {
-    model: ANTHROPIC_MODEL,
-    max_tokens,
-    system: system || 'You are a helpful MET English teaching assistant.',
-    messages: [{ role: 'user', content: prompt }],
-  };
+  const payload = { model: ANTHROPIC_MODEL, max_tokens, system: sys, messages: [{ role: 'user', content: prompt }] };
 
+  // ── 3. Anthropic via dev/server proxy (skip silently if not configured) ──
   const serverResponse = await fetch('/api/anthropic', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
   }).catch(() => null);
-
   if (serverResponse?.ok) return serverResponse.json();
   if (serverResponse && ![404, 405].includes(serverResponse.status)) {
     const err = await serverResponse.json().catch(() => ({}));
-    throw new Error(err.error?.message || err.message || `AI API error ${serverResponse.status}`);
+    const msg = err.error?.message || err.message || `proxy ${serverResponse.status}`;
+    // "not configured" is just an absent key — record it but keep trying other providers
+    if (!/not configured/i.test(msg)) errors.push(`Anthropic proxy: ${msg}`);
   }
 
+  // ── 4. Anthropic direct (browser key) ──
   const apiKey = import.meta.env.VITE_ANTHROPIC_API_KEY || localStorage.getItem(API_KEY_LS);
-  const openaiKey = import.meta.env.VITE_OPENAI_API_KEY || localStorage.getItem('vv:openai_api_key');
-
   if (apiKey) {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true',
-      },
-      body: JSON.stringify(payload),
-    });
-    if (!res.ok) {
+    try {
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json', 'x-api-key': apiKey,
+          'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true',
+        },
+        body: JSON.stringify(payload),
+      });
+      if (res.ok) return res.json();
       const err = await res.json().catch(() => ({}));
-      throw new Error(err.error?.message || `API error ${res.status}`);
+      errors.push(`Anthropic: ${err.error?.message || res.status}`);
+    } catch (e) {
+      errors.push(`Anthropic: ${e.message}`);
     }
-    return res.json();
   }
 
+  // ── 5. OpenAI direct ──
+  const openaiKey = import.meta.env.VITE_OPENAI_API_KEY || localStorage.getItem('vv:openai_api_key');
   if (openaiKey) {
-    const res = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${openaiKey}`,
-      },
-      body: JSON.stringify({
-        model: OPENAI_MODEL,
-        temperature: 0.3,
-        max_completion_tokens: max_tokens,
-        messages: [
-          { role: 'system', content: system || 'You are a helpful MET English teaching assistant.' },
-          { role: 'user', content: prompt },
-        ],
-      }),
-    });
-    if (!res.ok) {
+    try {
+      const res = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${openaiKey}` },
+        body: JSON.stringify({
+          model: OPENAI_MODEL, temperature: 0.3, max_completion_tokens: max_tokens,
+          messages: [{ role: 'system', content: sys }, { role: 'user', content: prompt }],
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        return { content: [{ text: data?.choices?.[0]?.message?.content || '' }] };
+      }
       const err = await res.json().catch(() => ({}));
-      throw new Error(err.error?.message || `OpenAI API error ${res.status}`);
+      errors.push(`OpenAI: ${err.error?.message || res.status}`);
+    } catch (e) {
+      errors.push(`OpenAI: ${e.message}`);
     }
-    const data = await res.json();
-    const text = data?.choices?.[0]?.message?.content || '';
-    return { content: [{ text }] };
   }
 
-  throw new Error(
-    'No AI key configured. Add VITE_GROQ_API_KEY for local testing.'
-  );
+  // Nothing succeeded — surface the REAL provider errors, not a misleading single message
+  if (errors.length) {
+    throw new Error(`All AI providers failed:\n${errors.join('\n')}`);
+  }
+  throw new Error('No AI key configured. Add VITE_GROQ_API_KEY or VITE_GEMINI_API_KEY to .env, or set one in Settings.');
 }
 
 /* ─── summarizeTranscript ────────────────────────────────────── */
