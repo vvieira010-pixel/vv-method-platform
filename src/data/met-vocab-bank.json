@@ -1,0 +1,2594 @@
+{
+  "schemaVersion": "1.0",
+  "contentType": "interactive_exercise_bank",
+  "title": "MET B2 Vocabulary Interactive Exercise Bank",
+  "subtitle": "Upper-intermediate vocabulary practice for common MET topic areas",
+  "createdFor": "Educational platform import",
+  "targetAudience": {
+    "ageGroup": "Adults and young adults",
+    "level": "B1-B2+",
+    "exam": "Michigan English Test (MET)",
+    "learnerProfile": "General English learners and healthcare/professional learners preparing for MET"
+  },
+  "learningDesign": {
+    "approach": "Vocabulary in context + MET-style reasoning",
+    "corePattern": "Statement → Reason → Support",
+    "exerciseFormats": [
+      "multiple_choice_single",
+      "multiple_choice_multiple",
+      "fill_in_the_blank",
+      "drag_and_drop_matching",
+      "true_false_with_explanation",
+      "short_answer_reflection",
+      "interactive_scenario_case_study",
+      "ordering_sequencing",
+      "timed_quick_fire"
+    ],
+    "platformMapping": {
+      "multiple_choice_single": "radio button quiz",
+      "multiple_choice_multiple": "checkbox quiz",
+      "fill_in_the_blank": "text input or dropdown",
+      "drag_and_drop_matching": "matching columns or draggable cards",
+      "true_false_with_explanation": "true/false toggle plus explanation text box",
+      "short_answer_reflection": "text area with model response",
+      "interactive_scenario_case_study": "scenario card plus response box",
+      "ordering_sequencing": "drag-to-order cards",
+      "timed_quick_fire": "timer plus short-answer field"
+    }
+  },
+  "teacherNotes": {
+    "mainUse": "Use these exercises after teaching the vocabulary lists or as platform homework.",
+    "recommendedFlow": "Start with matching or fill-in-the-blank, then move to scenario and short-answer tasks.",
+    "assessmentSuggestion": "For short-answer/scenario items, evaluate clarity, vocabulary accuracy, grammar control, and support/detail.",
+    "commonMistakesToWatch": [
+      "Using target words with the wrong part of speech",
+      "Listing vocabulary without a clear sentence meaning",
+      "Giving opinions without reasons or examples",
+      "Overusing simple words when a B2 word would be more precise"
+    ]
+  },
+  "modules": [
+    {
+      "id": "health_lifestyle",
+      "title": "Health and Lifestyle",
+      "levelRange": "B1-B2+",
+      "targetVocabulary": [
+        {
+          "word": "maintain",
+          "partOfSpeech": "verb",
+          "definition": "to keep something in good condition or at the same level"
+        },
+        {
+          "word": "balanced",
+          "partOfSpeech": "adjective",
+          "definition": "including the right amount of different things"
+        },
+        {
+          "word": "routine",
+          "partOfSpeech": "noun",
+          "definition": "a regular way of doing things"
+        },
+        {
+          "word": "prevent",
+          "partOfSpeech": "verb",
+          "definition": "to stop something from happening"
+        },
+        {
+          "word": "reduce",
+          "partOfSpeech": "verb",
+          "definition": "to make something smaller or less serious"
+        },
+        {
+          "word": "improve",
+          "partOfSpeech": "verb",
+          "definition": "to make something better"
+        },
+        {
+          "word": "harmful",
+          "partOfSpeech": "adjective",
+          "definition": "causing damage or problems"
+        },
+        {
+          "word": "benefit",
+          "partOfSpeech": "noun",
+          "definition": "a good result or advantage"
+        },
+        {
+          "word": "physical",
+          "partOfSpeech": "adjective",
+          "definition": "related to the body"
+        },
+        {
+          "word": "mental",
+          "partOfSpeech": "adjective",
+          "definition": "related to the mind"
+        },
+        {
+          "word": "active",
+          "partOfSpeech": "adjective",
+          "definition": "moving often or doing many activities"
+        },
+        {
+          "word": "unhealthy",
+          "partOfSpeech": "adjective",
+          "definition": "not good for your health"
+        },
+        {
+          "word": "condition",
+          "partOfSpeech": "noun",
+          "definition": "the state of someone’s health or body"
+        },
+        {
+          "word": "recover",
+          "partOfSpeech": "verb",
+          "definition": "to become healthy again after illness or injury"
+        },
+        {
+          "word": "encourage",
+          "partOfSpeech": "verb",
+          "definition": "to give someone support or confidence to do something"
+        },
+        {
+          "word": "avoid",
+          "partOfSpeech": "verb",
+          "definition": "to stay away from something"
+        },
+        {
+          "word": "nutritious",
+          "partOfSpeech": "adjective",
+          "definition": "containing substances that help the body stay healthy"
+        },
+        {
+          "word": "lifestyle",
+          "partOfSpeech": "noun",
+          "definition": "the way a person lives"
+        },
+        {
+          "word": "well-being",
+          "partOfSpeech": "noun",
+          "definition": "general health and happiness"
+        },
+        {
+          "word": "excessive",
+          "partOfSpeech": "adjective",
+          "definition": "too much or more than necessary"
+        }
+      ],
+      "learningObjectives": [
+        "Use B2 vocabulary to discuss healthy habits and well-being.",
+        "Explain benefits, risks, and lifestyle choices using reasons and examples.",
+        "Recognize vocabulary in MET-style everyday and opinion contexts."
+      ],
+      "exerciseCount": 3,
+      "exercises": [
+        {
+          "id": "health_lifestyle_fill_blank",
+          "type": "fill_in_the_blank",
+          "title": "Healthy Habits in Context",
+          "difficulty": "B1-B2",
+          "skillFocus": [
+            "Vocabulary",
+            "Grammar in Context"
+          ],
+          "platformInteraction": "text_input_or_dropdown",
+          "instructions": "Complete each sentence with one word from the word bank.",
+          "wordBank": [
+            "maintain",
+            "prevent",
+            "nutritious",
+            "excessive",
+            "well-being"
+          ],
+          "items": [
+            {
+              "id": "q1",
+              "sentence": "Regular exercise can help people ______ a healthy weight.",
+              "correctAnswer": "maintain",
+              "explanation": "'Maintain' means keep something at the same level or in good condition."
+            },
+            {
+              "id": "q2",
+              "sentence": "A ______ breakfast gives the body energy for the morning.",
+              "correctAnswer": "nutritious",
+              "explanation": "'Nutritious' describes food that is good for the body."
+            },
+            {
+              "id": "q3",
+              "sentence": "Good sleep can improve mental ______.",
+              "correctAnswer": "well-being",
+              "explanation": "'Well-being' means general health and happiness."
+            },
+            {
+              "id": "q4",
+              "sentence": "Doctors often encourage healthy habits to ______ future illness.",
+              "correctAnswer": "prevent",
+              "explanation": "'Prevent' means stop something from happening."
+            },
+            {
+              "id": "q5",
+              "sentence": "______ screen time may affect sleep quality.",
+              "correctAnswer": "excessive",
+              "explanation": "'Excessive' means too much or more than necessary."
+            }
+          ]
+        },
+        {
+          "id": "health_lifestyle_multi_select",
+          "type": "multiple_choice_multiple",
+          "title": "Benefits and Risks",
+          "difficulty": "B2",
+          "skillFocus": [
+            "Vocabulary",
+            "Critical Thinking"
+          ],
+          "platformInteraction": "checkboxes",
+          "instructions": "Choose all correct answers. More than one answer may be correct.",
+          "items": [
+            {
+              "id": "q1",
+              "prompt": "Which words can describe positive health results?",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "benefit"
+                },
+                {
+                  "id": "B",
+                  "text": "harmful"
+                },
+                {
+                  "id": "C",
+                  "text": "well-being"
+                },
+                {
+                  "id": "D",
+                  "text": "unhealthy"
+                }
+              ],
+              "correctOptionIds": [
+                "A",
+                "C"
+              ],
+              "explanation": "'Benefit' and 'well-being' are positive. 'Harmful' and 'unhealthy' describe negative effects."
+            },
+            {
+              "id": "q2",
+              "prompt": "Which actions can help improve lifestyle?",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "avoid excessive sugar"
+                },
+                {
+                  "id": "B",
+                  "text": "maintain a routine"
+                },
+                {
+                  "id": "C",
+                  "text": "reduce physical activity"
+                },
+                {
+                  "id": "D",
+                  "text": "encourage unhealthy habits"
+                }
+              ],
+              "correctOptionIds": [
+                "A",
+                "B"
+              ],
+              "explanation": "Avoiding too much sugar and maintaining a routine are healthy actions. The other options are negative."
+            }
+          ]
+        },
+        {
+          "id": "health_lifestyle_short_answer",
+          "type": "short_answer_reflection",
+          "title": "MET-Style Opinion: Health",
+          "difficulty": "B2",
+          "skillFocus": [
+            "Writing",
+            "Vocabulary",
+            "MET Speaking/Writing Support"
+          ],
+          "platformInteraction": "text_area",
+          "instructions": "Answer in 3–5 sentences. Use at least three target vocabulary words.",
+          "prompt": "What is one habit people should develop to improve their health? Explain your answer with a reason and an example.",
+          "modelResponse": "People should develop a regular exercise routine because it supports both physical and mental well-being. For example, walking for thirty minutes after work can reduce stress and help people stay active. This habit is simple, but it can have a strong long-term benefit.",
+          "successCriteria": [
+            "Clear opinion",
+            "At least one reason",
+            "At least one example",
+            "Three or more target words"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "workplace_communication",
+      "title": "Workplace Communication",
+      "levelRange": "B1-B2+",
+      "targetVocabulary": [
+        {
+          "word": "colleague",
+          "partOfSpeech": "noun",
+          "definition": "a person you work with"
+        },
+        {
+          "word": "supervisor",
+          "partOfSpeech": "noun",
+          "definition": "a person who manages workers"
+        },
+        {
+          "word": "deadline",
+          "partOfSpeech": "noun",
+          "definition": "the final time or date to finish something"
+        },
+        {
+          "word": "responsibility",
+          "partOfSpeech": "noun",
+          "definition": "a duty or task you are expected to do"
+        },
+        {
+          "word": "task",
+          "partOfSpeech": "noun",
+          "definition": "a piece of work that needs to be done"
+        },
+        {
+          "word": "efficient",
+          "partOfSpeech": "adjective",
+          "definition": "working well without wasting time or energy"
+        },
+        {
+          "word": "cooperate",
+          "partOfSpeech": "verb",
+          "definition": "to work together with others"
+        },
+        {
+          "word": "clarify",
+          "partOfSpeech": "verb",
+          "definition": "to make something easier to understand"
+        },
+        {
+          "word": "request",
+          "partOfSpeech": "noun",
+          "definition": "something you ask for politely or formally"
+        },
+        {
+          "word": "respond",
+          "partOfSpeech": "verb",
+          "definition": "to answer or react to something"
+        },
+        {
+          "word": "issue",
+          "partOfSpeech": "noun",
+          "definition": "a problem or topic that needs attention"
+        },
+        {
+          "word": "resolve",
+          "partOfSpeech": "verb",
+          "definition": "to solve a problem"
+        },
+        {
+          "word": "update",
+          "partOfSpeech": "noun/verb",
+          "definition": "new information or to add new information"
+        },
+        {
+          "word": "feedback",
+          "partOfSpeech": "noun",
+          "definition": "comments about someone’s work or performance"
+        },
+        {
+          "word": "procedure",
+          "partOfSpeech": "noun",
+          "definition": "an official way of doing something"
+        },
+        {
+          "word": "shift",
+          "partOfSpeech": "noun",
+          "definition": "a period of work time"
+        },
+        {
+          "word": "communicate",
+          "partOfSpeech": "verb",
+          "definition": "to share information, ideas, or feelings"
+        },
+        {
+          "word": "reliable",
+          "partOfSpeech": "adjective",
+          "definition": "able to be trusted or depended on"
+        },
+        {
+          "word": "professional",
+          "partOfSpeech": "adjective",
+          "definition": "suitable for a work environment"
+        },
+        {
+          "word": "prioritize",
+          "partOfSpeech": "verb",
+          "definition": "to decide what is most important"
+        }
+      ],
+      "learningObjectives": [
+        "Use professional vocabulary for workplace situations.",
+        "Identify appropriate language for problems, updates, feedback, and priorities.",
+        "Practice polite and clear workplace communication."
+      ],
+      "exerciseCount": 3,
+      "exercises": [
+        {
+          "id": "workplace_communication_matching",
+          "type": "drag_and_drop_matching",
+          "title": "Workplace Word Match",
+          "difficulty": "B1-B2",
+          "skillFocus": [
+            "Vocabulary"
+          ],
+          "platformInteraction": "drag_and_drop",
+          "instructions": "Match each word to the correct definition.",
+          "pairs": [
+            {
+              "word": "deadline",
+              "definition": "the final date or time to finish something",
+              "explanation": "A deadline is connected to time management."
+            },
+            {
+              "word": "supervisor",
+              "definition": "a person who manages workers",
+              "explanation": "A supervisor gives instructions and checks work."
+            },
+            {
+              "word": "clarify",
+              "definition": "to make something clearer",
+              "explanation": "You clarify when information is confusing."
+            },
+            {
+              "word": "feedback",
+              "definition": "comments that help someone improve",
+              "explanation": "Feedback explains what was good and what should change."
+            },
+            {
+              "word": "prioritize",
+              "definition": "to decide what is most important",
+              "explanation": "People prioritize when they cannot do everything at once."
+            }
+          ]
+        },
+        {
+          "id": "workplace_communication_scenario",
+          "type": "interactive_scenario_case_study",
+          "title": "Professional Response Scenario",
+          "difficulty": "B2",
+          "skillFocus": [
+            "Speaking",
+            "Writing",
+            "Vocabulary",
+            "Problem Solving"
+          ],
+          "platformInteraction": "scenario_card_plus_text_area",
+          "instructions": "Read the situation and write a response. Use clear, polite, B2-level English.",
+          "scenario": "Your supervisor asks why a report was not finished by the deadline. You had a technical issue, but you also forgot to update your colleague.",
+          "task": "Write a professional response explaining the issue and what you will do next.",
+          "targetVocabulary": [
+            "deadline",
+            "issue",
+            "communicate",
+            "update",
+            "prioritize",
+            "shift"
+          ],
+          "modelResponse": "I apologize for missing the deadline. There was a technical issue with the system, but I should have communicated the problem earlier. I will update my colleague now, prioritize the report, and send the final version by the end of the shift.",
+          "explanation": "The model response gives a clear statement, reason, and support. It also uses topic vocabulary naturally instead of listing words randomly."
+        },
+        {
+          "id": "workplace_communication_true_false",
+          "type": "true_false_with_explanation",
+          "title": "Workplace Meaning Check",
+          "difficulty": "B2",
+          "skillFocus": [
+            "Vocabulary",
+            "Reasoning"
+          ],
+          "platformInteraction": "true_false_toggle_plus_textbox",
+          "instructions": "Decide if each statement is true or false. Then explain your answer in one short sentence.",
+          "items": [
+            {
+              "id": "q1",
+              "statement": "If a person is reliable, coworkers can usually depend on them.",
+              "correctAnswer": true,
+              "modelExplanation": "Reliable means trustworthy or dependable.",
+              "explanation": "Correct. A reliable person can be trusted to do what they promise."
+            },
+            {
+              "id": "q2",
+              "statement": "To resolve an issue means to make it more confusing.",
+              "correctAnswer": false,
+              "modelExplanation": "Resolve means solve a problem.",
+              "explanation": "Incorrect meaning. 'Resolve' means find a solution."
+            },
+            {
+              "id": "q3",
+              "statement": "A request is usually more polite than a demand.",
+              "correctAnswer": true,
+              "modelExplanation": "A request is something you ask for politely.",
+              "explanation": "Correct. Requests are generally polite or formal."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "education_learning",
+      "title": "Education and Learning",
+      "levelRange": "B1-B2+",
+      "targetVocabulary": [
+        {
+          "word": "assignment",
+          "partOfSpeech": "noun",
+          "definition": "a piece of schoolwork or work task"
+        },
+        {
+          "word": "lecture",
+          "partOfSpeech": "noun",
+          "definition": "a formal talk given to teach people about a subject"
+        },
+        {
+          "word": "participate",
+          "partOfSpeech": "verb",
+          "definition": "to take part in an activity"
+        },
+        {
+          "word": "improve",
+          "partOfSpeech": "verb",
+          "definition": "to make something better"
+        },
+        {
+          "word": "academic",
+          "partOfSpeech": "adjective",
+          "definition": "related to school, college, or study"
+        },
+        {
+          "word": "skill",
+          "partOfSpeech": "noun",
+          "definition": "an ability to do something well"
+        },
+        {
+          "word": "strategy",
+          "partOfSpeech": "noun",
+          "definition": "a plan used to achieve a goal"
+        },
+        {
+          "word": "evaluate",
+          "partOfSpeech": "verb",
+          "definition": "to judge or measure the quality of something"
+        },
+        {
+          "word": "requirement",
+          "partOfSpeech": "noun",
+          "definition": "something that is needed or demanded"
+        },
+        {
+          "word": "independent",
+          "partOfSpeech": "adjective",
+          "definition": "able to do things without much help"
+        },
+        {
+          "word": "challenge",
+          "partOfSpeech": "noun",
+          "definition": "something difficult that tests your ability"
+        },
+        {
+          "word": "progress",
+          "partOfSpeech": "noun",
+          "definition": "improvement over time"
+        },
+        {
+          "word": "concentrate",
+          "partOfSpeech": "verb",
+          "definition": "to give full attention to something"
+        },
+        {
+          "word": "research",
+          "partOfSpeech": "noun",
+          "definition": "careful study to discover information"
+        },
+        {
+          "word": "organize",
+          "partOfSpeech": "verb",
+          "definition": "to arrange ideas or things clearly"
+        },
+        {
+          "word": "relevant",
+          "partOfSpeech": "adjective",
+          "definition": "connected to the topic or situation"
+        },
+        {
+          "word": "effective",
+          "partOfSpeech": "adjective",
+          "definition": "successful in producing a good result"
+        },
+        {
+          "word": "method",
+          "partOfSpeech": "noun",
+          "definition": "a way of doing something"
+        },
+        {
+          "word": "achieve",
+          "partOfSpeech": "verb",
+          "definition": "to successfully reach a goal"
+        },
+        {
+          "word": "explanation",
+          "partOfSpeech": "noun",
+          "definition": "a statement that makes something clear"
+        }
+      ],
+      "learningObjectives": [
+        "Use vocabulary related to studying, courses, and progress.",
+        "Explain learning strategies and academic challenges.",
+        "Build MET-style answers about education and personal development."
+      ],
+      "exerciseCount": 3,
+      "exercises": [
+        {
+          "id": "education_learning_mc",
+          "type": "multiple_choice_single",
+          "title": "Education Vocabulary in Context",
+          "difficulty": "B1-B2",
+          "skillFocus": [
+            "Vocabulary",
+            "Reading"
+          ],
+          "platformInteraction": "radio_buttons",
+          "instructions": "Choose the best answer.",
+          "items": [
+            {
+              "id": "q1",
+              "prompt": "A useful reading ______ is to look for the main idea before reading every detail.",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "strategy"
+                },
+                {
+                  "id": "B",
+                  "text": "requirement"
+                },
+                {
+                  "id": "C",
+                  "text": "challenge"
+                },
+                {
+                  "id": "D",
+                  "text": "lecture"
+                }
+              ],
+              "correctOptionIds": [
+                "A"
+              ],
+              "explanation": "'Strategy' means a plan used to reach a goal."
+            },
+            {
+              "id": "q2",
+              "prompt": "Students should ______ in class discussions to practice speaking.",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "evaluate"
+                },
+                {
+                  "id": "B",
+                  "text": "participate"
+                },
+                {
+                  "id": "C",
+                  "text": "concentrate"
+                },
+                {
+                  "id": "D",
+                  "text": "organize"
+                }
+              ],
+              "correctOptionIds": [
+                "B"
+              ],
+              "explanation": "'Participate' means take part in an activity."
+            },
+            {
+              "id": "q3",
+              "prompt": "The teacher gave a clear ______ of the grammar rule.",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "progress"
+                },
+                {
+                  "id": "B",
+                  "text": "method"
+                },
+                {
+                  "id": "C",
+                  "text": "explanation"
+                },
+                {
+                  "id": "D",
+                  "text": "research"
+                }
+              ],
+              "correctOptionIds": [
+                "C"
+              ],
+              "explanation": "'Explanation' means a statement that makes something clear."
+            }
+          ]
+        },
+        {
+          "id": "education_learning_ordering",
+          "type": "ordering_sequencing",
+          "title": "Organize a MET Writing Answer",
+          "difficulty": "B2",
+          "skillFocus": [
+            "Writing Organization",
+            "Speaking Organization"
+          ],
+          "platformInteraction": "drag_to_order",
+          "instructions": "Put the sentences in the best logical order.",
+          "items": [
+            {
+              "id": "q1",
+              "prompt": "Order this answer about online learning.",
+              "sentences": [
+                {
+                  "id": "A",
+                  "text": "For example, working adults can study at night after their shifts."
+                },
+                {
+                  "id": "B",
+                  "text": "Online learning can be effective for many students."
+                },
+                {
+                  "id": "C",
+                  "text": "This flexibility helps independent learners make progress."
+                },
+                {
+                  "id": "D",
+                  "text": "One reason is that students can choose a convenient schedule."
+                }
+              ],
+              "correctOrder": [
+                "B",
+                "D",
+                "A",
+                "C"
+              ],
+              "explanation": "The best order is statement, reason, example, conclusion."
+            }
+          ]
+        },
+        {
+          "id": "education_learning_quick_fire",
+          "type": "timed_quick_fire",
+          "title": "Education Quick Recall",
+          "difficulty": "B1-B2",
+          "skillFocus": [
+            "Vocabulary Recall"
+          ],
+          "platformInteraction": "timer_plus_short_answer",
+          "instructions": "Answer each item quickly. Suggested time: 20 seconds per item.",
+          "timeLimitSecondsPerItem": 20,
+          "items": [
+            {
+              "id": "q1",
+              "prompt": "Word for a piece of schoolwork:",
+              "correctAnswer": "assignment",
+              "acceptedAnswers": [
+                "assignment"
+              ],
+              "explanation": "An assignment is schoolwork or a task."
+            },
+            {
+              "id": "q2",
+              "prompt": "Word for improvement over time:",
+              "correctAnswer": "progress",
+              "acceptedAnswers": [
+                "progress"
+              ],
+              "explanation": "Progress means improvement over time."
+            },
+            {
+              "id": "q3",
+              "prompt": "Verb meaning to judge or measure quality:",
+              "correctAnswer": "evaluate",
+              "acceptedAnswers": [
+                "evaluate"
+              ],
+              "explanation": "Evaluate means judge or measure quality."
+            },
+            {
+              "id": "q4",
+              "prompt": "Adjective meaning connected to the topic:",
+              "correctAnswer": "relevant",
+              "acceptedAnswers": [
+                "relevant"
+              ],
+              "explanation": "Relevant means connected to the topic."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "technology_work_study",
+      "title": "Technology in Work and Study",
+      "levelRange": "B1-B2+",
+      "targetVocabulary": [
+        {
+          "word": "device",
+          "partOfSpeech": "noun",
+          "definition": "a machine or tool, especially electronic"
+        },
+        {
+          "word": "access",
+          "partOfSpeech": "noun",
+          "definition": "the ability to use or enter something"
+        },
+        {
+          "word": "digital",
+          "partOfSpeech": "adjective",
+          "definition": "related to computers or electronic technology"
+        },
+        {
+          "word": "convenient",
+          "partOfSpeech": "adjective",
+          "definition": "easy and useful for a situation"
+        },
+        {
+          "word": "reliable",
+          "partOfSpeech": "adjective",
+          "definition": "able to be trusted or depended on"
+        },
+        {
+          "word": "efficient",
+          "partOfSpeech": "adjective",
+          "definition": "working well without wasting time or energy"
+        },
+        {
+          "word": "privacy",
+          "partOfSpeech": "noun",
+          "definition": "the right to keep personal information secret"
+        },
+        {
+          "word": "update",
+          "partOfSpeech": "noun/verb",
+          "definition": "new information or to add new information"
+        },
+        {
+          "word": "platform",
+          "partOfSpeech": "noun",
+          "definition": "a website or system used for a specific purpose"
+        },
+        {
+          "word": "communicate",
+          "partOfSpeech": "verb",
+          "definition": "to share information, ideas, or feelings"
+        },
+        {
+          "word": "automatic",
+          "partOfSpeech": "adjective",
+          "definition": "working by itself without direct human control"
+        },
+        {
+          "word": "replace",
+          "partOfSpeech": "verb",
+          "definition": "to take the place of something or someone"
+        },
+        {
+          "word": "advantage",
+          "partOfSpeech": "noun",
+          "definition": "a good point or benefit"
+        },
+        {
+          "word": "disadvantage",
+          "partOfSpeech": "noun",
+          "definition": "a problem or negative point"
+        },
+        {
+          "word": "distraction",
+          "partOfSpeech": "noun",
+          "definition": "something that takes your attention away"
+        },
+        {
+          "word": "information",
+          "partOfSpeech": "noun",
+          "definition": "facts or knowledge about something"
+        },
+        {
+          "word": "resource",
+          "partOfSpeech": "noun",
+          "definition": "something useful that people can use"
+        },
+        {
+          "word": "security",
+          "partOfSpeech": "noun",
+          "definition": "protection from danger, crime, or data loss"
+        },
+        {
+          "word": "virtual",
+          "partOfSpeech": "adjective",
+          "definition": "existing online instead of in person"
+        },
+        {
+          "word": "connect",
+          "partOfSpeech": "verb",
+          "definition": "to join or communicate with someone or something"
+        }
+      ],
+      "learningObjectives": [
+        "Use vocabulary about digital tools, online learning, and privacy.",
+        "Compare advantages and disadvantages of technology.",
+        "Explain how technology affects work and study."
+      ],
+      "exerciseCount": 3,
+      "exercises": [
+        {
+          "id": "technology_work_study_fill_blank",
+          "type": "fill_in_the_blank",
+          "title": "Technology at Work and Study",
+          "difficulty": "B1-B2",
+          "skillFocus": [
+            "Vocabulary",
+            "Grammar in Context"
+          ],
+          "platformInteraction": "text_input_or_dropdown",
+          "instructions": "Complete each sentence with one word from the word bank.",
+          "wordBank": [
+            "platform",
+            "privacy",
+            "distraction",
+            "reliable",
+            "virtual"
+          ],
+          "items": [
+            {
+              "id": "q1",
+              "sentence": "The school uses an online ______ for homework and feedback.",
+              "correctAnswer": "platform",
+              "explanation": "A platform is a website or system used for a specific purpose."
+            },
+            {
+              "id": "q2",
+              "sentence": "Students need a ______ internet connection for online classes.",
+              "correctAnswer": "reliable",
+              "explanation": "'Reliable' means able to be trusted or depended on."
+            },
+            {
+              "id": "q3",
+              "sentence": "Social media can be a serious ______ while studying.",
+              "correctAnswer": "distraction",
+              "explanation": "A distraction takes your attention away."
+            },
+            {
+              "id": "q4",
+              "sentence": "Hospitals must protect patient ______ when using digital tools.",
+              "correctAnswer": "privacy",
+              "explanation": "Privacy is the right to keep personal information secret."
+            },
+            {
+              "id": "q5",
+              "sentence": "A ______ meeting happens online, not in person.",
+              "correctAnswer": "virtual",
+              "explanation": "Virtual means existing online instead of physically."
+            }
+          ]
+        },
+        {
+          "id": "technology_work_study_true_false",
+          "type": "true_false_with_explanation",
+          "title": "Technology: Advantage or Problem?",
+          "difficulty": "B2",
+          "skillFocus": [
+            "Vocabulary",
+            "Reasoning"
+          ],
+          "platformInteraction": "true_false_toggle_plus_textbox",
+          "instructions": "Decide if each statement is true or false. Then explain your answer in one short sentence.",
+          "items": [
+            {
+              "id": "q1",
+              "statement": "A disadvantage is a negative point or problem.",
+              "correctAnswer": true,
+              "modelExplanation": "A disadvantage is something bad about a choice.",
+              "explanation": "Correct. It contrasts with advantage."
+            },
+            {
+              "id": "q2",
+              "statement": "Security is not important when people use online platforms.",
+              "correctAnswer": false,
+              "modelExplanation": "Security protects people and data online.",
+              "explanation": "False. Security is very important for digital systems."
+            },
+            {
+              "id": "q3",
+              "statement": "A device can be a phone, tablet, or computer.",
+              "correctAnswer": true,
+              "modelExplanation": "A device is an electronic tool or machine.",
+              "explanation": "Correct. These are common examples of devices."
+            }
+          ]
+        },
+        {
+          "id": "technology_work_study_short_answer",
+          "type": "short_answer_reflection",
+          "title": "MET-Style Opinion: Technology",
+          "difficulty": "B2+",
+          "skillFocus": [
+            "Writing",
+            "Vocabulary",
+            "MET Speaking/Writing Support"
+          ],
+          "platformInteraction": "text_area",
+          "instructions": "Answer in 3–5 sentences. Use at least three target vocabulary words.",
+          "prompt": "Has technology made studying easier or more difficult? Explain both sides and give your opinion.",
+          "modelResponse": "Technology has made studying easier in many ways because students have quick access to resources, videos, and virtual classes. However, it can also create distractions, especially when students use social media during study time. In my opinion, technology is helpful if learners use reliable platforms and manage their time carefully.",
+          "successCriteria": [
+            "Clear opinion",
+            "Mentions both advantage and disadvantage",
+            "Uses at least three technology words",
+            "Includes support/example"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "community_transportation",
+      "title": "Community and Transportation",
+      "levelRange": "B1-B2+",
+      "targetVocabulary": [
+        {
+          "word": "community",
+          "partOfSpeech": "noun",
+          "definition": "a group of people living in the same area or sharing something"
+        },
+        {
+          "word": "neighborhood",
+          "partOfSpeech": "noun",
+          "definition": "an area of a town or city where people live"
+        },
+        {
+          "word": "transportation",
+          "partOfSpeech": "noun",
+          "definition": "ways of moving people or goods from one place to another"
+        },
+        {
+          "word": "traffic",
+          "partOfSpeech": "noun",
+          "definition": "cars, buses, and other vehicles on the road"
+        },
+        {
+          "word": "commute",
+          "partOfSpeech": "verb",
+          "definition": "to travel regularly between home and work or school"
+        },
+        {
+          "word": "facility",
+          "partOfSpeech": "noun",
+          "definition": "a place, building, or service used for a specific purpose"
+        },
+        {
+          "word": "public",
+          "partOfSpeech": "adjective",
+          "definition": "available for everyone to use"
+        },
+        {
+          "word": "improve",
+          "partOfSpeech": "verb",
+          "definition": "to make something better"
+        },
+        {
+          "word": "expand",
+          "partOfSpeech": "verb",
+          "definition": "to make something larger or more complete"
+        },
+        {
+          "word": "resident",
+          "partOfSpeech": "noun",
+          "definition": "a person who lives in a particular place"
+        },
+        {
+          "word": "local",
+          "partOfSpeech": "adjective",
+          "definition": "related to a particular area or community"
+        },
+        {
+          "word": "safety",
+          "partOfSpeech": "noun",
+          "definition": "protection from danger or harm"
+        },
+        {
+          "word": "crowded",
+          "partOfSpeech": "adjective",
+          "definition": "full of too many people or things"
+        },
+        {
+          "word": "solution",
+          "partOfSpeech": "noun",
+          "definition": "a way to solve a problem"
+        },
+        {
+          "word": "construction",
+          "partOfSpeech": "noun",
+          "definition": "the process of building something"
+        },
+        {
+          "word": "pedestrian",
+          "partOfSpeech": "noun",
+          "definition": "a person walking, especially near roads"
+        },
+        {
+          "word": "route",
+          "partOfSpeech": "noun",
+          "definition": "the way from one place to another"
+        },
+        {
+          "word": "accessible",
+          "partOfSpeech": "adjective",
+          "definition": "easy to reach, use, or enter"
+        },
+        {
+          "word": "urban",
+          "partOfSpeech": "adjective",
+          "definition": "related to cities"
+        }
+      ],
+      "learningObjectives": [
+        "Use vocabulary for city life, transportation, and local problems.",
+        "Discuss solutions to community issues.",
+        "Practice giving opinions about public decisions."
+      ],
+      "exerciseCount": 3,
+      "exercises": [
+        {
+          "id": "community_transportation_mc",
+          "type": "multiple_choice_single",
+          "title": "City Problems and Solutions",
+          "difficulty": "B1-B2",
+          "skillFocus": [
+            "Vocabulary",
+            "Reading"
+          ],
+          "platformInteraction": "radio_buttons",
+          "instructions": "Choose the best answer.",
+          "items": [
+            {
+              "id": "q1",
+              "prompt": "Many ______ complained that the road construction was too noisy.",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "residents"
+                },
+                {
+                  "id": "B",
+                  "text": "routes"
+                },
+                {
+                  "id": "C",
+                  "text": "facilities"
+                },
+                {
+                  "id": "D",
+                  "text": "pedestrians"
+                }
+              ],
+              "correctOptionIds": [
+                "A"
+              ],
+              "explanation": "Residents are people who live in a particular area."
+            },
+            {
+              "id": "q2",
+              "prompt": "The city wants to ______ the subway system to reach more neighborhoods.",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "commute"
+                },
+                {
+                  "id": "B",
+                  "text": "expand"
+                },
+                {
+                  "id": "C",
+                  "text": "crowd"
+                },
+                {
+                  "id": "D",
+                  "text": "construct"
+                }
+              ],
+              "correctOptionIds": [
+                "B"
+              ],
+              "explanation": "'Expand' means make something larger or more complete."
+            },
+            {
+              "id": "q3",
+              "prompt": "More street lights could improve ______ at night.",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "traffic"
+                },
+                {
+                  "id": "B",
+                  "text": "urban"
+                },
+                {
+                  "id": "C",
+                  "text": "safety"
+                },
+                {
+                  "id": "D",
+                  "text": "route"
+                }
+              ],
+              "correctOptionIds": [
+                "C"
+              ],
+              "explanation": "Safety means protection from danger or harm."
+            }
+          ]
+        },
+        {
+          "id": "community_transportation_scenario",
+          "type": "interactive_scenario_case_study",
+          "title": "Public Decision Scenario",
+          "difficulty": "B2+",
+          "skillFocus": [
+            "Speaking",
+            "Writing",
+            "Vocabulary",
+            "Problem Solving"
+          ],
+          "platformInteraction": "scenario_card_plus_text_area",
+          "instructions": "Read the situation and write a response. Use clear, polite, B2-level English.",
+          "scenario": "Your city government wants to build a new bus route near your neighborhood. Some residents support it, but others worry about noise and construction.",
+          "task": "Write a short response to a city official. Say if you support the plan and explain why.",
+          "targetVocabulary": [
+            "route",
+            "transportation",
+            "accessible",
+            "residents",
+            "construction",
+            "community",
+            "traffic"
+          ],
+          "modelResponse": "I support the new bus route because it would make transportation more accessible for residents who do not drive. Although construction may cause temporary noise, the long-term benefit is stronger than the inconvenience. A better public route could reduce traffic and help the whole community.",
+          "explanation": "The model response gives a clear statement, reason, and support. It also uses topic vocabulary naturally instead of listing words randomly."
+        },
+        {
+          "id": "community_transportation_ordering",
+          "type": "ordering_sequencing",
+          "title": "Problem-Solution Order",
+          "difficulty": "B2",
+          "skillFocus": [
+            "Writing Organization",
+            "Speaking Organization"
+          ],
+          "platformInteraction": "drag_to_order",
+          "instructions": "Put the sentences in the best logical order.",
+          "items": [
+            {
+              "id": "q1",
+              "prompt": "Order this paragraph about traffic.",
+              "sentences": [
+                {
+                  "id": "A",
+                  "text": "For example, more buses would give residents an alternative to driving."
+                },
+                {
+                  "id": "B",
+                  "text": "One solution is to improve public transportation."
+                },
+                {
+                  "id": "C",
+                  "text": "Traffic is a serious problem in many urban areas."
+                },
+                {
+                  "id": "D",
+                  "text": "As a result, roads could become less crowded during rush hour."
+                }
+              ],
+              "correctOrder": [
+                "C",
+                "B",
+                "A",
+                "D"
+              ],
+              "explanation": "The answer moves from problem to solution, example, and result."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "food_family_restaurants_routines",
+      "title": "Food, Family, Restaurants, and Routines",
+      "levelRange": "B1-B2+",
+      "targetVocabulary": [
+        {
+          "word": "meal",
+          "partOfSpeech": "noun",
+          "definition": "food eaten at a regular time"
+        },
+        {
+          "word": "homemade",
+          "partOfSpeech": "adjective",
+          "definition": "made at home instead of bought from a store"
+        },
+        {
+          "word": "ingredient",
+          "partOfSpeech": "noun",
+          "definition": "one of the foods used to make a dish"
+        },
+        {
+          "word": "portion",
+          "partOfSpeech": "noun",
+          "definition": "the amount of food served to one person"
+        },
+        {
+          "word": "nutritious",
+          "partOfSpeech": "adjective",
+          "definition": "containing substances that help the body stay healthy"
+        },
+        {
+          "word": "appetite",
+          "partOfSpeech": "noun",
+          "definition": "the feeling of wanting to eat"
+        },
+        {
+          "word": "diet",
+          "partOfSpeech": "noun",
+          "definition": "the food a person usually eats"
+        },
+        {
+          "word": "tradition",
+          "partOfSpeech": "noun",
+          "definition": "a custom or habit passed from one generation to another"
+        },
+        {
+          "word": "gather",
+          "partOfSpeech": "verb",
+          "definition": "to come together in one place"
+        },
+        {
+          "word": "prepare",
+          "partOfSpeech": "verb",
+          "definition": "to make something ready"
+        },
+        {
+          "word": "serve",
+          "partOfSpeech": "verb",
+          "definition": "to give food or drinks to someone"
+        },
+        {
+          "word": "recommend",
+          "partOfSpeech": "verb",
+          "definition": "to suggest something because it is good"
+        },
+        {
+          "word": "flavor",
+          "partOfSpeech": "noun",
+          "definition": "the taste of food or drink"
+        },
+        {
+          "word": "casual",
+          "partOfSpeech": "adjective",
+          "definition": "relaxed and informal"
+        },
+        {
+          "word": "atmosphere",
+          "partOfSpeech": "noun",
+          "definition": "the feeling or mood of a place"
+        },
+        {
+          "word": "reservation",
+          "partOfSpeech": "noun",
+          "definition": "an arrangement to keep a table, room, or seat for someone"
+        },
+        {
+          "word": "routine",
+          "partOfSpeech": "noun",
+          "definition": "a regular way of doing things"
+        },
+        {
+          "word": "habit",
+          "partOfSpeech": "noun",
+          "definition": "something you do often, usually without thinking"
+        },
+        {
+          "word": "occasion",
+          "partOfSpeech": "noun",
+          "definition": "a special time or event"
+        },
+        {
+          "word": "preference",
+          "partOfSpeech": "noun",
+          "definition": "a choice or liking for one thing more than another"
+        }
+      ],
+      "learningObjectives": [
+        "Use vocabulary about meals, routines, restaurants, and traditions.",
+        "Describe personal experiences clearly.",
+        "Compare preferences using reasons and examples."
+      ],
+      "exerciseCount": 3,
+      "exercises": [
+        {
+          "id": "food_family_restaurants_routines_matching",
+          "type": "drag_and_drop_matching",
+          "title": "Food and Routine Match",
+          "difficulty": "B1-B2",
+          "skillFocus": [
+            "Vocabulary"
+          ],
+          "platformInteraction": "drag_and_drop",
+          "instructions": "Match each word to the correct definition.",
+          "pairs": [
+            {
+              "word": "ingredient",
+              "definition": "one food used to make a dish",
+              "explanation": "Ingredients are parts of a recipe."
+            },
+            {
+              "word": "reservation",
+              "definition": "an arrangement to keep a table or seat",
+              "explanation": "You make a reservation before going to some restaurants."
+            },
+            {
+              "word": "atmosphere",
+              "definition": "the feeling or mood of a place",
+              "explanation": "Atmosphere describes how a place feels."
+            },
+            {
+              "word": "preference",
+              "definition": "a choice or liking for one thing more than another",
+              "explanation": "Preference explains what someone likes more."
+            },
+            {
+              "word": "occasion",
+              "definition": "a special time or event",
+              "explanation": "Birthdays and celebrations are occasions."
+            }
+          ]
+        },
+        {
+          "id": "food_family_restaurants_routines_fill_blank",
+          "type": "fill_in_the_blank",
+          "title": "Restaurant Review Words",
+          "difficulty": "B1-B2",
+          "skillFocus": [
+            "Vocabulary",
+            "Grammar in Context"
+          ],
+          "platformInteraction": "text_input_or_dropdown",
+          "instructions": "Complete each sentence with one word from the word bank.",
+          "wordBank": [
+            "flavor",
+            "portion",
+            "casual",
+            "homemade",
+            "recommend"
+          ],
+          "items": [
+            {
+              "id": "q1",
+              "sentence": "The soup had a rich ______ because it used fresh herbs.",
+              "correctAnswer": "flavor",
+              "explanation": "Flavor means the taste of food or drink."
+            },
+            {
+              "id": "q2",
+              "sentence": "The restaurant had a relaxed and ______ atmosphere.",
+              "correctAnswer": "casual",
+              "explanation": "Casual means relaxed and informal."
+            },
+            {
+              "id": "q3",
+              "sentence": "The ______ was large enough for two people.",
+              "correctAnswer": "portion",
+              "explanation": "A portion is an amount of food served to one person."
+            },
+            {
+              "id": "q4",
+              "sentence": "I would ______ this place to anyone who likes traditional food.",
+              "correctAnswer": "recommend",
+              "explanation": "Recommend means suggest something because it is good."
+            },
+            {
+              "id": "q5",
+              "sentence": "My grandmother prefers ______ meals instead of restaurant food.",
+              "correctAnswer": "homemade",
+              "explanation": "Homemade means made at home."
+            }
+          ]
+        },
+        {
+          "id": "food_family_restaurants_routines_short_answer",
+          "type": "short_answer_reflection",
+          "title": "MET Personal Experience: Meal",
+          "difficulty": "B1-B2",
+          "skillFocus": [
+            "Writing",
+            "Vocabulary",
+            "MET Speaking/Writing Support"
+          ],
+          "platformInteraction": "text_area",
+          "instructions": "Answer in 3–5 sentences. Use at least three target vocabulary words.",
+          "prompt": "Describe a memorable meal you had with family or friends. Where were you, and why was it special?",
+          "modelResponse": "One memorable meal was a homemade dinner with my family on my birthday. Everyone gathered at my grandmother’s house, and she prepared my favorite dish. The atmosphere was warm and casual, so the occasion felt very special.",
+          "successCriteria": [
+            "Clear description",
+            "Personal detail",
+            "At least three target words",
+            "Simple past used correctly"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "environment",
+      "title": "Environment",
+      "levelRange": "B1-B2+",
+      "targetVocabulary": [
+        {
+          "word": "pollution",
+          "partOfSpeech": "noun",
+          "definition": "harmful substances in the air, water, or land"
+        },
+        {
+          "word": "recycle",
+          "partOfSpeech": "verb",
+          "definition": "to use old materials again instead of throwing them away"
+        },
+        {
+          "word": "waste",
+          "partOfSpeech": "noun",
+          "definition": "materials that are thrown away"
+        },
+        {
+          "word": "reduce",
+          "partOfSpeech": "verb",
+          "definition": "to make something smaller or less serious"
+        },
+        {
+          "word": "protect",
+          "partOfSpeech": "verb",
+          "definition": "to keep something safe from harm"
+        },
+        {
+          "word": "resource",
+          "partOfSpeech": "noun",
+          "definition": "something useful that people can use"
+        },
+        {
+          "word": "climate",
+          "partOfSpeech": "noun",
+          "definition": "the usual weather conditions in a place over time"
+        },
+        {
+          "word": "sustainable",
+          "partOfSpeech": "adjective",
+          "definition": "able to continue without damaging the environment"
+        },
+        {
+          "word": "energy",
+          "partOfSpeech": "noun",
+          "definition": "power used to make things work"
+        },
+        {
+          "word": "conserve",
+          "partOfSpeech": "verb",
+          "definition": "to use something carefully so it is not wasted"
+        },
+        {
+          "word": "harmful",
+          "partOfSpeech": "adjective",
+          "definition": "causing damage or problems"
+        },
+        {
+          "word": "natural",
+          "partOfSpeech": "adjective",
+          "definition": "coming from nature, not made by humans"
+        },
+        {
+          "word": "wildlife",
+          "partOfSpeech": "noun",
+          "definition": "animals and plants living in nature"
+        },
+        {
+          "word": "environment",
+          "partOfSpeech": "noun",
+          "definition": "the natural world around us"
+        },
+        {
+          "word": "responsibility",
+          "partOfSpeech": "noun",
+          "definition": "a duty or task you are expected to do"
+        },
+        {
+          "word": "damage",
+          "partOfSpeech": "noun",
+          "definition": "harm or injury caused to something"
+        },
+        {
+          "word": "solution",
+          "partOfSpeech": "noun",
+          "definition": "a way to solve a problem"
+        },
+        {
+          "word": "renewable",
+          "partOfSpeech": "adjective",
+          "definition": "able to be replaced naturally and used again"
+        },
+        {
+          "word": "consume",
+          "partOfSpeech": "verb",
+          "definition": "to use something such as energy, food, or resources"
+        },
+        {
+          "word": "awareness",
+          "partOfSpeech": "noun",
+          "definition": "knowledge or understanding of a problem"
+        }
+      ],
+      "learningObjectives": [
+        "Use vocabulary about pollution, energy, and environmental responsibility.",
+        "Explain problems and propose solutions.",
+        "Build clear MET-style opinions about public/environmental issues."
+      ],
+      "exerciseCount": 3,
+      "exercises": [
+        {
+          "id": "environment_multi_select",
+          "type": "multiple_choice_multiple",
+          "title": "Environmental Solutions",
+          "difficulty": "B2",
+          "skillFocus": [
+            "Vocabulary",
+            "Critical Thinking"
+          ],
+          "platformInteraction": "checkboxes",
+          "instructions": "Choose all correct answers. More than one answer may be correct.",
+          "items": [
+            {
+              "id": "q1",
+              "prompt": "Which actions can help protect the environment?",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "recycle plastic and paper"
+                },
+                {
+                  "id": "B",
+                  "text": "consume more energy unnecessarily"
+                },
+                {
+                  "id": "C",
+                  "text": "conserve water"
+                },
+                {
+                  "id": "D",
+                  "text": "increase waste"
+                }
+              ],
+              "correctOptionIds": [
+                "A",
+                "C"
+              ],
+              "explanation": "Recycling and conserving water help the environment. Consuming more energy and increasing waste make problems worse."
+            },
+            {
+              "id": "q2",
+              "prompt": "Which words are usually connected to environmental problems?",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "pollution"
+                },
+                {
+                  "id": "B",
+                  "text": "damage"
+                },
+                {
+                  "id": "C",
+                  "text": "renewable"
+                },
+                {
+                  "id": "D",
+                  "text": "waste"
+                }
+              ],
+              "correctOptionIds": [
+                "A",
+                "B",
+                "D"
+              ],
+              "explanation": "Pollution, damage, and waste are problems. Renewable describes energy that can be replaced naturally."
+            }
+          ]
+        },
+        {
+          "id": "environment_fill_blank",
+          "type": "fill_in_the_blank",
+          "title": "Environment Vocabulary in Context",
+          "difficulty": "B1-B2",
+          "skillFocus": [
+            "Vocabulary",
+            "Grammar in Context"
+          ],
+          "platformInteraction": "text_input_or_dropdown",
+          "instructions": "Complete each sentence with one word from the word bank.",
+          "wordBank": [
+            "sustainable",
+            "renewable",
+            "awareness",
+            "pollution",
+            "conserve"
+          ],
+          "items": [
+            {
+              "id": "q1",
+              "sentence": "Solar and wind power are examples of ______ energy.",
+              "correctAnswer": "renewable",
+              "explanation": "Renewable energy can be replaced naturally."
+            },
+            {
+              "id": "q2",
+              "sentence": "Factories can cause air ______ if they release harmful gases.",
+              "correctAnswer": "pollution",
+              "explanation": "Pollution means harmful substances in air, water, or land."
+            },
+            {
+              "id": "q3",
+              "sentence": "Schools can raise environmental ______ through recycling projects.",
+              "correctAnswer": "awareness",
+              "explanation": "Awareness means knowledge or understanding of a problem."
+            },
+            {
+              "id": "q4",
+              "sentence": "People should ______ water during dry seasons.",
+              "correctAnswer": "conserve",
+              "explanation": "Conserve means use carefully so it is not wasted."
+            },
+            {
+              "id": "q5",
+              "sentence": "A ______ solution protects nature and can continue over time.",
+              "correctAnswer": "sustainable",
+              "explanation": "Sustainable means able to continue without damaging the environment."
+            }
+          ]
+        },
+        {
+          "id": "environment_scenario",
+          "type": "interactive_scenario_case_study",
+          "title": "Community Environment Scenario",
+          "difficulty": "B2+",
+          "skillFocus": [
+            "Speaking",
+            "Writing",
+            "Vocabulary",
+            "Problem Solving"
+          ],
+          "platformInteraction": "scenario_card_plus_text_area",
+          "instructions": "Read the situation and write a response. Use clear, polite, B2-level English.",
+          "scenario": "A local park is becoming dirty because visitors leave trash after weekend events.",
+          "task": "Write a proposal with one solution and one reason.",
+          "targetVocabulary": [
+            "recycling",
+            "awareness",
+            "waste",
+            "protect",
+            "responsibility",
+            "community"
+          ],
+          "modelResponse": "One practical solution is to place more recycling bins around the park and add signs to raise awareness. This could reduce waste because visitors would have a clear and convenient place to throw away bottles and paper. Protecting the park is a shared responsibility for the whole community.",
+          "explanation": "The model response gives a clear statement, reason, and support. It also uses topic vocabulary naturally instead of listing words randomly."
+        }
+      ]
+    },
+    {
+      "id": "general_science_discoveries",
+      "title": "General Science and Discoveries",
+      "levelRange": "B1-B2+",
+      "targetVocabulary": [
+        {
+          "word": "discovery",
+          "partOfSpeech": "noun",
+          "definition": "something new that is found or learned"
+        },
+        {
+          "word": "research",
+          "partOfSpeech": "noun",
+          "definition": "careful study to discover information"
+        },
+        {
+          "word": "evidence",
+          "partOfSpeech": "noun",
+          "definition": "facts or information that show something is true"
+        },
+        {
+          "word": "experiment",
+          "partOfSpeech": "noun",
+          "definition": "a test done to learn or prove something"
+        },
+        {
+          "word": "observe",
+          "partOfSpeech": "verb",
+          "definition": "to watch or study something carefully"
+        },
+        {
+          "word": "theory",
+          "partOfSpeech": "noun",
+          "definition": "an explanation based on evidence and study"
+        },
+        {
+          "word": "analyze",
+          "partOfSpeech": "verb",
+          "definition": "to study something carefully to understand it"
+        },
+        {
+          "word": "data",
+          "partOfSpeech": "noun",
+          "definition": "information collected for study or analysis"
+        },
+        {
+          "word": "pattern",
+          "partOfSpeech": "noun",
+          "definition": "a repeated form, behavior, or result"
+        },
+        {
+          "word": "behavior",
+          "partOfSpeech": "noun",
+          "definition": "the way a person, animal, or thing acts"
+        },
+        {
+          "word": "develop",
+          "partOfSpeech": "verb",
+          "definition": "to grow, change, or improve over time"
+        },
+        {
+          "word": "invention",
+          "partOfSpeech": "noun",
+          "definition": "a new machine, tool, or method"
+        },
+        {
+          "word": "investigate",
+          "partOfSpeech": "verb",
+          "definition": "to examine something carefully to find the truth"
+        },
+        {
+          "word": "explain",
+          "partOfSpeech": "verb",
+          "definition": "to make something clear or easy to understand"
+        },
+        {
+          "word": "result",
+          "partOfSpeech": "noun",
+          "definition": "what happens because of an action or process"
+        },
+        {
+          "word": "process",
+          "partOfSpeech": "noun",
+          "definition": "a series of steps or changes"
+        },
+        {
+          "word": "accurate",
+          "partOfSpeech": "adjective",
+          "definition": "correct and exact"
+        },
+        {
+          "word": "significant",
+          "partOfSpeech": "adjective",
+          "definition": "important or large enough to notice"
+        },
+        {
+          "word": "complex",
+          "partOfSpeech": "adjective",
+          "definition": "having many connected parts; not simple"
+        },
+        {
+          "word": "predict",
+          "partOfSpeech": "verb",
+          "definition": "to say what will probably happen in the future"
+        }
+      ],
+      "learningObjectives": [
+        "Use general science vocabulary in non-specialist contexts.",
+        "Identify evidence, results, processes, and patterns.",
+        "Practice reading-style vocabulary in context."
+      ],
+      "exerciseCount": 3,
+      "exercises": [
+        {
+          "id": "general_science_discoveries_matching",
+          "type": "drag_and_drop_matching",
+          "title": "Science Vocabulary Match",
+          "difficulty": "B2",
+          "skillFocus": [
+            "Vocabulary"
+          ],
+          "platformInteraction": "drag_and_drop",
+          "instructions": "Match each word to the correct definition.",
+          "pairs": [
+            {
+              "word": "evidence",
+              "definition": "facts that show something is true",
+              "explanation": "Evidence supports an idea or conclusion."
+            },
+            {
+              "word": "experiment",
+              "definition": "a test done to learn or prove something",
+              "explanation": "Experiments help researchers test ideas."
+            },
+            {
+              "word": "analyze",
+              "definition": "to study carefully to understand",
+              "explanation": "Scientists analyze data after collecting it."
+            },
+            {
+              "word": "pattern",
+              "definition": "a repeated form, behavior, or result",
+              "explanation": "A pattern can show how something usually happens."
+            },
+            {
+              "word": "predict",
+              "definition": "to say what will probably happen",
+              "explanation": "Scientists predict based on evidence and data."
+            }
+          ]
+        },
+        {
+          "id": "general_science_discoveries_mc",
+          "type": "multiple_choice_single",
+          "title": "Research Words in Context",
+          "difficulty": "B2",
+          "skillFocus": [
+            "Vocabulary",
+            "Reading"
+          ],
+          "platformInteraction": "radio_buttons",
+          "instructions": "Choose the best answer.",
+          "items": [
+            {
+              "id": "q1",
+              "prompt": "The researchers collected ______ from 500 participants.",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "data"
+                },
+                {
+                  "id": "B",
+                  "text": "theory"
+                },
+                {
+                  "id": "C",
+                  "text": "invention"
+                },
+                {
+                  "id": "D",
+                  "text": "behavior"
+                }
+              ],
+              "correctOptionIds": [
+                "A"
+              ],
+              "explanation": "Data is information collected for study or analysis."
+            },
+            {
+              "id": "q2",
+              "prompt": "The results showed a ______ improvement in memory after the training.",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "complex"
+                },
+                {
+                  "id": "B",
+                  "text": "significant"
+                },
+                {
+                  "id": "C",
+                  "text": "accurate"
+                },
+                {
+                  "id": "D",
+                  "text": "natural"
+                }
+              ],
+              "correctOptionIds": [
+                "B"
+              ],
+              "explanation": "Significant means important or large enough to notice."
+            },
+            {
+              "id": "q3",
+              "prompt": "Scientists need to ______ the cause of the problem before suggesting a solution.",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "investigate"
+                },
+                {
+                  "id": "B",
+                  "text": "observe"
+                },
+                {
+                  "id": "C",
+                  "text": "develop"
+                },
+                {
+                  "id": "D",
+                  "text": "explain"
+                }
+              ],
+              "correctOptionIds": [
+                "A"
+              ],
+              "explanation": "Investigate means examine carefully to find the truth."
+            }
+          ]
+        },
+        {
+          "id": "general_science_discoveries_true_false",
+          "type": "true_false_with_explanation",
+          "title": "Science Meaning Check",
+          "difficulty": "B2",
+          "skillFocus": [
+            "Vocabulary",
+            "Reasoning"
+          ],
+          "platformInteraction": "true_false_toggle_plus_textbox",
+          "instructions": "Decide if each statement is true or false. Then explain your answer in one short sentence.",
+          "items": [
+            {
+              "id": "q1",
+              "statement": "A theory is always just a random guess with no evidence.",
+              "correctAnswer": false,
+              "modelExplanation": "A theory should be based on evidence and study.",
+              "explanation": "False. In science, a theory is an explanation supported by evidence."
+            },
+            {
+              "id": "q2",
+              "statement": "If something is complex, it has many connected parts.",
+              "correctAnswer": true,
+              "modelExplanation": "Complex means not simple; it has many parts.",
+              "explanation": "Correct."
+            },
+            {
+              "id": "q3",
+              "statement": "To observe means to ignore something.",
+              "correctAnswer": false,
+              "modelExplanation": "Observe means watch or study carefully.",
+              "explanation": "False. Observe means pay attention carefully."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "customer_service_shopping",
+      "title": "Customer Service and Shopping",
+      "levelRange": "B1-B2+",
+      "targetVocabulary": [
+        {
+          "word": "purchase",
+          "partOfSpeech": "noun",
+          "definition": "something that you buy"
+        },
+        {
+          "word": "customer",
+          "partOfSpeech": "noun",
+          "definition": "a person who buys something from a store or business"
+        },
+        {
+          "word": "service",
+          "partOfSpeech": "noun",
+          "definition": "help or work provided for someone"
+        },
+        {
+          "word": "refund",
+          "partOfSpeech": "noun",
+          "definition": "money returned to a customer"
+        },
+        {
+          "word": "exchange",
+          "partOfSpeech": "verb",
+          "definition": "to return something and get another item instead"
+        },
+        {
+          "word": "receipt",
+          "partOfSpeech": "noun",
+          "definition": "a paper or digital record showing that you paid"
+        },
+        {
+          "word": "product",
+          "partOfSpeech": "noun",
+          "definition": "something made or sold by a company"
+        },
+        {
+          "word": "quality",
+          "partOfSpeech": "noun",
+          "definition": "how good or bad something is"
+        },
+        {
+          "word": "discount",
+          "partOfSpeech": "noun",
+          "definition": "a lower price than usual"
+        },
+        {
+          "word": "advertise",
+          "partOfSpeech": "verb",
+          "definition": "to tell people about a product or service to make them buy it"
+        },
+        {
+          "word": "complain",
+          "partOfSpeech": "verb",
+          "definition": "to say that something is wrong or unsatisfactory"
+        },
+        {
+          "word": "complaint",
+          "partOfSpeech": "noun",
+          "definition": "a statement that something is wrong or bad"
+        },
+        {
+          "word": "available",
+          "partOfSpeech": "adjective",
+          "definition": "ready to be used, bought, or chosen"
+        },
+        {
+          "word": "recommend",
+          "partOfSpeech": "verb",
+          "definition": "to suggest something because it is good"
+        },
+        {
+          "word": "compare",
+          "partOfSpeech": "verb",
+          "definition": "to look at things to see similarities and differences"
+        },
+        {
+          "word": "affordable",
+          "partOfSpeech": "adjective",
+          "definition": "not too expensive"
+        },
+        {
+          "word": "valuable",
+          "partOfSpeech": "adjective",
+          "definition": "useful or worth a lot"
+        },
+        {
+          "word": "deliver",
+          "partOfSpeech": "verb",
+          "definition": "to bring something to a person or place"
+        },
+        {
+          "word": "guarantee",
+          "partOfSpeech": "noun",
+          "definition": "a promise that something will work or be repaired"
+        },
+        {
+          "word": "satisfied",
+          "partOfSpeech": "adjective",
+          "definition": "happy because something was good enough"
+        }
+      ],
+      "learningObjectives": [
+        "Use vocabulary for shopping, complaints, refunds, and service.",
+        "Understand common customer-service scenarios.",
+        "Practice polite problem-solving language."
+      ],
+      "exerciseCount": 3,
+      "exercises": [
+        {
+          "id": "customer_service_shopping_fill_blank",
+          "type": "fill_in_the_blank",
+          "title": "Customer Service in Context",
+          "difficulty": "B1-B2",
+          "skillFocus": [
+            "Vocabulary",
+            "Grammar in Context"
+          ],
+          "platformInteraction": "text_input_or_dropdown",
+          "instructions": "Complete each sentence with one word from the word bank.",
+          "wordBank": [
+            "refund",
+            "receipt",
+            "complaint",
+            "guarantee",
+            "satisfied"
+          ],
+          "items": [
+            {
+              "id": "q1",
+              "sentence": "The customer asked for a ______ because the product was broken.",
+              "correctAnswer": "refund",
+              "explanation": "A refund is money returned to a customer."
+            },
+            {
+              "id": "q2",
+              "sentence": "You usually need a ______ to return an item to the store.",
+              "correctAnswer": "receipt",
+              "explanation": "A receipt is proof that you paid."
+            },
+            {
+              "id": "q3",
+              "sentence": "The phone comes with a one-year ______.",
+              "correctAnswer": "guarantee",
+              "explanation": "A guarantee is a promise that something will work or be repaired."
+            },
+            {
+              "id": "q4",
+              "sentence": "The manager listened carefully to the customer’s ______.",
+              "correctAnswer": "complaint",
+              "explanation": "A complaint is a statement that something is wrong."
+            },
+            {
+              "id": "q5",
+              "sentence": "Most customers were ______ with the fast delivery.",
+              "correctAnswer": "satisfied",
+              "explanation": "Satisfied means happy because something was good enough."
+            }
+          ]
+        },
+        {
+          "id": "customer_service_shopping_scenario",
+          "type": "interactive_scenario_case_study",
+          "title": "Polite Complaint Scenario",
+          "difficulty": "B2",
+          "skillFocus": [
+            "Speaking",
+            "Writing",
+            "Vocabulary",
+            "Problem Solving"
+          ],
+          "platformInteraction": "scenario_card_plus_text_area",
+          "instructions": "Read the situation and write a response. Use clear, polite, B2-level English.",
+          "scenario": "You bought a pair of shoes online, but they arrived in the wrong size. You still have the receipt.",
+          "task": "Write a polite message asking for a solution.",
+          "targetVocabulary": [
+            "purchase",
+            "deliver",
+            "receipt",
+            "exchange",
+            "refund",
+            "procedure"
+          ],
+          "modelResponse": "Hello, I recently made a purchase from your website, but the shoes were delivered in the wrong size. I have the receipt and would like to request an exchange or a refund. Could you please let me know what procedure I should follow?",
+          "explanation": "The model response gives a clear statement, reason, and support. It also uses topic vocabulary naturally instead of listing words randomly."
+        },
+        {
+          "id": "customer_service_shopping_quick_fire",
+          "type": "timed_quick_fire",
+          "title": "Shopping Quick Recall",
+          "difficulty": "B1-B2",
+          "skillFocus": [
+            "Vocabulary Recall"
+          ],
+          "platformInteraction": "timer_plus_short_answer",
+          "instructions": "Answer each item quickly. Suggested time: 20 seconds per item.",
+          "timeLimitSecondsPerItem": 20,
+          "items": [
+            {
+              "id": "q1",
+              "prompt": "Money returned to a customer:",
+              "correctAnswer": "refund",
+              "acceptedAnswers": [
+                "refund"
+              ],
+              "explanation": "A refund is money returned."
+            },
+            {
+              "id": "q2",
+              "prompt": "A lower price than usual:",
+              "correctAnswer": "discount",
+              "acceptedAnswers": [
+                "discount"
+              ],
+              "explanation": "A discount is a price reduction."
+            },
+            {
+              "id": "q3",
+              "prompt": "Something a company sells:",
+              "correctAnswer": "product",
+              "acceptedAnswers": [
+                "product"
+              ],
+              "explanation": "A product is something made or sold."
+            },
+            {
+              "id": "q4",
+              "prompt": "Not too expensive:",
+              "correctAnswer": "affordable",
+              "acceptedAnswers": [
+                "affordable"
+              ],
+              "explanation": "Affordable means reasonably priced."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "travel_culture",
+      "title": "Travel and Culture",
+      "levelRange": "B1-B2+",
+      "targetVocabulary": [
+        {
+          "word": "destination",
+          "partOfSpeech": "noun",
+          "definition": "the place where someone is going"
+        },
+        {
+          "word": "journey",
+          "partOfSpeech": "noun",
+          "definition": "a trip from one place to another"
+        },
+        {
+          "word": "experience",
+          "partOfSpeech": "noun",
+          "definition": "something that happens to you and affects you"
+        },
+        {
+          "word": "explore",
+          "partOfSpeech": "verb",
+          "definition": "to travel around a place to learn about it"
+        },
+        {
+          "word": "culture",
+          "partOfSpeech": "noun",
+          "definition": "the customs, beliefs, art, and way of life of a group of people"
+        },
+        {
+          "word": "tradition",
+          "partOfSpeech": "noun",
+          "definition": "a custom or habit passed from one generation to another"
+        },
+        {
+          "word": "local",
+          "partOfSpeech": "adjective",
+          "definition": "related to a particular area or community"
+        },
+        {
+          "word": "foreign",
+          "partOfSpeech": "adjective",
+          "definition": "from another country"
+        },
+        {
+          "word": "customs",
+          "partOfSpeech": "noun",
+          "definition": "traditional ways of behaving in a society"
+        },
+        {
+          "word": "landmark",
+          "partOfSpeech": "noun",
+          "definition": "a famous building or place"
+        },
+        {
+          "word": "accommodation",
+          "partOfSpeech": "noun",
+          "definition": "a place where travelers stay"
+        },
+        {
+          "word": "itinerary",
+          "partOfSpeech": "noun",
+          "definition": "a plan for a trip, including places and times"
+        },
+        {
+          "word": "crowded",
+          "partOfSpeech": "adjective",
+          "definition": "full of too many people or things"
+        },
+        {
+          "word": "memorable",
+          "partOfSpeech": "adjective",
+          "definition": "easy to remember because it was special"
+        },
+        {
+          "word": "convenient",
+          "partOfSpeech": "adjective",
+          "definition": "easy and useful for a situation"
+        },
+        {
+          "word": "recommend",
+          "partOfSpeech": "verb",
+          "definition": "to suggest something because it is good"
+        },
+        {
+          "word": "compare",
+          "partOfSpeech": "verb",
+          "definition": "to look at things to see similarities and differences"
+        },
+        {
+          "word": "appreciate",
+          "partOfSpeech": "verb",
+          "definition": "to understand the value of something"
+        },
+        {
+          "word": "festival",
+          "partOfSpeech": "noun",
+          "definition": "a special event with music, food, or cultural activities"
+        },
+        {
+          "word": "adapt",
+          "partOfSpeech": "verb",
+          "definition": "to change your behavior to fit a new situation"
+        }
+      ],
+      "learningObjectives": [
+        "Use vocabulary about travel, culture, and experiences.",
+        "Compare cultural habits and travel preferences.",
+        "Describe memorable experiences with clear details."
+      ],
+      "exerciseCount": 3,
+      "exercises": [
+        {
+          "id": "travel_culture_mc",
+          "type": "multiple_choice_single",
+          "title": "Travel Vocabulary in Context",
+          "difficulty": "B1-B2",
+          "skillFocus": [
+            "Vocabulary",
+            "Reading"
+          ],
+          "platformInteraction": "radio_buttons",
+          "instructions": "Choose the best answer.",
+          "items": [
+            {
+              "id": "q1",
+              "prompt": "The museum is the most famous ______ in the city.",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "landmark"
+                },
+                {
+                  "id": "B",
+                  "text": "journey"
+                },
+                {
+                  "id": "C",
+                  "text": "custom"
+                },
+                {
+                  "id": "D",
+                  "text": "accommodation"
+                }
+              ],
+              "correctOptionIds": [
+                "A"
+              ],
+              "explanation": "A landmark is a famous place or building."
+            },
+            {
+              "id": "q2",
+              "prompt": "Our ______ includes two museums, a local market, and a boat tour.",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "destination"
+                },
+                {
+                  "id": "B",
+                  "text": "itinerary"
+                },
+                {
+                  "id": "C",
+                  "text": "festival"
+                },
+                {
+                  "id": "D",
+                  "text": "culture"
+                }
+              ],
+              "correctOptionIds": [
+                "B"
+              ],
+              "explanation": "An itinerary is a plan for a trip."
+            },
+            {
+              "id": "q3",
+              "prompt": "Travelers often need to ______ to different customs.",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "adapt"
+                },
+                {
+                  "id": "B",
+                  "text": "explore"
+                },
+                {
+                  "id": "C",
+                  "text": "compare"
+                },
+                {
+                  "id": "D",
+                  "text": "recommend"
+                }
+              ],
+              "correctOptionIds": [
+                "A"
+              ],
+              "explanation": "Adapt means change your behavior to fit a new situation."
+            }
+          ]
+        },
+        {
+          "id": "travel_culture_ordering",
+          "type": "ordering_sequencing",
+          "title": "Travel Experience Paragraph",
+          "difficulty": "B2",
+          "skillFocus": [
+            "Writing Organization",
+            "Speaking Organization"
+          ],
+          "platformInteraction": "drag_to_order",
+          "instructions": "Put the sentences in the best logical order.",
+          "items": [
+            {
+              "id": "q1",
+              "prompt": "Order this short travel paragraph.",
+              "sentences": [
+                {
+                  "id": "A",
+                  "text": "For example, I tried local food and learned about traditional music."
+                },
+                {
+                  "id": "B",
+                  "text": "The trip helped me appreciate a different culture."
+                },
+                {
+                  "id": "C",
+                  "text": "Last year, I visited a small city that became a memorable destination for me."
+                },
+                {
+                  "id": "D",
+                  "text": "Because of this experience, I became more open to foreign customs."
+                }
+              ],
+              "correctOrder": [
+                "C",
+                "B",
+                "A",
+                "D"
+              ],
+              "explanation": "The paragraph starts with context, then main idea, example, and conclusion."
+            }
+          ]
+        },
+        {
+          "id": "travel_culture_short_answer",
+          "type": "short_answer_reflection",
+          "title": "MET Personal Experience: Travel and Culture",
+          "difficulty": "B2",
+          "skillFocus": [
+            "Writing",
+            "Vocabulary",
+            "MET Speaking/Writing Support"
+          ],
+          "platformInteraction": "text_area",
+          "instructions": "Answer in 3–5 sentences. Use at least three target vocabulary words.",
+          "prompt": "Describe a place you would recommend to a visitor. Explain what makes it interesting.",
+          "modelResponse": "I would recommend my city’s central market because it is a great place to explore local culture. Visitors can try traditional food, talk to local people, and see a famous landmark nearby. The experience is memorable because it shows everyday life, not only tourist attractions.",
+          "successCriteria": [
+            "Clear recommendation",
+            "Reason and example",
+            "At least three target words",
+            "Natural B2 vocabulary"
+          ]
+        }
+      ]
+    }
+  ]
+}

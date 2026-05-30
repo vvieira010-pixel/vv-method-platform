@@ -11,7 +11,7 @@ import { STUDENTS } from '../data/students.jsx';
 const TEACHER_EMAIL = String(import.meta.env.VITE_TEACHER_EMAIL || 'teacher@vvmethod.com').toLowerCase();
 
 const CSS = `
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap');
 
   .login-root {
     min-height: 100dvh; display: grid; grid-template-columns: 1fr 1fr;
@@ -64,7 +64,7 @@ const CSS = `
   .login-role-dot { width: 8px; height: 8px; border-radius: 50%; margin-right: 10px; flex-shrink: 0; }
   .login-role-title { font-size: 15px; font-weight: 700; color: var(--text); display: flex; align-items: center; margin-bottom: 3px; }
   .login-role-desc  { font-size: 12.5px; color: var(--muted); }
-  .login-role-arrow { color: #CBD5E1; transition: color 0.15s; }
+  .login-role-arrow { color: #a8b8c0; transition: color 0.15s; }
   .login-role-card:hover .login-role-arrow { color: var(--primary); }
 
   .login-back-btn {
@@ -99,7 +99,7 @@ const CSS = `
   .login-submit-btn.teacher { background: var(--primary); color: #fff; }
   .login-submit-btn.teacher:hover { background: var(--primary-ink); }
   .login-submit-btn.student { background: var(--accent-deep); color: #fff; }
-  .login-submit-btn.student:hover { background: #060e1c; }
+  .login-submit-btn.student:hover { background: #131a28; }
   .login-hint { font-size: 11.5px; color: var(--muted); text-align: center; margin-top: 12px; }
 `;
 

@@ -4,7 +4,6 @@ import StudentDashboard from './pages/student-dashboard.jsx';
 import ErrorBoundary from './components/error-boundary.jsx';
 import { TweaksPanel, TweakSection, TweakRadio, TweakColor } from './components/tweaks-panel.jsx';
 import { Icon, Avatar, Button, Shell } from './components/shared.jsx';
-import { TeacherUnreadBadge } from './components/message-center.jsx';
 import { STUDENTS } from './data/students.jsx';
 import { seedStudentsIfEmpty, getStudents } from './lib/workflow.js';
 
@@ -23,16 +22,16 @@ const SubmissionReview  = lazy(() => import('./pages/submission-review.jsx'));
 const ErrorBankPage     = lazy(() => import('./pages/error-bank.jsx'));
 const ReportsPage       = lazy(() => import('./pages/reports.jsx'));
 const SettingsPage      = lazy(() => import('./pages/settings.jsx'));
+const InboxPage         = lazy(() => import('./tools/tool-inbox.jsx'));
 
 export default function App() {
   const [auth, setAuth] = useState(null);
   const [view, setView] = useState('dashboard');
   // Sub-view params: { studentId?, classEventId?, diagnosisId?, homeworkId?, submissionId? }
   const [viewParams, setViewParams] = useState({});
-  const [inboxUnread, setInboxUnread] = useState(() => readInboxUnread());
   const [tweaks, setTweaksState] = useState(() => ({
     cardStyle: 'bordered',
-    accent: '#1E4E8C',
+    accent: '#2d8b8b',
     ...window.TWEAK_DEFAULTS,
   }));
   const [students, setStudents] = useState([]);
@@ -62,24 +61,10 @@ export default function App() {
     window.vvGo = (target, params = {}) => {
       setView(target);
       setViewParams(params);
-      if (target === 'inbox') {
-        writeInboxUnread(0);
-        setInboxUnread(0);
-        window.dispatchEvent(new CustomEvent('vv:inbox-unread-changed'));
-      }
     };
     return () => { delete window.vvGo; };
   }, []);
 
-  useEffect(() => {
-    const loadUnread = () => setInboxUnread(readInboxUnread());
-    window.addEventListener('vv:inbox-unread-changed', loadUnread);
-    window.addEventListener('storage', loadUnread);
-    return () => {
-      window.removeEventListener('vv:inbox-unread-changed', loadUnread);
-      window.removeEventListener('storage', loadUnread);
-    };
-  }, []);
 
   const navigate = (target, params = {}) => {
     setView(target);
@@ -116,6 +101,7 @@ export default function App() {
     { id: 'diagnostics',  label: 'Diagnostics',  icon: <Icon.diagnose size={16} /> },
     { id: 'homework',     label: 'Homework',     icon: <Icon.homework size={16} /> },
     { id: 'submissions',  label: 'Submissions',  icon: <Icon.doc size={16} /> },
+    { id: 'inbox',        label: 'Inbox',        icon: <Icon.inbox size={16} /> },
     { id: 'error-bank',   label: 'Error Bank',   icon: <Icon.warning size={16} /> },
     { id: 'reports',      label: 'Reports',      icon: <Icon.progress size={16} /> },
     { id: 'settings',     label: 'Settings',     icon: <Icon.settings size={16} /> },
@@ -123,11 +109,7 @@ export default function App() {
 
   const rightSlot = (
     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: 'var(--orange-deep)' }}>
-        <Icon.inbox size={15} />
-        <TeacherUnreadBadge />
-      </span>
-      <span style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)' }}>Teacher</span>
+<span style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)' }}>Teacher</span>
       <Avatar name="Vini V" size={32} tone="ink" />
       <Button variant="quiet" size="sm" onClick={handleSignOut}>Sign out</Button>
     </div>
@@ -200,6 +182,9 @@ function renderTeacherPage(view, params, ctx) {
         onNavigate={navigate}
       />;
 
+    case 'inbox':
+      return <InboxPage students={students} onNavigate={navigate} />;
+
     case 'error-bank':
       return <ErrorBankPage students={students} onNavigate={navigate} />;
 
@@ -218,12 +203,6 @@ function renderTeacherPage(view, params, ctx) {
 function getSafeOrigin() {
   try { if (document.referrer) return new URL(document.referrer).origin; } catch {}
   return window.location.origin;
-}
-function readInboxUnread() {
-  try { const v = Number(localStorage.getItem('inboxUnread') || 0); return Number.isFinite(v) && v > 0 ? v : 0; } catch { return 0; }
-}
-function writeInboxUnread(v) {
-  try { localStorage.setItem('inboxUnread', String(Math.max(0, Number(v) || 0))); } catch {}
 }
 function shadeColor(hex, percent) {
   const f = parseInt(hex.slice(1), 16), t = percent < 0 ? 0 : 255, p = Math.abs(percent) / 100;

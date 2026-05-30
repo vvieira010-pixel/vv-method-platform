@@ -9,7 +9,7 @@
  * 5. Save approved diagnosis
  */
 import { useState, useEffect } from 'react';
-import { Icon, Card, SectionHeader, Pill, Button, Avatar } from '../components/shared.jsx';
+import { Icon, Card, SectionHeader, Pill, Button, Avatar, StudentFeedbackView } from '../components/shared.jsx';
 import { callAI } from '../components/shared.jsx';
 import { parseAiJson } from '../lib/ai-helpers.js';
 import { buildDiagnosticPrompt } from '../lib/prompts.js';
@@ -76,6 +76,7 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
 
   useEffect(() => {
     if (diagnosisId) loadExistingDiagnosis(diagnosisId);
+    else setStep('prereq');
   }, [diagnosisId]);
 
   async function loadStudent(sid) {
@@ -94,15 +95,22 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
   }
 
   async function loadExistingDiagnosis(dxId) {
-    const diagnoses = await getDiagnoses(selectedStudentId || studentId);
+    if (!dxId) return;
+    const diagnoses = await getDiagnoses(); // search all — don't depend on a matching studentId
     const dx = diagnoses.find(d => d.id === dxId);
     if (dx) {
       setSavedDiagnosis(dx);
+      if (dx.studentId) {
+        setSelectedStudentId(dx.studentId);
+        loadStudent(dx.studentId);
+      }
       if (dx.sections) {
         setSections(dx.sections);
         setAiResult(dx.aiRaw || null);
       }
       setStep('review');
+    } else {
+      setError('Could not load that diagnosis — it may have been deleted.');
     }
   }
 
@@ -549,6 +557,18 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
             </Button>
           </div>
 
+          {/* Empty draft — no generated content */}
+          {!SECTION_KEYS.some(({ key }) => sections[key]) && (
+            <Card style={{ padding: 28, textAlign: 'center' }}>
+              <p style={{ color: 'var(--muted)', fontSize: 'var(--text-sm)', marginBottom: 14 }}>
+                This diagnosis has no generated content — it was saved before the AI analysis completed.
+              </p>
+              <Button variant="primary" size="sm" onClick={() => onNavigate('diagnostics:create', { studentId: savedDiagnosis?.studentId || selectedStudentId || studentId })}>
+                <Icon.diagnose size={13} /> Start a new diagnosis
+              </Button>
+            </Card>
+          )}
+
           {/* Sections */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             {SECTION_KEYS.map(({ key, label, studentFacing }) => {
@@ -610,6 +630,23 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
 }
 
 /* ── Section content renderer ── */
+function KeyValueCards({ content }) {
+  if (!content || typeof content !== 'object') return null;
+  const entries = Array.isArray(content) ? content.map((v, i) => [`${i + 1}`, v]) : Object.entries(content);
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      {entries.map(([k, v]) => (
+        <div key={k} style={{ padding: 10, background: 'var(--bg)', borderRadius: 'var(--radius-sm)' }}>
+          <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', marginBottom: 4 }}>{camelToLabel(String(k))}</div>
+          <div style={{ fontSize: 'var(--text-sm)', lineHeight: 1.6 }}>
+            {typeof v === 'object' ? (Array.isArray(v) ? v.map((item, j) => <div key={j}>• {typeof item === 'object' ? Object.values(item).join(' — ') : String(item)}</div>) : Object.entries(v).map(([sk, sv]) => `${camelToLabel(sk)}: ${sv}`).join(' · ')) : String(v)}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function SectionContent({ sectionKey, content }) {
   if (!content) return <p style={{ color: 'var(--muted)', fontStyle: 'italic' }}>No content generated.</p>;
 
@@ -618,16 +655,7 @@ function SectionContent({ sectionKey, content }) {
   }
 
   if (sectionKey === 'studentFeedback' && typeof content === 'object') {
-    return (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-        {Object.entries(content).map(([k, v]) => (
-          <div key={k} style={{ padding: 10, background: 'var(--bg)', borderRadius: 'var(--radius-sm)' }}>
-            <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', marginBottom: 4 }}>{camelToLabel(k)}</div>
-            <div style={{ fontSize: 'var(--text-sm)', lineHeight: 1.6 }}>{String(v)}</div>
-          </div>
-        ))}
-      </div>
-    );
+    return <StudentFeedbackView feedback={content} />;
   }
 
   if (sectionKey === 'errorBankSuggestions' && Array.isArray(content)) {
@@ -673,18 +701,35 @@ function SectionContent({ sectionKey, content }) {
 
   if (sectionKey === 'skillDiagnosis' && typeof content === 'object') {
     return (
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 10 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         {Object.entries(content).map(([skill, data]) => (
-          <div key={skill} style={{ padding: 12, background: 'var(--bg)', borderRadius: 'var(--radius-sm)' }}>
-            <div style={{ fontWeight: 700, textTransform: 'capitalize', marginBottom: 4, fontSize: 'var(--text-sm)' }}>{skill}</div>
+          <div key={skill} style={{ padding: 14, background: 'var(--bg)', borderRadius: 'var(--radius-sm)', borderLeft: `3px solid ${data?.evaluated === false ? 'var(--border)' : data?.score0to80 >= 55 ? 'var(--success)' : data?.score0to80 >= 40 ? 'var(--warning)' : 'var(--danger)'}` }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+              <span style={{ fontWeight: 700, textTransform: 'capitalize', fontSize: 'var(--text-sm)' }}>{skill}</span>
+              {data?.evaluated === false ? (
+                <Pill tone="muted">Not evaluated</Pill>
+              ) : (
+                <>
+                  {data?.score0to80 != null && <Pill tone={data.score0to80 >= 55 ? 'success' : data.score0to80 >= 40 ? 'warning' : 'danger'}>{data.score0to80}/80</Pill>}
+                  {data?.scoreConfidenceLevel && <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>{data.scoreConfidenceLevel}</span>}
+                </>
+              )}
+            </div>
             {data?.evaluated === false ? (
-              <p style={{ color: 'var(--muted)', fontSize: 'var(--text-xs)', fontStyle: 'italic' }}>{data.diagnosis || 'Not evaluated.'}</p>
+              <p style={{ color: 'var(--muted)', fontSize: 'var(--text-xs)', fontStyle: 'italic', margin: 0 }}>{data.diagnosis || 'Not evaluated — no evidence.'}</p>
             ) : (
-              <>
-                {data?.score0to80 != null && <div style={{ fontSize: 'var(--text-xs)', color: 'var(--accent)', fontWeight: 600 }}>Score: {data.score0to80}/80</div>}
-                {data?.strengths?.length > 0 && <div style={{ fontSize: 'var(--text-xs)', color: 'var(--success)', marginTop: 4 }}>✓ {data.strengths[0]}</div>}
-                {data?.weaknesses?.length > 0 && <div style={{ fontSize: 'var(--text-xs)', color: 'var(--danger)', marginTop: 2 }}>✗ {data.weaknesses[0]}</div>}
-              </>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {data?.strengths?.length > 0 && data.strengths.map((s, j) => (
+                  <div key={j} style={{ fontSize: 'var(--text-xs)', color: 'var(--success)' }}>✓ {s}</div>
+                ))}
+                {data?.weaknesses?.length > 0 && data.weaknesses.map((w, j) => (
+                  <div key={j} style={{ fontSize: 'var(--text-xs)', color: 'var(--danger)' }}>✗ {w}</div>
+                ))}
+                {data?.mainIssues?.length > 0 && data.mainIssues.map((iss, j) => (
+                  <div key={j} style={{ fontSize: 'var(--text-xs)', color: 'var(--danger)' }}>✗ {iss}</div>
+                ))}
+                {data?.whatToImproveNext && <div style={{ fontSize: 'var(--text-xs)', color: 'var(--accent)', marginTop: 2 }}>Next: {data.whatToImproveNext}</div>}
+              </div>
             )}
           </div>
         ))}
@@ -694,22 +739,123 @@ function SectionContent({ sectionKey, content }) {
 
   if (sectionKey === 'homeworkRecommendation' && typeof content === 'object') {
     return (
-      <div>
-        <div style={{ fontWeight: 700, marginBottom: 8 }}>{content.title}</div>
-        <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-2)', marginBottom: 8 }}><strong>Objective:</strong> {content.objective}</div>
-        <div style={{ fontSize: 'var(--text-sm)', marginBottom: 8, lineHeight: 1.6 }}>{content.instructions}</div>
-        {Array.isArray(content.tasks) && (
-          <ol style={{ paddingLeft: 20, fontSize: 'var(--text-sm)', lineHeight: 1.7 }}>
-            {content.tasks.map((t, i) => <li key={i}>{typeof t === 'string' ? t : t.description}</li>)}
-          </ol>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div>
+          <div style={{ fontWeight: 700, fontSize: 'var(--text-md)', marginBottom: 4 }}>{content.title}</div>
+          <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-2)' }}>{content.objective}</div>
+        </div>
+        {content.instructions && (
+          <div style={{ padding: 12, background: 'var(--accent-subtle)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-sm)', lineHeight: 1.6 }}>{content.instructions}</div>
+        )}
+        {Array.isArray(content.tasks) && content.tasks.map((t, i) => (
+          <div key={i} style={{ padding: 14, background: 'var(--bg)', borderRadius: 'var(--radius-sm)', borderLeft: '3px solid var(--accent)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+              <span style={{ fontSize: 'var(--text-xs)', fontWeight: 800, color: 'var(--accent)' }}>Task {t.taskNumber || i + 1}</span>
+              {t.type && <Pill tone="accent">{t.type}</Pill>}
+            </div>
+            <div style={{ fontSize: 'var(--text-sm)', fontWeight: 600, marginBottom: 6 }}>{typeof t === 'string' ? t : t.description}</div>
+            {t.content && <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-2)', lineHeight: 1.7, whiteSpace: 'pre-wrap', marginBottom: 6 }}>{t.content}</div>}
+            {t.example && <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontStyle: 'italic' }}>Example: {t.example}</div>}
+          </div>
+        ))}
+        {content.teacherNotes && (
+          <div style={{ padding: 10, background: 'var(--warning-bg)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-xs)', color: 'var(--warning)' }}>
+            <strong>Teacher notes:</strong> {content.teacherNotes}
+          </div>
         )}
       </div>
     );
   }
 
-  // Default: JSON display
+  if (sectionKey === 'nextClassFocus' && typeof content === 'object') {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {Object.entries(content).map(([k, v]) => (
+          <div key={k} style={{ padding: 10, background: 'var(--bg)', borderRadius: 'var(--radius-sm)' }}>
+            <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--accent)', textTransform: 'uppercase', marginBottom: 4 }}>{camelToLabel(k)}</div>
+            <div style={{ fontSize: 'var(--text-sm)', lineHeight: 1.6, color: 'var(--text)' }}>{String(v)}</div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (sectionKey === 'profileUpdateSuggestions' && typeof content === 'object' && !Array.isArray(content)) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        {Object.entries(content).map(([k, v]) => (
+          <div key={k} style={{ padding: 10, background: 'var(--bg)', borderRadius: 'var(--radius-sm)' }}>
+            <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--accent)', textTransform: 'uppercase', marginBottom: 6 }}>{camelToLabel(k)}</div>
+            {Array.isArray(v) ? (
+              <ul style={{ margin: 0, paddingLeft: 16, fontSize: 'var(--text-sm)', lineHeight: 1.7 }}>
+                {v.map((item, j) => <li key={j}>{String(item)}</li>)}
+              </ul>
+            ) : (
+              <div style={{ fontSize: 'var(--text-sm)', lineHeight: 1.6 }}>{String(v)}</div>
+            )}
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (sectionKey === 'vocabGrammarTargets' && typeof content === 'object') {
+    const vocab = Array.isArray(content.vocabularyTargets) ? content.vocabularyTargets : [];
+    const grammar = Array.isArray(content.grammarTargets) ? content.grammarTargets : [];
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+        {vocab.length > 0 && (
+          <div>
+            <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--accent)', textTransform: 'uppercase', marginBottom: 8 }}>Vocabulary Targets</div>
+            {vocab.map((v, i) => (
+              <div key={i} style={{ padding: 10, background: 'var(--bg)', borderRadius: 'var(--radius-sm)', marginBottom: 6 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                  <strong style={{ fontSize: 'var(--text-sm)' }}>{v.wordOrPhrase}</strong>
+                  {v.category && <Pill tone="muted">{v.category}</Pill>}
+                </div>
+                {v.meaning && <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-2)', marginBottom: 2 }}>{v.meaning}</div>}
+                {v.exampleSentence && <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontStyle: 'italic' }}>"{v.exampleSentence}"</div>}
+              </div>
+            ))}
+          </div>
+        )}
+        {grammar.length > 0 && (
+          <div>
+            <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--warning)', textTransform: 'uppercase', marginBottom: 8 }}>Grammar Targets</div>
+            {grammar.map((g, i) => (
+              <div key={i} style={{ padding: 10, background: 'var(--bg)', borderRadius: 'var(--radius-sm)', marginBottom: 6 }}>
+                <strong style={{ fontSize: 'var(--text-sm)' }}>{g.area}</strong>
+                {g.issue && <div style={{ fontSize: 'var(--text-xs)', color: 'var(--danger)', marginTop: 4 }}>{g.issue}</div>}
+                {g.correction && <div style={{ fontSize: 'var(--text-xs)', color: 'var(--success)', marginTop: 2 }}>{g.correction}</div>}
+                {g.practiceDirection && <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: 2 }}>Practice: {g.practiceDirection}</div>}
+              </div>
+            ))}
+          </div>
+        )}
+        {vocab.length === 0 && grammar.length === 0 && (
+          <KeyValueCards content={content} />
+        )}
+      </div>
+    );
+  }
+
+  if ((sectionKey === 'targetScoreRelevance' || sectionKey === 'readinessCheck') && typeof content === 'object') {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {Object.entries(content).map(([k, v]) => (
+          <div key={k} style={{ padding: 10, background: 'var(--bg)', borderRadius: 'var(--radius-sm)' }}>
+            <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', marginBottom: 4 }}>{camelToLabel(k)}</div>
+            <div style={{ fontSize: 'var(--text-sm)', lineHeight: 1.6, color: 'var(--text)' }}>
+              {Array.isArray(v) ? v.map((item, j) => <div key={j}>• {typeof item === 'object' ? JSON.stringify(item) : String(item)}</div>) : String(v)}
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
   if (typeof content === 'object') {
-    return <pre style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--font-mono)', whiteSpace: 'pre-wrap', lineHeight: 1.5, color: 'var(--text-2)' }}>{JSON.stringify(content, null, 2)}</pre>;
+    return <KeyValueCards content={content} />;
   }
 
   return <p style={{ lineHeight: 1.7, fontSize: 'var(--text-sm)' }}>{String(content)}</p>;

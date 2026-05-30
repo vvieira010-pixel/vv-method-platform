@@ -4,6 +4,7 @@ import { clearWorkflowData } from '../lib/workflow.js';
 
 export default function SettingsPage({ onNavigate }) {
   const [groqKey, setGroqKey] = useState(() => localStorage.getItem('vv:groq_api_key') || '');
+  const [geminiKey, setGeminiKey] = useState(() => localStorage.getItem('vv:gemini_api_key') || '');
   const [anthropicKey, setAnthropicKey] = useState(() => localStorage.getItem('vv:anthropic_api_key') || '');
   const [openaiKey, setOpenaiKey] = useState(() => localStorage.getItem('vv:openai_api_key') || '');
   const [saved, setSaved] = useState('');
@@ -11,6 +12,8 @@ export default function SettingsPage({ onNavigate }) {
   function saveKeys() {
     if (groqKey.trim()) localStorage.setItem('vv:groq_api_key', groqKey.trim());
     else localStorage.removeItem('vv:groq_api_key');
+    if (geminiKey.trim()) localStorage.setItem('vv:gemini_api_key', geminiKey.trim());
+    else localStorage.removeItem('vv:gemini_api_key');
     if (anthropicKey.trim()) localStorage.setItem('vv:anthropic_api_key', anthropicKey.trim());
     else localStorage.removeItem('vv:anthropic_api_key');
     if (openaiKey.trim()) localStorage.setItem('vv:openai_api_key', openaiKey.trim());
@@ -41,13 +44,16 @@ export default function SettingsPage({ onNavigate }) {
       <Card style={{ padding: 20, marginTop: 20 }}>
         <SectionHeader title="AI Provider Keys" icon={<Icon.spark size={15} />} />
         <p style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', margin: '8px 0 16px', lineHeight: 1.6 }}>
-          Keys are stored in your browser only. Priority: Groq (free tier, fast) → Anthropic → OpenAI.
-          Groq is recommended — it's free and has very high limits.
+          Keys are stored in your browser only. Priority: Groq (free, fast) → Gemini (free, high quality) → Anthropic → OpenAI.
         </p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           <Field label="Groq API Key (recommended — free)">
             <input className="input" type="password" value={groqKey} onChange={e => setGroqKey(e.target.value)} placeholder="gsk_…" />
             <a href="https://console.groq.com/keys" target="_blank" rel="noopener noreferrer" style={{ fontSize: 'var(--text-xs)', color: 'var(--accent)', marginTop: 3 }}>Get a free Groq key →</a>
+          </Field>
+          <Field label="Gemini API Key (free, high quality)">
+            <input className="input" type="password" value={geminiKey} onChange={e => setGeminiKey(e.target.value)} placeholder="AIza…" />
+            <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener noreferrer" style={{ fontSize: 'var(--text-xs)', color: 'var(--accent)', marginTop: 3 }}>Get a free Gemini key →</a>
           </Field>
           <Field label="Anthropic API Key (fallback)">
             <input className="input" type="password" value={anthropicKey} onChange={e => setAnthropicKey(e.target.value)} placeholder="sk-ant-…" />

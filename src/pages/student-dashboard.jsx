@@ -7,7 +7,7 @@
  * - Scores/diagnosis only from approved diagnoses
  */
 import { useState, useEffect } from 'react';
-import { Icon, Avatar, Button, Card } from '../components/shared.jsx';
+import { Icon, Avatar, Button, Card, StudentFeedbackView } from '../components/shared.jsx';
 import { getHomework, submitHomework, getDiagnoses, getProgressNotes, getReviews, getAllSubmissions } from '../lib/workflow.js';
 import { isStructuredExercise, createEmptyResponse } from '../lib/exercise-types.js';
 import { ExercisePlayer, HomeworkStepThrough } from '../components/exercise-player.jsx';
@@ -106,14 +106,11 @@ function HomeView({ student, onTab }) {
 
       {/* Latest approved feedback */}
       {latestFeedback && typeof latestFeedback === 'object' ? (
-        <div style={{ padding: 18, borderRadius: 'var(--radius-md)', background: 'var(--success-bg)', border: '1px solid var(--success-soft)', marginBottom: 16 }}>
-          <div style={{ fontWeight: 700, fontSize: 'var(--text-md)', color: 'var(--success)', marginBottom: 10 }}>
+        <div style={{ padding: 18, borderRadius: 'var(--radius-md)', background: 'var(--surface)', border: '1px solid var(--border)', marginBottom: 16 }}>
+          <div style={{ fontWeight: 700, fontSize: 'var(--text-md)', color: 'var(--accent-deep)', marginBottom: 12 }}>
             Latest Feedback from Teacher
           </div>
-          {latestFeedback.whatImproved && <p style={{ fontSize: 'var(--text-sm)', lineHeight: 1.7, marginBottom: 6 }}><strong>What's improving:</strong> {latestFeedback.whatImproved}</p>}
-          {latestFeedback.whatNeedsAttention && <p style={{ fontSize: 'var(--text-sm)', lineHeight: 1.7, marginBottom: 6 }}><strong>Focus on:</strong> {latestFeedback.whatNeedsAttention}</p>}
-          {latestFeedback.whatToPracticeNext && <p style={{ fontSize: 'var(--text-sm)', lineHeight: 1.7, marginBottom: 6 }}><strong>Your next step:</strong> {latestFeedback.whatToPracticeNext}</p>}
-          {latestFeedback.closingNote && <p style={{ fontSize: 'var(--text-sm)', fontStyle: 'italic', color: 'var(--text-2)', marginTop: 8 }}>{latestFeedback.closingNote}</p>}
+          <StudentFeedbackView feedback={latestFeedback} />
         </div>
       ) : (
         <div style={{ padding: 16, borderRadius: 'var(--radius-md)', background: 'var(--bg)', border: '1px solid var(--border)', marginBottom: 16 }}>

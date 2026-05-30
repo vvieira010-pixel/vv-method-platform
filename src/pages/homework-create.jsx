@@ -10,6 +10,7 @@ import { buildHomeworkGeneratorPrompt, buildExerciseListPrompt } from '../lib/pr
 import { getDiagnoses, getStudent, saveHomework, updateClassEventStatus } from '../lib/workflow.js';
 import { EX_TYPES, createExercise, exercisePreview, getExType } from '../lib/exercise-types.js';
 import { ExerciseEditor, ExerciseTypePicker, ExTypeBadge } from '../components/exercise-editor.jsx';
+import { getExerciseModules, getModuleExercises, bankMeta } from '../lib/exercise-bank.js';
 
 const SKILL_TYPES = ['writing', 'speaking', 'grammar', 'vocabulary', 'reading', 'listening', 'mixed'];
 
@@ -24,6 +25,7 @@ export default function HomeworkCreate({ diagnosisId, studentId, students, onNav
   const [loadingOptions, setLoadingOptions] = useState(false);
   const [showTypePicker, setShowTypePicker] = useState(false);
   const [expandedEx, setExpandedEx] = useState(null);
+  const [showLibrary, setShowLibrary] = useState(false);
 
   useEffect(() => { load(); }, [diagnosisId, studentId]);
 
@@ -199,6 +201,14 @@ export default function HomeworkCreate({ diagnosisId, studentId, students, onNav
     window.toast?.(`"${ex.title || 'Exercise'}" added.`, 'ok');
   }
 
+  function addModuleFromLibrary(mod) {
+    const exercises = getModuleExercises(mod.id);
+    if (!exercises.length) { window.toast?.('No exercises in this module.', 'warn'); return; }
+    setForm(f => ({ ...f, exercises: [...f.exercises, ...exercises] }));
+    window.toast?.(`Added ${exercises.length} exercises from "${mod.title}".`, 'ok');
+    setShowLibrary(false);
+  }
+
   /* ── Assign ── */
   async function handleAssign() {
     if (!form.title.trim()) { window.toast?.('Title is required.', 'warn'); return; }
@@ -265,6 +275,9 @@ export default function HomeworkCreate({ diagnosisId, studentId, students, onNav
         <Button variant={preview ? 'primary' : 'ghost'} size="sm" onClick={() => setPreview(true)}>
           <Icon.eye size={12} /> Preview as Student
         </Button>
+        <Button variant="ghost" size="sm" onClick={() => setShowLibrary(true)}>
+          <Icon.doc size={12} /> Add from Library
+        </Button>
         {diagnosis && (
           <>
             <Button variant="ghost" size="sm" onClick={handleGenerateOptions} disabled={loadingOptions || generating}>
@@ -276,6 +289,45 @@ export default function HomeworkCreate({ diagnosisId, studentId, students, onNav
           </>
         )}
       </div>
+
+      {/* ── Exercise Library Picker ── */}
+      {showLibrary && (
+        <div
+          onClick={() => setShowLibrary(false)}
+          style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.45)', zIndex: 60, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}
+        >
+          <div onClick={e => e.stopPropagation()} style={{ background: 'var(--surface)', borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-modal)', maxWidth: 680, width: '100%', maxHeight: '82vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+            <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--divider)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div>
+                <div style={{ fontWeight: 700, fontSize: 'var(--text-md)' }}>{bankMeta.title}</div>
+                <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>{bankMeta.moduleCount} modules · {bankMeta.exerciseCount} exercise sets</div>
+              </div>
+              <button onClick={() => setShowLibrary(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)', fontSize: 20 }}>×</button>
+            </div>
+            <div style={{ padding: 16, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {getExerciseModules().map(mod => (
+                <div key={mod.id} style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', padding: 14, display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                      <span style={{ fontWeight: 700, fontSize: 'var(--text-sm)' }}>{mod.title}</span>
+                      {mod.levelRange && <Pill tone="muted">{mod.levelRange}</Pill>}
+                    </div>
+                    {mod.targetVocabulary?.length > 0 && (
+                      <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-2)', lineHeight: 1.5 }}>
+                        {mod.targetVocabulary.slice(0, 8).join(' · ')}{mod.targetVocabulary.length > 8 ? ' …' : ''}
+                      </div>
+                    )}
+                    <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: 4 }}>{mod.exerciseCount} exercise sets</div>
+                  </div>
+                  <Button variant="primary" size="sm" onClick={() => addModuleFromLibrary(mod)} style={{ flexShrink: 0 }}>
+                    <Icon.plus size={12} /> Add
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── AI Exercise Options Panel ── */}
       {(loadingOptions || exerciseOptions.length > 0) && (

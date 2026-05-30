@@ -168,12 +168,13 @@ Test Strategy: time_management, question_type_recognition, distractor_management
 10. For estimatedOverallScore: only average evaluated skills; label "Partial Estimated Overall" if fewer than all 4 main skills covered.
 11. subskillsAssessed should only list subskills you have actual evidence for.
 12. ratingBreakdown for speaking and writing must align with the official MET rating scales above.
-13. studentFeedback.rubricScores: scores MUST be decimals to one decimal place (e.g., 2.5, 3.2, 1.8). Never whole numbers. Be precise — reflect the actual evidence quality, not a rounded impression.
-14. studentFeedback.strengths: provide at least 4 distinct strengths, each with specific evidence.
-15. studentFeedback.priorityAreas: provide at least 4 priority areas. Each area has ONLY: issue (name), whyItMatters, howToImprove. Do NOT include "example" or "betterExample" fields.
-16. studentFeedback.corrections: provide at least 4 corrections. Quote the student's actual phrases. Provide corrected version + one-sentence rule.
-17. homeworkRecommendation tasks: each task's "content" field MUST be fully written out exercise content ready for the student to use. For grammar tasks: write out actual sentences containing the target error pattern. For vocabulary: write sentences with blanks. For writing/speaking: write the full prompt. Never write "practice X" — write the actual exercise.
-18. homeworkRecommendation must have 2–4 tasks, each targeting a different diagnosed weakness. No repeated tasks.
+13. studentFeedback is written DIRECTLY TO THE STUDENT in warm, simple, second-person English ("you", "your"). It is the student-facing report — clear and encouraging, never clinical. Every example MUST be drawn from the actual class context, topics, and things the student really said today — never generic.
+14. studentFeedback.classFocus: a short opening paragraph (2–4 sentences) naming what the class focused on and the student's general performance.
+15. studentFeedback.whatYouDidWell: 2–4 strengths. Each: title (strength), explanation (why they did it well, simple), metConnection (why it matters for MET), example (a real example or paraphrase from today's class).
+16. studentFeedback.whatToImprove: 1–3 areas. Each: area (the specific skill), metImportance (how it affects the MET score), insteadOf (the student's actual weak phrase/answer), sayInstead (the improved version), howToImprove (one clear, practical action). The insteadOf/sayInstead pair MUST use the student's real language from class.
+17. studentFeedback.finalNote: a warm, encouraging closing focused on progress and the next step.
+18. homeworkRecommendation tasks: each task's "content" field MUST be fully written out exercise content ready for the student to use. For grammar tasks: write out actual sentences containing the target error pattern. For vocabulary: write sentences with blanks. For writing/speaking: write the full prompt. Never write "practice X" — write the actual exercise.
+19. homeworkRecommendation must have 2–4 tasks, each targeting a different diagnosed weakness. No repeated tasks.
 
 ━━━ OUTPUT FORMAT ━━━
 Return ONLY valid JSON. No markdown, no backticks, no prose outside the JSON object.
@@ -307,50 +308,38 @@ Return ONLY valid JSON. No markdown, no backticks, no prose outside the JSON obj
     { "rank": 3, "urgency": "Watch", "area": "...", "evidence": "...", "pattern": "...", "whatToImprove": "...", "whyItMatters": "...", "howToImprove": "...", "successCriteria": "...", "timeHorizon": "..." }
   ],
   "studentFeedback": {
-    "overallEvaluation": "2–3 sentence evidence-based summary of what the student demonstrated today — no generic praise. Reference actual performance.",
-    "rubricScores": [
-      { "criterion": "Task Completion", "score0to4": 2.8, "comment": "evidence-based comment — what they did and what was missing" },
-      { "criterion": "Grammar Accuracy", "score0to4": 1.7, "comment": "reference actual errors observed" },
-      { "criterion": "Vocabulary Range", "score0to4": 2.3, "comment": "what vocabulary was strong or limited" },
-      { "criterion": "Organization", "score0to4": 3.1, "comment": "how ideas were structured" },
-      { "criterion": "Task Development", "score0to4": 2.0, "comment": "how well ideas were developed with examples and detail" }
+    "classFocus": "Short opening paragraph (2–4 sentences) written to the student: what the class focused on today and how they generally performed. Warm, second person.",
+    "whatYouDidWell": [
+      {
+        "strength": "strength title (e.g. 'You communicated your main ideas clearly')",
+        "explanation": "You did this well because [simple explanation in plain English].",
+        "metConnection": "This is important for MET because [reason].",
+        "example": "a real example or paraphrase from today's class — what the student actually said or did"
+      },
+      {
+        "strength": "second strength title",
+        "explanation": "...",
+        "metConnection": "...",
+        "example": "..."
+      }
     ],
-    "strengths": [
-      { "strength": "strength title 1", "evidence": "exact quote or paraphrase from transcript/notes that shows this strength" },
-      { "strength": "strength title 2", "evidence": "exact quote or paraphrase" },
-      { "strength": "strength title 3", "evidence": "exact quote or paraphrase" },
-      { "strength": "strength title 4", "evidence": "exact quote or paraphrase" }
-    ],
-    "priorityAreas": [
+    "whatToImprove": [
       {
-        "issue": "name of the issue",
-        "whyItMatters": "plain language — how this affects MET performance and the target score",
-        "howToImprove": "specific, actionable instruction the student can follow"
+        "area": "the specific skill to improve (grammar, vocabulary accuracy, answer development, fluency, pronunciation, organization, etc.)",
+        "metImportance": "This is important for MET because [how it affects the exam score/performance].",
+        "insteadOf": "the student's actual weak phrase or answer from today",
+        "sayInstead": "the improved version",
+        "howToImprove": "one clear, practical action the student can take"
       },
       {
-        "issue": "second priority issue",
-        "whyItMatters": "...",
-        "howToImprove": "..."
-      },
-      {
-        "issue": "third priority issue",
-        "whyItMatters": "...",
-        "howToImprove": "..."
-      },
-      {
-        "issue": "fourth priority issue",
-        "whyItMatters": "...",
+        "area": "optional second area to improve",
+        "metImportance": "...",
+        "insteadOf": "...",
+        "sayInstead": "...",
         "howToImprove": "..."
       }
     ],
-    "corrections": [
-      { "original": "student's exact phrase", "corrected": "correct or improved version", "explanation": "one-sentence rule or reason" },
-      { "original": "...", "corrected": "...", "explanation": "..." },
-      { "original": "...", "corrected": "...", "explanation": "..." },
-      { "original": "...", "corrected": "...", "explanation": "..." }
-    ],
-    "nextStep": "one specific, small, achievable practice task the student can do before next class — not generic",
-    "closingMessage": "warm, realistic, personal closing — reference something specific about this student's progress or goal"
+    "finalNote": "Encouraging closing message focused on progress and the next step — reference something specific about this student."
   },
   "homeworkRecommendation": {
     "title": "specific title that reflects the actual target — not generic",
