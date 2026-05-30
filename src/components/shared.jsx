@@ -681,17 +681,14 @@ export async function callAI(prompt, { max_tokens = 2048, system } = {}) {
   const groqKey = import.meta.env.VITE_GROQ_API_KEY || localStorage.getItem('vv:groq_api_key');
 
   if (groqKey) {
-    // Cascade ordered by daily token budget, highest first.
-    // 500K TPD tanks → 200K → 100K. Walk through them so a single rate-limited
-    // model doesn't kill the request when 2M+ tokens of other budget exist.
+    // Cascade ordered by speed and capacity to maximize availability and performance.
     const candidateModels = [
-      GROQ_MODEL,
-      'meta-llama/llama-4-scout-17b-16e-instruct', // 500K TPD, 30K TPM
-      'qwen/qwen3-32b',                            // 500K TPD, 6K  TPM
-      'llama-3.1-8b-instant',                      // 500K TPD, 6K  TPM
-      'openai/gpt-oss-120b',                       // 200K TPD, 8K  TPM
-      'openai/gpt-oss-20b',                        // 200K TPD, 8K  TPM
-      'llama-3.3-70b-versatile',                   // 100K TPD, 12K TPM (last — smallest tank)
+      'openai/gpt-oss-20b',                        // 1000 T/s, 250K TPM
+      'meta-llama/llama-4-scout-17b-16e-instruct', // 750 T/s, 300K TPM
+      'llama-3.1-8b-instant',                      // 560 T/s, 250K TPM
+      'openai/gpt-oss-120b',                       // 500 T/s, 250K TPM
+      'qwen/qwen3-32b',                            // 400 T/s, 300K TPM
+      GROQ_MODEL,                                  // Llama 3.3 70B - 280 T/s, 300K TPM (Heavy lifter fallback)
     ]
       .filter(Boolean)
       .filter((model, idx, arr) => arr.indexOf(model) === idx);
@@ -728,6 +725,27 @@ export async function callAI(prompt, { max_tokens = 2048, system } = {}) {
       if (res.status === 400 && /decommissioned|no longer supported/i.test(msg)) continue;
     }
     throw new Error(primaryError || 'Groq request failed.');
+  }
+
+  const geminiKey = import.meta.env.VITE_GEMINI_API_KEY || localStorage.getItem('vv:gemini_api_key');
+  if (geminiKey) {
+    const geminiModel = import.meta.env.VITE_GEMINI_MODEL || 'gemini-1.5-pro';
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${geminiKey}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{
+          role: 'user',
+          parts: [{ text: (system ? `${system}\n\n${prompt}` : prompt) }]
+        }],
+        generationConfig: { maxOutputTokens: max_tokens, temperature: 0.3 }
+      }),
+    });
+    if (res.ok) {
+      const data = await res.json();
+      const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+      return { content: [{ text }] };
+    }
   }
 
   const payload = {
