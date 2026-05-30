@@ -7,8 +7,11 @@
  * - Scores/diagnosis only from approved diagnoses
  */
 import { useState, useEffect } from 'react';
-import { Icon, Avatar, Button } from '../components/shared.jsx';
+import { Icon, Avatar, Button, Card } from '../components/shared.jsx';
 import { getHomework, submitHomework, getDiagnoses, getProgressNotes, getReviews, getAllSubmissions } from '../lib/workflow.js';
+import { isStructuredExercise, createEmptyResponse } from '../lib/exercise-types.js';
+import { ExercisePlayer, HomeworkStepThrough } from '../components/exercise-player.jsx';
+import { ExTypeBadge } from '../components/exercise-editor.jsx';
 import { MessageTeacherDock, StudentInbox } from '../components/message-center.jsx';
 import '../styles/logbook.css';
 
@@ -184,6 +187,7 @@ function HomeworkView({ student }) {
   const [reviews, setReviews] = useState([]);
   const [expanded, setExpanded] = useState(null);
   const [answer, setAnswer] = useState('');
+  const [responses, setResponses] = useState({}); // { exerciseId: responseObj }
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -194,7 +198,13 @@ function HomeworkView({ student }) {
     })();
   }, [student.id]);
 
-  async function handleSubmit(hwId) {
+  // Check if homework has structured exercises
+  function hasStructuredExercises(h) {
+    return (h.activities || []).some(a => isStructuredExercise(a));
+  }
+
+  // Handle legacy text submission
+  async function handleLegacySubmit(hwId) {
     if (!answer.trim()) { window.toast?.('Please write your answer.', 'warn'); return; }
     setSubmitting(true);
     await submitHomework(hwId, student.id, answer);
@@ -206,8 +216,43 @@ function HomeworkView({ student }) {
     window.toast?.('Submitted! Your teacher will review soon.', 'ok');
   }
 
+  // Handle structured exercise submission
+  async function handleStructuredSubmit(hwId) {
+    setSubmitting(true);
+    // Build a summary text from structured responses for backward compatibility
+    const hw = homework.find(h => h.id === hwId);
+    const exercises = (hw?.activities || []).filter(a => isStructuredExercise(a));
+    const summaryParts = exercises.map(ex => {
+      const res = responses[ex.id];
+      if (!res) return `[${ex.type}] — no response`;
+      switch (ex.type) {
+        case 'mcq':   return `[MCQ] ${ex.question}\nAnswer: ${ex.options?.[res.selected] || 'none'}`;
+        case 'blank': return `[BLANK] ${ex.template}\nAnswers: ${(res.blanks || []).join(', ')}`;
+        case 'short': return `[SHORT] ${ex.prompt}\n${res.text || ''}`;
+        case 'speak': return `[SPEAK] ${ex.prompt}\nTranscript: ${res.transcript || '(audio submitted)'}`;
+        case 'order': return `[ORDER] Order: ${(res.order || []).map(i => i + 1).join(' → ')}`;
+        case 'fix':   return `[FIX] ${res.text || ''}`;
+        case 'flash': return `[FLASH] ${res.learned || 0} cards learned`;
+        default:      return `[${ex.type}] response submitted`;
+      }
+    });
+    const content = summaryParts.join('\n\n---\n\n');
+    await submitHomework(hwId, student.id, content, responses);
+    const hwList = await getHomework(student.id);
+    setHomework(hwList || []);
+    setResponses({});
+    setExpanded(null);
+    setSubmitting(false);
+    window.toast?.('Submitted! Your teacher will review soon.', 'ok');
+  }
+
+  // Update a single exercise response
+  function updateResponse(exerciseId, updatedRes) {
+    setResponses(prev => ({ ...prev, [exerciseId]: updatedRes }));
+  }
+
   return (
-    <div style={{ padding: '20px 16px', maxWidth: 680, margin: '0 auto' }}>
+    <div style={{ padding: '20px 16px', maxWidth: 700, margin: '0 auto' }}>
       <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-xl)', fontWeight: 700, margin: '0 0 16px' }}>My Homework</h2>
       {homework.length === 0 && <p style={{ color: 'var(--muted)', padding: '16px 0' }}>No homework assigned yet. Your teacher will assign homework after your next class.</p>}
       {homework.map(h => {
@@ -216,30 +261,89 @@ function HomeworkView({ student }) {
         const submitted = h.status === 'submitted';
         const statusTone = review ? 'success' : submitted ? 'warning' : 'muted';
         const statusLabel = review ? 'Reviewed' : submitted ? 'Submitted' : h.status;
+        const isStructured = hasStructuredExercises(h);
+        const structuredExercises = isStructured ? (h.activities || []).filter(a => isStructuredExercise(a)) : [];
+
+        // Exercise type badges for structured homework
+        const typeSummary = {};
+        structuredExercises.forEach(e => { typeSummary[e.type] = (typeSummary[e.type] || 0) + 1; });
 
         return (
           <div key={h.id} style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', marginBottom: 10, overflow: 'hidden' }}>
-            <div style={{ padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', background: isExpanded ? 'var(--bg)' : 'var(--surface)' }} onClick={() => setExpanded(isExpanded ? null : h.id)}>
+            {/* Header */}
+            <div
+              style={{ padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', background: isExpanded ? 'var(--bg)' : 'var(--surface)' }}
+              onClick={() => setExpanded(isExpanded ? null : h.id)}
+            >
               <div>
                 <div style={{ fontWeight: 600 }}>{h.title}</div>
-                <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: 2 }}>
-                  {h.type}{h.dueDate ? ` · Due ${new Date(h.dueDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}` : ''}
+                <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: 2, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                  {isStructured ? (
+                    <>
+                      <span>{structuredExercises.length} exercise{structuredExercises.length !== 1 ? 's' : ''}</span>
+                      {Object.keys(typeSummary).map(type => (
+                        <ExTypeBadge key={type} typeId={type} />
+                      ))}
+                    </>
+                  ) : (
+                    <span>{h.type}</span>
+                  )}
+                  {h.dueDate && <span>· Due {new Date(h.dueDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</span>}
                 </div>
               </div>
-              <span style={{ padding: '3px 10px', borderRadius: 99, fontSize: 'var(--text-xs)', fontWeight: 600, background: statusTone === 'success' ? 'var(--success-bg)' : statusTone === 'warning' ? 'var(--warning-bg)' : 'var(--bg-deep)', color: statusTone === 'success' ? 'var(--success)' : statusTone === 'warning' ? 'var(--warning)' : 'var(--muted)' }}>{statusLabel}</span>
+              <span style={{
+                padding: '3px 10px', borderRadius: 99, fontSize: 'var(--text-xs)', fontWeight: 600,
+                background: statusTone === 'success' ? 'var(--success-bg)' : statusTone === 'warning' ? 'var(--warning-bg)' : 'var(--bg-deep)',
+                color: statusTone === 'success' ? 'var(--success)' : statusTone === 'warning' ? 'var(--warning)' : 'var(--muted)',
+              }}>{statusLabel}</span>
             </div>
 
+            {/* Expanded content */}
             {isExpanded && (
               <div style={{ padding: 16, borderTop: '1px solid var(--divider)' }}>
                 {h.objective && <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-2)', marginBottom: 10 }}><strong>Goal:</strong> {h.objective}</p>}
                 {h.description && <div style={{ fontSize: 'var(--text-sm)', lineHeight: 1.7, whiteSpace: 'pre-wrap', marginBottom: 12 }}>{h.description}</div>}
-                {(h.activities || []).map((a, i) => (
-                  <div key={i} style={{ fontSize: 'var(--text-sm)', marginBottom: 8, padding: 10, background: 'var(--bg)', borderRadius: 'var(--radius-sm)', lineHeight: 1.6 }}>{a.instruction}</div>
-                ))}
-                {h.selfCheck?.length > 0 && (
+
+                {/* ── STRUCTURED EXERCISES: step-through ── */}
+                {isStructured && !submitted && !review && (
+                  <HomeworkStepThrough
+                    exercises={structuredExercises}
+                    responses={responses}
+                    onResponse={updateResponse}
+                    onSubmit={() => handleStructuredSubmit(h.id)}
+                    readOnly={false}
+                  />
+                )}
+
+                {/* ── STRUCTURED EXERCISES: submitted (read-only) ── */}
+                {isStructured && (submitted || review) && (
+                  <div>
+                    {structuredExercises.map((ex, i) => (
+                      <div key={ex.id} style={{ borderTop: i > 0 ? '1px solid var(--divider)' : 'none', paddingTop: i > 0 ? 14 : 0, marginBottom: 14 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                          <span style={{ fontWeight: 700, fontSize: 'var(--text-sm)', color: 'var(--accent)' }}>{i + 1}.</span>
+                          <ExTypeBadge typeId={ex.type} />
+                        </div>
+                        <ExercisePlayer exercise={ex} response={{}} onResponse={() => {}} readOnly={true} />
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* ── LEGACY: plain text activities ── */}
+                {!isStructured && (
+                  <>
+                    {(h.activities || []).map((a, i) => (
+                      <div key={i} style={{ fontSize: 'var(--text-sm)', marginBottom: 8, padding: 10, background: 'var(--bg)', borderRadius: 'var(--radius-sm)', lineHeight: 1.6 }}>{a.instruction}</div>
+                    ))}
+                  </>
+                )}
+
+                {/* Self-check */}
+                {h.selfCheck?.filter(Boolean).length > 0 && (
                   <div style={{ marginTop: 12, padding: 12, background: 'var(--bg)', borderRadius: 'var(--radius-sm)' }}>
                     <div style={{ fontWeight: 600, fontSize: 'var(--text-sm)', marginBottom: 8 }}>Self-check:</div>
-                    {h.selfCheck.map((c, i) => (
+                    {h.selfCheck.filter(Boolean).map((c, i) => (
                       <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: 6 }}>
                         <input type="checkbox" style={{ marginTop: 3 }} />
                         <span style={{ fontSize: 'var(--text-sm)' }}>{c}</span>
@@ -248,16 +352,17 @@ function HomeworkView({ student }) {
                   </div>
                 )}
 
-                {/* Submit form */}
-                {!submitted && !review && (
+                {/* Legacy submit form */}
+                {!isStructured && !submitted && !review && (
                   <div style={{ marginTop: 14 }}>
                     <textarea value={answer} onChange={e => setAnswer(e.target.value)} rows={5} placeholder="Write your answer here…" style={{ width: '100%', padding: 10, borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)', fontSize: 'var(--text-sm)', resize: 'vertical' }} />
-                    <Button variant="primary" size="sm" onClick={() => handleSubmit(h.id)} disabled={submitting || !answer.trim()} style={{ marginTop: 8 }}>
+                    <Button variant="primary" size="sm" onClick={() => handleLegacySubmit(h.id)} disabled={submitting || !answer.trim()} style={{ marginTop: 8 }}>
                       {submitting ? 'Submitting…' : 'Submit Homework'}
                     </Button>
                   </div>
                 )}
 
+                {/* Submitted status */}
                 {submitted && !review && (
                   <div style={{ marginTop: 12, padding: 12, background: 'var(--warning-bg)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-sm)', color: 'var(--warning)', fontWeight: 500 }}>
                     Submitted ✓ — Waiting for your teacher to review.
@@ -267,19 +372,47 @@ function HomeworkView({ student }) {
                 {/* Teacher review */}
                 {review && (
                   <div style={{ marginTop: 14, padding: 14, background: 'var(--success-bg)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--success-soft)' }}>
-                    <div style={{ fontWeight: 700, color: 'var(--success)', marginBottom: 8 }}>
-                      Teacher Review {review.score != null ? `· ${review.score}/10` : ''}
+                    <div style={{ fontWeight: 700, color: 'var(--success)', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <span>Teacher Review {review.score != null ? `· ${review.score}/10` : ''}</span>
+                      {review.redoRequired && (
+                        <span style={{ fontSize: 'var(--text-xs)', fontWeight: 700, padding: '2px 8px', borderRadius: 99, background: 'var(--warning-bg)', color: 'var(--warning)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Redo requested</span>
+                      )}
                     </div>
-                    {review.overallNote && <p style={{ fontSize: 'var(--text-sm)', lineHeight: 1.7 }}>{review.overallNote}</p>}
+                    {review.whatImproved && (
+                      <div style={{ marginBottom: 10, padding: 8, background: 'rgba(255,255,255,0.6)', borderRadius: 'var(--radius-sm)', borderLeft: '3px solid var(--success)' }}>
+                        <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--success)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4 }}>What improved</div>
+                        <div style={{ fontSize: 'var(--text-sm)', lineHeight: 1.6 }}>{review.whatImproved}</div>
+                      </div>
+                    )}
+                    {review.overallNote && <p style={{ fontSize: 'var(--text-sm)', lineHeight: 1.7, marginBottom: 10 }}>{review.overallNote}</p>}
                     {review.corrections?.length > 0 && (
-                      <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 6 }}>
-                        {review.corrections.map((c, i) => (
-                          <div key={i} style={{ fontSize: 'var(--text-sm)', padding: 8, background: 'rgba(255,255,255,0.6)', borderRadius: 'var(--radius-sm)' }}>
-                            <span style={{ color: 'var(--danger)', textDecoration: 'line-through' }}>{c.original}</span>
-                            {' → '}
-                            <span style={{ color: 'var(--success)', fontWeight: 600 }}>{c.improved}</span>
-                            {c.note && <span style={{ color: 'var(--muted)', marginLeft: 6 }}>({c.note})</span>}
-                          </div>
+                      <div style={{ marginTop: 10, marginBottom: 10 }}>
+                        <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>Corrections</div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                          {review.corrections.map((c, i) => (
+                            <div key={i} style={{ fontSize: 'var(--text-sm)', padding: 8, background: 'rgba(255,255,255,0.6)', borderRadius: 'var(--radius-sm)' }}>
+                              <span style={{ color: 'var(--danger)', textDecoration: 'line-through' }}>{c.original}</span>
+                              {' → '}
+                              <span style={{ color: 'var(--success)', fontWeight: 600 }}>{c.improved}</span>
+                              {c.note && <span style={{ color: 'var(--muted)', marginLeft: 6 }}>({c.note})</span>}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {Array.isArray(review.activeErrors) && review.activeErrors.length > 0 && (
+                      <div style={{ marginTop: 8 }}>
+                        <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--warning)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4 }}>Still working on</div>
+                        {review.activeErrors.map((e, i) => (
+                          <div key={i} style={{ fontSize: 'var(--text-sm)', color: 'var(--text-2)', marginLeft: 8 }}>• {e}</div>
+                        ))}
+                      </div>
+                    )}
+                    {Array.isArray(review.newErrors) && review.newErrors.length > 0 && (
+                      <div style={{ marginTop: 8 }}>
+                        <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--danger)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4 }}>New to work on</div>
+                        {review.newErrors.map((e, i) => (
+                          <div key={i} style={{ fontSize: 'var(--text-sm)', color: 'var(--text-2)', marginLeft: 8 }}>• {e}</div>
                         ))}
                       </div>
                     )}

@@ -184,9 +184,13 @@ export async function getSubmissions(studentId) {
   const all = load(K.submissions);
   return studentId ? all.filter(s => s.studentId === studentId) : all;
 }
-export async function submitHomework(homeworkId, studentId, content) {
+export async function submitHomework(homeworkId, studentId, content, responses) {
   const all = load(K.submissions);
-  const sub = { id: uid(), homeworkId, studentId, content, submittedAt: new Date().toISOString(), status: 'submitted' };
+  const sub = {
+    id: uid(), homeworkId, studentId, content,
+    responses: responses || null,
+    submittedAt: new Date().toISOString(), status: 'submitted',
+  };
   all.unshift(sub);
   save(K.submissions, all);
   // Update homework status
@@ -760,6 +764,7 @@ export async function saveClassEvidence(data) {
     evaluatedVocabulary: data.evaluatedVocabulary ?? false,
     evaluatedTestStrategy: data.evaluatedTestStrategy ?? false,
     // Evidence counts
+    testStrategyEvidenceCount: data.testStrategyEvidenceCount ?? 0,
     speakingEvidenceCount: data.speakingEvidenceCount ?? 0,
     writingEvidenceCount: data.writingEvidenceCount ?? 0,
     readingEvidenceCount: data.readingEvidenceCount ?? 0,
