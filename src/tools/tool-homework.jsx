@@ -4,6 +4,9 @@
 import { useState, useEffect } from 'react';
 import { Icon, Card, SectionHeader, Pill, Button, PillNav, Avatar } from '../components/shared.jsx';
 import { getHomework, saveHomework, deleteHomework, getSubmissions, getDiagnoses, getReviews, saveReview, updateDiagnosisCycleStage, getStudentCycleState } from '../lib/workflow.js';
+import { isStructuredExercise, autoGrade, exercisePreview } from '../lib/exercise-types.js';
+import { ExTypeBadge } from '../components/exercise-editor.jsx';
+import { ExercisePlayer } from '../components/exercise-player.jsx';
 
 const TYPES = [
   { id: 'grammar',    label: 'Grammar'    },
@@ -280,22 +283,53 @@ export default function ToolHomework({ student, students = [], onSelectStudent, 
             )}
             {pendingSubmissions.map(sub => {
               const hwItem = hw.find(h => h.id === sub.homeworkId);
+              const hasStructured = sub.responses && hwItem?.activities?.some(a => isStructuredExercise(a));
+              const structuredExercises = hasStructured ? (hwItem?.activities || []).filter(a => isStructuredExercise(a)) : [];
+
               return (
                 <Card key={sub.id} style={{ marginBottom: 12, padding: 16 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
                     <div>
                       <div style={{ fontWeight: 700 }}>{hwItem?.title || 'Homework submission'}</div>
-                      <div style={{ fontSize: "var(--text-xs)", color: 'var(--muted)' }}>
-                        Submitted {new Date(sub.submittedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+                      <div style={{ fontSize: "var(--text-xs)", color: 'var(--muted)', display: 'flex', alignItems: 'center', gap: 6, marginTop: 2, flexWrap: 'wrap' }}>
+                        <span>Submitted {new Date(sub.submittedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</span>
+                        {hasStructured && <span>· {structuredExercises.length} exercises</span>}
                       </div>
                     </div>
                     <Pill tone="warning">Needs review</Pill>
                   </div>
-                  {sub.content && (
+
+                  {/* Structured exercises — per-exercise review */}
+                  {hasStructured ? (
+                    <div style={{ borderTop: '1px solid var(--divider)', paddingTop: 10, marginBottom: 10 }}>
+                      {structuredExercises.map((ex, i) => {
+                        const res = sub.responses?.[ex.id] || {};
+                        const grade = autoGrade(ex, res);
+                        return (
+                          <div key={ex.id} style={{ marginBottom: 12, padding: 12, background: 'var(--bg)', borderRadius: 'var(--radius-sm)' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                              <span style={{ fontWeight: 700, fontSize: 'var(--text-sm)', color: 'var(--accent)' }}>{i + 1}.</span>
+                              <ExTypeBadge typeId={ex.type} />
+                              <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-2)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                {exercisePreview(ex)}
+                              </span>
+                              {grade && (
+                                <Pill tone={grade.correct ? 'success' : 'warning'}>
+                                  {grade.correct ? '✓ Correct' : grade.feedback}
+                                </Pill>
+                              )}
+                            </div>
+                            <StructuredResponsePreview exercise={ex} response={res} />
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : sub.content ? (
                     <div style={{ fontSize: "var(--text-sm)", color: 'var(--text-2)', lineHeight: 1.6, borderTop: '1px solid var(--divider)', paddingTop: 10, marginBottom: 10, whiteSpace: 'pre-wrap' }}>
                       {sub.content}
                     </div>
-                  )}
+                  ) : null}
+
                   <Button variant="primary" size="sm" onClick={() => {
                     setReviewingSubmission(sub);
                     setReviewForm({ corrections: [{ original: '', improved: '', note: '' }], overallNote: '', score: '' });
@@ -317,7 +351,7 @@ export default function ToolHomework({ student, students = [], onSelectStudent, 
                         <span style={{ fontWeight: 600, fontSize: "var(--text-sm)" }}>
                           {hw.find(h => h.id === sub.homeworkId)?.title || 'Submission'}
                         </span>
-                        <Pill tone="success">Reviewed{rev?.score != null ? ` · ${rev.score}/5` : ''}</Pill>
+                        <Pill tone="success">Reviewed{rev?.score != null ? ` · ${rev.score}/4` : ''}</Pill>
                       </div>
                     </Card>
                   );
@@ -336,9 +370,42 @@ export default function ToolHomework({ student, students = [], onSelectStudent, 
             </div>
 
             {/* Student's answer */}
-            <div style={{ padding: 12, background: "var(--bg)", borderRadius: "var(--radius-sm)", marginBottom: 16, fontSize: "var(--text-sm)", lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>
-              {reviewingSubmission.content || 'No text content.'}
-            </div>
+            {(() => {
+              const hwItem = hw.find(h => h.id === reviewingSubmission.homeworkId);
+              const hasStructured = reviewingSubmission.responses && hwItem?.activities?.some(a => isStructuredExercise(a));
+              const structuredExercises = hasStructured ? (hwItem?.activities || []).filter(a => isStructuredExercise(a)) : [];
+
+              if (hasStructured) {
+                return (
+                  <div style={{ marginBottom: 16 }}>
+                    {structuredExercises.map((ex, i) => {
+                      const res = reviewingSubmission.responses?.[ex.id] || {};
+                      const grade = autoGrade(ex, res);
+                      return (
+                        <div key={ex.id} style={{ padding: 12, background: 'var(--bg)', borderRadius: 'var(--radius-sm)', marginBottom: 8 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                            <span style={{ fontWeight: 700, fontSize: 'var(--text-sm)', color: 'var(--accent)' }}>{i + 1}.</span>
+                            <ExTypeBadge typeId={ex.type} />
+                            {grade && (
+                              <Pill tone={grade.correct ? 'success' : 'warning'}>
+                                {grade.correct ? '✓' : `${Math.round(grade.score * 100)}%`}
+                              </Pill>
+                            )}
+                          </div>
+                          <StructuredResponsePreview exercise={ex} response={res} />
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              }
+
+              return (
+                <div style={{ padding: 12, background: "var(--bg)", borderRadius: "var(--radius-sm)", marginBottom: 16, fontSize: "var(--text-sm)", lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>
+                  {reviewingSubmission.content || 'No text content.'}
+                </div>
+              );
+            })()}
 
             {/* Corrections */}
             <label style={smallLabel}>Corrections</label>
@@ -357,8 +424,8 @@ export default function ToolHomework({ student, students = [], onSelectStudent, 
 
             <div style={{ display: 'flex', gap: 12, alignItems: 'end' }}>
               <div>
-                <label style={smallLabel}>Score (0–5)</label>
-                <input className="input" type="number" min="0" max="5" step="0.5" value={reviewForm.score} onChange={e => setReviewForm(f => ({ ...f, score: e.target.value }))} style={{ width: 80 }} />
+                <label style={smallLabel}>Score (0–4)</label>
+                <input className="input" type="number" min="0" max="4" step="0.25" value={reviewForm.score} onChange={e => setReviewForm(f => ({ ...f, score: e.target.value }))} style={{ width: 80 }} />
               </div>
               <Button variant="primary" onClick={handleSaveReview}>Save Review</Button>
             </div>
@@ -398,4 +465,127 @@ function formatDiagnosisLabel(diagnosis) {
   const date = diagnosis?.createdAt ? new Date(diagnosis.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }) : 'Saved';
   const focus = diagnosis?.priorityFocus || diagnosis?.nextSteps?.[0] || diagnosis?.weaknesses?.[0] || 'MET focus';
   return `${date} — ${String(focus).slice(0, 48)}`;
+}
+
+/* ─── STRUCTURED RESPONSE PREVIEW (for teacher review) ──── */
+function StructuredResponsePreview({ exercise, response }) {
+  if (!exercise || !response) return <span style={{ fontSize: 'var(--text-xs)', color: 'var(--faint)' }}>No response</span>;
+  const rs = { fontSize: 'var(--text-sm)', color: 'var(--text-2)', lineHeight: 1.6 };
+
+  switch (exercise.type) {
+    case 'mcq': {
+      const selected = response.selected;
+      const opt = exercise.options?.[selected];
+      const isCorrect = selected === exercise.correct;
+      return (
+        <div style={rs}>
+          <strong>Q:</strong> {exercise.question}<br />
+          <strong>Answer:</strong>{' '}
+          <span style={{ color: isCorrect ? 'var(--success)' : 'var(--danger)', fontWeight: 600 }}>
+            {opt != null ? `${String.fromCharCode(65 + selected)}. ${opt}` : 'No answer'}
+          </span>
+          {!isCorrect && exercise.correct != null && (
+            <span style={{ color: 'var(--muted)', marginLeft: 8 }}>
+              (correct: {String.fromCharCode(65 + exercise.correct)})
+            </span>
+          )}
+        </div>
+      );
+    }
+    case 'blank':
+      return (
+        <div style={rs}>
+          <strong>Template:</strong> {exercise.template}<br />
+          <strong>Answers:</strong> {(response.blanks || []).map((b, i) => {
+            const accepted = (exercise.blanks?.[i] || '').split('|').map(a => a.trim().toLowerCase());
+            const isRight = accepted.includes((b || '').trim().toLowerCase());
+            return (
+              <span key={i} style={{ color: isRight ? 'var(--success)' : 'var(--danger)', fontWeight: 600, marginRight: 8 }}>
+                [{b || '—'}]
+              </span>
+            );
+          })}
+        </div>
+      );
+    case 'short':
+      return (
+        <div style={rs}>
+          <strong>Prompt:</strong> {exercise.prompt}<br />
+          <div style={{ marginTop: 6, padding: 8, background: 'var(--surface)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)', whiteSpace: 'pre-wrap' }}>
+            {response.text || 'No text submitted.'}
+          </div>
+          <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>
+            {(response.text || '').split(/\s+/).filter(Boolean).length} words (target: {exercise.targetWords || 120})
+          </span>
+        </div>
+      );
+    case 'speak':
+      return (
+        <div style={rs}>
+          <strong>Prompt:</strong> {exercise.prompt} ({exercise.targetSeconds}s target)<br />
+          {response.audioB64 && (
+            <audio controls src={response.audioB64} style={{ width: '100%', height: 36, marginTop: 6 }} />
+          )}
+          {response.transcript && (
+            <div style={{ marginTop: 6, padding: 8, background: 'var(--surface)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)', fontStyle: 'italic' }}>
+              {response.transcript}
+            </div>
+          )}
+          {!response.audioB64 && !response.transcript && <span style={{ color: 'var(--faint)' }}>No audio or transcript</span>}
+        </div>
+      );
+    case 'order': {
+      const order = response.order || [];
+      const sentences = exercise.sentences || [];
+      return (
+        <div style={rs}>
+          <strong>Student order:</strong>
+          <ol style={{ paddingLeft: 18, margin: '4px 0 0' }}>
+            {order.map((idx, i) => {
+              const isRight = idx === i;
+              return (
+                <li key={i} style={{ color: isRight ? 'var(--success)' : 'var(--danger)', fontWeight: isRight ? 400 : 600 }}>
+                  {sentences[idx] || `[${idx}]`}
+                </li>
+              );
+            })}
+          </ol>
+        </div>
+      );
+    }
+    case 'fix': {
+      const original = exercise.errorText || '';
+      const student = response.text || '';
+      const target = exercise.correctedText || '';
+      const isFixed = student.trim().toLowerCase().replace(/\s+/g, ' ') === target.trim().toLowerCase().replace(/\s+/g, ' ');
+      return (
+        <div style={rs}>
+          <strong>Original (with errors):</strong>
+          <div style={{ padding: 6, background: 'var(--danger-bg)', borderRadius: 'var(--radius-sm)', margin: '4px 0', textDecoration: 'line-through', color: 'var(--danger)' }}>
+            {original}
+          </div>
+          <strong>Student correction:</strong>
+          <div style={{ padding: 6, background: isFixed ? 'var(--success-bg)' : 'var(--warning-bg)', borderRadius: 'var(--radius-sm)', margin: '4px 0' }}>
+            {student || 'No correction submitted.'}
+          </div>
+          {!isFixed && target && (
+            <>
+              <strong>Expected:</strong>
+              <div style={{ padding: 6, background: 'var(--bg)', borderRadius: 'var(--radius-sm)', margin: '4px 0', color: 'var(--success)' }}>
+                {target}
+              </div>
+            </>
+          )}
+        </div>
+      );
+    }
+    case 'flash':
+      return (
+        <div style={rs}>
+          <strong>Flashcards:</strong> {response.learned || 0} of {(exercise.pairs || []).length} marked as learned
+        </div>
+      );
+    default:
+      return <div style={rs}>{JSON.stringify(response)}</div>;
+  }
 }
