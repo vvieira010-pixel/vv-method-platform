@@ -149,7 +149,7 @@ function HomeView({ student, onTab }) {
                 </div>
                 {s.score_0_80 > 0 && (
                   <div style={{ width: '100%', height: 6, borderRadius: 99, background: 'var(--bg-deep)', overflow: 'hidden' }}>
-                    <div style={{ width: `${Math.min(100, (s.score_0_80 / 80) * 100)}%`, height: '100%', borderRadius: 99, background: 'var(--accent)', transition: 'width 0.4s' }} />
+                    <div style={{ width: '100%', height: '100%', borderRadius: 99, background: 'var(--accent)', transform: `scaleX(${Math.min(1, s.score_0_80 / 80)})`, transformOrigin: 'left', transition: 'transform 0.4s' }} />
                   </div>
                 )}
                 {s.score_0_80 === 0 && <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontStyle: 'italic' }}>Not evaluated yet</div>}
@@ -376,7 +376,7 @@ function HomeworkView({ student }) {
                       )}
                     </div>
                     {review.whatImproved && (
-                      <div style={{ marginBottom: 10, padding: 8, background: 'rgba(255,255,255,0.6)', borderRadius: 'var(--radius-sm)', borderLeft: '3px solid var(--success)' }}>
+                      <div style={{ marginBottom: 10, padding: 8, background: 'rgba(255,255,255,0.6)', borderRadius: 'var(--radius-sm)' }}>
                         <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--success)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4 }}>What improved</div>
                         <div style={{ fontSize: 'var(--text-sm)', lineHeight: 1.6 }}>{review.whatImproved}</div>
                       </div>

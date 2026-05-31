@@ -177,7 +177,7 @@ Compare the submission to the diagnosis. Return JSON:
               <SectionHeader title="Original Diagnosis Priorities" icon={<Icon.diagnose size={15} />} />
               <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {diagnosis.sections.priorityDiagnosis.content.map((p, i) => (
-                  <div key={i} style={{ padding: 10, background: 'var(--bg)', borderRadius: 'var(--radius-sm)', borderLeft: `3px solid ${i === 0 ? 'var(--danger)' : i === 1 ? 'var(--warning)' : 'var(--info)'}` }}>
+                  <div key={i} style={{ padding: 10, background: 'var(--bg)', borderRadius: 'var(--radius-sm)' }}>
                     <div style={{ fontWeight: 600, fontSize: 'var(--text-sm)' }}>#{p.rank} {p.area}</div>
                     <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-2)', marginTop: 2 }}>{p.whatToImprove}</div>
                   </div>

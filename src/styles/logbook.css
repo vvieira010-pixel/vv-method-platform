@@ -123,7 +123,7 @@
   text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; }
 .dash-gam-name   { font-size: 20px; font-weight: 800; margin-bottom: 12px; }
 .dash-gam-bar-track { height: 8px; background: rgba(255,255,255,0.15); border-radius: 2px; overflow: hidden; }
-.dash-gam-bar-fill  { height: 100%; background: #a8dadc; border-radius: 2px; transition: width 0.6s; }
+.dash-gam-bar-fill  { height: 100%; background: #a8dadc; border-radius: 2px; transition: transform 0.6s; transform-origin: left; }
 .dash-gam-bar-labels { display: flex; justify-content: space-between; margin-top: 5px;
   font-size: 11px; color: rgba(255,255,255,0.5); }
 .dash-gam-stat-label { font-size: 11px; color: rgba(255,255,255,0.6); }
@@ -235,7 +235,7 @@
 
 /* ── Progress bar ── */
 .dash-progress-bar { height: 6px; background: var(--bg-deep); border-radius: 2px; overflow: hidden; }
-.dash-progress-fill { height: 100%; background: var(--accent); border-radius: 2px; transition: width 0.4s; }
+.dash-progress-fill { height: 100%; background: var(--accent); border-radius: 2px; transition: transform 0.4s; transform-origin: left; }
 
 /* ── KPI grid ── */
 .dash-kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 14px; }

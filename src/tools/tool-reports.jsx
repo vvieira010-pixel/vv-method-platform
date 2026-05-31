@@ -17,7 +17,7 @@ function SkillBar({ label, value, max = 10 }) {
         <span style={{ fontWeight: 700, color: 'var(--text)' }}>{value}/{max}</span>
       </div>
       <div style={{ height: 7, background: 'var(--bg-deep)', borderRadius: 999, overflow: 'hidden' }}>
-        <div style={{ height: '100%', width: `${pct}%`, background: tone, borderRadius: 999, transition: 'width 0.4s' }} />
+        <div style={{ height: '100%', width: '100%', background: tone, borderRadius: 999, transform: `scaleX(${pct / 100})`, transformOrigin: 'left', transition: 'transform 0.4s' }} />
       </div>
     </div>
   );
@@ -184,8 +184,8 @@ export default function ToolReports({ students = [] }) {
                   </div>
                   <div style={{ height: 12, background: 'var(--bg-deep)', borderRadius: 999, overflow: 'hidden', marginBottom: 10 }}>
                     <div style={{
-                      height: '100%', borderRadius: 999, transition: 'width 0.4s',
-                      width: `${readiness}%`,
+                      height: '100%', borderRadius: 999, transition: 'transform 0.4s',
+                      width: '100%', transform: `scaleX(${readiness / 100})`, transformOrigin: 'left',
                       background: readiness >= 70 ? 'var(--success)' : readiness >= 45 ? 'var(--warning)' : 'var(--danger)',
                     }} />
                   </div>
