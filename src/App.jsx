@@ -5,7 +5,7 @@ import ErrorBoundary from './components/error-boundary.jsx';
 import { TweaksPanel, TweakSection, TweakRadio, TweakColor } from './components/tweaks-panel.jsx';
 import { Icon, Avatar, Button, Shell } from './components/shared.jsx';
 import { STUDENTS } from './data/students.jsx';
-import { seedStudentsIfEmpty, getStudents } from './lib/workflow.js';
+import { seedStudentsIfEmpty, seedDemoDataIfEmpty, getStudents } from './lib/workflow.js';
 
 // Lazy-loaded teacher pages
 const TeacherDashboard  = lazy(() => import('./pages/teacher-dashboard.jsx'));
@@ -31,7 +31,7 @@ export default function App() {
   const [viewParams, setViewParams] = useState({});
   const [tweaks, setTweaksState] = useState(() => ({
     cardStyle: 'bordered',
-    accent: '#2d8b8b',
+    accent: '#5F8A64',
     ...window.TWEAK_DEFAULTS,
   }));
   const [students, setStudents] = useState([]);
@@ -39,6 +39,7 @@ export default function App() {
   // Seed students from hardcoded list on first run, then load live roster
   useEffect(() => {
     seedStudentsIfEmpty(STUDENTS).then(() => {
+      seedDemoDataIfEmpty();
       getStudents().then(setStudents);
     });
   }, []);

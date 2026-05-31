@@ -40,13 +40,14 @@ function convertExercise(ex) {
     case 'multiple_choice_single':
     case 'multiple_choice_multiple': {
       (items || []).forEach(it => {
-        const options = (it.options || []).map(o => o.text);
+        const options = (it.options || []).map(o => o.text).filter(Boolean);
+        if (!options.length || !it.prompt) return;
         const firstCorrect = (it.correctOptionIds || [])[0];
         const correct = (it.options || []).findIndex(o => o.id === firstCorrect);
         out.push({
           id: exId(), type: 'mcq',
           question: it.prompt,
-          options: options.length ? options : ['', '', '', ''],
+          options,
           correct: correct >= 0 ? correct : null,
           explanation: it.explanation || '',
         });

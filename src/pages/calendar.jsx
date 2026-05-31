@@ -183,7 +183,7 @@ export default function CalendarPage({ students, onNavigate }) {
                 const student = students.find(s => s.id === ev.studentId);
                 return (
                   <div key={ev.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 0', borderBottom: '1px solid var(--divider)' }}>
-                    <span style={{ flex: 1, fontSize: 'var(--text-xs)', fontWeight: 600 }}>{student?.firstName} · {ev.date}</span>
+                    <span style={{ flex: 1, fontSize: 'var(--text-xs)', fontWeight: 600 }}>{student?.firstName || 'Student'} · {ev.date}</span>
                     <Button variant="primary" size="sm" onClick={() => onNavigate('diagnostics:create', { studentId: ev.studentId, classEventId: ev.id })}>Go</Button>
                   </div>
                 );

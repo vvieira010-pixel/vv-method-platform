@@ -550,7 +550,11 @@ export async function seedErrorBankFromProfile(studentId, profile) {
         id: uid(),
         error: errorText,
         correct: correctText,
-        type: cat.skill_area?.includes('speaking') ? 'grammar' : 'grammar',
+        type: cat.skill_area?.includes('speaking') ? 'speaking'
+            : cat.skill_area?.includes('writing') ? 'writing'
+            : cat.skill_area?.includes('listening') ? 'listening'
+            : cat.skill_area?.includes('reading') ? 'reading'
+            : 'grammar',
         category: cat.category_id,
         categoryName: cat.category_name,
         explanation: pattern.explanation || pattern.solution || cat.definition || '',
@@ -636,6 +640,66 @@ export async function seedStudentsIfEmpty(STUDENTS) {
   }));
   save(K.studentsCrud, seeded);
   return seeded;
+}
+
+export async function seedDemoDataIfEmpty() {
+  const diagnoses = load(K.diagnoses);
+  const events = load(K.classEvents);
+  if (diagnoses.some(d => d.id?.startsWith('demo-'))) return;
+
+  const students = load(K.studentsCrud);
+  if (!students.length) return;
+  const s1 = students[0].id;
+
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const nextDate = tomorrow.toISOString().slice(0, 10);
+
+  events.push({
+    id: 'demo-class-1', studentId: s1, date: nextDate, startTime: '14:00', endTime: '15:00',
+    title: 'English Class', classFocus: 'Speaking & Vocabulary', metSkillFocus: 'speaking',
+    status: 'scheduled', diagnosticStatus: 'not-started', homeworkStatus: 'not-generated',
+    createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
+  });
+  save(K.classEvents, events);
+
+  diagnoses.unshift({
+    id: 'demo-dx-1', studentId: s1, status: 'approved',
+    createdAt: new Date(Date.now() - 3 * 86400000).toISOString(),
+    updatedAt: new Date(Date.now() - 3 * 86400000).toISOString(),
+    sections: {
+      studentFeedback: { approved: true, content: {
+        whatYouDidWell: "You showed strong improvement in using past tenses correctly during our conversation practice. Your confidence when speaking has noticeably increased, and you're making fewer hesitation pauses. Your vocabulary range for describing daily routines is solid at B1+ level.",
+        whatToImprove: "Focus on article usage ('a' vs 'the') — you consistently drop articles before nouns. Also work on linking words (however, although, furthermore) to connect your ideas more naturally.",
+        finalNote: "Great progress this week! Your speaking fluency is really developing. For next class, review the article rules handout and try writing 3 sentences using 'although' and 'however'. Keep up the excellent work!"
+      }},
+      priorityDiagnosis: { approved: true, content: [
+        { rank: 1, area: 'Articles & Determiners', whatToImprove: 'Consistent omission of articles before nouns', urgency: 'high' },
+        { rank: 2, area: 'Linking & Cohesion', whatToImprove: 'Limited use of discourse markers', urgency: 'medium' },
+      ]},
+    },
+    content: { section_snapshot: [
+      { section: 'Speaking', score_0_80: 52, next_step: 'Improve fluency with linking phrases' },
+      { section: 'Writing', score_0_80: 44, next_step: 'Article usage and sentence variety' },
+      { section: 'Reading', score_0_80: 56, next_step: 'Inference and detail questions' },
+      { section: 'Listening', score_0_80: 48, next_step: 'Note-taking during longer passages' },
+    ]},
+  });
+  diagnoses.push({
+    id: 'demo-dx-2', studentId: s1, status: 'approved',
+    createdAt: new Date(Date.now() - 10 * 86400000).toISOString(),
+    updatedAt: new Date(Date.now() - 10 * 86400000).toISOString(),
+    sections: {
+      studentFeedback: { approved: true, content: {
+        whatYouDidWell: "Excellent effort on the reading comprehension exercise! You correctly identified the main idea and supporting details. Your pronunciation of difficult words like 'environment' and 'responsibility' has improved significantly.",
+        whatToImprove: "Work on your writing speed — you tend to spend too long thinking before writing. Practice timed writing exercises (10 minutes, 100 words). Also, pay attention to subject-verb agreement with third person singular.",
+        finalNote: "You're making steady progress. I can see you're practicing between classes. Next week we'll focus on speaking practice for the MET oral exam format. Try to listen to one English podcast this week!"
+      }},
+      priorityDiagnosis: { approved: true, content: [] },
+    },
+    content: {},
+  });
+  save(K.diagnoses, diagnoses);
 }
 
 /* ─── TARGET PROFILES ────────────────────────────────────────── */

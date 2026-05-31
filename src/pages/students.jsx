@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 import { Icon, Card, SectionHeader, Pill, Button, Avatar } from '../components/shared.jsx';
 import { getStudents, saveStudent, deleteStudent, getActiveTargetProfile, getLatestDiagnosis, getErrorBank } from '../lib/workflow.js';
 
-export default function StudentsPage({ students: propStudents, onNavigate }) {
+export default function StudentsPage({ onNavigate }) {
   const [students, setStudents] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [editStudent, setEditStudent] = useState(null);

@@ -687,6 +687,7 @@ const trunc = (str, max) => {
 export const buildDiagnosticPrompt = (data) => {
   const {
     student, classEvent, classEvidence, targetProfile, errorProfileContext,
+    previousStrengths, previousWeaknesses,
   } = data;
 
   const ev = classEvidence || {};
@@ -701,8 +702,8 @@ export const buildDiagnosticPrompt = (data) => {
     .replace('{TARGET_LEVEL}', student?.targetLevel || student?.bandTarget || 'B2')
     .replace('{EXAM_GOAL}', student?.examGoal || student?.goal || 'Pass MET B2')
     .replace('{PROFESSIONAL_CONTEXT}', student?.professionalContext || 'not provided')
-    .replace('{PREVIOUS_STRENGTHS}', 'not provided')
-    .replace('{PREVIOUS_WEAKNESSES}', 'not provided')
+    .replace('{PREVIOUS_STRENGTHS}', previousStrengths || 'not provided')
+    .replace('{PREVIOUS_WEAKNESSES}', previousWeaknesses || 'not provided')
     .replace('{PREVIOUS_ERRORS}', errorProfileContext || 'not provided')
     .replace('{CLASS_DATE}', classEvent?.date || new Date().toISOString().slice(0, 10))
     .replace('{CLASS_FOCUS}', classEvent?.classFocus || 'not specified')

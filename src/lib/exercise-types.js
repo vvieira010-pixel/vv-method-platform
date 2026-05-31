@@ -114,8 +114,9 @@ export function autoGrade(exercise, response) {
     }
 
     case 'fix': {
-      const student = (response.text || '').trim().toLowerCase().replace(/\s+/g, ' ');
-      const target  = (exercise.correctedText || '').trim().toLowerCase().replace(/\s+/g, ' ');
+      const normalize = s => (s || '').trim().toLowerCase().replace(/\s+/g, ' ').replace(/[.,;:!?]+$/, '');
+      const student = normalize(response.text);
+      const target  = normalize(exercise.correctedText);
       const isCorrect = student === target;
       return {
         correct: isCorrect,

@@ -26,10 +26,17 @@ export function parseAiJson(raw) {
     }
 
     let fixed = text;
+    if (escape) fixed = fixed.slice(0, -1);
     if (inString) fixed += '"';
     fixed = fixed.replace(/,\s*$/, "");
-    for (let i = 0; i < openBrackets; i++) fixed += ']';
-    for (let i = 0; i < openBraces; i++) fixed += '}';
+    for (let i = 0; i < openBrackets; i++) {
+      fixed = fixed.replace(/,\s*$/, "");
+      fixed += ']';
+    }
+    for (let i = 0; i < openBraces; i++) {
+      fixed = fixed.replace(/,\s*$/, "");
+      fixed += '}';
+    }
 
     try { return JSON.parse(fixed); } catch {
       const cleaned = fixed.replace(/,\s*([}\]])/g, "$1");

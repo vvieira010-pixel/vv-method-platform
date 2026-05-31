@@ -7,23 +7,16 @@
  * - Scores/diagnosis only from approved diagnoses
  */
 import { useState, useEffect } from 'react';
-import { Icon, Avatar, Button, Card, StudentFeedbackView } from '../components/shared.jsx';
-import { getHomework, submitHomework, getDiagnoses, getProgressNotes, getReviews, getAllSubmissions } from '../lib/workflow.js';
-import { isStructuredExercise, createEmptyResponse } from '../lib/exercise-types.js';
+import { Icon, Avatar, Button, Card, SectionHeader, StudentFeedbackView, Shell } from '../components/shared.jsx';
+import { getHomework, submitHomework, getDiagnoses, getProgressNotes, getReviews, getAllSubmissions, getClassEvents } from '../lib/workflow.js';
+import { isStructuredExercise } from '../lib/exercise-types.js';
 import { ExercisePlayer, HomeworkStepThrough } from '../components/exercise-player.jsx';
 import { ExTypeBadge } from '../components/exercise-editor.jsx';
 import { MessageTeacherDock, StudentInbox } from '../components/message-center.jsx';
 import '../styles/logbook.css';
 
-const TABS = [
-  { id: 'home',     label: 'Home',     icon: <Icon.home size={16} /> },
-  { id: 'homework', label: 'Homework', icon: <Icon.homework size={16} /> },
-  { id: 'progress', label: 'Progress', icon: <Icon.progress size={16} /> },
-  { id: 'messages', label: 'Messages', icon: <Icon.inbox size={16} /> },
-];
-
 export default function StudentDashboard({ student, onSignOut }) {
-  const [tab, setTab] = useState('home');
+  const [activeTab, setActiveTab] = useState('dashboard');
 
   if (!student) {
     return <div style={{ padding: 40, textAlign: 'center', color: 'var(--muted)' }}>
@@ -31,140 +24,137 @@ export default function StudentDashboard({ student, onSignOut }) {
     </div>;
   }
 
+  const tabs = [
+    { id: 'dashboard', label: 'Journey', icon: <Icon.home /> },
+    { id: 'feedback',  label: 'Feedback', icon: <Icon.doc /> },
+    { id: 'homework',  label: 'Practice', icon: <Icon.homework /> },
+    { id: 'progress',  label: 'Mastery', icon: <Icon.progress /> },
+    { id: 'messages',  label: 'Messages', icon: <Icon.inbox /> },
+  ];
+
   return (
-    <div className="dash">
-      <header className="dash-topbar">
-        <div className="dash-brand">
-          <span className="dash-brand-name">MET Preparation</span>
+    <Shell
+      active={activeTab}
+      onTab={setActiveTab}
+      tabs={tabs}
+      rightSlot={
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <span style={{ fontSize: 'var(--text-sm)', fontWeight: 600 }}>{student.firstName}</span>
+          <Avatar name={student.name} size={32} />
+          <Button variant="ghost" size="sm" onClick={onSignOut}>Sign out</Button>
         </div>
-        <div className="dash-topbar-right">
-          <span className="dash-topbar-name">{student.firstName}</span>
-          <Avatar name={student.name} size={30} tone="auto" />
-          <button onClick={onSignOut} style={{ background: 'none', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: '5px 10px', fontSize: 11.5, fontWeight: 500, color: 'var(--muted)', cursor: 'pointer', fontFamily: 'inherit' }}>
-            Sign out
-          </button>
+      }
+    >
+      <div className="page-shell">
+        <div className="page-inner">
+          {activeTab === 'dashboard' && <HomeView student={student} onTab={setActiveTab} />}
+          {activeTab === 'feedback'  && <FeedbackView student={student} />}
+          {activeTab === 'homework'  && <HomeworkView student={student} />}
+          {activeTab === 'progress'  && <ProgressView student={student} />}
+          {activeTab === 'messages'  && <StudentInbox student={student} />}
         </div>
-      </header>
-
-      <div className="dash-body">
-        {tab === 'home' && <HomeView student={student} onTab={setTab} />}
-        {tab === 'homework' && <HomeworkView student={student} />}
-        {tab === 'progress' && <ProgressView student={student} />}
-        {tab === 'messages' && <StudentInbox student={student} />}
       </div>
-
-      <nav className="dash-bottom-nav">
-        {TABS.map(t => (
-          <button key={t.id} onClick={() => setTab(t.id)} className={'dash-nav-btn' + (tab === t.id ? ' active' : '')}>
-            <span className="dash-nav-icon">{t.icon}</span>
-            <span className="dash-nav-label">{t.label}</span>
-          </button>
-        ))}
-      </nav>
-      <MessageTeacherDock student={student} onSent={() => setTab('messages')} />
-    </div>
+      <MessageTeacherDock student={student} onSent={() => setActiveTab('messages')} />
+    </Shell>
   );
 }
 
 /* ─── HOME ─── */
 function HomeView({ student, onTab }) {
-  const [latestFeedback, setLatestFeedback] = useState(null);
   const [pendingHw, setPendingHw] = useState([]);
-  const [snapshot, setSnapshot] = useState([]);
+  const [nextClass, setNextClass] = useState(null);
+  const [hasFeedback, setHasFeedback] = useState(false);
+  const session = student.session || 1;
+  const totalSessions = student.totalSessions || 24;
+  const progress = Math.round((session / totalSessions) * 100);
 
   useEffect(() => {
     (async () => {
-      const [hw, diagnoses] = await Promise.all([
+      const [hw, diagnoses, events] = await Promise.all([
         getHomework(student.id),
         getDiagnoses(student.id),
+        getClassEvents(student.id),
       ]);
       setPendingHw((hw || []).filter(h => h.status === 'not-started' || h.status === 'in-progress'));
 
-      // Only show feedback from approved diagnoses
       const approvedDx = (diagnoses || []).filter(dx => dx.status === 'approved' && dx.sections?.studentFeedback?.approved);
-      if (approvedDx.length > 0) {
-        const dx = approvedDx[0];
-        setLatestFeedback(dx.sections.studentFeedback.content);
-        setSnapshot(dx.content?.section_snapshot || []);
-      }
+      setHasFeedback(approvedDx.length > 0);
+
+      const today = new Date().toISOString().slice(0, 10);
+      const upcoming = (events || [])
+        .filter(e => e.status === 'scheduled' && e.date >= today)
+        .sort((a, b) => a.date.localeCompare(b.date) || (a.startTime || '').localeCompare(b.startTime || ''));
+      setNextClass(upcoming[0] || null);
     })();
   }, [student.id]);
 
-  function timeOfDay() {
-    const h = new Date().getHours();
-    return h < 12 ? 'morning' : h < 17 ? 'afternoon' : 'evening';
-  }
-
   return (
-    <div style={{ padding: '20px 16px', maxWidth: 680, margin: '0 auto' }}>
-      <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-2xl)', fontWeight: 700, color: 'var(--accent-deep)', margin: '0 0 4px' }}>
-        Good {timeOfDay()}, {student.firstName}.
-      </h1>
-      <p style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', margin: '0 0 20px' }}>
-        {student.currentLevel || student.band} → {student.targetLevel || student.bandTarget} · Session {student.session || 1}/{student.totalSessions || 24}
-      </p>
-
-      {/* Latest approved feedback */}
-      {latestFeedback && typeof latestFeedback === 'object' ? (
-        <div style={{ padding: 18, borderRadius: 'var(--radius-md)', background: 'var(--surface)', border: '1px solid var(--border)', marginBottom: 16 }}>
-          <div style={{ fontWeight: 700, fontSize: 'var(--text-md)', color: 'var(--accent-deep)', marginBottom: 12 }}>
-            Latest Feedback from Teacher
+    <div style={{ maxWidth: 800, margin: '0 auto' }}>
+      {/* Journey Map */}
+      <Card style={{ marginBottom: 24, background: 'var(--accent)', color: '#fff' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+          <div style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-xl)' }}>Your Mastery Journey</div>
+          <div style={{ fontWeight: 800, fontSize: 'var(--text-lg)', color: 'var(--mastery-gold)' }}>
+            Session {session} <span style={{ color: 'var(--accent-soft)' }}>/ {totalSessions}</span>
           </div>
-          <StudentFeedbackView feedback={latestFeedback} />
         </div>
-      ) : (
-        <div style={{ padding: 16, borderRadius: 'var(--radius-md)', background: 'var(--bg)', border: '1px solid var(--border)', marginBottom: 16 }}>
-          <p style={{ color: 'var(--muted)', fontSize: 'var(--text-sm)', margin: 0 }}>No feedback available yet. Your teacher will send feedback after your next diagnosis.</p>
+        <div style={{ width: '100%', height: 12, borderRadius: 'var(--radius-pill)', background: 'rgba(255,255,255,0.1)', overflow: 'hidden' }}>
+          <div style={{ 
+            width: `${progress}%`, height: '100%', borderRadius: 'var(--radius-pill)', 
+            background: 'var(--mastery-gold)', transition: 'width 1s var(--ease)' 
+          }} />
         </div>
-      )}
+        <div style={{ marginTop: 12, fontSize: 'var(--text-sm)', color: 'var(--accent-soft)' }}>
+          {progress < 25 ? 'Just getting started—mastering the foundations.' :
+           progress < 50 ? 'Building momentum in intermediate skills.' :
+           progress < 75 ? 'Advancing toward sophisticated expression.' :
+           'Final stretch: honing mastery for the exam.'}
+        </div>
+      </Card>
 
-      {/* Pending homework */}
-      {pendingHw.length > 0 && (
-        <div style={{ padding: 16, borderRadius: 'var(--radius-md)', background: 'var(--accent-subtle)', border: '1px solid var(--accent-soft)', marginBottom: 16, cursor: 'pointer' }} onClick={() => onTab('homework')}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div>
-              <div style={{ fontWeight: 700, color: 'var(--accent-deep)' }}>
-                {pendingHw.length === 1 ? 'Homework assigned' : `${pendingHw.length} homework sets`}
-              </div>
-              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: 2 }}>
-                {pendingHw[0]?.title}
-                {pendingHw[0]?.dueDate ? ` · Due ${new Date(pendingHw[0].dueDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}` : ''}
-              </div>
+      {/* Next Class */}
+      {nextClass && (
+        <Card style={{ marginBottom: 24, display: 'flex', alignItems: 'center', gap: 16 }}>
+          <div style={{ width: 48, height: 48, borderRadius: 'var(--radius-md)', background: 'var(--info-bg)', display: 'grid', placeItems: 'center', color: 'var(--primary)', flexShrink: 0 }}>
+            <Icon.calendar size={22} />
+          </div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontWeight: 700, fontSize: 'var(--text-sm)', color: 'var(--text)' }}>Next Class</div>
+            <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', marginTop: 2 }}>
+              {new Date(nextClass.date + 'T12:00:00').toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}
+              {nextClass.startTime && ` · ${nextClass.startTime}`}
             </div>
-            <Icon.arrowR size={16} />
+            {nextClass.classFocus && (
+              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-2)', marginTop: 4 }}>Focus: {nextClass.classFocus}</div>
+            )}
           </div>
-        </div>
+        </Card>
       )}
 
-      {/* Skill snapshot (from approved diagnosis) */}
-      {snapshot.length > 0 && (
-        <div style={{ marginBottom: 16 }}>
-          <div style={{ fontWeight: 600, fontSize: 'var(--text-sm)', marginBottom: 10, color: 'var(--text-2)' }}>Your Current Skills</div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-            {snapshot.map(s => (
-              <div key={s.section} style={{ padding: 10, borderRadius: 'var(--radius-sm)', background: 'var(--surface)', border: '1px solid var(--border)' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 'var(--text-xs)', marginBottom: 4 }}>
-                  <span style={{ fontWeight: 600 }}>{s.section}</span>
-                  {s.score_0_80 > 0 && <span style={{ color: 'var(--muted)' }}>{s.score_0_80}/80</span>}
-                </div>
-                {s.score_0_80 > 0 && (
-                  <div style={{ width: '100%', height: 6, borderRadius: 99, background: 'var(--bg-deep)', overflow: 'hidden' }}>
-                    <div style={{ width: '100%', height: '100%', borderRadius: 99, background: 'var(--accent)', transform: `scaleX(${Math.min(1, s.score_0_80 / 80)})`, transformOrigin: 'left', transition: 'transform 0.4s' }} />
-                  </div>
-                )}
-                {s.score_0_80 === 0 && <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontStyle: 'italic' }}>Not evaluated yet</div>}
-              </div>
-            ))}
-          </div>
-        </div>
+      {/* Primary Call to Action */}
+      {pendingHw.length > 0 && (
+        <Card style={{ borderLeft: '4px solid var(--mastery-gold)', marginBottom: 24 }}>
+          <SectionHeader 
+            title="Practice Focus" 
+            sub={pendingHw[0].title}
+            action={<Button variant="primary" onClick={() => onTab('homework')}>Continue Practice</Button>}
+          />
+        </Card>
       )}
 
-      {/* Stats */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
-        <MiniStat label="Session" value={`${student.session || 1}/${student.totalSessions || 24}`} />
-        <MiniStat label="Pending HW" value={pendingHw.length} />
-        <MiniStat label="Level" value={student.currentLevel || student.band || 'B1'} />
-      </div>
+      {/* Feedback nudge */}
+      {hasFeedback && (
+        <Card style={{ display: 'flex', alignItems: 'center', gap: 16, cursor: 'pointer' }} onClick={() => onTab('feedback')}>
+          <div style={{ width: 48, height: 48, borderRadius: 'var(--radius-md)', background: 'var(--success-bg)', display: 'grid', placeItems: 'center', color: 'var(--success)', flexShrink: 0 }}>
+            <Icon.doc size={22} />
+          </div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontWeight: 700, fontSize: 'var(--text-sm)', color: 'var(--text)' }}>Teacher Feedback</div>
+            <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: 2 }}>New feedback from your teacher is available.</div>
+          </div>
+          <span style={{ color: 'var(--primary)', fontWeight: 600, fontSize: 'var(--text-sm)' }}>View →</span>
+        </Card>
+      )}
     </div>
   );
 }
@@ -424,90 +414,118 @@ function HomeworkView({ student }) {
   );
 }
 
-/* ─── PROGRESS ─── */
-function ProgressView({ student }) {
-  const [diagnoses, setDiagnoses] = useState([]);
-  const [notes, setNotes] = useState([]);
+/* ─── FEEDBACK ─── */
+function FeedbackView({ student }) {
+  const [feedbackList, setFeedbackList] = useState([]);
 
   useEffect(() => {
     (async () => {
-      const [dx, pn] = await Promise.all([getDiagnoses(student.id), getProgressNotes(student.id)]);
-      setDiagnoses((dx || []).filter(d => d.status === 'approved'));
-      setNotes(pn || []);
+      const diagnoses = await getDiagnoses(student.id);
+      const approved = (diagnoses || [])
+        .filter(dx => dx.status === 'approved' && dx.sections?.studentFeedback?.approved)
+        .map(dx => ({
+          id: dx.id,
+          date: dx.createdAt,
+          feedback: dx.sections.studentFeedback.content,
+        }));
+      setFeedbackList(approved);
     })();
   }, [student.id]);
 
   return (
-    <div style={{ padding: '20px 16px', maxWidth: 680, margin: '0 auto' }}>
-      <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-xl)', fontWeight: 700, margin: '0 0 16px' }}>My Progress</h2>
+    <div style={{ maxWidth: 800, margin: '0 auto' }}>
+      <SectionHeader title="Teacher Feedback" sub="Personalized notes from your teacher after each session." />
 
-      {diagnoses.length === 0 ? (
-        <p style={{ color: 'var(--muted)' }}>No diagnoses yet. After your first class, your progress will appear here.</p>
+      {feedbackList.length === 0 ? (
+        <Card>
+          <div style={{ color: 'var(--muted)', fontStyle: 'italic', padding: '20px 0', textAlign: 'center' }}>
+            No feedback yet. After your next class and diagnosis, your teacher will share personalized notes here.
+          </div>
+        </Card>
       ) : (
-        <>
-          {/* Current skills from latest diagnosis */}
-          {diagnoses[0]?.content?.section_snapshot?.length > 0 && (
-            <div style={{ marginBottom: 20 }}>
-              <div style={{ fontWeight: 600, fontSize: 'var(--text-sm)', marginBottom: 10 }}>Current Skills</div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-                {diagnoses[0].content.section_snapshot.map(s => (
-                  <div key={s.section} style={{ padding: 10, borderRadius: 'var(--radius-sm)', background: 'var(--surface)', border: '1px solid var(--border)' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 'var(--text-xs)', marginBottom: 4 }}>
-                      <span style={{ fontWeight: 600 }}>{s.section}</span>
-                      {s.score_0_80 > 0 && <span style={{ color: 'var(--accent)' }}>{s.score_0_80}/80</span>}
-                    </div>
-                    {s.score_0_80 > 0 && (
-                      <div style={{ width: '100%', height: 6, borderRadius: 99, background: 'var(--bg-deep)', overflow: 'hidden' }}>
-                        <div style={{ width: `${(s.score_0_80 / 80) * 100}%`, height: '100%', borderRadius: 99, background: s.trend === 'improving' ? 'var(--success)' : 'var(--accent)' }} />
-                      </div>
-                    )}
-                    {s.next_step && <div style={{ fontSize: 10, color: 'var(--muted)', marginTop: 4 }}>Next: {s.next_step}</div>}
-                  </div>
-                ))}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          {feedbackList.map(item => (
+            <Card key={item.id}>
+              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginBottom: 12 }}>
+                {new Date(item.date).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
               </div>
-            </div>
-          )}
-
-          {/* Diagnosis timeline */}
-          <div style={{ fontWeight: 600, fontSize: 'var(--text-sm)', marginBottom: 10 }}>Diagnosis History</div>
-          {diagnoses.map((dx, i) => (
-            <div key={dx.id} style={{ padding: 14, border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', marginBottom: 10, background: 'var(--surface)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                <span style={{ fontWeight: 600, fontSize: 'var(--text-sm)' }}>Class #{diagnoses.length - i}</span>
-                <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>{new Date(dx.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
-              </div>
-              {dx.sections?.profileUpdateSuggestions?.content?.progressNote && (
-                <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-2)', fontStyle: 'italic' }}>{dx.sections.profileUpdateSuggestions.content.progressNote}</p>
-              )}
-              {dx.content?.section_snapshot?.length > 0 && (
-                <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-                  {dx.content.section_snapshot.filter(s => s.score_0_80 > 0).map(s => (
-                    <div key={s.section} style={{ textAlign: 'center', flex: 1 }}>
-                      <div style={{ fontSize: 10, color: 'var(--muted)' }}>{s.section}</div>
-                      <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--accent-deep)' }}>{s.score_0_80}</div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          ))}
-        </>
-      )}
-
-      {/* Progress notes */}
-      {notes.length > 0 && (
-        <div style={{ marginTop: 20 }}>
-          <div style={{ fontWeight: 600, fontSize: 'var(--text-sm)', marginBottom: 10 }}>Notes from Teacher</div>
-          {notes.map(n => (
-            <div key={n.id} style={{ padding: '10px 14px', background: 'var(--bg)', borderRadius: 'var(--radius-sm)', marginBottom: 8, fontSize: 'var(--text-sm)', lineHeight: 1.6 }}>
-              <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginRight: 8 }}>
-                {new Date(n.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
-              </span>
-              {n.note}
-            </div>
+              <StudentFeedbackView feedback={item.feedback} />
+            </Card>
           ))}
         </div>
       )}
+    </div>
+  );
+}
+
+/* ─── PROGRESS ─── */
+function ProgressView({ student }) {
+  const [diagnoses, setDiagnoses] = useState([]);
+
+  useEffect(() => {
+    (async () => {
+      const dx = await getDiagnoses(student.id);
+      setDiagnoses((dx || []).filter(d => d.status === 'approved'));
+    })();
+  }, [student.id]);
+
+  const latestDx = diagnoses[0];
+  const snapshot = latestDx?.content?.section_snapshot || [];
+
+  return (
+    <div style={{ maxWidth: 800, margin: '0 auto' }}>
+      <SectionHeader title="Mastery Skill Tree" sub="Your progression across core MET competencies." />
+      
+      {snapshot.length === 0 ? (
+        <Card>
+          <div style={{ color: 'var(--muted)', fontStyle: 'italic', padding: '20px 0', textAlign: 'center' }}>
+            No mastery data yet. Complete your first diagnostic session to begin mapping your skills.
+          </div>
+        </Card>
+      ) : (
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+          {snapshot.map(s => (
+            <Card key={s.section}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                <div style={{ fontWeight: 700, fontSize: 'var(--text-md)', color: 'var(--accent)' }}>{s.section}</div>
+                <div style={{ fontSize: 'var(--text-lg)', fontWeight: 800, color: 'var(--mastery-gold)' }}>
+                  {s.score_0_80 || 0}/80
+                </div>
+              </div>
+              
+              {/* Mastery Progress Bar */}
+              <div style={{ width: '100%', height: 10, borderRadius: 'var(--radius-pill)', background: 'var(--divider)', marginBottom: 8 }}>
+                <div style={{ 
+                  width: `${((s.score_0_80 || 0) / 80) * 100}%`, 
+                  height: '100%', 
+                  borderRadius: 'var(--radius-pill)', 
+                  background: 'linear-gradient(90deg, var(--primary), var(--mastery-gold))',
+                  transition: 'width 0.8s var(--ease)' 
+                }} />
+              </div>
+              
+              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--steel)' }}>
+                {s.next_step ? `Next focus: ${s.next_step}` : 'Mastery attained'}
+              </div>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      {/* Diagnosis History remains for context */}
+      <div style={{ marginTop: 40 }}>
+        <SectionHeader title="History" sub="Your journey through diagnostic sessions." />
+        {diagnoses.map((dx, i) => (
+          <Card key={dx.id} style={{ marginBottom: 12 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <div style={{ fontWeight: 600 }}>Class Session #{diagnoses.length - i}</div>
+              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>
+                {new Date(dx.createdAt).toLocaleDateString()}
+              </div>
+            </div>
+          </Card>
+        ))}
+      </div>
     </div>
   );
 }
