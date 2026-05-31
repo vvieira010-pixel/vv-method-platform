@@ -22,6 +22,7 @@ const SubmissionReview  = lazy(() => import('./pages/submission-review.jsx'));
 const ErrorBankPage     = lazy(() => import('./pages/error-bank.jsx'));
 const ReportsPage       = lazy(() => import('./pages/reports.jsx'));
 const SettingsPage      = lazy(() => import('./pages/settings.jsx'));
+const ExerciseDemo      = lazy(() => import('./pages/exercise-demo.jsx'));
 const InboxPage         = lazy(() => import('./tools/tool-inbox.jsx'));
 
 export default function App() {
@@ -104,6 +105,7 @@ export default function App() {
     { id: 'inbox',        label: 'Inbox',        icon: <Icon.inbox size={16} /> },
     { id: 'error-bank',   label: 'Error Bank',   icon: <Icon.warning size={16} /> },
     { id: 'reports',      label: 'Reports',      icon: <Icon.progress size={16} /> },
+    { id: 'exercises',    label: 'Exercises',    icon: <Icon.doc size={16} /> },
     { id: 'settings',     label: 'Settings',     icon: <Icon.settings size={16} /> },
   ];
 
@@ -193,6 +195,9 @@ function renderTeacherPage(view, params, ctx) {
 
     case 'settings':
       return <SettingsPage onNavigate={navigate} />;
+
+    case 'exercises':
+      return <ExerciseDemo onNavigate={navigate} />;
 
     default:
       return <TeacherDashboard students={students} onNavigate={navigate} />;
