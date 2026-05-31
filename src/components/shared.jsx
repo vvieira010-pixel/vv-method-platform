@@ -186,7 +186,7 @@ const GLOBAL_CSS = `
   .kpi-trend { display: inline-flex; align-items: center; gap: 3px; font-size: var(--text-xs); font-weight: 600; margin-top: 5px; }
   .kpi-trend.up { color: var(--success); } .kpi-trend.down { color: var(--danger); }
   .review-badge { display: inline-flex; align-items: center; gap: 5px; font-size: var(--text-xs); font-weight: 700; padding: 3px 9px; border-radius: var(--radius-pill); }
-  .evidence-card { background: var(--accent-subtle); border: 1px solid var(--accent-soft); border-left: 3px solid var(--accent); border-radius: var(--radius-md); padding: 12px 14px; margin-bottom: 8px; }
+  .evidence-card { background: var(--accent-subtle); border: 1px solid var(--accent-soft); border-radius: var(--radius-md); padding: 12px 14px; margin-bottom: 8px; }
   .evidence-card-label { font-size: var(--text-xs); font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 4px; }
   .evidence-card-text { font-size: var(--text-sm); color: var(--text-2); line-height: 1.5; }
   .pill-nav { display: flex; gap: 6px; flex-wrap: wrap; }
@@ -496,7 +496,7 @@ export function StudentFeedbackView({ feedback }) {
                 {w.explanation && <p style={{ fontSize: 'var(--text-sm)', lineHeight: 1.6, margin: '0 0 4px' }}>{w.explanation}</p>}
                 {w.metConnection && <p style={{ fontSize: 'var(--text-sm)', lineHeight: 1.6, margin: '0 0 6px', color: 'var(--text-2)' }}>{w.metConnection}</p>}
                 {w.example && (
-                  <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-2)', fontStyle: 'italic', borderLeft: '3px solid var(--success)', paddingLeft: 10 }}>
+                  <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-2)', fontStyle: 'italic', borderLeft: '2px solid var(--success-soft)', paddingLeft: 10 }}>
                     <strong style={{ fontStyle: 'normal', color: 'var(--success)' }}>Example: </strong>{w.example}
                   </div>
                 )}
@@ -766,48 +766,42 @@ const OPENAI_MODEL = import.meta.env.VITE_OPENAI_MODEL || 'gpt-4.1-mini';
 const GROQ_MODEL = import.meta.env.VITE_GROQ_MODEL || 'llama-3.3-70b-versatile';
 const GEMINI_MODEL = import.meta.env.VITE_GEMINI_MODEL || 'gemini-2.5-flash';
 
+const AI_WINNER_LS = 'vv:ai_last_winner'; // sticky: provider/model that last succeeded this session
+
 export async function callAI(prompt, { max_tokens = 2048, system } = {}) {
   const sys = system || 'You are a helpful MET English teaching assistant.';
   const errors = []; // collect every provider failure so the real cause is surfaced
 
-  // ── 1. Groq (cascade across all chat models) ──
   const groqKey = import.meta.env.VITE_GROQ_API_KEY || localStorage.getItem('vv:groq_api_key');
-  if (groqKey) {
-    const candidateModels = [
-      GROQ_MODEL,
-      'meta-llama/llama-4-scout-17b-16e-instruct', // 300K TPM — preview, strongest reasoning
-      'llama-3.3-70b-versatile',                   // 300K TPM — production, very capable
-      'qwen/qwen3-32b',                            // 300K TPM — preview, strong multilingual
-      'openai/gpt-oss-120b',                       // 250K TPM — production, large
-      'openai/gpt-oss-20b',                        // 250K TPM — production, fast
-      'llama-3.1-8b-instant',                      // 250K TPM — production, fastest fallback
-    ].filter(Boolean).filter((m, i, arr) => arr.indexOf(m) === i);
+  const geminiKey = import.meta.env.VITE_GEMINI_API_KEY || localStorage.getItem('vv:gemini_api_key');
+  const anthropicKey = import.meta.env.VITE_ANTHROPIC_API_KEY || localStorage.getItem(API_KEY_LS);
+  const openaiKey = import.meta.env.VITE_OPENAI_API_KEY || localStorage.getItem('vv:openai_api_key');
+  const payload = { model: ANTHROPIC_MODEL, max_tokens, system: sys, messages: [{ role: 'user', content: prompt }] };
 
-    for (const model of candidateModels) {
-      try {
-        const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${groqKey}` },
-          body: JSON.stringify({
-            model, temperature: 0.3, max_tokens,
-            messages: [{ role: 'system', content: sys }, { role: 'user', content: prompt }],
-          }),
-        });
-        if (res.ok) {
-          const data = await res.json();
-          return { content: [{ text: data?.choices?.[0]?.message?.content || '' }] };
-        }
-        const err = await res.json().catch(() => ({}));
-        errors.push(`Groq/${model}: ${err.error?.message || res.status}`);
-      } catch (e) {
-        errors.push(`Groq/${model}: ${e.message}`);
+  // ── Provider attempts: each returns a result object on success, or null on failure (pushing to errors) ──
+  async function tryGroq(model) {
+    try {
+      const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${groqKey}` },
+        body: JSON.stringify({
+          model, temperature: 0.3, max_tokens,
+          messages: [{ role: 'system', content: sys }, { role: 'user', content: prompt }],
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        return { content: [{ text: data?.choices?.[0]?.message?.content || '' }] };
       }
+      const err = await res.json().catch(() => ({}));
+      errors.push(`Groq/${model}: ${err.error?.message || res.status}`);
+    } catch (e) {
+      errors.push(`Groq/${model}: ${e.message}`);
     }
+    return null;
   }
 
-  // ── 2. Gemini ──
-  const geminiKey = import.meta.env.VITE_GEMINI_API_KEY || localStorage.getItem('vv:gemini_api_key');
-  if (geminiKey) {
+  async function tryGemini() {
     try {
       const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${geminiKey}`;
       const res = await fetch(url, {
@@ -831,30 +825,29 @@ export async function callAI(prompt, { max_tokens = 2048, system } = {}) {
     } catch (e) {
       errors.push(`Gemini/${GEMINI_MODEL}: ${e.message}`);
     }
+    return null;
   }
 
-  const payload = { model: ANTHROPIC_MODEL, max_tokens, system: sys, messages: [{ role: 'user', content: prompt }] };
-
-  // ── 3. Anthropic via dev/server proxy (skip silently if not configured) ──
-  const serverResponse = await fetch('/api/anthropic', {
-    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
-  }).catch(() => null);
-  if (serverResponse?.ok) return serverResponse.json();
-  if (serverResponse && ![404, 405].includes(serverResponse.status)) {
-    const err = await serverResponse.json().catch(() => ({}));
-    const msg = err.error?.message || err.message || `proxy ${serverResponse.status}`;
-    // "not configured" is just an absent key — record it but keep trying other providers
-    if (!/not configured/i.test(msg)) errors.push(`Anthropic proxy: ${msg}`);
+  async function tryAnthropicProxy() {
+    const serverResponse = await fetch('/api/anthropic', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
+    }).catch(() => null);
+    if (serverResponse?.ok) return serverResponse.json();
+    if (serverResponse && ![404, 405].includes(serverResponse.status)) {
+      const err = await serverResponse.json().catch(() => ({}));
+      const msg = err.error?.message || err.message || `proxy ${serverResponse.status}`;
+      // "not configured" is just an absent key — record it but keep trying other providers
+      if (!/not configured/i.test(msg)) errors.push(`Anthropic proxy: ${msg}`);
+    }
+    return null;
   }
 
-  // ── 4. Anthropic direct (browser key) ──
-  const apiKey = import.meta.env.VITE_ANTHROPIC_API_KEY || localStorage.getItem(API_KEY_LS);
-  if (apiKey) {
+  async function tryAnthropicDirect() {
     try {
       const res = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json', 'x-api-key': apiKey,
+          'Content-Type': 'application/json', 'x-api-key': anthropicKey,
           'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true',
         },
         body: JSON.stringify(payload),
@@ -865,11 +858,10 @@ export async function callAI(prompt, { max_tokens = 2048, system } = {}) {
     } catch (e) {
       errors.push(`Anthropic: ${e.message}`);
     }
+    return null;
   }
 
-  // ── 5. OpenAI direct ──
-  const openaiKey = import.meta.env.VITE_OPENAI_API_KEY || localStorage.getItem('vv:openai_api_key');
-  if (openaiKey) {
+  async function tryOpenAI() {
     try {
       const res = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
@@ -887,6 +879,42 @@ export async function callAI(prompt, { max_tokens = 2048, system } = {}) {
       errors.push(`OpenAI: ${err.error?.message || res.status}`);
     } catch (e) {
       errors.push(`OpenAI: ${e.message}`);
+    }
+    return null;
+  }
+
+  // ── Build the default cascade order (Groq models → Gemini → Anthropic proxy → Anthropic direct → OpenAI) ──
+  const attempts = [];
+  if (groqKey) {
+    const candidateModels = [
+      GROQ_MODEL,
+      'meta-llama/llama-4-scout-17b-16e-instruct', // 300K TPM — preview, strongest reasoning
+      'llama-3.3-70b-versatile',                   // 300K TPM — production, very capable
+      'qwen/qwen3-32b',                            // 300K TPM — preview, strong multilingual
+      'openai/gpt-oss-120b',                       // 250K TPM — production, large
+      'openai/gpt-oss-20b',                        // 250K TPM — production, fast
+      'llama-3.1-8b-instant',                      // 250K TPM — production, fastest fallback
+    ].filter(Boolean).filter((m, i, arr) => arr.indexOf(m) === i);
+    for (const model of candidateModels) attempts.push({ id: `groq:${model}`, run: () => tryGroq(model) });
+  }
+  if (geminiKey) attempts.push({ id: 'gemini', run: tryGemini });
+  attempts.push({ id: 'anthropic-proxy', run: tryAnthropicProxy }); // always tried; skips silently if not configured
+  if (anthropicKey) attempts.push({ id: 'anthropic-direct', run: tryAnthropicDirect });
+  if (openaiKey) attempts.push({ id: 'openai', run: tryOpenAI });
+
+  // ── Sticky winner: try the last provider/model that succeeded first, then fall back to the full cascade ──
+  let lastWinner = null;
+  try { lastWinner = localStorage.getItem(AI_WINNER_LS); } catch { /* storage unavailable */ }
+  if (lastWinner) {
+    const idx = attempts.findIndex(a => a.id === lastWinner);
+    if (idx > 0) attempts.unshift(attempts.splice(idx, 1)[0]);
+  }
+
+  for (const attempt of attempts) {
+    const result = await attempt.run();
+    if (result) {
+      try { localStorage.setItem(AI_WINNER_LS, attempt.id); } catch { /* storage unavailable */ }
+      return result;
     }
   }
 

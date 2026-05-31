@@ -113,7 +113,7 @@ export function AchievementsCard({ gam }) {
         <div style={{ height: 8, background: 'var(--bg-deep)', borderRadius: 999, overflow: 'hidden' }}>
           <div style={{
             height: '100%', background: 'var(--accent)',
-            width: `${xpProgress}%`, borderRadius: 999, transition: 'width 0.6s',
+            width: '100%', borderRadius: 999, transform: `scaleX(${xpProgress / 100})`, transformOrigin: 'left', transition: 'transform 0.6s',
           }} />
         </div>
         {nextLevel && (

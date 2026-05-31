@@ -175,6 +175,8 @@ Test Strategy: time_management, question_type_recognition, distractor_management
 17. studentFeedback.finalNote: a warm, encouraging closing focused on progress and the next step.
 18. homeworkRecommendation tasks: each task's "content" field MUST be fully written out exercise content ready for the student to use. For grammar tasks: write out actual sentences containing the target error pattern. For vocabulary: write sentences with blanks. For writing/speaking: write the full prompt. Never write "practice X" — write the actual exercise.
 19. homeworkRecommendation must have 2–4 tasks, each targeting a different diagnosed weakness. No repeated tasks.
+20. priorityDiagnosis MUST contain exactly 3 items (rank 1–3), each with ALL fields filled (urgency, area, evidence, whatToImprove, whyItMatters, howToImprove). Never return an empty array.
+21. vocabGrammarTargets MUST be populated: vocabularyTargets with at least 2 items (each with wordOrPhrase, category, meaning, exampleSentence) and grammarTargets with at least 2 items (each with area, issue, correction, practiceDirection), all drawn from the actual evidence. Never return empty arrays.
 
 ━━━ OUTPUT FORMAT ━━━
 Return ONLY valid JSON. No markdown, no backticks, no prose outside the JSON object.

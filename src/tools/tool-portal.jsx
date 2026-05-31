@@ -121,7 +121,7 @@ export default function ToolPortal({ students = [], selectedStudentId, onSelectS
             <div style={{ marginTop: 14 }}>
               <div style={{ fontSize: 11, color: 'var(--muted)', marginBottom: 5 }}>Overall progress</div>
               <div style={{ height: 8, background: 'var(--bg-deep)', borderRadius: 999, overflow: 'hidden' }}>
-                <div style={{ height: '100%', width: `${selected.progress}%`, background: 'var(--accent)', borderRadius: 999, transition: 'width 0.4s' }} />
+                <div style={{ height: '100%', width: '100%', background: 'var(--accent)', borderRadius: 999, transform: `scaleX(${(selected.progress || 0) / 100})`, transformOrigin: 'left', transition: 'transform 0.4s' }} />
               </div>
             </div>
           </Card>
