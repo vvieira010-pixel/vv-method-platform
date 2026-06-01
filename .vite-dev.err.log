@@ -1,0 +1,447 @@
+[BABEL] Note: The code generator has deoptimised the styling of C:\Users\vviei\.claude\projects\Platform\.vite-cache\deps\react-dom_client.js?v=62f54e88 as it exceeds the max of 500KB.
+[2m02:46:33[22m [31m[1m[vite][22m[39m [31mInternal server error: C:\Users\vviei\.claude\projects\Platform\src\components\shared.jsx: Unexpected token (666:15)
+
+[0m [90m 664 |[31m   [36mreturn[31m [][33m;[31m
+ [90m 665 |[31m }
+[31m[1m>[22m[31m[90m 666 |[31m               [33m<[31m[33m/[31m[33mdiv[31m[33m>[31m
+ [90m     |[31m                [31m[1m^[22m[31m
+ [90m 667 |[31m             ))}
+ [90m 668 |[31m           [33m<[31m[33m/[31m[33mdiv[31m[33m>[31m
+ [90m 669 |[31m         [33m<[31m[33m/[31m[33mdiv[31m[33m>[31m[0m[39m
+  Plugin: [35mvite:react-babel[39m
+  File: [36mC:/Users/vviei/.claude/projects/Platform/src/components/shared.jsx[39m:666:15
+[33m  664|    return [];
+  665|  }
+  666|                </div>
+     |                 ^
+  667|              ))}
+  668|            </div>[39m
+      at constructor (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:365:19)
+      at JSXParserMixin.raise (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:6616:19)
+      at JSXParserMixin.unexpected (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:6636:16)
+      at JSXParserMixin.jsxParseIdentifier (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:4581:12)
+      at JSXParserMixin.jsxParseNamespacedName (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:4588:23)
+      at JSXParserMixin.jsxParseElementName (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:4597:21)
+      at JSXParserMixin.jsxParseOpeningElementAt (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:4673:22)
+      at JSXParserMixin.jsxParseElementAt (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:4698:33)
+      at JSXParserMixin.jsxParseElement (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:4761:17)
+      at JSXParserMixin.parseExprAtom (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:4774:19)
+      at JSXParserMixin.parseExprSubscripts (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:11098:23)
+      at JSXParserMixin.parseUpdate (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:11083:21)
+      at JSXParserMixin.parseMaybeUnary (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:11063:23)
+      at JSXParserMixin.parseMaybeUnaryOrPrivate (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:10916:61)
+      at JSXParserMixin.parseExprOps (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:10921:23)
+      at JSXParserMixin.parseMaybeConditional (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:10898:23)
+      at JSXParserMixin.parseMaybeAssign (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:10848:21)
+      at JSXParserMixin.parseExpressionBase (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:10801:23)
+      at C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:10797:39
+      at JSXParserMixin.allowInAnd (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:12438:16)
+      at JSXParserMixin.parseExpression (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:10797:17)
+      at JSXParserMixin.parseStatementContent (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:12912:23)
+      at JSXParserMixin.parseStatementLike (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:12784:17)
+      at JSXParserMixin.parseModuleItem (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:12761:17)
+      at JSXParserMixin.parseBlockOrModuleBlockBody (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:13333:36)
+      at JSXParserMixin.parseBlockBody (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:13326:10)
+      at JSXParserMixin.parseProgram (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:12639:10)
+      at JSXParserMixin.parseTopLevel (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:12629:25)
+      at JSXParserMixin.parse (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:14505:25)
+      at parse (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:14539:38)
+      at parser (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\core\lib\parser\index.js:41:34)
+      at parser.next (<anonymous>)
+      at normalizeFile (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\core\lib\transformation\normalize-file.js:51:37)
+      at normalizeFile.next (<anonymous>)
+      at run (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\core\lib\transformation\index.js:22:50)
+      at run.next (<anonymous>)
+      at transform (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\core\lib\transform.js:22:33)
+      at transform.next (<anonymous>)
+      at step (C:\Users\vviei\.claude\projects\Platform\node_modules\gensync\index.js:261:32)
+      at C:\Users\vviei\.claude\projects\Platform\node_modules\gensync\index.js:273:13
+      at async.call.result.err.err (C:\Users\vviei\.claude\projects\Platform\node_modules\gensync\index.js:223:11)
+      at C:\Users\vviei\.claude\projects\Platform\node_modules\gensync\index.js:189:28
+      at C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\core\lib\gensync-utils\async.js:67:7
+      at C:\Users\vviei\.claude\projects\Platform\node_modules\gensync\index.js:113:33
+      at step (C:\Users\vviei\.claude\projects\Platform\node_modules\gensync\index.js:287:14)
+      at C:\Users\vviei\.claude\projects\Platform\node_modules\gensync\index.js:273:13
+      at async.call.result.err.err (C:\Users\vviei\.claude\projects\Platform\node_modules\gensync\index.js:223:11)
+[2m02:46:33[22m [31m[1m[vite][22m[39m [31mInternal server error: C:\Users\vviei\.claude\projects\Platform\src\components\shared.jsx: Unexpected token (666:15)
+
+[0m [90m 664 |[31m   [36mreturn[31m [][33m;[31m
+ [90m 665 |[31m }
+[31m[1m>[22m[31m[90m 666 |[31m               [33m<[31m[33m/[31m[33mdiv[31m[33m>[31m
+ [90m     |[31m                [31m[1m^[22m[31m
+ [90m 667 |[31m             ))}
+ [90m 668 |[31m           [33m<[31m[33m/[31m[33mdiv[31m[33m>[31m
+ [90m 669 |[31m         [33m<[31m[33m/[31m[33mdiv[31m[33m>[31m[0m[39m
+  Plugin: [35mvite:react-babel[39m
+  File: [36mC:/Users/vviei/.claude/projects/Platform/src/components/shared.jsx[39m:666:15
+[33m  664|    return [];
+  665|  }
+  666|                </div>
+     |                 ^
+  667|              ))}
+  668|            </div>[39m
+      at constructor (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:365:19)
+      at JSXParserMixin.raise (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:6616:19)
+      at JSXParserMixin.unexpected (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:6636:16)
+      at JSXParserMixin.jsxParseIdentifier (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:4581:12)
+      at JSXParserMixin.jsxParseNamespacedName (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:4588:23)
+      at JSXParserMixin.jsxParseElementName (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:4597:21)
+      at JSXParserMixin.jsxParseOpeningElementAt (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:4673:22)
+      at JSXParserMixin.jsxParseElementAt (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:4698:33)
+      at JSXParserMixin.jsxParseElement (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:4761:17)
+      at JSXParserMixin.parseExprAtom (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:4774:19)
+      at JSXParserMixin.parseExprSubscripts (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:11098:23)
+      at JSXParserMixin.parseUpdate (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:11083:21)
+      at JSXParserMixin.parseMaybeUnary (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:11063:23)
+      at JSXParserMixin.parseMaybeUnaryOrPrivate (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:10916:61)
+      at JSXParserMixin.parseExprOps (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:10921:23)
+      at JSXParserMixin.parseMaybeConditional (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:10898:23)
+      at JSXParserMixin.parseMaybeAssign (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:10848:21)
+      at JSXParserMixin.parseExpressionBase (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:10801:23)
+      at C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:10797:39
+      at JSXParserMixin.allowInAnd (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:12438:16)
+      at JSXParserMixin.parseExpression (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:10797:17)
+      at JSXParserMixin.parseStatementContent (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:12912:23)
+      at JSXParserMixin.parseStatementLike (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:12784:17)
+      at JSXParserMixin.parseModuleItem (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:12761:17)
+      at JSXParserMixin.parseBlockOrModuleBlockBody (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:13333:36)
+      at JSXParserMixin.parseBlockBody (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:13326:10)
+      at JSXParserMixin.parseProgram (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:12639:10)
+      at JSXParserMixin.parseTopLevel (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:12629:25)
+      at JSXParserMixin.parse (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:14505:25)
+      at parse (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:14539:38)
+      at parser (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\core\lib\parser\index.js:41:34)
+      at parser.next (<anonymous>)
+      at normalizeFile (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\core\lib\transformation\normalize-file.js:51:37)
+      at normalizeFile.next (<anonymous>)
+      at run (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\core\lib\transformation\index.js:22:50)
+      at run.next (<anonymous>)
+      at transform (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\core\lib\transform.js:22:33)
+      at transform.next (<anonymous>)
+      at step (C:\Users\vviei\.claude\projects\Platform\node_modules\gensync\index.js:261:32)
+      at C:\Users\vviei\.claude\projects\Platform\node_modules\gensync\index.js:273:13
+      at async.call.result.err.err (C:\Users\vviei\.claude\projects\Platform\node_modules\gensync\index.js:223:11)
+      at C:\Users\vviei\.claude\projects\Platform\node_modules\gensync\index.js:189:28
+      at C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\core\lib\gensync-utils\async.js:67:7
+      at C:\Users\vviei\.claude\projects\Platform\node_modules\gensync\index.js:113:33
+      at step (C:\Users\vviei\.claude\projects\Platform\node_modules\gensync\index.js:287:14)
+      at C:\Users\vviei\.claude\projects\Platform\node_modules\gensync\index.js:273:13
+      at async.call.result.err.err (C:\Users\vviei\.claude\projects\Platform\node_modules\gensync\index.js:223:11)
+[2m08:28:27[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: [33mThe character ">" is not valid inside a JSX element[33m
+84 |            <div style={styles.heroStrip}>
+85 |              <span>Feedback loop</span>
+86 |              <strong>Class -> Diagnosis -> Homework -> Review</strong>
+   |                             ^
+87 |            </div>
+88 |          </div>
+[39m
+  Plugin: [35mvite:esbuild[39m
+  File: [36mC:/Users/vviei/.claude/projects/Platform/src/pages/teacher-dashboard.jsx[39m
+[2m08:28:27[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: [33mThe character ">" is not valid inside a JSX element[33m
+84 |            <div style={styles.heroStrip}>
+85 |              <span>Feedback loop</span>
+86 |              <strong>Class -> Diagnosis -> Homework -> Review</strong>
+   |                                          ^
+87 |            </div>
+88 |          </div>
+[39m
+  Plugin: [35mvite:esbuild[39m
+  File: [36mC:/Users/vviei/.claude/projects/Platform/src/pages/teacher-dashboard.jsx[39m
+[2m08:28:27[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: [33mThe character ">" is not valid inside a JSX element[33m
+84 |            <div style={styles.heroStrip}>
+85 |              <span>Feedback loop</span>
+86 |              <strong>Class -> Diagnosis -> Homework -> Review</strong>
+   |                                                      ^
+87 |            </div>
+88 |          </div>
+[39m
+  Plugin: [35mvite:esbuild[39m
+  File: [36mC:/Users/vviei/.claude/projects/Platform/src/pages/teacher-dashboard.jsx[39m
+[2m11:06:01[22m [31m[1m[vite][22m[39m [31mInternal server error: C:\Users\vviei\.claude\projects\Platform\src\components\shared.jsx: Unexpected token (1227:2)
+
+[0m [90m 1225 |[31m
+ [90m 1226 |[31m [36mfunction[31m parseStudentFeedback(feedback) {
+[31m[1m>[22m[31m[90m 1227 |[31m   [36mif[31m ([33m![31mfeedback) [36mreturn[31m [36mnull[31m[33m;[31m
+ [90m      |[31m   [31m[1m^[22m[31m
+ [90m 1228 |[31m   [36mif[31m ([36mtypeof[31m feedback [33m===[31m [32m'object'[31m) [36mreturn[31m feedback[33m;[31m
+ [90m 1229 |[31m   [36mif[31m ([36mtypeof[31m feedback [33m!==[31m [32m'string'[31m) [36mreturn[31m [36mnull[31m[33m;[31m
+ [90m 1230 |[31m[0m[39m
+  Plugin: [35mvite:react-babel[39m
+  File: [36mC:/Users/vviei/.claude/projects/Platform/src/components/shared.jsx[39m:1227:2
+[33m  1245|  }
+  1246|  
+  1247|  function buildWhatsNextSection(feedback, nextClassFocus, fixes) {
+     |                         ^
+  1248|    const whatsNext = (feedback?.whatsNext && typeof feedback.whatsNext === 'object') ? feedback.whatsNext : {};
+  1249|    const firstFix = fixes[0] || {};[39m
+      at constructor (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:365:19)
+      at JSXParserMixin.raise (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:6616:19)
+      at JSXParserMixin.unexpected (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:6636:16)
+      at JSXParserMixin.parseExprAtom (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:11459:22)
+      at JSXParserMixin.parseExprAtom (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:4776:20)
+      at JSXParserMixin.parseExprSubscripts (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:11098:23)
+      at JSXParserMixin.parseUpdate (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:11083:21)
+      at JSXParserMixin.parseMaybeUnary (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:11063:23)
+      at JSXParserMixin.parseMaybeUnaryOrPrivate (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:10916:61)
+      at JSXParserMixin.parseExprOps (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:10921:23)
+      at JSXParserMixin.parseMaybeConditional (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:10898:23)
+      at JSXParserMixin.parseMaybeAssign (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:10848:21)
+      at JSXParserMixin.parseExpressionBase (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:10801:23)
+      at C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:10797:39
+      at JSXParserMixin.allowInAnd (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:12443:12)
+      at JSXParserMixin.parseExpression (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:10797:17)
+      at JSXParserMixin.jsxParseExpressionContainer (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:4644:31)
+      at JSXParserMixin.jsxParseElementAt (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:4723:36)
+      at JSXParserMixin.jsxParseElement (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:4761:17)
+      at JSXParserMixin.parseExprAtom (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:4771:19)
+      at JSXParserMixin.parseExprSubscripts (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:11098:23)
+      at JSXParserMixin.parseUpdate (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:11083:21)
+      at JSXParserMixin.parseMaybeUnary (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:11063:23)
+      at JSXParserMixin.parseMaybeUnaryOrPrivate (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:10916:61)
+      at JSXParserMixin.parseExprOps (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:10921:23)
+      at JSXParserMixin.parseMaybeConditional (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:10898:23)
+      at JSXParserMixin.parseMaybeAssign (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:10848:21)
+      at C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:10817:39
+      at JSXParserMixin.allowInAnd (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:12443:12)
+      at JSXParserMixin.parseMaybeAssignAllowIn (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:10817:17)
+      at JSXParserMixin.parseMaybeAssignAllowInOrVoidPattern (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:12510:17)
+      at JSXParserMixin.parseParenAndDistinguishExpression (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:11692:28)
+      at JSXParserMixin.parseExprAtom (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:11348:23)
+      at JSXParserMixin.parseExprAtom (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:4776:20)
+      at JSXParserMixin.parseExprSubscripts (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:11098:23)
+      at JSXParserMixin.parseUpdate (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:11083:21)
+      at JSXParserMixin.parseMaybeUnary (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:11063:23)
+      at JSXParserMixin.parseMaybeUnaryOrPrivate (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:10916:61)
+      at JSXParserMixin.parseExprOps (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:10921:23)
+      at JSXParserMixin.parseMaybeConditional (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:10898:23)
+      at JSXParserMixin.parseMaybeAssign (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:10848:21)
+      at JSXParserMixin.parseExpressionBase (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:10801:23)
+      at C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:10797:39
+      at JSXParserMixin.allowInAnd (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:12438:16)
+      at JSXParserMixin.parseExpression (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:10797:17)
+      at JSXParserMixin.parseReturnStatement (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:13159:28)
+      at JSXParserMixin.parseStatementContent (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:12815:21)
+      at JSXParserMixin.parseStatementLike (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:12784:17)
+      at JSXParserMixin.parseStatementListItem (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:12764:17)
+      at JSXParserMixin.parseBlockOrModuleBlockBody (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:13333:61)
+[2m11:06:01[22m [31m[1m[vite][22m[39m [31mInternal server error: C:\Users\vviei\.claude\projects\Platform\src\components\shared.jsx: Unexpected token (1227:2)
+
+[0m [90m 1225 |[31m
+ [90m 1226 |[31m [36mfunction[31m parseStudentFeedback(feedback) {
+[31m[1m>[22m[31m[90m 1227 |[31m   [36mif[31m ([33m![31mfeedback) [36mreturn[31m [36mnull[31m[33m;[31m
+ [90m      |[31m   [31m[1m^[22m[31m
+ [90m 1228 |[31m   [36mif[31m ([36mtypeof[31m feedback [33m===[31m [32m'object'[31m) [36mreturn[31m feedback[33m;[31m
+ [90m 1229 |[31m   [36mif[31m ([36mtypeof[31m feedback [33m!==[31m [32m'string'[31m) [36mreturn[31m [36mnull[31m[33m;[31m
+ [90m 1230 |[31m[0m[39m
+  Plugin: [35mvite:react-babel[39m
+  File: [36mC:/Users/vviei/.claude/projects/Platform/src/components/shared.jsx[39m:1227:2
+[33m  1245|  }
+  1246|  
+  1247|  function buildWhatsNextSection(feedback, nextClassFocus, fixes) {
+     |                         ^
+  1248|    const whatsNext = (feedback?.whatsNext && typeof feedback.whatsNext === 'object') ? feedback.whatsNext : {};
+  1249|    const firstFix = fixes[0] || {};[39m
+      at constructor (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:365:19)
+      at JSXParserMixin.raise (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:6616:19)
+      at JSXParserMixin.unexpected (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:6636:16)
+      at JSXParserMixin.parseExprAtom (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:11459:22)
+      at JSXParserMixin.parseExprAtom (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:4776:20)
+      at JSXParserMixin.parseExprSubscripts (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:11098:23)
+      at JSXParserMixin.parseUpdate (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:11083:21)
+      at JSXParserMixin.parseMaybeUnary (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:11063:23)
+      at JSXParserMixin.parseMaybeUnaryOrPrivate (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:10916:61)
+      at JSXParserMixin.parseExprOps (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:10921:23)
+      at JSXParserMixin.parseMaybeConditional (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:10898:23)
+      at JSXParserMixin.parseMaybeAssign (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:10848:21)
+      at JSXParserMixin.parseExpressionBase (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:10801:23)
+      at C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:10797:39
+      at JSXParserMixin.allowInAnd (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:12443:12)
+      at JSXParserMixin.parseExpression (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:10797:17)
+      at JSXParserMixin.jsxParseExpressionContainer (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:4644:31)
+      at JSXParserMixin.jsxParseElementAt (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:4723:36)
+      at JSXParserMixin.jsxParseElement (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:4761:17)
+      at JSXParserMixin.parseExprAtom (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:4771:19)
+      at JSXParserMixin.parseExprSubscripts (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:11098:23)
+      at JSXParserMixin.parseUpdate (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:11083:21)
+      at JSXParserMixin.parseMaybeUnary (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:11063:23)
+      at JSXParserMixin.parseMaybeUnaryOrPrivate (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:10916:61)
+      at JSXParserMixin.parseExprOps (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:10921:23)
+      at JSXParserMixin.parseMaybeConditional (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:10898:23)
+      at JSXParserMixin.parseMaybeAssign (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:10848:21)
+      at C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:10817:39
+      at JSXParserMixin.allowInAnd (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:12443:12)
+      at JSXParserMixin.parseMaybeAssignAllowIn (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:10817:17)
+      at JSXParserMixin.parseMaybeAssignAllowInOrVoidPattern (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:12510:17)
+      at JSXParserMixin.parseParenAndDistinguishExpression (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:11692:28)
+      at JSXParserMixin.parseExprAtom (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:11348:23)
+      at JSXParserMixin.parseExprAtom (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:4776:20)
+      at JSXParserMixin.parseExprSubscripts (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:11098:23)
+      at JSXParserMixin.parseUpdate (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:11083:21)
+      at JSXParserMixin.parseMaybeUnary (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:11063:23)
+      at JSXParserMixin.parseMaybeUnaryOrPrivate (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:10916:61)
+      at JSXParserMixin.parseExprOps (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:10921:23)
+      at JSXParserMixin.parseMaybeConditional (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:10898:23)
+      at JSXParserMixin.parseMaybeAssign (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:10848:21)
+      at JSXParserMixin.parseExpressionBase (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:10801:23)
+      at C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:10797:39
+      at JSXParserMixin.allowInAnd (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:12438:16)
+      at JSXParserMixin.parseExpression (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:10797:17)
+      at JSXParserMixin.parseReturnStatement (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:13159:28)
+      at JSXParserMixin.parseStatementContent (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:12815:21)
+      at JSXParserMixin.parseStatementLike (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:12784:17)
+      at JSXParserMixin.parseStatementListItem (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:12764:17)
+      at JSXParserMixin.parseBlockOrModuleBlockBody (C:\Users\vviei\.claude\projects\Platform\node_modules\@babel\parser\lib\index.js:13333:61)
+[2m11:06:32[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m Pre-transform error: C:\Users\vviei\.claude\projects\Platform\src\components\shared.jsx: Unexpected token (1227:2)
+
+[0m [90m 1225 |[39m
+ [90m 1226 |[39m [36mfunction[39m parseStudentFeedback(feedback) {
+[31m[1m>[22m[39m[90m 1227 |[39m   [36mif[39m ([33m![39mfeedback) [36mreturn[39m [36mnull[39m[33m;[39m
+ [90m      |[39m   [31m[1m^[22m[39m
+ [90m 1228 |[39m   [36mif[39m ([36mtypeof[39m feedback [33m===[39m [32m'object'[39m) [36mreturn[39m feedback[33m;[39m
+ [90m 1229 |[39m   [36mif[39m ([36mtypeof[39m feedback [33m!==[39m [32m'string'[39m) [36mreturn[39m [36mnull[39m[33m;[39m
+ [90m 1230 |[39m[0m
+  Plugin: [35mvite:react-babel[39m
+  File: [36mC:/Users/vviei/.claude/projects/Platform/src/components/shared.jsx[39m:1227:2
+[33m  1245|  }
+  1246|  
+  1247|  function buildWhatsNextSection(feedback, nextClassFocus, fixes) {
+     |                         ^
+  1248|    const whatsNext = (feedback?.whatsNext && typeof feedback.whatsNext === 'object') ? feedback.whatsNext : {};
+  1249|    const firstFix = fixes[0] || {};[39m
+[2m11:06:33[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m Pre-transform error: C:\Users\vviei\.claude\projects\Platform\src\components\shared.jsx: Unexpected token (1227:2)
+
+[0m [90m 1225 |[39m
+ [90m 1226 |[39m [36mfunction[39m parseStudentFeedback(feedback) {
+[31m[1m>[22m[39m[90m 1227 |[39m   [36mif[39m ([33m![39mfeedback) [36mreturn[39m [36mnull[39m[33m;[39m
+ [90m      |[39m   [31m[1m^[22m[39m
+ [90m 1228 |[39m   [36mif[39m ([36mtypeof[39m feedback [33m===[39m [32m'object'[39m) [36mreturn[39m feedback[33m;[39m
+ [90m 1229 |[39m   [36mif[39m ([36mtypeof[39m feedback [33m!==[39m [32m'string'[39m) [36mreturn[39m [36mnull[39m[33m;[39m
+ [90m 1230 |[39m[0m
+  Plugin: [35mvite:react-babel[39m
+  File: [36mC:/Users/vviei/.claude/projects/Platform/src/components/shared.jsx[39m:1227:2
+[33m  1245|  }
+  1246|  
+  1247|  function buildWhatsNextSection(feedback, nextClassFocus, fixes) {
+     |                         ^
+  1248|    const whatsNext = (feedback?.whatsNext && typeof feedback.whatsNext === 'object') ? feedback.whatsNext : {};
+  1249|    const firstFix = fixes[0] || {};[39m
+[2m11:06:33[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m Pre-transform error: C:\Users\vviei\.claude\projects\Platform\src\components\shared.jsx: Unexpected token (1227:2)
+
+[0m [90m 1225 |[39m
+ [90m 1226 |[39m [36mfunction[39m parseStudentFeedback(feedback) {
+[31m[1m>[22m[39m[90m 1227 |[39m   [36mif[39m ([33m![39mfeedback) [36mreturn[39m [36mnull[39m[33m;[39m
+ [90m      |[39m   [31m[1m^[22m[39m
+ [90m 1228 |[39m   [36mif[39m ([36mtypeof[39m feedback [33m===[39m [32m'object'[39m) [36mreturn[39m feedback[33m;[39m
+ [90m 1229 |[39m   [36mif[39m ([36mtypeof[39m feedback [33m!==[39m [32m'string'[39m) [36mreturn[39m [36mnull[39m[33m;[39m
+ [90m 1230 |[39m[0m
+  Plugin: [35mvite:react-babel[39m
+  File: [36mC:/Users/vviei/.claude/projects/Platform/src/components/shared.jsx[39m:1227:2
+[33m  1245|  }
+  1246|  
+  1247|  function buildWhatsNextSection(feedback, nextClassFocus, fixes) {
+     |                         ^
+  1248|    const whatsNext = (feedback?.whatsNext && typeof feedback.whatsNext === 'object') ? feedback.whatsNext : {};
+  1249|    const firstFix = fixes[0] || {};[39m
+[2m11:06:33[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m Pre-transform error: C:\Users\vviei\.claude\projects\Platform\src\components\shared.jsx: Unexpected token (1227:2)
+
+[0m [90m 1225 |[39m
+ [90m 1226 |[39m [36mfunction[39m parseStudentFeedback(feedback) {
+[31m[1m>[22m[39m[90m 1227 |[39m   [36mif[39m ([33m![39mfeedback) [36mreturn[39m [36mnull[39m[33m;[39m
+ [90m      |[39m   [31m[1m^[22m[39m
+ [90m 1228 |[39m   [36mif[39m ([36mtypeof[39m feedback [33m===[39m [32m'object'[39m) [36mreturn[39m feedback[33m;[39m
+ [90m 1229 |[39m   [36mif[39m ([36mtypeof[39m feedback [33m!==[39m [32m'string'[39m) [36mreturn[39m [36mnull[39m[33m;[39m
+ [90m 1230 |[39m[0m
+  Plugin: [35mvite:react-babel[39m
+  File: [36mC:/Users/vviei/.claude/projects/Platform/src/components/shared.jsx[39m:1227:2
+[33m  1245|  }
+  1246|  
+  1247|  function buildWhatsNextSection(feedback, nextClassFocus, fixes) {
+     |                         ^
+  1248|    const whatsNext = (feedback?.whatsNext && typeof feedback.whatsNext === 'object') ? feedback.whatsNext : {};
+  1249|    const firstFix = fixes[0] || {};[39m
+[2m11:07:15[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m Pre-transform error: C:\Users\vviei\.claude\projects\Platform\src\components\shared.jsx: Unexpected token (1227:2)
+
+[0m [90m 1225 |[39m
+ [90m 1226 |[39m [36mfunction[39m parseStudentFeedback(feedback) {
+[31m[1m>[22m[39m[90m 1227 |[39m   [36mif[39m ([33m![39mfeedback) [36mreturn[39m [36mnull[39m[33m;[39m
+ [90m      |[39m   [31m[1m^[22m[39m
+ [90m 1228 |[39m   [36mif[39m ([36mtypeof[39m feedback [33m===[39m [32m'object'[39m) [36mreturn[39m feedback[33m;[39m
+ [90m 1229 |[39m   [36mif[39m ([36mtypeof[39m feedback [33m!==[39m [32m'string'[39m) [36mreturn[39m [36mnull[39m[33m;[39m
+ [90m 1230 |[39m[0m
+  Plugin: [35mvite:react-babel[39m
+  File: [36mC:/Users/vviei/.claude/projects/Platform/src/components/shared.jsx[39m:1227:2
+[33m  1245|  }
+  1246|  
+  1247|  function buildWhatsNextSection(feedback, nextClassFocus, fixes) {
+     |                         ^
+  1248|    const whatsNext = (feedback?.whatsNext && typeof feedback.whatsNext === 'object') ? feedback.whatsNext : {};
+  1249|    const firstFix = fixes[0] || {};[39m
+[2m11:07:40[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m Pre-transform error: C:\Users\vviei\.claude\projects\Platform\src\components\shared.jsx: Unexpected token (1227:2)
+
+[0m [90m 1225 |[39m
+ [90m 1226 |[39m [36mfunction[39m parseStudentFeedback(feedback) {
+[31m[1m>[22m[39m[90m 1227 |[39m   [36mif[39m ([33m![39mfeedback) [36mreturn[39m [36mnull[39m[33m;[39m
+ [90m      |[39m   [31m[1m^[22m[39m
+ [90m 1228 |[39m   [36mif[39m ([36mtypeof[39m feedback [33m===[39m [32m'object'[39m) [36mreturn[39m feedback[33m;[39m
+ [90m 1229 |[39m   [36mif[39m ([36mtypeof[39m feedback [33m!==[39m [32m'string'[39m) [36mreturn[39m [36mnull[39m[33m;[39m
+ [90m 1230 |[39m[0m
+  Plugin: [35mvite:react-babel[39m
+  File: [36mC:/Users/vviei/.claude/projects/Platform/src/components/shared.jsx[39m:1227:2
+[33m  1245|  }
+  1246|  
+  1247|  function buildWhatsNextSection(feedback, nextClassFocus, fixes) {
+     |                         ^
+  1248|    const whatsNext = (feedback?.whatsNext && typeof feedback.whatsNext === 'object') ? feedback.whatsNext : {};
+  1249|    const firstFix = fixes[0] || {};[39m
+[2m11:07:40[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m Pre-transform error: C:\Users\vviei\.claude\projects\Platform\src\components\shared.jsx: Unexpected token (1227:2)
+
+[0m [90m 1225 |[39m
+ [90m 1226 |[39m [36mfunction[39m parseStudentFeedback(feedback) {
+[31m[1m>[22m[39m[90m 1227 |[39m   [36mif[39m ([33m![39mfeedback) [36mreturn[39m [36mnull[39m[33m;[39m
+ [90m      |[39m   [31m[1m^[22m[39m
+ [90m 1228 |[39m   [36mif[39m ([36mtypeof[39m feedback [33m===[39m [32m'object'[39m) [36mreturn[39m feedback[33m;[39m
+ [90m 1229 |[39m   [36mif[39m ([36mtypeof[39m feedback [33m!==[39m [32m'string'[39m) [36mreturn[39m [36mnull[39m[33m;[39m
+ [90m 1230 |[39m[0m
+  Plugin: [35mvite:react-babel[39m
+  File: [36mC:/Users/vviei/.claude/projects/Platform/src/components/shared.jsx[39m:1227:2
+[33m  1245|  }
+  1246|  
+  1247|  function buildWhatsNextSection(feedback, nextClassFocus, fixes) {
+     |                         ^
+  1248|    const whatsNext = (feedback?.whatsNext && typeof feedback.whatsNext === 'object') ? feedback.whatsNext : {};
+  1249|    const firstFix = fixes[0] || {};[39m
+[2m11:07:40[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m Pre-transform error: C:\Users\vviei\.claude\projects\Platform\src\components\shared.jsx: Unexpected token (1227:2)
+
+[0m [90m 1225 |[39m
+ [90m 1226 |[39m [36mfunction[39m parseStudentFeedback(feedback) {
+[31m[1m>[22m[39m[90m 1227 |[39m   [36mif[39m ([33m![39mfeedback) [36mreturn[39m [36mnull[39m[33m;[39m
+ [90m      |[39m   [31m[1m^[22m[39m
+ [90m 1228 |[39m   [36mif[39m ([36mtypeof[39m feedback [33m===[39m [32m'object'[39m) [36mreturn[39m feedback[33m;[39m
+ [90m 1229 |[39m   [36mif[39m ([36mtypeof[39m feedback [33m!==[39m [32m'string'[39m) [36mreturn[39m [36mnull[39m[33m;[39m
+ [90m 1230 |[39m[0m
+  Plugin: [35mvite:react-babel[39m
+  File: [36mC:/Users/vviei/.claude/projects/Platform/src/components/shared.jsx[39m:1227:2
+[33m  1245|  }
+  1246|  
+  1247|  function buildWhatsNextSection(feedback, nextClassFocus, fixes) {
+     |                         ^
+  1248|    const whatsNext = (feedback?.whatsNext && typeof feedback.whatsNext === 'object') ? feedback.whatsNext : {};
+  1249|    const firstFix = fixes[0] || {};[39m
+[2m11:07:40[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m Pre-transform error: C:\Users\vviei\.claude\projects\Platform\src\components\shared.jsx: Unexpected token (1227:2)
+
+[0m [90m 1225 |[39m
+ [90m 1226 |[39m [36mfunction[39m parseStudentFeedback(feedback) {
+[31m[1m>[22m[39m[90m 1227 |[39m   [36mif[39m ([33m![39mfeedback) [36mreturn[39m [36mnull[39m[33m;[39m
+ [90m      |[39m   [31m[1m^[22m[39m
+ [90m 1228 |[39m   [36mif[39m ([36mtypeof[39m feedback [33m===[39m [32m'object'[39m) [36mreturn[39m feedback[33m;[39m
+ [90m 1229 |[39m   [36mif[39m ([36mtypeof[39m feedback [33m!==[39m [32m'string'[39m) [36mreturn[39m [36mnull[39m[33m;[39m
+ [90m 1230 |[39m[0m
+  Plugin: [35mvite:react-babel[39m
+  File: [36mC:/Users/vviei/.claude/projects/Platform/src/components/shared.jsx[39m:1227:2
+[33m  1245|  }
+  1246|  
+  1247|  function buildWhatsNextSection(feedback, nextClassFocus, fixes) {
+     |                         ^
+  1248|    const whatsNext = (feedback?.whatsNext && typeof feedback.whatsNext === 'object') ? feedback.whatsNext : {};
+  1249|    const firstFix = fixes[0] || {};[39m
+[BABEL] Note: The code generator has deoptimised the styling of C:\Users\vviei\.claude\projects\Platform\.vite-cache\deps\react-dom_client.js?v=f5cfd092 as it exceeds the max of 500KB.
