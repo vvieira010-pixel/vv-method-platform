@@ -173,8 +173,11 @@ Test Strategy: time_management, question_type_recognition, distractor_management
 15. studentFeedback.whatYouDidWell: 2–4 strengths. Each: title (strength), explanation (why they did it well, simple), metConnection (why it matters for MET), example (a real example or paraphrase from today's class).
 16. studentFeedback.whatToImprove: 1–3 areas. Each: area (the specific skill), metImportance (how it affects the MET score), insteadOf (the student's actual weak phrase/answer), sayInstead (the improved version), howToImprove (one clear, practical action). The insteadOf/sayInstead pair MUST use the student's real language from class.
 17. studentFeedback.finalNote: a warm, encouraging closing focused on progress and the next step.
-18. homeworkRecommendation tasks: each task's "content" field MUST be fully written out exercise content ready for the student to use. For grammar tasks: write out actual sentences containing the target error pattern. For vocabulary: write sentences with blanks. For writing/speaking: write the full prompt. Never write "practice X" — write the actual exercise.
-19. homeworkRecommendation must have 2–4 tasks, each targeting a different diagnosed weakness. No repeated tasks.
+18. studentFeedback.whatsNext: include a concise preview with nextTopic, skillFocus, whyItMatters, and curiositySentence. Keep it motivating, realistic, and connected to MET or real communication when relevant.
+19. studentFeedback.beforeNextClass: include 3–5 simple, practical checklist actions based on this student's actual feedback (not generic).
+20. studentFeedback must not include grades, numeric scores, or score-style language.
+21. homeworkRecommendation tasks: each task's "content" field MUST be fully written out exercise content ready for the student to use. For grammar tasks: write out actual sentences containing the target error pattern. For vocabulary: write sentences with blanks. For writing/speaking: write the full prompt. Never write "practice X" — write the actual exercise.
+22. homeworkRecommendation must have 2–4 tasks, each targeting a different diagnosed weakness. No repeated tasks.
 
 ━━━ OUTPUT FORMAT ━━━
 Return ONLY valid JSON. No markdown, no backticks, no prose outside the JSON object.
@@ -339,7 +342,18 @@ Return ONLY valid JSON. No markdown, no backticks, no prose outside the JSON obj
         "howToImprove": "..."
       }
     ],
-    "finalNote": "Encouraging closing message focused on progress and the next step — reference something specific about this student."
+    "finalNote": "Encouraging closing message focused on progress and the next step — reference something specific about this student.",
+    "whatsNext": {
+      "nextTopic": "Short preview of the next class topic.",
+      "skillFocus": "What specific skill will be trained next class.",
+      "whyItMatters": "Why this focus matters for MET performance or real communication.",
+      "curiositySentence": "One curiosity-building sentence so the student feels interested and prepared."
+    },
+    "beforeNextClass": [
+      "3-5 practical, student-friendly actions based on today's feedback",
+      "Action 2",
+      "Action 3"
+    ]
   },
   "homeworkRecommendation": {
     "title": "specific title that reflects the actual target — not generic",
@@ -608,6 +622,7 @@ ${grammar.slice(0, 3).map(g => `- ${g.area}: ${g.issue}`).join('\n') || 'None.'}
 - Each exercise should take 5–15 minutes.
 - Match B1–B2 transition level. Healthcare/nursing context when relevant.
 - Use the INTERACTIVE EXERCISE TYPES below to create varied, engaging exercises.
+- If type is "flash", you MUST include a "pairs" array with at least 10 objects in this exact shape: {"term":"...","def":"..."}.
 
 ━━━ INTERACTIVE EXERCISE TYPES ━━━
 You MUST use these exact type IDs. Each has a specific JSON shape:

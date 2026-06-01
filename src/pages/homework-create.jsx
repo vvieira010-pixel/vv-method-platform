@@ -117,34 +117,112 @@ export default function HomeworkCreate({ diagnosisId, studentId, students, onNav
   function updateCheck(i, v) { setForm(f => ({ ...f, selfCheck: f.selfCheck.map((t, idx) => idx === i ? v : t) })); }
   function removeCheck(i) { setForm(f => ({ ...f, selfCheck: f.selfCheck.filter((_, idx) => idx !== i) })); }
 
+  async function parseAiJsonWithRepair(raw, expectedShape) {
+    try {
+      return parseAiJson(raw);
+    } catch {
+      // Quick structural salvage before paying for a second AI call.
+      const text = String(raw || '').replace(/```json|```/gi, '').trim();
+      const arrStart = text.indexOf('[');
+      const arrEnd = text.lastIndexOf(']');
+      if (arrStart >= 0 && arrEnd > arrStart) {
+        try { return JSON.parse(text.slice(arrStart, arrEnd + 1)); } catch {}
+      }
+      const objStart = text.indexOf('{');
+      const objEnd = text.lastIndexOf('}');
+      if (objStart >= 0 && objEnd > objStart) {
+        try { return JSON.parse(text.slice(objStart, objEnd + 1)); } catch {}
+      }
+
+      // One repair pass: ask AI to output strict JSON only.
+      const repairPrompt = `You are a JSON repair tool.
+Return ONLY valid JSON. No markdown. No explanation.
+Expected shape: ${expectedShape}
+
+Original text:
+${text.slice(0, 14000)}`;
+
+      const repaired = await callAI(repairPrompt, { max_tokens: 4000, system: 'You repair malformed JSON into strict valid JSON.' });
+      const repairedRaw = repaired.content?.map(b => b.text || '').join('') || '';
+      return parseAiJson(repairedRaw);
+    }
+  }
+
   /* ── AI generation ── */
   async function handleAiGenerate() {
     if (!diagnosis) { window.toast?.('No diagnosis linked — cannot generate.', 'warn'); return; }
     setGenerating(true);
     try {
-      const prompt = buildHomeworkGeneratorPrompt({ student, diagnosis });
-      const data = await callAI(prompt, { max_tokens: 3000 });
-      const raw = data.content?.map(b => b.text || '').join('') || '';
-      const parsed = parseAiJson(raw);
+      const selectedTypes = form.exercises.map(ex => ex.type);
 
-      // Convert AI tasks to structured exercises
-      const aiTasks = Array.isArray(parsed.tasks) ? parsed.tasks : [];
-      const exercises = aiTasks.map(t => {
-        const text = typeof t === 'string' ? t : t.description || '';
-        return { ...createExercise('short'), prompt: text };
-      });
+      // If teacher already selected exercise types/cards, generate for those choices first.
+      if (selectedTypes.length > 0) {
+        const basePrompt = buildExerciseListPrompt({ student, diagnosis });
+        const typeSummary = summarizeTypes(selectedTypes);
+        const flashRequired = selectedTypes.includes('flash');
+        const typedPrompt = `${basePrompt}
 
-      setForm(f => ({
-        ...f,
-        title: parsed.title || f.title,
-        objective: parsed.objective || f.objective,
-        description: parsed.instructions || f.description,
-        exercises: exercises.length > 0 ? exercises : f.exercises,
-        selfCheck: Array.isArray(parsed.selfCheck) ? parsed.selfCheck : f.selfCheck,
-        skillType: inferSkillType(diagnosis?.sections?.priorityDiagnosis?.content),
-        teacherNotes: parsed.teacherReviewNotes || f.teacherNotes,
-      }));
-      window.toast?.('Homework regenerated from diagnosis.', 'ok');
+IMPORTANT OVERRIDE:
+- The teacher already selected this exact structure: ${typeSummary}.
+- Return exactly ${selectedTypes.length} exercises.
+- Keep the same order as this selected structure: ${selectedTypes.join(', ')}.
+- Prioritize diagnosis priority #1 first, then #2.
+- Use the same JSON format as requested above.
+${flashRequired ? `- For every "flash" exercise, include a "pairs" array with at least 10 objects: {"term":"...", "def":"..."}.` : ''}`;
+
+        const data = await callAI(typedPrompt, { max_tokens: 4000 });
+        const raw = data.content?.map(b => b.text || '').join('') || '';
+        const parsed = await parseAiJsonWithRepair(raw, `Array of ${selectedTypes.length} exercise objects using keys like title, type, content, and type-specific fields.`);
+        const list = extractAiExerciseList(parsed);
+        if (list.length === 0) {
+          throw new Error('AI returned no exercises for the selected structure. Try again.');
+        }
+        const picked = pickExercisesBySelection(list, selectedTypes);
+        const generated = picked.map((item, i) => exerciseFromAiOption(item, selectedTypes[i]));
+        if (generated.length === 0) {
+          throw new Error('AI response could not be converted into exercises. Try again.');
+        }
+
+        setForm(f => {
+          // Fill the exact cards the teacher already added (same order, same count).
+          // Do not append extra cards, and keep each existing card id stable.
+          const nextExercises = f.exercises.map((ex, idx) => {
+            const gen = generated[idx];
+            if (!gen) return ex;
+            return { ...gen, id: ex.id, type: ex.type || gen.type };
+          });
+
+          return {
+            ...f,
+            exercises: nextExercises,
+            skillType: inferSkillType(diagnosis?.sections?.priorityDiagnosis?.content),
+          };
+        });
+        window.toast?.('AI filled the exercises you selected.', 'ok');
+      } else {
+        // Legacy fallback when nothing is selected yet.
+        const prompt = buildHomeworkGeneratorPrompt({ student, diagnosis });
+        const data = await callAI(prompt, { max_tokens: 3000 });
+        const raw = data.content?.map(b => b.text || '').join('') || '';
+        const parsed = await parseAiJsonWithRepair(raw, 'Object with tasks array for homework generation.');
+        const aiTasks = Array.isArray(parsed.tasks) ? parsed.tasks : [];
+        const exercises = aiTasks.map(t => {
+          const text = typeof t === 'string' ? t : t.description || '';
+          return { ...createExercise('short'), prompt: text };
+        });
+
+        setForm(f => ({
+          ...f,
+          title: parsed.title || f.title,
+          objective: parsed.objective || f.objective,
+          description: parsed.instructions || f.description,
+          exercises: exercises.length > 0 ? [...f.exercises, ...exercises] : f.exercises,
+          selfCheck: Array.isArray(parsed.selfCheck) ? parsed.selfCheck : f.selfCheck,
+          skillType: inferSkillType(diagnosis?.sections?.priorityDiagnosis?.content),
+          teacherNotes: parsed.teacherReviewNotes || f.teacherNotes,
+        }));
+        window.toast?.('AI generated exercises from diagnosis and kept your current list.', 'ok');
+      }
     } catch (e) {
       window.toast?.(`AI generation failed: ${e.message}`, 'warn');
     }
@@ -159,8 +237,8 @@ export default function HomeworkCreate({ diagnosisId, studentId, students, onNav
       const prompt = buildExerciseListPrompt({ student, diagnosis });
       const data = await callAI(prompt, { max_tokens: 4000 });
       const raw = data.content?.map(b => b.text || '').join('') || '';
-      const parsed = parseAiJson(raw);
-      const list = Array.isArray(parsed) ? parsed : parsed.exercises || [];
+      const parsed = await parseAiJsonWithRepair(raw, 'Array of exercise objects or object with exercises array.');
+      const list = extractAiExerciseList(parsed);
       setExerciseOptions(list);
       if (list.length === 0) window.toast?.('No exercises returned. Try again.', 'warn');
     } catch (e) {
@@ -170,31 +248,7 @@ export default function HomeworkCreate({ diagnosisId, studentId, students, onNav
   }
 
   function addAiExerciseToList(ex) {
-    // Try to map AI exercise to a structured type, fallback to short answer
-    const newEx = createExercise(mapAiType(ex.type));
-    // Populate with AI content
-    if (newEx.type === 'mcq' && ex.options) {
-      newEx.question = ex.content || ex.title || '';
-      newEx.options = Array.isArray(ex.options) ? ex.options : ['', '', '', ''];
-      newEx.correct = typeof ex.correct === 'number' ? ex.correct : null;
-    } else if (newEx.type === 'blank') {
-      newEx.template = ex.content || '';
-      newEx.blanks = Array.isArray(ex.blanks) ? ex.blanks : [];
-    } else if (newEx.type === 'order') {
-      newEx.sentences = Array.isArray(ex.sentences) ? ex.sentences : (ex.content || '').split('\n').filter(Boolean);
-    } else if (newEx.type === 'fix') {
-      newEx.errorText = ex.content || ex.errorText || '';
-      newEx.correctedText = ex.correctedText || '';
-      newEx.hint = ex.hint || '';
-    } else if (newEx.type === 'flash') {
-      newEx.pairs = Array.isArray(ex.pairs) ? ex.pairs : [{ term: '', def: '' }];
-    } else if (newEx.type === 'speak') {
-      newEx.prompt = ex.content || ex.title || '';
-      newEx.targetSeconds = ex.targetSeconds || 60;
-    } else {
-      // short answer fallback
-      newEx.prompt = ex.content || ex.title || '';
-    }
+    const newEx = exerciseFromAiOption(ex);
 
     setForm(f => ({ ...f, exercises: [...f.exercises, newEx] }));
     setExpandedEx(newEx.id);
@@ -242,7 +296,7 @@ export default function HomeworkCreate({ diagnosisId, studentId, students, onNav
   form.exercises.forEach(e => { typeCounts[e.type] = (typeCounts[e.type] || 0) + 1; });
 
   return (
-    <div style={{ maxWidth: 860, margin: '0 auto', padding: '28px 20px' }}>
+    <div style={{ width: '100%', maxWidth: 'none', margin: 0, padding: '28px 24px' }}>
       <button onClick={() => onNavigate('homework')} style={backStyle}>
         <Icon.arrowL size={13} /> Back
       </button>
@@ -284,7 +338,7 @@ export default function HomeworkCreate({ diagnosisId, studentId, students, onNav
               <Icon.refresh size={12} /> {loadingOptions ? 'Loading…' : 'Generate Exercise Options'}
             </Button>
             <Button variant="ghost" size="sm" onClick={handleAiGenerate} disabled={generating || loadingOptions} style={{ marginLeft: 'auto' }}>
-              <Icon.refresh size={12} /> {generating ? 'Generating…' : 'Regenerate All with AI'}
+              <Icon.refresh size={12} /> {generating ? 'Generating…' : 'Generate for Selected Exercises'}
             </Button>
           </>
         )}
@@ -749,6 +803,173 @@ function mapAiType(aiType) {
   if (/error|correct|fix/.test(t)) return 'fix';
   if (/flash|card|vocab/.test(t)) return 'flash';
   return 'short'; // fallback
+}
+
+function extractAiExerciseList(parsed) {
+  if (!parsed) return [];
+  if (Array.isArray(parsed)) return parsed;
+  if (Array.isArray(parsed.exercises)) return parsed.exercises;
+  if (Array.isArray(parsed.tasks)) {
+    return parsed.tasks.map((t, idx) => {
+      if (typeof t === 'string') return { title: `Exercise ${idx + 1}`, type: 'short', content: t };
+      return {
+        title: t.title || t.description || `Exercise ${idx + 1}`,
+        type: t.type || 'short',
+        content: t.content || t.description || '',
+        ...t,
+      };
+    });
+  }
+  return [];
+}
+
+function summarizeTypes(types) {
+  const counts = {};
+  (types || []).forEach(t => { counts[t] = (counts[t] || 0) + 1; });
+  return Object.entries(counts).map(([t, c]) => `${c}x ${t}`).join(', ');
+}
+
+function pickExercisesBySelection(list, selectedTypes) {
+  const pool = Array.isArray(list) ? list : [];
+  const used = new Set();
+  const picked = [];
+
+  selectedTypes.forEach((wantedType) => {
+    const idx = pool.findIndex((item, i) => !used.has(i) && mapAiType(item?.type) === wantedType);
+    if (idx >= 0) {
+      used.add(idx);
+      picked.push(pool[idx]);
+      return;
+    }
+    const fallbackIdx = pool.findIndex((_, i) => !used.has(i));
+    if (fallbackIdx >= 0) {
+      used.add(fallbackIdx);
+      picked.push(pool[fallbackIdx]);
+    }
+  });
+
+  return picked;
+}
+
+function exerciseFromAiOption(ex, forcedType = null) {
+  const targetType = forcedType || mapAiType(ex?.type);
+  const newEx = createExercise(targetType);
+
+  if (newEx.type === 'mcq') {
+    newEx.question = ex?.content || ex?.title || '';
+    newEx.options = Array.isArray(ex?.options) ? ex.options.slice(0, 4) : ['', '', '', ''];
+    while (newEx.options.length < 4) newEx.options.push('');
+    newEx.correct = typeof ex?.correct === 'number' ? ex.correct : null;
+  } else if (newEx.type === 'blank') {
+    newEx.template = ex?.content || '';
+    newEx.blanks = Array.isArray(ex?.blanks) ? ex.blanks : [];
+  } else if (newEx.type === 'order') {
+    newEx.sentences = Array.isArray(ex?.sentences) ? ex.sentences : (ex?.content || '').split('\n').filter(Boolean);
+    if (newEx.sentences.length === 0) newEx.sentences = [''];
+  } else if (newEx.type === 'fix') {
+    newEx.errorText = ex?.content || ex?.errorText || '';
+    newEx.correctedText = ex?.correctedText || '';
+    newEx.hint = ex?.hint || '';
+  } else if (newEx.type === 'flash') {
+    const parsedPairs = normalizeFlashPairs(ex);
+    newEx.pairs = ensureMinFlashPairs(parsedPairs, ex?.title || ex?.content || 'Flashcard');
+  } else if (newEx.type === 'speak') {
+    newEx.prompt = ex?.content || ex?.title || '';
+    newEx.targetSeconds = ex?.targetSeconds || 60;
+  } else {
+    newEx.prompt = ex?.content || ex?.title || '';
+    if (ex?.targetWords) newEx.targetWords = ex.targetWords;
+    if (ex?.rubric) newEx.rubric = ex.rubric;
+  }
+
+  return newEx;
+}
+
+function normalizeFlashPairs(ex) {
+  const asPair = (item) => {
+    if (!item) return null;
+    if (typeof item === 'string') {
+      const p = splitFlashLine(item);
+      return p ? { term: p.term, def: p.def } : null;
+    }
+    const term = String(
+      item.term ?? item.front ?? item.word ?? item.question ?? item.prompt ?? item.key ?? ''
+    ).trim();
+    const def = String(
+      item.def ?? item.definition ?? item.back ?? item.meaning ?? item.answer ?? item.value ?? ''
+    ).trim();
+    if (!term && !def) return null;
+    return { term, def };
+  };
+
+  const arrays = [
+    ex?.pairs,
+    ex?.flashcards,
+    ex?.cards,
+    ex?.items,
+  ];
+
+  for (const arr of arrays) {
+    if (!Array.isArray(arr)) continue;
+    const parsed = arr.map(asPair).filter((p) => p && (p.term || p.def));
+    if (parsed.length > 0) return parsed;
+  }
+
+  // Fallback: parse content lines such as "term: definition".
+  const text = String(ex?.content || ex?.title || '').trim();
+  if (!text) return [];
+  const lines = text
+    .split(/\r?\n|;/)
+    .map((l) => l.replace(/^[\-\*\d\.\)\s]+/, '').trim())
+    .filter(Boolean);
+  const parsedFromLines = lines.map(splitFlashLine).filter(Boolean);
+  if (parsedFromLines.length > 0) return parsedFromLines;
+
+  // Last resort: convert one compact content into a single card.
+  if (ex?.title && ex?.content) {
+    return [{ term: String(ex.title).trim(), def: String(ex.content).trim() }];
+  }
+  return [];
+}
+
+function splitFlashLine(line) {
+  if (!line) return null;
+  const cleaned = String(line).trim();
+  const separators = [' - ', ' — ', ': ', ' = ', ' => ', ' -> ', '|'];
+  for (const sep of separators) {
+    const idx = cleaned.indexOf(sep);
+    if (idx <= 0) continue;
+    const left = cleaned.slice(0, idx).trim();
+    const right = cleaned.slice(idx + sep.length).trim();
+    if (left && right) return { term: left, def: right };
+  }
+  return null;
+}
+
+function ensureMinFlashPairs(pairs, seedText) {
+  const clean = [];
+  const seen = new Set();
+  (Array.isArray(pairs) ? pairs : []).forEach((p) => {
+    const term = String(p?.term || '').trim();
+    const def = String(p?.def || '').trim();
+    if (!term && !def) return;
+    const k = `${term.toLowerCase()}|${def.toLowerCase()}`;
+    if (seen.has(k)) return;
+    seen.add(k);
+    clean.push({ term, def });
+  });
+
+  const topic = String(seedText || 'Flashcard').replace(/\s+/g, ' ').trim().slice(0, 40) || 'Flashcard';
+  let i = clean.length + 1;
+  while (clean.length < 10) {
+    clean.push({
+      term: `${topic} ${i}`,
+      def: `Definition ${i}`,
+    });
+    i += 1;
+  }
+
+  return clean.slice(0, 20);
 }
 
 function Field({ label, children }) {

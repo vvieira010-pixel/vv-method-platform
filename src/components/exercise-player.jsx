@@ -7,6 +7,16 @@ import { Icon, Card, Button, Pill } from './shared.jsx';
 import { getExType, parseBlankTemplate, shuffleArray, autoGrade } from '../lib/exercise-types.js';
 import { ExTypeBadge } from './exercise-editor.jsx';
 
+const EXERCISE_LABELS = {
+  mcq: 'Listening Comprehension',
+  blank: 'Fill the Blank',
+  short: 'Written Response',
+  speak: 'Speaking Response',
+  order: 'Sentence Order',
+  fix: 'Error Correction',
+  flash: 'Flashcards',
+};
+
 /**
  * ExercisePlayer — switches on exercise.type, renders the right interactive UI.
  * @param {{ exercise, response, onResponse, readOnly }} props
@@ -23,20 +33,156 @@ export function ExercisePlayer({ exercise, response, onResponse, readOnly = fals
     onResponse?.({ ...response, ...patch });
   };
 
+  let content = null;
   switch (exercise.type) {
-    case 'mcq':   return <MCQPlayer   ex={exercise} res={response} update={update} readOnly={readOnly} />;
-    case 'blank': return <BlankPlayer ex={exercise} res={response} update={update} readOnly={readOnly} />;
-    case 'short': return <ShortPlayer ex={exercise} res={response} update={update} readOnly={readOnly} />;
-    case 'speak': return <SpeakPlayer ex={exercise} res={response} update={update} readOnly={readOnly} />;
-    case 'order': return <OrderPlayer ex={exercise} res={response} update={update} readOnly={readOnly} />;
-    case 'fix':   return <FixPlayer   ex={exercise} res={response} update={update} readOnly={readOnly} />;
-    case 'flash': return <FlashPlayer ex={exercise} res={response} update={update} readOnly={readOnly} />;
+    case 'mcq':   content = <MCQPlayer ex={exercise} res={response} update={update} readOnly={readOnly} />; break;
+    case 'blank': content = <BlankPlayer ex={exercise} res={response} update={update} readOnly={readOnly} />; break;
+    case 'short': content = <ShortPlayer ex={exercise} res={response} update={update} readOnly={readOnly} />; break;
+    case 'speak': content = <SpeakPlayer ex={exercise} res={response} update={update} readOnly={readOnly} />; break;
+    case 'order': content = <OrderPlayer ex={exercise} res={response} update={update} readOnly={readOnly} />; break;
+    case 'fix':   content = <FixPlayer ex={exercise} res={response} update={update} readOnly={readOnly} />; break;
+    case 'flash': content = <FlashPlayer ex={exercise} res={response} update={update} readOnly={readOnly} />; break;
     default:
-      return (
+      content = (
         <div style={{ padding: 14, fontSize: 'var(--text-sm)', color: 'var(--text-2)', lineHeight: 1.6 }}>
           {exercise.instruction || exercise.prompt || 'Exercise content'}
         </div>
       );
+      break;
+  }
+
+  const checklist = buildPracticeChecklist(exercise);
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+      {content}
+      <WhatYouPracticed checklist={checklist} />
+    </div>
+  );
+}
+
+function exerciseLabel(type) {
+  return EXERCISE_LABELS[type] || 'Exercise';
+}
+
+function hasCompletedResponse(ex, res = {}) {
+  switch (ex?.type) {
+    case 'mcq':
+      return res.selected !== undefined && res.selected !== null;
+    case 'blank': {
+      const expected = Math.max(ex.blanks?.length || 0, parseBlankTemplate(ex.template || '').filter(s => s.type === 'blank').length);
+      return expected === 0 || (res.blanks || []).filter(Boolean).length >= expected;
+    }
+    case 'short':
+      return Boolean((res.text || '').trim());
+    case 'speak':
+      return Boolean(res.audioB64 || (res.transcript || '').trim());
+    case 'order':
+      return Array.isArray(res.order) && res.order.length === (ex.sentences || []).length;
+    case 'fix':
+      return Boolean((res.text || '').trim()) && res.text !== ex.errorText;
+    case 'flash':
+      return (res.learned || 0) > 0 || (res.idx || 0) > 0;
+    default:
+      return true;
+  }
+}
+
+function WhatYouPracticed({ checklist }) {
+  return (
+    <div style={{ borderTop: '1px solid var(--divider)', paddingTop: 12 }}>
+      <div style={{ fontSize: 'var(--text-xs)', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--accent)', marginBottom: 8 }}>
+        What You Practiced
+      </div>
+      <div style={{ display: 'grid', gap: 7 }}>
+        {checklist.map((item, idx) => (
+          <label key={`${item.label}-${idx}`} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 'var(--text-sm)', lineHeight: 1.5, color: 'var(--text-2)' }}>
+            <input type="checkbox" checked readOnly />
+            <span><strong>{item.label}:</strong> {item.value}</span>
+          </label>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function buildPracticeChecklist(ex) {
+  const mainSkill = {
+    mcq: 'Listening and reading comprehension',
+    blank: 'Vocabulary and grammar accuracy',
+    short: 'Written communication and idea development',
+    speak: 'Spoken fluency and answer organization',
+    order: 'Cohesion and logical sequencing',
+    fix: 'Grammar editing and self-correction',
+    flash: 'Vocabulary recall and active usage',
+  }[ex?.type] || 'Target language practice';
+
+  const subskill = {
+    mcq: 'Finding key clues and selecting evidence-based answers',
+    blank: 'Choosing precise words or forms in context',
+    short: 'Building clear answers with support',
+    speak: 'Delivering complete MET-style responses',
+    order: 'Connecting ideas in the right order',
+    fix: 'Noticing and correcting recurring mistakes',
+    flash: 'Retrieving meaning quickly under time pressure',
+  }[ex?.type] || 'Applying language with control';
+
+  const usefulLanguage = normalizePracticeText(
+    ex?.modelResponse ||
+    ex?.example ||
+    ex?.explanation ||
+    ex?.prompt ||
+    ex?.question
+  ) || 'Useful language from this task to reuse in your next response.';
+
+  const grammarVocabStrategy = {
+    mcq: 'Strategy: remove options with weak evidence before choosing.',
+    blank: 'Grammar/Vocabulary: check collocation and sentence fit before finalizing.',
+    short: 'Strategy: plan statement + reason + support before writing.',
+    speak: 'Strategy: pause briefly, then answer in complete ideas.',
+    order: 'Strategy: find sequence markers (first, then, however, finally).',
+    fix: 'Grammar: compare your correction with the original error pattern.',
+    flash: 'Vocabulary: say each term in a real sentence to keep it active.',
+  }[ex?.type] || 'Use one grammar or vocabulary upgrade in your next attempt.';
+
+  const metOrRealConnection = normalizePracticeText(
+    ex?.metConnection ||
+    ex?.realCommunicationConnection
+  ) || defaultConnection(ex?.type);
+
+  return [
+    { label: 'Main skill', value: mainSkill },
+    { label: 'Subskill', value: subskill },
+    { label: 'Useful language', value: usefulLanguage },
+    { label: 'Grammar/Vocabulary/Strategy', value: grammarVocabStrategy },
+    { label: 'MET or real communication connection', value: metOrRealConnection },
+  ];
+}
+
+function normalizePracticeText(text) {
+  if (!text) return '';
+  const clean = String(text).replace(/\s+/g, ' ').trim();
+  if (clean.length <= 150) return clean;
+  return `${clean.slice(0, 147)}...`;
+}
+
+function defaultConnection(type) {
+  switch (type) {
+    case 'mcq':
+      return 'Supports MET listening/reading choices and everyday evidence-based decisions.';
+    case 'blank':
+      return 'Builds accuracy you need for MET tasks and clear professional messages.';
+    case 'short':
+      return 'Helps you write stronger MET responses and clearer real-world messages.';
+    case 'speak':
+      return 'Improves MET speaking timing and confident communication in real conversations.';
+    case 'order':
+      return 'Improves coherence for MET speaking/writing and natural communication flow.';
+    case 'fix':
+      return 'Builds editing habits for MET accuracy and professional communication.';
+    case 'flash':
+      return 'Strengthens quick word access for MET performance and daily communication.';
+    default:
+      return 'Connects directly to stronger MET performance and clearer communication.';
   }
 }
 
@@ -47,49 +193,32 @@ function MCQPlayer({ ex, res, update, readOnly }) {
 
   return (
     <div>
-      <p style={{ margin: '0 0 14px', fontSize: 'var(--text-md)', fontWeight: 600, color: 'var(--text)', lineHeight: 1.55 }}>
+      <p className="hw-prompt-title">
         {ex.question}
       </p>
-      <div style={{ display: 'grid', gap: 8 }}>
+      <div className="hw-choice-list">
         {(ex.options || []).map((opt, i) => {
           const selected = pick === i;
           const isRight = i === ex.correct;
-          let borderColor = 'var(--border)';
-          let bg = 'var(--surface)';
-          if (showResult && selected && isRight)  { borderColor = 'var(--success)'; bg = 'var(--success-bg)'; }
-          if (showResult && selected && !isRight)  { borderColor = 'var(--danger)'; bg = 'var(--danger-bg)'; }
-          if (showResult && !selected && isRight)  { borderColor = 'var(--success)'; bg = 'var(--surface)'; }
-          if (!showResult && selected)              { borderColor = 'var(--primary)'; bg = 'var(--accent-subtle)'; }
 
           return (
-            <div
+            <button
               key={i}
               onClick={() => !readOnly && update({ selected: i })}
-              style={{
-                display: 'flex', alignItems: 'center', gap: 12,
-                padding: '12px 14px', borderRadius: 10,
-                border: `1.5px solid ${borderColor}`, background: bg,
-                cursor: readOnly ? 'default' : 'pointer',
-                transition: 'all .15s var(--ease)',
-              }}
+              type="button"
+              className={'hw-choice' + (selected ? ' is-selected' : '')}
+              disabled={readOnly}
             >
-              <div style={{
-                width: 20, height: 20, borderRadius: '50%',
-                border: `2px solid ${selected ? 'var(--primary)' : 'var(--border)'}`,
-                background: selected ? 'var(--primary)' : 'transparent',
-                display: 'grid', placeItems: 'center', flexShrink: 0,
-              }}>
-                {selected && <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#fff' }} />}
-              </div>
-              <span style={{ fontSize: 'var(--text-sm)', color: 'var(--text)', flex: 1 }}>{opt}</span>
+              <span className="hw-choice-dot" />
+              <span>{opt}</span>
               {showResult && isRight && <Icon.check size={16} color="var(--success)" />}
-            </div>
+            </button>
           );
         })}
       </div>
       {showResult && (
         <div style={{
-          marginTop: 14, padding: '10px 14px', borderRadius: 10,
+          marginTop: 14, padding: '10px 14px', borderRadius: 14,
           background: pick === ex.correct ? 'var(--success-bg)' : 'var(--danger-bg)',
           color: pick === ex.correct ? 'var(--success)' : 'var(--danger)',
           fontSize: 'var(--text-sm)',
@@ -155,32 +284,25 @@ function ShortPlayer({ ex, res, update, readOnly }) {
 
   return (
     <div>
-      <p style={{ margin: '0 0 6px', fontSize: 'var(--text-md)', fontWeight: 600, color: 'var(--text)', lineHeight: 1.55 }}>
+      <p className="hw-prompt-title">
         {ex.prompt}
       </p>
       {ex.rubric && (
-        <p style={{ margin: '0 0 12px', fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>
+        <p className="hw-soft-note">
           {ex.rubric}
         </p>
       )}
       <textarea
-        className="input" rows={6} value={text}
+        className="hw-textarea" rows={6} value={text}
         onChange={e => update({ text: e.target.value })}
         disabled={readOnly}
-        placeholder="Start writing your answer…"
-        style={{ fontSize: 'var(--text-sm)', lineHeight: 1.7 }}
+        placeholder="Type your response here..."
       />
       <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8 }}>
         <span style={{ fontSize: 'var(--text-xs)', color: 'var(--faint)' }}>{wc} words</span>
         <span style={{ fontSize: 'var(--text-xs)', color: wc >= target * 0.8 ? 'var(--success)' : 'var(--muted)' }}>
           target {target} words {wc >= target * 0.8 ? '· you\'re there' : `· ${target - wc} to go`}
         </span>
-      </div>
-      <div style={{
-        marginTop: 14, padding: '10px 14px', borderRadius: 10,
-        background: 'var(--info-bg)', fontSize: 'var(--text-xs)', color: 'var(--info)',
-      }}>
-        After you submit, AI rates your response 1–5 and flags strengths + next step. Your teacher reviews before sending feedback.
       </div>
     </div>
   );
@@ -238,72 +360,77 @@ function SpeakPlayer({ ex, res, update, readOnly }) {
   // If we already have audio from a previous session
   useEffect(() => { if (res?.audioB64) setStatus('done'); }, []);
 
+  const level = status === 'recording'
+    ? 38 + Math.round(Math.abs(Math.sin(seconds * 1.2)) * 46)
+    : status === 'done'
+      ? 100
+      : 8;
+
   return (
-    <div>
-      <div style={{ background: 'var(--bg)', borderLeft: '3px solid var(--accent)', borderRadius: 10, padding: '14px 16px', marginBottom: 14 }}>
-        <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>Speaking prompt</div>
-        <p style={{ margin: 0, fontSize: 'var(--text-md)', color: 'var(--text)', lineHeight: 1.55, fontWeight: 500 }}>
-          {ex.prompt}
-          <span style={{ color: 'var(--muted)', fontWeight: 600 }}> Target: {target} seconds.</span>
-        </p>
+    <div className="speak-shell">
+      <div className="speak-segment" aria-label="Response mode">
+        <button type="button" className="is-active">Speaking</button>
+        <button type="button">Writing</button>
       </div>
 
-      {status === 'idle' && (
-        <Button variant="primary" onClick={start} disabled={readOnly}>
-          <Icon.mic size={13} /> Start recording
-        </Button>
-      )}
+      <div className="speak-panel">
+        <h3>{status === 'done' ? 'Review Your Response' : 'Record Your Response'}</h3>
+        <p>{ex.prompt}</p>
+        <p>Click the microphone to start recording your answer. Max duration: {target}s.</p>
 
-      {status === 'recording' && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-          <Button variant="danger" onClick={stop}>
-            <span style={{ width: 8, height: 8, background: '#fff', display: 'inline-block', borderRadius: 2 }} />
-            Stop · {fmt(seconds)}
-          </Button>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 'var(--text-sm)', color: 'var(--danger)' }}>
-            <span style={{
-              width: 8, height: 8, borderRadius: 999, background: 'var(--danger)',
-              animation: 'vv-pulse 1s ease-in-out infinite',
-            }} />
-            Recording
+        {status !== 'done' && (
+          <button
+            type="button"
+            className={'speak-record' + (status === 'recording' ? ' is-recording' : '')}
+            onClick={status === 'recording' ? stop : start}
+            disabled={readOnly}
+            aria-label={status === 'recording' ? 'Stop recording' : 'Start recording'}
+          >
+            {status === 'recording' ? (
+              <span style={{ width: 22, height: 22, borderRadius: 5, background: '#fff' }} />
+            ) : (
+              <Icon.mic size={42} />
+            )}
+          </button>
+        )}
+
+        {status === 'done' && res?.audioB64 && (
+          <div className="speak-audio">
+            <audio controls src={res.audioB64} style={{ width: '100%', height: 36 }} />
           </div>
-          <style>{`@keyframes vv-pulse { 0%,100%{opacity:1} 50%{opacity:.3} }`}</style>
-          {/* Mini waveform */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 2, marginLeft: 'auto' }}>
-            {Array.from({ length: 24 }).map((_, i) => (
-              <span key={i} style={{
-                width: 2, height: 4 + Math.abs(Math.sin(seconds * 0.7 + i * 0.4)) * 18,
-                background: 'var(--primary)', borderRadius: 999, transition: 'height .2s',
-              }} />
-            ))}
+        )}
+
+        <div className="speak-level">
+          <div className="speak-level-row">
+            <span>Audio Level</span>
+            <span>{fmt(seconds)} / {fmt(target)}</span>
+          </div>
+          <div className="speak-level-track">
+            <div className="speak-level-fill" style={{ width: `${Math.min(100, level)}%` }} />
           </div>
         </div>
-      )}
 
-      {status === 'done' && (
-        <div>
-          {res?.audioB64 && (
-            <div style={{ marginBottom: 12, padding: 10, background: 'var(--bg)', borderRadius: 8 }}>
-              <audio controls src={res.audioB64} style={{ width: '100%', height: 36 }} />
-            </div>
-          )}
-          <div style={{ marginBottom: 8 }}>
-            <span style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-              Optional — type a transcript
-            </span>
-          </div>
+        {status === 'done' && (
           <textarea
-            className="input" rows={3} value={res?.transcript || ''}
+            className="hw-textarea"
+            rows={3}
+            value={res?.transcript || ''}
             onChange={e => update({ transcript: e.target.value })}
             disabled={readOnly}
-            placeholder="Type what you said…"
-            style={{ fontSize: 'var(--text-sm)' }}
+            placeholder="Optional transcript..."
+            style={{ minHeight: 92, maxWidth: 420 }}
           />
-          {!readOnly && (
-            <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
-              <Button variant="ghost" size="sm" onClick={reset}>Re-record</Button>
-            </div>
-          )}
+        )}
+      </div>
+
+      {!readOnly && (
+        <div className="speak-actions">
+          <button type="button" className="speak-reset" onClick={reset}>
+            <Icon.refresh size={14} /> Reset
+          </button>
+          <span style={{ color: '#5c7585', fontSize: 'var(--text-xs)', fontWeight: 700 }}>
+            {status === 'recording' ? 'Recording now' : status === 'done' ? 'Ready to submit' : 'Waiting to record'}
+          </span>
         </div>
       )}
     </div>
@@ -490,21 +617,26 @@ function FlashPlayer({ ex, res, update, readOnly }) {
         </div>
       </div>
 
-      {/* Controls */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 14, gap: 8 }}>
+      {/* Main actions: 2 clear buttons */}
+      <div style={{ display: 'flex', gap: 8, marginTop: 14, marginBottom: 8 }}>
+        <Button variant="ghost" size="sm" onClick={() => setFlipped(f => !f)} style={{ flex: 1 }}>
+          <Icon.refresh size={12} /> Flip card
+        </Button>
+        {!readOnly && (
+          <Button variant="primary" size="sm" onClick={mark} style={{ flex: 1 }}>
+            <Icon.check size={12} /> I learned this
+          </Button>
+        )}
+      </div>
+
+      {/* Navigation */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
         <Button variant="ghost" size="sm" onClick={prev} disabled={idx === 0}>
           <Icon.arrowL size={12} /> Previous
         </Button>
-        <div style={{ display: 'flex', gap: 8 }}>
-          {flipped && !readOnly && (
-            <Button variant="primary" size="sm" onClick={mark}>
-              <Icon.check size={12} /> Learned
-            </Button>
-          )}
-          <Button variant="ghost" size="sm" onClick={next} disabled={idx === pairs.length - 1}>
-            Next <Icon.arrowR size={12} />
-          </Button>
-        </div>
+        <Button variant="ghost" size="sm" onClick={next} disabled={idx === pairs.length - 1}>
+          Next <Icon.arrowR size={12} />
+        </Button>
       </div>
     </div>
   );
@@ -516,7 +648,7 @@ function FlashPlayer({ ex, res, update, readOnly }) {
  * HomeworkStepThrough — renders exercises one at a time with progress bar + navigation.
  * Used in the student dashboard to walk through a homework set.
  */
-export function HomeworkStepThrough({ exercises, responses, onResponse, onSubmit, readOnly = false }) {
+export function HomeworkStepThrough({ exercises, responses, onResponse, onSubmit, readOnly = false, homework = null }) {
   const [currentIdx, setCurrentIdx] = useState(0);
 
   if (!exercises || exercises.length === 0) return null;
@@ -525,49 +657,106 @@ export function HomeworkStepThrough({ exercises, responses, onResponse, onSubmit
   const current = exercises[currentIdx];
   const currentRes = responses?.[current?.id] || {};
   const progress = ((currentIdx + 1) / total) * 100;
+  const completedCount = exercises.filter(ex => hasCompletedResponse(ex, responses?.[ex.id])).length;
+  const canSubmit = readOnly || completedCount === total;
+  const estimatedMinutes = homework?.estimatedTime || homework?.estimatedMinutes || Math.max(8, total * 4);
 
   const goPrev = () => setCurrentIdx(i => Math.max(i - 1, 0));
   const goNext = () => setCurrentIdx(i => Math.min(i + 1, total - 1));
   const isLast = currentIdx === total - 1;
 
   return (
-    <div>
-      {/* Progress bar */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
-        <span style={{ fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--text-2)', whiteSpace: 'nowrap' }}>
-          Exercise {currentIdx + 1} / {total}
-        </span>
-        <div style={{ flex: 1, height: 5, background: 'var(--divider)', borderRadius: 999, overflow: 'hidden' }}>
-          <div style={{ width: `${progress}%`, height: '100%', background: 'linear-gradient(90deg, var(--primary), var(--accent))', borderRadius: 999, transition: 'width 0.3s var(--ease)' }} />
+    <div className="hw-workspace">
+      <div className="hw-player-head">
+        <div>
+          <div className="hw-player-kicker">Level B2 / Academic Practice</div>
+          <div className="hw-player-title">{homework?.title || 'Homework Workspace'}</div>
+        </div>
+        <div className="hw-time-pill">
+          <Icon.practice size={15} /> {estimatedMinutes} min focus
         </div>
       </div>
 
-      {/* Current exercise */}
-      <Card style={{ padding: 20, marginBottom: 14 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
-          <ExTypeBadge typeId={current.type} size="md" />
+      <div className="hw-audio-strip" aria-label="Homework activity player">
+        <div className="hw-play-orb">
+          <Icon.arrowR size={22} />
         </div>
-        <ExercisePlayer
-          exercise={current}
-          response={currentRes}
-          onResponse={(updated) => onResponse?.(current.id, updated)}
-          readOnly={readOnly}
-        />
-      </Card>
+        <div>
+          <div className="hw-strip-label">Task focus: {exerciseLabel(current.type)}</div>
+          <div className="hw-wave" aria-hidden="true">
+            {Array.from({ length: 54 }).map((_, i) => (
+              <span
+                key={i}
+                className={i <= Math.round((currentIdx + 1) / total * 54) ? 'is-hot' : ''}
+                style={{ height: 8 + Math.abs(Math.sin(i * 0.65)) * 24 }}
+              />
+            ))}
+          </div>
+        </div>
+        <div className="hw-strip-progress">
+          <span>{String(currentIdx + 1).padStart(2, '0')} / {String(total).padStart(2, '0')}</span>
+          <div className="hw-volume-track"><div className="hw-volume-fill" /></div>
+        </div>
+      </div>
 
-      {/* Navigation */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
-        <Button variant="ghost" size="sm" onClick={goPrev} disabled={currentIdx === 0}>
-          <Icon.arrowL size={12} /> Previous
-        </Button>
+      <div className="hw-stage-grid">
+        <section className="hw-question-card">
+          <div className="hw-question-top">
+            <span className="hw-question-number">{currentIdx + 1}</span>
+            <div className="hw-question-type">{exerciseLabel(current.type)}</div>
+          </div>
+          <ExercisePlayer
+            exercise={current}
+            response={currentRes}
+            onResponse={(updated) => onResponse?.(current.id, updated)}
+            readOnly={readOnly}
+          />
+        </section>
+
+        <aside className="hw-side-card">
+          <div className="hw-side-label">Progress</div>
+          <div className="hw-step-list">
+            {exercises.map((ex, i) => {
+              const done = hasCompletedResponse(ex, responses?.[ex.id]);
+              return (
+                <div
+                  key={ex.id || i}
+                  className={'hw-step-dot' + (i === currentIdx ? ' is-current' : '') + (done ? ' is-done' : '')}
+                >
+                  <span>{done ? <Icon.check size={11} /> : i + 1}</span>
+                  <span>{exerciseLabel(ex.type)}</span>
+                </div>
+              );
+            })}
+          </div>
+          <div className="hw-progress-track">
+            <div className="hw-progress-fill" style={{ width: `${progress}%` }} />
+          </div>
+          <p style={{ margin: '14px 0 0', color: '#5c7585', fontSize: 'var(--text-xs)', lineHeight: 1.55 }}>
+            Complete each response, then submit it for teacher review.
+          </p>
+        </aside>
+      </div>
+
+      <div className="hw-workspace-footer">
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button type="button" className="hw-nav-button" onClick={goPrev} disabled={currentIdx === 0}>
+            <Icon.arrowL size={12} /> Previous
+          </button>
+          {!isLast && (
+            <button type="button" className="hw-nav-button" onClick={goNext}>
+              Next <Icon.arrowR size={12} />
+            </button>
+          )}
+        </div>
         {isLast ? (
-          <Button variant="primary" onClick={onSubmit} disabled={readOnly}>
+          <button type="button" className="hw-submit-button" onClick={onSubmit} disabled={!canSubmit}>
             <Icon.check size={13} /> Submit Homework
-          </Button>
+          </button>
         ) : (
-          <Button variant="primary" size="sm" onClick={goNext}>
-            Next <Icon.arrowR size={12} />
-          </Button>
+          <span style={{ color: '#5c7585', fontSize: 'var(--text-xs)', fontWeight: 700, alignSelf: 'center' }}>
+            {completedCount}/{total} complete
+          </span>
         )}
       </div>
     </div>

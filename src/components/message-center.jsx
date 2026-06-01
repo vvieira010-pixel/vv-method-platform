@@ -7,7 +7,7 @@ import { getInbox, sendMessage, markRead } from '../lib/workflow.js';
 
 const CSS = `
   .mc-dock {
-    position: fixed; bottom: 20px; right: 70px; z-index: 40;
+    position: fixed; bottom: 76px; right: 70px; z-index: 40;
   }
   .mc-dock-btn {
     width: 44px; height: 44px; border-radius: 50%;
@@ -75,6 +75,10 @@ const CSS = `
   .si-thread-time { font-size: 11px; color: var(--muted); }
   .si-thread-preview { font-size: 13px; color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .si-unread .si-thread-from::after { content: ''; display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--primary); margin-left: 6px; vertical-align: middle; }
+  @media (max-width: 520px) {
+    .mc-dock { right: 18px; bottom: 74px; }
+    .mc-popup { right: -6px; width: min(320px, calc(100vw - 24px)); }
+  }
 `;
 
 let injected = false;
