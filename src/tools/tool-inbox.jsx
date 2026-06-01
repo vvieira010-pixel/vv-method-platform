@@ -260,7 +260,7 @@ const S = {
     flexWrap: 'wrap',
     marginBottom: 18,
     padding: 18,
-    borderRadius: 16,
+    borderRadius: 4,
     background: 'linear-gradient(130deg, #102131 0%, #1f3750 45%, #2f6379 100%)',
     color: '#fff',
   },
@@ -274,7 +274,7 @@ const S = {
   filterBar: { display: 'flex', gap: 10, justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap' },
   tabBtn: {
     padding: '6px 14px',
-    borderRadius: 'var(--radius-pill)',
+    borderRadius: 'var(--radius-sm)',
     border: '1px solid var(--border)',
     background: '#fff',
     color: 'var(--muted)',

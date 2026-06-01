@@ -159,7 +159,7 @@ const S = {
     flexWrap: 'wrap',
     marginBottom: 18,
     padding: 18,
-    borderRadius: 16,
+    borderRadius: 4,
     background: 'linear-gradient(130deg, #102131 0%, #1c344a 45%, #20597e 100%)',
     color: '#fff',
   },

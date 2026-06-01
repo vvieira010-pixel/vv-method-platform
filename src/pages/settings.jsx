@@ -72,7 +72,7 @@ export default function SettingsPage({ onNavigate }) {
       <Card style={{ padding: 20, marginTop: 14 }}>
         <SectionHeader title="Platform" />
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 12, fontSize: 'var(--text-sm)', color: 'var(--muted)' }}>
-          <p>V.V. Method — MET Preparation Platform</p>
+          <p>MET Proficiency Mastery — First-Phase Platform</p>
           <p>Diagnosis-first teaching workflow</p>
           <p>All data stored locally in your browser (localStorage).</p>
         </div>

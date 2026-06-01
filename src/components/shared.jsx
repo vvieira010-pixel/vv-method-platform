@@ -41,10 +41,10 @@ const GLOBAL_CSS = `
     --orange:       #F97316;
     --orange-deep:  #EA580C;
     --dark-accent-border: rgba(168,218,220,0.15);
-    --radius-sm:    8px;
-    --radius-md:    14px;
-    --radius-lg:    22px;
-    --radius-pill:  999px;
+    --radius-sm:    3px;
+    --radius-md:    5px;
+    --radius-lg:    8px;
+    --radius-pill:  4px;
     --text-xs:      11.5px;
     --text-sm:      13px;
     --text-md:      14.5px;
@@ -151,7 +151,7 @@ const GLOBAL_CSS = `
   .shell-topbar-title { font-family: var(--font-display); font-size: var(--text-lg); font-weight: 800; color: var(--accent-deep); line-height: 1.1; }
   .shell-topbar-sub { font-size: var(--text-xs); color: var(--muted); margin-top: 2px; letter-spacing: 0.02em; }
   .shell-topbar-search {
-    width: 100%; border: 1px solid var(--border); border-radius: 999px;
+    width: 100%; border: 1px solid var(--border); border-radius: var(--radius-md);
     background: #fff; color: var(--text); font-size: var(--text-sm);
     padding: 9px 14px; outline: none; font-family: var(--font-ui);
     transition: border-color 0.15s, box-shadow 0.15s;
@@ -163,7 +163,7 @@ const GLOBAL_CSS = `
   .shell-brand-sub  { font-size: 10px; color: var(--on-dark-muted); letter-spacing: 0.08em; text-transform: uppercase; margin-top: 2px; display: block; }
   .shell-brand-pill {
     display: inline-flex; align-items: center; gap: 6px; margin-top: 10px;
-    padding: 4px 10px; border-radius: 999px; border: 1px solid rgba(168,218,220,0.26);
+    padding: 4px 10px; border-radius: var(--radius-sm); border: 1px solid rgba(168,218,220,0.26);
     font-size: 10.5px; letter-spacing: 0.04em; text-transform: uppercase; color: #d2f2f2;
     background: rgba(45,139,139,0.14); font-weight: 700;
   }
@@ -187,7 +187,7 @@ const GLOBAL_CSS = `
     margin: 10px 12px 14px;
     padding: 10px 12px;
     border: 1px solid rgba(168,218,220,0.2);
-    border-radius: 12px;
+    border-radius: var(--radius-md);
     background: rgba(8,20,32,0.35);
   }
   .shell-sidebar-footer-label { font-size: 10px; color: var(--on-dark-muted); text-transform: uppercase; letter-spacing: 0.09em; font-weight: 700; }
@@ -1562,8 +1562,8 @@ export function Shell({
     <div className="shell">
       <aside className="shell-sidebar">
         <div className="shell-brand">
-          <span className="shell-brand-name">V.V. Method</span>
-          <span className="shell-brand-sub">MET Preparation</span>
+          <span className="shell-brand-name">MET Proficiency Mastery</span>
+          <span className="shell-brand-sub">Proficiency Workspace</span>
           <span className="shell-brand-pill">Teacher Repository</span>
         </div>
         <nav className="shell-nav" aria-label="Main navigation">
@@ -1599,6 +1599,9 @@ export function Shell({
             <div className="shell-sidebar-footer-fill" />
           </div>
           <div className="shell-sidebar-footer-sub">64% used • Local storage mode</div>
+          <div className="shell-sidebar-footer-sub" style={{ marginTop: 4, color: '#bfe4e4' }}>
+            First phase of the platform. Let me know if something unexpected happens.
+          </div>
         </div>
       </aside>
       <div className="shell-content">

@@ -147,7 +147,7 @@ export default function ReportsPage({ students, onNavigate, workspaceQuery = '' 
                     <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
                     <XAxis dataKey="skill" tick={{ fontSize: 12, fill: 'var(--text-2)' }} axisLine={{ stroke: 'var(--divider)' }} tickLine={{ stroke: 'var(--divider)' }} />
                     <YAxis allowDecimals={false} tick={{ fontSize: 12, fill: 'var(--text-2)' }} axisLine={{ stroke: 'var(--divider)' }} tickLine={{ stroke: 'var(--divider)' }} />
-                    <Tooltip contentStyle={{ borderRadius: 10, border: '1px solid var(--border)', background: '#fff' }} cursor={{ fill: 'rgba(20, 80, 120, 0.08)' }} />
+                    <Tooltip contentStyle={{ borderRadius: 3, border: '1px solid var(--border)', background: '#fff' }} cursor={{ fill: 'rgba(20, 80, 120, 0.08)' }} />
                     <Legend wrapperStyle={{ fontSize: 12 }} />
                     <Bar dataKey="enoughEvidence" name="Evaluated with evidence" stackId="coverage" fill="#0f766e" isAnimationActive animationDuration={900} />
                     <Bar dataKey="lowEvidence" name="Not evaluated enough" stackId="coverage" fill="#f59e0b" isAnimationActive animationDuration={1100} />
@@ -305,7 +305,7 @@ const S = {
     flexWrap: 'wrap',
     marginBottom: 18,
     padding: 18,
-    borderRadius: 16,
+    borderRadius: 4,
     background: 'linear-gradient(130deg, #0f2438 0%, #193249 45%, #25627f 100%)',
     color: '#fff',
   },
@@ -326,7 +326,7 @@ const S = {
     alignItems: 'center',
     gap: 10,
     border: '1px solid var(--divider)',
-    borderRadius: 10,
+    borderRadius: 3,
     padding: '9px 10px',
     background: '#fff',
   },
@@ -337,7 +337,7 @@ const S = {
     gridTemplateColumns: '28px minmax(0, 1fr)',
     gap: 10,
     border: '1px solid var(--divider)',
-    borderRadius: 10,
+    borderRadius: 3,
     padding: '9px 10px',
     background: '#fff',
   },
@@ -352,7 +352,7 @@ const S = {
     fontSize: 'var(--text-xs)',
     fontWeight: 700,
   },
-  noteRow: { display: 'grid', gridTemplateColumns: '72px minmax(0, 1fr)', gap: 8, alignItems: 'start', padding: '7px 9px', borderRadius: 8, background: 'var(--bg)' },
+  noteRow: { display: 'grid', gridTemplateColumns: '72px minmax(0, 1fr)', gap: 8, alignItems: 'start', padding: '7px 9px', borderRadius: 3, background: 'var(--bg)' },
   noteDate: { color: 'var(--muted)', fontSize: 'var(--text-xs)' },
   empty: { fontSize: 'var(--text-sm)', color: 'var(--muted)', margin: '8px 0 0' },
 };

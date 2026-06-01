@@ -36,12 +36,32 @@ const CSS = `
   }
   .login-brand-name   { font-size: 18px; font-weight: 800; color: var(--on-dark); letter-spacing: 0.01em; }
   .login-brand-sub    { font-size: 11px; color: var(--on-dark-muted); opacity: 0.65; letter-spacing: 0.1em; text-transform: uppercase; margin-top: 3px; }
-  .login-brand-eyebrow { font-size: 11px; font-weight: 700; color: var(--primary); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 14px; }
+  .login-brand-eyebrow {
+    font-size: 11px;
+    font-weight: 700;
+    color: #d7f3f3;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 3px;
+    background: rgba(61, 166, 166, 0.22);
+    border: 1px solid rgba(168, 218, 220, 0.45);
+  }
   .login-brand-headline { font-size: clamp(28px, 3.2vw, 36px); font-weight: 800; color: var(--on-dark); line-height: 1.15; margin-bottom: 18px; }
   .login-brand-copy { color: var(--on-dark-muted); font-size: 14px; line-height: 1.7; margin-bottom: 28px; }
   .login-brand-flow   { display: flex; gap: 10px; align-items: center; font-size: 13.5px; font-weight: 500; color: var(--on-dark-muted); opacity: 0.85; flex-wrap: wrap; }
-  .login-brand-flow-step { color: var(--on-dark-muted); }
-  .login-brand-flow-step.active { color: var(--primary); font-weight: 600; opacity: 1; }
+  .login-brand-flow-step { color: var(--on-dark); opacity: 0.8; }
+  .login-brand-flow-step.active {
+    color: #ffffff;
+    font-weight: 700;
+    opacity: 1;
+    background: rgba(61, 166, 166, 0.25);
+    border: 1px solid rgba(168, 218, 220, 0.55);
+    border-radius: 3px;
+    padding: 2px 8px;
+  }
   .login-brand-flow-sep { color: var(--on-dark-muted); opacity: 0.4; }
 
   .login-form-panel {
@@ -52,10 +72,15 @@ const CSS = `
 
   .login-form-title { font-size: 28px; font-weight: 800; color: var(--text); letter-spacing: -0.01em; margin: 0 0 8px; }
   .login-form-sub   { font-size: 14.5px; color: var(--muted); margin: 0 0 28px; line-height: 1.55; }
+  .login-phase-note {
+    font-size: 12px; color: var(--text-2); background: var(--accent-subtle);
+    border: 1px solid var(--accent-soft); border-radius: 8px; padding: 10px 12px;
+    margin: -10px 0 18px;
+  }
 
   .login-role-card {
     display: flex; align-items: center; justify-content: space-between;
-    padding: 20px 22px; border: 2px solid var(--border); border-radius: 6px;
+    padding: 20px 22px; border: 2px solid var(--border); border-radius: 2px;
     cursor: pointer; background: #fff; width: 100%; text-align: left;
     transition: border-color 0.15s, box-shadow 0.15s; margin-bottom: 12px;
     font-family: var(--font-ui);
@@ -82,7 +107,7 @@ const CSS = `
   }
   .login-input {
     width: 100%; padding: 14px 16px; border: 1.5px solid var(--border);
-    border-radius: 4px; font-family: var(--font-ui); font-size: 16px;
+    border-radius: 2px; font-family: var(--font-ui); font-size: 16px;
     color: var(--text); background: #fff; outline: none;
     transition: border-color 0.15s, box-shadow 0.15s; margin-bottom: 6px;
     text-align: left;
@@ -91,7 +116,7 @@ const CSS = `
   .login-input.mono { font-family: var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; }
   .login-error { font-size: 13px; color: var(--danger); margin-bottom: 12px; min-height: 20px; }
   .login-submit-btn {
-    width: 100%; padding: 14px; border-radius: 4px; border: none; cursor: pointer;
+    width: 100%; padding: 14px; border-radius: 2px; border: none; cursor: pointer;
     font-family: var(--font-ui); font-size: 15px; font-weight: 700;
     display: flex; align-items: center; justify-content: center; gap: 8px;
     margin-top: 20px; transition: background 0.15s, opacity 0.15s;
@@ -162,7 +187,7 @@ export default function LoginScreen({ onSignIn, initialMode = 'choose' }) {
       <div className="login-brand-panel">
         <div className="login-brand-inner">
           <div>
-            <div className="login-brand-name">MET Preparation</div>
+            <div className="login-brand-name">MET Proficiency Mastery</div>
             <div className="login-brand-sub">Teacher Vinicius</div>
           </div>
 
@@ -199,6 +224,7 @@ export default function LoginScreen({ onSignIn, initialMode = 'choose' }) {
 
           <h1 className="login-form-title">{formHeading}</h1>
           <p className="login-form-sub">{formSubcopy}</p>
+          <p className="login-phase-note">First phase of the platform. Let me know if something unexpected happens.</p>
 
           {mode === 'choose' && (
             <>
@@ -260,7 +286,7 @@ export default function LoginScreen({ onSignIn, initialMode = 'choose' }) {
                     style={{
                       display: 'flex', alignItems: 'center', gap: 10,
                       padding: '14px 16px', border: '2px solid var(--border)',
-                      borderRadius: 8, cursor: 'pointer', background: '#fff',
+                      borderRadius: 2, cursor: 'pointer', background: '#fff',
                       fontFamily: 'var(--font-ui)', fontSize: 14, fontWeight: 600,
                       color: 'var(--text)', textAlign: 'left', width: '100%',
                       transition: 'border-color 0.15s, box-shadow 0.15s',

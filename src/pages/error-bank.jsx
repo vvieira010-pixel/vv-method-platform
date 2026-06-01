@@ -167,7 +167,7 @@ const S = {
     flexWrap: 'wrap',
     marginBottom: 18,
     padding: 18,
-    borderRadius: 16,
+    borderRadius: 4,
     background: 'linear-gradient(130deg, #102131 0%, #1a3148 45%, #2e5f75 100%)',
     color: '#fff',
   },
@@ -182,7 +182,7 @@ const S = {
   patternCard: {
     marginTop: 12,
     padding: '10px 12px',
-    borderRadius: 10,
+    borderRadius: 3,
     border: '1px solid var(--divider)',
     background: '#fff',
     display: 'grid',

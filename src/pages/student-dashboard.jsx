@@ -52,7 +52,7 @@ export default function StudentDashboard({ student, onSignOut }) {
     <div className="dash">
       <header className="dash-topbar">
         <div className="dash-brand">
-          <span className="dash-brand-name">MET Preparation</span>
+          <span className="dash-brand-name">MET Proficiency Mastery</span>
         </div>
         <div className="dash-topbar-right">
           <span className="dash-topbar-name">{student.firstName}</span>
@@ -149,6 +149,16 @@ function HomeView({ student, onTab }) {
         <MiniStat label="Session" value={`${student.session || 1}/${student.totalSessions || 24}`} />
         <MiniStat label="Pending HW" value={pendingHw.length} />
         <MiniStat label="Level" value={student.currentLevel || student.band || 'B1'} />
+      </div>
+
+      <div style={{ marginTop: 14, padding: 12, border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', background: 'var(--surface)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' }}>
+        <div>
+          <div style={{ fontWeight: 700, fontSize: 'var(--text-sm)', color: 'var(--accent-deep)' }}>Need help between classes?</div>
+          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: 2 }}>Send a quick message to your teacher.</div>
+        </div>
+        <Button variant="primary" size="sm" onClick={() => onTab('messages')}>
+          <Icon.inbox size={13} /> Message Teacher
+        </Button>
       </div>
     </div>
   );

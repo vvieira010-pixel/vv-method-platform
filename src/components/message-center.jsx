@@ -218,6 +218,8 @@ export function StudentInbox({ student }) {
   const [messages, setMessages] = useState([]);
   const [selected, setSelected] = useState(null);
   const [reply, setReply] = useState('');
+  const [quickMessage, setQuickMessage] = useState('');
+  const [sending, setSending] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -226,16 +228,33 @@ export function StudentInbox({ student }) {
     })();
   }, [student?.id]);
 
-  const handleReply = async () => {
-    if (!reply.trim()) return;
+  async function sendStudentMessage(text) {
+    const body = String(text || '').trim();
+    if (!body) return;
+    setSending(true);
     await sendMessage({
       fromStudentId: student?.id,
       fromName: student?.firstName,
       fromRole: 'student',
       toRole: 'teacher',
-      body: reply.trim(),
+      body,
     });
+    setSending(false);
+    window.toast?.('Message sent.', 'ok');
+  }
+
+  const handleReply = async () => {
+    if (!reply.trim()) return;
+    await sendStudentMessage(reply);
     setReply('');
+    const all = await getInbox({ role: 'student', studentId: student?.id });
+    setMessages(all || []);
+  };
+
+  const handleQuickSend = async () => {
+    if (!quickMessage.trim()) return;
+    await sendStudentMessage(quickMessage);
+    setQuickMessage('');
     const all = await getInbox({ role: 'student', studentId: student?.id });
     setMessages(all || []);
   };
@@ -243,6 +262,22 @@ export function StudentInbox({ student }) {
   return (
     <div className="si-root">
       <div style={{ fontWeight: 700, fontSize: 20, marginBottom: 20 }}>Inbox</div>
+      <div style={{ marginBottom: 14, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: 14 }}>
+        <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--muted)', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 6 }}>
+          Message Teacher
+        </div>
+        <textarea
+          className="mc-compose-input"
+          rows={3}
+          placeholder="Type your question or update..."
+          value={quickMessage}
+          onChange={e => setQuickMessage(e.target.value)}
+          style={{ width: '100%', marginBottom: 8 }}
+        />
+        <button className="btn btn-accent btn-sm" onClick={handleQuickSend} disabled={sending || !quickMessage.trim()}>
+          {sending ? 'Sending...' : 'Send Message'}
+        </button>
+      </div>
       {messages.length === 0 && (
         <div style={{ color: 'var(--muted)', fontSize: 14 }}>No messages yet.</div>
       )}
@@ -265,7 +300,9 @@ export function StudentInbox({ student }) {
             value={reply} onChange={e => setReply(e.target.value)}
             style={{ width: '100%', marginBottom: 10 }}
           />
-          <button className="btn btn-accent btn-sm" onClick={handleReply}>Send Reply</button>
+          <button className="btn btn-accent btn-sm" onClick={handleReply} disabled={sending || !reply.trim()}>
+            {sending ? 'Sending...' : 'Send Reply'}
+          </button>
         </div>
       )}
     </div>
