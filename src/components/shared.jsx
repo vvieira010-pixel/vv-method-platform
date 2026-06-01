@@ -131,28 +131,45 @@ const GLOBAL_CSS = `
   .pill-danger  { background: var(--danger-bg);  color: var(--danger);  }
   .pill-muted   { background: var(--divider);    color: var(--muted);   }
   .pill-info    { background: var(--info-bg);    color: var(--info);    }
-  .shell { display: flex; height: 100dvh; overflow: hidden; background: transparent; }
+  .shell { display: flex; height: 100dvh; overflow: hidden; background: #f4f8fa; }
   .shell-sidebar {
-    width: 248px; flex-shrink: 0; background:
-      radial-gradient(620px 240px at -30% -20%, rgba(45,139,139,0.25), transparent 60%),
-      linear-gradient(180deg, #131d2a 0%, #1a2332 55%, #0f1720 100%);
+    width: 272px; flex-shrink: 0; background:
+      radial-gradient(620px 240px at -30% -20%, rgba(45,139,139,0.22), transparent 60%),
+      linear-gradient(180deg, #102131 0%, #17293b 55%, #0f1c2a 100%);
     display: flex; flex-direction: column; overflow-y: auto; overflow-x: hidden;
-    border-right: 1px solid rgba(168,218,220,0.15);
+    border-right: 1px solid rgba(168,218,220,0.16);
   }
   .shell-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
   .shell-topbar {
-    height: 58px; flex-shrink: 0; background: rgba(255,255,255,0.78);
-    backdrop-filter: blur(8px);
-    border-bottom: 1px solid rgba(168, 218, 220, 0.25);
-    display: flex; align-items: center; padding: 0 20px; gap: 12px;
+    min-height: 72px; flex-shrink: 0; background: rgba(255,255,255,0.94);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(168, 218, 220, 0.32);
+    display: grid; grid-template-columns: minmax(180px, 0.95fr) minmax(260px, 1.1fr) auto;
+    align-items: center; padding: 12px 22px; gap: 14px;
   }
-  .shell-main { flex: 1; overflow-y: auto; overflow-x: hidden; }
+  .shell-topbar-left { min-width: 0; }
+  .shell-topbar-title { font-family: var(--font-display); font-size: var(--text-lg); font-weight: 800; color: var(--accent-deep); line-height: 1.1; }
+  .shell-topbar-sub { font-size: var(--text-xs); color: var(--muted); margin-top: 2px; letter-spacing: 0.02em; }
+  .shell-topbar-search {
+    width: 100%; border: 1px solid var(--border); border-radius: 999px;
+    background: #fff; color: var(--text); font-size: var(--text-sm);
+    padding: 9px 14px; outline: none; font-family: var(--font-ui);
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .shell-topbar-search:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(45,139,139,0.15); }
+  .shell-main { flex: 1; overflow-y: auto; overflow-x: hidden; background: linear-gradient(180deg, #f7fbfb 0%, #f1f7f7 100%); }
   .shell-brand { padding: 20px 16px 14px; border-bottom: 1px solid var(--dark-accent-border); }
   .shell-brand-name { font-size: var(--text-lg); font-family: var(--font-display); font-weight: 800; color: #fff; letter-spacing: 0.01em; display: block; }
   .shell-brand-sub  { font-size: 10px; color: var(--on-dark-muted); letter-spacing: 0.08em; text-transform: uppercase; margin-top: 2px; display: block; }
-  .shell-nav { flex: 1; padding: 12px 8px; }
-  .shell-nav-section { margin-bottom: 18px; }
-  .shell-nav-section-label { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--on-dark-muted); padding: 0 8px; margin-bottom: 4px; }
+  .shell-brand-pill {
+    display: inline-flex; align-items: center; gap: 6px; margin-top: 10px;
+    padding: 4px 10px; border-radius: 999px; border: 1px solid rgba(168,218,220,0.26);
+    font-size: 10.5px; letter-spacing: 0.04em; text-transform: uppercase; color: #d2f2f2;
+    background: rgba(45,139,139,0.14); font-weight: 700;
+  }
+  .shell-nav { flex: 1; padding: 14px 10px; }
+  .shell-nav-section { margin-bottom: 20px; }
+  .shell-nav-section-label { font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--on-dark-muted); padding: 0 8px; margin-bottom: 6px; }
   .shell-nav-btn {
     display: flex; align-items: center; gap: 9px; width: 100%; padding: 8px 10px;
     border-radius: var(--radius-md); background: none; border: none; cursor: pointer;
@@ -166,9 +183,17 @@ const GLOBAL_CSS = `
     font-weight: 700;
     border: 1px solid rgba(168,218,220,0.35);
   }
-  .shell-user { padding: 12px 14px; border-top: 1px solid var(--dark-accent-border); display: flex; align-items: center; gap: 9px; }
-  .shell-user-name { font-size: var(--text-xs); color: #fff; font-weight: 600; }
-  .shell-user-role { font-size: 10.5px; color: var(--on-dark-muted); }
+  .shell-sidebar-footer {
+    margin: 10px 12px 14px;
+    padding: 10px 12px;
+    border: 1px solid rgba(168,218,220,0.2);
+    border-radius: 12px;
+    background: rgba(8,20,32,0.35);
+  }
+  .shell-sidebar-footer-label { font-size: 10px; color: var(--on-dark-muted); text-transform: uppercase; letter-spacing: 0.09em; font-weight: 700; }
+  .shell-sidebar-footer-track { height: 7px; border-radius: 999px; background: rgba(255,255,255,0.14); margin-top: 8px; overflow: hidden; }
+  .shell-sidebar-footer-fill { height: 100%; width: 64%; background: linear-gradient(90deg, #2d8b8b 0%, #7fc4c4 100%); }
+  .shell-sidebar-footer-sub { font-size: 10.5px; color: #d4ecec; margin-top: 6px; }
   .workflow-strip { display: flex; align-items: center; padding: 0 20px; height: 36px; background: linear-gradient(90deg, rgba(240,248,248,0.82), rgba(244,250,250,0.4)); border-bottom: 1px solid rgba(168,218,220,0.25); overflow-x: auto; scrollbar-width: none; }
   .workflow-strip::-webkit-scrollbar { display: none; }
   .workflow-step { display: flex; align-items: center; gap: 6px; font-size: var(--text-xs); font-weight: 600; color: var(--muted); padding: 0 10px; cursor: pointer; white-space: nowrap; border: none; background: none; font-family: var(--font-ui); height: 100%; transition: color 0.12s; }
@@ -264,17 +289,654 @@ const GLOBAL_CSS = `
   .cycle-pipeline button.is-active { border-color: var(--accent); background: var(--accent-subtle); color: var(--accent-deep); }
   .cycle-pipeline-index { color: var(--muted); font-weight: 700; }
   .cycle-pipeline-icon { display: inline-flex; color: var(--accent-deep); }
+  .student-hw-page {
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 22px 16px 96px;
+  }
+  .student-hw-hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 18px;
+    align-items: end;
+    padding: 22px;
+    border-radius: 22px;
+    background:
+      radial-gradient(560px 240px at 100% 0%, rgba(251, 166, 30, 0.23), transparent 64%),
+      linear-gradient(135deg, #003B5C 0%, #004766 48%, #07314b 100%);
+    box-shadow: 0 24px 48px -30px rgba(0, 59, 92, 0.65);
+    color: #fff;
+    margin-bottom: 18px;
+  }
+  .student-hw-kicker {
+    color: #FBA61E;
+    font-size: 10.5px;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .student-hw-title {
+    font-family: var(--font-display);
+    font-size: clamp(24px, 4vw, 38px);
+    line-height: 1.05;
+    font-weight: 800;
+    margin: 0;
+    color: #fff;
+  }
+  .student-hw-subtitle {
+    max-width: 620px;
+    margin-top: 8px;
+    color: rgba(241, 250, 238, 0.78);
+    font-size: var(--text-sm);
+  }
+  .student-hw-meter {
+    min-width: 176px;
+    border: 1px solid rgba(255,255,255,0.16);
+    border-radius: 18px;
+    padding: 14px;
+    background: rgba(255,255,255,0.08);
+  }
+  .student-hw-meter-value {
+    font-size: 28px;
+    line-height: 1;
+    font-family: var(--font-display);
+    font-weight: 800;
+    color: #FBA61E;
+  }
+  .student-hw-meter-label {
+    font-size: 11px;
+    color: rgba(255,255,255,0.72);
+    margin-top: 5px;
+  }
+  .student-hw-list {
+    display: grid;
+    gap: 14px;
+  }
+  .hw-assignment-card {
+    border: 1px solid rgba(0, 59, 92, 0.14);
+    border-radius: 20px;
+    overflow: hidden;
+    background: rgba(255,255,255,0.9);
+    box-shadow: 0 20px 42px -34px rgba(0, 59, 92, 0.55);
+  }
+  .hw-assignment-head {
+    width: 100%;
+    border: 0;
+    background: #fff;
+    padding: 17px 18px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 14px;
+    text-align: left;
+    cursor: pointer;
+    font-family: var(--font-ui);
+  }
+  .hw-assignment-head.is-open {
+    background: linear-gradient(180deg, #ffffff 0%, #f6fafb 100%);
+  }
+  .hw-assignment-title {
+    color: #003B5C;
+    font-size: var(--text-lg);
+    font-weight: 800;
+  }
+  .hw-assignment-meta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 7px;
+    margin-top: 5px;
+    color: #5c7585;
+    font-size: var(--text-xs);
+  }
+  .hw-status-pill {
+    justify-self: end;
+    padding: 7px 12px;
+    border-radius: 999px;
+    font-size: var(--text-xs);
+    font-weight: 800;
+    color: #003B5C;
+    background: #e6eef2;
+    white-space: nowrap;
+  }
+  .hw-status-pill.is-warning {
+    color: #8a5a00;
+    background: #fff4d8;
+  }
+  .hw-status-pill.is-success {
+    color: #047857;
+    background: #dcfce7;
+  }
+  .hw-expanded {
+    border-top: 1px solid rgba(0, 59, 92, 0.1);
+    padding: 18px;
+    background:
+      linear-gradient(180deg, rgba(246,250,251,0.9), rgba(255,255,255,0.92));
+  }
+  .hw-context-grid {
+    display: grid;
+    grid-template-columns: 1.1fr 1fr;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+  .hw-context-box {
+    border-radius: 16px;
+    padding: 13px 14px;
+    background: #fff;
+    border: 1px solid rgba(0, 59, 92, 0.1);
+    color: #25394a;
+    font-size: var(--text-sm);
+    line-height: 1.65;
+  }
+  .hw-context-label {
+    color: #003B5C;
+    font-size: 10.5px;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 5px;
+  }
+  .hw-workspace {
+    border-radius: 24px;
+    padding: 20px;
+    background:
+      radial-gradient(640px 250px at 0% 0%, rgba(251, 166, 30, 0.13), transparent 62%),
+      linear-gradient(180deg, #f7fbfd 0%, #eef6f8 100%);
+    border: 1px solid rgba(0, 59, 92, 0.12);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.9);
+  }
+  .hw-player-head {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 16px;
+    align-items: start;
+    margin-bottom: 16px;
+  }
+  .hw-player-kicker {
+    color: #9a6200;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 5px;
+  }
+  .hw-player-title {
+    color: #003B5C;
+    font-family: var(--font-display);
+    font-size: clamp(22px, 3vw, 31px);
+    line-height: 1.08;
+    font-weight: 800;
+  }
+  .hw-time-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border: 0;
+    border-radius: 999px;
+    padding: 9px 13px;
+    background: #e1e7eb;
+    color: #003B5C;
+    font-size: var(--text-xs);
+    font-weight: 800;
+    white-space: nowrap;
+  }
+  .hw-audio-strip {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: 18px;
+    align-items: center;
+    min-height: 92px;
+    border-radius: 999px;
+    padding: 17px 23px;
+    background: #004766;
+    color: #dff5ff;
+    margin-bottom: 18px;
+    box-shadow: 0 20px 40px -32px rgba(0, 59, 92, 0.7);
+  }
+  .hw-play-orb {
+    width: 48px;
+    height: 48px;
+    border-radius: 999px;
+    display: grid;
+    place-items: center;
+    border: 0;
+    color: #003B5C;
+    background: #FBA61E;
+    flex: 0 0 auto;
+  }
+  .hw-strip-label {
+    color: #7fd5ff;
+    font-size: var(--text-xs);
+    margin-bottom: 8px;
+  }
+  .hw-wave {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    height: 34px;
+    overflow: hidden;
+  }
+  .hw-wave span {
+    width: 3px;
+    border-radius: 999px;
+    background: rgba(127, 213, 255, 0.26);
+  }
+  .hw-wave span.is-hot { background: #FBA61E; }
+  .hw-strip-progress {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #bfeeff;
+    font-size: var(--text-xs);
+    font-weight: 700;
+  }
+  .hw-volume-track {
+    width: 82px;
+    height: 5px;
+    border-radius: 999px;
+    background: rgba(127,213,255,0.24);
+    overflow: hidden;
+  }
+  .hw-volume-fill {
+    height: 100%;
+    width: 72%;
+    background: #FBA61E;
+  }
+  .hw-stage-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 230px;
+    gap: 18px;
+    align-items: stretch;
+  }
+  .hw-question-card,
+  .hw-side-card {
+    background: #fff;
+    border: 1px solid rgba(0, 59, 92, 0.14);
+    border-radius: 24px;
+    box-shadow: 0 20px 42px -34px rgba(0, 59, 92, 0.48);
+  }
+  .hw-question-card {
+    padding: 22px;
+    min-height: 330px;
+  }
+  .hw-side-card {
+    padding: 18px;
+  }
+  .hw-question-top {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 18px;
+  }
+  .hw-question-number {
+    width: 28px;
+    height: 28px;
+    border-radius: 999px;
+    display: grid;
+    place-items: center;
+    flex: 0 0 auto;
+    background: #004766;
+    color: #fff;
+    font-size: var(--text-xs);
+    font-weight: 800;
+  }
+  .hw-question-type {
+    color: #003B5C;
+    font-weight: 800;
+    font-size: var(--text-lg);
+  }
+  .hw-side-label {
+    color: #5c7585;
+    font-size: 10.5px;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  .hw-step-list {
+    display: grid;
+    gap: 8px;
+  }
+  .hw-step-dot {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: 8px;
+    color: #5c7585;
+    font-size: var(--text-xs);
+    font-weight: 700;
+  }
+  .hw-step-dot span:first-child {
+    width: 20px;
+    height: 20px;
+    border-radius: 999px;
+    display: grid;
+    place-items: center;
+    background: #e6eef2;
+    color: #003B5C;
+    font-size: 10px;
+  }
+  .hw-step-dot.is-current span:first-child {
+    background: #FBA61E;
+  }
+  .hw-step-dot.is-done span:first-child {
+    background: #004766;
+    color: #fff;
+  }
+  .hw-progress-track {
+    height: 7px;
+    border-radius: 999px;
+    background: #e3ebef;
+    overflow: hidden;
+    margin: 16px 0 0;
+  }
+  .hw-progress-fill {
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, #004766, #FBA61E);
+    transition: width 0.25s var(--ease);
+  }
+  .hw-workspace-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-top: 16px;
+  }
+  .hw-nav-button {
+    border: 1px solid rgba(0, 59, 92, 0.14);
+    border-radius: 999px;
+    min-height: 44px;
+    padding: 10px 15px;
+    background: #fff;
+    color: #003B5C;
+    font-family: var(--font-ui);
+    font-size: var(--text-sm);
+    font-weight: 800;
+    cursor: pointer;
+  }
+  .hw-nav-button:disabled {
+    cursor: not-allowed;
+    opacity: 0.45;
+  }
+  .hw-submit-button {
+    border: 0;
+    border-radius: 999px;
+    min-height: 44px;
+    padding: 12px 18px;
+    color: #fff;
+    background: #004766;
+    font-family: var(--font-ui);
+    font-size: var(--text-sm);
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow: 0 15px 30px -22px rgba(0, 59, 92, 0.8);
+  }
+  .hw-submit-button:disabled {
+    background: #9aacb7;
+    cursor: not-allowed;
+    box-shadow: none;
+  }
+  .hw-choice-list {
+    display: grid;
+    gap: 13px;
+  }
+  .hw-choice {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: 13px;
+    align-items: center;
+    min-height: 68px;
+    padding: 14px 15px;
+    border-radius: 999px;
+    border: 1.5px solid #dce6eb;
+    background: #fff;
+    color: #0f2e44;
+    cursor: pointer;
+    font-family: var(--font-ui);
+    text-align: left;
+    transition: transform 0.15s, border-color 0.15s, background 0.15s;
+  }
+  .hw-choice:hover {
+    transform: translateY(-1px);
+    border-color: #9bc1d1;
+  }
+  .hw-choice.is-selected {
+    border-color: #004766;
+    background: #f2f8fb;
+    font-weight: 800;
+  }
+  .hw-choice-dot {
+    width: 20px;
+    height: 20px;
+    border-radius: 999px;
+    border: 1.5px solid #9aacb7;
+    display: grid;
+    place-items: center;
+  }
+  .hw-choice.is-selected .hw-choice-dot {
+    background: #004766;
+    border-color: #004766;
+  }
+  .hw-choice.is-selected .hw-choice-dot::after {
+    content: "";
+    width: 7px;
+    height: 7px;
+    border-radius: 999px;
+    background: #fff;
+  }
+  .hw-prompt-title {
+    margin: 0 0 14px;
+    color: #003B5C;
+    font-size: 20px;
+    line-height: 1.35;
+    font-weight: 800;
+  }
+  .hw-soft-note {
+    border-radius: 14px;
+    border-left: 4px solid #FBA61E;
+    background: #fff7e8;
+    color: #5d430d;
+    padding: 11px 13px;
+    font-size: var(--text-xs);
+    line-height: 1.55;
+    margin-bottom: 14px;
+  }
+  .hw-textarea {
+    width: 100%;
+    min-height: 132px;
+    resize: vertical;
+    border: 1.5px solid #cddde5;
+    border-radius: 22px;
+    padding: 16px;
+    background: #fbfdfe;
+    color: #143349;
+    font-family: var(--font-ui);
+    font-size: var(--text-sm);
+    line-height: 1.7;
+    outline: none;
+  }
+  .hw-textarea:focus {
+    border-color: #004766;
+    box-shadow: 0 0 0 4px rgba(0, 71, 102, 0.1);
+  }
+  .speak-shell {
+    border-radius: 26px;
+    padding: 18px;
+    background: #fff;
+  }
+  .speak-segment {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    padding: 5px;
+    border-radius: 999px;
+    background: #e4eaee;
+    margin-bottom: 18px;
+  }
+  .speak-segment button {
+    border: 0;
+    border-radius: 999px;
+    padding: 10px;
+    background: transparent;
+    color: #273b4a;
+    font-family: var(--font-ui);
+    font-size: var(--text-xs);
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    cursor: default;
+  }
+  .speak-segment button.is-active {
+    background: #004766;
+    color: #fff;
+  }
+  .speak-panel {
+    min-height: 360px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 14px;
+  }
+  .speak-panel h3 {
+    color: #003B5C;
+    font-size: 20px;
+    font-weight: 800;
+    margin: 0;
+  }
+  .speak-panel p {
+    max-width: 390px;
+    color: #294252;
+    font-size: var(--text-sm);
+    line-height: 1.6;
+    margin: 0;
+  }
+  .speak-record {
+    width: 110px;
+    height: 110px;
+    border-radius: 999px;
+    border: 0;
+    display: grid;
+    place-items: center;
+    background: #9c6400;
+    color: #fff;
+    cursor: pointer;
+    box-shadow: 0 18px 34px -24px rgba(84, 54, 0, 0.9);
+    margin: 22px 0 10px;
+  }
+  .speak-record.is-recording {
+    background: #b42318;
+    animation: pulseDot 1.1s ease-in-out infinite;
+  }
+  .speak-level {
+    width: min(100%, 360px);
+    margin-top: 8px;
+  }
+  .speak-level-row {
+    display: flex;
+    justify-content: space-between;
+    color: #294252;
+    font-size: 10.5px;
+    font-weight: 800;
+    margin-bottom: 7px;
+  }
+  .speak-level-track {
+    height: 12px;
+    border-radius: 999px;
+    background: #dfe5e8;
+    overflow: hidden;
+  }
+  .speak-level-fill {
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, #FBA61E, #004766);
+    transition: width 0.16s;
+  }
+  .speak-actions {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    border-top: 1px solid #e5ecef;
+    padding-top: 16px;
+    margin-top: 16px;
+  }
+  .speak-reset {
+    border: 0;
+    background: transparent;
+    color: #004766;
+    font-family: var(--font-ui);
+    font-weight: 800;
+    cursor: pointer;
+  }
+  .speak-audio {
+    width: min(100%, 390px);
+    padding: 10px;
+    border-radius: 16px;
+    background: #f4f8fa;
+    border: 1px solid #dce6eb;
+  }
   @media (max-width: 768px) {
     .landing-hero-grid { grid-template-columns: 1fr; }
     .landing-grid-3 { grid-template-columns: 1fr 1fr; }
     .landing-grid-4 { grid-template-columns: 1fr 1fr; }
     .shell-sidebar  { display: none; }
+    .shell-topbar {
+      grid-template-columns: 1fr;
+      gap: 8px;
+      min-height: auto;
+      padding: 10px 14px;
+    }
+    .shell-topbar-search { display: none; }
     .teacher-overview-hero,
     .teacher-overview-split,
     .teacher-overview-snapshot { grid-template-columns: 1fr; }
     .teacher-overview-kpis { grid-template-columns: 1fr 1fr; }
     .quick-actions-grid { grid-template-columns: 1fr; }
     .cycle-pipeline { grid-template-columns: 1fr; }
+    .student-hw-hero,
+    .hw-player-head,
+    .hw-stage-grid,
+    .hw-context-grid,
+    .hw-assignment-head {
+      grid-template-columns: 1fr;
+    }
+    .student-hw-meter,
+    .hw-status-pill {
+      justify-self: start;
+    }
+    .hw-audio-strip {
+      grid-template-columns: auto minmax(0, 1fr);
+      border-radius: 28px;
+    }
+    .hw-strip-progress {
+      grid-column: 1 / -1;
+      justify-content: space-between;
+    }
+    .hw-question-card {
+      min-height: auto;
+      padding: 18px;
+    }
+    .hw-side-card {
+      order: -1;
+    }
+    .hw-workspace-footer {
+      align-items: stretch;
+      flex-direction: column;
+    }
+    .hw-workspace-footer > div {
+      display: grid !important;
+      grid-template-columns: 1fr 1fr;
+      width: 100%;
+    }
+    .hw-submit-button {
+      width: 100%;
+    }
+    .speak-panel {
+      min-height: 320px;
+    }
   }
 `;
 
@@ -475,15 +1137,25 @@ export function ReviewStatusBadge({ status }) {
  * opening paragraph → What you did well → What to improve → Final note.
  * Shared by the teacher review (diagnostic-create) and the student dashboard.
  */
-export function StudentFeedbackView({ feedback }) {
-  if (!feedback || typeof feedback !== 'object') return null;
-  const wins = Array.isArray(feedback.whatYouDidWell) ? feedback.whatYouDidWell : [];
-  const fixes = Array.isArray(feedback.whatToImprove) ? feedback.whatToImprove : [];
+export function StudentFeedbackView({
+  feedback,
+  nextClassFocus = null,
+  upcomingClass = null,
+  homeworkAssigned = null,
+  onOpenHomework = null,
+}) {
+  const parsed = parseStudentFeedback(feedback);
+  if (!parsed || typeof parsed !== 'object') return null;
+
+  const wins = Array.isArray(parsed.whatYouDidWell) ? parsed.whatYouDidWell : [];
+  const fixes = Array.isArray(parsed.whatToImprove) ? parsed.whatToImprove.slice(0, 1) : [];
+  const whatsNext = buildWhatsNextSection(parsed, nextClassFocus, fixes);
+  const beforeNextClass = buildBeforeNextClassChecklist(parsed, fixes);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-      {feedback.classFocus && (
-        <p style={{ fontSize: 'var(--text-md)', lineHeight: 1.7, color: 'var(--text)', margin: 0 }}>{feedback.classFocus}</p>
+      {parsed.classFocus && (
+        <p style={{ fontSize: 'var(--text-md)', lineHeight: 1.7, color: 'var(--text)', margin: 0 }}>{parsed.classFocus}</p>
       )}
 
       {wins.length > 0 && (
@@ -508,10 +1180,10 @@ export function StudentFeedbackView({ feedback }) {
 
       {fixes.length > 0 && (
         <div>
-          <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 'var(--text-lg)', color: 'var(--warning)', marginBottom: 10 }}>What to improve</div>
+          <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 'var(--text-lg)', color: 'var(--accent-deep)', marginBottom: 10 }}>What to improve</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {fixes.map((f, i) => (
-              <div key={i} style={{ padding: 14, background: 'var(--warning-bg)', border: '1px solid var(--warning-soft)', borderRadius: 'var(--radius-md)' }}>
+              <div key={i} style={{ padding: 14, background: 'var(--accent-subtle)', border: '1px solid var(--accent-soft)', borderRadius: 'var(--radius-md)' }}>
                 <div style={{ fontSize: 'var(--text-md)', fontWeight: 700, color: 'var(--text)', marginBottom: 6 }}>{i + 1}. {f.area}</div>
                 {f.metImportance && <p style={{ fontSize: 'var(--text-sm)', lineHeight: 1.6, margin: '0 0 8px', color: 'var(--text-2)' }}>{f.metImportance}</p>}
                 {(f.insteadOf || f.sayInstead) && (
@@ -519,20 +1191,20 @@ export function StudentFeedbackView({ feedback }) {
                     {f.insteadOf && (
                       <div style={{ fontSize: 'var(--text-sm)' }}>
                         <span style={{ color: 'var(--muted)', fontWeight: 600 }}>Instead of: </span>
-                        <span style={{ color: 'var(--danger)' }}>"{f.insteadOf}"</span>
+                        <span style={{ color: 'var(--text-2)' }}>"{f.insteadOf}"</span>
                       </div>
                     )}
                     {f.sayInstead && (
                       <div style={{ fontSize: 'var(--text-sm)' }}>
                         <span style={{ color: 'var(--muted)', fontWeight: 600 }}>Say: </span>
-                        <span style={{ color: 'var(--success)', fontWeight: 600 }}>"{f.sayInstead}"</span>
+                        <span style={{ color: 'var(--accent-deep)', fontWeight: 700 }}>"{f.sayInstead}"</span>
                       </div>
                     )}
                   </div>
                 )}
                 {f.howToImprove && (
                   <div style={{ fontSize: 'var(--text-sm)', lineHeight: 1.6 }}>
-                    <strong style={{ color: 'var(--accent)' }}>How to improve: </strong>{f.howToImprove}
+                    <strong style={{ color: 'var(--accent-deep)' }}>How to improve: </strong>{f.howToImprove}
                   </div>
                 )}
               </div>
@@ -541,14 +1213,177 @@ export function StudentFeedbackView({ feedback }) {
         </div>
       )}
 
-      {feedback.finalNote && (
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 12 }}>
+        <div style={{ padding: 14, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)' }}>
+          <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 'var(--text-lg)', color: 'var(--accent-deep)', marginBottom: 8 }}>What&apos;s Next?</div>
+          <div style={{ display: 'grid', gap: 6 }}>
+            <p style={{ margin: 0, fontSize: 'var(--text-sm)', lineHeight: 1.6 }}><strong>Next topic:</strong> {whatsNext.nextTopic}</p>
+            <p style={{ margin: 0, fontSize: 'var(--text-sm)', lineHeight: 1.6 }}><strong>Skill focus:</strong> {whatsNext.skillFocus}</p>
+            <p style={{ margin: 0, fontSize: 'var(--text-sm)', lineHeight: 1.6 }}><strong>Why it matters:</strong> {whatsNext.whyItMatters}</p>
+            <p style={{ margin: 0, fontSize: 'var(--text-sm)', lineHeight: 1.6, color: 'var(--text-2)' }}>{whatsNext.curiositySentence}</p>
+          </div>
+        </div>
+
+        <div style={{ padding: 14, background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)' }}>
+          <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>Before Our Next Class</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {beforeNextClass.map((item, i) => (
+              <label key={`${item}-${i}`} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 'var(--text-sm)', lineHeight: 1.5, color: 'var(--text)' }}>
+                <input type="checkbox" />
+                <span>{item}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {parsed.finalNote && (
         <div style={{ padding: 14, background: 'var(--accent-subtle)', border: '1px solid var(--accent-soft)', borderRadius: 'var(--radius-md)' }}>
           <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Final note</div>
-          <p style={{ fontSize: 'var(--text-sm)', lineHeight: 1.7, margin: 0, color: 'var(--text)' }}>{feedback.finalNote}</p>
+          <p style={{ fontSize: 'var(--text-sm)', lineHeight: 1.7, margin: 0, color: 'var(--text)' }}>{parsed.finalNote}</p>
         </div>
       )}
+
+      <div style={{ padding: 14, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)' }}>
+        <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>Upcoming Class</div>
+        {upcomingClass?.available ? (
+          <div style={{ display: 'grid', gap: 6 }}>
+            <p style={{ margin: 0, fontSize: 'var(--text-sm)', lineHeight: 1.6 }}><strong>Date:</strong> {upcomingClass.dateLabel}</p>
+            <p style={{ margin: 0, fontSize: 'var(--text-sm)', lineHeight: 1.6 }}><strong>Time:</strong> {upcomingClass.timeLabel}</p>
+            <p style={{ margin: 0, fontSize: 'var(--text-sm)', lineHeight: 1.6 }}><strong>Weekly schedule:</strong> {upcomingClass.weeklySchedule}</p>
+            <p style={{ margin: 0, fontSize: 'var(--text-sm)', lineHeight: 1.6 }}><strong>Next class focus:</strong> {upcomingClass.nextClassFocus || whatsNext.nextTopic}</p>
+          </div>
+        ) : (
+          <p style={{ margin: 0, fontSize: 'var(--text-sm)', color: 'var(--muted)' }}>
+            Your next class will appear here once it is scheduled.
+          </p>
+        )}
+      </div>
+
+      <div
+        style={{ padding: 14, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', cursor: homeworkAssigned?.count > 0 && onOpenHomework ? 'pointer' : 'default' }}
+        onClick={() => { if (homeworkAssigned?.count > 0) onOpenHomework?.(); }}
+      >
+        <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>Homework Assigned</div>
+        {homeworkAssigned?.count > 0 ? (
+          <div style={{ display: 'grid', gap: 6 }}>
+            <p style={{ margin: 0, fontSize: 'var(--text-sm)', lineHeight: 1.6 }}>
+              <strong>{homeworkAssigned.count === 1 ? '1 homework set is ready.' : `${homeworkAssigned.count} homework sets are ready.`}</strong>
+            </p>
+            <p style={{ margin: 0, fontSize: 'var(--text-sm)', color: 'var(--text-2)' }}>
+              {homeworkAssigned.title || 'Open Homework to start.'}
+              {homeworkAssigned.dueDateLabel ? ` · Due ${homeworkAssigned.dueDateLabel}` : ''}
+            </p>
+          </div>
+        ) : (
+          <p style={{ margin: 0, fontSize: 'var(--text-sm)', color: 'var(--muted)' }}>
+            No homework assigned yet.
+          </p>
+        )}
+      </div>
     </div>
   );
+}
+
+function parseStudentFeedback(feedback) {
+  if (!feedback) return null;
+  if (typeof feedback === 'object') return feedback;
+  if (typeof feedback !== 'string') return null;
+
+  const raw = feedback.trim().replace(/```json|```/gi, '');
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw);
+  } catch {
+    const start = raw.indexOf('{');
+    const end = raw.lastIndexOf('}');
+    if (start === -1 || end <= start) return null;
+    try {
+      return JSON.parse(raw.slice(start, end + 1));
+    } catch {
+      return null;
+    }
+  }
+}
+
+function buildWhatsNextSection(feedback, nextClassFocus, fixes) {
+  const whatsNext = (feedback?.whatsNext && typeof feedback.whatsNext === 'object') ? feedback.whatsNext : {};
+  const firstFix = fixes[0] || {};
+
+  const nextTopic = normalizeSentence(
+    whatsNext.nextTopic ||
+    nextClassFocus?.primaryFocus ||
+    firstFix.area ||
+    feedback?.classFocus
+  ) || 'Build clearer responses in your next MET-style task.';
+
+  const skillFocus = normalizeSentence(
+    whatsNext.skillFocus ||
+    nextClassFocus?.monitoringFocus ||
+    firstFix.area ||
+    firstFix.howToImprove
+  ) || 'Use complete, well-structured answers with stronger control.';
+
+  const whyItMatters = normalizeSentence(
+    whatsNext.whyItMatters ||
+    firstFix.metImportance
+  ) || 'This helps you perform better in MET tasks and communicate clearly in real situations.';
+
+  const curiositySentence = normalizeSentence(
+    whatsNext.curiositySentence ||
+    whatsNext.curiosity ||
+    nextClassFocus?.warmUpSuggestion
+  ) || 'Next class, you will test this in a short challenge and notice how much more natural your answer sounds.';
+
+  return { nextTopic, skillFocus, whyItMatters, curiositySentence };
+}
+
+function buildBeforeNextClassChecklist(feedback, fixes) {
+  const explicit = Array.isArray(feedback?.beforeNextClass)
+    ? feedback.beforeNextClass
+    : Array.isArray(feedback?.beforeOurNextClass)
+      ? feedback.beforeOurNextClass
+      : [];
+
+  const fromFixes = fixes
+    .map((f) => normalizeSentence(f?.howToImprove || f?.sayInstead || f?.area))
+    .filter(Boolean);
+
+  const fromHomework = normalizeSentence(feedback?.homeworkSummary || feedback?.homework?.summary)
+    ? [normalizeSentence(feedback?.homeworkSummary || feedback?.homework?.summary)]
+    : [];
+
+  const merged = [...explicit, ...fromFixes, ...fromHomework]
+    .map(normalizeSentence)
+    .filter(Boolean)
+    .slice(0, 5);
+
+  const unique = [];
+  for (const item of merged) {
+    if (!unique.some(u => u.toLowerCase() === item.toLowerCase())) unique.push(item);
+  }
+
+  if (unique.length >= 3) return unique.slice(0, 5);
+
+  const focusHint = normalizeSentence(fixes[0]?.area || feedback?.classFocus || feedback?.whatsNext?.skillFocus) || 'your main class focus';
+  const fallback = [
+    normalizeSentence(fixes[0]?.howToImprove) || `Practice one short response focused on ${focusHint}.`,
+    normalizeSentence(fixes[1]?.howToImprove) || `Rewrite one sentence from class using a stronger version for ${focusHint}.`,
+    `Write one question about ${focusHint} that you want to clarify next class.`,
+  ];
+
+  const finalList = [...unique];
+  for (const item of fallback) {
+    if (!item) continue;
+    if (!finalList.some(existing => existing.toLowerCase() === item.toLowerCase())) finalList.push(item);
+    if (finalList.length >= 5) break;
+  }
+  return finalList.slice(0, 5);
+}
+
+function normalizeSentence(text) {
+  if (!text) return '';
+  return String(text).replace(/\s+/g, ' ').trim();
 }
 
 /* ─── EVIDENCE CARD ──────────────────────────────────────────── */
@@ -704,9 +1539,21 @@ const NEW_NAV_SECTIONS = [
   { label: 'Reports',  ids: ['reports', 'settings'] },
 ];
 
-export function Shell({ tabs = [], active, onTab, children, rightSlot, workflowActive, onWorkflowStage }) {
+export function Shell({
+  tabs = [],
+  active,
+  onTab,
+  children,
+  rightSlot,
+  workflowActive,
+  onWorkflowStage,
+  searchValue = '',
+  onSearchChange,
+  searchPlaceholder = 'Search students, classes, diagnostics...',
+}) {
   injectGlobalCSS();
   const tabMap = Object.fromEntries(tabs.map(t => [t.id, t]));
+  const activeTab = tabMap[active];
   // Auto-detect which nav section map to use
   const isNewNav = tabs.some(t => t.id === 'dashboard' || t.id === 'students' || t.id === 'diagnostics');
   const NAV_SECTIONS = isNewNav ? NEW_NAV_SECTIONS : LEGACY_NAV_SECTIONS;
@@ -717,6 +1564,7 @@ export function Shell({ tabs = [], active, onTab, children, rightSlot, workflowA
         <div className="shell-brand">
           <span className="shell-brand-name">V.V. Method</span>
           <span className="shell-brand-sub">MET Preparation</span>
+          <span className="shell-brand-pill">Teacher Repository</span>
         </div>
         <nav className="shell-nav" aria-label="Main navigation">
           {NAV_SECTIONS.map(sec => {
@@ -745,14 +1593,30 @@ export function Shell({ tabs = [], active, onTab, children, rightSlot, workflowA
             );
           })}
         </nav>
+        <div className="shell-sidebar-footer">
+          <div className="shell-sidebar-footer-label">Workspace Capacity</div>
+          <div className="shell-sidebar-footer-track">
+            <div className="shell-sidebar-footer-fill" />
+          </div>
+          <div className="shell-sidebar-footer-sub">64% used • Local storage mode</div>
+        </div>
       </aside>
       <div className="shell-content">
         <header className="shell-topbar">
-          <div style={{ flex:1 }}>
-            {workflowActive && <WorkflowStageStrip active={workflowActive} onStage={onWorkflowStage} />}
+          <div className="shell-topbar-left">
+            <div className="shell-topbar-title">{activeTab?.label || 'Workspace'}</div>
+            <div className="shell-topbar-sub">Teacher-facing operations</div>
           </div>
-          {rightSlot && <div style={{ display:'flex', alignItems:'center', gap:10 }}>{rightSlot}</div>}
+          <input
+            className="shell-topbar-search"
+            placeholder={searchPlaceholder}
+            aria-label="Search workspace"
+            value={searchValue}
+            onChange={(e) => onSearchChange?.(e.target.value)}
+          />
+          {rightSlot && <div style={{ display:'flex', alignItems:'center', gap:10, justifyContent:'flex-end' }}>{rightSlot}</div>}
         </header>
+        {workflowActive && <WorkflowStageStrip active={workflowActive} onStage={onWorkflowStage} />}
         <main className="shell-main">{children}</main>
       </div>
     </div>

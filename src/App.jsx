@@ -6,6 +6,7 @@ import { TweaksPanel, TweakSection, TweakRadio, TweakColor } from './components/
 import { Icon, Avatar, Button, Shell } from './components/shared.jsx';
 import { STUDENTS } from './data/students.jsx';
 import { seedStudentsIfEmpty, getStudents } from './lib/workflow.js';
+import './styles/design-system.css';
 
 // Lazy-loaded teacher pages
 const TeacherDashboard  = lazy(() => import('./pages/teacher-dashboard.jsx'));
@@ -35,6 +36,7 @@ export default function App() {
     ...window.TWEAK_DEFAULTS,
   }));
   const [students, setStudents] = useState([]);
+  const [workspaceSearch, setWorkspaceSearch] = useState('');
 
   // Seed students from hardcoded list on first run, then load live roster
   useEffect(() => {
@@ -117,10 +119,17 @@ export default function App() {
 
   return (
     <>
-      <Shell tabs={teacherTabs} active={view} onTab={(id) => navigate(id)} rightSlot={rightSlot}>
+      <Shell
+        tabs={teacherTabs}
+        active={view}
+        onTab={(id) => navigate(id)}
+        rightSlot={rightSlot}
+        searchValue={workspaceSearch}
+        onSearchChange={setWorkspaceSearch}
+      >
         <ErrorBoundary label="Page unavailable">
           <Suspense fallback={<PageLoader />}>
-            {renderTeacherPage(view, viewParams, { students, navigate })}
+            {renderTeacherPage(view, viewParams, { students, navigate, workspaceSearch })}
           </Suspense>
         </ErrorBoundary>
       </Shell>
@@ -131,26 +140,26 @@ export default function App() {
 }
 
 function renderTeacherPage(view, params, ctx) {
-  const { students, navigate } = ctx;
+  const { students, navigate, workspaceSearch } = ctx;
 
   switch (view) {
     case 'dashboard':
       return <TeacherDashboard students={students} onNavigate={navigate} />;
 
     case 'students':
-      return <StudentsPage students={students} onNavigate={navigate} />;
+      return <StudentsPage students={students} onNavigate={navigate} workspaceQuery={workspaceSearch} />;
 
     case 'students:profile':
       return <StudentProfile studentId={params.studentId} students={students} onNavigate={navigate} />;
 
     case 'calendar':
-      return <CalendarPage students={students} onNavigate={navigate} />;
+      return <CalendarPage students={students} onNavigate={navigate} workspaceQuery={workspaceSearch} />;
 
     case 'calendar:class':
       return <ClassRecord classEventId={params.classEventId} students={students} onNavigate={navigate} />;
 
     case 'diagnostics':
-      return <DiagnosticsPage students={students} onNavigate={navigate} />;
+      return <DiagnosticsPage students={students} onNavigate={navigate} workspaceQuery={workspaceSearch} />;
 
     case 'diagnostics:create':
       return <DiagnosticCreate
@@ -162,7 +171,7 @@ function renderTeacherPage(view, params, ctx) {
       />;
 
     case 'homework':
-      return <HomeworkPage students={students} onNavigate={navigate} />;
+      return <HomeworkPage students={students} onNavigate={navigate} workspaceQuery={workspaceSearch} />;
 
     case 'homework:create':
       return <HomeworkCreate
@@ -173,7 +182,7 @@ function renderTeacherPage(view, params, ctx) {
       />;
 
     case 'submissions':
-      return <SubmissionsPage students={students} onNavigate={navigate} />;
+      return <SubmissionsPage students={students} onNavigate={navigate} workspaceQuery={workspaceSearch} />;
 
     case 'submissions:review':
       return <SubmissionReview
@@ -183,13 +192,13 @@ function renderTeacherPage(view, params, ctx) {
       />;
 
     case 'inbox':
-      return <InboxPage students={students} onNavigate={navigate} />;
+      return <InboxPage students={students} onNavigate={navigate} workspaceQuery={workspaceSearch} />;
 
     case 'error-bank':
-      return <ErrorBankPage students={students} onNavigate={navigate} />;
+      return <ErrorBankPage students={students} onNavigate={navigate} workspaceQuery={workspaceSearch} />;
 
     case 'reports':
-      return <ReportsPage students={students} onNavigate={navigate} />;
+      return <ReportsPage students={students} onNavigate={navigate} workspaceQuery={workspaceSearch} />;
 
     case 'settings':
       return <SettingsPage onNavigate={navigate} />;
