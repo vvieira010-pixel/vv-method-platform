@@ -481,22 +481,25 @@ export function StudentFeedbackView({ feedback }) {
   const fixes = Array.isArray(feedback.whatToImprove) ? feedback.whatToImprove : [];
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
       {feedback.classFocus && (
-        <p style={{ fontSize: 'var(--text-md)', lineHeight: 1.7, color: 'var(--text)', margin: 0 }}>{feedback.classFocus}</p>
+        <div style={{ padding: 12, borderRadius: 'var(--radius-md)', background: 'var(--bg)', border: '1px solid var(--border)' }}>
+          <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>Class focus</div>
+          <p style={{ fontSize: 'var(--text-sm)', lineHeight: 1.7, color: 'var(--text)', margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{feedback.classFocus}</p>
+        </div>
       )}
 
       {wins.length > 0 && (
         <div>
-          <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 'var(--text-lg)', color: 'var(--success)', marginBottom: 10 }}>What you did well</div>
+          <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 'var(--text-md)', color: 'var(--success)', marginBottom: 8 }}>What you did well</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {wins.map((w, i) => (
               <div key={i} style={{ padding: 14, background: 'var(--success-bg)', border: '1px solid var(--success-soft)', borderRadius: 'var(--radius-md)' }}>
-                <div style={{ fontSize: 'var(--text-md)', fontWeight: 700, color: 'var(--text)', marginBottom: 6 }}>{i + 1}. {w.strength}</div>
+                <div style={{ fontSize: 'var(--text-sm)', fontWeight: 700, color: 'var(--text)', marginBottom: 6 }}>{i + 1}. {w.strength}</div>
                 {w.explanation && <p style={{ fontSize: 'var(--text-sm)', lineHeight: 1.6, margin: '0 0 4px' }}>{w.explanation}</p>}
                 {w.metConnection && <p style={{ fontSize: 'var(--text-sm)', lineHeight: 1.6, margin: '0 0 6px', color: 'var(--text-2)' }}>{w.metConnection}</p>}
                 {w.example && (
-                  <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-2)', fontStyle: 'italic', borderLeft: '3px solid var(--success)', paddingLeft: 10 }}>
+                  <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-2)', fontStyle: 'italic', borderLeft: '3px solid var(--success)', paddingLeft: 10, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
                     <strong style={{ fontStyle: 'normal', color: 'var(--success)' }}>Example: </strong>{w.example}
                   </div>
                 )}
@@ -508,22 +511,22 @@ export function StudentFeedbackView({ feedback }) {
 
       {fixes.length > 0 && (
         <div>
-          <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 'var(--text-lg)', color: 'var(--warning)', marginBottom: 10 }}>What to improve</div>
+          <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 'var(--text-md)', color: 'var(--warning)', marginBottom: 8 }}>What to improve</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {fixes.map((f, i) => (
               <div key={i} style={{ padding: 14, background: 'var(--warning-bg)', border: '1px solid var(--warning-soft)', borderRadius: 'var(--radius-md)' }}>
-                <div style={{ fontSize: 'var(--text-md)', fontWeight: 700, color: 'var(--text)', marginBottom: 6 }}>{i + 1}. {f.area}</div>
+                <div style={{ fontSize: 'var(--text-sm)', fontWeight: 700, color: 'var(--text)', marginBottom: 6 }}>{i + 1}. {f.area}</div>
                 {f.metImportance && <p style={{ fontSize: 'var(--text-sm)', lineHeight: 1.6, margin: '0 0 8px', color: 'var(--text-2)' }}>{f.metImportance}</p>}
                 {(f.insteadOf || f.sayInstead) && (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 8 }}>
                     {f.insteadOf && (
-                      <div style={{ fontSize: 'var(--text-sm)' }}>
+                      <div style={{ fontSize: 'var(--text-sm)', padding: '8px 10px', background: 'rgba(220,38,38,0.08)', borderRadius: 8, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
                         <span style={{ color: 'var(--muted)', fontWeight: 600 }}>Instead of: </span>
                         <span style={{ color: 'var(--danger)' }}>"{f.insteadOf}"</span>
                       </div>
                     )}
                     {f.sayInstead && (
-                      <div style={{ fontSize: 'var(--text-sm)' }}>
+                      <div style={{ fontSize: 'var(--text-sm)', padding: '8px 10px', background: 'rgba(5,150,105,0.08)', borderRadius: 8, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
                         <span style={{ color: 'var(--muted)', fontWeight: 600 }}>Say: </span>
                         <span style={{ color: 'var(--success)', fontWeight: 600 }}>"{f.sayInstead}"</span>
                       </div>
@@ -544,7 +547,7 @@ export function StudentFeedbackView({ feedback }) {
       {feedback.finalNote && (
         <div style={{ padding: 14, background: 'var(--accent-subtle)', border: '1px solid var(--accent-soft)', borderRadius: 'var(--radius-md)' }}>
           <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Final note</div>
-          <p style={{ fontSize: 'var(--text-sm)', lineHeight: 1.7, margin: 0, color: 'var(--text)' }}>{feedback.finalNote}</p>
+          <p style={{ fontSize: 'var(--text-sm)', lineHeight: 1.7, margin: 0, color: 'var(--text)', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{feedback.finalNote}</p>
         </div>
       )}
     </div>

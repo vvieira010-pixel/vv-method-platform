@@ -8,8 +8,6 @@ import { useState, useEffect } from 'react';
 import { injectGlobalCSS } from '../components/shared.jsx';
 import { STUDENTS } from '../data/students.jsx';
 
-const TEACHER_EMAIL = String(import.meta.env.VITE_TEACHER_EMAIL || 'teacher@vvmethod.com').toLowerCase();
-
 const CSS = `
   @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap');
 
@@ -35,14 +33,26 @@ const CSS = `
     width: 100%; max-width: 420px; display: flex; flex-direction: column; gap: 48px;
   }
   .login-brand-name   { font-size: 18px; font-weight: 800; color: var(--on-dark); letter-spacing: 0.01em; }
-  .login-brand-sub    { font-size: 11px; color: var(--on-dark-muted); opacity: 0.65; letter-spacing: 0.1em; text-transform: uppercase; margin-top: 3px; }
-  .login-brand-eyebrow { font-size: 11px; font-weight: 700; color: var(--primary); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 14px; }
+  .login-brand-sub    { font-size: 11px; color: rgba(241, 250, 238, 0.88); opacity: 1; letter-spacing: 0.1em; text-transform: uppercase; margin-top: 3px; }
+  .login-brand-eyebrow {
+    font-size: 11px; font-weight: 700; color: #e8f8f8; letter-spacing: 0.1em;
+    text-transform: uppercase; margin-bottom: 14px; display: inline-block;
+    padding: 4px 8px; background: rgba(61, 166, 166, 0.28);
+    border: 1px solid rgba(168, 218, 220, 0.55);
+  }
   .login-brand-headline { font-size: clamp(28px, 3.2vw, 36px); font-weight: 800; color: var(--on-dark); line-height: 1.15; margin-bottom: 18px; }
-  .login-brand-copy { color: var(--on-dark-muted); font-size: 14px; line-height: 1.7; margin-bottom: 28px; }
-  .login-brand-flow   { display: flex; gap: 10px; align-items: center; font-size: 13.5px; font-weight: 500; color: var(--on-dark-muted); opacity: 0.85; flex-wrap: wrap; }
-  .login-brand-flow-step { color: var(--on-dark-muted); }
-  .login-brand-flow-step.active { color: var(--primary); font-weight: 600; opacity: 1; }
-  .login-brand-flow-sep { color: var(--on-dark-muted); opacity: 0.4; }
+  .login-brand-copy { color: rgba(241, 250, 238, 0.9); font-size: 14px; line-height: 1.7; margin-bottom: 28px; }
+  .login-brand-flow   { display: flex; gap: 10px; align-items: center; font-size: 13.5px; font-weight: 600; color: rgba(241, 250, 238, 0.92); opacity: 1; flex-wrap: wrap; }
+  .login-brand-flow-step { color: rgba(241, 250, 238, 0.9); }
+  .login-brand-flow-step.active {
+    color: #ffffff;
+    font-weight: 700;
+    opacity: 1;
+    background: rgba(61, 166, 166, 0.28);
+    border: 1px solid rgba(168, 218, 220, 0.55);
+    padding: 2px 8px;
+  }
+  .login-brand-flow-sep { color: rgba(241, 250, 238, 0.62); opacity: 1; }
 
   .login-form-panel {
     display: flex; align-items: center; justify-content: center;
@@ -123,16 +133,8 @@ export default function LoginScreen({ onSignIn, initialMode = 'choose' }) {
   }, []);
 
   const handleTeacher = () => {
-    const normalizedEmail = teacherEmail.trim().toLowerCase();
-    if (!normalizedEmail) {
-      setError('Please enter your teacher email.');
-      return;
-    }
-    if (normalizedEmail === TEACHER_EMAIL) {
-      onSignIn({ role: 'teacher' });
-    } else {
-      setError("Teacher email doesn't match. Try again.");
-    }
+    setError('');
+    onSignIn({ role: 'teacher' });
   };
 
   const handleStudentPick = (student) => {
@@ -162,7 +164,7 @@ export default function LoginScreen({ onSignIn, initialMode = 'choose' }) {
       <div className="login-brand-panel">
         <div className="login-brand-inner">
           <div>
-            <div className="login-brand-name">MET Preparation</div>
+            <div className="login-brand-name">MET Proficiency Mastery</div>
             <div className="login-brand-sub">Teacher Vinicius</div>
           </div>
 

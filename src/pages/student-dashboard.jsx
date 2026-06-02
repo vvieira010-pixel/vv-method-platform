@@ -78,7 +78,8 @@ function HomeView({ student, onTab }) {
         getHomework(student.id),
         getDiagnoses(student.id),
       ]);
-      setPendingHw((hw || []).filter(h => h.status === 'not-started' || h.status === 'in-progress'));
+      const doneStatuses = new Set(['submitted', 'reviewed', 'completed', 'corrected']);
+      setPendingHw((hw || []).filter(h => !doneStatuses.has(h.status)));
 
       // Only show feedback from approved diagnoses
       const approvedDx = (diagnoses || []).filter(dx => dx.status === 'approved' && dx.sections?.studentFeedback?.approved);

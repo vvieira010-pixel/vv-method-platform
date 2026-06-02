@@ -30,7 +30,7 @@ export default function HomeworkCreate({ diagnosisId, studentId, students, onNav
   useEffect(() => { load(); }, [diagnosisId, studentId]);
 
   async function load() {
-    const sid = studentId;
+    let sid = studentId || '';
     if (sid) {
       const s = await getStudent(sid) || students.find(x => x.id === sid);
       setStudent(s);
@@ -39,6 +39,11 @@ export default function HomeworkCreate({ diagnosisId, studentId, students, onNav
       const allDx = await getDiagnoses(sid);
       const dx = allDx.find(d => d.id === diagnosisId);
       setDiagnosis(dx);
+      if (dx && !sid && dx.studentId) sid = dx.studentId;
+      if (sid) {
+        const s = await getStudent(sid) || students.find(x => x.id === sid);
+        setStudent(s || null);
+      }
       if (dx) populateFromDiagnosis(dx, students.find(x => x.id === sid));
     }
   }
@@ -119,32 +124,37 @@ export default function HomeworkCreate({ diagnosisId, studentId, students, onNav
 
   /* ── AI generation ── */
   async function handleAiGenerate() {
-    if (!diagnosis) { window.toast?.('No diagnosis linked — cannot generate.', 'warn'); return; }
+    const hasSelectedExercises = form.exercises.length > 0;
+    if (!diagnosis && !hasSelectedExercises) {
+      window.toast?.('Link a diagnosis or add exercises first.', 'warn');
+      return;
+    }
     setGenerating(true);
     try {
-      const prompt = buildHomeworkGeneratorPrompt({ student, diagnosis });
+      const prompt = hasSelectedExercises
+        ? buildSelectedExerciseFillPrompt({ student, diagnosis, selectedExercises: form.exercises })
+        : buildHomeworkGeneratorPrompt({ student, diagnosis });
       const data = await callAI(prompt, { max_tokens: 3000 });
       const raw = data.content?.map(b => b.text || '').join('') || '';
       const parsed = parseAiJson(raw);
 
-      // Convert AI tasks to structured exercises
-      const aiTasks = Array.isArray(parsed.tasks) ? parsed.tasks : [];
-      const exercises = aiTasks.map(t => {
-        const text = typeof t === 'string' ? t : t.description || '';
-        return { ...createExercise('short'), prompt: text };
-      });
+      const aiTasks = Array.isArray(parsed)
+        ? parsed
+        : (Array.isArray(parsed.tasks) ? parsed.tasks : []);
 
       setForm(f => ({
         ...f,
         title: parsed.title || f.title,
         objective: parsed.objective || f.objective,
         description: parsed.instructions || f.description,
-        exercises: exercises.length > 0 ? exercises : f.exercises,
+        exercises: hasSelectedExercises
+          ? fillSelectedExercisesWithAi(f.exercises, aiTasks)
+          : buildExercisesFromAiTasks(aiTasks, f.exercises),
         selfCheck: Array.isArray(parsed.selfCheck) ? parsed.selfCheck : f.selfCheck,
         skillType: inferSkillType(diagnosis?.sections?.priorityDiagnosis?.content),
-        teacherNotes: parsed.teacherReviewNotes || f.teacherNotes,
+        teacherNotes: parsed.teacherNotes || parsed.teacherReviewNotes || f.teacherNotes,
       }));
-      window.toast?.('Homework regenerated from diagnosis.', 'ok');
+      window.toast?.(hasSelectedExercises ? 'Selected exercises filled with AI.' : 'Homework regenerated from diagnosis.', 'ok');
     } catch (e) {
       window.toast?.(`AI generation failed: ${e.message}`, 'warn');
     }
@@ -213,10 +223,13 @@ export default function HomeworkCreate({ diagnosisId, studentId, students, onNav
   async function handleAssign() {
     if (!form.title.trim()) { window.toast?.('Title is required.', 'warn'); return; }
     if (form.exercises.length === 0) { window.toast?.('Add at least one exercise.', 'warn'); return; }
+    const resolvedStudentId = studentId || student?.id || diagnosis?.studentId || '';
+    if (!resolvedStudentId) { window.toast?.('Select or link a student before assigning homework.', 'warn'); return; }
+    const resolvedStudent = student || students.find(s => s.id === resolvedStudentId);
     setSaving(true);
     await saveHomework({
-      studentId,
-      studentName: student?.name,
+      studentId: resolvedStudentId,
+      studentName: resolvedStudent?.name || '',
       diagnosisId,
       title: form.title,
       objective: form.objective,
@@ -278,16 +291,15 @@ export default function HomeworkCreate({ diagnosisId, studentId, students, onNav
         <Button variant="ghost" size="sm" onClick={() => setShowLibrary(true)}>
           <Icon.doc size={12} /> Add from Library
         </Button>
-        {diagnosis && (
-          <>
-            <Button variant="ghost" size="sm" onClick={handleGenerateOptions} disabled={loadingOptions || generating}>
-              <Icon.refresh size={12} /> {loadingOptions ? 'Loading…' : 'Generate Exercise Options'}
-            </Button>
-            <Button variant="ghost" size="sm" onClick={handleAiGenerate} disabled={generating || loadingOptions} style={{ marginLeft: 'auto' }}>
-              <Icon.refresh size={12} /> {generating ? 'Generating…' : 'Regenerate All with AI'}
-            </Button>
-          </>
-        )}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handleGenerateOptions}
+          disabled={!diagnosis || loadingOptions || generating}
+          title={!diagnosis ? 'Open Homework from a diagnosis to generate options.' : ''}
+        >
+          <Icon.refresh size={12} /> {loadingOptions ? 'Loading…' : 'Generate Exercise Options'}
+        </Button>
       </div>
 
       {/* ── Exercise Library Picker ── */}
@@ -447,6 +459,9 @@ export default function HomeworkCreate({ diagnosisId, studentId, students, onNav
                     {exerciseCount} {exerciseCount === 1 ? 'exercise' : 'exercises'}
                   </span>
                 </div>
+                <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: 4 }}>
+                  Choose the exercise types first, then use <strong>Fill Selected with AI</strong> to auto-fill only those cards.
+                </div>
                 {/* Type badges summary */}
                 {exerciseCount > 0 && (
                   <div style={{ display: 'flex', gap: 6, marginTop: 6, flexWrap: 'wrap' }}>
@@ -456,9 +471,14 @@ export default function HomeworkCreate({ diagnosisId, studentId, students, onNav
                   </div>
                 )}
               </div>
-              <Button variant="primary" size="sm" onClick={() => setShowTypePicker(!showTypePicker)}>
-                <Icon.plus size={12} /> Add Exercise
-              </Button>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                <Button variant="ghost" size="sm" onClick={handleAiGenerate} disabled={generating || loadingOptions}>
+                  <Icon.refresh size={12} /> {generating ? 'Generating…' : (form.exercises.length > 0 ? 'Fill Selected with AI' : 'Regenerate All with AI')}
+                </Button>
+                <Button variant="primary" size="sm" onClick={() => setShowTypePicker(!showTypePicker)}>
+                  <Icon.plus size={12} /> Add Exercise
+                </Button>
+              </div>
             </div>
 
             {/* Type picker */}
@@ -749,6 +769,180 @@ function mapAiType(aiType) {
   if (/error|correct|fix/.test(t)) return 'fix';
   if (/flash|card|vocab/.test(t)) return 'flash';
   return 'short'; // fallback
+}
+
+function buildExercisesFromAiTasks(tasks, fallback) {
+  const built = (tasks || []).map(t => createExerciseFromAiTask(t)).filter(Boolean);
+  return built.length > 0 ? built : fallback;
+}
+
+function fillSelectedExercisesWithAi(exercises, tasks) {
+  if (!Array.isArray(exercises) || exercises.length === 0) return exercises;
+  const pool = Array.isArray(tasks) ? [...tasks] : [];
+  return exercises.map(ex => {
+    const aiTask = pullBestTaskForType(pool, ex.type);
+    if (!aiTask) return ex;
+    return applyAiTaskToExercise(ex, aiTask);
+  });
+}
+
+function pullBestTaskForType(pool, type) {
+  if (!Array.isArray(pool) || pool.length === 0) return null;
+  let idx = pool.findIndex(t => mapAiType(t?.type) === type);
+  if (idx < 0) idx = 0;
+  return idx >= 0 ? pool.splice(idx, 1)[0] : null;
+}
+
+function createExerciseFromAiTask(task) {
+  if (!task || typeof task !== 'object') return null;
+  const ex = createExercise(mapAiType(task.type));
+  return applyAiTaskToExercise(ex, task);
+}
+
+function applyAiTaskToExercise(exercise, aiTask) {
+  const ex = { ...exercise };
+  const content = aiTask?.content || aiTask?.description || aiTask?.title || '';
+
+  if (ex.type === 'mcq') {
+    const options = normalizeMcqOptions(aiTask?.options);
+    ex.question = aiTask?.question || content;
+    ex.options = options;
+    ex.correct = normalizeCorrectIndex(aiTask?.correct, options.length);
+    return ex;
+  }
+
+  if (ex.type === 'blank') {
+    ex.template = aiTask?.template || content;
+    ex.blanks = normalizeBlankAnswers(aiTask?.blanks, ex.template);
+    return ex;
+  }
+
+  if (ex.type === 'order') {
+    ex.sentences = normalizeSentences(aiTask?.sentences, content);
+    return ex;
+  }
+
+  if (ex.type === 'fix') {
+    ex.errorText = aiTask?.errorText || content;
+    ex.correctedText = aiTask?.correctedText || aiTask?.example || ex.correctedText || '';
+    ex.hint = aiTask?.hint || '';
+    return ex;
+  }
+
+  if (ex.type === 'flash') {
+    ex.pairs = normalizeFlashPairs(aiTask?.pairs);
+    return ex;
+  }
+
+  if (ex.type === 'speak') {
+    ex.prompt = aiTask?.prompt || content;
+    ex.targetSeconds = normalizeTargetSeconds(aiTask?.targetSeconds, aiTask?.duration);
+    return ex;
+  }
+
+  ex.prompt = aiTask?.prompt || content;
+  if (aiTask?.rubric) ex.rubric = aiTask.rubric;
+  if (Number.isFinite(Number(aiTask?.targetWords))) ex.targetWords = Number(aiTask.targetWords);
+  return ex;
+}
+
+function normalizeMcqOptions(options) {
+  if (!Array.isArray(options) || options.length === 0) return ['', '', '', ''];
+  const clean = options
+    .map(opt => (typeof opt === 'string' ? opt : opt?.text || opt?.label || ''))
+    .filter(Boolean)
+    .slice(0, 4);
+  while (clean.length < 4) clean.push('');
+  return clean;
+}
+
+function normalizeCorrectIndex(correct, optionCount) {
+  const n = Number(correct);
+  if (Number.isInteger(n) && n >= 0 && n < optionCount) return n;
+  return null;
+}
+
+function normalizeBlankAnswers(blanks, template) {
+  if (Array.isArray(blanks) && blanks.length > 0) return blanks.map(v => String(v));
+  const count = (String(template || '').match(/_{3,}/g) || []).length;
+  return Array.from({ length: count }, () => '');
+}
+
+function normalizeSentences(sentences, content) {
+  if (Array.isArray(sentences) && sentences.length > 0) return sentences.map(s => String(s));
+  return String(content || '')
+    .split('\n')
+    .map(s => s.trim())
+    .filter(Boolean);
+}
+
+function normalizeFlashPairs(pairs) {
+  if (!Array.isArray(pairs) || pairs.length === 0) return [{ term: '', def: '' }];
+  const clean = pairs
+    .map(p => ({ term: p?.term || '', def: p?.def || p?.definition || '' }))
+    .filter(p => p.term || p.def);
+  return clean.length > 0 ? clean : [{ term: '', def: '' }];
+}
+
+function normalizeTargetSeconds(targetSeconds, duration) {
+  const parsed = Number(targetSeconds);
+  if (Number.isFinite(parsed) && parsed > 0) return parsed;
+  const durMatch = String(duration || '').match(/\d+/);
+  if (durMatch) return Math.max(30, Number(durMatch[0]) * 60);
+  return 60;
+}
+
+function buildSelectedExerciseFillPrompt({ student, diagnosis, selectedExercises = [] }) {
+  const basePrompt = buildHomeworkGeneratorPrompt({ student, diagnosis });
+  const selected = selectedExercises.map((ex, idx) => {
+    const meta = getExType(ex.type);
+    return `${idx + 1}. type="${ex.type}" (${meta?.label || ex.type})\nCurrent draft: ${exercisePreview(ex) || 'empty'}`;
+  }).join('\n\n');
+
+  return `${basePrompt}
+
+━━━ SELECTED EXERCISES TO FILL ━━━
+You must fill ONLY these selected exercise cards.
+Keep the same number, order, and type:
+
+${selected}
+
+━━━ EXTRA RULES FOR THIS RUN ━━━
+1. Keep tasks count exactly ${selectedExercises.length}.
+2. Keep each task type exactly matching the selected list and in the same order.
+3. Fill each task with concrete student-ready content.
+4. Return a JSON object with "tasks" array aligned to that selected order.
+5. Use type IDs from this app only: mcq, blank, short, speak, order, fix, flash.
+
+Return ONLY valid JSON in this shape:
+{
+  "title": "optional improved homework title",
+  "objective": "optional objective",
+  "instructions": "optional student instructions",
+  "tasks": [
+    {
+      "taskNumber": 1,
+      "type": "exact selected type",
+      "title": "short task title",
+      "content": "full exercise content",
+      "options": ["for mcq only"],
+      "correct": 0,
+      "template": "for blank only",
+      "blanks": ["for blank only"],
+      "prompt": "for short/speak",
+      "rubric": "for short only",
+      "targetWords": 120,
+      "targetSeconds": 60,
+      "sentences": ["for order only"],
+      "errorText": "for fix only",
+      "correctedText": "for fix only",
+      "hint": "for fix only",
+      "pairs": [{ "term": "x", "def": "y" }]
+    }
+  ],
+  "selfCheck": ["specific checks"],
+  "teacherNotes": "review focus"
+}`;
 }
 
 function Field({ label, children }) {

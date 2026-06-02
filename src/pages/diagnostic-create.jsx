@@ -121,7 +121,7 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
     evaluatedSpeaking: false, evaluatedWriting: false, evaluatedReading: false,
     evaluatedListening: false, evaluatedGrammar: false, evaluatedVocabulary: false, evaluatedTestStrategy: false,
     speakingEvidenceCount: 0, writingEvidenceCount: 0, readingEvidenceCount: 0,
-    listeningEvidenceCount: 0, grammarEvidenceCount: 0, vocabularyEvidenceCount: 0,
+    listeningEvidenceCount: 0, grammarEvidenceCount: 0, vocabularyEvidenceCount: 0, testStrategyEvidenceCount: 0,
   });
 
   // ── Prereq validation ──
@@ -135,15 +135,16 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
     studentAnswer: inlineTranscript,
   } : null;
   const evidence = classEvidence || inlineEvidenceObj;
+  const normalizedEvidence = normalizeEvidenceCounts(evidence);
 
-  const evaluatedSkills = evidence ? Object.entries({
-    speaking: evidence.evaluatedSpeaking,
-    writing: evidence.evaluatedWriting,
-    reading: evidence.evaluatedReading,
-    listening: evidence.evaluatedListening,
-    grammar: evidence.evaluatedGrammar,
-    vocabulary: evidence.evaluatedVocabulary,
-    testStrategy: evidence.evaluatedTestStrategy,
+  const evaluatedSkills = normalizedEvidence ? Object.entries({
+    speaking: normalizedEvidence.evaluatedSpeaking,
+    writing: normalizedEvidence.evaluatedWriting,
+    reading: normalizedEvidence.evaluatedReading,
+    listening: normalizedEvidence.evaluatedListening,
+    grammar: normalizedEvidence.evaluatedGrammar,
+    vocabulary: normalizedEvidence.evaluatedVocabulary,
+    testStrategy: normalizedEvidence.evaluatedTestStrategy,
   }).filter(([, v]) => v).map(([k]) => k) : [];
 
   // When no class linked: need transcript OR teacher notes + at least one skill
@@ -154,7 +155,7 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
   const prereqOk = selectedStudent && targetProfile && inlineReady;
   const prereqWarning = evaluatedSkills.some(sk => {
     const countKey = sk + 'EvidenceCount';
-    return evidence && (evidence[countKey] === 0 || evidence[countKey] === undefined);
+    return normalizedEvidence && (normalizedEvidence[countKey] === 0 || normalizedEvidence[countKey] === undefined);
   });
 
   // ── Run AI diagnosis ──
@@ -164,7 +165,7 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
     setError('');
 
     try {
-      const prompt = buildDiagnosticPrompt({ student: selectedStudent, classEvent, classEvidence: evidence, targetProfile });
+      const prompt = buildDiagnosticPrompt({ student: selectedStudent, classEvent, classEvidence: normalizedEvidence, targetProfile });
       const data = await callAI(prompt, { max_tokens: 8000 });
       const raw = data.content?.map(b => b.text || '').join('') || '';
       if (!raw.trim()) throw new Error('AI returned empty response.');
@@ -216,7 +217,7 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
   async function regenerateSection(key) {
     setRegenerating(key);
     try {
-      const prompt = buildDiagnosticPrompt({ student: selectedStudent, classEvent, classEvidence: evidence, targetProfile });
+      const prompt = buildDiagnosticPrompt({ student: selectedStudent, classEvent, classEvidence: normalizedEvidence, targetProfile });
       const sectionPrompt = `${prompt}\n\nIMPORTANT: Return ONLY the "${key}" field from the JSON structure. No other fields.`;
       const data = await callAI(sectionPrompt, { max_tokens: 2000 });
       const raw = data.content?.map(b => b.text || '').join('') || '';
@@ -252,12 +253,13 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
         targetProfileId: targetProfile?.id,
         evaluatedSkills: Object.fromEntries(evaluatedSkills.map(k => [k, true])),
         evidenceCounts: {
-          speaking: evidence?.speakingEvidenceCount || 0,
-          writing: evidence?.writingEvidenceCount || 0,
-          reading: evidence?.readingEvidenceCount || 0,
-          listening: evidence?.listeningEvidenceCount || 0,
-          grammar: evidence?.grammarEvidenceCount || 0,
-          vocabulary: evidence?.vocabularyEvidenceCount || 0,
+          speaking: normalizedEvidence?.speakingEvidenceCount || 0,
+          writing: normalizedEvidence?.writingEvidenceCount || 0,
+          reading: normalizedEvidence?.readingEvidenceCount || 0,
+          listening: normalizedEvidence?.listeningEvidenceCount || 0,
+          grammar: normalizedEvidence?.grammarEvidenceCount || 0,
+          vocabulary: normalizedEvidence?.vocabularyEvidenceCount || 0,
+          testStrategy: normalizedEvidence?.testStrategyEvidenceCount || 0,
         },
         sections,
         aiRaw: aiResult,
@@ -487,7 +489,14 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
                       <div
                         key={key}
                         style={{ padding: 10, borderRadius: 'var(--radius-sm)', border: `2px solid ${evaluated ? 'var(--accent)' : 'var(--border)'}`, background: evaluated ? 'var(--accent-subtle)' : 'var(--surface)', cursor: 'pointer', transition: 'all 0.15s' }}
-                        onClick={() => setInlineSkills(s => ({ ...s, [evalKey]: !s[evalKey], ...(countKey && !s[evalKey] ? {} : countKey ? { [countKey]: 0 } : {}) }))}
+                        onClick={() => setInlineSkills(s => {
+                          const newVal = !s[evalKey];
+                          return {
+                            ...s,
+                            [evalKey]: newVal,
+                            ...(countKey ? { [countKey]: newVal ? Math.max(1, Number(s[countKey] || 0)) : 0 } : {}),
+                          };
+                        })}
                       >
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                           <span style={{ width: 16, height: 16, borderRadius: 3, border: `2px solid ${evaluated ? 'var(--accent)' : 'var(--border)'}`, background: evaluated ? 'var(--accent)' : 'transparent', display: 'grid', placeItems: 'center', flexShrink: 0 }}>
@@ -498,8 +507,8 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
                         {evaluated && countKey && (
                           <div style={{ marginTop: 6, display: 'flex', alignItems: 'center', gap: 6 }} onClick={e => e.stopPropagation()}>
                             <span style={{ fontSize: 10, color: 'var(--muted)' }}>Turns:</span>
-                            <input type="number" min={0} max={30} value={inlineSkills[countKey]}
-                              onChange={e => setInlineSkills(s => ({ ...s, [countKey]: Number(e.target.value) }))}
+                            <input type="number" min={1} max={30} value={inlineSkills[countKey]}
+                              onChange={e => setInlineSkills(s => ({ ...s, [countKey]: Math.max(1, Number(e.target.value) || 1) }))}
                               style={{ width: 48, padding: '2px 4px', border: '1px solid var(--border)', borderRadius: 4, fontSize: 11, textAlign: 'center' }} />
                           </div>
                         )}
@@ -877,6 +886,17 @@ function tryParseOrString(text) {
   try { return JSON.parse(text); } catch { return text; }
 }
 
+function normalizeEvidenceCounts(evidence) {
+  if (!evidence || typeof evidence !== 'object') return evidence;
+  const next = { ...evidence };
+  SKILL_KEYS.forEach(({ evalKey, countKey }) => {
+    if (!countKey) return;
+    if (next[evalKey]) next[countKey] = Math.max(1, Number(next[countKey] || 0));
+    else next[countKey] = 0;
+  });
+  return next;
+}
+
 function buildSnapshot(skillDiagnosis) {
   if (!skillDiagnosis || typeof skillDiagnosis !== 'object') return [];
   return Object.entries(skillDiagnosis).map(([skill, data]) => ({
@@ -898,7 +918,7 @@ const SKILL_KEYS = [
   { key: 'Listening',    evalKey: 'evaluatedListening',    countKey: 'listeningEvidenceCount' },
   { key: 'Grammar',      evalKey: 'evaluatedGrammar',      countKey: 'grammarEvidenceCount' },
   { key: 'Vocabulary',   evalKey: 'evaluatedVocabulary',   countKey: 'vocabularyEvidenceCount' },
-  { key: 'Test Strategy',evalKey: 'evaluatedTestStrategy', countKey: null },
+  { key: 'Test Strategy',evalKey: 'evaluatedTestStrategy', countKey: 'testStrategyEvidenceCount' },
 ];
 
 const backStyle = { background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)', fontSize: 'var(--text-sm)', display: 'flex', alignItems: 'center', gap: 4, marginBottom: 16, padding: 0, fontFamily: 'var(--font-ui)' };
