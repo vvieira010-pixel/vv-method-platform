@@ -2,14 +2,14 @@
  * student-dashboard.jsx — Student portal showing only teacher-approved content
  *
  * Rules:
- * - Student feedback visible only if sections.studentFeedback.approved === true
+ * - Student feedback visible only if sections.studentFeedback.approved === true and not hidden
  * - Homework visible only after teacher assigns it
  * - Scores/diagnosis only from approved diagnoses
  */
 import { useState, useEffect } from 'react';
-import { Icon, Avatar, Button, Card, StudentFeedbackView } from '../components/shared.jsx';
-import { getHomework, submitHomework, getDiagnoses, getProgressNotes, getReviews, getAllSubmissions } from '../lib/workflow.js';
-import { isStructuredExercise, createEmptyResponse } from '../lib/exercise-types.js';
+import { Icon, Avatar, Button, StudentFeedbackView } from '../components/shared.jsx';
+import { getHomework, submitHomework, getDiagnoses, getProgressNotes, getReviews, getClassEvents, getDraft, saveDraft } from '../lib/workflow.js';
+import { isStructuredExercise } from '../lib/exercise-types.js';
 import { ExercisePlayer, HomeworkStepThrough } from '../components/exercise-player.jsx';
 import { ExTypeBadge } from '../components/exercise-editor.jsx';
 import { MessageTeacherDock, StudentInbox } from '../components/message-center.jsx';
@@ -18,9 +18,29 @@ import '../styles/logbook.css';
 const TABS = [
   { id: 'home',     label: 'Home',     icon: <Icon.home size={16} /> },
   { id: 'homework', label: 'Homework', icon: <Icon.homework size={16} /> },
+  { id: 'feedback', label: 'Feedback', icon: <Icon.inbox size={16} /> },
   { id: 'progress', label: 'Progress', icon: <Icon.progress size={16} /> },
   { id: 'messages', label: 'Messages', icon: <Icon.inbox size={16} /> },
 ];
+
+const PROGRESS_STAGES = [
+  { label: 'Starting', order: 1, min: 1 },
+  { label: 'Building', order: 2, min: 17 },
+  { label: 'Developing', order: 3, min: 33 },
+  { label: 'Improving', order: 4, min: 49 },
+  { label: 'Ready for Mock Practice', order: 5, min: 65 },
+];
+
+function getProgressStage(score) {
+  const value = Number(score) || 0;
+  if (value <= 0) return { label: 'Not evaluated enough', order: 0, min: 0 };
+  return [...PROGRESS_STAGES].reverse().find(stage => value >= stage.min) || PROGRESS_STAGES[0];
+}
+
+function hasVisibleApprovedStudentFeedback(dx) {
+  const feedback = dx?.sections?.studentFeedback;
+  return dx?.status === 'approved' && feedback?.approved === true && feedback.hidden !== true;
+}
 
 export default function StudentDashboard({ student, onSignOut }) {
   const [tab, setTab] = useState('home');
@@ -35,8 +55,16 @@ export default function StudentDashboard({ student, onSignOut }) {
     <div className="dash">
       <header className="dash-topbar">
         <div className="dash-brand">
-          <span className="dash-brand-name">MET Preparation</span>
+          <span className="dash-brand-name">MET Proficiency Mastery</span>
         </div>
+        <nav className="dash-top-nav" aria-label="Student sections">
+          {TABS.map(t => (
+            <button key={t.id} onClick={() => setTab(t.id)} className={'dash-nav-btn' + (tab === t.id ? ' active' : '')}>
+              <span className="dash-nav-icon">{t.icon}</span>
+              <span className="dash-nav-label">{t.label}</span>
+            </button>
+          ))}
+        </nav>
         <div className="dash-topbar-right">
           <span className="dash-topbar-name">{student.firstName}</span>
           <Avatar name={student.name} size={30} tone="auto" />
@@ -49,18 +77,10 @@ export default function StudentDashboard({ student, onSignOut }) {
       <div className="dash-body">
         {tab === 'home' && <HomeView student={student} onTab={setTab} />}
         {tab === 'homework' && <HomeworkView student={student} />}
+        {tab === 'feedback' && <FeedbackView student={student} onTab={setTab} />}
         {tab === 'progress' && <ProgressView student={student} />}
         {tab === 'messages' && <StudentInbox student={student} />}
       </div>
-
-      <nav className="dash-bottom-nav">
-        {TABS.map(t => (
-          <button key={t.id} onClick={() => setTab(t.id)} className={'dash-nav-btn' + (tab === t.id ? ' active' : '')}>
-            <span className="dash-nav-icon">{t.icon}</span>
-            <span className="dash-nav-label">{t.label}</span>
-          </button>
-        ))}
-      </nav>
       <MessageTeacherDock student={student} onSent={() => setTab('messages')} />
     </div>
   );
@@ -70,19 +90,42 @@ export default function StudentDashboard({ student, onSignOut }) {
 function HomeView({ student, onTab }) {
   const [latestFeedback, setLatestFeedback] = useState(null);
   const [pendingHw, setPendingHw] = useState([]);
+  const [latestReview, setLatestReview] = useState(null);
   const [snapshot, setSnapshot] = useState([]);
+  const [nextClass, setNextClass] = useState(null);
+  const [generalMemoText, setGeneralMemoText] = useState(() => localStorage.getItem('vv:student_general_memo') || '');
 
   useEffect(() => {
     (async () => {
-      const [hw, diagnoses] = await Promise.all([
+      const [hw, diagnoses, classEvents, reviews] = await Promise.all([
         getHomework(student.id),
         getDiagnoses(student.id),
+        getClassEvents(student.id),
+        getReviews(student.id),
       ]);
       const doneStatuses = new Set(['submitted', 'reviewed', 'completed', 'corrected']);
       setPendingHw((hw || []).filter(h => !doneStatuses.has(h.status)));
 
-      // Only show feedback from approved diagnoses
-      const approvedDx = (diagnoses || []).filter(dx => dx.status === 'approved' && dx.sections?.studentFeedback?.approved);
+      const newestReview = (reviews || [])
+        .sort((a, b) => new Date(b.reviewedAt || b.createdAt || 0) - new Date(a.reviewedAt || a.createdAt || 0))[0];
+      if (newestReview) {
+        const reviewedHw = (hw || []).find(item => item.id === newestReview.homeworkId);
+        setLatestReview({ ...newestReview, homeworkTitle: reviewedHw?.title || 'Homework review' });
+      }
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const upcoming = (classEvents || [])
+        .filter(e => e.status !== 'cancelled')
+        .map(e => ({ ...e, startAt: new Date(`${e.date || new Date().toISOString().slice(0, 10)}T${e.startTime || '00:00'}`) }))
+        .filter(e => e.startAt >= today)
+        .sort((a, b) => a.startAt - b.startAt);
+      setNextClass(upcoming[0] || null);
+
+      // Only show feedback after teacher approval and when the section is not hidden.
+      const approvedDx = (diagnoses || [])
+        .filter(hasVisibleApprovedStudentFeedback)
+        .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
       if (approvedDx.length > 0) {
         const dx = approvedDx[0];
         setLatestFeedback(dx.sections.studentFeedback.content);
@@ -96,85 +139,324 @@ function HomeView({ student, onTab }) {
     return h < 12 ? 'morning' : h < 17 ? 'afternoon' : 'evening';
   }
 
+  const pendingTitle = pendingHw[0]?.title || 'No homework pending';
+  const evaluatedSkills = snapshot.filter(s => Number(s.score_0_80) > 0);
+  const focusSkill = evaluatedSkills[0]?.section || student.focusSkill || 'Waiting for evidence';
+  const feedbackFocus = latestFeedback && typeof latestFeedback === 'object'
+    ? latestFeedback.nextStep || latestFeedback.focusArea?.area || latestFeedback.focusArea?.explanation || latestFeedback.finalNote
+    : '';
+  const whatsNext = latestReview
+    ? { title: 'Read your teacher review', text: latestReview.homeworkTitle, action: 'Open reviewed homework', tab: 'homework' }
+    : pendingHw.length > 0
+      ? { title: 'Finish assigned practice', text: pendingTitle, action: 'Open homework', tab: 'homework' }
+      : feedbackFocus
+        ? { title: 'Practice the current focus', text: feedbackFocus, action: 'Open feedback', tab: 'feedback' }
+        : { title: 'Prepare for the next class focus', text: nextClass?.classFocus || nextClass?.metSkillFocus || 'Your teacher will confirm the next focus.', action: 'Check homework', tab: 'homework' };
+  const generalMemo = generalMemoText || 'No general memo posted yet.';
+  const individualMemo = student.notes
+    || student.goalNote
+    || (feedbackFocus ? `Current personal focus: ${feedbackFocus}` : '')
+    || `Goal: ${student.examGoal || student.goal || 'MET preparation'}.`;
+  const nextDate = nextClass?.startAt
+    ? nextClass.startAt.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })
+    : 'Not scheduled';
+  const nextTime = nextClass?.startAt
+    ? nextClass.startAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    : 'Teacher will confirm';
+
   return (
-    <div style={{ padding: '20px 16px', maxWidth: 680, margin: '0 auto' }}>
-      <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-2xl)', fontWeight: 700, color: 'var(--accent-deep)', margin: '0 0 4px' }}>
-        Good {timeOfDay()}, {student.firstName}.
-      </h1>
-      <p style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', margin: '0 0 20px' }}>
-        {student.currentLevel || student.band} → {student.targetLevel || student.bandTarget} · Session {student.session || 1}/{student.totalSessions || 24}
-      </p>
-
-      {/* Latest approved feedback */}
-      {latestFeedback && typeof latestFeedback === 'object' ? (
-        <div style={{ padding: 18, borderRadius: 'var(--radius-md)', background: 'var(--surface)', border: '1px solid var(--border)', marginBottom: 16 }}>
-          <div style={{ fontWeight: 700, fontSize: 'var(--text-md)', color: 'var(--accent-deep)', marginBottom: 12 }}>
-            Latest Feedback from Teacher
-          </div>
-          <StudentFeedbackView feedback={latestFeedback} />
+    <div className="student-home">
+      <section className="student-hero">
+        <div>
+          <p className="student-hero-kicker">MET preparation dashboard</p>
+          <h1>Good {timeOfDay()}, {student.firstName}.</h1>
+          <p>{student.currentLevel || student.band || 'Current level'} to {student.targetLevel || student.bandTarget || 'target level'} · Session {student.session || 1}/{student.totalSessions || 24}</p>
         </div>
-      ) : (
-        <div style={{ padding: 16, borderRadius: 'var(--radius-md)', background: 'var(--bg)', border: '1px solid var(--border)', marginBottom: 16 }}>
-          <p style={{ color: 'var(--muted)', fontSize: 'var(--text-sm)', margin: 0 }}>No feedback available yet. Your teacher will send feedback after your next diagnosis.</p>
-        </div>
-      )}
+        <button className="student-hero-action" onClick={() => onTab('homework')}>
+          <Icon.homework size={15} />
+          Open homework
+        </button>
+      </section>
 
-      {/* Pending homework */}
-      {pendingHw.length > 0 && (
-        <div style={{ padding: 16, borderRadius: 'var(--radius-md)', background: 'var(--accent-subtle)', border: '1px solid var(--accent-soft)', marginBottom: 16, cursor: 'pointer' }} onClick={() => onTab('homework')}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <section className="student-metrics" aria-label="Student summary">
+        <MetricCard icon={<Icon.calendar size={19} />} label="Next class" value={nextDate} sub={nextTime} tone="blue" />
+        <MetricCard icon={<Icon.homework size={19} />} label="Homework" value={pendingHw.length} sub={pendingHw.length === 1 ? 'task pending' : 'tasks pending'} tone="teal" />
+        <MetricCard icon={<Icon.progress size={19} />} label="Current focus" value={focusSkill} sub="from approved diagnosis" tone="purple" />
+        <MetricCard icon={<Icon.inbox size={19} />} label="Feedback" value={latestFeedback ? 'Ready' : 'Waiting'} sub={latestFeedback ? 'teacher approved' : 'after diagnosis'} tone="orange" />
+      </section>
+
+      <section className="student-grid">
+        <article className="student-panel student-panel--primary">
+          <div className="student-panel-head">
             <div>
-              <div style={{ fontWeight: 700, color: 'var(--accent-deep)' }}>
-                {pendingHw.length === 1 ? 'Homework assigned' : `${pendingHw.length} homework sets`}
-              </div>
-              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: 2 }}>
-                {pendingHw[0]?.title}
-                {pendingHw[0]?.dueDate ? ` · Due ${new Date(pendingHw[0].dueDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}` : ''}
+              <span className="student-panel-kicker">Next class</span>
+              <h2>{nextClass?.title || 'Your next MET class'}</h2>
+            </div>
+            <span className="student-pill">{nextDate}</span>
+          </div>
+          <div className="student-next-layout">
+            <div>
+              <p className="student-focus-line">{nextClass?.classFocus || nextClass?.metSkillFocus || 'Your teacher will confirm the class focus.'}</p>
+              <div className="student-detail-list">
+                <span><Icon.calendar size={14} /> {nextTime}</span>
+                <span><Icon.progress size={14} /> {nextClass?.metSkillFocus || focusSkill}</span>
               </div>
             </div>
-            <Icon.arrowR size={16} />
+            <div className="student-prep-box">
+              <strong>What's Next</strong>
+              <p>{whatsNext.text}</p>
+              <button type="button" onClick={() => onTab(whatsNext.tab)}>{whatsNext.action}</button>
+            </div>
           </div>
-        </div>
-      )}
+        </article>
 
-      {/* Skill snapshot (from approved diagnosis) */}
-      {snapshot.length > 0 && (
-        <div style={{ marginBottom: 16 }}>
-          <div style={{ fontWeight: 600, fontSize: 'var(--text-sm)', marginBottom: 10, color: 'var(--text-2)' }}>Your Current Skills</div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-            {snapshot.map(s => (
-              <div key={s.section} style={{ padding: 10, borderRadius: 'var(--radius-sm)', background: 'var(--surface)', border: '1px solid var(--border)' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 'var(--text-xs)', marginBottom: 4 }}>
-                  <span style={{ fontWeight: 600 }}>{s.section}</span>
-                  {s.score_0_80 > 0 && <span style={{ color: 'var(--muted)' }}>{s.score_0_80}/80</span>}
-                </div>
-                {s.score_0_80 > 0 && (
-                  <div style={{ width: '100%', height: 6, borderRadius: 99, background: 'var(--bg-deep)', overflow: 'hidden' }}>
-                    <div style={{ width: `${Math.min(100, (s.score_0_80 / 80) * 100)}%`, height: '100%', borderRadius: 99, background: 'var(--accent)', transition: 'width 0.4s' }} />
-                  </div>
-                )}
-                {s.score_0_80 === 0 && <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontStyle: 'italic' }}>Not evaluated yet</div>}
-              </div>
-            ))}
+        <section className="student-memo-board" aria-label="Memo board">
+          <article>
+            <span className="student-panel-kicker">General memo</span>
+            <h2>Memo Board</h2>
+            <p>{generalMemo}</p>
+          </article>
+          <article>
+            <span className="student-panel-kicker">Individual memo</span>
+            <h2>{student.firstName}'s note</h2>
+            <p>{individualMemo}</p>
+          </article>
+        </section>
+
+        <article className="student-panel student-panel--todo">
+          <div className="student-panel-head">
+            <div>
+              <span className="student-panel-kicker">Today</span>
+              <h2>What to do now</h2>
+            </div>
           </div>
-        </div>
-      )}
+          <div className="student-todo-list">
+            {latestReview && (
+              <TodoRow done={false} label="Teacher review ready" meta={latestReview.homeworkTitle} />
+            )}
+            <TodoRow done={!!latestFeedback} label="Review latest feedback" meta={latestFeedback ? 'Available in the Feedback tab' : 'Waiting for teacher approval'} />
+            <TodoRow done={pendingHw.length === 0} label={pendingTitle} meta={pendingHw[0]?.dueDate ? `Due ${new Date(pendingHw[0].dueDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}` : 'Homework area'} />
+            <TodoRow done={false} label="What's next" meta={whatsNext.title} />
+          </div>
+          <button className="student-wide-action" onClick={() => onTab('homework')}>Go to homework <Icon.arrowR size={14} /></button>
+        </article>
 
-      {/* Stats */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
-        <MiniStat label="Session" value={`${student.session || 1}/${student.totalSessions || 24}`} />
-        <MiniStat label="Pending HW" value={pendingHw.length} />
-        <MiniStat label="Level" value={student.currentLevel || student.band || 'B1'} />
+        <article className="student-panel">
+          <div className="student-panel-head">
+            <div>
+              <span className="student-panel-kicker">Teacher feedback</span>
+              <h2>Latest approved note</h2>
+            </div>
+            <button className="student-text-action" onClick={() => onTab('feedback')}>Open feedback</button>
+          </div>
+          {latestFeedback && typeof latestFeedback === 'object' ? (
+            <div className="student-feedback-summary">
+              <p>{latestFeedback.classFocus || latestFeedback.finalNote || 'Your teacher has approved new feedback for you.'}</p>
+              <button className="student-wide-action" onClick={() => onTab('feedback')}>Read feedback <Icon.arrowR size={14} /></button>
+            </div>
+          ) : (
+            <div className="student-empty-card">
+              No approved feedback yet. Your teacher will send a clear summary after the next diagnosis.
+            </div>
+          )}
+        </article>
+
+        <article className="student-panel">
+          <div className="student-panel-head">
+            <div>
+              <span className="student-panel-kicker">Progress snapshot</span>
+              <h2>Evaluated skills</h2>
+            </div>
+          </div>
+          {evaluatedSkills.length > 0 ? (
+            <div className="student-skill-list">
+              {evaluatedSkills.slice(0, 5).map(s => <SkillRow key={s.section} skill={s} />)}
+            </div>
+          ) : (
+            <div className="student-empty-card">
+              Evaluated skills will appear here after your teacher has enough class evidence.
+            </div>
+          )}
+        </article>
+      </section>
+    </div>
+  );
+}
+
+function MetricCard({ icon, label, value, sub, tone }) {
+  return (
+    <article className={`student-metric student-metric--${tone}`}>
+      <div className="student-metric-copy">
+        <span>{label}</span>
+        <strong>{value}</strong>
+        <small>{sub}</small>
+      </div>
+      <div className="student-metric-icon">{icon}</div>
+    </article>
+  );
+}
+
+function TodoRow({ done, label, meta }) {
+  return (
+    <div className={'student-todo-row' + (done ? ' done' : '')}>
+      <span className="student-todo-check">{done ? '✓' : ''}</span>
+      <span>
+        <strong>{label}</strong>
+        <small>{meta}</small>
+      </span>
+    </div>
+  );
+}
+
+function SkillRow({ skill }) {
+  const score = Number(skill.score_0_80) || 0;
+  if (score <= 0) return null;
+  const stage = getProgressStage(score);
+  return (
+    <div className="student-skill-row">
+      <div className="student-skill-top">
+        <strong>{skill.section}</strong>
+        <span>{stage.label}</span>
+      </div>
+      <div>
+        <div className="student-stage-track" aria-label={`${skill.section} progress stage: ${stage.label}`}>
+          {PROGRESS_STAGES.map(item => (
+            <span key={item.label} className={item.order <= stage.order ? 'active' : ''} />
+          ))}
+        </div>
+        {skill.next_step && <div className="student-skill-note">Next: {skill.next_step}</div>}
       </div>
     </div>
   );
 }
 
-function MiniStat({ label, value }) {
+function FeedbackView({ student, onTab }) {
+  const [feedbackItems, setFeedbackItems] = useState([]);
+
+  useEffect(() => {
+    (async () => {
+      const diagnoses = await getDiagnoses(student.id);
+      const approved = (diagnoses || [])
+        .filter(hasVisibleApprovedStudentFeedback)
+        .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
+        .map(dx => ({
+          id: dx.id,
+          createdAt: dx.createdAt,
+          feedback: dx.sections.studentFeedback.content,
+          snapshot: dx.content?.section_snapshot || [],
+        }));
+      setFeedbackItems(approved);
+    })();
+  }, [student.id]);
+
+  const latest = feedbackItems[0];
+  const feedback = latest?.feedback;
+  const primarySkill = latest?.snapshot?.find(s => Number(s.score_0_80) > 0) || null;
+  const stage = primarySkill ? getProgressStage(Number(primarySkill.score_0_80) || 0) : null;
+  const highlights = Array.isArray(feedback?.highlights)
+    ? feedback.highlights
+    : (Array.isArray(feedback?.whatYouDidWell) ? feedback.whatYouDidWell : []);
+  const rawFocusArea = feedback?.focusArea || (Array.isArray(feedback?.whatToImprove) ? feedback.whatToImprove[0] : null);
+  const focusArea = typeof rawFocusArea === 'string'
+    ? { area: rawFocusArea, explanation: rawFocusArea }
+    : rawFocusArea;
+  const firstWin = highlights[0];
+  const nextStep = feedback?.nextStep || focusArea?.howToImprove || primarySkill?.next_step || 'Practice one clear next step before your next class.';
+
   return (
-    <div style={{ padding: 10, borderRadius: 'var(--radius-sm)', background: 'var(--surface)', border: '1px solid var(--border)', textAlign: 'center' }}>
-      <div style={{ fontSize: 'var(--text-xl)', fontWeight: 700, color: 'var(--accent-deep)' }}>{value}</div>
-      <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>{label}</div>
+    <div className="student-feedback-page">
+      <section className="student-hero">
+        <div>
+          <p className="student-hero-kicker">Feedback</p>
+          <h1>Your teacher’s latest notes</h1>
+          <p>Simple, approved feedback you can use before the next class.</p>
+        </div>
+        <button className="student-hero-action" onClick={() => onTab('homework')}>
+          <Icon.homework size={15} />
+          Practice next
+        </button>
+      </section>
+
+      {!feedback ? (
+        <div className="student-empty-card">
+          No approved feedback yet. After your teacher reviews your diagnosis, your feedback will appear here.
+        </div>
+      ) : (
+        <>
+          <section className="student-progress-profile">
+            <div>
+              <span className="student-panel-kicker">Today’s progress</span>
+              <h2>{primarySkill ? `${primarySkill.section} progress` : 'MET progress'}</h2>
+              <p>{feedback.classFocus || 'Your teacher has shared a short summary of your latest class.'}</p>
+            </div>
+            {stage && <span className="student-stage-badge">{stage.label}</span>}
+          </section>
+
+          <section className="student-feedback-grid">
+            <article className="student-panel">
+              <span className="student-panel-kicker">What improved</span>
+              <h2>{firstWin?.strength || 'You made progress'}</h2>
+              <p className="student-readable-copy">{firstWin?.explanation || feedback.finalNote || 'Your teacher noticed improvement in your latest class.'}</p>
+            </article>
+
+            <article className="student-panel">
+              <span className="student-panel-kicker">Current focus</span>
+              <h2>{focusArea?.area || primarySkill?.section || 'Next MET skill'}</h2>
+              <p className="student-readable-copy">{focusArea?.explanation || focusArea?.howToImprove || focusArea?.metImportance || nextStep}</p>
+            </article>
+
+            <article className="student-panel student-panel--primary">
+              <div className="student-panel-head">
+                <div>
+                  <span className="student-panel-kicker">Full feedback</span>
+                  <h2>Teacher-approved feedback</h2>
+                </div>
+                {latest.createdAt && (
+                  <span className="student-muted-pill">
+                    {new Date(latest.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+                  </span>
+                )}
+              </div>
+              <StudentFeedbackView feedback={feedback} />
+            </article>
+
+            <article className="student-panel">
+              <span className="student-panel-kicker">Confidence check</span>
+              <h2>Before the next class</h2>
+              <div className="student-confidence-list">
+                <TodoRow done={true} label="I understand my teacher’s main feedback" meta="Review the full note above" />
+                <TodoRow done={!!firstWin} label="I can name one thing I did better" meta={firstWin?.strength || 'Use your feedback note'} />
+                <TodoRow done={false} label="I can practice the next focus" meta={feedback?.nextStep || focusArea?.area || 'Complete the homework task'} />
+                <TodoRow done={false} label="I can bring one question to class" meta="Ask your teacher for help where needed" />
+              </div>
+            </article>
+          </section>
+
+          {feedbackItems.length > 1 && (
+            <section className="student-panel student-feedback-history">
+              <div className="student-panel-head">
+                <div>
+                  <span className="student-panel-kicker">History</span>
+                  <h2>Past feedback</h2>
+                </div>
+                <span className="student-muted-pill">{feedbackItems.length - 1} older</span>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {feedbackItems.slice(1).map(item => (
+                  <details key={item.id} style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', background: 'var(--surface)', padding: '10px 12px' }}>
+                    <summary style={{ cursor: 'pointer', fontWeight: 700, fontSize: 'var(--text-sm)', color: 'var(--text)' }}>
+                      {item.createdAt ? new Date(item.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : 'Previous feedback'}
+                    </summary>
+                    <div style={{ marginTop: 12 }}>
+                      <StudentFeedbackView feedback={item.feedback} />
+                    </div>
+                  </details>
+                ))}
+              </div>
+            </section>
+          )}
+        </>
+      )}
     </div>
   );
 }
@@ -186,6 +468,8 @@ function HomeworkView({ student }) {
   const [expanded, setExpanded] = useState(null);
   const [answer, setAnswer] = useState('');
   const [responses, setResponses] = useState({}); // { exerciseId: responseObj }
+  const [draftMeta, setDraftMeta] = useState({}); // { homeworkId: { updatedAt, currentExerciseId } }
+  const [homeworkFilter, setHomeworkFilter] = useState('todo');
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -199,6 +483,28 @@ function HomeworkView({ student }) {
   // Check if homework has structured exercises
   function hasStructuredExercises(h) {
     return (h.activities || []).some(a => isStructuredExercise(a));
+  }
+
+  function homeworkDraftKey(hwId) {
+    return `student-homework:${student.id}:${hwId}`;
+  }
+
+  async function toggleHomework(h) {
+    const willOpen = expanded !== h.id;
+    setExpanded(willOpen ? h.id : null);
+    if (!willOpen || h.status === 'submitted') return;
+
+    const draft = await getDraft(homeworkDraftKey(h.id));
+    if (draft?.responses && typeof draft.responses === 'object') {
+      setResponses(prev => ({ ...prev, ...draft.responses }));
+      setDraftMeta(prev => ({
+        ...prev,
+        [h.id]: {
+          updatedAt: draft.updatedAt,
+          currentExerciseId: draft.currentExerciseId,
+        },
+      }));
+    }
   }
 
   // Handle legacy text submission
@@ -235,10 +541,13 @@ function HomeworkView({ student }) {
       }
     });
     const content = summaryParts.join('\n\n---\n\n');
-    await submitHomework(hwId, student.id, content, responses);
+    const exerciseResponses = Object.fromEntries(exercises.map(ex => [ex.id, responses[ex.id] || {}]));
+    await submitHomework(hwId, student.id, content, exerciseResponses);
+    await saveDraft(homeworkDraftKey(hwId), null);
     const hwList = await getHomework(student.id);
     setHomework(hwList || []);
     setResponses({});
+    setDraftMeta(prev => ({ ...prev, [hwId]: null }));
     setExpanded(null);
     setSubmitting(false);
     window.toast?.('Submitted! Your teacher will review soon.', 'ok');
@@ -249,16 +558,77 @@ function HomeworkView({ student }) {
     setResponses(prev => ({ ...prev, [exerciseId]: updatedRes }));
   }
 
+  async function saveStructuredProgress(hwId, currentExerciseId) {
+    const hw = homework.find(h => h.id === hwId);
+    const exerciseIds = new Set((hw?.activities || []).filter(a => isStructuredExercise(a)).map(ex => ex.id));
+    const exerciseResponses = Object.fromEntries(
+      Object.entries(responses).filter(([exerciseId]) => exerciseIds.has(exerciseId))
+    );
+    const draft = {
+      responses: exerciseResponses,
+      currentExerciseId,
+      updatedAt: new Date().toISOString(),
+    };
+    await saveDraft(homeworkDraftKey(hwId), draft);
+    setDraftMeta(prev => ({ ...prev, [hwId]: draft }));
+    window.toast?.('Progress saved. You can continue later.', 'ok');
+  }
+
+  const reviewedIds = new Set(reviews.map(r => r.homeworkId));
+  const sortedHomework = [...homework].sort((a, b) => new Date(b.reviewedAt || b.assignedAt || b.createdAt || 0) - new Date(a.reviewedAt || a.assignedAt || a.createdAt || 0));
+  const visibleHomework = sortedHomework.filter(h => {
+    const reviewed = reviewedIds.has(h.id) || h.status === 'reviewed' || h.status === 'corrected' || h.status === 'completed';
+    if (homeworkFilter === 'todo') return !reviewed && h.status !== 'submitted';
+    if (homeworkFilter === 'submitted') return h.status === 'submitted' && !reviewed;
+    if (homeworkFilter === 'reviewed') return reviewed;
+    return true;
+  });
+  const reviewedCount = sortedHomework.filter(h => reviewedIds.has(h.id) || h.status === 'reviewed' || h.status === 'corrected' || h.status === 'completed').length;
+
   return (
-    <div style={{ padding: '20px 16px', maxWidth: 700, margin: '0 auto' }}>
-      <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-xl)', fontWeight: 700, margin: '0 0 16px' }}>My Homework</h2>
-      {homework.length === 0 && <p style={{ color: 'var(--muted)', padding: '16px 0' }}>No homework assigned yet. Your teacher will assign homework after your next class.</p>}
-      {homework.map(h => {
+    <div className="student-homework-page">
+      <section className="student-hero">
+        <div>
+          <p className="student-hero-kicker">Homework</p>
+          <h1>Assigned practice</h1>
+          <p>Complete the tasks your teacher assigned, then submit them for review.</p>
+        </div>
+        <span className="student-stage-badge">{homework.length} assigned</span>
+      </section>
+
+      {homework.length === 0 && (
+        <div className="student-empty-card">
+          No homework assigned yet. Your teacher will assign practice after your next class.
+        </div>
+      )}
+
+      {homework.length > 0 && (
+        <div className="student-homework-filters" aria-label="Homework filters">
+          {[
+            ['todo', 'To do'],
+            ['submitted', 'Submitted'],
+            ['reviewed', `Reviewed (${reviewedCount})`],
+            ['all', 'All'],
+          ].map(([id, label]) => (
+            <button key={id} type="button" className={homeworkFilter === id ? 'active' : ''} onClick={() => setHomeworkFilter(id)}>
+              {label}
+            </button>
+          ))}
+        </div>
+      )}
+
+      <section className="student-homework-list">
+      {homework.length > 0 && visibleHomework.length === 0 && (
+        <div className="student-empty-card">
+          No homework in this view.
+        </div>
+      )}
+      {visibleHomework.map(h => {
         const review = reviews.find(r => r.homeworkId === h.id);
         const isExpanded = expanded === h.id;
         const submitted = h.status === 'submitted';
         const statusTone = review ? 'success' : submitted ? 'warning' : 'muted';
-        const statusLabel = review ? 'Reviewed' : submitted ? 'Submitted' : h.status;
+        const statusLabel = review ? 'Reviewed' : submitted ? 'Submitted' : (h.status || 'Not started');
         const isStructured = hasStructuredExercises(h);
         const structuredExercises = isStructured ? (h.activities || []).filter(a => isStructuredExercise(a)) : [];
 
@@ -267,15 +637,16 @@ function HomeworkView({ student }) {
         structuredExercises.forEach(e => { typeSummary[e.type] = (typeSummary[e.type] || 0) + 1; });
 
         return (
-          <div key={h.id} style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', marginBottom: 10, overflow: 'hidden' }}>
+          <article key={h.id} className={'student-homework-card' + (isExpanded ? ' is-expanded' : '')}>
             {/* Header */}
-            <div
-              style={{ padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', background: isExpanded ? 'var(--bg)' : 'var(--surface)' }}
-              onClick={() => setExpanded(isExpanded ? null : h.id)}
+            <button
+              className="student-homework-card-head"
+              onClick={() => toggleHomework(h)}
             >
-              <div>
-                <div style={{ fontWeight: 600 }}>{h.title}</div>
-                <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: 2, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+              <div className="student-homework-title">
+                <span className="student-panel-kicker">Assigned homework</span>
+                <h2>{h.title || 'Homework task'}</h2>
+                <div className="student-homework-meta">
                   {isStructured ? (
                     <>
                       <span>{structuredExercises.length} exercise{structuredExercises.length !== 1 ? 's' : ''}</span>
@@ -286,21 +657,46 @@ function HomeworkView({ student }) {
                   ) : (
                     <span>{h.type}</span>
                   )}
-                  {h.dueDate && <span>· Due {new Date(h.dueDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</span>}
+                  {h.dueDate && <span>Due {new Date(h.dueDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</span>}
+                  {draftMeta[h.id]?.updatedAt && !submitted && !review && (
+                    <span>Saved {new Date(draftMeta[h.id].updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                  )}
                 </div>
               </div>
-              <span style={{
-                padding: '3px 10px', borderRadius: 99, fontSize: 'var(--text-xs)', fontWeight: 600,
-                background: statusTone === 'success' ? 'var(--success-bg)' : statusTone === 'warning' ? 'var(--warning-bg)' : 'var(--bg-deep)',
-                color: statusTone === 'success' ? 'var(--success)' : statusTone === 'warning' ? 'var(--warning)' : 'var(--muted)',
-              }}>{statusLabel}</span>
-            </div>
+              <span className={`student-homework-status student-homework-status--${statusTone}`}>{statusLabel}</span>
+            </button>
 
             {/* Expanded content */}
             {isExpanded && (
-              <div style={{ padding: 16, borderTop: '1px solid var(--divider)' }}>
-                {h.objective && <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-2)', marginBottom: 10 }}><strong>Goal:</strong> {h.objective}</p>}
-                {h.description && <div style={{ fontSize: 'var(--text-sm)', lineHeight: 1.7, whiteSpace: 'pre-wrap', marginBottom: 12 }}>{h.description}</div>}
+              <div className="student-homework-content">
+                {(h.objective || h.description || h.estimatedTime || h.metSkillConnection) && (
+                  <div className="student-homework-brief">
+                    {h.objective && (
+                      <div>
+                        <strong>Goal</strong>
+                        <p>{h.objective}</p>
+                      </div>
+                    )}
+                    {h.estimatedTime && (
+                      <div>
+                        <strong>Time</strong>
+                        <p>{h.estimatedTime}</p>
+                      </div>
+                    )}
+                    {h.metSkillConnection && (
+                      <div>
+                        <strong>MET skill</strong>
+                        <p>{h.metSkillConnection}</p>
+                      </div>
+                    )}
+                    {h.description && (
+                      <div className="student-homework-brief-wide">
+                        <strong>Instructions</strong>
+                        <p>{h.description}</p>
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 {/* ── STRUCTURED EXERCISES: step-through ── */}
                 {isStructured && !submitted && !review && (
@@ -308,7 +704,9 @@ function HomeworkView({ student }) {
                     exercises={structuredExercises}
                     responses={responses}
                     onResponse={updateResponse}
+                    onSave={(exerciseId) => saveStructuredProgress(h.id, exerciseId)}
                     onSubmit={() => handleStructuredSubmit(h.id)}
+                    initialExerciseId={draftMeta[h.id]?.currentExerciseId}
                     readOnly={false}
                   />
                 )}
@@ -332,7 +730,7 @@ function HomeworkView({ student }) {
                 {!isStructured && (
                   <>
                     {(h.activities || []).map((a, i) => (
-                      <div key={i} style={{ fontSize: 'var(--text-sm)', marginBottom: 8, padding: 10, background: 'var(--bg)', borderRadius: 'var(--radius-sm)', lineHeight: 1.6 }}>{a.instruction}</div>
+                      <div key={i} className="student-homework-activity">{a.instruction}</div>
                     ))}
                   </>
                 )}
@@ -352,8 +750,8 @@ function HomeworkView({ student }) {
 
                 {/* Legacy submit form */}
                 {!isStructured && !submitted && !review && (
-                  <div style={{ marginTop: 14 }}>
-                    <textarea value={answer} onChange={e => setAnswer(e.target.value)} rows={5} placeholder="Write your answer here…" style={{ width: '100%', padding: 10, borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)', fontSize: 'var(--text-sm)', resize: 'vertical' }} />
+                  <div className="student-homework-submit">
+                    <textarea value={answer} onChange={e => setAnswer(e.target.value)} rows={5} placeholder="Write your answer here…" />
                     <Button variant="primary" size="sm" onClick={() => handleLegacySubmit(h.id)} disabled={submitting || !answer.trim()} style={{ marginTop: 8 }}>
                       {submitting ? 'Submitting…' : 'Submit Homework'}
                     </Button>
@@ -362,7 +760,7 @@ function HomeworkView({ student }) {
 
                 {/* Submitted status */}
                 {submitted && !review && (
-                  <div style={{ marginTop: 12, padding: 12, background: 'var(--warning-bg)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-sm)', color: 'var(--warning)', fontWeight: 500 }}>
+                  <div className="student-homework-waiting">
                     Submitted ✓ — Waiting for your teacher to review.
                   </div>
                 )}
@@ -371,7 +769,7 @@ function HomeworkView({ student }) {
                 {review && (
                   <div style={{ marginTop: 14, padding: 14, background: 'var(--success-bg)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--success-soft)' }}>
                     <div style={{ fontWeight: 700, color: 'var(--success)', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 10 }}>
-                      <span>Teacher Review {review.score != null ? `· ${review.score}/10` : ''}</span>
+                      <span>Teacher Review</span>
                       {review.redoRequired && (
                         <span style={{ fontSize: 'var(--text-xs)', fontWeight: 700, padding: '2px 8px', borderRadius: 99, background: 'var(--warning-bg)', color: 'var(--warning)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Redo requested</span>
                       )}
@@ -418,9 +816,10 @@ function HomeworkView({ student }) {
                 )}
               </div>
             )}
-          </div>
+          </article>
         );
       })}
+      </section>
     </div>
   );
 }
@@ -438,77 +837,121 @@ function ProgressView({ student }) {
     })();
   }, [student.id]);
 
+  const latest = diagnoses[0];
+  const skills = (latest?.content?.section_snapshot || []).filter(skill => Number(skill.score_0_80) > 0);
+
   return (
-    <div style={{ padding: '20px 16px', maxWidth: 680, margin: '0 auto' }}>
-      <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-xl)', fontWeight: 700, margin: '0 0 16px' }}>My Progress</h2>
+    <div className="student-progress-page">
+      <section className="student-hero">
+        <div>
+          <p className="student-hero-kicker">MET progress profile</p>
+          <h1>Your readiness path</h1>
+          <p>Progress stages show direction without turning your learning into a grade.</p>
+        </div>
+      </section>
 
       {diagnoses.length === 0 ? (
-        <p style={{ color: 'var(--muted)' }}>No diagnoses yet. After your first class, your progress will appear here.</p>
+        <div className="student-empty-card">No diagnoses yet. After your first class, your progress will appear here.</div>
       ) : (
         <>
-          {/* Current skills from latest diagnosis */}
-          {diagnoses[0]?.content?.section_snapshot?.length > 0 && (
-            <div style={{ marginBottom: 20 }}>
-              <div style={{ fontWeight: 600, fontSize: 'var(--text-sm)', marginBottom: 10 }}>Current Skills</div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-                {diagnoses[0].content.section_snapshot.map(s => (
-                  <div key={s.section} style={{ padding: 10, borderRadius: 'var(--radius-sm)', background: 'var(--surface)', border: '1px solid var(--border)' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 'var(--text-xs)', marginBottom: 4 }}>
-                      <span style={{ fontWeight: 600 }}>{s.section}</span>
-                      {s.score_0_80 > 0 && <span style={{ color: 'var(--accent)' }}>{s.score_0_80}/80</span>}
-                    </div>
-                    {s.score_0_80 > 0 && (
-                      <div style={{ width: '100%', height: 6, borderRadius: 99, background: 'var(--bg-deep)', overflow: 'hidden' }}>
-                        <div style={{ width: `${(s.score_0_80 / 80) * 100}%`, height: '100%', borderRadius: 99, background: s.trend === 'improving' ? 'var(--success)' : 'var(--accent)' }} />
-                      </div>
-                    )}
-                    {s.next_step && <div style={{ fontSize: 10, color: 'var(--muted)', marginTop: 4 }}>Next: {s.next_step}</div>}
-                  </div>
-                ))}
-              </div>
+          {skills.length > 0 ? (
+            <section className="student-readiness-grid">
+              {skills.map(skill => (
+                <ProgressProfileCard key={skill.section} skill={skill} />
+              ))}
+            </section>
+          ) : (
+            <div className="student-empty-card" style={{ marginBottom: 18 }}>
+              No evaluated skills are ready to show yet. When a class evaluates speaking only, only speaking progress will appear here.
             </div>
           )}
 
-          {/* Diagnosis timeline */}
-          <div style={{ fontWeight: 600, fontSize: 'var(--text-sm)', marginBottom: 10 }}>Diagnosis History</div>
-          {diagnoses.map((dx, i) => (
-            <div key={dx.id} style={{ padding: 14, border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', marginBottom: 10, background: 'var(--surface)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                <span style={{ fontWeight: 600, fontSize: 'var(--text-sm)' }}>Class #{diagnoses.length - i}</span>
-                <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>{new Date(dx.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+          <section className="student-panel">
+            <div className="student-panel-head">
+              <div>
+                <span className="student-panel-kicker">Progress history</span>
+                <h2>Recent approved diagnoses</h2>
               </div>
-              {dx.sections?.profileUpdateSuggestions?.content?.progressNote && (
-                <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-2)', fontStyle: 'italic' }}>{dx.sections.profileUpdateSuggestions.content.progressNote}</p>
-              )}
-              {dx.content?.section_snapshot?.length > 0 && (
-                <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-                  {dx.content.section_snapshot.filter(s => s.score_0_80 > 0).map(s => (
-                    <div key={s.section} style={{ textAlign: 'center', flex: 1 }}>
-                      <div style={{ fontSize: 10, color: 'var(--muted)' }}>{s.section}</div>
-                      <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--accent-deep)' }}>{s.score_0_80}</div>
-                    </div>
-                  ))}
-                </div>
-              )}
             </div>
-          ))}
+            <div className="student-history-list">
+              {diagnoses.map((dx, i) => (
+                <div key={dx.id} className="student-history-item">
+                  <div>
+                    <strong>Class #{diagnoses.length - i}</strong>
+                    {dx.sections?.profileUpdateSuggestions?.content?.progressNote && (
+                      <p>{dx.sections.profileUpdateSuggestions.content.progressNote}</p>
+                    )}
+                  </div>
+                  <span>{new Date(dx.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                </div>
+              ))}
+            </div>
+          </section>
         </>
       )}
 
-      {/* Progress notes */}
       {notes.length > 0 && (
-        <div style={{ marginTop: 20 }}>
-          <div style={{ fontWeight: 600, fontSize: 'var(--text-sm)', marginBottom: 10 }}>Notes from Teacher</div>
-          {notes.map(n => (
-            <div key={n.id} style={{ padding: '10px 14px', background: 'var(--bg)', borderRadius: 'var(--radius-sm)', marginBottom: 8, fontSize: 'var(--text-sm)', lineHeight: 1.6 }}>
-              <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginRight: 8 }}>
-                {new Date(n.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
-              </span>
-              {n.note}
+        <section className="student-panel">
+          <div className="student-panel-head">
+            <div>
+              <span className="student-panel-kicker">Teacher notes</span>
+              <h2>Extra notes</h2>
             </div>
-          ))}
-        </div>
+          </div>
+          <div className="student-history-list">
+            {notes.map(n => (
+              <div key={n.id} className="student-history-item">
+                <div>
+                  <strong>{new Date(n.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</strong>
+                  <p>{n.note}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
       )}
     </div>
+  );
+}
+
+function ProgressProfileCard({ skill }) {
+  const score = Number(skill.score_0_80) || 0;
+  if (score <= 0) return null;
+  const stage = getProgressStage(score);
+
+  return (
+    <article className="student-progress-card">
+      <div className="student-panel-head">
+        <div>
+          <span className="student-panel-kicker">Skill progress</span>
+          <h2>{skill.section}</h2>
+        </div>
+        <span className="student-stage-badge">{stage.label}</span>
+      </div>
+
+      <div className="student-stage-track student-stage-track--wide" aria-label={`${skill.section} progress stage: ${stage.label}`}>
+        {PROGRESS_STAGES.map(item => (
+          <span key={item.label} className={item.order <= stage.order ? 'active' : ''} title={item.label} />
+        ))}
+      </div>
+
+      <div className="student-progress-copy-grid">
+        <div>
+          <strong>Current focus</strong>
+          <p>{skill.next_step || `Keep building more control in ${skill.section}.`}</p>
+        </div>
+        <div>
+          <strong>Next class target</strong>
+          <p>{skill.next_step || 'Practice this skill with teacher guidance and clear examples.'}</p>
+        </div>
+      </div>
+
+      <div className="student-confidence-list">
+        <TodoRow done={stage.order >= 2} label={`I understand the ${skill.section} task`} meta="Foundation step" />
+        <TodoRow done={stage.order >= 3} label="I can complete it with support" meta="Building control" />
+        <TodoRow done={stage.order >= 4} label="I can do it more independently" meta="Consistency step" />
+        <TodoRow done={stage.order >= 5} label="I can try timed mock practice" meta="Ready for mock practice" />
+      </div>
+    </article>
   );
 }

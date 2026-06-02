@@ -85,7 +85,8 @@ export default function App() {
   }
 
   if (auth.role === 'student') {
-    const student = students.find(s => s.id === auth.studentId) || students[0];
+    const student = students.find(s => s.id === auth.studentId);
+    if (!student) return <PageLoader />;
     return (
       <ErrorBoundary label="Dashboard unavailable">
         <StudentDashboard student={student} onSignOut={handleSignOut} />

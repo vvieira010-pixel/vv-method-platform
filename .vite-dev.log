@@ -343,3 +343,135 @@
 [2m20:05:03[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/homework-create.jsx[22m
 [2m20:05:20[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/student-dashboard.jsx[22m
 [2m20:06:02[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/shared.jsx[22m
+[2m22:32:29[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/student-dashboard.jsx[22m
+[2m22:32:29[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/student-dashboard.jsx[22m
+[2m22:34:07[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles/logbook.css[22m
+[2m22:34:22[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles/logbook.css[22m
+[2m00:11:57[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/student-dashboard.jsx[22m
+[2m00:11:58[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/student-dashboard.jsx[22m
+[2m00:12:19[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/student-dashboard.jsx[22m
+[2m00:13:22[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/student-dashboard.jsx[22m
+[2m00:14:29[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles/logbook.css[22m
+[2m00:14:45[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles/logbook.css[22m
+[2m00:15:39[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/student-dashboard.jsx[22m
+[2m00:28:24[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/settings.jsx[22m
+[2m00:28:24[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/settings.jsx[22m
+[2m00:29:08[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/diagnostic-create.jsx[22m
+[2m00:29:21[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/diagnostic-create.jsx[22m
+[2m00:29:54[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/student-dashboard.jsx[22m
+[2m00:30:11[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/shared.jsx[22m
+[2m00:30:11[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [33mhmr invalidate [39m[2m/src/components/shared.jsx[22m Could not Fast Refresh ("Icon" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports
+[2m00:30:11[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/components/shared.jsx[22m
+[2m00:58:41[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/student-dashboard.jsx[22m
+[2m00:58:41[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/student-dashboard.jsx[22m
+[2m00:59:39[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles/logbook.css[22m
+[2m01:01:17[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles/logbook.css[22m
+[2m01:01:34[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/student-dashboard.jsx[22m
+[2m01:01:53[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles/logbook.css[22m
+[2m01:20:36[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/login.jsx[22m
+[2m01:20:36[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/login.jsx[22m
+[2m01:20:49[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/shared.jsx[22m
+[2m01:20:49[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [33mhmr invalidate [39m[2m/src/components/shared.jsx[22m Could not Fast Refresh ("Icon" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports
+[2m01:20:49[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/components/shared.jsx[22m
+[2m01:21:05[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/error-boundary.jsx[22m
+[2m01:21:15[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/message-center.jsx[22m
+[2m01:23:54[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/error-boundary.jsx[22m
+[2m01:27:02[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/exercise-player.jsx[22m
+[2m01:27:03[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/exercise-player.jsx[22m
+[2m01:32:31[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/login.jsx[22m
+[2m01:32:31[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/login.jsx[22m
+[2m01:34:06[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/login.jsx[22m
+[2m03:27:18[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/diagnostic-create.jsx, /src/pages/homework-create.jsx[22m
+[2m03:27:18[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/diagnostic-create.jsx, /src/pages/homework-create.jsx[22m
+[2m03:28:02[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/shared.jsx[22m
+[2m03:28:02[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [33mhmr invalidate [39m[2m/src/components/shared.jsx[22m Could not Fast Refresh ("Icon" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports
+[2m03:28:02[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/components/shared.jsx[22m
+[2m03:29:46[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/student-dashboard.jsx[22m
+[2m03:29:47[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/shared.jsx[22m
+[2m03:30:50[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/diagnostic-create.jsx, /src/pages/homework-create.jsx[22m
+[2m03:36:22[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/diagnostic-create.jsx, /src/pages/homework-create.jsx[22m
+[2m03:36:22[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/diagnostic-create.jsx, /src/pages/homework-create.jsx[22m
+[2m03:36:45[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/diagnostic-create.jsx[22m
+[2m03:42:26[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/shared.jsx[22m
+[2m03:42:26[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/shared.jsx[22m
+[2m03:42:27[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [33mhmr invalidate [39m[2m/src/components/shared.jsx[22m Could not Fast Refresh ("Icon" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports
+[2m03:42:27[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/components/shared.jsx[22m
+[2m03:42:45[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/diagnostic-create.jsx[22m
+[2m03:48:09[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/diagnostic-create.jsx, /src/pages/homework-create.jsx[22m
+[2m03:48:28[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/diagnostic-create.jsx, /src/pages/homework-create.jsx[22m
+[2m03:49:03[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/shared.jsx[22m
+[2m03:49:04[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [33mhmr invalidate [39m[2m/src/components/shared.jsx[22m Could not Fast Refresh ("Icon" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports
+[2m03:49:04[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/components/shared.jsx[22m
+[2m03:57:25[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/exercise-editor.jsx[22m
+[2m03:57:25[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/student-dashboard.jsx, /src/components/exercise-editor.jsx, /src/components/exercise-player.jsx, /src/pages/homework-create.jsx[22m
+[2m03:57:53[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/student-dashboard.jsx, /src/components/exercise-editor.jsx, /src/components/exercise-player.jsx, /src/pages/homework-create.jsx[22m
+[2m04:08:00[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/homework-create.jsx[22m
+[2m04:08:00[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/homework-create.jsx[22m
+[2m14:53:04[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/exercise-player.jsx[22m
+[2m14:53:04[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/exercise-player.jsx[22m
+[2m14:53:22[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/exercise-player.jsx[22m
+[2m14:53:47[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/student-dashboard.jsx[22m
+[2m14:54:03[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/student-dashboard.jsx[22m
+[2m14:54:17[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/exercise-player.jsx[22m
+[2m15:04:11[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/App.jsx, /src/pages/student-dashboard.jsx, /src/components/message-center.jsx, /src/pages/teacher-dashboard.jsx, /src/pages/calendar.jsx, /src/pages/reports.jsx, /src/pages/error-bank.jsx, /src/pages/settings.jsx, /src/tools/tool-inbox.jsx, /src/pages/submissions.jsx, /src/pages/diagnostic-create.jsx, /src/pages/student-profile.jsx, /src/pages/homework-create.jsx, /src/pages/homework.jsx, /src/pages/diagnostics.jsx, /src/pages/class-record.jsx, /src/pages/students.jsx, /src/pages/submission-review.jsx[22m
+[2m15:04:11[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/App.jsx, /src/pages/student-dashboard.jsx, /src/components/message-center.jsx, /src/pages/teacher-dashboard.jsx, /src/pages/calendar.jsx, /src/pages/reports.jsx, /src/pages/error-bank.jsx, /src/pages/settings.jsx, /src/tools/tool-inbox.jsx, /src/pages/submissions.jsx, /src/pages/diagnostic-create.jsx, /src/pages/student-profile.jsx, /src/pages/homework-create.jsx, /src/pages/homework.jsx, /src/pages/diagnostics.jsx, /src/pages/class-record.jsx, /src/pages/students.jsx, /src/pages/submission-review.jsx[22m
+[2m15:04:33[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/submission-review.jsx[22m
+[2m15:04:59[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/student-dashboard.jsx[22m
+[2m15:05:26[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/student-dashboard.jsx[22m
+[2m15:06:11[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/student-dashboard.jsx[22m
+[2m15:06:11[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles/logbook.css[22m
+[2m15:06:30[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/student-dashboard.jsx[22m
+[2m15:06:48[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/submissions.jsx[22m
+[2m15:07:04[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/submission-review.jsx[22m
+[2m15:07:32[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/message-center.jsx[22m
+[2m15:09:57[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/App.jsx, /src/pages/student-dashboard.jsx, /src/components/message-center.jsx, /src/pages/teacher-dashboard.jsx, /src/pages/calendar.jsx, /src/pages/reports.jsx, /src/pages/error-bank.jsx, /src/pages/settings.jsx, /src/tools/tool-inbox.jsx, /src/pages/submissions.jsx, /src/pages/diagnostic-create.jsx, /src/pages/student-profile.jsx, /src/pages/homework-create.jsx, /src/pages/homework.jsx, /src/pages/diagnostics.jsx, /src/pages/class-record.jsx, /src/pages/students.jsx, /src/pages/submission-review.jsx[22m
+[2m15:09:57[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/App.jsx, /src/pages/student-dashboard.jsx, /src/components/message-center.jsx, /src/pages/teacher-dashboard.jsx, /src/pages/calendar.jsx, /src/pages/reports.jsx, /src/pages/error-bank.jsx, /src/pages/settings.jsx, /src/tools/tool-inbox.jsx, /src/pages/submissions.jsx, /src/pages/diagnostic-create.jsx, /src/pages/student-profile.jsx, /src/pages/homework-create.jsx, /src/pages/homework.jsx, /src/pages/diagnostics.jsx, /src/pages/class-record.jsx, /src/pages/students.jsx, /src/pages/submission-review.jsx[22m
+[2m15:18:20[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/student-dashboard.jsx[22m
+[2m15:18:20[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/student-dashboard.jsx[22m
+[2m15:18:46[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/student-dashboard.jsx[22m
+[2m15:19:06[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles/logbook.css[22m
+[2m15:23:40[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles/logbook.css[22m
+[2m15:23:41[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles/logbook.css[22m
+[2m15:23:52[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/student-dashboard.jsx[22m
+[2m15:24:05[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles/logbook.css[22m
+[2m15:27:38[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/settings.jsx[22m
+[2m15:27:38[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/settings.jsx[22m
+[2m15:28:27[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/student-dashboard.jsx[22m
+[2m15:28:38[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/student-dashboard.jsx[22m
+[2m15:28:59[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/student-dashboard.jsx[22m
+[2m15:35:42[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles/logbook.css[22m
+[2m15:35:42[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles/logbook.css[22m
+[2m15:38:25[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles/logbook.css[22m
+[2m15:39:02[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles/logbook.css[22m
+[2m15:39:19[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles/logbook.css[22m
+[2m15:49:17[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/App.jsx, /src/pages/student-dashboard.jsx, /src/components/message-center.jsx, /src/pages/teacher-dashboard.jsx, /src/pages/calendar.jsx, /src/pages/reports.jsx, /src/pages/error-bank.jsx, /src/pages/settings.jsx, /src/tools/tool-inbox.jsx, /src/pages/submissions.jsx, /src/pages/diagnostic-create.jsx, /src/pages/student-profile.jsx, /src/pages/homework-create.jsx, /src/pages/homework.jsx, /src/pages/diagnostics.jsx, /src/pages/class-record.jsx, /src/pages/students.jsx, /src/pages/submission-review.jsx[22m
+[2m15:49:17[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/App.jsx, /src/pages/student-dashboard.jsx, /src/components/message-center.jsx, /src/pages/teacher-dashboard.jsx, /src/pages/calendar.jsx, /src/pages/reports.jsx, /src/pages/error-bank.jsx, /src/pages/settings.jsx, /src/tools/tool-inbox.jsx, /src/pages/submissions.jsx, /src/pages/diagnostic-create.jsx, /src/pages/student-profile.jsx, /src/pages/homework-create.jsx, /src/pages/homework.jsx, /src/pages/diagnostics.jsx, /src/pages/class-record.jsx, /src/pages/students.jsx, /src/pages/submission-review.jsx[22m
+[2m15:49:34[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/login.jsx[22m
+[2m15:50:07[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/students.jsx[22m
+[2m15:53:01[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/settings.jsx[22m
+[2m15:53:16[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/App.jsx[22m
+[2m15:53:27[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/students.jsx[22m
+[2m15:54:45[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/App.jsx[22m
+[2m15:55:04[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/students.jsx[22m
+[2m16:07:15[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/student-dashboard.jsx[22m
+[2m16:07:18[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/student-dashboard.jsx[22m
+[2m16:07:40[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/shared.jsx[22m
+[2m16:07:44[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [33mhmr invalidate [39m[2m/src/components/shared.jsx[22m Could not Fast Refresh ("Icon" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports
+[2m16:07:44[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/components/shared.jsx[22m
+[2m16:08:25[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/message-center.jsx[22m
+[2m16:08:25[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/message-center.jsx[22m
+[2m16:10:21[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/submission-review.jsx[22m
+[2m16:10:28[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/submission-review.jsx[22m
+[2m16:11:16[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/students.jsx[22m
+[2m16:11:16[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/students.jsx[22m
+[2m16:12:49[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/homework-create.jsx[22m
+[2m16:12:49[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/homework-create.jsx[22m
+[2m17:00:57[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/shared.jsx[22m
+[2m17:00:57[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/shared.jsx[22m
+[2m17:00:58[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [33mhmr invalidate [39m[2m/src/components/shared.jsx[22m Could not Fast Refresh ("Icon" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports
+[2m17:00:58[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/components/shared.jsx[22m
+[2m17:01:45[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/shared.jsx[22m
+[2m17:01:45[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [33mhmr invalidate [39m[2m/src/components/shared.jsx[22m Could not Fast Refresh ("Icon" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports
+[2m17:01:45[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/components/shared.jsx[22m
+[2m17:02:09[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/exercise-player.jsx[22m
+[2m17:02:24[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles/logbook.css[22m

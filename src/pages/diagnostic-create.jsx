@@ -40,6 +40,33 @@ const SECTION_KEYS = [
   { key: 'profileUpdateSuggestions',label:'Profile Update Suggestions',   studentFacing: false },
 ];
 
+const REQUIRED_APPROVAL_KEYS = ['skillDiagnosis', 'studentFeedback', 'homeworkRecommendation', 'nextClassFocus'];
+const SECTION_LABELS = Object.fromEntries(SECTION_KEYS.map(section => [section.key, section.label]));
+
+function shouldRetryCompact(error) {
+  const msg = String(error?.message || error || '').toLowerCase();
+  return msg.includes('request too large')
+    || msg.includes('tokens per minute')
+    || msg.includes('tokens per day')
+    || msg.includes('rate limit')
+    || msg.includes('quota')
+    || msg.includes('limit reached');
+}
+
+function friendlyAiError(error) {
+  const msg = String(error?.message || error || '');
+  if (/quota|rate limit|tokens per day|limit reached/i.test(msg)) {
+    return 'Diagnosis failed because the available AI providers are out of quota or rate-limited. The app tried the full diagnosis and a smaller fallback. Wait for quota reset, use a different key, or shorten the transcript/notes.';
+  }
+  if (/request too large|tokens per minute|too many tokens/i.test(msg)) {
+    return 'Diagnosis failed because the class evidence is too long for the available fallback model. Shorten the transcript/notes and try again.';
+  }
+  if (/failed to fetch/i.test(msg)) {
+    return 'Diagnosis failed because one provider could not be reached from the browser. Check the key/provider setup and try again.';
+  }
+  return `Diagnosis failed: ${msg}`;
+}
+
 export default function DiagnosticCreate({ studentId, classEventId, diagnosisId, students, onNavigate }) {
   const [step, setStep] = useState('prereq'); // prereq | generating | review | saved
   const [student, setStudent] = useState(null);
@@ -165,8 +192,16 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
     setError('');
 
     try {
-      const prompt = buildDiagnosticPrompt({ student: selectedStudent, classEvent, classEvidence: normalizedEvidence, targetProfile });
-      const data = await callAI(prompt, { max_tokens: 8000 });
+      const promptData = { student: selectedStudent, classEvent, classEvidence: normalizedEvidence, targetProfile };
+      let data;
+      try {
+        const prompt = buildDiagnosticPrompt(promptData);
+        data = await callAI(prompt, { max_tokens: 8000, preferredProvider: 'gemini' });
+      } catch (firstError) {
+        if (!shouldRetryCompact(firstError)) throw firstError;
+        const compactPrompt = buildDiagnosticPrompt(promptData, { compact: true });
+        data = await callAI(compactPrompt, { max_tokens: 2600, preferredProvider: 'gemini' });
+      }
       const raw = data.content?.map(b => b.text || '').join('') || '';
       if (!raw.trim()) throw new Error('AI returned empty response.');
       const parsed = parseAiJson(raw);
@@ -186,7 +221,7 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
       setStep('review');
     } catch (e) {
       console.error(e);
-      setError(`Diagnosis failed: ${e.message}`);
+      setError(friendlyAiError(e));
       setStep('prereq');
     }
   }
@@ -219,7 +254,7 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
     try {
       const prompt = buildDiagnosticPrompt({ student: selectedStudent, classEvent, classEvidence: normalizedEvidence, targetProfile });
       const sectionPrompt = `${prompt}\n\nIMPORTANT: Return ONLY the "${key}" field from the JSON structure. No other fields.`;
-      const data = await callAI(sectionPrompt, { max_tokens: 2000 });
+      const data = await callAI(sectionPrompt, { max_tokens: 2000, preferredProvider: 'gemini' });
       const raw = data.content?.map(b => b.text || '').join('') || '';
       const parsed = parseAiJson(raw);
       const content = parsed[key] ?? parsed;
@@ -241,11 +276,30 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
 
   const approvedCount = Object.values(sections).filter(s => s.approved).length;
   const totalSections = SECTION_KEYS.length;
+  const missingRequiredApprovals = REQUIRED_APPROVAL_KEYS.filter(key => {
+    const section = sections[key];
+    return !section?.approved || section.hidden;
+  });
+  const canApproveDiagnosis = missingRequiredApprovals.length === 0;
 
   // ── Save diagnosis ──
   async function handleSave(approve = false) {
     setSaving(true);
     try {
+      if (approve && !canApproveDiagnosis) {
+        const missing = missingRequiredApprovals.map(key => SECTION_LABELS[key]).join(', ');
+        window.toast?.(`Approve required sections first: ${missing}`, 'warn');
+        setSaving(false);
+        return;
+      }
+      const studentFeedbackSection = sections.studentFeedback;
+      const homeworkSection = sections.homeworkRecommendation;
+      const visibleStudentFeedback = studentFeedbackSection?.approved && !studentFeedbackSection.hidden
+        ? studentFeedbackSection.content
+        : null;
+      const visibleHomework = homeworkSection?.approved && !homeworkSection.hidden
+        ? homeworkSection.content
+        : null;
       const dx = await saveDiagnosis({
         id: savedDiagnosis?.id,
         studentId: selectedStudentId || studentId,
@@ -271,9 +325,9 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
         content: {
           overall_result: typeof sections.classSummary?.content === 'string' ? sections.classSummary.content : '',
           priorities: sections.priorityDiagnosis?.content || [],
-          student_friendly_feedback: sections.studentFeedback?.content || null,
-          homework: sections.homeworkRecommendation?.content?.instructions || '',
-          homework_directions: sections.homeworkRecommendation?.content || null,
+          student_friendly_feedback: visibleStudentFeedback,
+          homework: visibleHomework?.instructions || '',
+          homework_directions: visibleHomework,
           error_bank: sections.errorBankSuggestions?.content || [],
           section_snapshot: buildSnapshot(sections.skillDiagnosis?.content),
         },
@@ -555,13 +609,18 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', background: 'var(--bg)', borderRadius: 'var(--radius-md)', marginBottom: 20 }}>
             <div style={{ flex: 1 }}>
               <div style={{ fontWeight: 600, fontSize: 'var(--text-sm)' }}>{approvedCount} of {totalSections} sections approved</div>
+              {missingRequiredApprovals.length > 0 && (
+                <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: 4 }}>
+                  Required before final approval: {missingRequiredApprovals.map(key => SECTION_LABELS[key]).join(', ')}
+                </div>
+              )}
               <div style={{ height: 6, background: 'var(--bg-deep)', borderRadius: 99, marginTop: 6, overflow: 'hidden' }}>
                 <div style={{ height: '100%', width: `${(approvedCount / totalSections) * 100}%`, background: approvedCount === totalSections ? 'var(--success)' : 'var(--accent)', borderRadius: 99, transition: 'width 0.3s' }} />
               </div>
             </div>
             <Button variant="ghost" size="sm" onClick={approveAll}>Approve All</Button>
             <Button variant="ghost" size="sm" onClick={() => handleSave(false)} disabled={saving}>Save Draft</Button>
-            <Button variant="primary" onClick={() => handleSave(true)} disabled={saving || approvedCount === 0}>
+            <Button variant="primary" onClick={() => handleSave(true)} disabled={saving || !canApproveDiagnosis}>
               <Icon.check size={14} /> Approve & Save
             </Button>
           </div>
@@ -627,7 +686,7 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
           {/* Bottom actions */}
           <div style={{ display: 'flex', gap: 10, marginTop: 20, flexWrap: 'wrap' }}>
             <Button variant="ghost" size="sm" onClick={() => handleSave(false)} disabled={saving}>Save Draft</Button>
-            <Button variant="primary" onClick={() => handleSave(true)} disabled={saving || approvedCount === 0}>
+            <Button variant="primary" onClick={() => handleSave(true)} disabled={saving || !canApproveDiagnosis}>
               <Icon.check size={14} /> Approve & Save ({approvedCount}/{totalSections})
             </Button>
             {savedDiagnosis && <Button variant="ghost" size="sm" onClick={() => setStep('saved')}>Post-approval actions</Button>}

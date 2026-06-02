@@ -1,5 +1,5 @@
 /**
- * shared.jsx — V.V. Method Platform Design System
+ * shared.jsx — MET Proficiency Mastery Design System
  * Core UI primitives, icons, layout shell, and AI utilities.
  */
 
@@ -32,18 +32,18 @@ const GLOBAL_CSS = `
     --success-soft: #D1FAE5;
     --info:         #2d8b8b;
     --info-bg:      #e4f2f2;
-    --warning:      #D97706;
-    --warning-bg:   #FFFBEB;
-    --warning-soft: #FDE68A;
-    --danger:       #DC2626;
-    --danger-bg:    #FEF2F2;
-    --danger-soft:  #FECACA;
-    --orange:       #F97316;
-    --orange-deep:  #EA580C;
+    --warning:      #B7791F;
+    --warning-bg:   #FFF7E6;
+    --warning-soft: #FDE7A3;
+    --danger:       #C76A00;
+    --danger-bg:    #FFF3E0;
+    --danger-soft:  #FAD7A0;
+    --orange:       #F59E0B;
+    --orange-deep:  #B7791F;
     --dark-accent-border: rgba(168,218,220,0.15);
-    --radius-sm:    8px;
-    --radius-md:    14px;
-    --radius-lg:    22px;
+    --radius-sm:    5px;
+    --radius-md:    7px;
+    --radius-lg:    8px;
     --radius-pill:  999px;
     --text-xs:      11.5px;
     --text-sm:      13px;
@@ -84,7 +84,7 @@ const GLOBAL_CSS = `
     font-size: var(--text-md);
     line-height: 1.55;
   }
-  [data-cards="flat"]     .card { border: none; box-shadow: none; background: var(--faint); }
+  [data-cards="flat"]     .card { border: 1px solid var(--border); box-shadow: none; background: var(--surface); }
   [data-cards="bordered"] .card { border: 1px solid var(--border); box-shadow: none; }
   [data-cards="shadowed"] .card { border: none; box-shadow: var(--shadow-card); }
   .btn {
@@ -106,7 +106,7 @@ const GLOBAL_CSS = `
   .btn-quiet    { background: transparent; color: var(--muted); }
   .btn-quiet:hover:not(:disabled) { background: var(--divider); color: var(--text); }
   .btn-danger   { background: var(--danger); color: #fff; }
-  .btn-danger:hover:not(:disabled) { background: #B91C1C; }
+  .btn-danger:hover:not(:disabled) { background: #A85500; }
   .btn-sm  { padding: 5px 11px; font-size: var(--text-xs); border-radius: var(--radius-sm); }
   .btn-lg  { padding: 11px 22px; font-size: var(--text-md); }
   .btn-block { width: 100%; }
@@ -189,6 +189,38 @@ const GLOBAL_CSS = `
   .evidence-card { background: var(--accent-subtle); border: 1px solid var(--accent-soft); border-left: 3px solid var(--accent); border-radius: var(--radius-md); padding: 12px 14px; margin-bottom: 8px; }
   .evidence-card-label { font-size: var(--text-xs); font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 4px; }
   .evidence-card-text { font-size: var(--text-sm); color: var(--text-2); line-height: 1.5; }
+  .student-feedback-mini { display: grid; gap: 8px; }
+  .student-feedback-mini-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(220px, 0.9fr); gap: 8px; }
+  .student-feedback-mini-card {
+    min-width: 0; padding: 10px 11px; border-radius: var(--radius-md);
+    background: var(--surface); border: 1px solid var(--border);
+  }
+  .student-feedback-mini-card.is-success { background: var(--success-bg); border-color: var(--success-soft); }
+  .student-feedback-mini-card.is-warning { background: var(--warning-bg); border-color: var(--warning-soft); }
+  .student-feedback-mini-card.is-accent { background: var(--accent-subtle); border-color: var(--accent-soft); }
+  .student-feedback-mini-label {
+    display: block; margin-bottom: 4px; color: var(--primary-ink);
+    font-size: 10.5px; font-weight: 800; letter-spacing: 0.07em; text-transform: uppercase;
+  }
+  .student-feedback-mini-title {
+    display: flex; align-items: flex-start; gap: 8px; margin-bottom: 4px;
+    color: var(--text); font-size: var(--text-sm); font-weight: 800; line-height: 1.3;
+  }
+  .student-feedback-mini-number {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 20px; height: 20px; flex: 0 0 auto; border-radius: var(--radius-sm);
+    background: rgba(255,255,255,0.8); border: 1px solid currentColor;
+    color: var(--accent); font-size: 10.5px; font-weight: 900;
+  }
+  .student-feedback-mini-card p {
+    margin: 0; color: var(--text-2); font-size: var(--text-sm);
+    line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere;
+  }
+  .student-feedback-mini-evidence {
+    margin-top: 7px; padding-top: 7px; border-top: 1px solid rgba(26,35,50,0.12);
+    color: var(--muted); font-size: var(--text-xs); line-height: 1.45;
+    white-space: pre-wrap; overflow-wrap: anywhere;
+  }
   .pill-nav { display: flex; gap: 6px; flex-wrap: wrap; }
   .pill-nav-btn { padding: 5px 13px; border-radius: var(--radius-pill); font-size: var(--text-sm); font-weight: 500; background: var(--divider); color: var(--text-2); border: none; cursor: pointer; font-family: var(--font-ui); transition: background 0.12s, color 0.12s; }
   .pill-nav-btn:hover  { background: var(--bg-deep); color: var(--text); }
@@ -237,7 +269,7 @@ const GLOBAL_CSS = `
   .landing-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
   .landing-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
   .landing-grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
-  .landing-tile { background: var(--faint); border: 1px solid var(--divider); border-radius: var(--radius-md); padding: 14px; }
+  .landing-tile { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 14px; }
   .landing-tile h3 { font-size: var(--text-sm); font-weight: 700; margin-bottom: 6px; }
   .landing-tile p  { font-size: var(--text-xs); color: var(--muted); line-height: 1.5; margin-bottom: 10px; }
   .landing-tile ul { padding-left: 14px; font-size: var(--text-xs); color: var(--muted); line-height: 1.8; margin-bottom: 10px; }
@@ -275,6 +307,7 @@ const GLOBAL_CSS = `
     .teacher-overview-kpis { grid-template-columns: 1fr 1fr; }
     .quick-actions-grid { grid-template-columns: 1fr; }
     .cycle-pipeline { grid-template-columns: 1fr; }
+    .student-feedback-mini-row { grid-template-columns: 1fr; }
   }
 `;
 
@@ -328,6 +361,7 @@ export const Icon = {
   link:     (p) => <SvgIcon d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71 M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71" {...p} />,
   copy:     (p) => <SvgIcon {...p}><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></SvgIcon>,
   download: (p) => <SvgIcon d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4 M7 10l5 5 5-5 M12 15V3" {...p} />,
+  upload:   (p) => <SvgIcon d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4 M17 8l-5-5-5 5 M12 3v12" {...p} />,
   eye:      (p) => <SvgIcon {...p}><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></SvgIcon>,
   refresh:  (p) => <SvgIcon d="M23 4v6h-6 M1 20v-6h6 M3.51 9a9 9 0 0114.85-3.36L23 10 M1 14l4.64 4.36A9 9 0 0020.49 15" {...p} />,
   print:    (p) => <SvgIcon {...p}><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></SvgIcon>,
@@ -472,84 +506,79 @@ export function ReviewStatusBadge({ status }) {
 /* ─── STUDENT FEEDBACK VIEW ──────────────────────────────────── */
 /**
  * Renders the structured studentFeedback object as a clean, student-facing report:
- * opening paragraph → What you did well → What to improve → Final note.
+ * Class Focus → Highlights → Focus Area → Next Step → Final Note.
  * Shared by the teacher review (diagnostic-create) and the student dashboard.
  */
 export function StudentFeedbackView({ feedback }) {
   if (!feedback || typeof feedback !== 'object') return null;
-  const wins = Array.isArray(feedback.whatYouDidWell) ? feedback.whatYouDidWell : [];
-  const fixes = Array.isArray(feedback.whatToImprove) ? feedback.whatToImprove : [];
+  const highlights = Array.isArray(feedback.highlights)
+    ? feedback.highlights
+    : (Array.isArray(feedback.whatYouDidWell) ? feedback.whatYouDidWell : []);
+  const rawFocusArea = feedback.focusArea || (Array.isArray(feedback.whatToImprove) ? feedback.whatToImprove[0] : null);
+  const focusArea = typeof rawFocusArea === 'string'
+    ? { area: rawFocusArea, explanation: rawFocusArea }
+    : rawFocusArea;
+  const nextStep = feedback.nextStep || focusArea?.howToImprove || '';
+  const finalNote = feedback.finalNote
+    || feedback.encouragingNote
+    || feedback.closingNote
+    || 'Keep going. The next step is clear, and steady practice will make progress easier to see in class.';
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+    <div className="student-feedback-mini">
       {feedback.classFocus && (
-        <div style={{ padding: 12, borderRadius: 'var(--radius-md)', background: 'var(--bg)', border: '1px solid var(--border)' }}>
-          <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>Class focus</div>
-          <p style={{ fontSize: 'var(--text-sm)', lineHeight: 1.7, color: 'var(--text)', margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{feedback.classFocus}</p>
+        <div className="student-feedback-mini-card">
+          <span className="student-feedback-mini-label">Class Focus</span>
+          <p>{feedback.classFocus}</p>
         </div>
       )}
 
-      {wins.length > 0 && (
-        <div>
-          <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 'var(--text-md)', color: 'var(--success)', marginBottom: 8 }}>What you did well</div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {wins.map((w, i) => (
-              <div key={i} style={{ padding: 14, background: 'var(--success-bg)', border: '1px solid var(--success-soft)', borderRadius: 'var(--radius-md)' }}>
-                <div style={{ fontSize: 'var(--text-sm)', fontWeight: 700, color: 'var(--text)', marginBottom: 6 }}>{i + 1}. {w.strength}</div>
-                {w.explanation && <p style={{ fontSize: 'var(--text-sm)', lineHeight: 1.6, margin: '0 0 4px' }}>{w.explanation}</p>}
-                {w.metConnection && <p style={{ fontSize: 'var(--text-sm)', lineHeight: 1.6, margin: '0 0 6px', color: 'var(--text-2)' }}>{w.metConnection}</p>}
-                {w.example && (
-                  <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-2)', fontStyle: 'italic', borderLeft: '3px solid var(--success)', paddingLeft: 10, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
-                    <strong style={{ fontStyle: 'normal', color: 'var(--success)' }}>Example: </strong>{w.example}
+      {highlights.length > 0 && (
+        <div className="student-feedback-mini-row">
+          {highlights.slice(0, 2).map((item, i) => {
+            const w = typeof item === 'string' ? { strength: `Highlight ${i + 1}`, explanation: item } : item;
+            const evidence = w.evidence || w.example || w.classEvidence;
+            return (
+              <div key={i} className="student-feedback-mini-card is-success">
+                <span className="student-feedback-mini-label">Highlight</span>
+                <div className="student-feedback-mini-title">
+                  <span className="student-feedback-mini-number">{i + 1}</span>
+                  <span>{w.strength || w.title || `Highlight ${i + 1}`}</span>
+                </div>
+                {w.explanation && <p>{w.explanation}</p>}
+                {evidence && (
+                  <div className="student-feedback-mini-evidence">
+                    <strong>Evidence from class: </strong>{evidence}
                   </div>
                 )}
               </div>
-            ))}
-          </div>
+            );
+          })}
         </div>
       )}
 
-      {fixes.length > 0 && (
-        <div>
-          <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 'var(--text-md)', color: 'var(--warning)', marginBottom: 8 }}>What to improve</div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {fixes.map((f, i) => (
-              <div key={i} style={{ padding: 14, background: 'var(--warning-bg)', border: '1px solid var(--warning-soft)', borderRadius: 'var(--radius-md)' }}>
-                <div style={{ fontSize: 'var(--text-sm)', fontWeight: 700, color: 'var(--text)', marginBottom: 6 }}>{i + 1}. {f.area}</div>
-                {f.metImportance && <p style={{ fontSize: 'var(--text-sm)', lineHeight: 1.6, margin: '0 0 8px', color: 'var(--text-2)' }}>{f.metImportance}</p>}
-                {(f.insteadOf || f.sayInstead) && (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 8 }}>
-                    {f.insteadOf && (
-                      <div style={{ fontSize: 'var(--text-sm)', padding: '8px 10px', background: 'rgba(220,38,38,0.08)', borderRadius: 8, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
-                        <span style={{ color: 'var(--muted)', fontWeight: 600 }}>Instead of: </span>
-                        <span style={{ color: 'var(--danger)' }}>"{f.insteadOf}"</span>
-                      </div>
-                    )}
-                    {f.sayInstead && (
-                      <div style={{ fontSize: 'var(--text-sm)', padding: '8px 10px', background: 'rgba(5,150,105,0.08)', borderRadius: 8, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
-                        <span style={{ color: 'var(--muted)', fontWeight: 600 }}>Say: </span>
-                        <span style={{ color: 'var(--success)', fontWeight: 600 }}>"{f.sayInstead}"</span>
-                      </div>
-                    )}
-                  </div>
-                )}
-                {f.howToImprove && (
-                  <div style={{ fontSize: 'var(--text-sm)', lineHeight: 1.6 }}>
-                    <strong style={{ color: 'var(--accent)' }}>How to improve: </strong>{f.howToImprove}
-                  </div>
-                )}
-              </div>
-            ))}
+      {focusArea && (
+        <div className="student-feedback-mini-card is-warning">
+          <span className="student-feedback-mini-label">Focus Area</span>
+          <div className="student-feedback-mini-title">
+            <span>{focusArea.area || 'One thing to improve'}</span>
           </div>
+          <p>{focusArea.explanation || focusArea.metImportance || focusArea.howToImprove}</p>
         </div>
       )}
 
-      {feedback.finalNote && (
-        <div style={{ padding: 14, background: 'var(--accent-subtle)', border: '1px solid var(--accent-soft)', borderRadius: 'var(--radius-md)' }}>
-          <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Final note</div>
-          <p style={{ fontSize: 'var(--text-sm)', lineHeight: 1.7, margin: 0, color: 'var(--text)', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{feedback.finalNote}</p>
+      <div className="student-feedback-mini-row">
+        {nextStep && (
+          <div className="student-feedback-mini-card is-accent">
+            <span className="student-feedback-mini-label">Next Step</span>
+            <p>{nextStep}</p>
+          </div>
+        )}
+        <div className="student-feedback-mini-card is-accent">
+          <span className="student-feedback-mini-label">Final Note</span>
+          <p>{finalNote}</p>
         </div>
-      )}
+      </div>
     </div>
   );
 }
@@ -718,8 +747,8 @@ export function Shell({ tabs = [], active, onTab, children, rightSlot, workflowA
     <div className="shell">
       <aside className="shell-sidebar">
         <div className="shell-brand">
-          <span className="shell-brand-name">V.V. Method</span>
-          <span className="shell-brand-sub">MET Preparation</span>
+          <span className="shell-brand-name">MET Proficiency Mastery</span>
+          <span className="shell-brand-sub">Teacher Workspace</span>
         </div>
         <nav className="shell-nav" aria-label="Main navigation">
           {NAV_SECTIONS.map(sec => {
@@ -769,9 +798,44 @@ const OPENAI_MODEL = import.meta.env.VITE_OPENAI_MODEL || 'gpt-4.1-mini';
 const GROQ_MODEL = import.meta.env.VITE_GROQ_MODEL || 'llama-3.3-70b-versatile';
 const GEMINI_MODEL = import.meta.env.VITE_GEMINI_MODEL || 'gemini-2.5-flash';
 
-export async function callAI(prompt, { max_tokens = 2048, system } = {}) {
+export async function callAI(prompt, { max_tokens = 2048, system, preferredProvider } = {}) {
   const sys = system || 'You are a helpful MET English teaching assistant.';
   const errors = []; // collect every provider failure so the real cause is surfaced
+
+  const tryGemini = async () => {
+    const geminiKey = import.meta.env.VITE_GEMINI_API_KEY || localStorage.getItem('vv:gemini_api_key');
+    if (!geminiKey) return null;
+    try {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${geminiKey}`;
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          systemInstruction: { parts: [{ text: sys }] },
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { temperature: 0.3, maxOutputTokens: max_tokens },
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const text = data?.candidates?.[0]?.content?.parts?.map(p => p.text).join('') || '';
+        if (text) return { content: [{ text }] };
+        errors.push(`Gemini/${GEMINI_MODEL}: empty response (${data?.candidates?.[0]?.finishReason || 'no candidates'})`);
+        return null;
+      }
+      const err = await res.json().catch(() => ({}));
+      errors.push(`Gemini/${GEMINI_MODEL}: ${err.error?.message || res.status}`);
+    } catch (e) {
+      errors.push(`Gemini/${GEMINI_MODEL}: ${e.message}`);
+    }
+    return null;
+  };
+
+  // Diagnosis and long-context tasks can ask Gemini to go first.
+  if (preferredProvider === 'gemini') {
+    const geminiFirst = await tryGemini();
+    if (geminiFirst) return geminiFirst;
+  }
 
   // ── 1. Groq (cascade across all chat models) ──
   const groqKey = import.meta.env.VITE_GROQ_API_KEY || localStorage.getItem('vv:groq_api_key');
@@ -809,31 +873,9 @@ export async function callAI(prompt, { max_tokens = 2048, system } = {}) {
   }
 
   // ── 2. Gemini ──
-  const geminiKey = import.meta.env.VITE_GEMINI_API_KEY || localStorage.getItem('vv:gemini_api_key');
-  if (geminiKey) {
-    try {
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${geminiKey}`;
-      const res = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          systemInstruction: { parts: [{ text: sys }] },
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { temperature: 0.3, maxOutputTokens: max_tokens },
-        }),
-      });
-      if (res.ok) {
-        const data = await res.json();
-        const text = data?.candidates?.[0]?.content?.parts?.map(p => p.text).join('') || '';
-        if (text) return { content: [{ text }] };
-        errors.push(`Gemini/${GEMINI_MODEL}: empty response (${data?.candidates?.[0]?.finishReason || 'no candidates'})`);
-      } else {
-        const err = await res.json().catch(() => ({}));
-        errors.push(`Gemini/${GEMINI_MODEL}: ${err.error?.message || res.status}`);
-      }
-    } catch (e) {
-      errors.push(`Gemini/${GEMINI_MODEL}: ${e.message}`);
-    }
+  if (preferredProvider !== 'gemini') {
+    const geminiResult = await tryGemini();
+    if (geminiResult) return geminiResult;
   }
 
   const payload = { model: ANTHROPIC_MODEL, max_tokens, system: sys, messages: [{ role: 'user', content: prompt }] };

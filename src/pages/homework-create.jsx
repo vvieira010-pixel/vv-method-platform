@@ -255,7 +255,7 @@ export default function HomeworkCreate({ diagnosisId, studentId, students, onNav
   form.exercises.forEach(e => { typeCounts[e.type] = (typeCounts[e.type] || 0) + 1; });
 
   return (
-    <div style={{ maxWidth: 860, margin: '0 auto', padding: '28px 20px' }}>
+    <div style={{ maxWidth: 1120, width: '100%', margin: '0 auto', padding: '22px 24px 14px' }}>
       <button onClick={() => onNavigate('homework')} style={backStyle}>
         <Icon.arrowL size={13} /> Back
       </button>
@@ -436,7 +436,7 @@ export default function HomeworkCreate({ diagnosisId, studentId, students, onNav
               <Field label="Instructions for student (optional)">
                 <textarea className="input" rows={3} value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} placeholder="Optional context or instructions before the exercises..." />
               </Field>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
                 <Field label="Skill focus">
                   <select className="input" value={form.skillType} onChange={e => setForm(f => ({ ...f, skillType: e.target.value }))}>
                     {SKILL_TYPES.map(t => <option key={t} value={t}>{t.charAt(0).toUpperCase() + t.slice(1)}</option>)}
@@ -557,7 +557,17 @@ export default function HomeworkCreate({ diagnosisId, studentId, students, onNav
       )}
 
       {/* Action buttons */}
-      <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
+      <div style={{
+        position: 'sticky',
+        bottom: 0,
+        zIndex: 20,
+        display: 'flex',
+        gap: 10,
+        marginTop: 14,
+        padding: '12px 0 4px',
+        background: 'linear-gradient(180deg, rgba(240,246,246,0.78) 0%, var(--bg) 42%)',
+        borderTop: '1px solid rgba(194,217,217,0.65)',
+      }}>
         <Button variant="primary" onClick={handleAssign} disabled={saving}>
           <Icon.send size={13} /> {saving ? 'Assigning…' : 'Approve & Assign to Student'}
         </Button>

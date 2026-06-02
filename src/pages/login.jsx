@@ -6,17 +6,18 @@
 
 import { useState, useEffect } from 'react';
 import { injectGlobalCSS } from '../components/shared.jsx';
-import { STUDENTS } from '../data/students.jsx';
+import { getStudentByEmailPassword } from '../lib/workflow.js';
 
 const CSS = `
   @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap');
 
   .login-root {
-    min-height: 100dvh; display: grid; grid-template-columns: 1fr 1fr;
-    font-family: var(--font-ui); background: var(--bg);
+    min-height: 100vh; min-height: 100dvh; height: 100vh; height: 100dvh;
+    display: grid; grid-template-columns: 1fr 1fr;
+    font-family: var(--font-ui); background: #fff; overflow: hidden;
   }
   @media (max-width: 860px) {
-    .login-root { grid-template-columns: 1fr; }
+    .login-root { grid-template-columns: 1fr; height: auto; min-height: 100dvh; overflow: visible; }
     .login-brand-panel { display: none; }
     .login-mobile-tagline { display: block; }
   }
@@ -27,7 +28,7 @@ const CSS = `
   .login-brand-panel {
     background: var(--accent-deep); display: flex; align-items: center; justify-content: center;
     padding: clamp(32px, 5vw, 56px) clamp(28px, 6vw, 64px);
-    position: relative; overflow: hidden;
+    min-height: 100dvh; position: relative; overflow: hidden;
   }
   .login-brand-inner {
     width: 100%; max-width: 420px; display: flex; flex-direction: column; gap: 48px;
@@ -56,7 +57,7 @@ const CSS = `
 
   .login-form-panel {
     display: flex; align-items: center; justify-content: center;
-    padding: clamp(32px, 5vw, 56px) clamp(28px, 6vw, 64px); background: #fff;
+    min-height: 100dvh; padding: clamp(32px, 5vw, 56px) clamp(28px, 6vw, 64px); background: #fff;
   }
   .login-form-inner { width: 100%; max-width: 420px; text-align: left; }
 
@@ -122,9 +123,15 @@ function injectLoginCSS() {
   loginCssInjected = true;
 }
 
+const DEFAULT_TEACHER_EMAIL = 'teacher@vvmethod.com';
+const DEFAULT_TEACHER_PASSWORD = 'TeacherTest2026!';
+
 export default function LoginScreen({ onSignIn, initialMode = 'choose' }) {
   const [mode, setMode] = useState(initialMode);
   const [teacherEmail, setTeacherEmail] = useState('');
+  const [teacherPassword, setTeacherPassword] = useState('');
+  const [studentEmail, setStudentEmail] = useState('');
+  const [studentPassword, setStudentPassword] = useState('');
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -134,10 +141,33 @@ export default function LoginScreen({ onSignIn, initialMode = 'choose' }) {
 
   const handleTeacher = () => {
     setError('');
+    if (!teacherEmail.trim() || !teacherPassword.trim()) {
+      setError('Enter your email and password.');
+      return;
+    }
+    const allowLocalFallback = import.meta.env.DEV || import.meta.env.VITE_ALLOW_DEMO_LOGIN === 'true';
+    const configuredEmail = import.meta.env.VITE_TEACHER_EMAIL;
+    const configuredPassword = import.meta.env.VITE_TEACHER_PASSWORD;
+    const expectedEmail = String(configuredEmail || (allowLocalFallback ? DEFAULT_TEACHER_EMAIL : '')).trim().toLowerCase();
+    const expectedPassword = String(configuredPassword || (allowLocalFallback ? DEFAULT_TEACHER_PASSWORD : ''));
+    if (!expectedEmail || !expectedPassword) {
+      setError('Teacher credentials are not configured.');
+      return;
+    }
+    if (teacherEmail.trim().toLowerCase() !== expectedEmail || teacherPassword !== expectedPassword) {
+      setError('Email or password is incorrect.');
+      return;
+    }
     onSignIn({ role: 'teacher' });
   };
 
-  const handleStudentPick = (student) => {
+  const handleStudent = async () => {
+    setError('');
+    const student = await getStudentByEmailPassword(studentEmail, studentPassword);
+    if (!student) {
+      setError('Email or password is incorrect.');
+      return;
+    }
     onSignIn({ role: 'student', studentId: student.id });
   };
 
@@ -145,6 +175,9 @@ export default function LoginScreen({ onSignIn, initialMode = 'choose' }) {
     setMode(m);
     setError('');
     setTeacherEmail('');
+    setTeacherPassword('');
+    setStudentEmail('');
+    setStudentPassword('');
   };
 
   const formHeading = mode === 'choose'
@@ -244,45 +277,53 @@ export default function LoginScreen({ onSignIn, initialMode = 'choose' }) {
                 placeholder="teacher@vvmethod.com"
                 autoFocus
               />
-<div className="login-error" role="alert" aria-live="polite">{error}</div>
+              <label className="login-field-label" htmlFor="login-teacher-password" style={{ marginTop: 12 }}>Password</label>
+              <input
+                id="login-teacher-password"
+                className="login-input"
+                type="password"
+                autoComplete="current-password"
+                value={teacherPassword}
+                onChange={e => setTeacherPassword(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && handleTeacher()}
+                placeholder="Enter your password"
+              />
+              <div className="login-error" role="alert" aria-live="polite">{error}</div>
               <button type="button" className="login-submit-btn teacher" onClick={handleTeacher}>
-                Enter Workspace →
+                Sign in →
               </button>
             </>
           )}
 
           {mode === 'student' && (
             <>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 10 }}>
-                {STUDENTS.map(s => (
-                  <button
-                    key={s.id}
-                    type="button"
-                    onClick={() => handleStudentPick(s)}
-                    style={{
-                      display: 'flex', alignItems: 'center', gap: 10,
-                      padding: '14px 16px', border: '2px solid var(--border)',
-                      borderRadius: 8, cursor: 'pointer', background: '#fff',
-                      fontFamily: 'var(--font-ui)', fontSize: 14, fontWeight: 600,
-                      color: 'var(--text)', textAlign: 'left', width: '100%',
-                      transition: 'border-color 0.15s, box-shadow 0.15s',
-                    }}
-                    onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--primary)'; e.currentTarget.style.boxShadow = '0 0 0 3px var(--accent-soft)'; }}
-                    onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.boxShadow = 'none'; }}
-                  >
-                    <span style={{
-                      width: 32, height: 32, borderRadius: '50%',
-                      background: 'var(--accent)', color: '#fff',
-                      display: 'grid', placeItems: 'center',
-                      fontSize: 13, fontWeight: 700, flexShrink: 0,
-                    }}>
-                      {s.firstName.slice(0, 1)}
-                    </span>
-                    {s.firstName}
-                  </button>
-                ))}
-              </div>
-              <div className="login-hint" style={{ marginTop: 16 }}>Tap your name to open your dashboard.</div>
+              <label className="login-field-label" htmlFor="login-student-email">Student Email</label>
+              <input
+                id="login-student-email"
+                className="login-input"
+                type="email"
+                autoComplete="email"
+                value={studentEmail}
+                onChange={e => setStudentEmail(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && handleStudent()}
+                placeholder="student@email.com"
+                autoFocus
+              />
+              <label className="login-field-label" htmlFor="login-student-password" style={{ marginTop: 12 }}>Password</label>
+              <input
+                id="login-student-password"
+                className="login-input"
+                type="password"
+                autoComplete="current-password"
+                value={studentPassword}
+                onChange={e => setStudentPassword(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && handleStudent()}
+                placeholder="Enter your password"
+              />
+              <div className="login-error" role="alert" aria-live="polite">{error}</div>
+              <button type="button" className="login-submit-btn student" onClick={handleStudent}>
+                Sign in →
+              </button>
             </>
           )}
 

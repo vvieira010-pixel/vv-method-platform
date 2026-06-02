@@ -240,9 +240,6 @@ function ShortEditor({ ex, update }) {
           />
         </div>
       </div>
-      <div style={{ ...hintText, color: 'var(--info)' }}>
-        This exercise is AI pre-evaluated. You review before sending feedback.
-      </div>
     </div>
   );
 }
@@ -270,9 +267,6 @@ function SpeakEditor({ ex, update }) {
         <div style={hintText}>
           Student sees: "Target: {ex.targetSeconds || 60} seconds"
         </div>
-      </div>
-      <div style={{ ...hintText, color: 'var(--info)' }}>
-        Student records audio + optional transcript. AI pre-evaluated before your review.
       </div>
     </div>
   );

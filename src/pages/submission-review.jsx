@@ -6,9 +6,9 @@ import { Icon, Card, SectionHeader, Pill, Button, Avatar } from '../components/s
 import { callAI } from '../components/shared.jsx';
 import { parseAiJson } from '../lib/ai-helpers.js';
 import {
-  getAllSubmissions, getHomework, getReviews, saveReview,
+  getAllSubmissions, getHomework, getReviews, saveReview, deleteReview,
   getDiagnoses, getErrorBank, promoteErrorToLongTerm, markErrorSolved, saveProgressNote,
-  getStudent,
+  getStudent, sendMessage,
 } from '../lib/workflow.js';
 
 export default function SubmissionReview({ submissionId, students, onNavigate }) {
@@ -131,8 +131,21 @@ Compare the submission to the diagnosis. Return JSON:
       await saveProgressNote({ studentId: submission?.studentId, sourceType: 'review', sourceId: rev.id, note: form.whatImproved });
     }
 
+    if (form.sendFeedback && submission?.studentId) {
+      await sendMessage({
+        fromRole: 'teacher',
+        fromName: 'Teacher',
+        toRole: 'student',
+        toStudentId: submission.studentId,
+        type: 'homework-review',
+        homeworkId: homework?.id,
+        reviewId: rev.id,
+        body: `Your homework review is ready: ${homework?.title || 'Homework'}.\n\n${form.overallNote || form.whatImproved || 'Open Homework to read your teacher review.'}`,
+      });
+    }
+
     setSaving(false);
-    window.toast?.('Review saved!', 'ok');
+    window.toast?.(form.sendFeedback ? 'Review saved and student notified.' : 'Review saved.', 'ok');
     setExistingReview(rev);
   }
 
@@ -146,7 +159,7 @@ Compare the submission to the diagnosis. Return JSON:
       <h1 style={S.headline}>Submission Review</h1>
       {student && <p style={S.sub}>{student.name} · {homework?.title}</p>}
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginTop: 20 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 20, marginTop: 20 }}>
         {/* Left: submission + diagnosis */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           {/* Student submission */}
@@ -240,7 +253,7 @@ Compare the submission to the diagnosis. Return JSON:
               <Field label="Overall feedback to student">
                 <textarea className="input" rows={4} value={form.overallNote} onChange={e => setForm(f => ({ ...f, overallNote: e.target.value }))} placeholder="Feedback the student will see…" />
               </Field>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 10 }}>
                 <Field label="Score (0–10)">
                   <input className="input" type="number" min={0} max={10} step={0.5} value={form.score} onChange={e => setForm(f => ({ ...f, score: e.target.value }))} />
                 </Field>
@@ -261,7 +274,14 @@ Compare the submission to the diagnosis. Return JSON:
           <Button variant="primary" onClick={handleSave} disabled={saving} style={{ alignSelf: 'flex-start' }}>
             {saving ? 'Saving…' : 'Save Review' + (form.sendFeedback ? ' & Send Feedback' : '')}
           </Button>
-          {existingReview && <Pill tone="success" style={{ alignSelf: 'flex-start' }}>✓ Review saved</Pill>}
+          {existingReview && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+              <Pill tone="success">✓ Review saved</Pill>
+              <Button variant="ghost" size="sm" style={{ color: 'var(--danger)' }} onClick={async () => { if (confirm('Delete this teacher review?')) { await deleteReview(existingReview.id); window.toast?.('Review deleted.', 'info'); onNavigate('submissions'); } }}>
+                <Icon.trash size={12} /> Delete review
+              </Button>
+            </div>
+          )}
         </div>
       </div>
     </div>
