@@ -203,6 +203,23 @@ export default function LoginScreen({ onSignIn, initialMode = 'choose' }) {
     onSignIn({ role: 'student', studentId: student.id });
   };
 
+  const handleStudentMagicLink = async () => {
+    setError('');
+    setMagicSentTo('');
+    const email = studentEmail.trim();
+    if (!email) { setError('Enter your email first, then request a link.'); return; }
+    setMagicSending(true);
+    try {
+      // createUser:true — a student's first sign-in provisions their auth account,
+      // which then self-claims the teacher-created roster row (by matching email).
+      await sendMagicLink(email, window.location.origin, { createUser: true });
+      setMagicSentTo(email);
+    } catch (e) {
+      setError(e.message || 'Could not send the sign-in link.');
+    }
+    setMagicSending(false);
+  };
+
   const back = (m) => {
     setMode(m);
     setError('');
@@ -379,6 +396,29 @@ export default function LoginScreen({ onSignIn, initialMode = 'choose' }) {
               <button type="button" className="login-submit-btn student" onClick={handleStudent}>
                 Sign in →
               </button>
+
+              {supabaseReady && (
+                <>
+                  <div className="login-divider"><span>or</span></div>
+                  {magicSentTo ? (
+                    <div className="login-magic-sent" role="status" aria-live="polite">
+                      Check <strong>{magicSentTo}</strong> for a sign-in link. Open it on this device to finish signing in.
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      className="login-magic-btn"
+                      onClick={handleStudentMagicLink}
+                      disabled={magicSending}
+                    >
+                      {magicSending ? 'Sending link…' : 'Email me a sign-in link'}
+                    </button>
+                  )}
+                  <p className="login-hint">
+                    Passwordless sign-in via Supabase — lets your homework and feedback sync from your teacher.
+                  </p>
+                </>
+              )}
             </>
           )}
 

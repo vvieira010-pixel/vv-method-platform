@@ -14,6 +14,7 @@ import {
   clearStoredSupabaseSession,
   fetchSupabaseUser,
 } from './lib/supabase-storage.js';
+import { claimStudentByEmail, ensureProfile, setSessionRole } from './lib/supabase-db.js';
 
 // Lazy-loaded teacher pages
 const TeacherDashboard  = lazy(() => import('./pages/teacher-dashboard.jsx'));
@@ -50,23 +51,25 @@ export default function App() {
     const { url, anonKey, isConfigured } = getSupabaseConfig();
     if (!isConfigured) return;
 
-    /** Resolve auth payload from a verified Supabase user object. */
+    /**
+     * Resolve auth payload from a verified Supabase user. Role is determined by
+     * whether the email matches a teacher-created roster row: if a student row
+     * claims this user, they are a student; otherwise a teacher. The claim sets
+     * students.auth_user_id so the student's RLS policies unlock their data.
+     */
     async function resolveAuth(accessToken, sbUser) {
       const meta = sbUser?.user_metadata || {};
-      if (meta.role_hint === 'student') {
-        // Must resolve the local student record so the dashboard can load.
-        const roster = await getStudents();
-        const match = roster.find(
-          s => s.email === sbUser.email || s.authUserId === sbUser.id
-        );
-        if (!match) {
-          // Valid Supabase student but no matching local record yet — clear and bail.
-          clearStoredSupabaseSession();
-          return null;
-        }
-        return { role: 'student', studentId: match.id, email: sbUser.email };
+      const email = sbUser?.email || '';
+      let claimed = null;
+      try { claimed = await claimStudentByEmail(email); } catch { /* treat as teacher */ }
+      if (claimed) {
+        setSessionRole('student');
+        await ensureProfile('student', { displayName: meta.display_name || email, studentUuid: claimed.id });
+        return { role: 'student', studentId: claimed.local_id || claimed.id, email };
       }
-      return { role: 'teacher', email: sbUser.email, displayName: meta.display_name || sbUser.email };
+      setSessionRole('teacher');
+      await ensureProfile('teacher', { displayName: meta.display_name || email });
+      return { role: 'teacher', email, displayName: meta.display_name || email };
     }
 
     async function handleHash() {
@@ -154,6 +157,7 @@ export default function App() {
   const handleSignIn = (payload) => setAuth(payload);
   const handleSignOut = () => {
     clearStoredSupabaseSession();
+    setSessionRole('');
     setAuth(null);
     setView('dashboard');
     setViewParams({});

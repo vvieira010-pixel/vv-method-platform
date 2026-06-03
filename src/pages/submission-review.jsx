@@ -10,6 +10,7 @@ import {
   getDiagnoses, getErrorBank, promoteErrorToLongTerm, markErrorSolved, saveProgressNote,
   getStudent, sendMessage,
 } from '../lib/workflow.js';
+import { createSignedAudioUrl } from '../lib/supabase-db.js';
 
 export default function SubmissionReview({ submissionId, students, onNavigate }) {
   const [submission, setSubmission] = useState(null);
@@ -22,6 +23,7 @@ export default function SubmissionReview({ submissionId, students, onNavigate })
   const [aiComparing, setAiComparing] = useState(false);
   const [aiComparison, setAiComparison] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [audioUrls, setAudioUrls] = useState({}); // exId → playable URL (signed for Storage paths)
 
   useEffect(() => { load(); }, [submissionId]);
 
@@ -30,6 +32,16 @@ export default function SubmissionReview({ submissionId, students, onNavigate })
     const sub = allSubs.find(s => s.id === submissionId);
     if (!sub) return;
     setSubmission(sub);
+
+    // Resolve a playable URL for each recorded response: base64 inline plays as-is,
+    // a Storage path needs a short-lived signed URL, a stored URL is used directly.
+    const urls = {};
+    for (const [exId, r] of Object.entries(sub.responses || {})) {
+      if (r?.audioB64) urls[exId] = r.audioB64;
+      else if (r?.audioUrl) urls[exId] = r.audioUrl;
+      else if (r?.audioPath) { const u = await createSignedAudioUrl(r.audioPath); if (u) urls[exId] = u; }
+    }
+    setAudioUrls(urls);
 
     const [hw, revs] = await Promise.all([
       getHomework(sub.studentId),
@@ -159,11 +171,11 @@ Compare the submission to the diagnosis. Return JSON:
     (homework?.activities || []).map(a => [a.id, a])
   );
   const audioResponses = Object.entries(submission.responses || {})
-    .filter(([, res]) => res && res.audioB64)
+    .filter(([exId, res]) => res && (audioUrls[exId] || res.audioB64))
     .map(([exId, res], i) => {
       const ex = activityById[exId];
       const label = ex?.prompt || ex?.question || ex?.title || `Speaking response ${i + 1}`;
-      return { exId, res, label };
+      return { exId, res, label, url: audioUrls[exId] || res.audioB64 };
     });
 
   return (
@@ -185,12 +197,12 @@ Compare the submission to the diagnosis. Return JSON:
             {/* Speaking recordings — one audio player per recorded response */}
             {audioResponses.length > 0 && (
               <div style={{ marginTop: 14, display: 'flex', flexDirection: 'column', gap: 12 }}>
-                {audioResponses.map(({ exId, res, label }) => (
+                {audioResponses.map(({ exId, res, label, url }) => (
                   <div key={exId}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--accent)', marginBottom: 6 }}>
                       <Icon.mic size={13} /> {label}
                     </div>
-                    <audio controls src={res.audioB64} style={{ width: '100%', height: 38 }} />
+                    <audio controls src={url} style={{ width: '100%', height: 38 }} />
                     {res.transcript && (
                       <div style={{ marginTop: 6, padding: 10, background: 'var(--bg)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-sm)', lineHeight: 1.6, color: 'var(--text-2)', fontStyle: 'italic', whiteSpace: 'pre-wrap' }}>
                         {res.transcript}

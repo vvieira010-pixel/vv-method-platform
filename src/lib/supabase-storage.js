@@ -97,17 +97,18 @@ export async function fetchSupabaseUser(url, anonKey, accessToken) {
 /**
  * Send a passwordless magic-link / OTP email. On click, Supabase redirects to
  * `redirectTo` with the session in the URL hash (handled by App.jsx).
- * `create_user: false` means only existing users get a link (no silent signups).
+ * `createUser` controls whether a brand-new user is provisioned: teachers use
+ * false (must already exist), students use true (first sign-in creates them).
  * Returns { ok } or throws with the API error message.
  */
-export async function sendMagicLink(email, redirectTo) {
+export async function sendMagicLink(email, redirectTo, { createUser = false } = {}) {
   const { url, anonKey, isConfigured } = getSupabaseConfig();
   if (!isConfigured) throw new Error('Supabase is not configured.');
   const endpoint = `${url}/auth/v1/otp?redirect_to=${encodeURIComponent(redirectTo)}`;
   const res = await fetch(endpoint, {
     method: 'POST',
     headers: { apikey: anonKey, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email: String(email).trim(), create_user: false }),
+    body: JSON.stringify({ email: String(email).trim(), create_user: createUser }),
   });
   if (!res.ok) {
     let msg = `Magic-link request failed (${res.status})`;

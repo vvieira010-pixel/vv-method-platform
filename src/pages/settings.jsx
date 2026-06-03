@@ -1,6 +1,8 @@
 import { useRef, useState } from 'react';
 import { Icon, Card, SectionHeader, Button } from '../components/shared.jsx';
-import { clearWorkflowData } from '../lib/workflow.js';
+import { clearWorkflowData, syncLocalToCloud } from '../lib/workflow.js';
+import { getDbContext } from '../lib/supabase-db.js';
+import { getSupabaseConfig } from '../lib/supabase-storage.js';
 
 const SENSITIVE_LOCAL_KEYS = new Set([
   'vv:groq_api_key',
@@ -16,7 +18,31 @@ export default function SettingsPage({ onNavigate }) {
   const [openaiKey, setOpenaiKey] = useState(() => localStorage.getItem('vv:openai_api_key') || '');
   const [generalMemo, setGeneralMemo] = useState(() => localStorage.getItem('vv:student_general_memo') || '');
   const [saved, setSaved] = useState('');
+  const [syncing, setSyncing] = useState(false);
+  const [syncResult, setSyncResult] = useState('');
   const importInputRef = useRef(null);
+
+  const supabaseConfigured = getSupabaseConfig().isConfigured;
+
+  async function handleSyncToCloud() {
+    if (!getDbContext()) {
+      window.toast?.('Sign in with your Supabase magic link first, then sync.', 'warn');
+      return;
+    }
+    setSyncing(true);
+    setSyncResult('');
+    try {
+      const counts = await syncLocalToCloud();
+      const total = Object.values(counts).reduce((a, b) => a + b, 0);
+      const detail = Object.entries(counts).filter(([, n]) => n > 0).map(([k, n]) => `${k}: ${n}`).join(' · ');
+      setSyncResult(total ? `Synced ${total} new record(s). ${detail}` : 'Already up to date — nothing new to sync.');
+      window.toast?.('Cloud sync complete.', 'ok');
+    } catch (e) {
+      setSyncResult(`Sync failed: ${e.message}`);
+      window.toast?.('Cloud sync failed.', 'warn');
+    }
+    setSyncing(false);
+  }
 
   function saveKeys() {
     if (groqKey.trim()) localStorage.setItem('vv:groq_api_key', groqKey.trim());
@@ -168,6 +194,24 @@ export default function SettingsPage({ onNavigate }) {
           <Button variant="primary" onClick={saveGeneralMemo}>Save General Memo</Button>
         </div>
       </Card>
+
+      {/* Cloud sync */}
+      {supabaseConfigured && (
+        <Card style={{ padding: 20, marginTop: 14 }}>
+          <SectionHeader title="Cloud Sync" icon={<Icon.upload size={15} />} />
+          <p style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', margin: '8px 0 14px' }}>
+            Push the data stored in this browser (students, diagnoses, homework, submissions, reviews…)
+            up to Supabase so it's available across devices and so students can sign in and reach their homework.
+            Run this once after signing in; it's safe to run again — already-synced records are skipped.
+          </p>
+          <Button variant="primary" onClick={handleSyncToCloud} disabled={syncing}>
+            <Icon.upload size={14} /> {syncing ? 'Syncing…' : 'Sync local data to cloud'}
+          </Button>
+          {syncResult && (
+            <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-2)', marginTop: 12 }}>{syncResult}</p>
+          )}
+        </Card>
+      )}
 
       {/* Platform info */}
       <Card style={{ padding: 20, marginTop: 14 }}>

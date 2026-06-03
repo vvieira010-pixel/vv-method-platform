@@ -1,7 +1,13 @@
 /**
  * workflow.js — V.V. Method data layer
- * localStorage-backed persistence with Firebase-ready interface.
+ *
+ * Dual-mode persistence: when the user has a live Supabase session, list
+ * entities are read/written through src/lib/supabase-db.js (cross-device);
+ * otherwise everything falls back to localStorage (offline / dev logins).
+ * Function signatures are unchanged — all callers already `await`.
  */
+
+import { getDbContext, dbHasEntity, dbList, dbUpsert, dbRemove } from './supabase-db.js';
 
 const K = {
   sessions:    'vv:sessions',
@@ -84,6 +90,61 @@ function loadWithIds(key) {
   return all;
 }
 
+/* ─── dual-mode helpers (Supabase when signed in, else localStorage) ── */
+
+/** True when this entity should route through Supabase right now. */
+function dbReady(entityKey) {
+  return dbHasEntity(entityKey) && Boolean(getDbContext());
+}
+
+/** List an entity's records, Supabase-first with localStorage fallback. */
+async function listVia(entityKey, lsKey, filterFn) {
+  if (dbReady(entityKey)) {
+    try {
+      const all = await dbList(entityKey);
+      if (Array.isArray(all)) return filterFn ? all.filter(filterFn) : all;
+    } catch (e) {
+      console.warn(`[workflow] ${entityKey} list via Supabase failed, using localStorage:`, e.message);
+    }
+  }
+  const all = loadWithIds(lsKey);
+  return filterFn ? all.filter(filterFn) : all;
+}
+
+/**
+ * Create-or-update one record (Supabase-first). Builds the record with defaults,
+ * a stable id and timestamps, then upserts. Mirrors the localStorage `upsert`
+ * semantics (match existing only when data.id is truthy) on the fallback path.
+ */
+async function saveVia(entityKey, lsKey, data, defaults = {}) {
+  const now = new Date().toISOString();
+  const id = (data && data.id) || uid();
+  const record = { ...defaults, ...data, id, createdAt: (data && data.createdAt) || now, updatedAt: now };
+  if (dbReady(entityKey)) {
+    try {
+      const saved = await dbUpsert(entityKey, record);
+      if (saved) return saved;
+    } catch (e) {
+      console.warn(`[workflow] ${entityKey} save via Supabase failed, using localStorage:`, e.message);
+    }
+  }
+  const all = load(lsKey);
+  const idx = (data && data.id) ? all.findIndex(r => r.id === data.id) : -1;
+  if (idx >= 0) { const merged = { ...all[idx], ...record }; all[idx] = merged; save(lsKey, all); return merged; }
+  all.unshift(record);
+  save(lsKey, all);
+  return record;
+}
+
+/** Delete one record by id (Supabase-first). */
+async function removeVia(entityKey, lsKey, id) {
+  if (dbReady(entityKey)) {
+    try { if (await dbRemove(entityKey, id)) return; }
+    catch (e) { console.warn(`[workflow] ${entityKey} delete via Supabase failed, using localStorage:`, e.message); }
+  }
+  save(lsKey, load(lsKey).filter(r => r.id !== id));
+}
+
 /* ─── SESSIONS ───────────────────────────────────────────────── */
 export async function getSessions(studentId) {
   const all = load(K.sessions);
@@ -116,15 +177,14 @@ export async function clearWorkflowData() {
 
 /* ─── DIAGNOSES ─────────────────────────────────────────────── */
 export async function getDiagnoses(studentId) {
-  const all = loadWithIds(K.diagnoses);
-  return studentId ? all.filter(d => d.studentId === studentId) : all;
+  return listVia('diagnoses', K.diagnoses, studentId ? (d => d.studentId === studentId) : null);
 }
 export async function getLatestDiagnosis(studentId) {
   const all = await getDiagnoses(studentId);
   return all[0] || null;
 }
 export async function saveDiagnosis(data) {
-  return upsert(K.diagnoses, data, {
+  return saveVia('diagnoses', K.diagnoses, data, {
     studentId: null,
     sessionId: null,
     strengths: [],
@@ -152,11 +212,10 @@ export async function deleteFeedback(id) {
 
 /* ─── HOMEWORK ───────────────────────────────────────────────── */
 export async function getHomework(studentId) {
-  const all = load(K.homework);
-  return studentId ? all.filter(h => h.studentId === studentId) : all;
+  return listVia('homework', K.homework, studentId ? (h => h.studentId === studentId) : null);
 }
 export async function saveHomework(data) {
-  return upsert(K.homework, data, {
+  return saveVia('homework', K.homework, data, {
     diagnosisId: null,
     assignedAt: new Date().toISOString(),
     status: 'not-started',
@@ -164,6 +223,20 @@ export async function saveHomework(data) {
   });
 }
 export async function deleteHomework(id) {
+  if (dbReady('homework')) {
+    try {
+      // FKs have no cascade — remove dependent submissions + reviews first.
+      const subs = await dbList('submissions');
+      for (const s of (subs || []).filter(s => s.homeworkId === id)) await dbRemove('submissions', s.id);
+      const revs = await dbList('reviews');
+      for (const r of (revs || []).filter(r => r.homeworkId === id)) await dbRemove('reviews', r.id);
+      await dbRemove('homework', id);
+      removeHomeworkDrafts(id);
+      return;
+    } catch (e) {
+      console.warn('[workflow] deleteHomework via Supabase failed, using localStorage:', e.message);
+    }
+  }
   save(K.homework, load(K.homework).filter(h => h.id !== id));
   save(K.submissions, load(K.submissions).filter(s => s.homeworkId !== id));
   save(K.reviews, load(K.reviews).filter(r => r.homeworkId !== id));
@@ -172,11 +245,10 @@ export async function deleteHomework(id) {
 
 /* ─── PRACTICE ASSIGNMENTS ───────────────────────────────────── */
 export async function getPracticeAssignments(studentId) {
-  const all = load(K.practiceAssignments);
-  return studentId ? all.filter(p => p.studentId === studentId) : all;
+  return listVia('practiceAssignments', K.practiceAssignments, studentId ? (p => p.studentId === studentId) : null);
 }
 export async function savePracticeAssignment(data) {
-  return upsert(K.practiceAssignments, data, {
+  return saveVia('practiceAssignments', K.practiceAssignments, data, {
     studentId: null,
     diagnosisId: null,
     resourceIds: data?.resourceIds || [],
@@ -185,24 +257,35 @@ export async function savePracticeAssignment(data) {
   });
 }
 export async function deletePracticeAssignment(id) {
-  save(K.practiceAssignments, load(K.practiceAssignments).filter(p => p.id !== id));
+  return removeVia('practiceAssignments', K.practiceAssignments, id);
 }
 
 /* ─── SUBMISSIONS ────────────────────────────────────────────── */
 export async function getSubmissions(studentId) {
-  const all = load(K.submissions);
-  return studentId ? all.filter(s => s.studentId === studentId) : all;
+  return listVia('submissions', K.submissions, studentId ? (s => s.studentId === studentId) : null);
 }
 export async function submitHomework(homeworkId, studentId, content, responses) {
-  const all = load(K.submissions);
   const sub = {
     id: uid(), homeworkId, studentId, content,
     responses: responses || null,
     submittedAt: new Date().toISOString(), status: 'submitted',
   };
+  if (dbReady('submissions')) {
+    try {
+      const saved = await dbUpsert('submissions', sub);
+      // Bump the homework to 'submitted' (best-effort; ignore if not visible).
+      try {
+        const hw = (await dbList('homework') || []).find(h => h.id === homeworkId);
+        if (hw) await dbUpsert('homework', { ...hw, status: 'submitted' });
+      } catch { /* student may not be able to write homework — RLS; ignore */ }
+      if (saved) return saved;
+    } catch (e) {
+      console.warn('[workflow] submitHomework via Supabase failed, using localStorage:', e.message);
+    }
+  }
+  const all = load(K.submissions);
   all.unshift(sub);
   save(K.submissions, all);
-  // Update homework status
   const hw = load(K.homework);
   const idx = hw.findIndex(h => h.id === homeworkId);
   if (idx >= 0) { hw[idx].status = 'submitted'; save(K.homework, hw); }
@@ -281,11 +364,10 @@ export async function saveProgress(studentId, data) {
 
 /* ─── REPORTS ────────────────────────────────────────────────── */
 export async function getReports(studentId) {
-  const all = load(K.reports);
-  return studentId ? all.filter(r => r.studentId === studentId) : all;
+  return listVia('reports', K.reports, studentId ? (r => r.studentId === studentId) : null);
 }
 export async function saveReport(data) {
-  return upsert(K.reports, data, {
+  return saveVia('reports', K.reports, data, {
     studentId: null,
     diagnosisIds: data?.diagnosisIds || [],
     feedbackIds: data?.feedbackIds || [],
@@ -307,7 +389,7 @@ export async function getLateStatus(studentId) {
 
 /* ─── PRACTICE RESOURCES (the catalog) ───────────────────────── */
 export async function getPracticeResources(filters = {}) {
-  const all = load(K.practiceResources);
+  const all = await listVia('practiceResources', K.practiceResources, null);
   if (!filters || Object.keys(filters).length === 0) return all;
   return all.filter(r => {
     if (filters.skill && r.skill !== filters.skill) return false;
@@ -326,8 +408,6 @@ export async function getPracticeResources(filters = {}) {
   });
 }
 export async function savePracticeResource(data) {
-  const all = load(K.practiceResources);
-  const existing = all.findIndex(r => r.id === data.id);
   const record = {
     id: data?.id || uid(),
     title: data?.title || 'Untitled resource',
@@ -350,27 +430,33 @@ export async function savePracticeResource(data) {
     createdAt: data?.createdAt || new Date().toISOString(),
     ...data,
   };
+  if (dbReady('practiceResources')) {
+    try { const saved = await dbUpsert('practiceResources', record); if (saved) return saved; }
+    catch (e) { console.warn('[workflow] savePracticeResource via Supabase failed, using localStorage:', e.message); }
+  }
+  const all = load(K.practiceResources);
+  const existing = all.findIndex(r => r.id === record.id);
   if (existing >= 0) all[existing] = { ...all[existing], ...record };
   else all.unshift(record);
   save(K.practiceResources, all);
   return record;
 }
 export async function deletePracticeResource(id) {
-  save(K.practiceResources, load(K.practiceResources).filter(r => r.id !== id));
+  return removeVia('practiceResources', K.practiceResources, id);
 }
 
 /* ─── PRACTICE SUBMISSIONS (student answers + AI feedback) ───── */
 export async function getPracticeSubmissions(query = {}) {
-  const all = load(K.practiceSubmissions);
+  const all = await listVia('practiceSubmissions', K.practiceSubmissions, null);
   if (typeof query === 'string') return all.filter(s => s.assignmentId === query || s.studentId === query);
   if (query.assignmentId) return all.filter(s => s.assignmentId === query.assignmentId);
   if (query.studentId) return all.filter(s => s.studentId === query.studentId);
   return all;
 }
 export async function savePracticeSubmission(data) {
-  const all = load(K.practiceSubmissions);
   // attempt number is auto-incremented from existing submissions for the same assignment
-  const previousAttempts = all.filter(s => s.assignmentId === data.assignmentId).length;
+  const existingForAssignment = await listVia('practiceSubmissions', K.practiceSubmissions, s => s.assignmentId === data.assignmentId);
+  const previousAttempts = existingForAssignment.length;
   const record = {
     id: data?.id || uid(),
     assignmentId: data?.assignmentId || null,
@@ -387,32 +473,43 @@ export async function savePracticeSubmission(data) {
     submittedAt: data?.submittedAt || new Date().toISOString(),
     ...data,
   };
+  if (dbReady('practiceSubmissions')) {
+    try { const saved = await dbUpsert('practiceSubmissions', record); if (saved) return saved; }
+    catch (e) { console.warn('[workflow] savePracticeSubmission via Supabase failed, using localStorage:', e.message); }
+  }
+  const all = load(K.practiceSubmissions);
   all.unshift(record);
   save(K.practiceSubmissions, all);
   return record;
 }
 
 /* ─── ERROR BANK (per-student long-term store) ───────────────── */
+// localStorage shape is object-keyed (errorBankGlobal[studentId] = [entries]);
+// the DB stores one row per entry (error_bank_entries) with studentId in content.
 export async function getErrorBank(studentId) {
+  if (dbReady('errorBank')) {
+    try { return (await dbList('errorBank') || []).filter(e => e.studentId === studentId); }
+    catch (e) { console.warn('[workflow] getErrorBank via Supabase failed, using localStorage:', e.message); }
+  }
   const obj = loadObj(K.errorBankGlobal);
   return obj[studentId] || [];
 }
 export async function promoteErrorToLongTerm(diagnosisId, errorIndex, studentId) {
   // Pull the diagnosis, lift one error_bank item, dedupe by `error+correct` so a
   // teacher can click promote twice without creating duplicates.
-  const diags = load(K.diagnoses);
+  const diags = await getDiagnoses();
   const diag = diags.find(d => d.id === diagnosisId);
   if (!diag) return null;
   const sourceItem = diag.content?.error_bank?.[errorIndex];
   if (!sourceItem) return null;
   const sid = studentId || diag.studentId;
   if (!sid) return null;
-  const obj = loadObj(K.errorBankGlobal);
-  const list = obj[sid] || [];
-  const dupe = list.find(it => it.error === sourceItem.error && it.correct === sourceItem.correct);
+  const existing = await getErrorBank(sid);
+  const dupe = existing.find(it => it.error === sourceItem.error && it.correct === sourceItem.correct);
   if (dupe) return dupe;
   const record = {
     id: uid(),
+    studentId: sid,
     error: sourceItem.error || '',
     correct: sourceItem.correct || '',
     type: sourceItem.type || 'grammar',
@@ -424,11 +521,28 @@ export async function promoteErrorToLongTerm(diagnosisId, errorIndex, studentId)
     lastPracticed: null,
     createdAt: new Date().toISOString(),
   };
-  obj[sid] = [record, ...list];
+  if (dbReady('errorBank')) {
+    try { const saved = await dbUpsert('errorBank', record); if (saved) return saved; }
+    catch (e) { console.warn('[workflow] promoteErrorToLongTerm via Supabase failed, using localStorage:', e.message); }
+  }
+  const obj = loadObj(K.errorBankGlobal);
+  obj[sid] = [record, ...(obj[sid] || [])];
   save(K.errorBankGlobal, obj);
   return record;
 }
 export async function markErrorPracticed(studentId, errorId) {
+  if (dbReady('errorBank')) {
+    try {
+      const entry = (await dbList('errorBank') || []).find(e => e.id === errorId);
+      if (!entry) return null;
+      const practiceCount = (entry.practiceCount || 0) + 1;
+      return await dbUpsert('errorBank', {
+        ...entry, practiceCount,
+        status: practiceCount >= 3 ? 'solved' : 'practicing',
+        lastPracticed: new Date().toISOString(),
+      });
+    } catch (e) { console.warn('[workflow] markErrorPracticed via Supabase failed, using localStorage:', e.message); }
+  }
   const obj = loadObj(K.errorBankGlobal);
   const list = obj[studentId] || [];
   const idx = list.findIndex(e => e.id === errorId);
@@ -444,6 +558,13 @@ export async function markErrorPracticed(studentId, errorId) {
   return list[idx];
 }
 export async function markErrorSolved(studentId, errorId) {
+  if (dbReady('errorBank')) {
+    try {
+      const entry = (await dbList('errorBank') || []).find(e => e.id === errorId);
+      if (!entry) return null;
+      return await dbUpsert('errorBank', { ...entry, status: 'solved', lastPracticed: new Date().toISOString() });
+    } catch (e) { console.warn('[workflow] markErrorSolved via Supabase failed, using localStorage:', e.message); }
+  }
   const obj = loadObj(K.errorBankGlobal);
   const list = obj[studentId] || [];
   const idx = list.findIndex(e => e.id === errorId);
@@ -456,12 +577,9 @@ export async function markErrorSolved(studentId, errorId) {
 
 /* ─── REVIEWS (teacher correction of student submissions) ────── */
 export async function getReviews(studentId) {
-  const all = load(K.reviews);
-  return studentId ? all.filter(r => r.studentId === studentId) : all;
+  return listVia('reviews', K.reviews, studentId ? (r => r.studentId === studentId) : null);
 }
 export async function saveReview(data) {
-  const all = load(K.reviews);
-  const existing = all.findIndex(r => r.id === data.id);
   const record = {
     id: data?.id || uid(),
     submissionId: data?.submissionId || null,
@@ -475,6 +593,29 @@ export async function saveReview(data) {
     createdAt: data?.createdAt || new Date().toISOString(),
     ...data,
   };
+  if (dbReady('reviews')) {
+    try {
+      const saved = await dbUpsert('reviews', record);
+      // Flip the submission + homework to 'reviewed'.
+      if (record.submissionId) {
+        try {
+          const sub = (await dbList('submissions') || []).find(s => s.id === record.submissionId);
+          if (sub) await dbUpsert('submissions', { ...sub, status: 'reviewed', reviewedAt: record.reviewedAt });
+        } catch { /* ignore */ }
+      }
+      if (record.homeworkId) {
+        try {
+          const hw = (await dbList('homework') || []).find(h => h.id === record.homeworkId);
+          if (hw) await dbUpsert('homework', { ...hw, status: 'reviewed', reviewedAt: record.reviewedAt });
+        } catch { /* ignore */ }
+      }
+      if (saved) return saved;
+    } catch (e) {
+      console.warn('[workflow] saveReview via Supabase failed, using localStorage:', e.message);
+    }
+  }
+  const all = load(K.reviews);
+  const existing = all.findIndex(r => r.id === record.id);
   if (existing >= 0) all[existing] = { ...all[existing], ...record };
   else all.unshift(record);
   save(K.reviews, all);
@@ -496,6 +637,25 @@ export async function saveReview(data) {
   return record;
 }
 export async function deleteReview(id) {
+  if (dbReady('reviews')) {
+    try {
+      const review = (await dbList('reviews') || []).find(r => r.id === id);
+      await dbRemove('reviews', id);
+      if (review?.submissionId) {
+        const sub = (await dbList('submissions') || []).find(s => s.id === review.submissionId);
+        if (sub) await dbUpsert('submissions', { ...sub, status: 'submitted', reviewedAt: undefined });
+      }
+      if (review?.homeworkId) {
+        try {
+          const hw = (await dbList('homework') || []).find(h => h.id === review.homeworkId);
+          if (hw) await dbUpsert('homework', { ...hw, status: 'submitted', reviewedAt: undefined });
+        } catch { /* ignore */ }
+      }
+      return;
+    } catch (e) {
+      console.warn('[workflow] deleteReview via Supabase failed, using localStorage:', e.message);
+    }
+  }
   const reviews = load(K.reviews);
   const review = reviews.find(r => r.id === id);
   save(K.reviews, reviews.filter(r => r.id !== id));
@@ -522,6 +682,12 @@ export async function deleteReview(id) {
 
 /* ─── DIAGNOSIS CYCLE STATE ─────────────────────────────────── */
 export async function updateDiagnosisCycleStage(diagnosisId, stage) {
+  if (dbReady('diagnoses')) {
+    const all = await getDiagnoses();
+    const d = all.find(x => x.id === diagnosisId);
+    if (!d) return null;
+    return saveDiagnosis({ ...d, cycleStage: stage });
+  }
   const all = load(K.diagnoses);
   const idx = all.findIndex(d => d.id === diagnosisId);
   if (idx < 0) return null;
@@ -531,17 +697,17 @@ export async function updateDiagnosisCycleStage(diagnosisId, stage) {
 }
 
 export async function getDiagnosisTimeline(studentId) {
-  const all = load(K.diagnoses);
+  const all = await getDiagnoses(studentId);
   return all
-    .filter(d => d.studentId === studentId)
+    .slice()
     .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 }
 
 export async function getStudentCycleState(studentId) {
-  const diagnoses = load(K.diagnoses).filter(d => d.studentId === studentId);
-  const homework = load(K.homework).filter(h => h.studentId === studentId);
-  const submissions = load(K.submissions).filter(s => s.studentId === studentId);
-  const reviews = load(K.reviews).filter(r => r.studentId === studentId);
+  const diagnoses = await getDiagnoses(studentId);
+  const homework = await getHomework(studentId);
+  const submissions = await getSubmissions(studentId);
+  const reviews = await getReviews(studentId);
 
   const latestDiagnosis = diagnoses[0] || null;
   const daysSinceLastDiagnosis = latestDiagnosis
@@ -585,9 +751,8 @@ export async function getStudentCycleState(studentId) {
 /* ─── ERROR BANK PROFILE SEEDING ─────────────────────────────── */
 export async function seedErrorBankFromProfile(studentId, profile) {
   if (!studentId || !profile?.error_categories) return [];
-  const obj = loadObj(K.errorBankGlobal);
-  const existing = obj[studentId] || [];
-  const existingKeys = new Set(existing.map(e => `${e.error}|${e.correct}`));
+  const existingEntries = await getErrorBank(studentId);
+  const existingKeys = new Set(existingEntries.map(e => `${e.error}|${e.correct}`));
   const added = [];
 
   for (const cat of profile.error_categories) {
@@ -600,6 +765,7 @@ export async function seedErrorBankFromProfile(studentId, profile) {
 
       const record = {
         id: uid(),
+        studentId,
         error: errorText,
         correct: correctText,
         type: cat.skill_area?.includes('speaking') ? 'grammar' : 'grammar',
@@ -618,23 +784,31 @@ export async function seedErrorBankFromProfile(studentId, profile) {
         lastPracticed: null,
         createdAt: new Date().toISOString(),
       };
-      existing.push(record);
       existingKeys.add(key);
       added.push(record);
     }
   }
 
-  obj[studentId] = existing;
+  if (dbReady('errorBank')) {
+    try {
+      for (const rec of added) await dbUpsert('errorBank', rec);
+      return added;
+    } catch (e) {
+      console.warn('[workflow] seedErrorBankFromProfile via Supabase failed, using localStorage:', e.message);
+    }
+  }
+  const obj = loadObj(K.errorBankGlobal);
+  obj[studentId] = [...(obj[studentId] || []), ...added];
   save(K.errorBankGlobal, obj);
   return added;
 }
 
 /* ─── STUDENT CRUD (teacher-managed, replaces hardcoded roster) ── */
 export async function getStudents() {
-  return load(K.studentsCrud);
+  return listVia('studentsCrud', K.studentsCrud, null);
 }
 export async function getStudent(id) {
-  return load(K.studentsCrud).find(s => s.id === id) || null;
+  return (await getStudents()).find(s => s.id === id) || null;
 }
 export async function getStudentByEmailPassword(email, password) {
   const normalizedEmail = String(email || '').trim().toLowerCase();
@@ -673,12 +847,34 @@ export async function saveStudent(data) {
     createdAt: data.createdAt || now,
     updatedAt: now,
   };
+  if (dbReady('studentsCrud')) {
+    try { const saved = await dbUpsert('studentsCrud', record); if (saved) return saved; }
+    catch (e) { console.warn('[workflow] saveStudent via Supabase failed, using localStorage:', e.message); }
+  }
   if (existing >= 0) all[existing] = { ...all[existing], ...record };
   else all.unshift(record);
   save(K.studentsCrud, all);
   return record;
 }
 export async function deleteStudent(id) {
+  if (dbReady('studentsCrud')) {
+    try {
+      // FKs have no cascade — clear student-scoped rows before removing the student.
+      const scoped = ['reviews', 'submissions', 'homework', 'diagnoses', 'reports',
+        'progressNotes', 'vocabularyBank', 'practiceSubmissions', 'practiceAssignments',
+        'classEvidence', 'classEvents', 'targetProfiles'];
+      for (const entity of scoped) {
+        try {
+          const rows = (await dbList(entity)) || [];
+          for (const r of rows.filter(r => r.studentId === id)) await dbRemove(entity, r.id);
+        } catch { /* ignore one entity's failure */ }
+      }
+      await dbRemove('studentsCrud', id);
+      return;
+    } catch (e) {
+      console.warn('[workflow] deleteStudent via Supabase failed, using localStorage:', e.message);
+    }
+  }
   save(K.studentsCrud, load(K.studentsCrud).filter(s => s.id !== id));
   save(K.targetProfiles, load(K.targetProfiles).filter(p => p.studentId !== id));
   save(K.classEvents, load(K.classEvents).filter(e => e.studentId !== id));
@@ -746,16 +942,13 @@ export const TARGET_PROFILE_PRESETS = {
 };
 
 export async function getTargetProfiles(studentId) {
-  const all = load(K.targetProfiles);
-  return studentId ? all.filter(p => p.studentId === studentId) : all;
+  return listVia('targetProfiles', K.targetProfiles, studentId ? (p => p.studentId === studentId) : null);
 }
 export async function getActiveTargetProfile(studentId) {
   const profiles = await getTargetProfiles(studentId);
   return profiles.find(p => p.isActive) || profiles[0] || null;
 }
 export async function saveTargetProfile(data) {
-  const all = load(K.targetProfiles);
-  const existing = all.findIndex(p => p.id === data.id);
   const record = {
     id: data.id || uid(),
     studentId: data.studentId || null,
@@ -769,12 +962,32 @@ export async function saveTargetProfile(data) {
     isActive: data.isActive ?? false,
     createdAt: data.createdAt || new Date().toISOString(),
   };
+  if (dbReady('targetProfiles')) {
+    try { const saved = await dbUpsert('targetProfiles', record); if (saved) return saved; }
+    catch (e) { console.warn('[workflow] saveTargetProfile via Supabase failed, using localStorage:', e.message); }
+  }
+  const all = load(K.targetProfiles);
+  const existing = all.findIndex(p => p.id === record.id);
   if (existing >= 0) all[existing] = { ...all[existing], ...record };
   else all.unshift(record);
   save(K.targetProfiles, all);
   return record;
 }
 export async function setActiveTargetProfile(studentId, profileId) {
+  if (dbReady('targetProfiles')) {
+    try {
+      const profiles = await getTargetProfiles(studentId);
+      for (const p of profiles) {
+        const shouldBeActive = p.id === profileId;
+        if (Boolean(p.isActive) !== shouldBeActive) await dbUpsert('targetProfiles', { ...p, isActive: shouldBeActive });
+      }
+      const student = await getStudent(studentId);
+      if (student) await saveStudent({ ...student, activeTargetProfileId: profileId });
+      return;
+    } catch (e) {
+      console.warn('[workflow] setActiveTargetProfile via Supabase failed, using localStorage:', e.message);
+    }
+  }
   const all = load(K.targetProfiles);
   all.forEach(p => { if (p.studentId === studentId) p.isActive = p.id === profileId; });
   save(K.targetProfiles, all);
@@ -784,20 +997,17 @@ export async function setActiveTargetProfile(studentId, profileId) {
   if (si >= 0) { students[si].activeTargetProfileId = profileId; save(K.studentsCrud, students); }
 }
 export async function deleteTargetProfile(id) {
-  save(K.targetProfiles, load(K.targetProfiles).filter(p => p.id !== id));
+  return removeVia('targetProfiles', K.targetProfiles, id);
 }
 
 /* ─── CLASS EVENTS ───────────────────────────────────────────── */
 export async function getClassEvents(studentId) {
-  const all = load(K.classEvents);
-  return studentId ? all.filter(e => e.studentId === studentId) : all;
+  return listVia('classEvents', K.classEvents, studentId ? (e => e.studentId === studentId) : null);
 }
 export async function getClassEvent(id) {
-  return load(K.classEvents).find(e => e.id === id) || null;
+  return (await getClassEvents()).find(e => e.id === id) || null;
 }
 export async function saveClassEvent(data) {
-  const all = load(K.classEvents);
-  const existing = all.findIndex(e => e.id === data.id);
   const record = {
     id: data.id || uid(),
     studentId: data.studentId || null,
@@ -813,31 +1023,47 @@ export async function saveClassEvent(data) {
     createdAt: data.createdAt || new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };
+  if (dbReady('classEvents')) {
+    try { const saved = await dbUpsert('classEvents', record); if (saved) return saved; }
+    catch (e) { console.warn('[workflow] saveClassEvent via Supabase failed, using localStorage:', e.message); }
+  }
+  const all = load(K.classEvents);
+  const existing = all.findIndex(e => e.id === record.id);
   if (existing >= 0) all[existing] = { ...all[existing], ...record };
   else all.unshift(record);
   save(K.classEvents, all);
   return record;
 }
 export async function updateClassEventStatus(id, patch) {
+  if (dbReady('classEvents')) {
+    try {
+      const ev = (await getClassEvents()).find(e => e.id === id);
+      if (!ev) return null;
+      return await dbUpsert('classEvents', { ...ev, ...patch });
+    } catch (e) {
+      console.warn('[workflow] updateClassEventStatus via Supabase failed, using localStorage:', e.message);
+    }
+  }
   const all = load(K.classEvents);
   const idx = all.findIndex(e => e.id === id);
   if (idx >= 0) { all[idx] = { ...all[idx], ...patch, updatedAt: new Date().toISOString() }; save(K.classEvents, all); return all[idx]; }
   return null;
 }
 export async function deleteClassEvent(id) {
-  save(K.classEvents, load(K.classEvents).filter(e => e.id !== id));
+  return removeVia('classEvents', K.classEvents, id);
 }
 
 /* ─── CLASS EVIDENCE ─────────────────────────────────────────── */
 export async function getClassEvidence(classEventId) {
-  const all = load(K.classEvidence);
+  const all = await listVia('classEvidence', K.classEvidence, null);
   return classEventId ? all.find(e => e.classEventId === classEventId) || null : all;
 }
 export async function saveClassEvidence(data) {
-  const all = load(K.classEvidence);
-  const existing = all.findIndex(e => e.classEventId === data.classEventId || e.id === data.id);
+  // dedupe by classEventId so re-saving the same class updates one row
+  const priorList = await listVia('classEvidence', K.classEvidence, null);
+  const prior = priorList.find(e => e.classEventId === data.classEventId || e.id === data.id);
   const record = {
-    id: data.id || uid(),
+    id: data.id || prior?.id || uid(),
     classEventId: data.classEventId || null,
     studentId: data.studentId || null,
     // Skill flags
@@ -867,12 +1093,27 @@ export async function saveClassEvidence(data) {
     createdAt: data.createdAt || new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };
+  if (dbReady('classEvidence')) {
+    try { const saved = await dbUpsert('classEvidence', record); if (saved) return saved; }
+    catch (e) { console.warn('[workflow] saveClassEvidence via Supabase failed, using localStorage:', e.message); }
+  }
+  const all = load(K.classEvidence);
+  const existing = all.findIndex(e => e.classEventId === record.classEventId || e.id === record.id);
   if (existing >= 0) all[existing] = { ...all[existing], ...record };
   else all.push(record);
   save(K.classEvidence, all);
   return record;
 }
 export async function updateClassEvidence(id, patch) {
+  if (dbReady('classEvidence')) {
+    try {
+      const ev = (await listVia('classEvidence', K.classEvidence, null)).find(e => e.id === id);
+      if (!ev) return null;
+      return await dbUpsert('classEvidence', { ...ev, ...patch });
+    } catch (e) {
+      console.warn('[workflow] updateClassEvidence via Supabase failed, using localStorage:', e.message);
+    }
+  }
   const all = load(K.classEvidence);
   const idx = all.findIndex(e => e.id === id);
   if (idx >= 0) { all[idx] = { ...all[idx], ...patch, updatedAt: new Date().toISOString() }; save(K.classEvidence, all); return all[idx]; }
@@ -881,12 +1122,9 @@ export async function updateClassEvidence(id, patch) {
 
 /* ─── VOCABULARY BANK ────────────────────────────────────────── */
 export async function getVocabularyBank(studentId) {
-  const all = load(K.vocabularyBank);
-  return studentId ? all.filter(v => v.studentId === studentId) : all;
+  return listVia('vocabularyBank', K.vocabularyBank, studentId ? (v => v.studentId === studentId) : null);
 }
 export async function saveVocabularyEntry(data) {
-  const all = load(K.vocabularyBank);
-  const existing = all.findIndex(v => v.id === data.id);
   const record = {
     id: data.id || uid(),
     studentId: data.studentId || null,
@@ -898,28 +1136,41 @@ export async function saveVocabularyEntry(data) {
     evidenceSource: data.evidenceSource || {},
     createdAt: data.createdAt || new Date().toISOString(),
   };
+  if (dbReady('vocabularyBank')) {
+    try { const saved = await dbUpsert('vocabularyBank', record); if (saved) return saved; }
+    catch (e) { console.warn('[workflow] saveVocabularyEntry via Supabase failed, using localStorage:', e.message); }
+  }
+  const all = load(K.vocabularyBank);
+  const existing = all.findIndex(v => v.id === record.id);
   if (existing >= 0) all[existing] = { ...all[existing], ...record };
   else all.unshift(record);
   save(K.vocabularyBank, all);
   return record;
 }
 export async function updateVocabularyEntry(id, patch) {
+  if (dbReady('vocabularyBank')) {
+    try {
+      const v = (await listVia('vocabularyBank', K.vocabularyBank, null)).find(x => x.id === id);
+      if (!v) return null;
+      return await dbUpsert('vocabularyBank', { ...v, ...patch });
+    } catch (e) {
+      console.warn('[workflow] updateVocabularyEntry via Supabase failed, using localStorage:', e.message);
+    }
+  }
   const all = load(K.vocabularyBank);
   const idx = all.findIndex(v => v.id === id);
   if (idx >= 0) { all[idx] = { ...all[idx], ...patch }; save(K.vocabularyBank, all); return all[idx]; }
   return null;
 }
 export async function deleteVocabularyEntry(id) {
-  save(K.vocabularyBank, load(K.vocabularyBank).filter(v => v.id !== id));
+  return removeVia('vocabularyBank', K.vocabularyBank, id);
 }
 
 /* ─── PROGRESS NOTES ─────────────────────────────────────────── */
 export async function getProgressNotes(studentId) {
-  const all = load(K.progressNotes);
-  return studentId ? all.filter(n => n.studentId === studentId) : all;
+  return listVia('progressNotes', K.progressNotes, studentId ? (n => n.studentId === studentId) : null);
 }
 export async function saveProgressNote(data) {
-  const all = load(K.progressNotes);
   const record = {
     id: data.id || uid(),
     studentId: data.studentId || null,
@@ -928,19 +1179,42 @@ export async function saveProgressNote(data) {
     note: data.note || '',
     createdAt: data.createdAt || new Date().toISOString(),
   };
+  if (dbReady('progressNotes')) {
+    try { const saved = await dbUpsert('progressNotes', record); if (saved) return saved; }
+    catch (e) { console.warn('[workflow] saveProgressNote via Supabase failed, using localStorage:', e.message); }
+  }
+  const all = load(K.progressNotes);
   all.unshift(record);
   save(K.progressNotes, all);
   return record;
 }
 export async function deleteProgressNote(id) {
-  save(K.progressNotes, load(K.progressNotes).filter(n => n.id !== id));
+  return removeVia('progressNotes', K.progressNotes, id);
 }
 
 /* ─── ALL SUBMISSIONS (teacher view) ─────────────────────────── */
 export async function getAllSubmissions() {
-  return load(K.submissions);
+  return listVia('submissions', K.submissions, null);
 }
 export async function deleteSubmission(id) {
+  if (dbReady('submissions')) {
+    try {
+      const submission = (await dbList('submissions') || []).find(s => s.id === id);
+      const revs = (await dbList('reviews') || []).filter(r => r.submissionId === id);
+      for (const r of revs) await dbRemove('reviews', r.id);
+      await dbRemove('submissions', id);
+      if (submission?.homeworkId) {
+        try {
+          const hw = (await dbList('homework') || []).find(h => h.id === submission.homeworkId);
+          if (hw) await dbUpsert('homework', { ...hw, status: 'not-started', reviewedAt: undefined });
+        } catch { /* ignore */ }
+        removeHomeworkDrafts(submission.homeworkId);
+      }
+      return;
+    } catch (e) {
+      console.warn('[workflow] deleteSubmission via Supabase failed, using localStorage:', e.message);
+    }
+  }
   const submission = load(K.submissions).find(s => s.id === id);
   save(K.submissions, load(K.submissions).filter(s => s.id !== id));
   save(K.reviews, load(K.reviews).filter(r => r.submissionId !== id));
@@ -954,4 +1228,52 @@ export async function deleteSubmission(id) {
     }
     removeHomeworkDrafts(submission.homeworkId);
   }
+}
+
+/* ─── ONE-TIME LOCAL → CLOUD IMPORT ──────────────────────────── */
+/**
+ * Push existing localStorage records into Supabase. Idempotent: each record's
+ * `${entity}:${id}` is recorded in `vv:syncedIds` and skipped on re-run.
+ * Order matters — students before everything (FK + studentId resolution),
+ * homework before submissions/reviews. Returns a per-entity count of new rows.
+ */
+export async function syncLocalToCloud() {
+  if (!getDbContext()) throw new Error('Sign in with Supabase first to sync to the cloud.');
+  const order = [
+    'studentsCrud', 'diagnoses', 'targetProfiles', 'classEvents', 'classEvidence',
+    'vocabularyBank', 'progressNotes', 'reports', 'practiceResources',
+    'practiceAssignments', 'practiceSubmissions', 'homework', 'submissions', 'reviews',
+  ];
+  const synced = new Set(loadObj('vv:syncedIds').ids || []);
+  const counts = {};
+  for (const entity of order) {
+    if (!dbHasEntity(entity)) continue;
+    const list = load(K[entity]);
+    let n = 0;
+    for (const rec of list) {
+      if (!rec || !rec.id) continue;
+      const tag = `${entity}:${rec.id}`;
+      if (synced.has(tag)) continue;
+      try { await dbUpsert(entity, rec); synced.add(tag); n++; }
+      catch (e) { console.warn(`[sync] ${tag} failed:`, e.message); }
+    }
+    counts[entity] = n;
+  }
+  // Error bank is object-keyed (errorBankGlobal[studentId] = [entries]) — push after students.
+  if (dbHasEntity('errorBank')) {
+    const obj = loadObj(K.errorBankGlobal);
+    let n = 0;
+    for (const [sid, entries] of Object.entries(obj)) {
+      for (const entry of (entries || [])) {
+        if (!entry?.id) continue;
+        const tag = `errorBank:${entry.id}`;
+        if (synced.has(tag)) continue;
+        try { await dbUpsert('errorBank', { ...entry, studentId: entry.studentId || sid }); synced.add(tag); n++; }
+        catch (e) { console.warn(`[sync] ${tag} failed:`, e.message); }
+      }
+    }
+    counts.errorBank = n;
+  }
+  save('vv:syncedIds', { ids: [...synced] });
+  return counts;
 }
