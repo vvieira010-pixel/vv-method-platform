@@ -9,8 +9,6 @@ import { injectGlobalCSS } from '../components/shared.jsx';
 import { getStudentByEmailPassword } from '../lib/workflow.js';
 
 const CSS = `
-  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap');
-
   .login-root {
     min-height: 100vh; min-height: 100dvh; height: 100vh; height: 100dvh;
     display: grid; grid-template-columns: 1fr 1fr;
