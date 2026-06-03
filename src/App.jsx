@@ -9,10 +9,10 @@ import { seedStudentsIfEmpty, getStudents } from './lib/workflow.js';
 import {
   getSupabaseConfig,
   parseSupabaseHashFragment,
-  parseJwtClaims,
   storeSupabaseSession,
   readStoredSupabaseSession,
   clearStoredSupabaseSession,
+  fetchSupabaseUser,
 } from './lib/supabase-storage.js';
 
 // Lazy-loaded teacher pages
@@ -47,35 +47,67 @@ export default function App() {
 
   // ── Supabase auth: handle implicit-flow hash redirect + restore stored session ──
   useEffect(() => {
-    const { isConfigured } = getSupabaseConfig();
+    const { url, anonKey, isConfigured } = getSupabaseConfig();
     if (!isConfigured) return;
 
-    // 1. Check for #access_token in the URL (email confirmation / OAuth redirect)
-    const fragment = parseSupabaseHashFragment(window.location.hash);
-    if (fragment?.access_token) {
-      const claims = parseJwtClaims(fragment.access_token);
-      const meta = claims?.user_metadata || {};
-      const role = meta.role_hint === 'student' ? 'student' : 'teacher';
-      storeSupabaseSession({
-        access_token: fragment.access_token,
-        refresh_token: fragment.refresh_token,
-        expires_at: fragment.expires_at || Math.floor(Date.now() / 1000) + fragment.expires_in,
-        user: { id: claims?.sub, email: claims?.email, user_metadata: meta },
-      });
-      // Clean the token out of the URL bar
-      history.replaceState(null, '', window.location.pathname + window.location.search);
-      setAuth({ role, email: claims?.email, displayName: meta.display_name || claims?.email });
-      return;
+    /** Resolve auth payload from a verified Supabase user object. */
+    async function resolveAuth(accessToken, sbUser) {
+      const meta = sbUser?.user_metadata || {};
+      if (meta.role_hint === 'student') {
+        // Must resolve the local student record so the dashboard can load.
+        const roster = await getStudents();
+        const match = roster.find(
+          s => s.email === sbUser.email || s.authUserId === sbUser.id
+        );
+        if (!match) {
+          // Valid Supabase student but no matching local record yet — clear and bail.
+          clearStoredSupabaseSession();
+          return null;
+        }
+        return { role: 'student', studentId: match.id, email: sbUser.email };
+      }
+      return { role: 'teacher', email: sbUser.email, displayName: meta.display_name || sbUser.email };
     }
 
-    // 2. Restore a previously stored session on page reload
-    const stored = readStoredSupabaseSession();
-    if (stored?.access_token) {
-      const claims = parseJwtClaims(stored.access_token);
-      const meta = claims?.user_metadata || stored.user?.user_metadata || {};
-      const role = meta.role_hint === 'student' ? 'student' : 'teacher';
-      setAuth({ role, email: claims?.email || stored.user?.email, displayName: meta.display_name });
+    async function handleHash() {
+      const fragment = parseSupabaseHashFragment(window.location.hash);
+      if (!fragment?.access_token) return false;
+
+      // Always clean the URL first so the token isn't bookmarked or leaked.
+      history.replaceState(null, '', window.location.pathname + window.location.search);
+
+      try {
+        // Validate by fetching the actual user from Supabase — rejects forged tokens.
+        const sbUser = await fetchSupabaseUser(url, anonKey, fragment.access_token);
+        storeSupabaseSession({
+          access_token: fragment.access_token,
+          refresh_token: fragment.refresh_token,
+          expires_at: fragment.expires_at || Math.floor(Date.now() / 1000) + fragment.expires_in,
+          user: sbUser,
+        });
+        const payload = await resolveAuth(fragment.access_token, sbUser);
+        if (payload) setAuth(payload);
+      } catch {
+        // Token invalid or Supabase unreachable — do not sign in.
+        clearStoredSupabaseSession();
+      }
+      return true;
     }
+
+    async function restoreSession() {
+      const stored = readStoredSupabaseSession();
+      if (!stored?.access_token) return;
+      try {
+        // Re-validate the stored token so a stale or tampered session is rejected.
+        const sbUser = await fetchSupabaseUser(url, anonKey, stored.access_token);
+        const payload = await resolveAuth(stored.access_token, sbUser);
+        if (payload) setAuth(payload);
+      } catch {
+        clearStoredSupabaseSession();
+      }
+    }
+
+    handleHash().then(wasHash => { if (!wasHash) restoreSession(); });
   }, []);
 
   // Seed students from hardcoded list on first run, then load live roster
