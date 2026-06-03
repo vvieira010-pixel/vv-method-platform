@@ -508,75 +508,69 @@ export function ReviewStatusBadge({ status }) {
  */
 export function StudentFeedbackView({ feedback }) {
   if (!feedback || typeof feedback !== 'object') return null;
-  const wins = Array.isArray(feedback.whatYouDidWell) ? feedback.whatYouDidWell : [];
-  const fixes = Array.isArray(feedback.whatToImprove) ? feedback.whatToImprove : [];
+  const wins = (Array.isArray(feedback.whatYouDidWell) ? feedback.whatYouDidWell : [])
+    .filter(w => w && (w.strength || w.explanation));
+  const fixes = (Array.isArray(feedback.whatToImprove) ? feedback.whatToImprove : [])
+    .filter(f => f && (f.area || f.howToImprove || f.insteadOf));
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 22, maxWidth: '68ch' }}>
+      {/* Opening — reads as the first paragraph of a note */}
       {feedback.classFocus && (
-        <p style={{ fontSize: 'var(--text-md)', lineHeight: 1.7, color: 'var(--text)', margin: 0 }}>{feedback.classFocus}</p>
+        <p style={{ fontSize: 'var(--text-md)', lineHeight: 1.75, color: 'var(--text)', margin: 0 }}>{feedback.classFocus}</p>
       )}
 
+      {/* Strengths — bordered left rail, no numbered headers, quote in prose */}
       {wins.length > 0 && (
-        <div>
-          <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 'var(--text-lg)', color: 'var(--success)', marginBottom: 10 }}>What you did well</div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {wins.map((w, i) => (
-              <div key={i} style={{ padding: 14, background: 'var(--success-bg)', border: '1px solid var(--success-soft)', borderRadius: 'var(--radius-md)' }}>
-                <div style={{ fontSize: 'var(--text-md)', fontWeight: 700, color: 'var(--text)', marginBottom: 6 }}>{i + 1}. {w.strength}</div>
-                {w.explanation && <p style={{ fontSize: 'var(--text-sm)', lineHeight: 1.6, margin: '0 0 4px' }}>{w.explanation}</p>}
-                {w.metConnection && <p style={{ fontSize: 'var(--text-sm)', lineHeight: 1.6, margin: '0 0 6px', color: 'var(--text-2)' }}>{w.metConnection}</p>}
-                {w.example && (
-                  <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-2)', fontStyle: 'italic', borderLeft: '2px solid var(--success-soft)', paddingLeft: 10 }}>
-                    <strong style={{ fontStyle: 'normal', color: 'var(--success)' }}>Example: </strong>{w.example}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          {wins.map((w, i) => (
+            <div key={i} style={{ paddingLeft: 14, borderLeft: '3px solid var(--success)' }}>
+              {w.strength && (
+                <div style={{ fontSize: 'var(--text-md)', fontWeight: 700, color: 'var(--text)', marginBottom: 4 }}>{w.strength}</div>
+              )}
+              {w.explanation && (
+                <p style={{ fontSize: 'var(--text-md)', lineHeight: 1.7, margin: 0, color: 'var(--text)' }}>{w.explanation}</p>
+              )}
+              {w.example && (
+                <p style={{ fontSize: 'var(--text-md)', lineHeight: 1.7, margin: '4px 0 0', color: 'var(--text-2)', fontStyle: 'italic' }}>
+                  “{w.example}”
+                </p>
+              )}
+            </div>
+          ))}
         </div>
       )}
 
+      {/* Focus areas — same rail treatment, quote pair rendered inline as one sentence */}
       {fixes.length > 0 && (
-        <div>
-          <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 'var(--text-lg)', color: 'var(--warning)', marginBottom: 10 }}>What to improve</div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {fixes.map((f, i) => (
-              <div key={i} style={{ padding: 14, background: 'var(--warning-bg)', border: '1px solid var(--warning-soft)', borderRadius: 'var(--radius-md)' }}>
-                <div style={{ fontSize: 'var(--text-md)', fontWeight: 700, color: 'var(--text)', marginBottom: 6 }}>{i + 1}. {f.area}</div>
-                {f.metImportance && <p style={{ fontSize: 'var(--text-sm)', lineHeight: 1.6, margin: '0 0 8px', color: 'var(--text-2)' }}>{f.metImportance}</p>}
-                {(f.insteadOf || f.sayInstead) && (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 8 }}>
-                    {f.insteadOf && (
-                      <div style={{ fontSize: 'var(--text-sm)' }}>
-                        <span style={{ color: 'var(--muted)', fontWeight: 600 }}>Instead of: </span>
-                        <span style={{ color: 'var(--danger)' }}>"{f.insteadOf}"</span>
-                      </div>
-                    )}
-                    {f.sayInstead && (
-                      <div style={{ fontSize: 'var(--text-sm)' }}>
-                        <span style={{ color: 'var(--muted)', fontWeight: 600 }}>Say: </span>
-                        <span style={{ color: 'var(--success)', fontWeight: 600 }}>"{f.sayInstead}"</span>
-                      </div>
-                    )}
-                  </div>
-                )}
-                {f.howToImprove && (
-                  <div style={{ fontSize: 'var(--text-sm)', lineHeight: 1.6 }}>
-                    <strong style={{ color: 'var(--accent)' }}>How to improve: </strong>{f.howToImprove}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          {fixes.map((f, i) => (
+            <div key={i} style={{ paddingLeft: 14, borderLeft: '3px solid var(--warning-text)' }}>
+              {f.area && (
+                <div style={{ fontSize: 'var(--text-md)', fontWeight: 700, color: 'var(--text)', marginBottom: 4 }}>{f.area}</div>
+              )}
+              {(f.insteadOf || f.sayInstead) && (
+                <p style={{ fontSize: 'var(--text-md)', lineHeight: 1.7, margin: '0 0 4px', color: 'var(--text)' }}>
+                  {f.insteadOf && <>You said <em style={{ color: 'var(--danger)' }}>“{f.insteadOf}”</em></>}
+                  {f.insteadOf && f.sayInstead && <> — try </>}
+                  {!f.insteadOf && f.sayInstead && <>Try </>}
+                  {f.sayInstead && <em style={{ color: 'var(--success)', fontWeight: 600 }}>“{f.sayInstead}”</em>}
+                  {(f.insteadOf || f.sayInstead) && '.'}
+                </p>
+              )}
+              {f.howToImprove && (
+                <p style={{ fontSize: 'var(--text-md)', lineHeight: 1.7, margin: 0, color: 'var(--text)' }}>{f.howToImprove}</p>
+              )}
+            </div>
+          ))}
         </div>
       )}
 
+      {/* Closing — no header, no card, no label. Just a paragraph that closes the note. */}
       {feedback.finalNote && (
-        <div style={{ padding: 14, background: 'var(--accent-subtle)', border: '1px solid var(--accent-soft)', borderRadius: 'var(--radius-md)' }}>
-          <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Final note</div>
-          <p style={{ fontSize: 'var(--text-sm)', lineHeight: 1.7, margin: 0, color: 'var(--text)' }}>{feedback.finalNote}</p>
-        </div>
+        <p style={{ fontSize: 'var(--text-md)', lineHeight: 1.75, margin: 0, color: 'var(--text-2)' }}>
+          {feedback.finalNote}
+        </p>
       )}
     </div>
   );

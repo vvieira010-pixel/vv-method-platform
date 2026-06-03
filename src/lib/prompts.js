@@ -168,11 +168,61 @@ Test Strategy: time_management, question_type_recognition, distractor_management
 10. For estimatedOverallScore: only average evaluated skills; label "Partial Estimated Overall" if fewer than all 4 main skills covered.
 11. subskillsAssessed should only list subskills you have actual evidence for.
 12. ratingBreakdown for speaking and writing must align with the official MET rating scales above.
-13. studentFeedback is written DIRECTLY TO THE STUDENT in warm, simple, second-person English ("you", "your"). It is the student-facing report — clear and encouraging, never clinical. Every example MUST be drawn from the actual class context, topics, and things the student really said today — never generic.
-14. studentFeedback.classFocus: a short opening paragraph (2–4 sentences) naming what the class focused on and the student's general performance.
-15. studentFeedback.whatYouDidWell: 2–4 strengths. Each: title (strength), explanation (why they did it well, simple), metConnection (why it matters for MET), example (a real example or paraphrase from today's class).
-16. studentFeedback.whatToImprove: 1–3 areas. Each: area (the specific skill), metImportance (how it affects the MET score), insteadOf (the student's actual weak phrase/answer), sayInstead (the improved version), howToImprove (one clear, practical action). The insteadOf/sayInstead pair MUST use the student's real language from class.
-17. studentFeedback.finalNote: a warm, encouraging closing focused on progress and the next step.
+13. studentFeedback is a short personal note from teacher to student — not a report, not a rubric, not a form. Write the way a tutor who taught this lesson would actually write to this student.
+
+    PROSE-FIRST PROCEDURE (mandatory). Before filling any JSON field, draft the feedback as a 5–7 sentence note in your head. Then split that draft into the fields below — pull existing sentences into their slots. Do not write new prose for the fields. If you find yourself writing prose for one of the slots, you skipped the draft step. Start over.
+
+    VOICE RULES (any violation fails):
+    • Second person only: "you", "your". Never "the student", "he/she/they", "this learner".
+    • Quote-anchored: every strength and every fix references something specific the student actually said or wrote today. Use direct quotes when you have them.
+    • Substitution test: could the sentence be copied into another student's feedback unchanged? If yes, rewrite or cut it.
+    • BANNED openers (never start a sentence with): "Great work", "Well done", "Excellent", "Good job", "It is important", "This is important", "Furthermore", "Additionally", "Moreover", "In addition", "In terms of", "With respect to", "Going forward", "In conclusion", "Overall".
+    • BANNED phrases (cut on sight): "This demonstrates", "Your performance", "You demonstrated", "You exhibited", "This is crucial for", "This is essential", "This shows that you", "Continue to", "Keep up".
+    • Vary sentence openings — no two consecutive sentences start the same way.
+    • Brevity wins. If a thought is one sentence, stop. Don't pad.
+
+    MET-RELEVANCE BUDGET. Across the ENTIRE studentFeedback object, at most 2 sentences may reference the MET exam directly. Each such reference must name a concrete consequence (e.g. "examiners weight delivery in the third descriptor — your hesitation there costs you a point"), not a generic "this matters for MET" or "this affects your score". If you cannot make it concrete, drop it.
+
+    LESS IS MORE. Better to return 1 strength than 3 padded ones. Better to skip whatToImprove than fabricate one. If the evidence does not support an item, omit it.
+
+14. studentFeedback.classFocus: 2–3 sentences. Pull from the draft. Name the actual task or topic. Say concretely how it went, anchored in what happened. Do not open with "The class focused on" or "Today we worked on".
+
+15. studentFeedback.whatYouDidWell: 1–3 strengths (1 or 2 is preferred; 3 only if the evidence clearly supports it). For each item:
+    - strength: plain phrase of what they actually did. Not a rubric label.
+    - explanation: 1–2 sentences pulled from the draft. Start from what they DID, then why it worked. May include MET context inline if it fits the budget; do NOT add a separate metConnection field. Leave metConnection empty string ("") — folded into explanation now.
+    - example: the actual quote or near-quote that earned this. Format naturally: "When you said 'X'..." or just the quote in italics. If you don't have a specific quote, omit the whole strength.
+
+16. studentFeedback.whatToImprove: 0–2 areas (1 is usually right). For each item:
+    - area: plain phrase. Not a rubric label.
+    - insteadOf: exact or near quote of what they said/wrote today. Required.
+    - sayInstead: the better version. Short, usable, at their level.
+    - howToImprove: 1–2 sentences. ONE thing to try. May include MET consequence inline if it fits the budget; do NOT add a separate metImportance field. Leave metImportance empty string ("") — folded into howToImprove now.
+
+17. studentFeedback.finalNote: 1–2 sentences. Specific to today. What you noticed them getting close to, or one thing to try before next class. Not a recap. Not "Keep up the great work!" Must feel handwritten.
+
+EXAMPLE — what good feedback sounds like (study the voice, not the content):
+
+  classFocus: "Your healthcare interview practice today landed where it needed to. You stayed in the role of nurse for both prompts, didn't switch to first-language fallback once, and answered the visa officer's second question without asking for a repeat. The patient-handover section is still where you slow down — that's the next thing."
+
+  whatYouDidWell[0]:
+    strength: "You built complete answers under pressure"
+    explanation: "Your response to the 'tell me about a difficult patient' prompt had a setup, the action you took, and the outcome — in that order, in one stretch. That's exactly the shape MET speaking wants on extended responses."
+    example: "I had a patient who was refusing medication, so I sat with her and asked what she was worried about, and she said her sister had a reaction to it."
+
+  whatToImprove[0]:
+    area: "Switching tense mid-sentence on past patient stories"
+    insteadOf: "She is having pain and I gave her the medication"
+    sayInstead: "She was having pain, so I gave her the medication"
+    howToImprove: "When you start a story in the past, stay in the past until the story ends. Try writing out tonight's three handover stories with every verb underlined — then check each one is past tense. Examiners flag this as a control issue even when the meaning is clear."
+
+  finalNote: "You were one phrase away from the visa-officer answer flowing without a pause — try the same prompt cold tomorrow morning and see if you can land it in one breath."
+
+END EXAMPLE.
+
+SELF-CHECK before returning the JSON. Run these three tests on your draft. If any fail, fix or drop the item:
+  (1) QUOTE TEST: every example and every insteadOf contains a near-verbatim quote from the transcript/notes. Paraphrases of the rubric do not count.
+  (2) SUBSTITUTION TEST: take each sentence in classFocus, explanation, howToImprove, finalNote — could it be pasted into another student's feedback unchanged? If yes, rewrite or cut.
+  (3) MET-BUDGET TEST: count MET-related sentences across the entire studentFeedback object. Must be ≤ 2 total. Each must name a concrete consequence, not a generic justification.
 18. homeworkRecommendation tasks: each task's "content" field MUST be fully written out exercise content ready for the student to use. For grammar tasks: write out actual sentences containing the target error pattern. For vocabulary: write sentences with blanks. For writing/speaking: write the full prompt. Never write "practice X" — write the actual exercise.
 19. homeworkRecommendation must have 2–4 tasks, each targeting a different diagnosed weakness. No repeated tasks.
 20. priorityDiagnosis MUST contain exactly 3 items (rank 1–3), each with ALL fields filled (urgency, area, evidence, whatToImprove, whyItMatters, howToImprove). Never return an empty array.
