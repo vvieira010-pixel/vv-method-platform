@@ -176,12 +176,6 @@ function ShortPlayer({ ex, res, update, readOnly }) {
           target {target} words {wc >= target * 0.8 ? '· you\'re there' : `· ${target - wc} to go`}
         </span>
       </div>
-      <div style={{
-        marginTop: 14, padding: '10px 14px', borderRadius: 10,
-        background: 'var(--info-bg)', fontSize: 'var(--text-xs)', color: 'var(--info)',
-      }}>
-        After you submit, AI rates your response 1–5 and flags strengths + next step. Your teacher reviews before sending feedback.
-      </div>
     </div>
   );
 }
@@ -518,8 +512,14 @@ function FlashPlayer({ ex, res, update, readOnly }) {
  * HomeworkStepThrough — renders exercises one at a time with progress bar + navigation.
  * Used in the student dashboard to walk through a homework set.
  */
-export function HomeworkStepThrough({ exercises, responses, onResponse, onSubmit, readOnly = false }) {
+export function HomeworkStepThrough({ exercises, responses, onResponse, onSubmit, onSave, initialExerciseId, readOnly = false }) {
   const [currentIdx, setCurrentIdx] = useState(0);
+
+  useEffect(() => {
+    if (!initialExerciseId || !Array.isArray(exercises)) return;
+    const idx = exercises.findIndex(ex => ex.id === initialExerciseId);
+    if (idx >= 0) setCurrentIdx(idx);
+  }, [initialExerciseId]);
 
   if (!exercises || exercises.length === 0) return null;
 
@@ -533,9 +533,9 @@ export function HomeworkStepThrough({ exercises, responses, onResponse, onSubmit
   const isLast = currentIdx === total - 1;
 
   return (
-    <div>
+    <div className="student-step-through">
       {/* Progress bar */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+      <div className="student-step-progress">
         <span style={{ fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--text-2)', whiteSpace: 'nowrap' }}>
           Exercise {currentIdx + 1} / {total}
         </span>
@@ -545,8 +545,8 @@ export function HomeworkStepThrough({ exercises, responses, onResponse, onSubmit
       </div>
 
       {/* Current exercise */}
-      <Card style={{ padding: 20, marginBottom: 14 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+      <Card small className="student-exercise-mini-card" style={{ marginBottom: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
           <ExTypeBadge typeId={current.type} size="md" />
         </div>
         <ExercisePlayer
@@ -558,19 +558,24 @@ export function HomeworkStepThrough({ exercises, responses, onResponse, onSubmit
       </Card>
 
       {/* Navigation */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
+      <div className="student-step-actions">
         <Button variant="ghost" size="sm" onClick={goPrev} disabled={currentIdx === 0}>
           <Icon.arrowL size={12} /> Previous
         </Button>
-        {isLast ? (
-          <Button variant="primary" onClick={onSubmit} disabled={readOnly}>
-            <Icon.check size={13} /> Submit Homework
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+          <Button variant="ghost" size="sm" onClick={() => onSave?.(current?.id)} disabled={readOnly}>
+            <Icon.check size={12} /> Save progress
           </Button>
-        ) : (
-          <Button variant="primary" size="sm" onClick={goNext}>
-            Next <Icon.arrowR size={12} />
-          </Button>
-        )}
+          {isLast ? (
+            <Button variant="primary" onClick={onSubmit} disabled={readOnly}>
+              <Icon.check size={13} /> Submit Homework
+            </Button>
+          ) : (
+            <Button variant="primary" size="sm" onClick={goNext}>
+              Next <Icon.arrowR size={12} />
+            </Button>
+          )}
+        </div>
       </div>
     </div>
   );

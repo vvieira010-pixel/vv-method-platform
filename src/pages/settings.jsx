@@ -1,13 +1,22 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Icon, Card, SectionHeader, Button } from '../components/shared.jsx';
 import { clearWorkflowData } from '../lib/workflow.js';
+
+const SENSITIVE_LOCAL_KEYS = new Set([
+  'vv:groq_api_key',
+  'vv:gemini_api_key',
+  'vv:anthropic_api_key',
+  'vv:openai_api_key',
+]);
 
 export default function SettingsPage({ onNavigate }) {
   const [groqKey, setGroqKey] = useState(() => localStorage.getItem('vv:groq_api_key') || '');
   const [geminiKey, setGeminiKey] = useState(() => localStorage.getItem('vv:gemini_api_key') || '');
   const [anthropicKey, setAnthropicKey] = useState(() => localStorage.getItem('vv:anthropic_api_key') || '');
   const [openaiKey, setOpenaiKey] = useState(() => localStorage.getItem('vv:openai_api_key') || '');
+  const [generalMemo, setGeneralMemo] = useState(() => localStorage.getItem('vv:student_general_memo') || '');
   const [saved, setSaved] = useState('');
+  const importInputRef = useRef(null);
 
   function saveKeys() {
     if (groqKey.trim()) localStorage.setItem('vv:groq_api_key', groqKey.trim());
@@ -23,8 +32,15 @@ export default function SettingsPage({ onNavigate }) {
     window.toast?.('API keys saved.', 'ok');
   }
 
+  function saveGeneralMemo() {
+    if (generalMemo.trim()) localStorage.setItem('vv:student_general_memo', generalMemo.trim());
+    else localStorage.removeItem('vv:student_general_memo');
+    window.dispatchEvent(new CustomEvent('vv:student-memo-changed'));
+    window.toast?.('General memo saved.', 'ok');
+  }
+
   async function handleClearAll() {
-    if (!confirm('Clear ALL platform data? This cannot be undone. Students, diagnoses, homework, and all records will be deleted.')) return;
+    if (!confirm('Clear ALL platform data? This cannot be undone. Export a backup first if you may need to restore students, diagnoses, homework, or class records.')) return;
     await clearWorkflowData();
     localStorage.removeItem('vv:studentsCrud');
     localStorage.removeItem('vv:targetProfiles');
@@ -32,8 +48,72 @@ export default function SettingsPage({ onNavigate }) {
     localStorage.removeItem('vv:classEvidence');
     localStorage.removeItem('vv:vocabularyBank');
     localStorage.removeItem('vv:progressNotes');
+    localStorage.removeItem('vv:student_general_memo');
     window.toast?.('All data cleared.', 'info');
     window.location.reload();
+  }
+
+  function collectPlatformData() {
+    const values = {};
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key?.startsWith('vv:') && !SENSITIVE_LOCAL_KEYS.has(key)) {
+        values[key] = localStorage.getItem(key);
+      }
+    }
+    return {
+      app: 'vv-method-platform',
+      schemaVersion: 1,
+      exportedAt: new Date().toISOString(),
+      excludedKeys: Array.from(SENSITIVE_LOCAL_KEYS),
+      values,
+    };
+  }
+
+  function handleExportData() {
+    const data = collectPlatformData();
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = `vv-method-platform-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    URL.revokeObjectURL(url);
+    window.toast?.('Backup exported.', 'ok');
+  }
+
+  function handleImportClick() {
+    importInputRef.current?.click();
+  }
+
+  async function handleImportData(event) {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+
+    try {
+      const backup = JSON.parse(await file.text());
+      if (backup?.app !== 'vv-method-platform' || typeof backup.values !== 'object' || backup.values === null) {
+        throw new Error('This is not a valid VV Method Platform backup.');
+      }
+      if (!confirm('Restore this backup? Current platform data in this browser will be replaced.')) return;
+
+      Object.keys(localStorage)
+        .filter(key => key.startsWith('vv:'))
+        .filter(key => !SENSITIVE_LOCAL_KEYS.has(key))
+        .forEach(key => localStorage.removeItem(key));
+
+      Object.entries(backup.values).forEach(([key, value]) => {
+        if (key.startsWith('vv:') && typeof value === 'string') localStorage.setItem(key, value);
+      });
+
+      window.toast?.('Backup restored.', 'ok');
+      window.location.reload();
+    } catch (e) {
+      window.toast?.(`Import failed: ${e.message}`, 'warn');
+    }
   }
 
   return (
@@ -45,6 +125,7 @@ export default function SettingsPage({ onNavigate }) {
         <SectionHeader title="AI Provider Keys" icon={<Icon.spark size={15} />} />
         <p style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', margin: '8px 0 16px', lineHeight: 1.6 }}>
           Keys are stored in your browser only. Priority: Groq (free, fast) → Gemini (free, high quality) → Anthropic → OpenAI.
+          Keys are not included in platform backups.
         </p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           <Field label="Groq API Key (recommended — free)">
@@ -68,6 +149,26 @@ export default function SettingsPage({ onNavigate }) {
         </div>
       </Card>
 
+      {/* Student dashboard memo */}
+      <Card style={{ padding: 20, marginTop: 14 }}>
+        <SectionHeader title="Student Dashboard Memo" icon={<Icon.inbox size={15} />} />
+        <p style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', margin: '8px 0 12px', lineHeight: 1.6 }}>
+          This general memo appears for every student on the Memo Board.
+        </p>
+        <Field label="General memo for all students">
+          <textarea
+            className="input"
+            rows={4}
+            value={generalMemo}
+            onChange={e => setGeneralMemo(e.target.value)}
+            placeholder="Type the message every student should see..."
+          />
+        </Field>
+        <div style={{ marginTop: 12 }}>
+          <Button variant="primary" onClick={saveGeneralMemo}>Save General Memo</Button>
+        </div>
+      </Card>
+
       {/* Platform info */}
       <Card style={{ padding: 20, marginTop: 14 }}>
         <SectionHeader title="Platform" />
@@ -76,13 +177,18 @@ export default function SettingsPage({ onNavigate }) {
           <p>Diagnosis-first teaching workflow</p>
           <p>All data stored locally in your browser (localStorage).</p>
         </div>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 16 }}>
+          <Button variant="primary" onClick={handleExportData}><Icon.download size={14} /> Export Backup</Button>
+          <Button variant="ghost" onClick={handleImportClick}><Icon.upload size={14} /> Import Backup</Button>
+          <input ref={importInputRef} type="file" accept="application/json,.json" onChange={handleImportData} style={{ display: 'none' }} />
+        </div>
       </Card>
 
       {/* Danger zone */}
       <Card style={{ padding: 20, marginTop: 14, border: '1.5px solid var(--danger-soft)' }}>
         <SectionHeader title="Danger Zone" icon={<Icon.warning size={15} />} />
         <p style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', margin: '8px 0 14px' }}>
-          Permanently delete all platform data including students, diagnoses, homework, submissions, and error bank.
+          Permanently delete all platform data including students, diagnoses, homework, submissions, and error bank. Export a backup before clearing.
         </p>
         <Button variant="danger" onClick={handleClearAll}>Clear All Platform Data</Button>
       </Card>

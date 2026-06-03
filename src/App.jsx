@@ -6,6 +6,14 @@ import { TweaksPanel, TweakSection, TweakRadio, TweakColor } from './components/
 import { Icon, Avatar, Button, Shell } from './components/shared.jsx';
 import { STUDENTS } from './data/students.jsx';
 import { seedStudentsIfEmpty, getStudents } from './lib/workflow.js';
+import {
+  getSupabaseConfig,
+  parseSupabaseHashFragment,
+  storeSupabaseSession,
+  readStoredSupabaseSession,
+  clearStoredSupabaseSession,
+  fetchSupabaseUser,
+} from './lib/supabase-storage.js';
 
 // Lazy-loaded teacher pages
 const TeacherDashboard  = lazy(() => import('./pages/teacher-dashboard.jsx'));
@@ -36,6 +44,71 @@ export default function App() {
     ...window.TWEAK_DEFAULTS,
   }));
   const [students, setStudents] = useState([]);
+
+  // ── Supabase auth: handle implicit-flow hash redirect + restore stored session ──
+  useEffect(() => {
+    const { url, anonKey, isConfigured } = getSupabaseConfig();
+    if (!isConfigured) return;
+
+    /** Resolve auth payload from a verified Supabase user object. */
+    async function resolveAuth(accessToken, sbUser) {
+      const meta = sbUser?.user_metadata || {};
+      if (meta.role_hint === 'student') {
+        // Must resolve the local student record so the dashboard can load.
+        const roster = await getStudents();
+        const match = roster.find(
+          s => s.email === sbUser.email || s.authUserId === sbUser.id
+        );
+        if (!match) {
+          // Valid Supabase student but no matching local record yet — clear and bail.
+          clearStoredSupabaseSession();
+          return null;
+        }
+        return { role: 'student', studentId: match.id, email: sbUser.email };
+      }
+      return { role: 'teacher', email: sbUser.email, displayName: meta.display_name || sbUser.email };
+    }
+
+    async function handleHash() {
+      const fragment = parseSupabaseHashFragment(window.location.hash);
+      if (!fragment?.access_token) return false;
+
+      // Always clean the URL first so the token isn't bookmarked or leaked.
+      history.replaceState(null, '', window.location.pathname + window.location.search);
+
+      try {
+        // Validate by fetching the actual user from Supabase — rejects forged tokens.
+        const sbUser = await fetchSupabaseUser(url, anonKey, fragment.access_token);
+        storeSupabaseSession({
+          access_token: fragment.access_token,
+          refresh_token: fragment.refresh_token,
+          expires_at: fragment.expires_at || Math.floor(Date.now() / 1000) + fragment.expires_in,
+          user: sbUser,
+        });
+        const payload = await resolveAuth(fragment.access_token, sbUser);
+        if (payload) setAuth(payload);
+      } catch {
+        // Token invalid or Supabase unreachable — do not sign in.
+        clearStoredSupabaseSession();
+      }
+      return true;
+    }
+
+    async function restoreSession() {
+      const stored = readStoredSupabaseSession();
+      if (!stored?.access_token) return;
+      try {
+        // Re-validate the stored token so a stale or tampered session is rejected.
+        const sbUser = await fetchSupabaseUser(url, anonKey, stored.access_token);
+        const payload = await resolveAuth(stored.access_token, sbUser);
+        if (payload) setAuth(payload);
+      } catch {
+        clearStoredSupabaseSession();
+      }
+    }
+
+    handleHash().then(wasHash => { if (!wasHash) restoreSession(); });
+  }, []);
 
   // Seed students from hardcoded list on first run, then load live roster
   useEffect(() => {
@@ -79,14 +152,20 @@ export default function App() {
   };
 
   const handleSignIn = (payload) => setAuth(payload);
-  const handleSignOut = () => { setAuth(null); setView('dashboard'); setViewParams({}); };
+  const handleSignOut = () => {
+    clearStoredSupabaseSession();
+    setAuth(null);
+    setView('dashboard');
+    setViewParams({});
+  };
 
   if (!auth) {
     return <LoginScreen onSignIn={handleSignIn} initialMode="choose" />;
   }
 
   if (auth.role === 'student') {
-    const student = students.find(s => s.id === auth.studentId) || students[0];
+    const student = students.find(s => s.id === auth.studentId);
+    if (!student) return <PageLoader />;
     return (
       <ErrorBoundary label="Dashboard unavailable">
         <StudentDashboard student={student} onSignOut={handleSignOut} />
