@@ -224,7 +224,7 @@ SELF-CHECK before returning the JSON. Run these three tests on your draft. If an
   (2) SUBSTITUTION TEST: take each sentence in classFocus, explanation, howToImprove, finalNote — could it be pasted into another student's feedback unchanged? If yes, rewrite or cut.
   (3) MET-BUDGET TEST: count MET-related sentences across the entire studentFeedback object. Must be ≤ 2 total. Each must name a concrete consequence, not a generic justification.
 18. homeworkRecommendation tasks: each task's "content" field MUST be fully written out exercise content ready for the student to use. For grammar tasks: write out actual sentences containing the target error pattern. For vocabulary: write sentences with blanks. For writing/speaking: write the full prompt. Never write "practice X" — write the actual exercise.
-19. homeworkRecommendation must have 2–4 tasks, each targeting a different diagnosed weakness. No repeated tasks.
+19. homeworkRecommendation must have 2–4 tasks, each targeting a different diagnosed weakness. No repeated tasks. The set MUST include at least one reading direction, at least one listening direction, and at least one speaking OR writing task (grammar/vocabulary tasks are optional extras on top of this required trio). Also include a one-line focusReminder tied to the top priority (e.g. "answer → reason → example").
 20. priorityDiagnosis MUST contain exactly 3 items (rank 1–3), each with ALL fields filled (urgency, area, evidence, whatToImprove, whyItMatters, howToImprove). Never return an empty array.
 21. vocabGrammarTargets MUST be populated: vocabularyTargets with at least 2 items (each with wordOrPhrase, category, meaning, exampleSentence) and grammarTargets with at least 2 items (each with area, issue, correction, practiceDirection), all drawn from the actual evidence. Never return empty arrays.
 
@@ -360,49 +360,38 @@ Return ONLY valid JSON. No markdown, no backticks, no prose outside the JSON obj
     { "rank": 3, "urgency": "Watch", "area": "...", "evidence": "...", "pattern": "...", "whatToImprove": "...", "whyItMatters": "...", "howToImprove": "...", "successCriteria": "...", "timeHorizon": "..." }
   ],
   "studentFeedback": {
-    "classFocus": "Short opening paragraph (2–4 sentences) written to the student: what the class focused on today and how they generally performed. Warm, second person.",
+    "//voice": "Follow rules 13–17. Draft as a 5–7 sentence note FIRST, then split into these fields. Quote-anchored, second person, no banned openers/phrases, ≤2 MET-specific sentences across this whole object. Leave metConnection/metImportance as empty strings — MET relevance is folded into explanation/howToImprove per the budget.",
+    "classFocus": "2–3 sentences pulled from the draft. Name the actual task/topic and how it went, anchored in what happened today. Do NOT open with 'The class focused on' or 'Today we worked on'.",
     "whatYouDidWell": [
       {
-        "strength": "strength title (e.g. 'You communicated your main ideas clearly')",
-        "explanation": "You did this well because [simple explanation in plain English].",
-        "metConnection": "This is important for MET because [reason].",
-        "example": "a real example or paraphrase from today's class — what the student actually said or did"
-      },
-      {
-        "strength": "second strength title",
-        "explanation": "...",
-        "metConnection": "...",
-        "example": "..."
+        "strength": "plain phrase of what they actually did — not a rubric label",
+        "explanation": "1–2 sentences from the draft: what they did, then why it worked. May fold in one concrete MET consequence inline if it fits the ≤2 budget.",
+        "metConnection": "",
+        "example": "the actual quote or near-quote from today that earned this — 'When you said \"...\"'. Omit the whole strength if you have no real quote."
       }
     ],
     "whatToImprove": [
       {
-        "area": "the specific skill to improve (grammar, vocabulary accuracy, answer development, fluency, pronunciation, organization, etc.)",
-        "metImportance": "This is important for MET because [how it affects the exam score/performance].",
-        "insteadOf": "the student's actual weak phrase or answer from today",
-        "sayInstead": "the improved version",
-        "howToImprove": "one clear, practical action the student can take"
-      },
-      {
-        "area": "optional second area to improve",
-        "metImportance": "...",
-        "insteadOf": "...",
-        "sayInstead": "...",
-        "howToImprove": "..."
+        "area": "plain phrase of what to work on — not a rubric label",
+        "metImportance": "",
+        "insteadOf": "exact or near quote of what the student said/wrote today",
+        "sayInstead": "the better version — short, usable, at their level",
+        "howToImprove": "1–2 sentences: the ONE thing to try. May fold in one concrete MET consequence inline if it fits the ≤2 budget."
       }
     ],
-    "finalNote": "Encouraging closing message focused on progress and the next step — reference something specific about this student."
+    "finalNote": "1–2 sentences specific to today: what they were close to, or one thing to try before next class. Handwritten feel. Not a recap, not 'Keep up the great work!'."
   },
   "homeworkRecommendation": {
     "title": "specific title that reflects the actual target — not generic",
     "objective": "direct link to top diagnosis priority — state what skill and why",
     "instructions": "clear, friendly instructions written to the student in second person",
+    "focusReminder": "one short line tied to the top priority, e.g. 'answer → reason → example'",
     "tasks": [
       {
         "taskNumber": 1,
         "type": "grammar|vocabulary|writing|speaking|reading|listening",
         "description": "one-line description of the task goal",
-        "content": "FULLY WRITTEN OUT exercise. For grammar: write 5–8 complete sentences with the error pattern for the student to correct. For vocabulary: write the words in context sentences with blanks to fill. For writing: write the full prompt with requirements. For speaking: write the full scenario and question. Do NOT just say 'practice grammar' — write the actual exercise.",
+        "content": "FULLY WRITTEN OUT exercise. For grammar: write 5–8 complete sentences with the error pattern for the student to correct. For vocabulary: write the words in context sentences with blanks to fill. For writing: write the full prompt with requirements. For speaking: write the full scenario and question. For reading: give the passage or a clear source + what to find. For listening: give the source + what to listen for. Do NOT just say 'practice grammar' — write the actual exercise.",
         "example": "a worked example showing the format and expected level",
         "expectedOutput": "what the student must write or record to submit"
       },
