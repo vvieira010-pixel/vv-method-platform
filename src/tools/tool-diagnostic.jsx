@@ -564,7 +564,7 @@ export default function ToolDiagnostic({ student, students, onSelectStudent, onN
               <SectionHeader title="Priorities" />
               <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 10 }}>
                 {result.priorities.filter(p => p.area).map((p, i) => (
-                  <div key={i} style={{ padding: 12, borderRadius: "var(--radius-sm)", background: "var(--bg)", borderLeft: `3px solid ${p.urgency === "Critical" ? "var(--danger)" : p.urgency === "Developing" ? "var(--warning)" : "var(--info)"}` }}>
+                  <div key={i} style={{ padding: 12, borderRadius: "var(--radius-sm)", background: "var(--bg)" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
                       <Pill tone={p.urgency === "Critical" ? "danger" : p.urgency === "Developing" ? "warning" : "info"}>{p.urgency}</Pill>
                       <span style={{ fontWeight: 600, fontSize: "var(--text-sm)" }}>{p.area}</span>
@@ -720,10 +720,10 @@ export default function ToolDiagnostic({ student, students, onSelectStudent, onN
 
 /* ─── Sub-components & styles ──────────────────────────────── */
 function SnapshotBar({ value4 }) {
-  const width = `${Math.max(0, Math.min(100, (clampTwoDecimals(value4) / 4) * 100))}%`;
+  const scale = Math.max(0, Math.min(1, clampTwoDecimals(value4) / 4));
   return (
     <div style={{ width: "100%", height: 8, borderRadius: "var(--radius-pill)", background: "var(--bg-deep)", overflow: "hidden" }}>
-      <div style={{ width, height: "100%", borderRadius: "var(--radius-pill)", background: "var(--accent)", transition: "width 0.4s var(--ease)" }} />
+      <div style={{ width: "100%", height: "100%", borderRadius: "var(--radius-pill)", background: "var(--accent)", transform: `scaleX(${scale})`, transformOrigin: "left", transition: "transform 0.4s var(--ease)" }} />
     </div>
   );
 }

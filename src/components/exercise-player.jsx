@@ -234,7 +234,7 @@ function SpeakPlayer({ ex, res, update, readOnly }) {
 
   return (
     <div>
-      <div style={{ background: 'var(--bg)', borderLeft: '3px solid var(--accent)', borderRadius: 10, padding: '14px 16px', marginBottom: 14 }}>
+      <div style={{ background: 'var(--bg)', borderRadius: 10, padding: '14px 16px', marginBottom: 14 }}>
         <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>Speaking prompt</div>
         <p style={{ margin: 0, fontSize: 'var(--text-md)', color: 'var(--text)', lineHeight: 1.55, fontWeight: 500 }}>
           {ex.prompt}
@@ -266,8 +266,10 @@ function SpeakPlayer({ ex, res, update, readOnly }) {
           <div style={{ display: 'flex', alignItems: 'center', gap: 2, marginLeft: 'auto' }}>
             {Array.from({ length: 24 }).map((_, i) => (
               <span key={i} style={{
-                width: 2, height: 4 + Math.abs(Math.sin(seconds * 0.7 + i * 0.4)) * 18,
-                background: 'var(--primary)', borderRadius: 999, transition: 'height .2s',
+                width: 2, height: 22,
+                background: 'var(--primary)', borderRadius: 999,
+                transform: `scaleY(${(4 + Math.abs(Math.sin(seconds * 0.7 + i * 0.4)) * 18) / 22})`,
+                transformOrigin: 'bottom', transition: 'transform .2s',
               }} />
             ))}
           </div>
@@ -538,7 +540,7 @@ export function HomeworkStepThrough({ exercises, responses, onResponse, onSubmit
           Exercise {currentIdx + 1} / {total}
         </span>
         <div style={{ flex: 1, height: 5, background: 'var(--divider)', borderRadius: 999, overflow: 'hidden' }}>
-          <div style={{ width: `${progress}%`, height: '100%', background: 'linear-gradient(90deg, var(--primary), var(--accent))', borderRadius: 999, transition: 'width 0.3s var(--ease)' }} />
+          <div style={{ width: '100%', height: '100%', background: 'linear-gradient(90deg, var(--primary), var(--accent))', borderRadius: 999, transform: `scaleX(${progress / 100})`, transformOrigin: 'left', transition: 'transform 0.3s var(--ease)' }} />
         </div>
       </div>
 

@@ -218,6 +218,13 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
         };
       });
       setSections(initSections);
+
+      // Warn if the AI returned any section empty/missing so the teacher can Regen before approving.
+      const emptyLabels = SECTION_KEYS.filter(({ key }) => isSectionEmpty(parsed[key])).map(({ label }) => label);
+      if (emptyLabels.length > 0) {
+        window.toast?.(`Some sections came back empty — use Regen: ${emptyLabels.join(', ')}`, 'warn');
+      }
+
       setStep('review');
     } catch (e) {
       console.error(e);
@@ -615,7 +622,7 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
                 </div>
               )}
               <div style={{ height: 6, background: 'var(--bg-deep)', borderRadius: 99, marginTop: 6, overflow: 'hidden' }}>
-                <div style={{ height: '100%', width: `${(approvedCount / totalSections) * 100}%`, background: approvedCount === totalSections ? 'var(--success)' : 'var(--accent)', borderRadius: 99, transition: 'width 0.3s' }} />
+                <div style={{ height: '100%', width: '100%', background: approvedCount === totalSections ? 'var(--success)' : 'var(--accent)', borderRadius: 99, transform: `scaleX(${approvedCount / totalSections})`, transformOrigin: 'left', transition: 'transform 0.3s' }} />
               </div>
             </div>
             <Button variant="ghost" size="sm" onClick={approveAll}>Approve All</Button>
@@ -698,6 +705,15 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
 }
 
 /* ── Section content renderer ── */
+function EmptySectionNote({ message }) {
+  return (
+    <div style={{ padding: 14, background: 'var(--warning-bg)', borderRadius: 'var(--radius-sm)', display: 'flex', alignItems: 'center', gap: 8 }}>
+      <Icon.refresh size={14} color="var(--warning)" />
+      <span style={{ fontSize: 'var(--text-sm)', color: 'var(--warning)' }}>{message}</span>
+    </div>
+  );
+}
+
 function KeyValueCards({ content }) {
   if (!content || typeof content !== 'object') return null;
   const entries = Array.isArray(content) ? content.map((v, i) => [`${i + 1}`, v]) : Object.entries(content);
@@ -750,10 +766,13 @@ function SectionContent({ sectionKey, content }) {
   }
 
   if (sectionKey === 'priorityDiagnosis' && Array.isArray(content)) {
+    if (content.length === 0) {
+      return <EmptySectionNote message="No priority items were generated — click Regen to retry this section." />;
+    }
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         {content.map((p, i) => (
-          <div key={i} style={{ padding: 12, background: 'var(--bg)', borderRadius: 'var(--radius-sm)', borderLeft: `3px solid ${p.urgency === 'Critical' ? 'var(--danger)' : p.urgency === 'Developing' ? 'var(--warning)' : 'var(--info)'}` }}>
+          <div key={i} style={{ padding: 12, background: 'var(--bg)', borderRadius: 'var(--radius-sm)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
               <Pill tone={p.urgency === 'Critical' ? 'danger' : p.urgency === 'Developing' ? 'warning' : 'info'}>{p.urgency}</Pill>
               <strong style={{ fontSize: 'var(--text-sm)' }}>{p.area}</strong>
@@ -771,7 +790,7 @@ function SectionContent({ sectionKey, content }) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         {Object.entries(content).map(([skill, data]) => (
-          <div key={skill} style={{ padding: 14, background: 'var(--bg)', borderRadius: 'var(--radius-sm)', borderLeft: `3px solid ${data?.evaluated === false ? 'var(--border)' : data?.score0to80 >= 55 ? 'var(--success)' : data?.score0to80 >= 40 ? 'var(--warning)' : 'var(--danger)'}` }}>
+          <div key={skill} style={{ padding: 14, background: 'var(--bg)', borderRadius: 'var(--radius-sm)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
               <span style={{ fontWeight: 700, textTransform: 'capitalize', fontSize: 'var(--text-sm)' }}>{skill}</span>
               {data?.evaluated === false ? (
@@ -816,7 +835,7 @@ function SectionContent({ sectionKey, content }) {
           <div style={{ padding: 12, background: 'var(--accent-subtle)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-sm)', lineHeight: 1.6 }}>{content.instructions}</div>
         )}
         {Array.isArray(content.tasks) && content.tasks.map((t, i) => (
-          <div key={i} style={{ padding: 14, background: 'var(--bg)', borderRadius: 'var(--radius-sm)', borderLeft: '3px solid var(--accent)' }}>
+          <div key={i} style={{ padding: 14, background: 'var(--bg)', borderRadius: 'var(--radius-sm)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
               <span style={{ fontSize: 'var(--text-xs)', fontWeight: 800, color: 'var(--accent)' }}>Task {t.taskNumber || i + 1}</span>
               {t.type && <Pill tone="accent">{t.type}</Pill>}
@@ -901,7 +920,7 @@ function SectionContent({ sectionKey, content }) {
           </div>
         )}
         {vocab.length === 0 && grammar.length === 0 && (
-          <KeyValueCards content={content} />
+          <EmptySectionNote message="No vocabulary or grammar targets were generated — click Regen to retry this section." />
         )}
       </div>
     );
@@ -939,6 +958,20 @@ function PrereqIcon({ ok, required }) {
 
 function camelToLabel(str) {
   return str.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase());
+}
+
+// True when an AI section came back missing or with no usable content.
+function isSectionEmpty(content) {
+  if (content == null) return true;
+  if (typeof content === 'string') return content.trim().length === 0;
+  if (Array.isArray(content)) return content.length === 0;
+  if (typeof content === 'object') {
+    const vals = Object.values(content);
+    if (vals.length === 0) return true;
+    // Object of arrays (e.g. vocabGrammarTargets): empty if every array is empty.
+    if (vals.every(v => Array.isArray(v))) return vals.every(v => v.length === 0);
+  }
+  return false;
 }
 
 function tryParseOrString(text) {

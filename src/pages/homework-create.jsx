@@ -703,7 +703,7 @@ function PreviewExercise({ exercise }) {
     case 'speak':
       return (
         <div>
-          <div style={{ background: 'var(--surface)', borderLeft: '3px solid var(--accent)', borderRadius: 8, padding: '12px 14px', marginBottom: 10 }}>
+          <div style={{ background: 'var(--surface)', borderRadius: 8, padding: '12px 14px', marginBottom: 10 }}>
             <p style={{ fontWeight: 500, margin: 0 }}>{exercise.prompt || 'Speaking prompt…'}</p>
             <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>Target: {exercise.targetSeconds || 60} seconds</span>
           </div>
