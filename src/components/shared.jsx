@@ -793,7 +793,7 @@ export function Shell({ tabs = [], active, onTab, children, rightSlot, workflowA
 
 /* ─── callAI ─────────────────────────────────────────────────── */
 const API_KEY_LS = 'vv:anthropic_api_key';
-const ANTHROPIC_MODEL = import.meta.env.VITE_ANTHROPIC_MODEL || 'claude-sonnet-4-5';
+const ANTHROPIC_MODEL = import.meta.env.VITE_ANTHROPIC_MODEL || 'claude-sonnet-4-6';
 const OPENAI_MODEL = import.meta.env.VITE_OPENAI_MODEL || 'gpt-4.1-mini';
 const GROQ_MODEL = import.meta.env.VITE_GROQ_MODEL || 'llama-3.3-70b-versatile';
 const GEMINI_MODEL = import.meta.env.VITE_GEMINI_MODEL || 'gemini-2.5-flash';

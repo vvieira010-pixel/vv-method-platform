@@ -6,6 +6,14 @@ import { TweaksPanel, TweakSection, TweakRadio, TweakColor } from './components/
 import { Icon, Avatar, Button, Shell } from './components/shared.jsx';
 import { STUDENTS } from './data/students.jsx';
 import { seedStudentsIfEmpty, getStudents } from './lib/workflow.js';
+import {
+  getSupabaseConfig,
+  parseSupabaseHashFragment,
+  parseJwtClaims,
+  storeSupabaseSession,
+  readStoredSupabaseSession,
+  clearStoredSupabaseSession,
+} from './lib/supabase-storage.js';
 
 // Lazy-loaded teacher pages
 const TeacherDashboard  = lazy(() => import('./pages/teacher-dashboard.jsx'));
@@ -35,6 +43,39 @@ export default function App() {
     ...window.TWEAK_DEFAULTS,
   }));
   const [students, setStudents] = useState([]);
+
+  // ── Supabase auth: handle implicit-flow hash redirect + restore stored session ──
+  useEffect(() => {
+    const { isConfigured } = getSupabaseConfig();
+    if (!isConfigured) return;
+
+    // 1. Check for #access_token in the URL (email confirmation / OAuth redirect)
+    const fragment = parseSupabaseHashFragment(window.location.hash);
+    if (fragment?.access_token) {
+      const claims = parseJwtClaims(fragment.access_token);
+      const meta = claims?.user_metadata || {};
+      const role = meta.role_hint === 'student' ? 'student' : 'teacher';
+      storeSupabaseSession({
+        access_token: fragment.access_token,
+        refresh_token: fragment.refresh_token,
+        expires_at: fragment.expires_at || Math.floor(Date.now() / 1000) + fragment.expires_in,
+        user: { id: claims?.sub, email: claims?.email, user_metadata: meta },
+      });
+      // Clean the token out of the URL bar
+      history.replaceState(null, '', window.location.pathname + window.location.search);
+      setAuth({ role, email: claims?.email, displayName: meta.display_name || claims?.email });
+      return;
+    }
+
+    // 2. Restore a previously stored session on page reload
+    const stored = readStoredSupabaseSession();
+    if (stored?.access_token) {
+      const claims = parseJwtClaims(stored.access_token);
+      const meta = claims?.user_metadata || stored.user?.user_metadata || {};
+      const role = meta.role_hint === 'student' ? 'student' : 'teacher';
+      setAuth({ role, email: claims?.email || stored.user?.email, displayName: meta.display_name });
+    }
+  }, []);
 
   // Seed students from hardcoded list on first run, then load live roster
   useEffect(() => {
@@ -78,7 +119,12 @@ export default function App() {
   };
 
   const handleSignIn = (payload) => setAuth(payload);
-  const handleSignOut = () => { setAuth(null); setView('dashboard'); setViewParams({}); };
+  const handleSignOut = () => {
+    clearStoredSupabaseSession();
+    setAuth(null);
+    setView('dashboard');
+    setViewParams({});
+  };
 
   if (!auth) {
     return <LoginScreen onSignIn={handleSignIn} initialMode="choose" />;
