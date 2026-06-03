@@ -3,40 +3,64 @@
  *
  * Exercises built or AI-generated in the homework builder normally live only
  * inside one homework assignment. This module lets the teacher save any
- * exercise into a personal library (localStorage key `vv:exerciseLibrary`)
- * and pull it back into any future homework.
+ * exercise into a personal library and pull it back into any future homework.
  *
- * Stored shape extends the platform exercise format (see exercise-types.js):
- *   { id: 'lib_…', type, …type-specific fields…,
- *     title, tags: [], level: '', createdAt, usageCount }
+ * STORAGE: Supabase `exercises` table when the teacher is authenticated with
+ * Supabase (cross-device, survives cache clears) — otherwise a localStorage
+ * fallback (`vv:exerciseLibrary`) so the feature still works for dev/local
+ * teacher logins and offline. This is the pilot slice of the broader
+ * localStorage→Supabase migration.
  *
- * The shape is flat JSON, so this is trivially portable to a Supabase
- * `exercises` table when the data layer migrates off localStorage.
+ * All functions are async (the Supabase path is network-bound). The
+ * localStorage path resolves synchronously-fast but is still awaited.
+ *
+ * Stored shape (both backends), extends the platform exercise format:
+ *   { id, type, …type-specific fields…, title, tags: [], level: '',
+ *     createdAt, usageCount }
  */
+
+import {
+  getSupabaseConfig,
+  readStoredSupabaseSession,
+  buildSupabaseHeaders,
+} from './supabase-storage.js';
 
 const LIBRARY_KEY = 'vv:exerciseLibrary';
 
-function load() {
+/* ─── backend selection ──────────────────────────────────────── */
+// Use Supabase only when configured AND the teacher has a live Supabase
+// session token. Local/dev password logins have no token → localStorage.
+function supabaseCtx() {
+  const cfg = getSupabaseConfig();
+  if (!cfg.isConfigured) return null;
+  const session = readStoredSupabaseSession();
+  if (!session?.access_token) return null;
+  return { url: cfg.url, anonKey: cfg.anonKey, token: session.access_token };
+}
+
+/* ─── localStorage fallback ──────────────────────────────────── */
+function lsLoad() {
   try { return JSON.parse(localStorage.getItem(LIBRARY_KEY) || '[]'); }
   catch { return []; }
 }
-function save(list) {
+function lsSave(list) {
   try { localStorage.setItem(LIBRARY_KEY, JSON.stringify(list)); } catch {}
 }
 function uid() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 }
 
+/* ─── shared helpers ─────────────────────────────────────────── */
+
 /** Stable-ish content signature so saving the same exercise twice updates, not duplicates. */
 function contentHash(ex) {
-  const core = [
+  return [
     ex.type,
     ex.question, ex.template, ex.prompt, ex.errorText,
     Array.isArray(ex.sentences) ? ex.sentences.join('|') : '',
     Array.isArray(ex.options) ? ex.options.join('|') : '',
     Array.isArray(ex.pairs) ? ex.pairs.map(p => `${p.term}=${p.def}`).join('|') : '',
   ].filter(Boolean).join('::').trim().toLowerCase();
-  return core;
 }
 
 /** Derive a readable title from an exercise's primary text field. */
@@ -49,63 +73,151 @@ function deriveTitle(ex) {
   return s.length > 80 ? s.slice(0, 77) + '…' : s;
 }
 
+/** Split a saved exercise into { meta, fields } where fields are the type-specific platform fields. */
+function splitExercise(exercise, meta = {}) {
+  const { id, title, tags, level, createdAt, usageCount, ...fields } = exercise;
+  return {
+    fields,
+    title: meta.title || deriveTitle(exercise),
+    tags: Array.isArray(meta.tags) ? meta.tags : (Array.isArray(tags) ? tags : []),
+    level: meta.level || level || '',
+  };
+}
+
+/** Map a Supabase `exercises` row back into the flat library-exercise shape used by the UI. */
+function rowToExercise(row) {
+  return {
+    ...(row.content || {}),
+    id: row.id,
+    type: row.type,
+    title: row.title || '',
+    tags: row.tags || [],
+    level: row.level || '',
+    createdAt: row.created_at,
+    usageCount: row.usage_count || 0,
+  };
+}
+
+/* ─── Supabase REST ──────────────────────────────────────────── */
+async function sbFetch(ctx, path, init = {}) {
+  const res = await fetch(`${ctx.url}/rest/v1/${path}`, {
+    ...init,
+    headers: buildSupabaseHeaders(ctx.anonKey, ctx.token, init.headers),
+  });
+  if (!res.ok) {
+    const body = await res.text().catch(() => '');
+    throw new Error(`Supabase ${init.method || 'GET'} ${path} → ${res.status} ${body}`);
+  }
+  return res;
+}
+
+/* ─── public API (async) ─────────────────────────────────────── */
+
 /** All saved exercises, newest first. */
-export function getLibraryExercises() {
-  return load();
+export async function getLibraryExercises() {
+  const ctx = supabaseCtx();
+  if (!ctx) return lsLoad();
+  try {
+    const res = await sbFetch(ctx, 'exercises?select=*&order=created_at.desc');
+    return (await res.json()).map(rowToExercise);
+  } catch (e) {
+    console.warn('[exercise-library] Supabase read failed, falling back to localStorage:', e.message);
+    return lsLoad();
+  }
 }
 
 /**
- * Save an exercise to the library. `exercise` is a platform exercise object
- * (from the homework builder). Strips its per-homework id, assigns a lib id,
+ * Save an exercise to the library. Strips its per-homework id, derives a title,
  * and dedupes by content signature (re-save updates the existing entry).
- * Returns the stored record.
+ * Returns the stored record (flat library-exercise shape).
  */
-export function saveExerciseToLibrary(exercise, meta = {}) {
+export async function saveExerciseToLibrary(exercise, meta = {}) {
   if (!exercise || !exercise.type) return null;
-  const list = load();
-  const sig = contentHash(exercise);
+  const { fields, title, tags, level } = splitExercise(exercise, meta);
+  const ctx = supabaseCtx();
 
-  // Copy type-specific fields, drop the homework-scoped id.
-  const { id, ...fields } = exercise;
-  const base = {
-    ...fields,
-    title: meta.title || deriveTitle(exercise),
-    tags: Array.isArray(meta.tags) ? meta.tags : [],
-    level: meta.level || '',
-  };
+  if (ctx) {
+    try {
+      const sig = contentHash(exercise);
+      // Dedupe: look for an existing row with the same content signature.
+      const existing = (await (await sbFetch(ctx, 'exercises?select=*&order=created_at.desc')).json())
+        .map(rowToExercise)
+        .find(e => contentHash(e) === sig);
 
-  const existingIdx = list.findIndex(e => contentHash(e) === sig);
-  if (existingIdx >= 0) {
-    // Update in place, preserve id/createdAt/usageCount.
-    const prev = list[existingIdx];
-    const updated = { ...prev, ...base, id: prev.id, createdAt: prev.createdAt, usageCount: prev.usageCount || 0 };
-    list[existingIdx] = updated;
-    save(list);
-    return updated;
+      const payload = { type: exercise.type, title, tags, level, content: fields };
+      if (existing) {
+        const res = await sbFetch(ctx, `exercises?id=eq.${existing.id}`, {
+          method: 'PATCH',
+          headers: { Prefer: 'return=representation' },
+          body: JSON.stringify(payload),
+        });
+        return rowToExercise((await res.json())[0]);
+      }
+      const res = await sbFetch(ctx, 'exercises', {
+        method: 'POST',
+        headers: { Prefer: 'return=representation' },
+        body: JSON.stringify(payload),  // teacher_id defaults to auth.uid() server-side
+      });
+      return rowToExercise((await res.json())[0]);
+    } catch (e) {
+      console.warn('[exercise-library] Supabase save failed, falling back to localStorage:', e.message);
+      // fall through to localStorage
+    }
   }
 
-  const record = {
-    ...base,
-    id: 'lib_' + uid(),
-    createdAt: new Date().toISOString(),
-    usageCount: 0,
-  };
+  // localStorage path (fallback / unauthenticated / dev login)
+  const list = lsLoad();
+  const sig = contentHash(exercise);
+  const base = { ...fields, type: exercise.type, title, tags, level };
+  const idx = list.findIndex(e => contentHash(e) === sig);
+  if (idx >= 0) {
+    const prev = list[idx];
+    const updated = { ...prev, ...base, id: prev.id, createdAt: prev.createdAt, usageCount: prev.usageCount || 0 };
+    list[idx] = updated;
+    lsSave(list);
+    return updated;
+  }
+  const record = { ...base, id: 'lib_' + uid(), createdAt: new Date().toISOString(), usageCount: 0 };
   list.unshift(record);
-  save(list);
+  lsSave(list);
   return record;
 }
 
-/** Remove a saved exercise by its lib id. */
-export function deleteLibraryExercise(libId) {
-  save(load().filter(e => e.id !== libId));
+/** Remove a saved exercise by id. */
+export async function deleteLibraryExercise(id) {
+  const ctx = supabaseCtx();
+  if (ctx) {
+    try {
+      await sbFetch(ctx, `exercises?id=eq.${id}`, { method: 'DELETE' });
+      return;
+    } catch (e) {
+      console.warn('[exercise-library] Supabase delete failed, falling back to localStorage:', e.message);
+    }
+  }
+  lsSave(lsLoad().filter(e => e.id !== id));
 }
 
 /** Bump usage count (called when a saved exercise is added into a homework). */
-export function incrementUsage(libId) {
-  const list = load();
-  const idx = list.findIndex(e => e.id === libId);
+export async function incrementUsage(id) {
+  const ctx = supabaseCtx();
+  if (ctx) {
+    try {
+      // read current, then write +1 (no atomic RPC for the pilot)
+      const rows = await (await sbFetch(ctx, `exercises?id=eq.${id}&select=usage_count`)).json();
+      const current = rows[0]?.usage_count || 0;
+      await sbFetch(ctx, `exercises?id=eq.${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ usage_count: current + 1 }),
+      });
+      return;
+    } catch (e) {
+      console.warn('[exercise-library] Supabase usage bump failed, falling back to localStorage:', e.message);
+    }
+  }
+  const list = lsLoad();
+  const idx = list.findIndex(e => e.id === id);
   if (idx >= 0) {
     list[idx] = { ...list[idx], usageCount: (list[idx].usageCount || 0) + 1 };
-    save(list);
+    lsSave(list);
   }
 }

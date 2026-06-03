@@ -27,8 +27,15 @@ export default function HomeworkCreate({ diagnosisId, studentId, students, onNav
   const [showTypePicker, setShowTypePicker] = useState(false);
   const [expandedEx, setExpandedEx] = useState(null);
   const [showLibrary, setShowLibrary] = useState(false);
-  // Bump to re-read the saved-exercise library after save/delete.
+  // Saved-exercise library (Supabase or localStorage). Reloaded when libVersion bumps.
   const [libVersion, setLibVersion] = useState(0);
+  const [libraryExercises, setLibraryExercises] = useState([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    getLibraryExercises().then(list => { if (!cancelled) setLibraryExercises(list); }).catch(() => {});
+    return () => { cancelled = true; };
+  }, [libVersion]);
 
   useEffect(() => { load(); }, [diagnosisId, studentId]);
 
@@ -223,31 +230,35 @@ export default function HomeworkCreate({ diagnosisId, studentId, students, onNav
   }
 
   /* ── Custom exercise library (teacher's saved bank) ── */
-  function saveToLibrary(ex) {
-    const rec = saveExerciseToLibrary(ex);
-    setLibVersion(v => v + 1);
-    window.toast?.(rec ? `Saved "${rec.title}" to your library.` : 'Could not save exercise.', rec ? 'ok' : 'warn');
+  async function saveToLibrary(ex) {
+    try {
+      const rec = await saveExerciseToLibrary(ex);
+      setLibVersion(v => v + 1);
+      window.toast?.(rec ? `Saved "${rec.title}" to your library.` : 'Could not save exercise.', rec ? 'ok' : 'warn');
+    } catch (e) {
+      window.toast?.(`Save failed: ${e.message}`, 'warn');
+    }
   }
 
-  function addFromLibrary(libEx) {
+  async function addFromLibrary(libEx) {
     // Drop the lib id so it becomes a fresh per-homework exercise.
     const { id, title, tags, level, createdAt, usageCount, ...fields } = libEx;
     const fresh = { ...fields, id: 'ex_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6) };
     setForm(f => ({ ...f, exercises: [...f.exercises, fresh] }));
-    incrementUsage(id);
-    window.toast?.(`"${title}" added.`, 'ok');
     setShowLibrary(false);
+    window.toast?.(`"${title}" added.`, 'ok');
+    try { await incrementUsage(id); } catch { /* non-critical */ }
   }
 
-  function removeFromLibrary(libId) {
-    deleteLibraryExercise(libId);
-    setLibVersion(v => v + 1);
-    window.toast?.('Removed from your library.', 'info');
+  async function removeFromLibrary(libId) {
+    try {
+      await deleteLibraryExercise(libId);
+      setLibVersion(v => v + 1);
+      window.toast?.('Removed from your library.', 'info');
+    } catch (e) {
+      window.toast?.(`Remove failed: ${e.message}`, 'warn');
+    }
   }
-
-  // Re-read on every render; libVersion bumps force a refresh after save/delete.
-  void libVersion;
-  const libraryExercises = getLibraryExercises();
 
   /* ── Assign ── */
   async function handleAssign() {
