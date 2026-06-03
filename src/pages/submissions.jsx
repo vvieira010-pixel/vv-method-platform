@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Icon, Card, SectionHeader, Pill, Button, Avatar } from '../components/shared.jsx';
-import { getAllSubmissions, getHomework, getReviews } from '../lib/workflow.js';
+import { getAllSubmissions, getHomework, getReviews, deleteSubmission, deleteReview } from '../lib/workflow.js';
 
 export default function SubmissionsPage({ students, onNavigate }) {
   const [submissions, setSubmissions] = useState([]);
@@ -49,7 +49,8 @@ export default function SubmissionsPage({ students, onNavigate }) {
           {filtered.map(sub => {
             const student = students.find(s => s.id === sub.studentId);
             const hw = homework.find(h => h.id === sub.homeworkId);
-            const reviewed = reviewedIds.has(sub.id);
+            const review = reviews.find(r => r.submissionId === sub.id);
+            const reviewed = !!review;
             return (
               <Card key={sub.id} style={{ padding: '14px 18px', border: !reviewed ? '1px solid var(--warning-soft)' : undefined }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
@@ -63,6 +64,14 @@ export default function SubmissionsPage({ students, onNavigate }) {
                   <Pill tone={reviewed ? 'success' : 'warning'}>{reviewed ? 'Reviewed' : 'Needs Review'}</Pill>
                   <Button variant={reviewed ? 'ghost' : 'primary'} size="sm" onClick={() => onNavigate('submissions:review', { submissionId: sub.id })}>
                     {reviewed ? 'View Review' : 'Review'}
+                  </Button>
+                  {reviewed && (
+                    <Button variant="ghost" size="sm" style={{ color: 'var(--warning)' }} onClick={async () => { if (confirm('Delete this teacher review? The submission will return to Needs Review.')) { await deleteReview(review.id); load(); } }}>
+                      Delete review
+                    </Button>
+                  )}
+                  <Button variant="ghost" size="sm" style={{ color: 'var(--danger)' }} onClick={async () => { if (confirm('Delete this submission and its review?')) { await deleteSubmission(sub.id); load(); } }}>
+                    <Icon.trash size={12} />
                   </Button>
                 </div>
               </Card>

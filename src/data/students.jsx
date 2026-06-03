@@ -12,7 +12,6 @@ export const STUDENTS = [
     currentBand: 'B1', targetBand: 'B2',
     currentStep: 'diagnose', totalXp: 0,
     email: 'anapbnurse@gmail.com', targetExam: 'MET', timezone: 'America/Sao_Paulo',
-    password: 'A9!mQ2#rT7',
     coursePackage: '24-session MET prep',
   },
   {
@@ -24,7 +23,6 @@ export const STUDENTS = [
     currentBand: 'B1', targetBand: 'B2',
     currentStep: 'diagnose', totalXp: 0,
     email: 'cybillarodrigues@gmail.com', targetExam: 'MET', timezone: 'America/Sao_Paulo',
-    password: 'Cy$4vL!8pN',
     coursePackage: '24-session MET prep',
   },
   {
@@ -36,7 +34,6 @@ export const STUDENTS = [
     currentBand: 'B1', targetBand: 'B2',
     currentStep: 'diagnose', totalXp: 0,
     email: 'fercoli18@hotmail.com', targetExam: 'MET', timezone: 'America/Sao_Paulo',
-    password: 'Fe!7xR2@kM',
     coursePackage: '24-session MET prep',
   },
   {
@@ -48,7 +45,6 @@ export const STUDENTS = [
     currentBand: 'B1', targetBand: 'B2',
     currentStep: 'diagnose', totalXp: 0,
     email: 'helenibamorim@gmail.com', targetExam: 'MET', timezone: 'America/Sao_Paulo',
-    password: 'He#3nV!9qL',
     coursePackage: '24-session MET prep',
   },
   {
@@ -60,7 +56,6 @@ export const STUDENTS = [
     currentBand: 'B1', targetBand: 'B2',
     currentStep: 'diagnose', totalXp: 0,
     email: 'klomacedo10@gmail.com', targetExam: 'MET', timezone: 'America/Sao_Paulo',
-    password: 'Lo@8tK!4wP',
     coursePackage: '24-session MET prep',
   },
   {
@@ -72,7 +67,6 @@ export const STUDENTS = [
     currentBand: 'B1', targetBand: 'B2',
     currentStep: 'diagnose', totalXp: 0,
     email: 'assuncao_marina@hotmail.com', targetExam: 'MET', timezone: 'America/Sao_Paulo',
-    password: 'Ma!2rD#7xQ',
     coursePackage: '24-session MET prep',
   },
   {
@@ -84,7 +78,6 @@ export const STUDENTS = [
     currentBand: 'B1', targetBand: 'B2',
     currentStep: 'diagnose', totalXp: 0,
     email: 'nildapreviatti@gmail.com', targetExam: 'MET', timezone: 'America/Sao_Paulo',
-    password: 'Ni$6pJ!3zR',
     coursePackage: '24-session MET prep',
   },
   {
@@ -96,7 +89,6 @@ export const STUDENTS = [
     currentBand: 'B1', targetBand: 'B2',
     currentStep: 'diagnose', totalXp: 0,
     email: 'rosy-penelupe@hotmail.com', targetExam: 'MET', timezone: 'America/Sao_Paulo',
-    password: 'Ro!5gM@2vX',
     coursePackage: '24-session MET prep',
   },
   {
@@ -108,7 +100,6 @@ export const STUDENTS = [
     currentBand: 'B1', targetBand: 'B2',
     currentStep: 'diagnose', totalXp: 0,
     email: 'sabrina_silva19@hotmail.com', targetExam: 'MET', timezone: 'America/Sao_Paulo',
-    password: 'Sa#9bT!6kN',
     coursePackage: '24-session MET prep',
   },
   {
@@ -120,7 +111,6 @@ export const STUDENTS = [
     currentBand: 'B1', targetBand: 'B2',
     currentStep: 'diagnose', totalXp: 0,
     email: 'tamaralopes27@gmail.com', targetExam: 'MET', timezone: 'America/Sao_Paulo',
-    password: 'Ta!4mY#8pL',
     coursePackage: '24-session MET prep',
   },
   {
@@ -132,27 +122,15 @@ export const STUDENTS = [
     currentBand: 'B1', targetBand: 'B2',
     currentStep: 'diagnose', totalXp: 0,
     email: 'vreis_04@hotmail.com', targetExam: 'MET', timezone: 'America/Sao_Paulo',
-    password: 'Va@7nQ!5rK',
     coursePackage: '24-session MET prep',
   },
 ];
 
 // STUDENTS array is the seed data source only — runtime data lives in vv:studentsCrud via workflow.js
 export const VALID_CODES = new Set(STUDENTS.map(s => s.code.toUpperCase()));
-export const VALID_EMAIL_PASSWORD = new Map(
-  STUDENTS.map(s => [String(s.email || '').toLowerCase(), s.password])
-);
 
 export function getStudentByCode(code) {
   return STUDENTS.find(s => s.code.toUpperCase() === (code || '').toUpperCase()) || null;
-}
-
-export function getStudentByEmailPassword(email, password) {
-  const normalizedEmail = String(email || '').trim().toLowerCase();
-  const normalizedPassword = String(password || '').trim();
-  return STUDENTS.find(
-    s => String(s.email || '').toLowerCase() === normalizedEmail && s.password === normalizedPassword
-  ) || null;
 }
 
 export function getStudentByName(name) {

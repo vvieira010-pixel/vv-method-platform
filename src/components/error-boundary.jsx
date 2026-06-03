@@ -16,8 +16,8 @@ export default class ErrorBoundary extends Component {
       const label = this.props.label || 'This section';
       return (
         <div style={{
-          padding: '32px 24px', background: '#FEF2F2', border: '1px solid #FECACA',
-          borderRadius: 12, margin: 16, color: '#991B1B',
+          padding: '32px 24px', background: 'var(--danger-bg)', border: '1px solid var(--danger-soft)',
+          borderRadius: 12, margin: 16, color: 'var(--danger)',
         }}>
           <div style={{ fontWeight: 700, marginBottom: 6 }}>{label} encountered an error.</div>
           <div style={{ fontSize: 12.5, opacity: 0.75, fontFamily: 'monospace', whiteSpace: 'pre-wrap' }}>
@@ -26,7 +26,7 @@ export default class ErrorBoundary extends Component {
           <button
             onClick={() => this.setState({ hasError: false, error: null })}
             style={{
-              marginTop: 14, padding: '6px 14px', background: '#DC2626', color: '#fff',
+              marginTop: 14, padding: '6px 14px', background: 'var(--danger)', color: '#fff',
               border: 'none', borderRadius: 7, cursor: 'pointer', fontSize: 13, fontWeight: 600,
               fontFamily: 'inherit',
             }}

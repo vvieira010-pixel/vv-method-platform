@@ -22,7 +22,7 @@ export default function StudentsPage({ students: propStudents, onNavigate }) {
 
   function openAdd() {
     setEditStudent(null);
-    setForm(EMPTY_FORM);
+    setForm({ ...EMPTY_FORM, password: generateStudentPassword() });
     setShowForm(true);
   }
 
@@ -31,6 +31,7 @@ export default function StudentsPage({ students: propStudents, onNavigate }) {
     setForm({
       name: student.name || '',
       email: student.email || '',
+      password: student.password || '',
       currentLevel: student.currentLevel || 'B1',
       targetLevel: student.targetLevel || 'B2',
       examGoal: student.examGoal || 'Pass MET B2',
@@ -43,21 +44,38 @@ export default function StudentsPage({ students: propStudents, onNavigate }) {
 
   async function handleSave() {
     if (!form.name.trim()) { window.toast?.('Name is required.', 'warn'); return; }
+    if (!form.email.trim()) { window.toast?.('Student email is required for login.', 'warn'); return; }
+    const password = form.password.trim() || generateStudentPassword();
     setSaving(true);
-    await saveStudent({ ...form, id: editStudent?.id, session: editStudent?.session || 1 });
+    await saveStudent({ ...form, password, id: editStudent?.id, session: editStudent?.session || 1 });
     await load();
     window.dispatchEvent(new CustomEvent('vv:students-updated'));
     setSaving(false);
     setShowForm(false);
-    window.toast?.(editStudent ? 'Student updated.' : 'Student added.', 'ok');
+    window.toast?.(editStudent ? 'Student updated. Login is ready.' : 'Student added. Login is ready.', 'ok');
   }
 
   async function handleDelete(student) {
-    if (!confirm(`Delete ${student.name}? This cannot be undone.`)) return;
+    if (!confirm(`Delete ${student.name} and all related classes, diagnoses, homework, submissions, feedback, messages, notes, and drafts? This cannot be undone. Export a backup first if needed.`)) return;
     await deleteStudent(student.id);
     await load();
     window.dispatchEvent(new CustomEvent('vv:students-updated'));
     window.toast?.('Student deleted.', 'info');
+  }
+
+  async function handleGenerateMissingPasswords() {
+    const missing = students.filter(s => s.email && !s.password);
+    if (missing.length === 0) {
+      window.toast?.('All students with email already have login passwords.', 'info');
+      return;
+    }
+    if (!confirm(`Generate passwords for ${missing.length} student${missing.length === 1 ? '' : 's'} missing login access?`)) return;
+    setSaving(true);
+    await Promise.all(missing.map(student => saveStudent({ ...student, password: generateStudentPassword() })));
+    await load();
+    window.dispatchEvent(new CustomEvent('vv:students-updated'));
+    setSaving(false);
+    window.toast?.('Missing student passwords generated.', 'ok');
   }
 
   const filtered = students.filter(s =>
@@ -72,19 +90,29 @@ export default function StudentsPage({ students: propStudents, onNavigate }) {
           <h1 style={S.headline}>Students</h1>
           <p style={S.sub}>{students.length} student{students.length !== 1 ? 's' : ''} in your roster</p>
         </div>
-        <Button variant="primary" onClick={openAdd}><Icon.plus size={14} /> Add Student</Button>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+          <Button variant="ghost" onClick={handleGenerateMissingPasswords} disabled={saving}>Generate Missing Logins</Button>
+          <Button variant="primary" onClick={openAdd}><Icon.plus size={14} /> Add Student</Button>
+        </div>
       </div>
 
       {/* Add/Edit form */}
       {showForm && (
         <Card style={{ marginBottom: 20, padding: 20, border: '2px solid var(--accent)' }}>
           <SectionHeader title={editStudent ? 'Edit Student' : 'New Student'} />
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 14 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12, marginTop: 14 }}>
             <Field label="Full name *">
               <input className="input" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value, firstName: e.target.value.split(' ')[0] }))} placeholder="e.g. Ana Paula" autoFocus />
             </Field>
             <Field label="Email">
               <input className="input" type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} placeholder="student@email.com" />
+            </Field>
+            <Field label="Student password">
+              <div style={{ display: 'flex', gap: 8 }}>
+                <input className="input" type="text" value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} placeholder="Generate or type a password" style={{ fontFamily: 'var(--font-mono)' }} />
+                <Button variant="ghost" type="button" onClick={() => setForm(f => ({ ...f, password: generateStudentPassword() }))}>Generate</Button>
+              </div>
+              <span style={{ color: 'var(--muted)', fontSize: 'var(--text-xs)' }}>Give this email and password to the student.</span>
             </Field>
             <Field label="Current level">
               <select className="input" value={form.currentLevel} onChange={e => setForm(f => ({ ...f, currentLevel: e.target.value }))}>
@@ -150,6 +178,7 @@ function StudentRow({ student, onProfile, onEdit, onDelete }) {
           </div>
         </div>
         <Pill tone="muted">{student.currentLevel}</Pill>
+        <Pill tone={student.email && student.password ? 'success' : 'warning'}>{student.email && student.password ? 'Login ready' : 'No login'}</Pill>
         <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>Session {student.session || 1}/{student.totalSessions || 24}</span>
         <div style={{ display: 'flex', gap: 6 }}>
           <Button variant="primary" size="sm" onClick={onProfile}>View Profile</Button>
@@ -171,10 +200,19 @@ function Field({ label, children, style }) {
 }
 
 const LEVELS = ['A2', 'B1', 'B1+', 'B2', 'B2+', 'C1'];
-const EMPTY_FORM = { name: '', email: '', currentLevel: 'B1', targetLevel: 'B2', examGoal: 'Pass MET B2', professionalContext: '', notes: '', totalSessions: 24 };
+const EMPTY_FORM = { name: '', email: '', password: '', currentLevel: 'B1', targetLevel: 'B2', examGoal: 'Pass MET B2', professionalContext: '', notes: '', totalSessions: 24 };
 const S = {
   shell: { maxWidth: 960, margin: '0 auto', padding: '28px 20px' },
   pageHeader: { display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 24 },
   headline: { fontFamily: 'var(--font-display)', fontSize: 'var(--text-2xl)', fontWeight: 700, color: 'var(--accent-deep)', margin: 0 },
   sub: { fontSize: 'var(--text-sm)', color: 'var(--muted)', margin: '4px 0 0' },
 };
+
+function generateStudentPassword() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$';
+  let password = '';
+  for (let i = 0; i < 10; i += 1) {
+    password += chars[Math.floor(Math.random() * chars.length)];
+  }
+  return password;
+}

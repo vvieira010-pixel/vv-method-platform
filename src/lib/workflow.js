@@ -37,6 +37,19 @@ function uid() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 }
 
+function removeHomeworkDrafts(homeworkId) {
+  if (!homeworkId) return;
+  const drafts = loadObj(K.drafts);
+  let changed = false;
+  Object.keys(drafts).forEach(key => {
+    if (key.includes(`:${homeworkId}`)) {
+      delete drafts[key];
+      changed = true;
+    }
+  });
+  if (changed) save(K.drafts, drafts);
+}
+
 /**
  * upsert — safe create-or-update for id-keyed list records.
  * Guarantees a valid id even when callers pass `{ id: undefined }`, by
@@ -152,6 +165,9 @@ export async function saveHomework(data) {
 }
 export async function deleteHomework(id) {
   save(K.homework, load(K.homework).filter(h => h.id !== id));
+  save(K.submissions, load(K.submissions).filter(s => s.homeworkId !== id));
+  save(K.reviews, load(K.reviews).filter(r => r.homeworkId !== id));
+  removeHomeworkDrafts(id);
 }
 
 /* ─── PRACTICE ASSIGNMENTS ───────────────────────────────────── */
@@ -462,10 +478,46 @@ export async function saveReview(data) {
   if (existing >= 0) all[existing] = { ...all[existing], ...record };
   else all.unshift(record);
   save(K.reviews, all);
+
+  const submissions = load(K.submissions);
+  const subIdx = submissions.findIndex(s => s.id === record.submissionId);
+  if (subIdx >= 0) {
+    submissions[subIdx] = { ...submissions[subIdx], status: 'reviewed', reviewedAt: record.reviewedAt };
+    save(K.submissions, submissions);
+  }
+
+  const homework = load(K.homework);
+  const hwIdx = homework.findIndex(h => h.id === record.homeworkId);
+  if (hwIdx >= 0) {
+    homework[hwIdx] = { ...homework[hwIdx], status: 'reviewed', reviewedAt: record.reviewedAt };
+    save(K.homework, homework);
+  }
+
   return record;
 }
 export async function deleteReview(id) {
-  save(K.reviews, load(K.reviews).filter(r => r.id !== id));
+  const reviews = load(K.reviews);
+  const review = reviews.find(r => r.id === id);
+  save(K.reviews, reviews.filter(r => r.id !== id));
+
+  if (review?.submissionId) {
+    const submissions = load(K.submissions);
+    const subIdx = submissions.findIndex(s => s.id === review.submissionId);
+    if (subIdx >= 0) {
+      submissions[subIdx] = { ...submissions[subIdx], status: 'submitted' };
+      delete submissions[subIdx].reviewedAt;
+      save(K.submissions, submissions);
+    }
+  }
+  if (review?.homeworkId) {
+    const homework = load(K.homework);
+    const hwIdx = homework.findIndex(h => h.id === review.homeworkId);
+    if (hwIdx >= 0) {
+      homework[hwIdx] = { ...homework[hwIdx], status: 'submitted' };
+      delete homework[hwIdx].reviewedAt;
+      save(K.homework, homework);
+    }
+  }
 }
 
 /* ─── DIAGNOSIS CYCLE STATE ─────────────────────────────────── */
@@ -584,15 +636,26 @@ export async function getStudents() {
 export async function getStudent(id) {
   return load(K.studentsCrud).find(s => s.id === id) || null;
 }
+export async function getStudentByEmailPassword(email, password) {
+  const normalizedEmail = String(email || '').trim().toLowerCase();
+  const normalizedPassword = String(password || '').trim();
+  if (!normalizedEmail || !normalizedPassword) return null;
+  return load(K.studentsCrud).find(s =>
+    String(s.email || '').trim().toLowerCase() === normalizedEmail &&
+    String(s.password || '').trim() === normalizedPassword
+  ) || null;
+}
 export async function saveStudent(data) {
   const all = load(K.studentsCrud);
   const now = new Date().toISOString();
   const existing = all.findIndex(s => s.id === data.id);
+  const previous = existing >= 0 ? all[existing] : {};
   const record = {
     id: data.id || uid(),
     name: data.name || '',
     firstName: data.firstName || (data.name || '').split(' ')[0] || '',
     email: data.email || '',
+    password: data.password ?? previous.password ?? '',
     currentLevel: data.currentLevel || data.band || 'B1',
     targetLevel: data.targetLevel || data.bandTarget || 'B2',
     examGoal: data.examGoal || data.goal || 'Pass MET B2',
@@ -617,12 +680,50 @@ export async function saveStudent(data) {
 }
 export async function deleteStudent(id) {
   save(K.studentsCrud, load(K.studentsCrud).filter(s => s.id !== id));
+  save(K.targetProfiles, load(K.targetProfiles).filter(p => p.studentId !== id));
+  save(K.classEvents, load(K.classEvents).filter(e => e.studentId !== id));
+  save(K.classEvidence, load(K.classEvidence).filter(e => e.studentId !== id));
+  save(K.diagnoses, load(K.diagnoses).filter(d => d.studentId !== id));
+  save(K.feedback, load(K.feedback).filter(f => f.studentId !== id));
+  save(K.homework, load(K.homework).filter(h => h.studentId !== id));
+  save(K.submissions, load(K.submissions).filter(s => s.studentId !== id));
+  save(K.reviews, load(K.reviews).filter(r => r.studentId !== id));
+  save(K.reports, load(K.reports).filter(r => r.studentId !== id));
+  save(K.progressNotes, load(K.progressNotes).filter(n => n.studentId !== id));
+  save(K.vocabularyBank, load(K.vocabularyBank).filter(v => v.studentId !== id));
+  save(K.practiceAssignments, load(K.practiceAssignments).filter(p => p.studentId !== id));
+  save(K.practiceSubmissions, load(K.practiceSubmissions).filter(s => s.studentId !== id));
+  save(K.inbox, load(K.inbox).filter(m => m.toStudentId !== id && m.fromStudentId !== id));
+  const errorBank = loadObj(K.errorBankGlobal);
+  delete errorBank[id];
+  save(K.errorBankGlobal, errorBank);
+  const progress = loadObj(K.progress);
+  delete progress[id];
+  save(K.progress, progress);
+  const drafts = loadObj(K.drafts);
+  Object.keys(drafts).forEach(key => {
+    if (key.startsWith(`${id}:`)) delete drafts[key];
+  });
+  save(K.drafts, drafts);
 }
 export async function seedStudentsIfEmpty(STUDENTS) {
   const existing = load(K.studentsCrud);
-  if (existing.length > 0) return existing;
+  if (existing.length > 0) {
+    let changed = false;
+    const seededById = new Map((STUDENTS || []).map(s => [s.id, s]));
+    const patched = existing.map(student => {
+      if (student.password) return student;
+      const seed = seededById.get(student.id);
+      if (!seed?.password) return student;
+      changed = true;
+      return { ...student, password: seed.password };
+    });
+    if (changed) save(K.studentsCrud, patched);
+    return changed ? patched : existing;
+  }
   const seeded = STUDENTS.map(s => ({
     id: s.id, name: s.name, firstName: s.firstName, email: s.email || '',
+    password: s.password || '',
     currentLevel: s.band || s.currentBand || 'B1',
     targetLevel: s.bandTarget || s.targetBand || 'B2',
     examGoal: s.goal || 'Pass MET B2',
@@ -838,4 +939,19 @@ export async function deleteProgressNote(id) {
 /* ─── ALL SUBMISSIONS (teacher view) ─────────────────────────── */
 export async function getAllSubmissions() {
   return load(K.submissions);
+}
+export async function deleteSubmission(id) {
+  const submission = load(K.submissions).find(s => s.id === id);
+  save(K.submissions, load(K.submissions).filter(s => s.id !== id));
+  save(K.reviews, load(K.reviews).filter(r => r.submissionId !== id));
+  if (submission?.homeworkId) {
+    const homework = load(K.homework);
+    const hwIdx = homework.findIndex(h => h.id === submission.homeworkId);
+    if (hwIdx >= 0) {
+      homework[hwIdx] = { ...homework[hwIdx], status: 'not-started' };
+      delete homework[hwIdx].reviewedAt;
+      save(K.homework, homework);
+    }
+    removeHomeworkDrafts(submission.homeworkId);
+  }
 }
