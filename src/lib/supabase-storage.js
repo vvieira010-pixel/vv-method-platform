@@ -93,3 +93,26 @@ export async function fetchSupabaseUser(url, anonKey, accessToken) {
   if (!res.ok) throw new Error(`Supabase user fetch failed: ${res.status}`);
   return res.json();
 }
+
+/**
+ * Send a passwordless magic-link / OTP email. On click, Supabase redirects to
+ * `redirectTo` with the session in the URL hash (handled by App.jsx).
+ * `create_user: false` means only existing users get a link (no silent signups).
+ * Returns { ok } or throws with the API error message.
+ */
+export async function sendMagicLink(email, redirectTo) {
+  const { url, anonKey, isConfigured } = getSupabaseConfig();
+  if (!isConfigured) throw new Error('Supabase is not configured.');
+  const endpoint = `${url}/auth/v1/otp?redirect_to=${encodeURIComponent(redirectTo)}`;
+  const res = await fetch(endpoint, {
+    method: 'POST',
+    headers: { apikey: anonKey, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: String(email).trim(), create_user: false }),
+  });
+  if (!res.ok) {
+    let msg = `Magic-link request failed (${res.status})`;
+    try { const j = await res.json(); msg = j.msg || j.error_description || j.error || msg; } catch {}
+    throw new Error(msg);
+  }
+  return { ok: true };
+}

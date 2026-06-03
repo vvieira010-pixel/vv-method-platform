@@ -11,6 +11,7 @@ import { getDiagnoses, getStudent, saveHomework, updateClassEventStatus } from '
 import { EX_TYPES, createExercise, exercisePreview, getExType } from '../lib/exercise-types.js';
 import { ExerciseEditor, ExerciseTypePicker, ExTypeBadge } from '../components/exercise-editor.jsx';
 import { getExerciseModules, getModuleExercises, bankMeta } from '../lib/exercise-bank.js';
+import { getLibraryExercises, saveExerciseToLibrary, deleteLibraryExercise, incrementUsage } from '../lib/exercise-library.js';
 
 const SKILL_TYPES = ['writing', 'speaking', 'grammar', 'vocabulary', 'reading', 'listening', 'mixed'];
 
@@ -26,6 +27,15 @@ export default function HomeworkCreate({ diagnosisId, studentId, students, onNav
   const [showTypePicker, setShowTypePicker] = useState(false);
   const [expandedEx, setExpandedEx] = useState(null);
   const [showLibrary, setShowLibrary] = useState(false);
+  // Saved-exercise library (Supabase or localStorage). Reloaded when libVersion bumps.
+  const [libVersion, setLibVersion] = useState(0);
+  const [libraryExercises, setLibraryExercises] = useState([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    getLibraryExercises().then(list => { if (!cancelled) setLibraryExercises(list); }).catch(() => {});
+    return () => { cancelled = true; };
+  }, [libVersion]);
 
   useEffect(() => { load(); }, [diagnosisId, studentId]);
 
@@ -219,6 +229,37 @@ export default function HomeworkCreate({ diagnosisId, studentId, students, onNav
     setShowLibrary(false);
   }
 
+  /* ── Custom exercise library (teacher's saved bank) ── */
+  async function saveToLibrary(ex) {
+    try {
+      const rec = await saveExerciseToLibrary(ex);
+      setLibVersion(v => v + 1);
+      window.toast?.(rec ? `Saved "${rec.title}" to your library.` : 'Could not save exercise.', rec ? 'ok' : 'warn');
+    } catch (e) {
+      window.toast?.(`Save failed: ${e.message}`, 'warn');
+    }
+  }
+
+  async function addFromLibrary(libEx) {
+    // Drop the lib id so it becomes a fresh per-homework exercise.
+    const { id, title, tags, level, createdAt, usageCount, ...fields } = libEx;
+    const fresh = { ...fields, id: 'ex_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6) };
+    setForm(f => ({ ...f, exercises: [...f.exercises, fresh] }));
+    setShowLibrary(false);
+    window.toast?.(`"${title}" added.`, 'ok');
+    try { await incrementUsage(id); } catch { /* non-critical */ }
+  }
+
+  async function removeFromLibrary(libId) {
+    try {
+      await deleteLibraryExercise(libId);
+      setLibVersion(v => v + 1);
+      window.toast?.('Removed from your library.', 'info');
+    } catch (e) {
+      window.toast?.(`Remove failed: ${e.message}`, 'warn');
+    }
+  }
+
   /* ── Assign ── */
   async function handleAssign() {
     if (!form.title.trim()) { window.toast?.('Title is required.', 'warn'); return; }
@@ -317,6 +358,38 @@ export default function HomeworkCreate({ diagnosisId, studentId, students, onNav
               <button onClick={() => setShowLibrary(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)', fontSize: 20 }}>×</button>
             </div>
             <div style={{ padding: 16, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {/* My Exercises — teacher's saved bank */}
+              {libraryExercises.length > 0 && (
+                <div style={{ marginBottom: 4 }}>
+                  <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>
+                    My Exercises ({libraryExercises.length})
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {libraryExercises.map(libEx => (
+                      <div key={libEx.id} style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', padding: '10px 12px', display: 'flex', gap: 10, alignItems: 'center' }}>
+                        <ExTypeBadge typeId={libEx.type} />
+                        <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--text-sm)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {libEx.title}
+                        </span>
+                        <Button variant="primary" size="sm" onClick={() => addFromLibrary(libEx)} style={{ flexShrink: 0 }}>
+                          <Icon.plus size={12} /> Add
+                        </Button>
+                        <button
+                          onClick={() => removeFromLibrary(libEx.id)}
+                          style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--danger)', padding: 4, flexShrink: 0 }}
+                          title="Remove from library"
+                        >
+                          <Icon.trash size={13} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                  <div style={{ height: 1, background: 'var(--divider)', margin: '14px 0 4px' }} />
+                  <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>
+                    Ready-made modules
+                  </div>
+                </div>
+              )}
               {getExerciseModules().map(mod => (
                 <div key={mod.id} style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', padding: 14, display: 'flex', gap: 12, alignItems: 'flex-start' }}>
                   <div style={{ flex: 1, minWidth: 0 }}>
@@ -514,6 +587,7 @@ export default function HomeworkCreate({ diagnosisId, studentId, students, onNav
                     onChange={(updated) => updateExercise(ex.id, updated)}
                     onRemove={() => removeExercise(ex.id)}
                     onMove={(dir) => moveExercise(i, dir)}
+                    onSaveToLibrary={() => saveToLibrary(ex)}
                   />
                 );
               })}
@@ -578,7 +652,7 @@ export default function HomeworkCreate({ diagnosisId, studentId, students, onNav
 }
 
 /* ─── EXERCISE CARD (collapsible) ───────────────────────────── */
-function ExerciseCard({ exercise, index, total, isExpanded, onToggle, onChange, onRemove, onMove }) {
+function ExerciseCard({ exercise, index, total, isExpanded, onToggle, onChange, onRemove, onMove, onSaveToLibrary }) {
   const meta = getExType(exercise.type);
   const previewText = exercisePreview(exercise);
 
@@ -613,6 +687,16 @@ function ExerciseCard({ exercise, index, total, isExpanded, onToggle, onChange, 
           {previewText}
         </span>
         <div style={{ display: 'flex', gap: 4, alignItems: 'center', flexShrink: 0 }}>
+          {/* Save to reusable library */}
+          {onSaveToLibrary && (
+            <button
+              onClick={e => { e.stopPropagation(); onSaveToLibrary(); }}
+              style={{ ...arrowBtnStyle(false), color: 'var(--accent)' }}
+              title="Save to my exercise library"
+            >
+              <Icon.star size={12} />
+            </button>
+          )}
           {/* Move arrows */}
           <button
             onClick={e => { e.stopPropagation(); onMove(-1); }}

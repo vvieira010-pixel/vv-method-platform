@@ -7,6 +7,7 @@
 import { useState, useEffect } from 'react';
 import { injectGlobalCSS } from '../components/shared.jsx';
 import { getStudentByEmailPassword } from '../lib/workflow.js';
+import { sendMagicLink, getSupabaseConfig } from '../lib/supabase-storage.js';
 
 const CSS = `
   .login-root {
@@ -110,6 +111,21 @@ const CSS = `
   .login-submit-btn.student { background: var(--accent-deep); color: #fff; }
   .login-submit-btn.student:hover { background: #131a28; }
   .login-hint { font-size: 11.5px; color: var(--muted); text-align: center; margin-top: 12px; }
+  .login-divider { display: flex; align-items: center; gap: 10px; margin: 18px 0 4px; color: var(--muted); font-size: 12px; }
+  .login-divider::before, .login-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+  .login-magic-btn {
+    width: 100%; padding: 13px; border-radius: 4px; cursor: pointer;
+    font-family: var(--font-ui); font-size: 14px; font-weight: 600;
+    background: #fff; color: var(--primary-ink); border: 1.5px solid var(--primary);
+    margin-top: 10px; transition: background 0.15s;
+  }
+  .login-magic-btn:hover:not(:disabled) { background: var(--accent-subtle); }
+  .login-magic-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+  .login-magic-sent {
+    margin-top: 12px; padding: 12px 14px; border-radius: 6px;
+    background: var(--success-bg); border: 1px solid var(--success-soft);
+    color: var(--text); font-size: 13px; line-height: 1.5;
+  }
 `;
 
 let loginCssInjected = false;
@@ -131,6 +147,9 @@ export default function LoginScreen({ onSignIn, initialMode = 'choose' }) {
   const [studentEmail, setStudentEmail] = useState('');
   const [studentPassword, setStudentPassword] = useState('');
   const [error, setError] = useState('');
+  const [magicSending, setMagicSending] = useState(false);
+  const [magicSentTo, setMagicSentTo] = useState('');
+  const supabaseReady = getSupabaseConfig().isConfigured;
 
   useEffect(() => {
     injectGlobalCSS();
@@ -157,6 +176,21 @@ export default function LoginScreen({ onSignIn, initialMode = 'choose' }) {
       return;
     }
     onSignIn({ role: 'teacher' });
+  };
+
+  const handleMagicLink = async () => {
+    setError('');
+    setMagicSentTo('');
+    const email = teacherEmail.trim();
+    if (!email) { setError('Enter your email first, then request a link.'); return; }
+    setMagicSending(true);
+    try {
+      await sendMagicLink(email, window.location.origin);
+      setMagicSentTo(email);
+    } catch (e) {
+      setError(e.message || 'Could not send the sign-in link.');
+    }
+    setMagicSending(false);
   };
 
   const handleStudent = async () => {
@@ -290,6 +324,29 @@ export default function LoginScreen({ onSignIn, initialMode = 'choose' }) {
               <button type="button" className="login-submit-btn teacher" onClick={handleTeacher}>
                 Sign in →
               </button>
+
+              {supabaseReady && (
+                <>
+                  <div className="login-divider"><span>or</span></div>
+                  {magicSentTo ? (
+                    <div className="login-magic-sent" role="status" aria-live="polite">
+                      Check <strong>{magicSentTo}</strong> for a sign-in link. Open it on this device to finish signing in.
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      className="login-magic-btn"
+                      onClick={handleMagicLink}
+                      disabled={magicSending}
+                    >
+                      {magicSending ? 'Sending link…' : 'Email me a sign-in link'}
+                    </button>
+                  )}
+                  <p className="login-hint">
+                    Passwordless sign-in via Supabase — needed to sync your data (e.g. the exercise library) across devices.
+                  </p>
+                </>
+              )}
             </>
           )}
 

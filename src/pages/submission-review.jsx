@@ -153,6 +153,19 @@ Compare the submission to the diagnosis. Return JSON:
 
   const activeErrorBank = errors.filter(e => e.status === 'active');
 
+  // Speaking recordings live in submission.responses keyed by exercise id.
+  // Map each one to its prompt from the homework activities for a readable label.
+  const activityById = Object.fromEntries(
+    (homework?.activities || []).map(a => [a.id, a])
+  );
+  const audioResponses = Object.entries(submission.responses || {})
+    .filter(([, res]) => res && res.audioB64)
+    .map(([exId, res], i) => {
+      const ex = activityById[exId];
+      const label = ex?.prompt || ex?.question || ex?.title || `Speaking response ${i + 1}`;
+      return { exId, res, label };
+    });
+
   return (
     <div style={{ maxWidth: 960, margin: '0 auto', padding: '28px 20px' }}>
       <button onClick={() => onNavigate('submissions')} style={backStyle}><Icon.arrowL size={13} /> Back to submissions</button>
@@ -168,6 +181,26 @@ Compare the submission to the diagnosis. Return JSON:
             <div style={{ marginTop: 10, padding: 12, background: 'var(--bg)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-sm)', lineHeight: 1.7, minHeight: 100, whiteSpace: 'pre-wrap' }}>
               {submission.content || <em style={{ color: 'var(--muted)' }}>No text content submitted.</em>}
             </div>
+
+            {/* Speaking recordings — one audio player per recorded response */}
+            {audioResponses.length > 0 && (
+              <div style={{ marginTop: 14, display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {audioResponses.map(({ exId, res, label }) => (
+                  <div key={exId}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--accent)', marginBottom: 6 }}>
+                      <Icon.mic size={13} /> {label}
+                    </div>
+                    <audio controls src={res.audioB64} style={{ width: '100%', height: 38 }} />
+                    {res.transcript && (
+                      <div style={{ marginTop: 6, padding: 10, background: 'var(--bg)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-sm)', lineHeight: 1.6, color: 'var(--text-2)', fontStyle: 'italic', whiteSpace: 'pre-wrap' }}>
+                        {res.transcript}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+
             <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: 8 }}>
               Submitted: {new Date(submission.submittedAt).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}
             </div>
