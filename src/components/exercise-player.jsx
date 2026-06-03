@@ -6,6 +6,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Icon, Card, Button, Pill } from './shared.jsx';
 import { getExType, parseBlankTemplate, shuffleArray, autoGrade } from '../lib/exercise-types.js';
 import { ExTypeBadge } from './exercise-editor.jsx';
+import { getDbContext, uploadSubmissionAudio, createSignedAudioUrl } from '../lib/supabase-db.js';
 
 /**
  * ExercisePlayer — switches on exercise.type, renders the right interactive UI.
@@ -184,6 +185,7 @@ function ShortPlayer({ ex, res, update, readOnly }) {
 function SpeakPlayer({ ex, res, update, readOnly }) {
   const [status, setStatus] = useState('idle'); // idle | recording | done
   const [seconds, setSeconds] = useState(0);
+  const [playbackUrl, setPlaybackUrl] = useState(res?.audioB64 || null);
   const timerRef = useRef(null);
   const mediaRef = useRef(null);
   const chunksRef = useRef([]);
@@ -198,11 +200,30 @@ function SpeakPlayer({ ex, res, update, readOnly }) {
       mediaRef.current = new MediaRecorder(stream);
       chunksRef.current = [];
       mediaRef.current.ondataavailable = e => { if (e.data.size > 0) chunksRef.current.push(e.data); };
-      mediaRef.current.onstop = () => {
+      mediaRef.current.onstop = async () => {
         const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
-        const reader = new FileReader();
-        reader.onloadend = () => update({ audioB64: reader.result, transcript: res?.transcript || '' });
-        reader.readAsDataURL(blob);
+        // Immediate local playback regardless of where it's persisted.
+        setPlaybackUrl(URL.createObjectURL(blob));
+        const ctx = getDbContext();
+        if (ctx) {
+          // Signed-in: upload to private Storage, persist only the object path.
+          try {
+            const rand = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now());
+            const path = `${ctx.authUid}/${rand}/${ex.id || 'audio'}.webm`;
+            await uploadSubmissionAudio(blob, path);
+            update({ audioPath: path, audioB64: null, transcript: res?.transcript || '' });
+          } catch (e) {
+            console.warn('[speak] audio upload failed, storing inline instead:', e.message);
+            const reader = new FileReader();
+            reader.onloadend = () => update({ audioB64: reader.result, audioPath: null, transcript: res?.transcript || '' });
+            reader.readAsDataURL(blob);
+          }
+        } else {
+          // localStorage mode: keep the legacy base64-in-record behaviour.
+          const reader = new FileReader();
+          reader.onloadend = () => update({ audioB64: reader.result, transcript: res?.transcript || '' });
+          reader.readAsDataURL(blob);
+        }
         stream.getTracks().forEach(t => t.stop());
       };
       mediaRef.current.start();
@@ -224,13 +245,20 @@ function SpeakPlayer({ ex, res, update, readOnly }) {
     clearInterval(timerRef.current);
     setSeconds(0);
     setStatus('idle');
-    update({ audioB64: null, transcript: '' });
+    setPlaybackUrl(null);
+    update({ audioB64: null, audioPath: null, transcript: '' });
   };
 
   useEffect(() => () => { clearInterval(timerRef.current); mediaRef.current?.stream?.getTracks().forEach(t => t.stop()); }, []);
 
-  // If we already have audio from a previous session
-  useEffect(() => { if (res?.audioB64) setStatus('done'); }, []);
+  // Restore a previously-recorded answer (base64 inline, or a signed URL for a Storage path).
+  useEffect(() => {
+    if (res?.audioB64) { setPlaybackUrl(res.audioB64); setStatus('done'); return; }
+    if (res?.audioPath) {
+      setStatus('done');
+      createSignedAudioUrl(res.audioPath).then(url => { if (url) setPlaybackUrl(url); });
+    }
+  }, []);
 
   return (
     <div>
@@ -278,9 +306,9 @@ function SpeakPlayer({ ex, res, update, readOnly }) {
 
       {status === 'done' && (
         <div>
-          {res?.audioB64 && (
+          {playbackUrl && (
             <div style={{ marginBottom: 12, padding: 10, background: 'var(--bg)', borderRadius: 8 }}>
-              <audio controls src={res.audioB64} style={{ width: '100%', height: 36 }} />
+              <audio controls src={playbackUrl} style={{ width: '100%', height: 36 }} />
             </div>
           )}
           <div style={{ marginBottom: 8 }}>
