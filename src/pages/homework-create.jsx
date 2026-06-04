@@ -855,6 +855,36 @@ function PreviewExercise({ exercise }) {
       );
     }
 
+    case 'listen':
+      return (
+        <div>
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12,
+            padding: '10px 14px', borderRadius: 10,
+            background: 'rgba(14,95,107,.08)', border: '1px solid rgba(14,95,107,.25)',
+          }}>
+            <span style={{ fontSize: 20 }}>▶</span>
+            <div>
+              <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: '#0E5F6B', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                Listen ({exercise.plays ?? 2}× allowed)
+              </div>
+              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>{(exercise.audioText || '').slice(0, 60) || 'Audio text not set…'}</div>
+            </div>
+          </div>
+          <p style={{ fontWeight: 600, marginBottom: 10 }}>{exercise.question || 'Question…'}</p>
+          {(exercise.options || []).map((opt, i) => (
+            <div key={i} style={{
+              display: 'flex', alignItems: 'center', gap: 10,
+              padding: '8px 12px', marginBottom: 4,
+              borderRadius: 8, border: '1px solid var(--border)', background: 'var(--surface)',
+            }}>
+              <span style={{ width: 20, height: 20, borderRadius: '50%', border: '2px solid var(--border)', flexShrink: 0 }} />
+              <span>{opt || `Option ${String.fromCharCode(65 + i)}`}</span>
+            </div>
+          ))}
+        </div>
+      );
+
     default:
       return <p>{exercise.instruction || exercisePreview(exercise)}</p>;
   }
