@@ -140,6 +140,29 @@ export function parsePKCECode(search = window.location.search) {
 }
 
 /**
+ * Sign in with email + password (Supabase password grant). No email delivery
+ * involved — works without SMTP. Returns the session
+ * ({ access_token, refresh_token, expires_in, user, ... }) or throws with the
+ * API error message. The account must already exist (create it in the Supabase
+ * dashboard → Authentication → Users, with "Auto Confirm User" on).
+ */
+export async function signInWithPassword(email, password) {
+  const { url, anonKey, isConfigured } = getSupabaseConfig();
+  if (!isConfigured) throw new Error('Supabase is not configured.');
+  const res = await fetch(`${url}/auth/v1/token?grant_type=password`, {
+    method: 'POST',
+    headers: { apikey: anonKey, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: String(email).trim(), password }),
+  });
+  if (!res.ok) {
+    let msg = `Sign-in failed (${res.status})`;
+    try { const j = await res.json(); msg = j.msg || j.error_description || j.error || msg; } catch {}
+    throw new Error(msg);
+  }
+  return res.json();
+}
+
+/**
  * Send a passwordless magic-link / OTP email using PKCE flow.
  * On click, Supabase redirects to `redirectTo?code=xxx` (PKCE) or
  * `redirectTo#access_token=xxx` (implicit, legacy) — App.jsx handles both.
