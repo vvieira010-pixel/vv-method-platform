@@ -90,7 +90,14 @@ HOMEWORK OBJECTIVE: ${homework.objective || homework.title}
 STUDENT SUBMISSION:
 ${submission.content || '(no text content)'}
 
-Compare the submission to the diagnosis. Return JSON:
+Compare the submission to the diagnosis.
+
+Write "teacherFeedback" as a warm, specific note spoken directly to ${student?.name || 'the student'}:
+reference what they ACTUALLY wrote, name one concrete strength and the single most
+important fix, and end with a clear next step. Sound like a real teacher — natural,
+encouraging and honest, never a generic AI template. No empty praise, no mention of AI.
+
+Return JSON:
 {
   "didStudentImprove": "brief assessment",
   "correctedErrors": ["errors the student fixed"],
@@ -102,7 +109,8 @@ Compare the submission to the diagnosis. Return JSON:
 }`;
 
     try {
-      const data = await callAI(prompt, { max_tokens: 2000 });
+      // Warmer temperature → more human teacher voice in the feedback.
+      const data = await callAI(prompt, { max_tokens: 2000, temperature: 0.7 });
       const raw = data.content?.map(b => b.text || '').join('') || '';
       const parsed = parseAiJson(raw);
       setAiComparison(parsed);

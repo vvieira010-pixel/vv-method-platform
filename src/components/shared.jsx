@@ -514,64 +514,86 @@ export function StudentFeedbackView({ feedback }) {
   const fixes = (Array.isArray(feedback.whatToImprove) ? feedback.whatToImprove : [])
     .filter(f => f && (f.area || f.howToImprove || f.insteadOf));
 
+  // Each part gets its own card (same content as before, just grouped visually).
+  const card = {
+    border: '1px solid var(--border)', borderRadius: 'var(--radius-md)',
+    padding: 16, background: 'var(--surface)',
+  };
+  const cardTitle = {
+    fontSize: 'var(--text-xs)', fontWeight: 800, letterSpacing: '0.06em',
+    textTransform: 'uppercase', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6,
+  };
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 22, maxWidth: '68ch' }}>
-      {/* Opening — reads as the first paragraph of a note */}
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 14, maxWidth: '72ch' }}>
+      {/* Opening card */}
       {feedback.classFocus && (
-        <p style={{ fontSize: 'var(--text-md)', lineHeight: 1.75, color: 'var(--text)', margin: 0 }}>{feedback.classFocus}</p>
+        <div style={card}>
+          <div style={{ ...cardTitle, color: 'var(--primary)' }}>Your class focus</div>
+          <p style={{ fontSize: 'var(--text-md)', lineHeight: 1.75, color: 'var(--text)', margin: 0 }}>{feedback.classFocus}</p>
+        </div>
       )}
 
-      {/* Strengths — bordered left rail, no numbered headers, quote in prose */}
+      {/* Strengths card */}
       {wins.length > 0 && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-          {wins.map((w, i) => (
-            <div key={i} style={{ paddingLeft: 14, borderLeft: '3px solid var(--success)' }}>
-              {w.strength && (
-                <div style={{ fontSize: 'var(--text-md)', fontWeight: 700, color: 'var(--text)', marginBottom: 4 }}>{w.strength}</div>
-              )}
-              {w.explanation && (
-                <p style={{ fontSize: 'var(--text-md)', lineHeight: 1.7, margin: 0, color: 'var(--text)' }}>{w.explanation}</p>
-              )}
-              {w.example && (
-                <p style={{ fontSize: 'var(--text-md)', lineHeight: 1.7, margin: '4px 0 0', color: 'var(--text-2)', fontStyle: 'italic' }}>
-                  “{w.example}”
-                </p>
-              )}
-            </div>
-          ))}
+        <div style={card}>
+          <div style={{ ...cardTitle, color: 'var(--success)' }}><Icon.check size={13} /> What you did well</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            {wins.map((w, i) => (
+              <div key={i} style={{ paddingLeft: 14, borderLeft: '3px solid var(--success)' }}>
+                {w.strength && (
+                  <div style={{ fontSize: 'var(--text-md)', fontWeight: 700, color: 'var(--text)', marginBottom: 4 }}>{w.strength}</div>
+                )}
+                {w.explanation && (
+                  <p style={{ fontSize: 'var(--text-md)', lineHeight: 1.7, margin: 0, color: 'var(--text)' }}>{w.explanation}</p>
+                )}
+                {w.example && (
+                  <p style={{ fontSize: 'var(--text-md)', lineHeight: 1.7, margin: '4px 0 0', color: 'var(--text-2)', fontStyle: 'italic' }}>
+                    “{w.example}”
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
-      {/* Focus areas — same rail treatment, quote pair rendered inline as one sentence */}
+      {/* Focus areas card */}
       {fixes.length > 0 && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-          {fixes.map((f, i) => (
-            <div key={i} style={{ paddingLeft: 14, borderLeft: '3px solid var(--warning-text)' }}>
-              {f.area && (
-                <div style={{ fontSize: 'var(--text-md)', fontWeight: 700, color: 'var(--text)', marginBottom: 4 }}>{f.area}</div>
-              )}
-              {(f.insteadOf || f.sayInstead) && (
-                <p style={{ fontSize: 'var(--text-md)', lineHeight: 1.7, margin: '0 0 4px', color: 'var(--text)' }}>
-                  {f.insteadOf && <>You said <em style={{ color: 'var(--danger)' }}>“{f.insteadOf}”</em></>}
-                  {f.insteadOf && f.sayInstead && <> — try </>}
-                  {!f.insteadOf && f.sayInstead && <>Try </>}
-                  {f.sayInstead && <em style={{ color: 'var(--success)', fontWeight: 600 }}>“{f.sayInstead}”</em>}
-                  {(f.insteadOf || f.sayInstead) && '.'}
-                </p>
-              )}
-              {f.howToImprove && (
-                <p style={{ fontSize: 'var(--text-md)', lineHeight: 1.7, margin: 0, color: 'var(--text)' }}>{f.howToImprove}</p>
-              )}
-            </div>
-          ))}
+        <div style={card}>
+          <div style={{ ...cardTitle, color: 'var(--warning-text)' }}>What to improve</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            {fixes.map((f, i) => (
+              <div key={i} style={{ paddingLeft: 14, borderLeft: '3px solid var(--warning-text)' }}>
+                {f.area && (
+                  <div style={{ fontSize: 'var(--text-md)', fontWeight: 700, color: 'var(--text)', marginBottom: 4 }}>{f.area}</div>
+                )}
+                {(f.insteadOf || f.sayInstead) && (
+                  <p style={{ fontSize: 'var(--text-md)', lineHeight: 1.7, margin: '0 0 4px', color: 'var(--text)' }}>
+                    {f.insteadOf && <>You said <em style={{ color: 'var(--danger)' }}>“{f.insteadOf}”</em></>}
+                    {f.insteadOf && f.sayInstead && <> — try </>}
+                    {!f.insteadOf && f.sayInstead && <>Try </>}
+                    {f.sayInstead && <em style={{ color: 'var(--success)', fontWeight: 600 }}>“{f.sayInstead}”</em>}
+                    {(f.insteadOf || f.sayInstead) && '.'}
+                  </p>
+                )}
+                {f.howToImprove && (
+                  <p style={{ fontSize: 'var(--text-md)', lineHeight: 1.7, margin: 0, color: 'var(--text)' }}>{f.howToImprove}</p>
+                )}
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
-      {/* Closing — no header, no card, no label. Just a paragraph that closes the note. */}
+      {/* Closing card */}
       {feedback.finalNote && (
-        <p style={{ fontSize: 'var(--text-md)', lineHeight: 1.75, margin: 0, color: 'var(--text-2)' }}>
-          {feedback.finalNote}
-        </p>
+        <div style={card}>
+          <div style={{ ...cardTitle, color: 'var(--muted)' }}>A note to you</div>
+          <p style={{ fontSize: 'var(--text-md)', lineHeight: 1.75, margin: 0, color: 'var(--text-2)' }}>
+            {feedback.finalNote}
+          </p>
+        </div>
       )}
     </div>
   );
@@ -861,7 +883,7 @@ function multiKeys(envVal, lsKey) {
   return [...parse(envVal), ...fromLs].filter((k, i, a) => a.indexOf(k) === i);
 }
 
-export async function callAI(prompt, { max_tokens = 2048, system } = {}) {
+export async function callAI(prompt, { max_tokens = 2048, system, temperature = 0.3 } = {}) {
   const sys = system || 'You are a helpful MET English teaching assistant.';
   const errors = []; // collect every provider failure so the real cause is surfaced
 
@@ -871,7 +893,7 @@ export async function callAI(prompt, { max_tokens = 2048, system } = {}) {
   const anthropicKeys = multiKeys(import.meta.env.VITE_ANTHROPIC_API_KEY, API_KEY_LS);
   const openaiKeys = multiKeys(import.meta.env.VITE_OPENAI_API_KEY, 'vv:openai_api_key');
   const openrouterKeys = multiKeys(import.meta.env.VITE_OPENROUTER_API_KEY, 'vv:openrouter_api_key');
-  const payload = { model: ANTHROPIC_MODEL, max_tokens, system: sys, messages: [{ role: 'user', content: prompt }] };
+  const payload = { model: ANTHROPIC_MODEL, max_tokens, temperature, system: sys, messages: [{ role: 'user', content: prompt }] };
 
   // ── Provider attempts: each returns a result object on success, or null on failure (pushing to errors) ──
   async function tryGroq(key, model) {
@@ -880,7 +902,7 @@ export async function callAI(prompt, { max_tokens = 2048, system } = {}) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
         body: JSON.stringify({
-          model, temperature: 0.3, max_tokens,
+          model, temperature, max_tokens,
           messages: [{ role: 'system', content: sys }, { role: 'user', content: prompt }],
         }),
       });
@@ -900,7 +922,7 @@ export async function callAI(prompt, { max_tokens = 2048, system } = {}) {
     try {
       const isGemma = /^gemma/i.test(model);
       const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
-      const gen = { temperature: 0.3, maxOutputTokens: max_tokens };
+      const gen = { temperature, maxOutputTokens: max_tokens };
       // Gemini 2.5 Flash / Flash-Lite "think" by default and that thinking consumes
       // the output token budget — leaving empty/truncated answers. Disable it so the
       // whole budget goes to the response. (Only Flash models allow budget 0; 2.5 Pro
@@ -982,7 +1004,7 @@ export async function callAI(prompt, { max_tokens = 2048, system } = {}) {
           'X-Title': 'MET Proficiency Mastery',
         },
         body: JSON.stringify({
-          model, temperature: 0.3, max_tokens,
+          model, temperature, max_tokens,
           messages: [{ role: 'system', content: sys }, { role: 'user', content: prompt }],
         }),
       });
@@ -1007,7 +1029,7 @@ export async function callAI(prompt, { max_tokens = 2048, system } = {}) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
         body: JSON.stringify({
-          model: OPENAI_MODEL, temperature: 0.3, max_completion_tokens: max_tokens,
+          model: OPENAI_MODEL, temperature, max_completion_tokens: max_tokens,
           messages: [{ role: 'system', content: sys }, { role: 'user', content: prompt }],
         }),
       });

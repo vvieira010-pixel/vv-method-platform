@@ -151,7 +151,8 @@ export default function HomeworkCreate({ diagnosisId, studentId, students, onNav
       const fillTokens = hasSelectedExercises
         ? Math.min(16000, Math.max(3000, form.exercises.length * 320))
         : 3000;
-      const data = await callAI(prompt, { max_tokens: fillTokens });
+      // Higher temperature → more natural, varied wording (less "AI-template" feel).
+      const data = await callAI(prompt, { max_tokens: fillTokens, temperature: 0.8 });
       const raw = data.content?.map(b => b.text || '').join('') || '';
       const parsed = parseAiJson(raw);
 
@@ -184,7 +185,7 @@ export default function HomeworkCreate({ diagnosisId, studentId, students, onNav
     setExerciseOptions([]);
     try {
       const prompt = buildExerciseListPrompt({ student, diagnosis });
-      const data = await callAI(prompt, { max_tokens: 4000 });
+      const data = await callAI(prompt, { max_tokens: 4000, temperature: 0.8 });
       const raw = data.content?.map(b => b.text || '').join('') || '';
       const parsed = parseAiJson(raw);
       const list = Array.isArray(parsed) ? parsed : parsed.exercises || [];
@@ -1014,6 +1015,20 @@ ${selected}
 3. Fill each task with concrete student-ready content.
 4. Return a JSON object with "tasks" array aligned to that selected order.
 5. Use type IDs from this app only: mcq, blank, short, speak, order, fix, flash.
+
+━━━ STYLE & AUTHENTICITY (write like a real exam item-writer, not a chatbot) ━━━
+- Sound human and natural. Use real, specific situations from the student's world
+  (${student?.professionalContext || 'their job / studies / daily life'}) — patients, shifts, colleagues,
+  appointments, real places and names — NOT abstract "A person does X" textbook filler.
+- VARY everything across the ${selectedExercises.length} items: different topics, sentence openings,
+  names, and contexts. Do not reuse the same stem (e.g. avoid every MCQ starting
+  "Which sentence is correct?"). Two items should never feel like copies.
+- Ground the content in THIS student's actual errors and targets above. For MCQ,
+  make the wrong options reflect mistakes this student really makes (plausible,
+  tempting distractors) — never obvious throwaways or "None of the above".
+- Natural English only: contractions where natural, varied vocabulary, no robotic
+  or over-formal phrasing, no meta-commentary, no "Option A/B" labels inside text.
+- Match B1–B2 level: realistic but not artificially simplified.
 
 Return ONLY valid JSON in this shape:
 {

@@ -196,7 +196,9 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
       let data;
       try {
         const prompt = buildDiagnosticPrompt(promptData);
-        data = await callAI(prompt, { max_tokens: 8000, preferredProvider: 'gemini' });
+        // The full diagnosis is one large JSON; too small a budget truncates the
+        // later sections (e.g. Personalized Student Feedback) so they come back empty.
+        data = await callAI(prompt, { max_tokens: 16000, preferredProvider: 'gemini' });
       } catch (firstError) {
         if (!shouldRetryCompact(firstError)) throw firstError;
         const compactPrompt = buildDiagnosticPrompt(promptData, { compact: true });
@@ -261,7 +263,7 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
     try {
       const prompt = buildDiagnosticPrompt({ student: selectedStudent, classEvent, classEvidence: normalizedEvidence, targetProfile });
       const sectionPrompt = `${prompt}\n\nIMPORTANT: Return ONLY the "${key}" field from the JSON structure. No other fields.`;
-      const data = await callAI(sectionPrompt, { max_tokens: 2000, preferredProvider: 'gemini' });
+      const data = await callAI(sectionPrompt, { max_tokens: 4000, preferredProvider: 'gemini' });
       const raw = data.content?.map(b => b.text || '').join('') || '';
       const parsed = parseAiJson(raw);
       const content = parsed[key] ?? parsed;
