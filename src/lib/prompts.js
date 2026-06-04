@@ -91,6 +91,22 @@ MET Speaking Rating Scale (3 categories, each scored 0–4):
     0 = not comprehensible even to a sympathetic listener
   ⚠ SPEAKING AUDIO RULE: If evidence is transcript-only (no audio), do NOT score Intelligibility/Delivery — set score0to4 to null and note "audio required — transcript only."
 
+MET Speaking Task Map (use this when diagnosing speaking evidence — match evidence to the correct task type):
+  Q1 | 60s | Picture description      | Neutral/descriptive  | Full spatial coverage; foreground/background/centre/left/right; precise nouns | Only 1 element described; vague words ("a big thing")
+  Q2 | 60s | Personal experience      | Informal/narrative   | Setup → event → outcome arc; past tense control; narrative connectors        | No sequence; tense switching mid-story
+  Q3 | 60s | Opinion / preference     | Informal/committed   | One clear position stated early; two developed reasons; SINGLE side only     | Giving both sides weakens commitment; no elaboration
+  Q4 | 90s | Advantages & disadvantages | Neutral/balanced   | BOTH sides required (~40s per side); neutral register; transition pivot      | Only one side = ~1/3 of task score lost
+  Q5 | 90s | Roleplay — persuade authority | Formal/one-sided | Position stated in first 10–15s; formal register ("I strongly believe..."); maintained throughout | Under-committing; using informal register with authority figure
+
+  ⚠ Q4 CRITICAL RULE: Task completion requires BOTH sides. Covering only one side loses approximately 1/3 of the total task score.
+  ⚠ Q4 vs Q5 REGISTER DISTINCTION — these are DIFFERENT task types requiring DIFFERENT approaches:
+    Q4: neutral, balanced, no personal opinion. Opener: "There are several benefits and drawbacks..."
+    Q5: committed, one-sided, persuasive, address the authority figure. Opener: "As far as I'm concerned..." / "I strongly believe..."
+    Never diagnose a Q4 response as if it were Q5 or vice versa. Register mismatch = task completion penalty.
+
+  Q4 Subskill Traps: balanced coverage, neutral register, transition pivot, time management (~40s per side), evidence/elaboration per point.
+  Q5 Subskill Traps: early position statement, formal register throughout, argument development, maintaining commitment, optional closing call to action.
+
 MET Writing Rating Scale (5 categories, each scored 0–4):
   Grammatical Accuracy — Error quantity/severity, reader ability to process meaning
     4 = rare errors, none preventing meaning, advanced grammar attempted
@@ -138,16 +154,26 @@ Estimated Overall Score Rule:
   CEFR band = the band matching the estimated overall score in the table above.
 
 ━━━ SKILL SUBSKILLS REFERENCE ━━━
-When diagnosing, identify which subskills you actually have evidence for and list them in subskillsAssessed:
+When diagnosing, identify which subskills you actually have evidence for and list them in subskillsAssessed.
+For each assessed subskill, use these diagnostic status labels (never "good"/"bad"):
+  "Secure"         — consistent performance; can be cited as a strength
+  "Consolidating"  — student shows the behavior inconsistently; needs repetition and cuing
+  "Developing"     — partial control; appears in favorable conditions only
+  "Not yet evident" — gap confirmed; student cannot yet produce this subskill reliably
 
 Speaking: task_relevance, task_completion, idea_development, supporting_details, organization, grammar_accuracy, grammar_complexity, vocabulary_range, vocabulary_appropriacy, connector_use, fluency, hesitation, pronunciation*, rhythm*, intelligibility*
   (*transcript-only: mark pronunciation/rhythm/intelligibility as "audio required")
+  When speaking evidence is tied to a specific task, tag it: e.g. "Q4: balanced_coverage", "Q5: position_commitment", "Q2: past_tense_accuracy".
 
-Writing: task_completion, idea_development, grammar_accuracy, grammar_complexity, vocabulary_range, word_choice, mechanics, sentence_boundaries, punctuation, spelling, cohesion, organization, connector_use
+Writing: task_completion, idea_development, grammar_accuracy, grammar_complexity, vocabulary_range, word_choice, mechanics, sentence_boundaries, punctuation, spelling, cohesion, organization, connector_use, register_consistency
+  Writing has two sections: Section 1 = linguistic accuracy (grammar/vocabulary in context, collocations, connectors, register); Section 2 = extended writing (task type: letter/email/essay/report/description). Tag subskills to section when known.
 
-Reading: grammar, main_idea, detail, inference, vocabulary_in_context, reference, purpose_tone, text_organization, multiple_text_comparison, distractor_recognition, time_management
+Reading: main_idea, detail, inference, vocabulary_in_context, reference, purpose_tone, text_organization, paraphrase_recognition, distractor_recognition, scanning, skimming, time_management
+  Common failure modes — main_idea: choosing a supporting detail instead of the gist; distractor_recognition: choosing option with familiar audio/text words; inference: over-literal reading; scanning: re-reading instead of targeting.
 
-Listening: main_idea, detail, inference, speaker_purpose, tone_attitude, vocabulary_in_context, distractor_recognition, listening_under_time_pressure
+Listening: main_idea, detail, inference, speaker_purpose, vocabulary_in_context, prediction_anticipation, distractor_resistance, listening_under_time_pressure
+  MET Listening sections: Sec 1 = short dialogues (identify main point/intent); Sec 2 = extended dialogues (track topic shifts); Sec 3 = lectures/monologues (main idea, detail, inference); Sec 4 = academic discussions (complex exchanges, identify roles/views).
+  Common failure modes — main_idea: choosing a detail; distractor_resistance: choosing option with familiar audio words but wrong answer; speaker_purpose: confusing topic with intent; inference: surface reading of implied meaning.
 
 Grammar: articles, quantifiers, verb_tenses, prepositions, subject_verb_agreement, sentence_structure, relative_clauses, conditionals, connectors
 
@@ -223,10 +249,13 @@ SELF-CHECK before returning the JSON. Run these three tests on your draft. If an
   (1) QUOTE TEST: every example and every insteadOf contains a near-verbatim quote from the transcript/notes. Paraphrases of the rubric do not count.
   (2) SUBSTITUTION TEST: take each sentence in classFocus, explanation, howToImprove, finalNote — could it be pasted into another student's feedback unchanged? If yes, rewrite or cut.
   (3) MET-BUDGET TEST: count MET-related sentences across the entire studentFeedback object. Must be ≤ 2 total. Each must name a concrete consequence, not a generic justification.
-18. homeworkRecommendation tasks: each task's "content" field MUST be fully written out exercise content ready for the student to use. For grammar tasks: write out actual sentences containing the target error pattern. For vocabulary: write sentences with blanks. For writing/speaking: write the full prompt. Never write "practice X" — write the actual exercise.
-19. homeworkRecommendation must have 2–4 tasks, each targeting a different diagnosed weakness. No repeated tasks. The set MUST include at least one reading direction, at least one listening direction, and at least one speaking OR writing task (grammar/vocabulary tasks are optional extras on top of this required trio). Also include a one-line focusReminder tied to the top priority (e.g. "answer → reason → example").
-20. priorityDiagnosis MUST contain exactly 3 items (rank 1–3), each with ALL fields filled (urgency, area, evidence, whatToImprove, whyItMatters, howToImprove). Never return an empty array.
-21. vocabGrammarTargets MUST be populated: vocabularyTargets with at least 2 items (each with wordOrPhrase, category, meaning, exampleSentence) and grammarTargets with at least 2 items (each with area, issue, correction, practiceDirection), all drawn from the actual evidence. Never return empty arrays.
+18. NEVER use the words "error" or "mistake" in any student-facing text (studentFeedback, homeworkRecommendation instructions, task content). Use instead: "what to change", "how to improve", "the next step", "what to adjust", "a pattern to work on".
+19. Gap-first diagnosis: before writing any diagnosis, identify the specific subskill gap exposed by the evidence. The gap — not a topic or syllabus point — is what drives priorities, homework, and next class focus.
+20. Diagnose speaking evidence against the correct task type (Q1–Q5). A response that only covers one side is a Q4 coverage gap, not a general "completeness" gap. Tag subskill findings to the task when evidence allows.
+21. homeworkRecommendation tasks: each task's "content" field MUST be fully written out exercise content ready for the student to use. For grammar tasks: write out actual sentences containing the target error pattern. For vocabulary: write sentences with blanks. For writing/speaking: write the full prompt. Never write "practice X" — write the actual exercise.
+22. homeworkRecommendation must have 2–4 tasks, each targeting a different diagnosed weakness. No repeated tasks. The set MUST include at least one reading direction, at least one listening direction, and at least one speaking OR writing task (grammar/vocabulary tasks are optional extras on top of this required trio). Also include a one-line focusReminder tied to the top priority (e.g. "answer → reason → example").
+23. priorityDiagnosis MUST contain exactly 3 items (rank 1–3), each with ALL fields filled (urgency, area, evidence, whatToImprove, whyItMatters, howToImprove). Never return an empty array.
+24. vocabGrammarTargets MUST be populated: vocabularyTargets with at least 2 items (each with wordOrPhrase, category, meaning, exampleSentence) and grammarTargets with at least 2 items (each with area, issue, correction, practiceDirection), all drawn from the actual evidence. Never return empty arrays.
 
 ━━━ OUTPUT FORMAT ━━━
 Return ONLY valid JSON. No markdown, no backticks, no prose outside the JSON object.
@@ -660,6 +689,7 @@ You MUST use these exact type IDs. Each has a specific JSON shape:
 5. "order" (Order Sentences) — sentences array in correct order (student sees shuffled)
 6. "fix" (Error Correction) — errorText + correctedText + hint
 7. "flash" (Flashcards) — pairs of term/definition
+8. "listen" (Listening Exercise) — audioText (the text read aloud via TTS) + plays (number of allowed listens, default 2) + question + 4 options + correct answer index + optional explanation
 
 Return ONLY valid JSON — an array of 6 exercises mixing different types:
 [
@@ -714,6 +744,18 @@ Return ONLY valid JSON — an array of 6 exercises mixing different types:
     "correctedText": "Corrected version for grading",
     "hint": "Look at: verb tenses, articles",
     "teacherNote": "Focus on past simple vs present perfect"
+  },
+  {
+    "title": "Listen and answer — speaker purpose",
+    "type": "listen",
+    "duration": "5 min",
+    "audioText": "The short dialogue or monologue text that will be read aloud by TTS. Keep it 2–4 sentences, realistic, at B1–B2 level.",
+    "plays": 2,
+    "question": "What is the speaker's main purpose?",
+    "options": ["To complain about a procedure", "To request information about a patient", "To explain a treatment plan", "To apologise for a delay"],
+    "correct": 1,
+    "explanation": "The speaker asks directly about the patient's status, making option B the correct answer.",
+    "teacherNote": "Targets speaker_purpose subskill — check if student identified intent vs topic"
   }
 ]`;
 };
