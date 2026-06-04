@@ -514,64 +514,86 @@ export function StudentFeedbackView({ feedback }) {
   const fixes = (Array.isArray(feedback.whatToImprove) ? feedback.whatToImprove : [])
     .filter(f => f && (f.area || f.howToImprove || f.insteadOf));
 
+  // Each part gets its own card (same content as before, just grouped visually).
+  const card = {
+    border: '1px solid var(--border)', borderRadius: 'var(--radius-md)',
+    padding: 16, background: 'var(--surface)',
+  };
+  const cardTitle = {
+    fontSize: 'var(--text-xs)', fontWeight: 800, letterSpacing: '0.06em',
+    textTransform: 'uppercase', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6,
+  };
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 22, maxWidth: '68ch' }}>
-      {/* Opening — reads as the first paragraph of a note */}
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 14, maxWidth: '72ch' }}>
+      {/* Opening card */}
       {feedback.classFocus && (
-        <p style={{ fontSize: 'var(--text-md)', lineHeight: 1.75, color: 'var(--text)', margin: 0 }}>{feedback.classFocus}</p>
+        <div style={card}>
+          <div style={{ ...cardTitle, color: 'var(--primary)' }}>Your class focus</div>
+          <p style={{ fontSize: 'var(--text-md)', lineHeight: 1.75, color: 'var(--text)', margin: 0 }}>{feedback.classFocus}</p>
+        </div>
       )}
 
-      {/* Strengths — bordered left rail, no numbered headers, quote in prose */}
+      {/* Strengths card */}
       {wins.length > 0 && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-          {wins.map((w, i) => (
-            <div key={i} style={{ paddingLeft: 14, borderLeft: '3px solid var(--success)' }}>
-              {w.strength && (
-                <div style={{ fontSize: 'var(--text-md)', fontWeight: 700, color: 'var(--text)', marginBottom: 4 }}>{w.strength}</div>
-              )}
-              {w.explanation && (
-                <p style={{ fontSize: 'var(--text-md)', lineHeight: 1.7, margin: 0, color: 'var(--text)' }}>{w.explanation}</p>
-              )}
-              {w.example && (
-                <p style={{ fontSize: 'var(--text-md)', lineHeight: 1.7, margin: '4px 0 0', color: 'var(--text-2)', fontStyle: 'italic' }}>
-                  “{w.example}”
-                </p>
-              )}
-            </div>
-          ))}
+        <div style={card}>
+          <div style={{ ...cardTitle, color: 'var(--success)' }}><Icon.check size={13} /> What you did well</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            {wins.map((w, i) => (
+              <div key={i} style={{ paddingLeft: 14, borderLeft: '3px solid var(--success)' }}>
+                {w.strength && (
+                  <div style={{ fontSize: 'var(--text-md)', fontWeight: 700, color: 'var(--text)', marginBottom: 4 }}>{w.strength}</div>
+                )}
+                {w.explanation && (
+                  <p style={{ fontSize: 'var(--text-md)', lineHeight: 1.7, margin: 0, color: 'var(--text)' }}>{w.explanation}</p>
+                )}
+                {w.example && (
+                  <p style={{ fontSize: 'var(--text-md)', lineHeight: 1.7, margin: '4px 0 0', color: 'var(--text-2)', fontStyle: 'italic' }}>
+                    “{w.example}”
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
-      {/* Focus areas — same rail treatment, quote pair rendered inline as one sentence */}
+      {/* Focus areas card */}
       {fixes.length > 0 && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-          {fixes.map((f, i) => (
-            <div key={i} style={{ paddingLeft: 14, borderLeft: '3px solid var(--warning-text)' }}>
-              {f.area && (
-                <div style={{ fontSize: 'var(--text-md)', fontWeight: 700, color: 'var(--text)', marginBottom: 4 }}>{f.area}</div>
-              )}
-              {(f.insteadOf || f.sayInstead) && (
-                <p style={{ fontSize: 'var(--text-md)', lineHeight: 1.7, margin: '0 0 4px', color: 'var(--text)' }}>
-                  {f.insteadOf && <>You said <em style={{ color: 'var(--danger)' }}>“{f.insteadOf}”</em></>}
-                  {f.insteadOf && f.sayInstead && <> — try </>}
-                  {!f.insteadOf && f.sayInstead && <>Try </>}
-                  {f.sayInstead && <em style={{ color: 'var(--success)', fontWeight: 600 }}>“{f.sayInstead}”</em>}
-                  {(f.insteadOf || f.sayInstead) && '.'}
-                </p>
-              )}
-              {f.howToImprove && (
-                <p style={{ fontSize: 'var(--text-md)', lineHeight: 1.7, margin: 0, color: 'var(--text)' }}>{f.howToImprove}</p>
-              )}
-            </div>
-          ))}
+        <div style={card}>
+          <div style={{ ...cardTitle, color: 'var(--warning-text)' }}>What to improve</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            {fixes.map((f, i) => (
+              <div key={i} style={{ paddingLeft: 14, borderLeft: '3px solid var(--warning-text)' }}>
+                {f.area && (
+                  <div style={{ fontSize: 'var(--text-md)', fontWeight: 700, color: 'var(--text)', marginBottom: 4 }}>{f.area}</div>
+                )}
+                {(f.insteadOf || f.sayInstead) && (
+                  <p style={{ fontSize: 'var(--text-md)', lineHeight: 1.7, margin: '0 0 4px', color: 'var(--text)' }}>
+                    {f.insteadOf && <>You said <em style={{ color: 'var(--danger)' }}>“{f.insteadOf}”</em></>}
+                    {f.insteadOf && f.sayInstead && <> — try </>}
+                    {!f.insteadOf && f.sayInstead && <>Try </>}
+                    {f.sayInstead && <em style={{ color: 'var(--success)', fontWeight: 600 }}>“{f.sayInstead}”</em>}
+                    {(f.insteadOf || f.sayInstead) && '.'}
+                  </p>
+                )}
+                {f.howToImprove && (
+                  <p style={{ fontSize: 'var(--text-md)', lineHeight: 1.7, margin: 0, color: 'var(--text)' }}>{f.howToImprove}</p>
+                )}
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
-      {/* Closing — no header, no card, no label. Just a paragraph that closes the note. */}
+      {/* Closing card */}
       {feedback.finalNote && (
-        <p style={{ fontSize: 'var(--text-md)', lineHeight: 1.75, margin: 0, color: 'var(--text-2)' }}>
-          {feedback.finalNote}
-        </p>
+        <div style={card}>
+          <div style={{ ...cardTitle, color: 'var(--muted)' }}>A note to you</div>
+          <p style={{ fontSize: 'var(--text-md)', lineHeight: 1.75, margin: 0, color: 'var(--text-2)' }}>
+            {feedback.finalNote}
+          </p>
+        </div>
       )}
     </div>
   );
