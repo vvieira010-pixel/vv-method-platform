@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "skills": {
+    "educator-teacher": {
+      "source": "dylantarre/animation-principles",
+      "sourceType": "github",
+      "skillPath": "skills/03-by-role-persona/educator-teacher/SKILL.md",
+      "computedHash": "68998cac4f1534ff805fd0dc920995d309cc91a8dccabfd84b6aec2d47a8e3f7"
+    }
+  }
+}
