@@ -155,7 +155,7 @@ export default function SettingsPage({ onNavigate }) {
         <SectionHeader title="AI Provider Keys" icon={<Icon.spark size={15} />} />
         <p style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', margin: '8px 0 16px', lineHeight: 1.6 }}>
           Keys are stored in your browser only. Priority: Gemini (free) → OpenRouter (free models, auto-cascade) → Groq (free, fast) → Anthropic → OpenAI.
-          Any one key is enough. Keys are not included in platform backups.
+          Any one key is enough. <strong>Tip:</strong> paste several keys in a field (comma-separated) and the app rotates to the next one when a key hits its limit. Keys are not included in platform backups.
         </p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           <Field label="Groq API Key (recommended — free)">
@@ -163,10 +163,10 @@ export default function SettingsPage({ onNavigate }) {
             <a href="https://console.groq.com/keys" target="_blank" rel="noopener noreferrer" style={{ fontSize: 'var(--text-xs)', color: 'var(--accent)', marginTop: 3 }}>Get a free Groq key →</a>
           </Field>
           <Field label="Gemini API Key (free — cascades through Gemini + Gemma)">
-            <input className="input" type="password" value={geminiKey} onChange={e => setGeminiKey(e.target.value)} placeholder="AIza…" />
+            <input className="input" type="password" value={geminiKey} onChange={e => setGeminiKey(e.target.value)} placeholder="AIza… (add more, comma-separated, to rotate)" />
             <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener noreferrer" style={{ fontSize: 'var(--text-xs)', color: 'var(--accent)', marginTop: 3 }}>Get a free Gemini key →</a>
             <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: 3, lineHeight: 1.5 }}>
-              One key tries: Gemini 2.5 Flash → 2.5 Flash-Lite → 2.0 Flash → 2.0 Flash-Lite → Gemma 3 27B → 12B → 4B, until one answers.
+              One key tries: Gemini 2.5 Flash → 2.5 Flash-Lite → 2.0 Flash → 2.0 Flash-Lite → Gemma 3 27B → 12B → 4B. Add several keys (comma-separated) to rotate when one is rate-limited.
             </span>
           </Field>
           <Field label="OpenRouter API Key (free models — auto-cascade)">
