@@ -197,6 +197,9 @@ export async function saveDiagnosis(data) {
     content: null,
   });
 }
+export async function deleteDiagnosis(id) {
+  return removeVia('diagnoses', K.diagnoses, id);
+}
 
 /* ─── FEEDBACK ───────────────────────────────────────────────── */
 export async function getFeedback(studentId) {
