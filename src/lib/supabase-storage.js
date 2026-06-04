@@ -117,7 +117,9 @@ async function challengeFromVerifier(verifier) {
  * Returns the session object ({ access_token, refresh_token, ... }) or throws.
  */
 export async function exchangePKCECode(url, anonKey, code) {
-  const verifier = sessionStorage.getItem(PKCE_VERIFIER_KEY) || '';
+  // Use localStorage (not sessionStorage) so the verifier survives the redirect
+  // even when the email client opens the magic link in a new tab or browser window.
+  const verifier = localStorage.getItem(PKCE_VERIFIER_KEY) || '';
   const res = await fetch(`${url}/auth/v1/token?grant_type=pkce`, {
     method: 'POST',
     headers: { apikey: anonKey, 'Content-Type': 'application/json' },
@@ -127,7 +129,7 @@ export async function exchangePKCECode(url, anonKey, code) {
     const err = await res.json().catch(() => ({}));
     throw new Error(`PKCE exchange failed: ${err.error_description || err.message || res.status}`);
   }
-  sessionStorage.removeItem(PKCE_VERIFIER_KEY);
+  localStorage.removeItem(PKCE_VERIFIER_KEY);
   return res.json(); // { access_token, refresh_token, expires_in, token_type, user }
 }
 
@@ -150,7 +152,7 @@ export async function sendMagicLink(email, redirectTo, { createUser = false } = 
   // Generate PKCE pair and persist verifier for the code exchange on return.
   const verifier = generateVerifier();
   const challenge = await challengeFromVerifier(verifier);
-  sessionStorage.setItem(PKCE_VERIFIER_KEY, verifier);
+  localStorage.setItem(PKCE_VERIFIER_KEY, verifier);
   const endpoint = `${url}/auth/v1/otp?redirect_to=${encodeURIComponent(redirectTo)}`;
   const res = await fetch(endpoint, {
     method: 'POST',
