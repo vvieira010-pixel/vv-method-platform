@@ -1,5 +1,4 @@
 import { useState, useEffect, lazy, Suspense } from 'react';
-import { useAuth0 } from '@auth0/auth0-react';
 import LoginScreen from './pages/login.jsx';
 import StudentDashboard from './pages/student-dashboard.jsx';
 import ErrorBoundary from './components/error-boundary.jsx';
@@ -36,7 +35,6 @@ const ExerciseDemo      = lazy(() => import('./pages/exercise-demo.jsx'));
 const InboxPage         = lazy(() => import('./tools/tool-inbox.jsx'));
 
 export default function App() {
-  const { isAuthenticated, user, isLoading: auth0Loading, logout: auth0Logout } = useAuth0();
   const [auth, setAuth] = useState(null);
   const [view, setView] = useState('dashboard');
   // Sub-view params: { studentId?, classEventId?, diagnosisId?, homeworkId?, submissionId? }
@@ -115,13 +113,6 @@ export default function App() {
     handleHash().then(wasHash => { if (!wasHash) restoreSession(); });
   }, []);
 
-  // ── Auth0 teacher sign-in: fires after the redirect callback is processed ──
-  useEffect(() => {
-    if (isAuthenticated && user && !auth) {
-      setAuth({ role: 'teacher', email: user.email, displayName: user.name || user.email });
-    }
-  }, [isAuthenticated, user, auth]);
-
   // Seed students from hardcoded list on first run, then load live roster
   useEffect(() => {
     seedStudentsIfEmpty(STUDENTS).then(() => {
@@ -170,14 +161,7 @@ export default function App() {
     setAuth(null);
     setView('dashboard');
     setViewParams({});
-    if (isAuthenticated) {
-      auth0Logout({ logoutParams: { returnTo: window.location.origin } });
-    }
   };
-
-  if (auth0Loading) {
-    return <div style={{ display:'flex', alignItems:'center', justifyContent:'center', height:'100vh', fontFamily:'sans-serif', color:'#888' }}>Signing in…</div>;
-  }
 
   if (!auth) {
     return <LoginScreen onSignIn={handleSignIn} initialMode="choose" />;
