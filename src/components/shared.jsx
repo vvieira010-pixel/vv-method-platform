@@ -1045,40 +1045,68 @@ export async function callAI(prompt, { max_tokens = 2048, system, temperature = 
     return null;
   }
 
+  // ── Per-attempt timeout: skip a provider if it doesn't respond within 10 s ──
+  function withTimeout(fn, ms = 10000) {
+    return () => Promise.race([
+      fn(),
+      new Promise(resolve => setTimeout(() => {
+        errors.push(`Timeout after ${ms / 1000}s`);
+        resolve(null);
+      }, ms)),
+    ]);
+  }
+
   // ── Build the default cascade order (Gemini → OpenRouter free models → Groq → Anthropic proxy → Anthropic direct → OpenAI) ──
   // For each model we rotate through every key for that provider, so a
   // rate-limited / out-of-quota key fails over to the next key before moving on.
-  const attempts = [];
+  const baseAttempts = [];
   for (const model of (geminiKeys.length ? geminiModels() : [])) {
-    geminiKeys.forEach((key, ki) => attempts.push({ id: `gemini:${model}#${ki}`, run: () => tryGemini(key, model) }));
+    geminiKeys.forEach((key, ki) => baseAttempts.push({ id: `gemini:${model}#${ki}`, run: withTimeout(() => tryGemini(key, model)) }));
   }
   for (const model of (openrouterKeys.length ? openRouterModels() : [])) {
-    openrouterKeys.forEach((key, ki) => attempts.push({ id: `openrouter:${model}#${ki}`, run: () => tryOpenRouter(key, model) }));
+    openrouterKeys.forEach((key, ki) => baseAttempts.push({ id: `openrouter:${model}#${ki}`, run: withTimeout(() => tryOpenRouter(key, model)) }));
   }
   if (groqKeys.length) {
     const candidateModels = [
       GROQ_MODEL,
-      'meta-llama/llama-4-scout-17b-16e-instruct', // 300K TPM — preview, strongest reasoning
-      'llama-3.3-70b-versatile',                   // 300K TPM — production, very capable
-      'qwen/qwen3-32b',                            // 300K TPM — preview, strong multilingual
-      'openai/gpt-oss-120b',                       // 250K TPM — production, large
-      'openai/gpt-oss-20b',                        // 250K TPM — production, fast
-      'llama-3.1-8b-instant',                      // 250K TPM — production, fastest fallback
+      'meta-llama/llama-4-scout-17b-16e-instruct',
+      'llama-3.3-70b-versatile',
+      'qwen/qwen3-32b',
+      'openai/gpt-oss-120b',
+      'openai/gpt-oss-20b',
+      'llama-3.1-8b-instant',
     ].filter(Boolean).filter((m, i, arr) => arr.indexOf(m) === i);
     for (const model of candidateModels) {
-      groqKeys.forEach((key, ki) => attempts.push({ id: `groq:${model}#${ki}`, run: () => tryGroq(key, model) }));
+      groqKeys.forEach((key, ki) => baseAttempts.push({ id: `groq:${model}#${ki}`, run: withTimeout(() => tryGroq(key, model)) }));
     }
   }
-  attempts.push({ id: 'anthropic-proxy', run: tryAnthropicProxy }); // always tried; skips silently if not configured
-  anthropicKeys.forEach((key, ki) => attempts.push({ id: `anthropic-direct#${ki}`, run: () => tryAnthropicDirect(key) }));
-  openaiKeys.forEach((key, ki) => attempts.push({ id: `openai#${ki}`, run: () => tryOpenAI(key) }));
+  baseAttempts.push({ id: 'anthropic-proxy', run: tryAnthropicProxy }); // always tried; skips silently if not configured
+  anthropicKeys.forEach((key, ki) => baseAttempts.push({ id: `anthropic-direct#${ki}`, run: withTimeout(() => tryAnthropicDirect(key)) }));
+  openaiKeys.forEach((key, ki) => baseAttempts.push({ id: `openai#${ki}`, run: withTimeout(() => tryOpenAI(key)) }));
 
-  // ── Sticky winner: try the last provider/model that succeeded first, then fall back to the full cascade ──
+  // ── Round-robin rotation: cycle the starting provider across calls ──
+  const ROUND_ROBIN_LS = 'vv:ai_rr_index';
+  let rrIdx = 0;
+  try { rrIdx = parseInt(localStorage.getItem(ROUND_ROBIN_LS) || '0', 10) || 0; } catch { /* ignore */ }
+
+  const pivotProviders = ['gemini', 'openrouter', 'groq', 'anthropic-proxy', 'openai', 'anthropic-direct'];
+  const pivotAttempts = baseAttempts.filter(a => pivotProviders.some(p => a.id === p || a.id.startsWith(p + ':')));
+  const pivotCount = pivotAttempts.length;
+
+  let attempts = baseAttempts;
+  if (pivotCount > 1) {
+    const pivotId = pivotAttempts[rrIdx % pivotCount]?.id;
+    const pivotPos = baseAttempts.findIndex(a => a.id === pivotId);
+    if (pivotPos > 0) attempts = [...baseAttempts.slice(pivotPos), ...baseAttempts.slice(0, pivotPos)];
+    try { localStorage.setItem(ROUND_ROBIN_LS, String((rrIdx + 1) % pivotCount)); } catch { /* ignore */ }
+  }
+
+  // ── Sticky winner overrides rotation if one provider has been consistently working ──
   let lastWinner = null;
   try { lastWinner = localStorage.getItem(AI_WINNER_LS); } catch { /* storage unavailable */ }
   if (lastWinner) {
     const idx = attempts.findIndex(a => a.id === lastWinner);
-    if (idx > 0) attempts.unshift(attempts.splice(idx, 1)[0]);
+    if (idx > 0) attempts = [attempts[idx], ...attempts.filter((_, i) => i !== idx)];
   }
 
   for (const attempt of attempts) {

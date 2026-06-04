@@ -6,6 +6,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Icon, Card, Button, Pill } from './shared.jsx';
 import { getExType, parseBlankTemplate, shuffleArray, autoGrade } from '../lib/exercise-types.js';
 import { ExTypeBadge } from './exercise-editor.jsx';
+import Listening from './exercises/Listening.jsx';
 import { getDbContext, uploadSubmissionAudio, createSignedAudioUrl } from '../lib/supabase-db.js';
 
 /**
@@ -32,6 +33,7 @@ export function ExercisePlayer({ exercise, response, onResponse, readOnly = fals
     case 'order': return <OrderPlayer ex={exercise} res={response} update={update} readOnly={readOnly} />;
     case 'fix':   return <FixPlayer   ex={exercise} res={response} update={update} readOnly={readOnly} />;
     case 'flash': return <FlashPlayer ex={exercise} res={response} update={update} readOnly={readOnly} />;
+    case 'listen': return <Listening exercise={exercise} onComplete={(result) => update({ selected: result?.correct ? exercise.correct : -1 })} />;
     default:
       return (
         <div style={{ padding: 14, fontSize: 'var(--text-sm)', color: 'var(--text-2)', lineHeight: 1.6 }}>
