@@ -8,6 +8,7 @@
  */
 import { useState, useEffect } from 'react';
 import { Icon, Avatar, Button, Card, StudentFeedbackView } from '../components/shared.jsx';
+import { printHomework } from '../lib/print-homework.js';
 import { getHomework, submitHomework, getDiagnoses, getProgressNotes, getReviews, getAllSubmissions } from '../lib/workflow.js';
 import { isStructuredExercise, createEmptyResponse } from '../lib/exercise-types.js';
 import { ExercisePlayer, HomeworkStepThrough } from '../components/exercise-player.jsx';
@@ -298,6 +299,11 @@ function HomeworkView({ student }) {
             {/* Expanded content */}
             {isExpanded && (
               <div style={{ padding: 16, borderTop: '1px solid var(--divider)' }}>
+                <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 10 }}>
+                  <Button variant="ghost" size="sm" onClick={() => printHomework(h, { studentName: student?.name })}>
+                    <Icon.print size={13} /> Print
+                  </Button>
+                </div>
                 {h.objective && <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-2)', marginBottom: 10 }}><strong>Goal:</strong> {h.objective}</p>}
                 {h.description && <div style={{ fontSize: 'var(--text-sm)', lineHeight: 1.7, whiteSpace: 'pre-wrap', marginBottom: 12 }}>{h.description}</div>}
 
