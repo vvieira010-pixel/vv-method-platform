@@ -36,8 +36,10 @@ function exerciseHtml(ex, n) {
       <p class="note">Speaking task — practise aloud (${ex.targetSeconds || 60}s). Notes / outline:</p>
       ${lines(4)}`;
   } else if (t === 'order') {
+    // Shuffle so the printed list is not in answer-key order (mirrors OrderPlayer behaviour).
+    const shuffled = (ex.sentences || []).slice().sort(() => Math.random() - 0.5);
     body = `<p class="q">Put these in the correct order — number them 1, 2, 3…:</p>
-      <ul class="scramble">${(ex.sentences || []).map(s => `<li>____ &nbsp; ${esc(s)}</li>`).join('')}</ul>`;
+      <ul class="scramble">${shuffled.map(s => `<li>____ &nbsp; ${esc(s)}</li>`).join('')}</ul>`;
   } else if (t === 'fix') {
     body = `<p class="q">Find and correct the mistake(s):</p>
       <p class="passage">${esc(ex.errorText)}</p>
