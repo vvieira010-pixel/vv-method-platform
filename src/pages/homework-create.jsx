@@ -146,7 +146,12 @@ export default function HomeworkCreate({ diagnosisId, studentId, students, onNav
       const prompt = hasSelectedExercises
         ? buildSelectedExerciseFillPrompt({ student, diagnosis, selectedExercises: form.exercises })
         : buildHomeworkGeneratorPrompt({ student, diagnosis });
-      const data = await callAI(prompt, { max_tokens: 3000 });
+      // Scale the token budget with how many exercises we're filling (large
+      // batches need a lot of output); the per-call cost is only paid on use.
+      const fillTokens = hasSelectedExercises
+        ? Math.min(16000, Math.max(3000, form.exercises.length * 320))
+        : 3000;
+      const data = await callAI(prompt, { max_tokens: fillTokens });
       const raw = data.content?.map(b => b.text || '').join('') || '';
       const parsed = parseAiJson(raw);
 
