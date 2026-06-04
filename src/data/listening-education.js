@@ -2,25 +2,47 @@
  * listening-education.js
  * MET-Style Listening Practice Set — Theme: Education and Learning (B1–C1)
  *
- * Source: met_style_listening_education_learning.md
+ * Each exercise carries filter metadata:
+ *   part    — 'part1' | 'part2a' | 'part2b' | 'part3'
+ *   level   — 'B1-B2' | 'B2' | 'B2-C1'
+ *   format  — 'short-conversation' | 'recording' | 'lecture'
+ *   theme   — 'education-learning'
+ *   title   — human-readable group name
  *
- * Structure: array of `listen` exercise objects, ready to drop into any homework set.
- * Each object matches the `listen` exercise type schema:
- *   { id, type:'listen', audioText, plays, question, options[], correct, explanation, pictureHint }
+ * Grouped exports:
+ *   PART1  — 8 short conversations (B1–B2)
+ *   PART2A — Recording 1: Choosing a Study Method (B2)
+ *   PART2B — Recording 2: Online Learning After the Pandemic (B2)
+ *   PART3  — Academic Lecture: How Technology Can Support Better Learning (B2–C1)
+ *   ALL_LISTENING_EDUCATION — flat array of all 20 exercises
  *
- * Parts:
- *   P1_Q1–P1_Q8  — Short Conversations (B1–B2, 8 questions)
- *   P2A_Q1–P2A_Q4 — Recording 1: Choosing a Study Method (B2, 4 questions)
- *   P2B_Q1–P2B_Q4 — Recording 2: Online Learning After the Pandemic (B2, 4 questions)
- *   P3_Q1–P3_Q8   — Academic Lecture: How Technology Can Support Better Learning (B2–C1)
+ * Filter helpers:
+ *   byPart(exercises, 'part1')
+ *   byLevel(exercises, 'B2')
+ *   byFormat(exercises, 'recording')
  */
 
-/* ── Part 1 — Short Conversations ─────────────────────────────── */
+/* ── Filter helpers ────────────────────────────────────────────── */
+export function byPart(exercises, part) {
+  return exercises.filter(e => e.part === part);
+}
+export function byLevel(exercises, level) {
+  return exercises.filter(e => e.level === level);
+}
+export function byFormat(exercises, format) {
+  return exercises.filter(e => e.format === format);
+}
+
+/* ── Shared metadata per group ─────────────────────────────────── */
+const META_P1  = { part: 'part1',  level: 'B1-B2', format: 'short-conversation', theme: 'education-learning', title: 'Part 1 — Short Conversations' };
+const META_P2A = { part: 'part2a', level: 'B2',    format: 'recording',          theme: 'education-learning', title: 'Part 2 — Recording 1: Choosing a Study Method' };
+const META_P2B = { part: 'part2b', level: 'B2',    format: 'recording',          theme: 'education-learning', title: 'Part 2 — Recording 2: Online Learning After the Pandemic' };
+const META_P3  = { part: 'part3',  level: 'B2-C1', format: 'lecture',            theme: 'education-learning', title: 'Part 3 — Academic Lecture: How Technology Can Support Better Learning' };
+
+/* ── Part 1 — Short Conversations (B1–B2) ─────────────────────── */
 
 export const P1_Q1 = {
-  id: 'listen_p1_q1',
-  type: 'listen',
-  plays: 2,
+  id: 'listen_p1_q1', type: 'listen', plays: 2, ...META_P1,
   pictureHint: 'A student sitting at a desk with books open, looking tired. A phone is next to the books.',
   audioText:
     'Girl: I was going to study for two hours, but I kept checking my phone. ' +
@@ -39,9 +61,7 @@ export const P1_Q1 = {
 };
 
 export const P1_Q2 = {
-  id: 'listen_p1_q2',
-  type: 'listen',
-  plays: 2,
+  id: 'listen_p1_q2', type: 'listen', plays: 2, ...META_P1,
   pictureHint: 'A teacher standing near a digital board while students raise their hands.',
   audioText:
     'Teacher: Okay, before we move on, can someone explain why the answer is C? ' +
@@ -60,9 +80,7 @@ export const P1_Q2 = {
 };
 
 export const P1_Q3 = {
-  id: 'listen_p1_q3',
-  type: 'listen',
-  plays: 2,
+  id: 'listen_p1_q3', type: 'listen', plays: 2, ...META_P1,
   pictureHint: 'Two students watching a video lesson on a laptop.',
   audioText:
     'Man: I actually like online lessons when the teacher gives us short videos first. ' +
@@ -81,9 +99,7 @@ export const P1_Q3 = {
 };
 
 export const P1_Q4 = {
-  id: 'listen_p1_q4',
-  type: 'listen',
-  plays: 2,
+  id: 'listen_p1_q4', type: 'listen', plays: 2, ...META_P1,
   pictureHint: 'A student looking at a low test score while another student points to a study schedule.',
   audioText:
     'Boy: I don\'t understand. I studied the night before the test. ' +
@@ -101,9 +117,7 @@ export const P1_Q4 = {
 };
 
 export const P1_Q5 = {
-  id: 'listen_p1_q5',
-  type: 'listen',
-  plays: 2,
+  id: 'listen_p1_q5', type: 'listen', plays: 2, ...META_P1,
   pictureHint: 'A student speaking nervously in front of a small class.',
   audioText:
     'Woman: I practiced my presentation a lot, but when I stood up, I forgot the first sentence. ' +
@@ -121,9 +135,7 @@ export const P1_Q5 = {
 };
 
 export const P1_Q6 = {
-  id: 'listen_p1_q6',
-  type: 'listen',
-  plays: 2,
+  id: 'listen_p1_q6', type: 'listen', plays: 2, ...META_P1,
   pictureHint: 'A classroom with students working in pairs.',
   audioText:
     'Teacher: For this activity, don\'t work alone. ' +
@@ -142,9 +154,7 @@ export const P1_Q6 = {
 };
 
 export const P1_Q7 = {
-  id: 'listen_p1_q7',
-  type: 'listen',
-  plays: 2,
+  id: 'listen_p1_q7', type: 'listen', plays: 2, ...META_P1,
   pictureHint: 'A student using headphones and a notebook while listening to an audio lesson.',
   audioText:
     'Girl: I used to pause the recording every few seconds, but now I listen once without stopping. ' +
@@ -163,9 +173,7 @@ export const P1_Q7 = {
 };
 
 export const P1_Q8 = {
-  id: 'listen_p1_q8',
-  type: 'listen',
-  plays: 2,
+  id: 'listen_p1_q8', type: 'listen', plays: 2, ...META_P1,
   pictureHint: 'A student looking at a tablet showing a vocabulary app.',
   audioText:
     'Man: This app reminds me to review old words every few days. ' +
@@ -183,7 +191,7 @@ export const P1_Q8 = {
   explanation: 'He says the app is annoying sometimes, but he remembers more, so his opinion is mixed but positive.',
 };
 
-/* ── Part 2A — Recording 1: Choosing a Study Method ────────────── */
+/* ── Part 2A — Recording 1: Choosing a Study Method (B2) ────────── */
 
 const P2A_SCRIPT =
   'Woman: Hey, Daniel, you look busy. Are you studying for the history exam already? ' +
@@ -216,9 +224,7 @@ const P2A_SCRIPT =
   'Man: Sadly true.';
 
 export const P2A_Q1 = {
-  id: 'listen_p2a_q1',
-  type: 'listen',
-  plays: 2,
+  id: 'listen_p2a_q1', type: 'listen', plays: 2, ...META_P2A,
   pictureHint: '',
   audioText: P2A_SCRIPT,
   question: 'What is the main topic of the conversation?',
@@ -233,9 +239,7 @@ export const P2A_Q1 = {
 };
 
 export const P2A_Q2 = {
-  id: 'listen_p2a_q2',
-  type: 'listen',
-  plays: 2,
+  id: 'listen_p2a_q2', type: 'listen', plays: 2, ...META_P2A,
   pictureHint: '',
   audioText: P2A_SCRIPT,
   question: 'According to the woman, what is retrieval practice?',
@@ -250,9 +254,7 @@ export const P2A_Q2 = {
 };
 
 export const P2A_Q3 = {
-  id: 'listen_p2a_q3',
-  type: 'listen',
-  plays: 2,
+  id: 'listen_p2a_q3', type: 'listen', plays: 2, ...META_P2A,
   pictureHint: '',
   audioText: P2A_SCRIPT,
   question: 'How does Daniel feel about retrieval practice at first?',
@@ -267,9 +269,7 @@ export const P2A_Q3 = {
 };
 
 export const P2A_Q4 = {
-  id: 'listen_p2a_q4',
-  type: 'listen',
-  plays: 2,
+  id: 'listen_p2a_q4', type: 'listen', plays: 2, ...META_P2A,
   pictureHint: '',
   audioText: P2A_SCRIPT,
   question: 'What can be inferred about the woman\'s study habits?',
@@ -283,7 +283,7 @@ export const P2A_Q4 = {
   explanation: 'She says she is studying thirty minutes a day, reviewing, quizzing herself, and checking mistakes.',
 };
 
-/* ── Part 2B — Recording 2: Online Learning After the Pandemic ─── */
+/* ── Part 2B — Recording 2: Online Learning After the Pandemic (B2) */
 
 const P2B_SCRIPT =
   'Speaker: Today, I want to talk about online learning — not as a perfect solution, ' +
@@ -313,9 +313,7 @@ const P2B_SCRIPT =
   'Technology can improve education, but only when it is used with careful teaching decisions.';
 
 export const P2B_Q1 = {
-  id: 'listen_p2b_q1',
-  type: 'listen',
-  plays: 2,
+  id: 'listen_p2b_q1', type: 'listen', plays: 2, ...META_P2B,
   pictureHint: '',
   audioText: P2B_SCRIPT,
   question: 'What is the main idea of the talk?',
@@ -330,9 +328,7 @@ export const P2B_Q1 = {
 };
 
 export const P2B_Q2 = {
-  id: 'listen_p2b_q2',
-  type: 'listen',
-  plays: 2,
+  id: 'listen_p2b_q2', type: 'listen', plays: 2, ...META_P2B,
   pictureHint: '',
   audioText: P2B_SCRIPT,
   question: 'What does the speaker say about early online classes?',
@@ -347,9 +343,7 @@ export const P2B_Q2 = {
 };
 
 export const P2B_Q3 = {
-  id: 'listen_p2b_q3',
-  type: 'listen',
-  plays: 2,
+  id: 'listen_p2b_q3', type: 'listen', plays: 2, ...META_P2B,
   pictureHint: '',
   audioText: P2B_SCRIPT,
   question: 'Which of the following is mentioned as a possible problem with online learning?',
@@ -364,9 +358,7 @@ export const P2B_Q3 = {
 };
 
 export const P2B_Q4 = {
-  id: 'listen_p2b_q4',
-  type: 'listen',
-  plays: 2,
+  id: 'listen_p2b_q4', type: 'listen', plays: 2, ...META_P2B,
   pictureHint: '',
   audioText: P2B_SCRIPT,
   question: 'What is the speaker\'s attitude toward educational technology?',
@@ -380,7 +372,7 @@ export const P2B_Q4 = {
   explanation: 'The speaker says technology can help, but only when used with careful teaching decisions.',
 };
 
-/* ── Part 3 — Academic Lecture ────────────────────────────────── */
+/* ── Part 3 — Academic Lecture (B2–C1) ────────────────────────── */
 
 const P3_SCRIPT =
   'Professor: Good morning, everyone. ' +
@@ -420,9 +412,7 @@ const P3_SCRIPT =
   'The best digital tools do not replace good teaching. They support it.';
 
 export const P3_Q1 = {
-  id: 'listen_p3_q1',
-  type: 'listen',
-  plays: 2,
+  id: 'listen_p3_q1', type: 'listen', plays: 2, ...META_P3,
   pictureHint: '',
   audioText: P3_SCRIPT,
   question: 'What is the main purpose of the lecture?',
@@ -437,9 +427,7 @@ export const P3_Q1 = {
 };
 
 export const P3_Q2 = {
-  id: 'listen_p3_q2',
-  type: 'listen',
-  plays: 2,
+  id: 'listen_p3_q2', type: 'listen', plays: 2, ...META_P3,
   pictureHint: '',
   audioText: P3_SCRIPT,
   question: 'According to the professor, what matters most when evaluating educational technology?',
@@ -454,9 +442,7 @@ export const P3_Q2 = {
 };
 
 export const P3_Q3 = {
-  id: 'listen_p3_q3',
-  type: 'listen',
-  plays: 2,
+  id: 'listen_p3_q3', type: 'listen', plays: 2, ...META_P3,
   pictureHint: '',
   audioText: P3_SCRIPT,
   question: 'Which action best describes active recall, according to the professor?',
@@ -471,9 +457,7 @@ export const P3_Q3 = {
 };
 
 export const P3_Q4 = {
-  id: 'listen_p3_q4',
-  type: 'listen',
-  plays: 2,
+  id: 'listen_p3_q4', type: 'listen', plays: 2, ...META_P3,
   pictureHint: '',
   audioText: P3_SCRIPT,
   question: 'What warning does the professor give about spaced repetition apps?',
@@ -488,9 +472,7 @@ export const P3_Q4 = {
 };
 
 export const P3_Q5 = {
-  id: 'listen_p3_q5',
-  type: 'listen',
-  plays: 2,
+  id: 'listen_p3_q5', type: 'listen', plays: 2, ...META_P3,
   pictureHint: '',
   audioText: P3_SCRIPT,
   question: 'In what order does the professor discuss the learning principles?',
@@ -505,9 +487,7 @@ export const P3_Q5 = {
 };
 
 export const P3_Q6 = {
-  id: 'listen_p3_q6',
-  type: 'listen',
-  plays: 2,
+  id: 'listen_p3_q6', type: 'listen', plays: 2, ...META_P3,
   pictureHint: '',
   audioText: P3_SCRIPT,
   question: 'What does the professor say about a simple red X as feedback?',
@@ -522,9 +502,7 @@ export const P3_Q6 = {
 };
 
 export const P3_Q7 = {
-  id: 'listen_p3_q7',
-  type: 'listen',
-  plays: 2,
+  id: 'listen_p3_q7', type: 'listen', plays: 2, ...META_P3,
   pictureHint: '',
   audioText: P3_SCRIPT,
   question: 'What can be inferred about the professor\'s view of teachers?',
@@ -539,9 +517,7 @@ export const P3_Q7 = {
 };
 
 export const P3_Q8 = {
-  id: 'listen_p3_q8',
-  type: 'listen',
-  plays: 2,
+  id: 'listen_p3_q8', type: 'listen', plays: 2, ...META_P3,
   pictureHint: '',
   audioText: P3_SCRIPT,
   question: 'Which statement best reflects the professor\'s conclusion?',
@@ -558,7 +534,7 @@ export const P3_Q8 = {
 /* ── Grouped exports ───────────────────────────────────────────── */
 
 /** Part 1 — 8 short conversations (B1–B2) */
-export const PART1 = [P1_Q1, P1_Q2, P1_Q3, P1_Q4, P1_Q5, P1_Q6, P1_Q7, P1_Q8];
+export const PART1  = [P1_Q1, P1_Q2, P1_Q3, P1_Q4, P1_Q5, P1_Q6, P1_Q7, P1_Q8];
 
 /** Part 2A — Recording 1: Choosing a Study Method (B2) */
 export const PART2A = [P2A_Q1, P2A_Q2, P2A_Q3, P2A_Q4];
@@ -567,9 +543,9 @@ export const PART2A = [P2A_Q1, P2A_Q2, P2A_Q3, P2A_Q4];
 export const PART2B = [P2B_Q1, P2B_Q2, P2B_Q3, P2B_Q4];
 
 /** Part 3 — Academic Lecture: How Technology Can Support Better Learning (B2–C1) */
-export const PART3 = [P3_Q1, P3_Q2, P3_Q3, P3_Q4, P3_Q5, P3_Q6, P3_Q7, P3_Q8];
+export const PART3  = [P3_Q1, P3_Q2, P3_Q3, P3_Q4, P3_Q5, P3_Q6, P3_Q7, P3_Q8];
 
-/** All 20 exercises in one flat array */
+/** All 20 exercises flat */
 export const ALL_LISTENING_EDUCATION = [...PART1, ...PART2A, ...PART2B, ...PART3];
 
 export default ALL_LISTENING_EDUCATION;

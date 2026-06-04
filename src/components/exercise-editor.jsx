@@ -494,7 +494,7 @@ function ListenEditor({ ex, update }) {
           <input
             className="input" type="number" min={0} max={10} step={1}
             value={ex.plays ?? 2}
-            onChange={e => update({ plays: Number(e.target.value) || 2 })}
+            onChange={e => { const v = Number(e.target.value); update({ plays: isNaN(v) ? 2 : v }); }}
             style={{ width: 70 }}
           />
           <div style={hintText}>0 = unlimited</div>
