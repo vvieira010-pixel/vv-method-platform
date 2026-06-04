@@ -40,7 +40,7 @@ const FACTORIES = {
   order:  () => ({ id: exId(), type: 'order',  sentences: [''] }),
   fix:    () => ({ id: exId(), type: 'fix',    errorText: '', correctedText: '', hint: '' }),
   flash:  () => ({ id: exId(), type: 'flash',  pairs: [{ term: '', def: '' }] }),
-  listen: () => ({ id: exId(), type: 'listen', audioText: '', plays: 2, question: '', options: ['', '', '', ''], correct: null, explanation: '', pictureHint: '' }),
+  listen: () => ({ id: exId(), type: 'listen', audioText: '', plays: 0, question: '', options: ['', '', '', ''], correct: null, explanation: '', pictureHint: '' }),
 };
 
 /**
@@ -116,9 +116,16 @@ export function autoGrade(exercise, response) {
     }
 
     case 'fix': {
-      const student = (response.text || '').trim().toLowerCase().replace(/\s+/g, ' ');
-      const target  = (exercise.correctedText || '').trim().toLowerCase().replace(/\s+/g, ' ');
-      const isCorrect = student === target;
+      // Normalize so a correct fix isn't marked wrong over cosmetic differences
+      // (curly vs straight quotes, trailing punctuation, double spaces).
+      const norm = (s) => (s || '')
+        .trim().toLowerCase()
+        .replace(/[‘’]/g, "'")      // curly → straight apostrophes
+        .replace(/[“”]/g, '"')      // curly → straight quotes
+        .replace(/\s+/g, ' ')                  // collapse whitespace
+        .replace(/\s*([.,;:!?])/g, '$1')       // no space before punctuation
+        .replace(/[.!?]+$/g, '');              // ignore trailing sentence punctuation
+      const isCorrect = norm(response.text) === norm(exercise.correctedText);
       return {
         correct: isCorrect,
         score: isCorrect ? 1 : 0,

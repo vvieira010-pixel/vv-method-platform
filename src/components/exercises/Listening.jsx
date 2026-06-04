@@ -73,7 +73,7 @@ export default function Listening({ exercise, onComplete }) {
     options = [],
     correct = null,
     explanation = '',
-    plays = 2,
+    plays = 0,
     pictureHint = '',
   } = exercise;
 
@@ -126,6 +126,9 @@ export default function Listening({ exercise, onComplete }) {
       setLoading(false);
       setPlaying(false);
       setError(e.message || 'Could not play audio.');
+      // Accessibility fallback: if audio can't play, reveal the question and the
+      // transcript so the student can still read and complete the exercise.
+      setRevealed(true);
     }
   }, [canPlay, audioText, audioUrl]);
 
@@ -239,10 +242,29 @@ export default function Listening({ exercise, onComplete }) {
 
         {error && (
           <div style={{ fontSize: 12.5, color: 'var(--danger)', textAlign: 'center' }}>
-            ⚠ {error}
+            ⚠ {error} You can read the transcript below to answer.
           </div>
         )}
       </div>
+
+      {/* Transcript — shown after answering (learning moment) or when audio fails
+          (accessibility fallback). Hidden during the normal listening challenge. */}
+      {audioText && (submitted || error) && (
+        <div style={{
+          padding: '12px 14px', marginBottom: 16, borderRadius: 8,
+          background: 'var(--bg)', border: '1px solid var(--border)',
+        }}>
+          <div style={{
+            fontSize: 11, fontWeight: 700, letterSpacing: '0.06em',
+            color: 'var(--muted)', textTransform: 'uppercase', marginBottom: 6,
+          }}>
+            Transcript
+          </div>
+          <div style={{ fontSize: 14, lineHeight: 1.65, color: 'var(--text)' }}>
+            {audioText}
+          </div>
+        </div>
+      )}
 
       {/* Question — revealed after first listen */}
       {revealed ? (

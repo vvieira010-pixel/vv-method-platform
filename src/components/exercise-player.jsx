@@ -46,14 +46,17 @@ export function ExercisePlayer({ exercise, response, onResponse, readOnly = fals
 /* ─── 1. MULTIPLE CHOICE ────────────────────────────────────── */
 function MCQPlayer({ ex, res, update, readOnly }) {
   const pick = res?.selected ?? null;
-  const showResult = pick !== null;
+  // Selection and grading are separate: choosing an option no longer reveals the
+  // result. The student confirms with "Check answer" (or it's shown read-only in review).
+  const [checked, setChecked] = useState(false);
+  const showResult = readOnly || checked;
 
   return (
     <div>
       <p style={{ margin: '0 0 14px', fontSize: 'var(--text-md)', fontWeight: 600, color: 'var(--text)', lineHeight: 1.55 }}>
         {ex.question}
       </p>
-      <div style={{ display: 'grid', gap: 8 }}>
+      <div role="radiogroup" aria-label={ex.question || 'Answer options'} style={{ display: 'grid', gap: 8 }}>
         {(ex.options || []).map((opt, i) => {
           const selected = pick === i;
           const isRight = i === ex.correct;
@@ -65,15 +68,19 @@ function MCQPlayer({ ex, res, update, readOnly }) {
           if (!showResult && selected)              { borderColor = 'var(--primary)'; bg = 'var(--accent-subtle)'; }
 
           return (
-            <div
+            <button
               key={i}
-              onClick={() => !readOnly && update({ selected: i })}
+              type="button"
+              role="radio"
+              aria-checked={selected}
+              disabled={readOnly || showResult}
+              onClick={() => { if (!readOnly && !showResult) update({ selected: i }); }}
               style={{
                 display: 'flex', alignItems: 'center', gap: 12,
-                padding: '12px 14px', borderRadius: 10,
+                padding: '12px 14px', borderRadius: 10, width: '100%', textAlign: 'left',
                 border: `1.5px solid ${borderColor}`, background: bg,
-                cursor: readOnly ? 'default' : 'pointer',
-                transition: 'all .15s var(--ease)',
+                cursor: (readOnly || showResult) ? 'default' : 'pointer',
+                transition: 'all .15s var(--ease)', fontFamily: 'var(--font-ui)',
               }}
             >
               <div style={{
@@ -86,10 +93,17 @@ function MCQPlayer({ ex, res, update, readOnly }) {
               </div>
               <span style={{ fontSize: 'var(--text-sm)', color: 'var(--text)', flex: 1 }}>{opt}</span>
               {showResult && isRight && <Icon.check size={16} color="var(--success)" />}
-            </div>
+            </button>
           );
         })}
       </div>
+
+      {!showResult && pick !== null && (
+        <Button variant="primary" size="sm" onClick={() => setChecked(true)} style={{ marginTop: 12 }}>
+          Check answer
+        </Button>
+      )}
+
       {showResult && (
         <div style={{
           marginTop: 14, padding: '10px 14px', borderRadius: 10,
@@ -125,24 +139,28 @@ function BlankPlayer({ ex, res, update, readOnly }) {
           const status = getStatus(seg.index);
           const color = status === 'ok' ? 'var(--success)' : status === 'warn' ? 'var(--warning)' : 'var(--primary)';
           return (
-            <input
-              key={i}
-              value={studentBlanks[seg.index] || ''}
-              onChange={e => {
-                const blanks = [...studentBlanks];
-                blanks[seg.index] = e.target.value;
-                update({ blanks });
-              }}
-              disabled={readOnly}
-              placeholder="___"
-              style={{
-                border: 'none', borderBottom: `2px solid ${color}`,
-                outline: 'none', fontSize: 'var(--text-md)', width: 130,
-                padding: '2px 6px', textAlign: 'center',
-                fontFamily: 'var(--font-ui)', fontWeight: 600,
-                color, background: 'transparent',
-              }}
-            />
+            <span key={i} style={{ whiteSpace: 'nowrap' }}>
+              <input
+                value={studentBlanks[seg.index] || ''}
+                onChange={e => {
+                  const blanks = [...studentBlanks];
+                  blanks[seg.index] = e.target.value;
+                  update({ blanks });
+                }}
+                disabled={readOnly}
+                placeholder="___"
+                aria-label={status === 'ok' ? 'Blank, correct' : status === 'warn' ? 'Blank, check your answer' : 'Blank'}
+                style={{
+                  border: 'none', borderBottom: `2px solid ${color}`,
+                  outline: 'none', fontSize: 'var(--text-md)', width: 130,
+                  padding: '2px 6px', textAlign: 'center',
+                  fontFamily: 'var(--font-ui)', fontWeight: 600,
+                  color, background: 'transparent',
+                }}
+              />
+              {status === 'ok' && <span title="correct" style={{ color: 'var(--success)', fontWeight: 700, marginLeft: 3, fontSize: 'var(--text-sm)' }}>✓</span>}
+              {status === 'warn' && <span title="check this" style={{ color: 'var(--warning)', fontWeight: 700, marginLeft: 3, fontSize: 'var(--text-sm)' }}>!</span>}
+            </span>
           );
         })}
       </p>
@@ -187,6 +205,7 @@ function ShortPlayer({ ex, res, update, readOnly }) {
 function SpeakPlayer({ ex, res, update, readOnly }) {
   const [status, setStatus] = useState('idle'); // idle | recording | done
   const [seconds, setSeconds] = useState(0);
+  const [typing, setTyping] = useState(false); // "type instead" alternative to recording
   const [playbackUrl, setPlaybackUrl] = useState(res?.audioB64 || null);
   const timerRef = useRef(null);
   const mediaRef = useRef(null);
@@ -273,9 +292,30 @@ function SpeakPlayer({ ex, res, update, readOnly }) {
       </div>
 
       {status === 'idle' && (
-        <Button variant="primary" onClick={start} disabled={readOnly}>
-          <Icon.mic size={13} /> Start recording
-        </Button>
+        <>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+            <Button variant="primary" onClick={start} disabled={readOnly}>
+              <Icon.mic size={13} /> Start recording
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => setTyping(t => !t)} disabled={readOnly}>
+              {typing ? 'Hide typing' : 'Type my answer instead'}
+            </Button>
+          </div>
+          {typing && (
+            <div style={{ marginTop: 12 }}>
+              <span style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                Your written answer
+              </span>
+              <textarea
+                className="input" rows={5} value={res?.transcript || ''}
+                onChange={e => update({ transcript: e.target.value })}
+                disabled={readOnly}
+                placeholder="Type your full answer here — this counts as your response if you can't record."
+                style={{ fontSize: 'var(--text-sm)', lineHeight: 1.7, marginTop: 6 }}
+              />
+            </div>
+          )}
+        </>
       )}
 
       {status === 'recording' && (
