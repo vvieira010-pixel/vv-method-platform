@@ -197,6 +197,17 @@ export async function saveDiagnosis(data) {
     content: null,
   });
 }
+export async function deleteDiagnosis(id) {
+  // Look up the diagnosis first so we can re-open its linked class event.
+  const dx = (await getDiagnoses()).find(d => d.id === id);
+  await removeVia('diagnoses', K.diagnoses, id);
+  // Saving a diagnosis marks the class event diagnosed (approved/draft); on delete
+  // reset it to 'not-started' so the class is offered for diagnosis again.
+  if (dx?.classEventId) {
+    try { await updateClassEventStatus(dx.classEventId, { diagnosticStatus: 'not-started' }); }
+    catch (e) { console.warn('[workflow] deleteDiagnosis: class event reset failed:', e.message); }
+  }
+}
 
 /* ─── FEEDBACK ───────────────────────────────────────────────── */
 export async function getFeedback(studentId) {

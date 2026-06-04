@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Icon, Card, SectionHeader, Pill, Button, Avatar } from '../components/shared.jsx';
-import { getDiagnoses, getStudents } from '../lib/workflow.js';
+import { getDiagnoses, getStudents, deleteDiagnosis } from '../lib/workflow.js';
 
 export default function DiagnosticsPage({ students, onNavigate }) {
   const [diagnoses, setDiagnoses] = useState([]);
@@ -76,6 +76,17 @@ export default function DiagnosticsPage({ students, onNavigate }) {
                       Generate HW
                     </Button>
                   )}
+                  <Button
+                    variant="ghost" size="sm" style={{ color: 'var(--danger)' }}
+                    aria-label="Delete diagnosis"
+                    onClick={async () => {
+                      if (!confirm(`Delete this diagnosis for ${student?.name || 'this student'}? This cannot be undone.`)) return;
+                      await deleteDiagnosis(dx.id);
+                      load();
+                    }}
+                  >
+                    <Icon.trash size={13} />
+                  </Button>
                 </div>
               </Card>
             );
