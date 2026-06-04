@@ -197,7 +197,7 @@ export default function SettingsPage({ onNavigate }) {
             <SecretInput value={geminiKey} onChange={e => setGeminiKey(e.target.value)} placeholder="AIza… (add more, comma-separated, to rotate)" />
             <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener noreferrer" style={{ fontSize: 'var(--text-xs)', color: 'var(--accent)', marginTop: 3 }}>Get a free Gemini key →</a>
             <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: 3, lineHeight: 1.5 }}>
-              One key tries: Gemini 2.5 Flash → 2.5 Flash-Lite → 2.0 Flash → 2.0 Flash-Lite → Gemma 3 27B → 12B → 4B. Add several keys (comma-separated) to rotate when one is rate-limited.
+              One key tries: Gemini 2.5 Flash → 2.5 Flash-Lite → 2.0 Flash → 2.0 Flash-Lite → Gemma, until one answers. Add several keys (comma-separated) to rotate when one is rate-limited.
             </span>
           </Field>
           <Field label="OpenRouter API Key (free models — auto-cascade)">

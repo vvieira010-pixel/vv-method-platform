@@ -809,9 +809,9 @@ const GEMINI_DEFAULT_MODELS = [
   'gemini-2.5-flash-lite',
   'gemini-2.0-flash',
   'gemini-2.0-flash-lite',
-  'gemma-3-27b-it',
-  'gemma-3-12b-it',
-  'gemma-3-4b-it',
+  // Gemma model availability varies by key/region; the cascade skips any that 404.
+  'gemma-4-31b-it',
+  'gemma-4-26b-a4b-it',
 ];
 function geminiModels() {
   const parse = s => String(s || '').split(',').map(x => x.trim()).filter(Boolean);
@@ -900,16 +900,22 @@ export async function callAI(prompt, { max_tokens = 2048, system } = {}) {
     try {
       const isGemma = /^gemma/i.test(model);
       const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
+      const gen = { temperature: 0.3, maxOutputTokens: max_tokens };
+      // Gemini 2.5 Flash / Flash-Lite "think" by default and that thinking consumes
+      // the output token budget — leaving empty/truncated answers. Disable it so the
+      // whole budget goes to the response. (Only Flash models allow budget 0; 2.5 Pro
+      // cannot disable thinking, so don't touch its config.)
+      if (/2\.5/.test(model) && /flash/i.test(model)) gen.thinkingConfig = { thinkingBudget: 0 };
       // Gemma has no system role — fold the system prompt into the user turn.
       const reqBody = isGemma
         ? {
             contents: [{ parts: [{ text: `${sys}\n\n${prompt}` }] }],
-            generationConfig: { temperature: 0.3, maxOutputTokens: max_tokens },
+            generationConfig: gen,
           }
         : {
             systemInstruction: { parts: [{ text: sys }] },
             contents: [{ parts: [{ text: prompt }] }],
-            generationConfig: { temperature: 0.3, maxOutputTokens: max_tokens },
+            generationConfig: gen,
           };
       const res = await fetch(url, {
         method: 'POST',
