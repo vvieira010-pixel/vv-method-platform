@@ -1,13 +1,14 @@
 /**
  * login.jsx — V.V. Method Platform Login Screen
- * Simple Home/Login screen for the MET preparation platform.
- * Teacher: email + password · Student: email + password
+ * Teacher: Auth0 Universal Login (no password)
+ * Student:  Supabase magic link (no password)
  */
 
 import { useState, useEffect } from 'react';
+import { useAuth0 } from '@auth0/auth0-react';
 import { injectGlobalCSS } from '../components/shared.jsx';
-import { getStudentByEmailPassword } from '../lib/workflow.js';
 import { sendMagicLink, getSupabaseConfig } from '../lib/supabase-storage.js';
+import { getAuth0Config } from '../lib/auth0-config.js';
 
 const CSS = `
   .login-root {
@@ -137,15 +138,9 @@ function injectLoginCSS() {
   loginCssInjected = true;
 }
 
-const DEFAULT_TEACHER_EMAIL = 'teacher@vvmethod.com';
-const DEFAULT_TEACHER_PASSWORD = 'TeacherTest2026!';
-
 export default function LoginScreen({ onSignIn, initialMode = 'choose' }) {
   const [mode, setMode] = useState(initialMode);
-  const [teacherEmail, setTeacherEmail] = useState('');
-  const [teacherPassword, setTeacherPassword] = useState('');
   const [studentEmail, setStudentEmail] = useState('');
-  const [studentPassword, setStudentPassword] = useState('');
   const [error, setError] = useState('');
   const [magicSending, setMagicSending] = useState(false);
   const [magicSentTo, setMagicSentTo] = useState('');
@@ -156,62 +151,16 @@ export default function LoginScreen({ onSignIn, initialMode = 'choose' }) {
     injectLoginCSS();
   }, []);
 
-  const handleTeacher = () => {
-    setError('');
-    if (!teacherEmail.trim() || !teacherPassword.trim()) {
-      setError('Enter your email and password.');
-      return;
-    }
-    const allowLocalFallback = import.meta.env.DEV || import.meta.env.VITE_ALLOW_DEMO_LOGIN === 'true';
-    const configuredEmail = import.meta.env.VITE_TEACHER_EMAIL;
-    const configuredPassword = import.meta.env.VITE_TEACHER_PASSWORD;
-    const expectedEmail = String(configuredEmail || (allowLocalFallback ? DEFAULT_TEACHER_EMAIL : '')).trim().toLowerCase();
-    const expectedPassword = String(configuredPassword || (allowLocalFallback ? DEFAULT_TEACHER_PASSWORD : ''));
-    if (!expectedEmail || !expectedPassword) {
-      setError('Teacher credentials are not configured.');
-      return;
-    }
-    if (teacherEmail.trim().toLowerCase() !== expectedEmail || teacherPassword !== expectedPassword) {
-      setError('Email or password is incorrect.');
-      return;
-    }
-    onSignIn({ role: 'teacher' });
-  };
-
-  const handleMagicLink = async () => {
-    setError('');
-    setMagicSentTo('');
-    const email = teacherEmail.trim();
-    if (!email) { setError('Enter your email first, then request a link.'); return; }
-    setMagicSending(true);
-    try {
-      await sendMagicLink(email, window.location.origin);
-      setMagicSentTo(email);
-    } catch (e) {
-      setError(e.message || 'Could not send the sign-in link.');
-    }
-    setMagicSending(false);
-  };
-
-  const handleStudent = async () => {
-    setError('');
-    const student = await getStudentByEmailPassword(studentEmail, studentPassword);
-    if (!student) {
-      setError('Email or password is incorrect.');
-      return;
-    }
-    onSignIn({ role: 'student', studentId: student.id });
-  };
-
   const handleStudentMagicLink = async () => {
     setError('');
     setMagicSentTo('');
     const email = studentEmail.trim();
-    if (!email) { setError('Enter your email first, then request a link.'); return; }
+    if (!email) { setError('Enter your email to receive a sign-in link.'); return; }
+    if (!supabaseReady) { setError('Auth is not configured. Contact your teacher.'); return; }
     setMagicSending(true);
     try {
-      // createUser:true — a student's first sign-in provisions their auth account,
-      // which then self-claims the teacher-created roster row (by matching email).
+      // createUser:true — first sign-in provisions the auth account and
+      // self-claims the teacher-created roster row (matched by email).
       await sendMagicLink(email, window.location.origin, { createUser: true });
       setMagicSentTo(email);
     } catch (e) {
@@ -223,10 +172,8 @@ export default function LoginScreen({ onSignIn, initialMode = 'choose' }) {
   const back = (m) => {
     setMode(m);
     setError('');
-    setTeacherEmail('');
-    setTeacherPassword('');
     setStudentEmail('');
-    setStudentPassword('');
+    setMagicSentTo('');
   };
 
   const formHeading = mode === 'choose'
@@ -237,8 +184,8 @@ export default function LoginScreen({ onSignIn, initialMode = 'choose' }) {
   const formSubcopy = mode === 'choose'
     ? 'Choose teacher or student to continue.'
     : mode === 'teacher'
-      ? 'Enter your workspace credentials.'
-      : 'Open your dashboard with your account.';
+      ? 'Sign in securely via Auth0 — no password needed.'
+      : 'Enter your email and we\'ll send you a sign-in link.';
 
   return (
     <div className="login-root">
@@ -312,64 +259,11 @@ export default function LoginScreen({ onSignIn, initialMode = 'choose' }) {
             </>
           )}
 
-          {mode === 'teacher' && (
-            <>
-              <label className="login-field-label" htmlFor="login-teacher-email">Teacher Email</label>
-              <input
-                id="login-teacher-email"
-                className="login-input"
-                type="email"
-                autoComplete="email"
-                value={teacherEmail}
-                onChange={e => setTeacherEmail(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && handleTeacher()}
-                placeholder="teacher@vvmethod.com"
-                autoFocus
-              />
-              <label className="login-field-label" htmlFor="login-teacher-password" style={{ marginTop: 12 }}>Password</label>
-              <input
-                id="login-teacher-password"
-                className="login-input"
-                type="password"
-                autoComplete="current-password"
-                value={teacherPassword}
-                onChange={e => setTeacherPassword(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && handleTeacher()}
-                placeholder="Enter your password"
-              />
-              <div className="login-error" role="alert" aria-live="polite">{error}</div>
-              <button type="button" className="login-submit-btn teacher" onClick={handleTeacher}>
-                Sign in →
-              </button>
-
-              {supabaseReady && (
-                <>
-                  <div className="login-divider"><span>or</span></div>
-                  {magicSentTo ? (
-                    <div className="login-magic-sent" role="status" aria-live="polite">
-                      Check <strong>{magicSentTo}</strong> for a sign-in link. Open it on this device to finish signing in.
-                    </div>
-                  ) : (
-                    <button
-                      type="button"
-                      className="login-magic-btn"
-                      onClick={handleMagicLink}
-                      disabled={magicSending}
-                    >
-                      {magicSending ? 'Sending link…' : 'Email me a sign-in link'}
-                    </button>
-                  )}
-                  <p className="login-hint">
-                    Passwordless sign-in via Supabase — needed to sync your data (e.g. the exercise library) across devices.
-                  </p>
-                </>
-              )}
-            </>
-          )}
+          {mode === 'teacher' && <TeacherAuth0Panel />}
 
           {mode === 'student' && (
             <>
-              <label className="login-field-label" htmlFor="login-student-email">Student Email</label>
+              <label className="login-field-label" htmlFor="login-student-email">Your email</label>
               <input
                 id="login-student-email"
                 className="login-input"
@@ -377,53 +271,65 @@ export default function LoginScreen({ onSignIn, initialMode = 'choose' }) {
                 autoComplete="email"
                 value={studentEmail}
                 onChange={e => setStudentEmail(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && handleStudent()}
+                onKeyDown={e => e.key === 'Enter' && handleStudentMagicLink()}
                 placeholder="student@email.com"
                 autoFocus
               />
-              <label className="login-field-label" htmlFor="login-student-password" style={{ marginTop: 12 }}>Password</label>
-              <input
-                id="login-student-password"
-                className="login-input"
-                type="password"
-                autoComplete="current-password"
-                value={studentPassword}
-                onChange={e => setStudentPassword(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && handleStudent()}
-                placeholder="Enter your password"
-              />
               <div className="login-error" role="alert" aria-live="polite">{error}</div>
-              <button type="button" className="login-submit-btn student" onClick={handleStudent}>
-                Sign in →
-              </button>
-
-              {supabaseReady && (
-                <>
-                  <div className="login-divider"><span>or</span></div>
-                  {magicSentTo ? (
-                    <div className="login-magic-sent" role="status" aria-live="polite">
-                      Check <strong>{magicSentTo}</strong> for a sign-in link. Open it on this device to finish signing in.
-                    </div>
-                  ) : (
-                    <button
-                      type="button"
-                      className="login-magic-btn"
-                      onClick={handleStudentMagicLink}
-                      disabled={magicSending}
-                    >
-                      {magicSending ? 'Sending link…' : 'Email me a sign-in link'}
-                    </button>
-                  )}
-                  <p className="login-hint">
-                    Passwordless sign-in via Supabase — lets your homework and feedback sync from your teacher.
-                  </p>
-                </>
+              {magicSentTo ? (
+                <div className="login-magic-sent" role="status" aria-live="polite">
+                  ✉️ Check <strong>{magicSentTo}</strong> for your sign-in link.
+                  Open it on this device to continue.
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  className="login-submit-btn student"
+                  onClick={handleStudentMagicLink}
+                  disabled={magicSending}
+                >
+                  {magicSending ? 'Sending…' : 'Send me a sign-in link →'}
+                </button>
               )}
+              <p className="login-hint">
+                No password — we email you a one-click link. Your homework and feedback sync automatically.
+              </p>
             </>
           )}
 
         </div>
       </div>
     </div>
+  );
+}
+
+/* ── Teacher Auth0 panel ─────────────────────────────────────── */
+function TeacherAuth0Panel() {
+  const { loginWithRedirect } = useAuth0();
+  const { isConfigured } = getAuth0Config();
+
+  if (!isConfigured) {
+    return (
+      <div className="login-error" role="alert" style={{ fontSize: 13, lineHeight: 1.6 }}>
+        Auth0 is not configured yet.<br />
+        Add <code>VITE_AUTH0_DOMAIN</code> and <code>VITE_AUTH0_CLIENT_ID</code> to your
+        Netlify environment variables, then redeploy.
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <button
+        type="button"
+        className="login-submit-btn teacher"
+        onClick={() => loginWithRedirect()}
+      >
+        Continue with Auth0 →
+      </button>
+      <p className="login-hint">
+        You'll be redirected to Auth0 to sign in securely. No password required.
+      </p>
+    </>
   );
 }
