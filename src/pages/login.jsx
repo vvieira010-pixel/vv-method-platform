@@ -158,9 +158,9 @@ export default function LoginScreen({ onSignIn, initialMode = 'choose' }) {
     if (!supabaseReady) { setError('Auth is not configured — check Supabase env vars.'); return; }
     setMagicSending(true);
     try {
-      // Teachers must already exist in Supabase Auth — createUser:false.
-      // resolveAuth in App.jsx resolves role: if email has no student row → teacher.
-      await sendMagicLink(email, window.location.origin, { createUser: false });
+      // createUser:true — provisions the Supabase Auth account on first sign-in.
+      // Role resolved in App.jsx: email with no student roster row → teacher.
+      await sendMagicLink(email, window.location.origin, { createUser: true });
       setMagicSentTo(email);
     } catch (e) {
       setError(e.message || 'Could not send the sign-in link.');
