@@ -883,31 +883,64 @@ export async function callAI(prompt, { max_tokens = 2048, system } = {}) {
     return null;
   }
 
-  // ── Build the default cascade order (Groq models → Gemini → Anthropic proxy → Anthropic direct → OpenAI) ──
-  const attempts = [];
-  if (groqKey) {
-    const candidateModels = [
-      GROQ_MODEL,
-      'meta-llama/llama-4-scout-17b-16e-instruct', // 300K TPM — preview, strongest reasoning
-      'llama-3.3-70b-versatile',                   // 300K TPM — production, very capable
-      'qwen/qwen3-32b',                            // 300K TPM — preview, strong multilingual
-      'openai/gpt-oss-120b',                       // 250K TPM — production, large
-      'openai/gpt-oss-20b',                        // 250K TPM — production, fast
-      'llama-3.1-8b-instant',                      // 250K TPM — production, fastest fallback
-    ].filter(Boolean).filter((m, i, arr) => arr.indexOf(m) === i);
-    for (const model of candidateModels) attempts.push({ id: `groq:${model}`, run: () => tryGroq(model) });
+  // ── Per-attempt timeout: skip a provider if it doesn't respond within 10 s ──
+  function withTimeout(fn, ms = 10000) {
+    return () => Promise.race([
+      fn(),
+      new Promise(resolve => setTimeout(() => {
+        errors.push(`Timeout after ${ms / 1000}s`);
+        resolve(null);
+      }, ms)),
+    ]);
   }
-  if (geminiKey) attempts.push({ id: 'gemini', run: tryGemini });
-  attempts.push({ id: 'anthropic-proxy', run: tryAnthropicProxy }); // always tried; skips silently if not configured
-  if (anthropicKey) attempts.push({ id: 'anthropic-direct', run: tryAnthropicDirect });
-  if (openaiKey) attempts.push({ id: 'openai', run: tryOpenAI });
 
-  // ── Sticky winner: try the last provider/model that succeeded first, then fall back to the full cascade ──
+  // ── Build provider list — 2 Groq models max, then Gemini, Anthropic, OpenAI ──
+  // Keeping Groq to 2 prevents 7 sequential failures when rate-limited.
+  const primaryGroq  = GROQ_MODEL;                   // configurable via VITE_GROQ_MODEL
+  const fallbackGroq = 'llama-3.1-8b-instant';       // fastest, almost always available
+
+  const baseAttempts = [];
+  if (groqKey) {
+    const groqModels = [primaryGroq, fallbackGroq]
+      .filter(Boolean)
+      .filter((m, i, arr) => arr.indexOf(m) === i);
+    for (const model of groqModels) {
+      baseAttempts.push({ id: `groq:${model}`, run: withTimeout(() => tryGroq(model)) });
+    }
+  }
+  if (geminiKey)    baseAttempts.push({ id: 'gemini',          run: withTimeout(tryGemini) });
+  /* Anthropic proxy is always fast (local Netlify Function) — no timeout needed */
+  baseAttempts.push({                id: 'anthropic-proxy',   run: tryAnthropicProxy });
+  if (anthropicKey) baseAttempts.push({ id: 'anthropic-direct', run: withTimeout(tryAnthropicDirect) });
+  if (openaiKey)    baseAttempts.push({ id: 'openai',           run: withTimeout(tryOpenAI) });
+
+  // ── Round-robin rotation: cycle the starting provider across calls ──
+  // This spreads load across providers instead of always hammering Groq first.
+  // Falls back to sticky winner if one provider has been working well.
+  const ROUND_ROBIN_LS = 'vv:ai_rr_index';
+  let rrIdx = 0;
+  try { rrIdx = parseInt(localStorage.getItem(ROUND_ROBIN_LS) || '0', 10) || 0; } catch { /* ignore */ }
+
+  // Count only top-level providers (not the fallback Groq model) for rotation pivot
+  const pivotProviders = ['groq', 'gemini', 'anthropic-proxy', 'openai'];
+  const pivotAttempts = baseAttempts.filter(a => pivotProviders.some(p => a.id === p || a.id.startsWith(p + ':')));
+  const pivotCount = pivotAttempts.length;
+
+  let attempts = baseAttempts;
+  if (pivotCount > 1) {
+    // Rotate: find the attempt at rrIdx position among pivot providers
+    const pivotId = pivotAttempts[rrIdx % pivotCount]?.id;
+    const pivotPos = baseAttempts.findIndex(a => a.id === pivotId);
+    if (pivotPos > 0) attempts = [...baseAttempts.slice(pivotPos), ...baseAttempts.slice(0, pivotPos)];
+    try { localStorage.setItem(ROUND_ROBIN_LS, String((rrIdx + 1) % pivotCount)); } catch { /* ignore */ }
+  }
+
+  // ── Sticky winner overrides rotation if one provider has been consistently working ──
   let lastWinner = null;
   try { lastWinner = localStorage.getItem(AI_WINNER_LS); } catch { /* storage unavailable */ }
   if (lastWinner) {
     const idx = attempts.findIndex(a => a.id === lastWinner);
-    if (idx > 0) attempts.unshift(attempts.splice(idx, 1)[0]);
+    if (idx > 0) attempts = [attempts[idx], ...attempts.filter((_, i) => i !== idx)];
   }
 
   for (const attempt of attempts) {
