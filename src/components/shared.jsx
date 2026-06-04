@@ -818,8 +818,12 @@ function geminiModels() {
   const fromEnv = parse(import.meta.env.VITE_GEMINI_MODELS);
   let fromLs = [];
   try { fromLs = parse(localStorage.getItem('vv:gemini_models')); } catch { /* storage unavailable */ }
-  const base = fromEnv.length ? fromEnv : (fromLs.length ? fromLs : GEMINI_DEFAULT_MODELS);
-  return [GEMINI_MODEL, ...base].filter(Boolean).filter((m, i, a) => a.indexOf(m) === i);
+  // An explicit list override (env or localStorage) wins exactly as given — don't
+  // prepend the default primary model, or an operator could never remove a
+  // retired/rate-limited one. Only the default path honors VITE_GEMINI_MODEL first.
+  const override = fromEnv.length ? fromEnv : fromLs;
+  const list = override.length ? override : [GEMINI_MODEL, ...GEMINI_DEFAULT_MODELS];
+  return list.filter(Boolean).filter((m, i, a) => a.indexOf(m) === i);
 }
 
 // OpenRouter: one key, OpenAI-compatible, cascades through its free models.
