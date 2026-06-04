@@ -6,10 +6,11 @@ import { Icon, Card, SectionHeader, Pill, Button, Avatar } from '../components/s
 import { callAI } from '../components/shared.jsx';
 import { parseAiJson } from '../lib/ai-helpers.js';
 import {
-  getAllSubmissions, getHomework, getReviews, saveReview,
+  getAllSubmissions, getHomework, getReviews, saveReview, deleteReview,
   getDiagnoses, getErrorBank, promoteErrorToLongTerm, markErrorSolved, saveProgressNote,
-  getStudent,
+  getStudent, sendMessage,
 } from '../lib/workflow.js';
+import { createSignedAudioUrl } from '../lib/supabase-db.js';
 
 export default function SubmissionReview({ submissionId, students, onNavigate }) {
   const [submission, setSubmission] = useState(null);
@@ -22,6 +23,7 @@ export default function SubmissionReview({ submissionId, students, onNavigate })
   const [aiComparing, setAiComparing] = useState(false);
   const [aiComparison, setAiComparison] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [audioUrls, setAudioUrls] = useState({}); // exId → playable URL (signed for Storage paths)
 
   useEffect(() => { load(); }, [submissionId]);
 
@@ -30,6 +32,16 @@ export default function SubmissionReview({ submissionId, students, onNavigate })
     const sub = allSubs.find(s => s.id === submissionId);
     if (!sub) return;
     setSubmission(sub);
+
+    // Resolve a playable URL for each recorded response: base64 inline plays as-is,
+    // a Storage path needs a short-lived signed URL, a stored URL is used directly.
+    const urls = {};
+    for (const [exId, r] of Object.entries(sub.responses || {})) {
+      if (r?.audioB64) urls[exId] = r.audioB64;
+      else if (r?.audioUrl) urls[exId] = r.audioUrl;
+      else if (r?.audioPath) { const u = await createSignedAudioUrl(r.audioPath); if (u) urls[exId] = u; }
+    }
+    setAudioUrls(urls);
 
     const [hw, revs] = await Promise.all([
       getHomework(sub.studentId),
@@ -78,7 +90,14 @@ HOMEWORK OBJECTIVE: ${homework.objective || homework.title}
 STUDENT SUBMISSION:
 ${submission.content || '(no text content)'}
 
-Compare the submission to the diagnosis. Return JSON:
+Compare the submission to the diagnosis.
+
+Write "teacherFeedback" as a warm, specific note spoken directly to ${student?.name || 'the student'}:
+reference what they ACTUALLY wrote, name one concrete strength and the single most
+important fix, and end with a clear next step. Sound like a real teacher — natural,
+encouraging and honest, never a generic AI template. No empty praise, no mention of AI.
+
+Return JSON:
 {
   "didStudentImprove": "brief assessment",
   "correctedErrors": ["errors the student fixed"],
@@ -90,7 +109,8 @@ Compare the submission to the diagnosis. Return JSON:
 }`;
 
     try {
-      const data = await callAI(prompt, { max_tokens: 2000 });
+      // Warmer temperature → more human teacher voice in the feedback.
+      const data = await callAI(prompt, { max_tokens: 2000, temperature: 0.7 });
       const raw = data.content?.map(b => b.text || '').join('') || '';
       const parsed = parseAiJson(raw);
       setAiComparison(parsed);
@@ -131,8 +151,21 @@ Compare the submission to the diagnosis. Return JSON:
       await saveProgressNote({ studentId: submission?.studentId, sourceType: 'review', sourceId: rev.id, note: form.whatImproved });
     }
 
+    if (form.sendFeedback && submission?.studentId) {
+      await sendMessage({
+        fromRole: 'teacher',
+        fromName: 'Teacher',
+        toRole: 'student',
+        toStudentId: submission.studentId,
+        type: 'homework-review',
+        homeworkId: homework?.id,
+        reviewId: rev.id,
+        body: `Your homework review is ready: ${homework?.title || 'Homework'}.\n\n${form.overallNote || form.whatImproved || 'Open Homework to read your teacher review.'}`,
+      });
+    }
+
     setSaving(false);
-    window.toast?.('Review saved!', 'ok');
+    window.toast?.(form.sendFeedback ? 'Review saved and student notified.' : 'Review saved.', 'ok');
     setExistingReview(rev);
   }
 
@@ -140,13 +173,26 @@ Compare the submission to the diagnosis. Return JSON:
 
   const activeErrorBank = errors.filter(e => e.status === 'active');
 
+  // Speaking recordings live in submission.responses keyed by exercise id.
+  // Map each one to its prompt from the homework activities for a readable label.
+  const activityById = Object.fromEntries(
+    (homework?.activities || []).map(a => [a.id, a])
+  );
+  const audioResponses = Object.entries(submission.responses || {})
+    .filter(([exId, res]) => res && (audioUrls[exId] || res.audioB64))
+    .map(([exId, res], i) => {
+      const ex = activityById[exId];
+      const label = ex?.prompt || ex?.question || ex?.title || `Speaking response ${i + 1}`;
+      return { exId, res, label, url: audioUrls[exId] || res.audioB64 };
+    });
+
   return (
     <div style={{ maxWidth: 960, margin: '0 auto', padding: '28px 20px' }}>
       <button onClick={() => onNavigate('submissions')} style={backStyle}><Icon.arrowL size={13} /> Back to submissions</button>
       <h1 style={S.headline}>Submission Review</h1>
       {student && <p style={S.sub}>{student.name} · {homework?.title}</p>}
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginTop: 20 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 20, marginTop: 20 }}>
         {/* Left: submission + diagnosis */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           {/* Student submission */}
@@ -155,6 +201,26 @@ Compare the submission to the diagnosis. Return JSON:
             <div style={{ marginTop: 10, padding: 12, background: 'var(--bg)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-sm)', lineHeight: 1.7, minHeight: 100, whiteSpace: 'pre-wrap' }}>
               {submission.content || <em style={{ color: 'var(--muted)' }}>No text content submitted.</em>}
             </div>
+
+            {/* Speaking recordings — one audio player per recorded response */}
+            {audioResponses.length > 0 && (
+              <div style={{ marginTop: 14, display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {audioResponses.map(({ exId, res, label, url }) => (
+                  <div key={exId}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--accent)', marginBottom: 6 }}>
+                      <Icon.mic size={13} /> {label}
+                    </div>
+                    <audio controls src={url} style={{ width: '100%', height: 38 }} />
+                    {res.transcript && (
+                      <div style={{ marginTop: 6, padding: 10, background: 'var(--bg)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-sm)', lineHeight: 1.6, color: 'var(--text-2)', fontStyle: 'italic', whiteSpace: 'pre-wrap' }}>
+                        {res.transcript}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+
             <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: 8 }}>
               Submitted: {new Date(submission.submittedAt).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}
             </div>
@@ -240,7 +306,7 @@ Compare the submission to the diagnosis. Return JSON:
               <Field label="Overall feedback to student">
                 <textarea className="input" rows={4} value={form.overallNote} onChange={e => setForm(f => ({ ...f, overallNote: e.target.value }))} placeholder="Feedback the student will see…" />
               </Field>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 10 }}>
                 <Field label="Score (0–10)">
                   <input className="input" type="number" min={0} max={10} step={0.5} value={form.score} onChange={e => setForm(f => ({ ...f, score: e.target.value }))} />
                 </Field>
@@ -261,7 +327,14 @@ Compare the submission to the diagnosis. Return JSON:
           <Button variant="primary" onClick={handleSave} disabled={saving} style={{ alignSelf: 'flex-start' }}>
             {saving ? 'Saving…' : 'Save Review' + (form.sendFeedback ? ' & Send Feedback' : '')}
           </Button>
-          {existingReview && <Pill tone="success" style={{ alignSelf: 'flex-start' }}>✓ Review saved</Pill>}
+          {existingReview && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+              <Pill tone="success">✓ Review saved</Pill>
+              <Button variant="ghost" size="sm" style={{ color: 'var(--danger)' }} onClick={async () => { if (confirm('Delete this teacher review?')) { await deleteReview(existingReview.id); window.toast?.('Review deleted.', 'info'); onNavigate('submissions'); } }}>
+                <Icon.trash size={12} /> Delete review
+              </Button>
+            </div>
+          )}
         </div>
       </div>
     </div>

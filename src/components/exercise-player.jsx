@@ -7,6 +7,7 @@ import { Icon, Card, Button, Pill } from './shared.jsx';
 import { getExType, parseBlankTemplate, shuffleArray, autoGrade } from '../lib/exercise-types.js';
 import { ExTypeBadge } from './exercise-editor.jsx';
 import Listening from './exercises/Listening.jsx';
+import { getDbContext, uploadSubmissionAudio, createSignedAudioUrl } from '../lib/supabase-db.js';
 
 /**
  * ExercisePlayer — switches on exercise.type, renders the right interactive UI.
@@ -178,12 +179,6 @@ function ShortPlayer({ ex, res, update, readOnly }) {
           target {target} words {wc >= target * 0.8 ? '· you\'re there' : `· ${target - wc} to go`}
         </span>
       </div>
-      <div style={{
-        marginTop: 14, padding: '10px 14px', borderRadius: 10,
-        background: 'var(--info-bg)', fontSize: 'var(--text-xs)', color: 'var(--info)',
-      }}>
-        After you submit, AI rates your response 1–5 and flags strengths + next step. Your teacher reviews before sending feedback.
-      </div>
     </div>
   );
 }
@@ -192,6 +187,7 @@ function ShortPlayer({ ex, res, update, readOnly }) {
 function SpeakPlayer({ ex, res, update, readOnly }) {
   const [status, setStatus] = useState('idle'); // idle | recording | done
   const [seconds, setSeconds] = useState(0);
+  const [playbackUrl, setPlaybackUrl] = useState(res?.audioB64 || null);
   const timerRef = useRef(null);
   const mediaRef = useRef(null);
   const chunksRef = useRef([]);
@@ -206,11 +202,30 @@ function SpeakPlayer({ ex, res, update, readOnly }) {
       mediaRef.current = new MediaRecorder(stream);
       chunksRef.current = [];
       mediaRef.current.ondataavailable = e => { if (e.data.size > 0) chunksRef.current.push(e.data); };
-      mediaRef.current.onstop = () => {
+      mediaRef.current.onstop = async () => {
         const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
-        const reader = new FileReader();
-        reader.onloadend = () => update({ audioB64: reader.result, transcript: res?.transcript || '' });
-        reader.readAsDataURL(blob);
+        // Immediate local playback regardless of where it's persisted.
+        setPlaybackUrl(URL.createObjectURL(blob));
+        const ctx = getDbContext();
+        if (ctx) {
+          // Signed-in: upload to private Storage, persist only the object path.
+          try {
+            const rand = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now());
+            const path = `${ctx.authUid}/${rand}/${ex.id || 'audio'}.webm`;
+            await uploadSubmissionAudio(blob, path);
+            update({ audioPath: path, audioB64: null, transcript: res?.transcript || '' });
+          } catch (e) {
+            console.warn('[speak] audio upload failed, storing inline instead:', e.message);
+            const reader = new FileReader();
+            reader.onloadend = () => update({ audioB64: reader.result, audioPath: null, transcript: res?.transcript || '' });
+            reader.readAsDataURL(blob);
+          }
+        } else {
+          // localStorage mode: keep the legacy base64-in-record behaviour.
+          const reader = new FileReader();
+          reader.onloadend = () => update({ audioB64: reader.result, transcript: res?.transcript || '' });
+          reader.readAsDataURL(blob);
+        }
         stream.getTracks().forEach(t => t.stop());
       };
       mediaRef.current.start();
@@ -232,13 +247,20 @@ function SpeakPlayer({ ex, res, update, readOnly }) {
     clearInterval(timerRef.current);
     setSeconds(0);
     setStatus('idle');
-    update({ audioB64: null, transcript: '' });
+    setPlaybackUrl(null);
+    update({ audioB64: null, audioPath: null, transcript: '' });
   };
 
   useEffect(() => () => { clearInterval(timerRef.current); mediaRef.current?.stream?.getTracks().forEach(t => t.stop()); }, []);
 
-  // If we already have audio from a previous session
-  useEffect(() => { if (res?.audioB64) setStatus('done'); }, []);
+  // Restore a previously-recorded answer (base64 inline, or a signed URL for a Storage path).
+  useEffect(() => {
+    if (res?.audioB64) { setPlaybackUrl(res.audioB64); setStatus('done'); return; }
+    if (res?.audioPath) {
+      setStatus('done');
+      createSignedAudioUrl(res.audioPath).then(url => { if (url) setPlaybackUrl(url); });
+    }
+  }, []);
 
   return (
     <div>
@@ -286,9 +308,9 @@ function SpeakPlayer({ ex, res, update, readOnly }) {
 
       {status === 'done' && (
         <div>
-          {res?.audioB64 && (
+          {playbackUrl && (
             <div style={{ marginBottom: 12, padding: 10, background: 'var(--bg)', borderRadius: 8 }}>
-              <audio controls src={res.audioB64} style={{ width: '100%', height: 36 }} />
+              <audio controls src={playbackUrl} style={{ width: '100%', height: 36 }} />
             </div>
           )}
           <div style={{ marginBottom: 8 }}>
@@ -520,8 +542,14 @@ function FlashPlayer({ ex, res, update, readOnly }) {
  * HomeworkStepThrough — renders exercises one at a time with progress bar + navigation.
  * Used in the student dashboard to walk through a homework set.
  */
-export function HomeworkStepThrough({ exercises, responses, onResponse, onSubmit, readOnly = false }) {
+export function HomeworkStepThrough({ exercises, responses, onResponse, onSubmit, onSave, initialExerciseId, readOnly = false }) {
   const [currentIdx, setCurrentIdx] = useState(0);
+
+  useEffect(() => {
+    if (!initialExerciseId || !Array.isArray(exercises)) return;
+    const idx = exercises.findIndex(ex => ex.id === initialExerciseId);
+    if (idx >= 0) setCurrentIdx(idx);
+  }, [initialExerciseId]);
 
   if (!exercises || exercises.length === 0) return null;
 
@@ -535,9 +563,9 @@ export function HomeworkStepThrough({ exercises, responses, onResponse, onSubmit
   const isLast = currentIdx === total - 1;
 
   return (
-    <div>
+    <div className="student-step-through">
       {/* Progress bar */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+      <div className="student-step-progress">
         <span style={{ fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--text-2)', whiteSpace: 'nowrap' }}>
           Exercise {currentIdx + 1} / {total}
         </span>
@@ -547,8 +575,8 @@ export function HomeworkStepThrough({ exercises, responses, onResponse, onSubmit
       </div>
 
       {/* Current exercise */}
-      <Card style={{ padding: 20, marginBottom: 14 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+      <Card small className="student-exercise-mini-card" style={{ marginBottom: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
           <ExTypeBadge typeId={current.type} size="md" />
         </div>
         <ExercisePlayer
@@ -560,19 +588,24 @@ export function HomeworkStepThrough({ exercises, responses, onResponse, onSubmit
       </Card>
 
       {/* Navigation */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
+      <div className="student-step-actions">
         <Button variant="ghost" size="sm" onClick={goPrev} disabled={currentIdx === 0}>
           <Icon.arrowL size={12} /> Previous
         </Button>
-        {isLast ? (
-          <Button variant="primary" onClick={onSubmit} disabled={readOnly}>
-            <Icon.check size={13} /> Submit Homework
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+          <Button variant="ghost" size="sm" onClick={() => onSave?.(current?.id)} disabled={readOnly}>
+            <Icon.check size={12} /> Save progress
           </Button>
-        ) : (
-          <Button variant="primary" size="sm" onClick={goNext}>
-            Next <Icon.arrowR size={12} />
-          </Button>
-        )}
+          {isLast ? (
+            <Button variant="primary" onClick={onSubmit} disabled={readOnly}>
+              <Icon.check size={13} /> Submit Homework
+            </Button>
+          ) : (
+            <Button variant="primary" size="sm" onClick={goNext}>
+              Next <Icon.arrowR size={12} />
+            </Button>
+          )}
+        </div>
       </div>
     </div>
   );

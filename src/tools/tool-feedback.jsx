@@ -384,7 +384,14 @@ Important rules:
 - Remove payment, security, platform, login, private business, and internal operational notes.
 - Keep only student-learning information: class content, performance, strengths, difficulties, corrections, homework, progress, and next steps.
 - Use warm constructive language: what to improve, what to change, next step.
-- Do not invent missing details.`;
+- Do not invent missing details.
+
+VOICE & AUTHENTICITY (write like a real teacher, not a chatbot):
+- Speak directly to ${form.studentName || "the student"} in a warm, human teacher voice — personal and specific, never generic or robotic.
+- Anchor every comment to a REAL moment from the class: paraphrase what the student actually said or did, the words they used, the question they answered. No vague "good participation" filler.
+- Avoid empty praise ("great job!", "well done!") and AI-template phrasing. If you praise something, name exactly what and why.
+- Vary your sentence openings and structure — two strengths/corrections should never read like the same template.
+- Sound like natural spoken-to-written English: encouraging but honest, concrete, and concise. Never mention AI or that this came from a transcript.`;
 
   const reportTypeModifier = REPORT_TYPE_MODIFIERS[form.reportType] || REPORT_TYPE_MODIFIERS["Full Class Progress Report"];
   const classFocusModifier = form.classFocus === "Auto-detect from transcript"
@@ -861,7 +868,8 @@ SECTION SELECTION (MUST FOLLOW):
         includeExercises,
       };
       const prompt = `${buildGeneratorPrompt(form)}\n\n${buildSectionDirective()}\n\nTeacher context:\n${buildContext()}`;
-      const data = await callAI(prompt, { max_tokens: 4096 });
+      // Warmer temperature → more natural, human teacher voice (less template-y).
+      const data = await callAI(prompt, { max_tokens: 4096, temperature: 0.7 });
       const raw = data.content?.map(b => b.text || "").join("") || "";
       const parsed = parseAiJson(raw);
       const compatibility = mapCompatibility(parsed, form);

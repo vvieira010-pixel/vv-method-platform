@@ -11,6 +11,7 @@ import { getDiagnoses, getStudent, saveHomework, updateClassEventStatus } from '
 import { EX_TYPES, createExercise, exercisePreview, getExType } from '../lib/exercise-types.js';
 import { ExerciseEditor, ExerciseTypePicker, ExTypeBadge } from '../components/exercise-editor.jsx';
 import { getExerciseModules, getModuleExercises, bankMeta } from '../lib/exercise-bank.js';
+import { getLibraryExercises, saveExerciseToLibrary, deleteLibraryExercise, incrementUsage } from '../lib/exercise-library.js';
 
 const SKILL_TYPES = ['writing', 'speaking', 'grammar', 'vocabulary', 'reading', 'listening', 'mixed'];
 
@@ -26,11 +27,20 @@ export default function HomeworkCreate({ diagnosisId, studentId, students, onNav
   const [showTypePicker, setShowTypePicker] = useState(false);
   const [expandedEx, setExpandedEx] = useState(null);
   const [showLibrary, setShowLibrary] = useState(false);
+  // Saved-exercise library (Supabase or localStorage). Reloaded when libVersion bumps.
+  const [libVersion, setLibVersion] = useState(0);
+  const [libraryExercises, setLibraryExercises] = useState([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    getLibraryExercises().then(list => { if (!cancelled) setLibraryExercises(list); }).catch(() => {});
+    return () => { cancelled = true; };
+  }, [libVersion]);
 
   useEffect(() => { load(); }, [diagnosisId, studentId]);
 
   async function load() {
-    const sid = studentId;
+    let sid = studentId || '';
     if (sid) {
       const s = await getStudent(sid) || students.find(x => x.id === sid);
       setStudent(s);
@@ -39,6 +49,11 @@ export default function HomeworkCreate({ diagnosisId, studentId, students, onNav
       const allDx = await getDiagnoses(sid);
       const dx = allDx.find(d => d.id === diagnosisId);
       setDiagnosis(dx);
+      if (dx && !sid && dx.studentId) sid = dx.studentId;
+      if (sid) {
+        const s = await getStudent(sid) || students.find(x => x.id === sid);
+        setStudent(s || null);
+      }
       if (dx) populateFromDiagnosis(dx, students.find(x => x.id === sid));
     }
   }
@@ -80,11 +95,13 @@ export default function HomeworkCreate({ diagnosisId, studentId, students, onNav
   }
 
   /* ── Exercise management ── */
-  function addExercise(type) {
-    const ex = createExercise(type);
-    setForm(f => ({ ...f, exercises: [...f.exercises, ex] }));
-    setExpandedEx(ex.id);
+  function addExercise(type, count = 1) {
+    const n = Math.max(1, Math.min(20, Number(count) || 1));
+    const created = Array.from({ length: n }, () => createExercise(type));
+    setForm(f => ({ ...f, exercises: [...f.exercises, ...created] }));
+    setExpandedEx(created[0].id); // expand the first of the batch for editing
     setShowTypePicker(false);
+    if (n > 1) window.toast?.(`Added ${n} ${type} exercises.`, 'ok');
   }
 
   function updateExercise(id, updated) {
@@ -119,32 +136,43 @@ export default function HomeworkCreate({ diagnosisId, studentId, students, onNav
 
   /* ── AI generation ── */
   async function handleAiGenerate() {
-    if (!diagnosis) { window.toast?.('No diagnosis linked — cannot generate.', 'warn'); return; }
+    const hasSelectedExercises = form.exercises.length > 0;
+    if (!diagnosis && !hasSelectedExercises) {
+      window.toast?.('Link a diagnosis or add exercises first.', 'warn');
+      return;
+    }
     setGenerating(true);
     try {
-      const prompt = buildHomeworkGeneratorPrompt({ student, diagnosis });
-      const data = await callAI(prompt, { max_tokens: 3000 });
+      const prompt = hasSelectedExercises
+        ? buildSelectedExerciseFillPrompt({ student, diagnosis, selectedExercises: form.exercises })
+        : buildHomeworkGeneratorPrompt({ student, diagnosis });
+      // Scale the token budget with how many exercises we're filling (large
+      // batches need a lot of output); the per-call cost is only paid on use.
+      const fillTokens = hasSelectedExercises
+        ? Math.min(16000, Math.max(3000, form.exercises.length * 320))
+        : 3000;
+      // Higher temperature → more natural, varied wording (less "AI-template" feel).
+      const data = await callAI(prompt, { max_tokens: fillTokens, temperature: 0.8 });
       const raw = data.content?.map(b => b.text || '').join('') || '';
       const parsed = parseAiJson(raw);
 
-      // Convert AI tasks to structured exercises
-      const aiTasks = Array.isArray(parsed.tasks) ? parsed.tasks : [];
-      const exercises = aiTasks.map(t => {
-        const text = typeof t === 'string' ? t : t.description || '';
-        return { ...createExercise('short'), prompt: text };
-      });
+      const aiTasks = Array.isArray(parsed)
+        ? parsed
+        : (Array.isArray(parsed.tasks) ? parsed.tasks : []);
 
       setForm(f => ({
         ...f,
         title: parsed.title || f.title,
         objective: parsed.objective || f.objective,
         description: parsed.instructions || f.description,
-        exercises: exercises.length > 0 ? exercises : f.exercises,
+        exercises: hasSelectedExercises
+          ? fillSelectedExercisesWithAi(f.exercises, aiTasks)
+          : buildExercisesFromAiTasks(aiTasks, f.exercises),
         selfCheck: Array.isArray(parsed.selfCheck) ? parsed.selfCheck : f.selfCheck,
         skillType: inferSkillType(diagnosis?.sections?.priorityDiagnosis?.content),
-        teacherNotes: parsed.teacherReviewNotes || f.teacherNotes,
+        teacherNotes: parsed.teacherNotes || parsed.teacherReviewNotes || f.teacherNotes,
       }));
-      window.toast?.('Homework regenerated from diagnosis.', 'ok');
+      window.toast?.(hasSelectedExercises ? 'Selected exercises filled with AI.' : 'Homework regenerated from diagnosis.', 'ok');
     } catch (e) {
       window.toast?.(`AI generation failed: ${e.message}`, 'warn');
     }
@@ -157,7 +185,7 @@ export default function HomeworkCreate({ diagnosisId, studentId, students, onNav
     setExerciseOptions([]);
     try {
       const prompt = buildExerciseListPrompt({ student, diagnosis });
-      const data = await callAI(prompt, { max_tokens: 4000 });
+      const data = await callAI(prompt, { max_tokens: 4000, temperature: 0.8 });
       const raw = data.content?.map(b => b.text || '').join('') || '';
       const parsed = parseAiJson(raw);
       const list = Array.isArray(parsed) ? parsed : parsed.exercises || [];
@@ -209,14 +237,48 @@ export default function HomeworkCreate({ diagnosisId, studentId, students, onNav
     setShowLibrary(false);
   }
 
+  /* ── Custom exercise library (teacher's saved bank) ── */
+  async function saveToLibrary(ex) {
+    try {
+      const rec = await saveExerciseToLibrary(ex);
+      setLibVersion(v => v + 1);
+      window.toast?.(rec ? `Saved "${rec.title}" to your library.` : 'Could not save exercise.', rec ? 'ok' : 'warn');
+    } catch (e) {
+      window.toast?.(`Save failed: ${e.message}`, 'warn');
+    }
+  }
+
+  async function addFromLibrary(libEx) {
+    // Drop the lib id so it becomes a fresh per-homework exercise.
+    const { id, title, tags, level, createdAt, usageCount, ...fields } = libEx;
+    const fresh = { ...fields, id: 'ex_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6) };
+    setForm(f => ({ ...f, exercises: [...f.exercises, fresh] }));
+    setShowLibrary(false);
+    window.toast?.(`"${title}" added.`, 'ok');
+    try { await incrementUsage(id); } catch { /* non-critical */ }
+  }
+
+  async function removeFromLibrary(libId) {
+    try {
+      await deleteLibraryExercise(libId);
+      setLibVersion(v => v + 1);
+      window.toast?.('Removed from your library.', 'info');
+    } catch (e) {
+      window.toast?.(`Remove failed: ${e.message}`, 'warn');
+    }
+  }
+
   /* ── Assign ── */
   async function handleAssign() {
     if (!form.title.trim()) { window.toast?.('Title is required.', 'warn'); return; }
     if (form.exercises.length === 0) { window.toast?.('Add at least one exercise.', 'warn'); return; }
+    const resolvedStudentId = studentId || student?.id || diagnosis?.studentId || '';
+    if (!resolvedStudentId) { window.toast?.('Select or link a student before assigning homework.', 'warn'); return; }
+    const resolvedStudent = student || students.find(s => s.id === resolvedStudentId);
     setSaving(true);
     await saveHomework({
-      studentId,
-      studentName: student?.name,
+      studentId: resolvedStudentId,
+      studentName: resolvedStudent?.name || '',
       diagnosisId,
       title: form.title,
       objective: form.objective,
@@ -242,7 +304,7 @@ export default function HomeworkCreate({ diagnosisId, studentId, students, onNav
   form.exercises.forEach(e => { typeCounts[e.type] = (typeCounts[e.type] || 0) + 1; });
 
   return (
-    <div style={{ maxWidth: 860, margin: '0 auto', padding: '28px 20px' }}>
+    <div style={{ maxWidth: 1120, width: '100%', margin: '0 auto', padding: '22px 24px 14px' }}>
       <button onClick={() => onNavigate('homework')} style={backStyle}>
         <Icon.arrowL size={13} /> Back
       </button>
@@ -278,16 +340,15 @@ export default function HomeworkCreate({ diagnosisId, studentId, students, onNav
         <Button variant="ghost" size="sm" onClick={() => setShowLibrary(true)}>
           <Icon.doc size={12} /> Add from Library
         </Button>
-        {diagnosis && (
-          <>
-            <Button variant="ghost" size="sm" onClick={handleGenerateOptions} disabled={loadingOptions || generating}>
-              <Icon.refresh size={12} /> {loadingOptions ? 'Loading…' : 'Generate Exercise Options'}
-            </Button>
-            <Button variant="ghost" size="sm" onClick={handleAiGenerate} disabled={generating || loadingOptions} style={{ marginLeft: 'auto' }}>
-              <Icon.refresh size={12} /> {generating ? 'Generating…' : 'Regenerate All with AI'}
-            </Button>
-          </>
-        )}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handleGenerateOptions}
+          disabled={!diagnosis || loadingOptions || generating}
+          title={!diagnosis ? 'Open Homework from a diagnosis to generate options.' : ''}
+        >
+          <Icon.refresh size={12} /> {loadingOptions ? 'Loading…' : 'Generate Exercise Options'}
+        </Button>
       </div>
 
       {/* ── Exercise Library Picker ── */}
@@ -305,6 +366,38 @@ export default function HomeworkCreate({ diagnosisId, studentId, students, onNav
               <button onClick={() => setShowLibrary(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)', fontSize: 20 }}>×</button>
             </div>
             <div style={{ padding: 16, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {/* My Exercises — teacher's saved bank */}
+              {libraryExercises.length > 0 && (
+                <div style={{ marginBottom: 4 }}>
+                  <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>
+                    My Exercises ({libraryExercises.length})
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {libraryExercises.map(libEx => (
+                      <div key={libEx.id} style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', padding: '10px 12px', display: 'flex', gap: 10, alignItems: 'center' }}>
+                        <ExTypeBadge typeId={libEx.type} />
+                        <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--text-sm)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {libEx.title}
+                        </span>
+                        <Button variant="primary" size="sm" onClick={() => addFromLibrary(libEx)} style={{ flexShrink: 0 }}>
+                          <Icon.plus size={12} /> Add
+                        </Button>
+                        <button
+                          onClick={() => removeFromLibrary(libEx.id)}
+                          style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--danger)', padding: 4, flexShrink: 0 }}
+                          title="Remove from library"
+                        >
+                          <Icon.trash size={13} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                  <div style={{ height: 1, background: 'var(--divider)', margin: '14px 0 4px' }} />
+                  <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>
+                    Ready-made modules
+                  </div>
+                </div>
+              )}
               {getExerciseModules().map(mod => (
                 <div key={mod.id} style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', padding: 14, display: 'flex', gap: 12, alignItems: 'flex-start' }}>
                   <div style={{ flex: 1, minWidth: 0 }}>
@@ -424,7 +517,7 @@ export default function HomeworkCreate({ diagnosisId, studentId, students, onNav
               <Field label="Instructions for student (optional)">
                 <textarea className="input" rows={3} value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} placeholder="Optional context or instructions before the exercises..." />
               </Field>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
                 <Field label="Skill focus">
                   <select className="input" value={form.skillType} onChange={e => setForm(f => ({ ...f, skillType: e.target.value }))}>
                     {SKILL_TYPES.map(t => <option key={t} value={t}>{t.charAt(0).toUpperCase() + t.slice(1)}</option>)}
@@ -447,6 +540,9 @@ export default function HomeworkCreate({ diagnosisId, studentId, students, onNav
                     {exerciseCount} {exerciseCount === 1 ? 'exercise' : 'exercises'}
                   </span>
                 </div>
+                <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: 4 }}>
+                  Choose the exercise types first, then use <strong>Fill Selected with AI</strong> to auto-fill only those cards.
+                </div>
                 {/* Type badges summary */}
                 {exerciseCount > 0 && (
                   <div style={{ display: 'flex', gap: 6, marginTop: 6, flexWrap: 'wrap' }}>
@@ -456,9 +552,14 @@ export default function HomeworkCreate({ diagnosisId, studentId, students, onNav
                   </div>
                 )}
               </div>
-              <Button variant="primary" size="sm" onClick={() => setShowTypePicker(!showTypePicker)}>
-                <Icon.plus size={12} /> Add Exercise
-              </Button>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                <Button variant="ghost" size="sm" onClick={handleAiGenerate} disabled={generating || loadingOptions}>
+                  <Icon.refresh size={12} /> {generating ? 'Generating…' : (form.exercises.length > 0 ? 'Fill Selected with AI' : 'Regenerate All with AI')}
+                </Button>
+                <Button variant="primary" size="sm" onClick={() => setShowTypePicker(!showTypePicker)}>
+                  <Icon.plus size={12} /> Add Exercise
+                </Button>
+              </div>
             </div>
 
             {/* Type picker */}
@@ -494,6 +595,7 @@ export default function HomeworkCreate({ diagnosisId, studentId, students, onNav
                     onChange={(updated) => updateExercise(ex.id, updated)}
                     onRemove={() => removeExercise(ex.id)}
                     onMove={(dir) => moveExercise(i, dir)}
+                    onSaveToLibrary={() => saveToLibrary(ex)}
                   />
                 );
               })}
@@ -537,7 +639,17 @@ export default function HomeworkCreate({ diagnosisId, studentId, students, onNav
       )}
 
       {/* Action buttons */}
-      <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
+      <div style={{
+        position: 'sticky',
+        bottom: 0,
+        zIndex: 20,
+        display: 'flex',
+        gap: 10,
+        marginTop: 14,
+        padding: '12px 0 4px',
+        background: 'linear-gradient(180deg, rgba(240,246,246,0.78) 0%, var(--bg) 42%)',
+        borderTop: '1px solid rgba(194,217,217,0.65)',
+      }}>
         <Button variant="primary" onClick={handleAssign} disabled={saving}>
           <Icon.send size={13} /> {saving ? 'Assigning…' : 'Approve & Assign to Student'}
         </Button>
@@ -548,7 +660,7 @@ export default function HomeworkCreate({ diagnosisId, studentId, students, onNav
 }
 
 /* ─── EXERCISE CARD (collapsible) ───────────────────────────── */
-function ExerciseCard({ exercise, index, total, isExpanded, onToggle, onChange, onRemove, onMove }) {
+function ExerciseCard({ exercise, index, total, isExpanded, onToggle, onChange, onRemove, onMove, onSaveToLibrary }) {
   const meta = getExType(exercise.type);
   const previewText = exercisePreview(exercise);
 
@@ -583,6 +695,16 @@ function ExerciseCard({ exercise, index, total, isExpanded, onToggle, onChange, 
           {previewText}
         </span>
         <div style={{ display: 'flex', gap: 4, alignItems: 'center', flexShrink: 0 }}>
+          {/* Save to reusable library */}
+          {onSaveToLibrary && (
+            <button
+              onClick={e => { e.stopPropagation(); onSaveToLibrary(); }}
+              style={{ ...arrowBtnStyle(false), color: 'var(--accent)' }}
+              title="Save to my exercise library"
+            >
+              <Icon.star size={12} />
+            </button>
+          )}
           {/* Move arrows */}
           <button
             onClick={e => { e.stopPropagation(); onMove(-1); }}
@@ -749,6 +871,194 @@ function mapAiType(aiType) {
   if (/error|correct|fix/.test(t)) return 'fix';
   if (/flash|card|vocab/.test(t)) return 'flash';
   return 'short'; // fallback
+}
+
+function buildExercisesFromAiTasks(tasks, fallback) {
+  const built = (tasks || []).map(t => createExerciseFromAiTask(t)).filter(Boolean);
+  return built.length > 0 ? built : fallback;
+}
+
+function fillSelectedExercisesWithAi(exercises, tasks) {
+  if (!Array.isArray(exercises) || exercises.length === 0) return exercises;
+  const pool = Array.isArray(tasks) ? [...tasks] : [];
+  return exercises.map(ex => {
+    const aiTask = pullBestTaskForType(pool, ex.type);
+    if (!aiTask) return ex;
+    return applyAiTaskToExercise(ex, aiTask);
+  });
+}
+
+function pullBestTaskForType(pool, type) {
+  if (!Array.isArray(pool) || pool.length === 0) return null;
+  let idx = pool.findIndex(t => mapAiType(t?.type) === type);
+  if (idx < 0) idx = 0;
+  return idx >= 0 ? pool.splice(idx, 1)[0] : null;
+}
+
+function createExerciseFromAiTask(task) {
+  if (!task || typeof task !== 'object') return null;
+  const ex = createExercise(mapAiType(task.type));
+  return applyAiTaskToExercise(ex, task);
+}
+
+function applyAiTaskToExercise(exercise, aiTask) {
+  const ex = { ...exercise };
+  const content = aiTask?.content || aiTask?.description || aiTask?.title || '';
+
+  if (ex.type === 'mcq') {
+    const options = normalizeMcqOptions(aiTask?.options);
+    ex.question = aiTask?.question || content;
+    ex.options = options;
+    ex.correct = normalizeCorrectIndex(aiTask?.correct, options.length);
+    return ex;
+  }
+
+  if (ex.type === 'blank') {
+    ex.template = aiTask?.template || content;
+    ex.blanks = normalizeBlankAnswers(aiTask?.blanks, ex.template);
+    return ex;
+  }
+
+  if (ex.type === 'order') {
+    ex.sentences = normalizeSentences(aiTask?.sentences, content);
+    return ex;
+  }
+
+  if (ex.type === 'fix') {
+    ex.errorText = aiTask?.errorText || content;
+    ex.correctedText = aiTask?.correctedText || aiTask?.example || ex.correctedText || '';
+    ex.hint = aiTask?.hint || '';
+    return ex;
+  }
+
+  if (ex.type === 'flash') {
+    ex.pairs = normalizeFlashPairs(aiTask?.pairs);
+    return ex;
+  }
+
+  if (ex.type === 'speak') {
+    ex.prompt = aiTask?.prompt || content;
+    ex.targetSeconds = normalizeTargetSeconds(aiTask?.targetSeconds, aiTask?.duration);
+    return ex;
+  }
+
+  ex.prompt = aiTask?.prompt || content;
+  if (aiTask?.rubric) ex.rubric = aiTask.rubric;
+  if (Number.isFinite(Number(aiTask?.targetWords))) ex.targetWords = Number(aiTask.targetWords);
+  return ex;
+}
+
+function normalizeMcqOptions(options) {
+  if (!Array.isArray(options) || options.length === 0) return ['', '', '', ''];
+  const clean = options
+    .map(opt => (typeof opt === 'string' ? opt : opt?.text || opt?.label || ''))
+    .filter(Boolean)
+    .slice(0, 4);
+  while (clean.length < 4) clean.push('');
+  return clean;
+}
+
+function normalizeCorrectIndex(correct, optionCount) {
+  const n = Number(correct);
+  if (Number.isInteger(n) && n >= 0 && n < optionCount) return n;
+  return null;
+}
+
+function normalizeBlankAnswers(blanks, template) {
+  if (Array.isArray(blanks) && blanks.length > 0) return blanks.map(v => String(v));
+  const count = (String(template || '').match(/_{3,}/g) || []).length;
+  return Array.from({ length: count }, () => '');
+}
+
+function normalizeSentences(sentences, content) {
+  if (Array.isArray(sentences) && sentences.length > 0) return sentences.map(s => String(s));
+  return String(content || '')
+    .split('\n')
+    .map(s => s.trim())
+    .filter(Boolean);
+}
+
+function normalizeFlashPairs(pairs) {
+  if (!Array.isArray(pairs) || pairs.length === 0) return [{ term: '', def: '' }];
+  const clean = pairs
+    .map(p => ({ term: p?.term || '', def: p?.def || p?.definition || '' }))
+    .filter(p => p.term || p.def);
+  return clean.length > 0 ? clean : [{ term: '', def: '' }];
+}
+
+function normalizeTargetSeconds(targetSeconds, duration) {
+  const parsed = Number(targetSeconds);
+  if (Number.isFinite(parsed) && parsed > 0) return parsed;
+  const durMatch = String(duration || '').match(/\d+/);
+  if (durMatch) return Math.max(30, Number(durMatch[0]) * 60);
+  return 60;
+}
+
+function buildSelectedExerciseFillPrompt({ student, diagnosis, selectedExercises = [] }) {
+  const basePrompt = buildHomeworkGeneratorPrompt({ student, diagnosis });
+  const selected = selectedExercises.map((ex, idx) => {
+    const meta = getExType(ex.type);
+    return `${idx + 1}. type="${ex.type}" (${meta?.label || ex.type})\nCurrent draft: ${exercisePreview(ex) || 'empty'}`;
+  }).join('\n\n');
+
+  return `${basePrompt}
+
+━━━ SELECTED EXERCISES TO FILL ━━━
+You must fill ONLY these selected exercise cards.
+Keep the same number, order, and type:
+
+${selected}
+
+━━━ EXTRA RULES FOR THIS RUN ━━━
+1. Keep tasks count exactly ${selectedExercises.length}.
+2. Keep each task type exactly matching the selected list and in the same order.
+3. Fill each task with concrete student-ready content.
+4. Return a JSON object with "tasks" array aligned to that selected order.
+5. Use type IDs from this app only: mcq, blank, short, speak, order, fix, flash.
+
+━━━ STYLE & AUTHENTICITY (write like a real exam item-writer, not a chatbot) ━━━
+- Sound human and natural. Use real, specific situations from the student's world
+  (${student?.professionalContext || 'their job / studies / daily life'}) — patients, shifts, colleagues,
+  appointments, real places and names — NOT abstract "A person does X" textbook filler.
+- VARY everything across the ${selectedExercises.length} items: different topics, sentence openings,
+  names, and contexts. Do not reuse the same stem (e.g. avoid every MCQ starting
+  "Which sentence is correct?"). Two items should never feel like copies.
+- Ground the content in THIS student's actual errors and targets above. For MCQ,
+  make the wrong options reflect mistakes this student really makes (plausible,
+  tempting distractors) — never obvious throwaways or "None of the above".
+- Natural English only: contractions where natural, varied vocabulary, no robotic
+  or over-formal phrasing, no meta-commentary, no "Option A/B" labels inside text.
+- Match B1–B2 level: realistic but not artificially simplified.
+
+Return ONLY valid JSON in this shape:
+{
+  "title": "optional improved homework title",
+  "objective": "optional objective",
+  "instructions": "optional student instructions",
+  "tasks": [
+    {
+      "taskNumber": 1,
+      "type": "exact selected type",
+      "title": "short task title",
+      "content": "full exercise content",
+      "options": ["for mcq only"],
+      "correct": 0,
+      "template": "for blank only",
+      "blanks": ["for blank only"],
+      "prompt": "for short/speak",
+      "rubric": "for short only",
+      "targetWords": 120,
+      "targetSeconds": 60,
+      "sentences": ["for order only"],
+      "errorText": "for fix only",
+      "correctedText": "for fix only",
+      "hint": "for fix only",
+      "pairs": [{ "term": "x", "def": "y" }]
+    }
+  ],
+  "selfCheck": ["specific checks"],
+  "teacherNotes": "review focus"
+}`;
 }
 
 function Field({ label, children }) {

@@ -8,12 +8,28 @@
  */
 import { useState, useEffect } from 'react';
 import { Icon, Avatar, Button, Card, StudentFeedbackView } from '../components/shared.jsx';
+import { printHomework } from '../lib/print-homework.js';
 import { getHomework, submitHomework, getDiagnoses, getProgressNotes, getReviews, getAllSubmissions } from '../lib/workflow.js';
 import { isStructuredExercise, createEmptyResponse } from '../lib/exercise-types.js';
 import { ExercisePlayer, HomeworkStepThrough } from '../components/exercise-player.jsx';
 import { ExTypeBadge } from '../components/exercise-editor.jsx';
 import { MessageTeacherDock, StudentInbox } from '../components/message-center.jsx';
 import '../styles/logbook.css';
+
+const DONE_MESSAGES = [
+  "Solid work. Your teacher will take a look soon.",
+  "That's the habit. Consistent practice is how it sticks.",
+  "Done. One session closer to your target.",
+  "Good. The work adds up — every set counts.",
+  "Submitted. You showed up and did it.",
+  "Nice. Progress is built one assignment at a time.",
+  "That's it. Keep the streak going.",
+  "Consistent. This is exactly what MET prep looks like.",
+  "Handed in. Your teacher will have feedback soon.",
+  "Done for today. Rest well — you earned it.",
+  "Every exercise you complete closes the gap.",
+  "One more done. That's how you get there.",
+];
 
 const TABS = [
   { id: 'home',     label: 'Home',     icon: <Icon.home size={16} /> },
@@ -186,6 +202,7 @@ function HomeworkView({ student }) {
   const [answer, setAnswer] = useState('');
   const [responses, setResponses] = useState({}); // { exerciseId: responseObj }
   const [submitting, setSubmitting] = useState(false);
+  const [doneState, setDoneState] = useState(null); // { hwId, msg } | null
 
   useEffect(() => {
     (async () => {
@@ -208,9 +225,10 @@ function HomeworkView({ student }) {
     const hw = await getHomework(student.id);
     setHomework(hw || []);
     setAnswer('');
-    setExpanded(null);
     setSubmitting(false);
-    window.toast?.('Submitted! Your teacher will review soon.', 'ok');
+    const msg = DONE_MESSAGES[Math.floor(Math.random() * DONE_MESSAGES.length)];
+    setDoneState({ hwId, msg });
+    setTimeout(() => { setDoneState(null); setExpanded(null); }, 2800);
   }
 
   // Handle structured exercise submission
@@ -238,9 +256,10 @@ function HomeworkView({ student }) {
     const hwList = await getHomework(student.id);
     setHomework(hwList || []);
     setResponses({});
-    setExpanded(null);
     setSubmitting(false);
-    window.toast?.('Submitted! Your teacher will review soon.', 'ok');
+    const msg = DONE_MESSAGES[Math.floor(Math.random() * DONE_MESSAGES.length)];
+    setDoneState({ hwId, msg });
+    setTimeout(() => { setDoneState(null); setExpanded(null); }, 2800);
   }
 
   // Update a single exercise response
@@ -296,8 +315,16 @@ function HomeworkView({ student }) {
             </div>
 
             {/* Expanded content */}
-            {isExpanded && (
+            {isExpanded && doneState?.hwId === h.id && (
+              <DoneCard msg={doneState.msg} onDismiss={() => { setDoneState(null); setExpanded(null); }} />
+            )}
+            {isExpanded && doneState?.hwId !== h.id && (
               <div style={{ padding: 16, borderTop: '1px solid var(--divider)' }}>
+                <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 10 }}>
+                  <Button variant="ghost" size="sm" onClick={() => printHomework(h, { studentName: student?.name })}>
+                    <Icon.print size={13} /> Print
+                  </Button>
+                </div>
                 {h.objective && <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-2)', marginBottom: 10 }}><strong>Goal:</strong> {h.objective}</p>}
                 {h.description && <div style={{ fontSize: 'var(--text-sm)', lineHeight: 1.7, whiteSpace: 'pre-wrap', marginBottom: 12 }}>{h.description}</div>}
 
@@ -420,6 +447,46 @@ function HomeworkView({ student }) {
           </div>
         );
       })}
+    </div>
+  );
+}
+
+function DoneCard({ msg, onDismiss }) {
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    const id = requestAnimationFrame(() => setVisible(true));
+    return () => cancelAnimationFrame(id);
+  }, []);
+
+  return (
+    <div
+      onClick={onDismiss}
+      style={{
+        padding: '28px 20px',
+        borderTop: '1px solid var(--divider)',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: 14,
+        cursor: 'pointer',
+        opacity: visible ? 1 : 0,
+        transform: visible ? 'translateY(0)' : 'translateY(8px)',
+        transition: 'opacity 0.35s var(--ease), transform 0.35s var(--ease)',
+      }}
+    >
+      <div style={{
+        width: 48, height: 48, borderRadius: '50%',
+        background: 'var(--success-bg)', border: '2px solid var(--success)',
+        display: 'grid', placeItems: 'center',
+        fontSize: 22, color: 'var(--success)',
+      }}>✓</div>
+      <p style={{
+        margin: 0,
+        fontSize: 'var(--text-md)', fontWeight: 500,
+        color: 'var(--text-2)', textAlign: 'center',
+        lineHeight: 1.55, maxWidth: 320,
+      }}>{msg}</p>
+      <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>Tap to dismiss</span>
     </div>
   );
 }

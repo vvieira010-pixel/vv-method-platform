@@ -6,6 +6,17 @@ import { TweaksPanel, TweakSection, TweakRadio, TweakColor } from './components/
 import { Icon, Avatar, Button, Shell } from './components/shared.jsx';
 import { STUDENTS } from './data/students.jsx';
 import { seedStudentsIfEmpty, getStudents } from './lib/workflow.js';
+import {
+  getSupabaseConfig,
+  parseSupabaseHashFragment,
+  parsePKCECode,
+  exchangePKCECode,
+  storeSupabaseSession,
+  readStoredSupabaseSession,
+  clearStoredSupabaseSession,
+  fetchSupabaseUser,
+} from './lib/supabase-storage.js';
+import { claimStudentByEmail, ensureProfile, setSessionRole } from './lib/supabase-db.js';
 
 // Lazy-loaded teacher pages
 const TeacherDashboard  = lazy(() => import('./pages/teacher-dashboard.jsx'));
@@ -36,6 +47,99 @@ export default function App() {
     ...window.TWEAK_DEFAULTS,
   }));
   const [students, setStudents] = useState([]);
+
+  // ── Supabase auth: handle implicit-flow hash redirect + restore stored session ──
+  useEffect(() => {
+    const { url, anonKey, isConfigured } = getSupabaseConfig();
+    if (!isConfigured) return;
+
+    /**
+     * Resolve auth payload from a verified Supabase user. Role is determined by
+     * whether the email matches a teacher-created roster row: if a student row
+     * claims this user, they are a student; otherwise a teacher. The claim sets
+     * students.auth_user_id so the student's RLS policies unlock their data.
+     */
+    async function resolveAuth(accessToken, sbUser) {
+      const meta = sbUser?.user_metadata || {};
+      const email = sbUser?.email || '';
+      let claimed = null;
+      try { claimed = await claimStudentByEmail(email); } catch { /* treat as teacher */ }
+      if (claimed) {
+        setSessionRole('student');
+        await ensureProfile('student', { displayName: meta.display_name || email, studentUuid: claimed.id });
+        return { role: 'student', studentId: claimed.local_id || claimed.id, email };
+      }
+      setSessionRole('teacher');
+      await ensureProfile('teacher', { displayName: meta.display_name || email });
+      return { role: 'teacher', email, displayName: meta.display_name || email };
+    }
+
+    // ── PKCE flow: ?code= in query string (modern Supabase default) ──
+    async function handlePKCE() {
+      const code = parsePKCECode(window.location.search);
+      if (!code) return false;
+      // Clean the URL immediately so the code can't be replayed.
+      history.replaceState(null, '', window.location.pathname);
+      try {
+        const session = await exchangePKCECode(url, anonKey, code);
+        const sbUser = session.user || await fetchSupabaseUser(url, anonKey, session.access_token);
+        storeSupabaseSession({
+          access_token: session.access_token,
+          refresh_token: session.refresh_token || '',
+          expires_at: session.expires_at || Math.floor(Date.now() / 1000) + (session.expires_in || 3600),
+          user: sbUser,
+        });
+        const payload = await resolveAuth(session.access_token, sbUser);
+        if (payload) setAuth(payload);
+      } catch {
+        clearStoredSupabaseSession();
+      }
+      return true;
+    }
+
+    // ── Implicit flow: #access_token= in hash (legacy / fallback) ──
+    async function handleHash() {
+      const fragment = parseSupabaseHashFragment(window.location.hash);
+      if (!fragment?.access_token) return false;
+
+      // Always clean the URL first so the token isn't bookmarked or leaked.
+      history.replaceState(null, '', window.location.pathname + window.location.search);
+
+      try {
+        // Validate by fetching the actual user from Supabase — rejects forged tokens.
+        const sbUser = await fetchSupabaseUser(url, anonKey, fragment.access_token);
+        storeSupabaseSession({
+          access_token: fragment.access_token,
+          refresh_token: fragment.refresh_token,
+          expires_at: fragment.expires_at || Math.floor(Date.now() / 1000) + fragment.expires_in,
+          user: sbUser,
+        });
+        const payload = await resolveAuth(fragment.access_token, sbUser);
+        if (payload) setAuth(payload);
+      } catch {
+        // Token invalid or Supabase unreachable — do not sign in.
+        clearStoredSupabaseSession();
+      }
+      return true;
+    }
+
+    async function restoreSession() {
+      const stored = readStoredSupabaseSession();
+      if (!stored?.access_token) return;
+      try {
+        // Re-validate the stored token so a stale or tampered session is rejected.
+        const sbUser = await fetchSupabaseUser(url, anonKey, stored.access_token);
+        const payload = await resolveAuth(stored.access_token, sbUser);
+        if (payload) setAuth(payload);
+      } catch {
+        clearStoredSupabaseSession();
+      }
+    }
+
+    handlePKCE().then(wasPKCE => {
+      if (!wasPKCE) handleHash().then(wasHash => { if (!wasHash) restoreSession(); });
+    });
+  }, []);
 
   // Seed students from hardcoded list on first run, then load live roster
   useEffect(() => {
@@ -79,14 +183,21 @@ export default function App() {
   };
 
   const handleSignIn = (payload) => setAuth(payload);
-  const handleSignOut = () => { setAuth(null); setView('dashboard'); setViewParams({}); };
+  const handleSignOut = () => {
+    clearStoredSupabaseSession();
+    setSessionRole('');
+    setAuth(null);
+    setView('dashboard');
+    setViewParams({});
+  };
 
   if (!auth) {
     return <LoginScreen onSignIn={handleSignIn} initialMode="choose" />;
   }
 
   if (auth.role === 'student') {
-    const student = students.find(s => s.id === auth.studentId) || students[0];
+    const student = students.find(s => s.id === auth.studentId);
+    if (!student) return <PageLoader />;
     return (
       <ErrorBoundary label="Dashboard unavailable">
         <StudentDashboard student={student} onSignOut={handleSignOut} />

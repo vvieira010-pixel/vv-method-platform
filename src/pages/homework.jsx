@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Icon, Card, SectionHeader, Pill, Button, Avatar } from '../components/shared.jsx';
 import { getHomework, deleteHomework } from '../lib/workflow.js';
+import { printHomework } from '../lib/print-homework.js';
 
 const STATUS_TONE = { 'not-started': 'muted', 'in-progress': 'info', submitted: 'warning', corrected: 'success', reviewed: 'success', completed: 'success' };
 
@@ -62,6 +63,9 @@ export default function HomeworkPage({ students, onNavigate }) {
                   {h.status === 'submitted' && (
                     <Button variant="primary" size="sm" onClick={() => onNavigate('submissions', {})}>Review</Button>
                   )}
+                  <Button variant="ghost" size="sm" onClick={() => printHomework(h, { studentName: student?.name })} aria-label="Print homework">
+                    <Icon.print size={12} />
+                  </Button>
                   <Button variant="ghost" size="sm" style={{ color: 'var(--danger)' }} onClick={async () => { if (confirm('Delete this homework?')) { await deleteHomework(h.id); load(); } }}>
                     <Icon.trash size={12} />
                   </Button>

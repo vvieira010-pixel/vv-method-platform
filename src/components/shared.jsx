@@ -23,10 +23,12 @@ const GLOBAL_CSS = `
     --surface:      #FFFFFF;
     --border:       #c2d9d9;
     --divider:      #e2efef;
-    --faint:        #5a7a7a;
+    --faint:        #edf4f4;
     --text:         #1a2332;
     --text-2:       #2a3d4e;
-    --muted:        #5c7585;
+    --muted:        #4d6672;
+    --accent-text:  #1d7070;
+    --warning-text: #B45309;
     --success:      #059669;
     --success-bg:   #ECFDF5;
     --success-soft: #D1FAE5;
@@ -84,36 +86,36 @@ const GLOBAL_CSS = `
     font-size: var(--text-md);
     line-height: 1.55;
   }
-  [data-cards="flat"]     .card { border: none; box-shadow: none; background: var(--faint); }
-  [data-cards="bordered"] .card { border: 1px solid var(--border); box-shadow: none; }
-  [data-cards="shadowed"] .card { border: none; box-shadow: var(--shadow-card); }
+  [data-cards="flat"]     .card { border: none; box-shadow: none; background: var(--bg); }
+  [data-cards="bordered"] .card { border: 1px solid var(--border); box-shadow: none; background: var(--surface); }
+  [data-cards="shadowed"] .card { border: none; box-shadow: var(--shadow-card); background: var(--surface); }
   .btn {
     display: inline-flex; align-items: center; justify-content: center; gap: 6px;
     font-family: var(--font-ui); font-size: var(--text-sm); font-weight: 600;
     cursor: pointer; border: none; outline: none;
     border-radius: var(--radius-md); padding: 9px 16px; line-height: 1;
-    transition: background 0.15s, box-shadow 0.15s, opacity 0.15s, transform 0.2s;
+    transition: background 0.15s, box-shadow 0.15s, opacity 0.15s, transform 0.15s;
     white-space: nowrap; text-decoration: none;
   }
-  .btn:hover:not(:disabled) { transform: translateY(-1px); }
+  .btn:hover:not(:disabled) { filter: brightness(1.06); transform: translateY(-1px); }
+  .btn:focus-visible { outline: 2px solid var(--primary); outline-offset: 3px; }
   .btn:disabled { opacity: 0.45; cursor: not-allowed; }
-  .btn-primary  { background: linear-gradient(120deg, #3da6a6 0%, #2d8b8b 100%); color: #fff; box-shadow: 0 10px 24px -14px rgba(45,139,139,0.55); }
-  .btn-primary:hover:not(:disabled) { background: linear-gradient(120deg, #349a9a 0%, #257878 100%); }
-  .btn-accent   { background: linear-gradient(120deg, #2d8b8b 0%, #1a2332 100%); color: #fff; }
-  .btn-accent:hover:not(:disabled) { background: linear-gradient(120deg, #257878 0%, #131a28 100%); }
+  .btn-primary  { background: var(--primary); color: #fff; box-shadow: 0 8px 20px -12px rgba(45,139,139,0.6); }
+  .btn-primary:hover:not(:disabled) { background: #349a9a; }
+  .btn-accent   { background: var(--accent-deep); color: #fff; }
+  .btn-accent:hover:not(:disabled) { background: #131a28; }
   .btn-ghost    { background: transparent; color: var(--text-2); border: 1px solid var(--border); }
-  .btn-ghost:hover:not(:disabled) { background: var(--bg-deep); }
+  .btn-ghost:hover:not(:disabled) { background: var(--bg-deep); filter: none; transform: none; }
   .btn-quiet    { background: transparent; color: var(--muted); }
-  .btn-quiet:hover:not(:disabled) { background: var(--divider); color: var(--text); }
+  .btn-quiet:hover:not(:disabled) { background: var(--divider); color: var(--text); filter: none; transform: none; }
   .btn-danger   { background: var(--danger); color: #fff; }
   .btn-danger:hover:not(:disabled) { background: #B91C1C; }
   .btn-sm  { padding: 5px 11px; font-size: var(--text-xs); border-radius: var(--radius-sm); }
   .btn-lg  { padding: 11px 22px; font-size: var(--text-md); }
   .btn-block { width: 100%; }
-  .btn-icon  { padding: 7px; border-radius: var(--radius-sm); }
+  .btn-icon  { padding: 13px; border-radius: var(--radius-sm); }
   .card {
-    background: linear-gradient(165deg, rgba(255,255,255,0.96) 0%, rgba(255,255,255,0.85) 100%);
-    backdrop-filter: blur(6px);
+    background: var(--surface);
     border: 1px solid rgba(168, 218, 220, 0.35);
     border-radius: var(--radius-lg); padding: 20px;
     box-shadow: var(--shadow-card);
@@ -125,12 +127,12 @@ const GLOBAL_CSS = `
     padding: 3px 8px; border-radius: var(--radius-pill); white-space: nowrap;
   }
   .pill-default { background: var(--bg-deep); color: var(--text-2); }
-  .pill-accent  { background: var(--accent-soft); color: var(--accent); }
+  .pill-accent  { background: var(--accent-subtle); color: var(--accent-text); }
   .pill-success { background: var(--success-bg); color: var(--success); }
-  .pill-warning { background: var(--warning-bg); color: var(--warning); }
+  .pill-warning { background: var(--warning-bg); color: var(--warning-text); }
   .pill-danger  { background: var(--danger-bg);  color: var(--danger);  }
   .pill-muted   { background: var(--divider);    color: var(--muted);   }
-  .pill-info    { background: var(--info-bg);    color: var(--info);    }
+  .pill-info    { background: var(--info-bg);    color: var(--accent-text); }
   .shell { display: flex; height: 100dvh; overflow: hidden; background: transparent; }
   .shell-sidebar {
     width: 248px; flex-shrink: 0; background:
@@ -149,19 +151,20 @@ const GLOBAL_CSS = `
   .shell-main { flex: 1; overflow-y: auto; overflow-x: hidden; }
   .shell-brand { padding: 20px 16px 14px; border-bottom: 1px solid var(--dark-accent-border); }
   .shell-brand-name { font-size: var(--text-lg); font-family: var(--font-display); font-weight: 800; color: #fff; letter-spacing: 0.01em; display: block; }
-  .shell-brand-sub  { font-size: 10px; color: var(--on-dark-muted); letter-spacing: 0.08em; text-transform: uppercase; margin-top: 2px; display: block; }
+  .shell-brand-sub  { font-size: 11px; color: var(--on-dark-muted); letter-spacing: 0.08em; text-transform: uppercase; margin-top: 2px; display: block; }
   .shell-nav { flex: 1; padding: 12px 8px; }
   .shell-nav-section { margin-bottom: 18px; }
-  .shell-nav-section-label { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--on-dark-muted); padding: 0 8px; margin-bottom: 4px; }
+  .shell-nav-section-label { font-size: var(--text-xs); font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--on-dark-muted); padding: 0 8px; margin-bottom: 4px; }
   .shell-nav-btn {
     display: flex; align-items: center; gap: 9px; width: 100%; padding: 8px 10px;
     border-radius: var(--radius-md); background: none; border: none; cursor: pointer;
     font-family: var(--font-ui); font-size: var(--text-sm); font-weight: 500;
-    color: rgba(255,255,255,0.82); transition: background 0.12s, color 0.12s, transform 0.2s; text-align: left;
+    color: rgba(255,255,255,0.82); transition: background 0.12s, color 0.12s; text-align: left;
   }
-  .shell-nav-btn:hover  { background: rgba(255,255,255,0.14); color: #fff; transform: translateX(2px); }
+  .shell-nav-btn:hover  { background: rgba(255,255,255,0.14); color: #fff; }
+  .shell-nav-btn:focus-visible { outline: 2px solid rgba(168,218,220,0.9); outline-offset: 1px; }
   .shell-nav-btn.active {
-    background: linear-gradient(120deg, rgba(61,166,166,0.28) 0%, rgba(45,139,139,0.22) 100%);
+    background: rgba(61,166,166,0.22);
     color: #fff;
     font-weight: 700;
     border: 1px solid rgba(168,218,220,0.35);
@@ -179,23 +182,43 @@ const GLOBAL_CSS = `
   .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
   .section-title { font-size: var(--text-lg); font-weight: 700; color: var(--text); }
   .section-sub   { font-size: var(--text-sm); color: var(--muted); margin-top: 2px; }
-  .kpi { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 18px 20px; }
-  .kpi-label { font-size: var(--text-xs); font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
-  .kpi-value { font-size: var(--text-3xl); font-family: var(--font-display); font-weight: 800; color: var(--text); line-height: 1; }
-  .kpi-sub   { font-size: var(--text-xs); color: var(--muted); margin-top: 5px; }
-  .kpi-trend { display: inline-flex; align-items: center; gap: 3px; font-size: var(--text-xs); font-weight: 600; margin-top: 5px; }
+  .kpi { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 14px 16px; display: flex; align-items: center; gap: 12px; }
+  .kpi-label { font-size: var(--text-sm); font-weight: 500; color: var(--text-2); flex: 1; min-width: 0; }
+  .kpi-value { font-size: var(--text-xl); font-weight: 700; color: var(--text); line-height: 1; flex-shrink: 0; }
+  .kpi-sub   { font-size: var(--text-xs); color: var(--muted); margin-top: 2px; }
+  .kpi-trend { display: inline-flex; align-items: center; gap: 3px; font-size: var(--text-xs); font-weight: 600; }
   .kpi-trend.up { color: var(--success); } .kpi-trend.down { color: var(--danger); }
   .review-badge { display: inline-flex; align-items: center; gap: 5px; font-size: var(--text-xs); font-weight: 700; padding: 3px 9px; border-radius: var(--radius-pill); }
   .evidence-card { background: var(--accent-subtle); border: 1px solid var(--accent-soft); border-radius: var(--radius-md); padding: 12px 14px; margin-bottom: 8px; }
   .evidence-card-label { font-size: var(--text-xs); font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 4px; }
   .evidence-card-text { font-size: var(--text-sm); color: var(--text-2); line-height: 1.5; }
   .pill-nav { display: flex; gap: 6px; flex-wrap: wrap; }
-  .pill-nav-btn { padding: 5px 13px; border-radius: var(--radius-pill); font-size: var(--text-sm); font-weight: 500; background: var(--divider); color: var(--text-2); border: none; cursor: pointer; font-family: var(--font-ui); transition: background 0.12s, color 0.12s; }
+  .pill-nav-btn { padding: 6px 14px; min-height: 36px; border-radius: var(--radius-pill); font-size: var(--text-sm); font-weight: 500; background: var(--divider); color: var(--text-2); border: none; cursor: pointer; font-family: var(--font-ui); transition: background 0.12s, color 0.12s; }
   .pill-nav-btn:hover  { background: var(--bg-deep); color: var(--text); }
+  .pill-nav-btn:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
   .pill-nav-btn.active { background: var(--accent); color: #fff; font-weight: 600; }
   .mini-bars { display: flex; align-items: flex-end; gap: 2px; height: 28px; }
   .mini-bar  { flex: 1; min-width: 3px; border-radius: 2px 2px 0 0; background: var(--accent-soft); transition: background 0.2s; }
   .mini-bar.lit { background: var(--accent); }
+  .shell-mobile-nav { display: none; }
+  @media (max-width: 768px) {
+    .shell-mobile-nav {
+      display: flex; position: fixed; bottom: 0; left: 0; right: 0;
+      height: 60px; padding-bottom: env(safe-area-inset-bottom, 0px);
+      background: var(--surface); border-top: 1px solid var(--border);
+      z-index: 50;
+    }
+    .shell-main { padding-bottom: 68px; }
+  }
+  .shell-mobile-nav-btn {
+    flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 3px; border: none; background: none; cursor: pointer;
+    font-family: var(--font-ui); font-size: 10px; font-weight: 500; line-height: 1;
+    color: var(--muted); padding: 6px 2px; min-height: 44px;
+    transition: color 0.12s;
+  }
+  .shell-mobile-nav-btn.active { color: var(--primary); font-weight: 700; }
+  .shell-mobile-nav-btn:focus-visible { outline: 2px solid var(--primary); outline-offset: -2px; border-radius: var(--radius-sm); }
   @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
   @keyframes pulseDot {
     0% { transform: scale(1); opacity: .7; }
@@ -276,6 +299,14 @@ const GLOBAL_CSS = `
     .quick-actions-grid { grid-template-columns: 1fr; }
     .cycle-pipeline { grid-template-columns: 1fr; }
   }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
 `;
 
 let cssInjected = false;
@@ -328,6 +359,7 @@ export const Icon = {
   link:     (p) => <SvgIcon d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71 M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71" {...p} />,
   copy:     (p) => <SvgIcon {...p}><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></SvgIcon>,
   download: (p) => <SvgIcon d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4 M7 10l5 5 5-5 M12 15V3" {...p} />,
+  upload:   (p) => <SvgIcon d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4 M17 8l-5-5-5 5 M12 3v12" {...p} />,
   eye:      (p) => <SvgIcon {...p}><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></SvgIcon>,
   refresh:  (p) => <SvgIcon d="M23 4v6h-6 M1 20v-6h6 M3.51 9a9 9 0 0114.85-3.36L23 10 M1 14l4.64 4.36A9 9 0 0020.49 15" {...p} />,
   print:    (p) => <SvgIcon {...p}><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></SvgIcon>,
@@ -477,28 +509,48 @@ export function ReviewStatusBadge({ status }) {
  */
 export function StudentFeedbackView({ feedback }) {
   if (!feedback || typeof feedback !== 'object') return null;
-  const wins = Array.isArray(feedback.whatYouDidWell) ? feedback.whatYouDidWell : [];
-  const fixes = Array.isArray(feedback.whatToImprove) ? feedback.whatToImprove : [];
+  const wins = (Array.isArray(feedback.whatYouDidWell) ? feedback.whatYouDidWell : [])
+    .filter(w => w && (w.strength || w.explanation));
+  const fixes = (Array.isArray(feedback.whatToImprove) ? feedback.whatToImprove : [])
+    .filter(f => f && (f.area || f.howToImprove || f.insteadOf));
+
+  // Each part gets its own card (same content as before, just grouped visually).
+  const card = {
+    border: '1px solid var(--border)', borderRadius: 'var(--radius-md)',
+    padding: 16, background: 'var(--surface)',
+  };
+  const cardTitle = {
+    fontSize: 'var(--text-xs)', fontWeight: 800, letterSpacing: '0.06em',
+    textTransform: 'uppercase', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6,
+  };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 14, maxWidth: '72ch' }}>
+      {/* Opening card */}
       {feedback.classFocus && (
-        <p style={{ fontSize: 'var(--text-md)', lineHeight: 1.7, color: 'var(--text)', margin: 0 }}>{feedback.classFocus}</p>
+        <div style={card}>
+          <div style={{ ...cardTitle, color: 'var(--primary)' }}>Your class focus</div>
+          <p style={{ fontSize: 'var(--text-md)', lineHeight: 1.75, color: 'var(--text)', margin: 0 }}>{feedback.classFocus}</p>
+        </div>
       )}
 
+      {/* Strengths card */}
       {wins.length > 0 && (
-        <div>
-          <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 'var(--text-lg)', color: 'var(--success)', marginBottom: 10 }}>What you did well</div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <div style={card}>
+          <div style={{ ...cardTitle, color: 'var(--success)' }}><Icon.check size={13} /> What you did well</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             {wins.map((w, i) => (
-              <div key={i} style={{ padding: 14, background: 'var(--success-bg)', border: '1px solid var(--success-soft)', borderRadius: 'var(--radius-md)' }}>
-                <div style={{ fontSize: 'var(--text-md)', fontWeight: 700, color: 'var(--text)', marginBottom: 6 }}>{i + 1}. {w.strength}</div>
-                {w.explanation && <p style={{ fontSize: 'var(--text-sm)', lineHeight: 1.6, margin: '0 0 4px' }}>{w.explanation}</p>}
-                {w.metConnection && <p style={{ fontSize: 'var(--text-sm)', lineHeight: 1.6, margin: '0 0 6px', color: 'var(--text-2)' }}>{w.metConnection}</p>}
+              <div key={i} style={{ paddingLeft: 14, borderLeft: '3px solid var(--success)' }}>
+                {w.strength && (
+                  <div style={{ fontSize: 'var(--text-md)', fontWeight: 700, color: 'var(--text)', marginBottom: 4 }}>{w.strength}</div>
+                )}
+                {w.explanation && (
+                  <p style={{ fontSize: 'var(--text-md)', lineHeight: 1.7, margin: 0, color: 'var(--text)' }}>{w.explanation}</p>
+                )}
                 {w.example && (
-                  <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-2)', fontStyle: 'italic', borderLeft: '2px solid var(--success-soft)', paddingLeft: 10 }}>
-                    <strong style={{ fontStyle: 'normal', color: 'var(--success)' }}>Example: </strong>{w.example}
-                  </div>
+                  <p style={{ fontSize: 'var(--text-md)', lineHeight: 1.7, margin: '4px 0 0', color: 'var(--text-2)', fontStyle: 'italic' }}>
+                    “{w.example}”
+                  </p>
                 )}
               </div>
             ))}
@@ -506,34 +558,27 @@ export function StudentFeedbackView({ feedback }) {
         </div>
       )}
 
+      {/* Focus areas card */}
       {fixes.length > 0 && (
-        <div>
-          <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 'var(--text-lg)', color: 'var(--warning)', marginBottom: 10 }}>What to improve</div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <div style={card}>
+          <div style={{ ...cardTitle, color: 'var(--warning-text)' }}>What to improve</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             {fixes.map((f, i) => (
-              <div key={i} style={{ padding: 14, background: 'var(--warning-bg)', border: '1px solid var(--warning-soft)', borderRadius: 'var(--radius-md)' }}>
-                <div style={{ fontSize: 'var(--text-md)', fontWeight: 700, color: 'var(--text)', marginBottom: 6 }}>{i + 1}. {f.area}</div>
-                {f.metImportance && <p style={{ fontSize: 'var(--text-sm)', lineHeight: 1.6, margin: '0 0 8px', color: 'var(--text-2)' }}>{f.metImportance}</p>}
+              <div key={i} style={{ paddingLeft: 14, borderLeft: '3px solid var(--warning-text)' }}>
+                {f.area && (
+                  <div style={{ fontSize: 'var(--text-md)', fontWeight: 700, color: 'var(--text)', marginBottom: 4 }}>{f.area}</div>
+                )}
                 {(f.insteadOf || f.sayInstead) && (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 8 }}>
-                    {f.insteadOf && (
-                      <div style={{ fontSize: 'var(--text-sm)' }}>
-                        <span style={{ color: 'var(--muted)', fontWeight: 600 }}>Instead of: </span>
-                        <span style={{ color: 'var(--danger)' }}>"{f.insteadOf}"</span>
-                      </div>
-                    )}
-                    {f.sayInstead && (
-                      <div style={{ fontSize: 'var(--text-sm)' }}>
-                        <span style={{ color: 'var(--muted)', fontWeight: 600 }}>Say: </span>
-                        <span style={{ color: 'var(--success)', fontWeight: 600 }}>"{f.sayInstead}"</span>
-                      </div>
-                    )}
-                  </div>
+                  <p style={{ fontSize: 'var(--text-md)', lineHeight: 1.7, margin: '0 0 4px', color: 'var(--text)' }}>
+                    {f.insteadOf && <>You said <em style={{ color: 'var(--danger)' }}>“{f.insteadOf}”</em></>}
+                    {f.insteadOf && f.sayInstead && <> — try </>}
+                    {!f.insteadOf && f.sayInstead && <>Try </>}
+                    {f.sayInstead && <em style={{ color: 'var(--success)', fontWeight: 600 }}>“{f.sayInstead}”</em>}
+                    {(f.insteadOf || f.sayInstead) && '.'}
+                  </p>
                 )}
                 {f.howToImprove && (
-                  <div style={{ fontSize: 'var(--text-sm)', lineHeight: 1.6 }}>
-                    <strong style={{ color: 'var(--accent)' }}>How to improve: </strong>{f.howToImprove}
-                  </div>
+                  <p style={{ fontSize: 'var(--text-md)', lineHeight: 1.7, margin: 0, color: 'var(--text)' }}>{f.howToImprove}</p>
                 )}
               </div>
             ))}
@@ -541,10 +586,13 @@ export function StudentFeedbackView({ feedback }) {
         </div>
       )}
 
+      {/* Closing card */}
       {feedback.finalNote && (
-        <div style={{ padding: 14, background: 'var(--accent-subtle)', border: '1px solid var(--accent-soft)', borderRadius: 'var(--radius-md)' }}>
-          <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Final note</div>
-          <p style={{ fontSize: 'var(--text-sm)', lineHeight: 1.7, margin: 0, color: 'var(--text)' }}>{feedback.finalNote}</p>
+        <div style={card}>
+          <div style={{ ...cardTitle, color: 'var(--muted)' }}>A note to you</div>
+          <p style={{ fontSize: 'var(--text-md)', lineHeight: 1.75, margin: 0, color: 'var(--text-2)' }}>
+            {feedback.finalNote}
+          </p>
         </div>
       )}
     </div>
@@ -755,37 +803,106 @@ export function Shell({ tabs = [], active, onTab, children, rightSlot, workflowA
         </header>
         <main className="shell-main">{children}</main>
       </div>
+      <nav className="shell-mobile-nav" aria-label="Mobile navigation">
+        {tabs.slice(0, 5).map(tab => (
+          <button key={tab.id}
+            className={`shell-mobile-nav-btn${active === tab.id ? ' active' : ''}`}
+            aria-current={active === tab.id ? 'page' : undefined}
+            onClick={() => onTab(tab.id)}>
+            {tab.icon}
+            <span>{tab.label}</span>
+          </button>
+        ))}
+      </nav>
     </div>
   );
 }
 
 /* ─── callAI ─────────────────────────────────────────────────── */
 const API_KEY_LS = 'vv:anthropic_api_key';
-const ANTHROPIC_MODEL = import.meta.env.VITE_ANTHROPIC_MODEL || 'claude-sonnet-4-5';
+const ANTHROPIC_MODEL = import.meta.env.VITE_ANTHROPIC_MODEL || 'claude-sonnet-4-6';
 const OPENAI_MODEL = import.meta.env.VITE_OPENAI_MODEL || 'gpt-4.1-mini';
 const GROQ_MODEL = import.meta.env.VITE_GROQ_MODEL || 'llama-3.3-70b-versatile';
 const GEMINI_MODEL = import.meta.env.VITE_GEMINI_MODEL || 'gemini-2.5-flash';
+// Gemini API key also serves Google's open Gemma models on the same endpoint.
+// Cascade through several; override via VITE_GEMINI_MODELS or 'vv:gemini_models'.
+const GEMINI_DEFAULT_MODELS = [
+  'gemini-2.5-flash',
+  'gemini-2.5-flash-lite',
+  'gemini-2.0-flash',
+  'gemini-2.0-flash-lite',
+  // Gemma model availability varies by key/region; the cascade skips any that 404.
+  'gemma-4-31b-it',
+  'gemma-4-26b-a4b-it',
+];
+function geminiModels() {
+  const parse = s => String(s || '').split(',').map(x => x.trim()).filter(Boolean);
+  const fromEnv = parse(import.meta.env.VITE_GEMINI_MODELS);
+  let fromLs = [];
+  try { fromLs = parse(localStorage.getItem('vv:gemini_models')); } catch { /* storage unavailable */ }
+  // An explicit list override (env or localStorage) wins exactly as given — don't
+  // prepend the default primary model, or an operator could never remove a
+  // retired/rate-limited one. Only the default path honors VITE_GEMINI_MODEL first.
+  const override = fromEnv.length ? fromEnv : fromLs;
+  const list = override.length ? override : [GEMINI_MODEL, ...GEMINI_DEFAULT_MODELS];
+  return list.filter(Boolean).filter((m, i, a) => a.indexOf(m) === i);
+}
+
+// OpenRouter: one key, OpenAI-compatible, cascades through its free models.
+// Override the list via VITE_OPENROUTER_MODELS or the 'vv:openrouter_models'
+// localStorage key (comma-separated). Free model ids end in ':free'; if one is
+// unavailable or rate-limited the cascade simply tries the next.
+const OPENROUTER_API = 'https://openrouter.ai/api/v1/chat/completions';
+const OPENROUTER_DEFAULT_MODELS = [
+  'deepseek/deepseek-chat-v3-0324:free',
+  'meta-llama/llama-3.3-70b-instruct:free',
+  'google/gemini-2.0-flash-exp:free',
+  'deepseek/deepseek-r1-0528:free',
+  'qwen/qwen-2.5-72b-instruct:free',
+  'mistralai/mistral-small-3.2-24b-instruct:free',
+  'meta-llama/llama-3.2-3b-instruct:free',
+];
+function openRouterModels() {
+  const parse = s => String(s || '').split(',').map(x => x.trim()).filter(Boolean);
+  const fromEnv = parse(import.meta.env.VITE_OPENROUTER_MODELS);
+  let fromLs = [];
+  try { fromLs = parse(localStorage.getItem('vv:openrouter_models')); } catch { /* storage unavailable */ }
+  const list = fromEnv.length ? fromEnv : (fromLs.length ? fromLs : OPENROUTER_DEFAULT_MODELS);
+  return list.filter((m, i, a) => a.indexOf(m) === i);
+}
 
 const AI_WINNER_LS = 'vv:ai_last_winner'; // sticky: provider/model that last succeeded this session
 
-export async function callAI(prompt, { max_tokens = 2048, system } = {}) {
+// A provider field may hold SEVERAL keys (comma- or newline-separated) so the
+// cascade can rotate to a fresh key when one is rate-limited / out of quota.
+// Combines env value(s) + the localStorage field, deduped, order preserved.
+function multiKeys(envVal, lsKey) {
+  const parse = s => String(s || '').split(/[,\n]/).map(x => x.trim()).filter(Boolean);
+  let fromLs = [];
+  try { fromLs = parse(localStorage.getItem(lsKey)); } catch { /* storage unavailable */ }
+  return [...parse(envVal), ...fromLs].filter((k, i, a) => a.indexOf(k) === i);
+}
+
+export async function callAI(prompt, { max_tokens = 2048, system, temperature = 0.3 } = {}) {
   const sys = system || 'You are a helpful MET English teaching assistant.';
   const errors = []; // collect every provider failure so the real cause is surfaced
 
-  const groqKey = import.meta.env.VITE_GROQ_API_KEY || localStorage.getItem('vv:groq_api_key');
-  const geminiKey = import.meta.env.VITE_GEMINI_API_KEY || localStorage.getItem('vv:gemini_api_key');
-  const anthropicKey = import.meta.env.VITE_ANTHROPIC_API_KEY || localStorage.getItem(API_KEY_LS);
-  const openaiKey = import.meta.env.VITE_OPENAI_API_KEY || localStorage.getItem('vv:openai_api_key');
-  const payload = { model: ANTHROPIC_MODEL, max_tokens, system: sys, messages: [{ role: 'user', content: prompt }] };
+  // Each provider can carry multiple keys; the cascade rotates through them.
+  const groqKeys = multiKeys(import.meta.env.VITE_GROQ_API_KEY, 'vv:groq_api_key');
+  const geminiKeys = multiKeys(import.meta.env.VITE_GEMINI_API_KEY, 'vv:gemini_api_key');
+  const anthropicKeys = multiKeys(import.meta.env.VITE_ANTHROPIC_API_KEY, API_KEY_LS);
+  const openaiKeys = multiKeys(import.meta.env.VITE_OPENAI_API_KEY, 'vv:openai_api_key');
+  const openrouterKeys = multiKeys(import.meta.env.VITE_OPENROUTER_API_KEY, 'vv:openrouter_api_key');
+  const payload = { model: ANTHROPIC_MODEL, max_tokens, temperature, system: sys, messages: [{ role: 'user', content: prompt }] };
 
   // ── Provider attempts: each returns a result object on success, or null on failure (pushing to errors) ──
-  async function tryGroq(model) {
+  async function tryGroq(key, model) {
     try {
       const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${groqKey}` },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
         body: JSON.stringify({
-          model, temperature: 0.3, max_tokens,
+          model, temperature, max_tokens,
           messages: [{ role: 'system', content: sys }, { role: 'user', content: prompt }],
         }),
       });
@@ -801,29 +918,43 @@ export async function callAI(prompt, { max_tokens = 2048, system } = {}) {
     return null;
   }
 
-  async function tryGemini() {
+  async function tryGemini(key, model = GEMINI_MODEL) {
     try {
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${geminiKey}`;
+      const isGemma = /^gemma/i.test(model);
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
+      const gen = { temperature, maxOutputTokens: max_tokens };
+      // Gemini 2.5 Flash / Flash-Lite "think" by default and that thinking consumes
+      // the output token budget — leaving empty/truncated answers. Disable it so the
+      // whole budget goes to the response. (Only Flash models allow budget 0; 2.5 Pro
+      // cannot disable thinking, so don't touch its config.)
+      if (/2\.5/.test(model) && /flash/i.test(model)) gen.thinkingConfig = { thinkingBudget: 0 };
+      // Gemma has no system role — fold the system prompt into the user turn.
+      const reqBody = isGemma
+        ? {
+            contents: [{ parts: [{ text: `${sys}\n\n${prompt}` }] }],
+            generationConfig: gen,
+          }
+        : {
+            systemInstruction: { parts: [{ text: sys }] },
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: gen,
+          };
       const res = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          systemInstruction: { parts: [{ text: sys }] },
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { temperature: 0.3, maxOutputTokens: max_tokens },
-        }),
+        body: JSON.stringify(reqBody),
       });
       if (res.ok) {
         const data = await res.json();
         const text = data?.candidates?.[0]?.content?.parts?.map(p => p.text).join('') || '';
         if (text) return { content: [{ text }] };
-        errors.push(`Gemini/${GEMINI_MODEL}: empty response (${data?.candidates?.[0]?.finishReason || 'no candidates'})`);
+        errors.push(`Gemini/${model}: empty response (${data?.candidates?.[0]?.finishReason || 'no candidates'})`);
       } else {
         const err = await res.json().catch(() => ({}));
-        errors.push(`Gemini/${GEMINI_MODEL}: ${err.error?.message || res.status}`);
+        errors.push(`Gemini/${model}: ${err.error?.message || res.status}`);
       }
     } catch (e) {
-      errors.push(`Gemini/${GEMINI_MODEL}: ${e.message}`);
+      errors.push(`Gemini/${model}: ${e.message}`);
     }
     return null;
   }
@@ -842,12 +973,12 @@ export async function callAI(prompt, { max_tokens = 2048, system } = {}) {
     return null;
   }
 
-  async function tryAnthropicDirect() {
+  async function tryAnthropicDirect(key) {
     try {
       const res = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json', 'x-api-key': anthropicKey,
+          'Content-Type': 'application/json', 'x-api-key': key,
           'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true',
         },
         body: JSON.stringify(payload),
@@ -861,13 +992,44 @@ export async function callAI(prompt, { max_tokens = 2048, system } = {}) {
     return null;
   }
 
-  async function tryOpenAI() {
+  async function tryOpenRouter(key, model) {
+    try {
+      const res = await fetch(OPENROUTER_API, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${key}`,
+          // Optional ranking headers OpenRouter uses for its free-tier dashboards.
+          'HTTP-Referer': typeof window !== 'undefined' ? window.location.origin : 'https://met-proficiency-mastery.netlify.app',
+          'X-Title': 'MET Proficiency Mastery',
+        },
+        body: JSON.stringify({
+          model, temperature, max_tokens,
+          messages: [{ role: 'system', content: sys }, { role: 'user', content: prompt }],
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const text = data?.choices?.[0]?.message?.content || '';
+        if (text) return { content: [{ text }] };
+        errors.push(`OpenRouter/${model}: empty response`);
+      } else {
+        const err = await res.json().catch(() => ({}));
+        errors.push(`OpenRouter/${model}: ${err.error?.message || res.status}`);
+      }
+    } catch (e) {
+      errors.push(`OpenRouter/${model}: ${e.message}`);
+    }
+    return null;
+  }
+
+  async function tryOpenAI(key) {
     try {
       const res = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${openaiKey}` },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
         body: JSON.stringify({
-          model: OPENAI_MODEL, temperature: 0.3, max_completion_tokens: max_tokens,
+          model: OPENAI_MODEL, temperature, max_completion_tokens: max_tokens,
           messages: [{ role: 'system', content: sys }, { role: 'user', content: prompt }],
         }),
       });
@@ -894,41 +1056,45 @@ export async function callAI(prompt, { max_tokens = 2048, system } = {}) {
     ]);
   }
 
-  // ── Build provider list — 2 Groq models max, then Gemini, Anthropic, OpenAI ──
-  // Keeping Groq to 2 prevents 7 sequential failures when rate-limited.
-  const primaryGroq  = GROQ_MODEL;                   // configurable via VITE_GROQ_MODEL
-  const fallbackGroq = 'llama-3.1-8b-instant';       // fastest, almost always available
-
+  // ── Build the default cascade order (Gemini → OpenRouter free models → Groq → Anthropic proxy → Anthropic direct → OpenAI) ──
+  // For each model we rotate through every key for that provider, so a
+  // rate-limited / out-of-quota key fails over to the next key before moving on.
   const baseAttempts = [];
-  if (groqKey) {
-    const groqModels = [primaryGroq, fallbackGroq]
-      .filter(Boolean)
-      .filter((m, i, arr) => arr.indexOf(m) === i);
-    for (const model of groqModels) {
-      baseAttempts.push({ id: `groq:${model}`, run: withTimeout(() => tryGroq(model)) });
+  for (const model of (geminiKeys.length ? geminiModels() : [])) {
+    geminiKeys.forEach((key, ki) => baseAttempts.push({ id: `gemini:${model}#${ki}`, run: withTimeout(() => tryGemini(key, model)) }));
+  }
+  for (const model of (openrouterKeys.length ? openRouterModels() : [])) {
+    openrouterKeys.forEach((key, ki) => baseAttempts.push({ id: `openrouter:${model}#${ki}`, run: withTimeout(() => tryOpenRouter(key, model)) }));
+  }
+  if (groqKeys.length) {
+    const candidateModels = [
+      GROQ_MODEL,
+      'meta-llama/llama-4-scout-17b-16e-instruct',
+      'llama-3.3-70b-versatile',
+      'qwen/qwen3-32b',
+      'openai/gpt-oss-120b',
+      'openai/gpt-oss-20b',
+      'llama-3.1-8b-instant',
+    ].filter(Boolean).filter((m, i, arr) => arr.indexOf(m) === i);
+    for (const model of candidateModels) {
+      groqKeys.forEach((key, ki) => baseAttempts.push({ id: `groq:${model}#${ki}`, run: withTimeout(() => tryGroq(key, model)) }));
     }
   }
-  if (geminiKey)    baseAttempts.push({ id: 'gemini',          run: withTimeout(tryGemini) });
-  /* Anthropic proxy is always fast (local Netlify Function) — no timeout needed */
-  baseAttempts.push({                id: 'anthropic-proxy',   run: tryAnthropicProxy });
-  if (anthropicKey) baseAttempts.push({ id: 'anthropic-direct', run: withTimeout(tryAnthropicDirect) });
-  if (openaiKey)    baseAttempts.push({ id: 'openai',           run: withTimeout(tryOpenAI) });
+  baseAttempts.push({ id: 'anthropic-proxy', run: tryAnthropicProxy }); // always tried; skips silently if not configured
+  anthropicKeys.forEach((key, ki) => baseAttempts.push({ id: `anthropic-direct#${ki}`, run: withTimeout(() => tryAnthropicDirect(key)) }));
+  openaiKeys.forEach((key, ki) => baseAttempts.push({ id: `openai#${ki}`, run: withTimeout(() => tryOpenAI(key)) }));
 
   // ── Round-robin rotation: cycle the starting provider across calls ──
-  // This spreads load across providers instead of always hammering Groq first.
-  // Falls back to sticky winner if one provider has been working well.
   const ROUND_ROBIN_LS = 'vv:ai_rr_index';
   let rrIdx = 0;
   try { rrIdx = parseInt(localStorage.getItem(ROUND_ROBIN_LS) || '0', 10) || 0; } catch { /* ignore */ }
 
-  // Count only top-level providers (not the fallback Groq model) for rotation pivot
-  const pivotProviders = ['groq', 'gemini', 'anthropic-proxy', 'openai'];
+  const pivotProviders = ['gemini', 'openrouter', 'groq', 'anthropic-proxy', 'openai', 'anthropic-direct'];
   const pivotAttempts = baseAttempts.filter(a => pivotProviders.some(p => a.id === p || a.id.startsWith(p + ':')));
   const pivotCount = pivotAttempts.length;
 
   let attempts = baseAttempts;
   if (pivotCount > 1) {
-    // Rotate: find the attempt at rrIdx position among pivot providers
     const pivotId = pivotAttempts[rrIdx % pivotCount]?.id;
     const pivotPos = baseAttempts.findIndex(a => a.id === pivotId);
     if (pivotPos > 0) attempts = [...baseAttempts.slice(pivotPos), ...baseAttempts.slice(0, pivotPos)];

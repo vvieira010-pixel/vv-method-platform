@@ -5,14 +5,14 @@
 
 /* ─── TYPE REGISTRY ─────────────────────────────────────────── */
 export const EX_TYPES = [
-  { id: 'mcq',    label: 'Multiple Choice',  iconKey: 'check',    color: '#0A2C56', bg: 'rgba(11,79,74,.12)',   hint: 'Single best answer',               grading: 'auto'  },
-  { id: 'blank',  label: 'Fill the Blank',   iconKey: 'spark',    color: '#25557A', bg: 'rgba(37,85,122,.12)',  hint: '1–3 blanks per item',              grading: 'auto'  },
-  { id: 'short',  label: 'Short Answer',     iconKey: 'doc',      color: '#B8761A', bg: 'rgba(184,118,26,.12)', hint: 'AI pre-evaluated',                 grading: 'ai'    },
-  { id: 'speak',  label: 'Speaking Prompt',  iconKey: 'mic',      color: '#8A2B26', bg: 'rgba(138,43,38,.12)',  hint: 'Audio + transcript, AI-evaluated', grading: 'ai'    },
-  { id: 'order',  label: 'Order Sentences',  iconKey: 'bolt',     color: '#5A2C5C', bg: 'rgba(90,44,92,.12)',   hint: 'Sequence the steps',               grading: 'auto'  },
-  { id: 'fix',    label: 'Error Correction', iconKey: 'search',   color: '#2E6A3F', bg: 'rgba(46,106,63,.12)',  hint: 'Find & fix in a passage',          grading: 'auto'  },
-  { id: 'flash',  label: 'Flashcards',       iconKey: 'homework', color: '#1A1F1E', bg: 'rgba(26,31,30,.08)',   hint: 'Term/definition pairs',            grading: 'track' },
-  { id: 'listen', label: 'Listening',        iconKey: 'inbox',    color: '#0E5F6B', bg: 'rgba(14,95,107,.12)',  hint: 'Hear audio, answer question',      grading: 'auto'  },
+  { id: 'mcq',    label: 'Multiple Choice',  iconKey: 'check',    color: '#0A2C56', bg: 'rgba(11,79,74,.12)',   hint: 'Single best answer',          grading: 'auto'  },
+  { id: 'blank',  label: 'Fill the Blank',   iconKey: 'spark',    color: '#25557A', bg: 'rgba(37,85,122,.12)',  hint: '1–3 blanks per item',         grading: 'auto'  },
+  { id: 'short',  label: 'Short Answer',     iconKey: 'doc',      color: '#B8761A', bg: 'rgba(184,118,26,.12)', hint: 'Teacher-reviewed response',   grading: 'ai'    },
+  { id: 'speak',  label: 'Speaking Prompt',  iconKey: 'mic',      color: '#8A2B26', bg: 'rgba(138,43,38,.12)',  hint: 'Audio + optional transcript', grading: 'ai'    },
+  { id: 'order',  label: 'Order Sentences',  iconKey: 'bolt',     color: '#5A2C5C', bg: 'rgba(90,44,92,.12)',   hint: 'Sequence the steps',          grading: 'auto'  },
+  { id: 'fix',    label: 'Error Correction', iconKey: 'search',   color: '#2E6A3F', bg: 'rgba(46,106,63,.12)',  hint: 'Find & fix in a passage',     grading: 'auto'  },
+  { id: 'flash',  label: 'Flashcards',       iconKey: 'homework', color: '#1A1F1E', bg: 'rgba(26,31,30,.08)',   hint: 'Term/definition pairs',       grading: 'track' },
+  { id: 'listen', label: 'Listening',        iconKey: 'inbox',    color: '#0E5F6B', bg: 'rgba(14,95,107,.12)',  hint: 'Hear audio, answer question', grading: 'auto'  },
 ];
 
 /** Look up a type by id */
@@ -140,7 +140,7 @@ export function autoGrade(exercise, response) {
     }
 
     default:
-      return null; // AI-evaluated or tracked types
+      return null; // Teacher-reviewed or tracked types
   }
 }
 

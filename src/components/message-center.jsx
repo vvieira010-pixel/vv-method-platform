@@ -7,10 +7,13 @@ import { getInbox, sendMessage, markRead } from '../lib/workflow.js';
 
 const CSS = `
   .mc-dock {
-    position: fixed; bottom: 20px; right: 70px; z-index: 40;
+    position: fixed;
+    right: max(18px, env(safe-area-inset-right));
+    bottom: max(18px, env(safe-area-inset-bottom));
+    z-index: 40;
   }
   .mc-dock-btn {
-    width: 44px; height: 44px; border-radius: 50%;
+    width: 44px; height: 44px; border-radius: var(--radius-md);
     background: var(--accent); color: #fff;
     border: none; cursor: pointer; display: flex; align-items: center;
     justify-content: center; box-shadow: 0 4px 14px rgba(0,0,0,0.25);
@@ -20,16 +23,16 @@ const CSS = `
   .mc-badge {
     position: absolute; top: -3px; right: -3px;
     width: 18px; height: 18px; border-radius: 50%;
-    background: var(--danger); color: #fff;
+    background: var(--warning); color: #fff;
     font-size: 10px; font-weight: 700; display: flex;
     align-items: center; justify-content: center; border: 2px solid #fff;
   }
   .mc-popup {
-    position: absolute; bottom: 56px; right: 0; width: 300px;
+    position: absolute; bottom: 56px; right: 0; width: min(320px, calc(100vw - 28px));
     background: var(--surface); border: 1px solid var(--border);
-    border-radius: 14px; box-shadow: var(--shadow-modal);
+    border-radius: var(--radius-lg); box-shadow: var(--shadow-modal);
     display: flex; flex-direction: column; overflow: hidden;
-    max-height: 420px;
+    max-height: min(420px, calc(100dvh - 110px));
   }
   .mc-popup-header {
     padding: 14px 16px; border-bottom: 1px solid var(--divider);
@@ -40,11 +43,11 @@ const CSS = `
   .mc-msg { display: flex; gap: 8px; align-items: flex-end; }
   .mc-msg.from-me { flex-direction: row-reverse; }
   .mc-bubble {
-    max-width: 200px; padding: 8px 12px; border-radius: 12px;
+    max-width: 200px; padding: 8px 12px; border-radius: var(--radius-md);
     font-size: 13px; line-height: 1.45; word-break: break-word;
   }
-  .mc-msg.from-me  .mc-bubble { background: var(--accent); color: #fff; border-radius: 12px 12px 2px 12px; }
-  .mc-msg.from-them .mc-bubble { background: var(--bg-deep); color: var(--text); border-radius: 12px 12px 12px 2px; }
+  .mc-msg.from-me  .mc-bubble { background: var(--accent); color: #fff; border-radius: var(--radius-md) var(--radius-md) 2px var(--radius-md); }
+  .mc-msg.from-them .mc-bubble { background: var(--bg-deep); color: var(--text); border-radius: var(--radius-md) var(--radius-md) var(--radius-md) 2px; }
   .mc-bubble-time { font-size: 10px; opacity: 0.6; margin-top: 3px; }
   .mc-compose {
     padding: 10px 12px; border-top: 1px solid var(--divider);
@@ -52,13 +55,13 @@ const CSS = `
   }
   .mc-compose-input {
     flex: 1; padding: 8px 11px; border: 1px solid var(--border);
-    border-radius: 8px; font-family: var(--font-ui); font-size: 13px;
+    border-radius: var(--radius-sm); font-family: var(--font-ui); font-size: 13px;
     color: var(--text); resize: none; outline: none;
     transition: border-color 0.15s;
   }
   .mc-compose-input:focus { border-color: var(--primary); }
   .mc-compose-send {
-    width: 34px; height: 34px; border-radius: 8px;
+    width: 34px; height: 34px; border-radius: var(--radius-sm);
     background: var(--accent); color: #fff; border: none; cursor: pointer;
     display: flex; align-items: center; justify-content: center;
     transition: background 0.15s; flex-shrink: 0;
@@ -68,13 +71,31 @@ const CSS = `
 
   /* Student inbox tab */
   .si-root { padding: 24px; max-width: 600px; margin: 0 auto; }
-  .si-thread { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 10px; padding: 14px 16px; cursor: pointer; transition: border-color 0.12s; }
+  .si-thread { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); margin-bottom: 10px; padding: 14px 16px; cursor: pointer; transition: border-color 0.12s; }
   .si-thread:hover { border-color: var(--primary); }
   .si-thread-meta { display: flex; justify-content: space-between; margin-bottom: 4px; }
   .si-thread-from { font-size: 13px; font-weight: 700; color: var(--text); }
   .si-thread-time { font-size: 11px; color: var(--muted); }
   .si-thread-preview { font-size: 13px; color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .si-unread .si-thread-from::after { content: ''; display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--primary); margin-left: 6px; vertical-align: middle; }
+  @media (max-width: 640px) {
+    .mc-dock {
+      right: max(12px, env(safe-area-inset-right));
+      bottom: max(12px, env(safe-area-inset-bottom));
+    }
+    .mc-dock-btn {
+      width: 40px;
+      height: 40px;
+    }
+    .mc-popup {
+      right: 0;
+      width: calc(100vw - 24px);
+      max-height: min(390px, calc(100dvh - 92px));
+    }
+    .si-root {
+      padding: 16px;
+    }
+  }
 `;
 
 let injected = false;
@@ -112,7 +133,7 @@ export function TeacherUnreadBadge() {
   if (!count) return null;
   return (
     <span style={{
-      background: 'var(--danger)', color: '#fff',
+      background: 'var(--warning)', color: '#fff',
       borderRadius: '999px', padding: '1px 7px',
       fontSize: 11, fontWeight: 700,
     }}>{count}</span>
@@ -216,11 +237,23 @@ export function StudentInbox({ student }) {
   const [reply, setReply] = useState('');
 
   useEffect(() => {
-    (async () => {
+    const refresh = async () => {
       const all = await getInbox({ role: 'student', studentId: student?.id });
       setMessages(all || []);
-    })();
+    };
+    refresh();
+    window.addEventListener('vv:messages-changed', refresh);
+    return () => window.removeEventListener('vv:messages-changed', refresh);
   }, [student?.id]);
+
+  const openMessage = async (message) => {
+    setSelected(message);
+    if (!message.read && message.fromRole === 'teacher') {
+      await markRead(message.id);
+      const all = await getInbox({ role: 'student', studentId: student?.id });
+      setMessages(all || []);
+    }
+  };
 
   const handleReply = async () => {
     if (!reply.trim()) return;
@@ -244,7 +277,7 @@ export function StudentInbox({ student }) {
       )}
       {messages.map(m => (
         <div key={m.id} className={`si-thread ${!m.read && m.fromRole === 'teacher' ? 'si-unread' : ''}`}
-          onClick={() => setSelected(m)}>
+          onClick={() => openMessage(m)}>
           <div className="si-thread-meta">
             <span className="si-thread-from">{m.fromRole === 'teacher' ? 'Teacher Vini' : 'You'}</span>
             <span className="si-thread-time">{fmtTime(m.createdAt)}</span>

@@ -1,10 +1,10 @@
 [build]
-  command = "npm run build"
+  command = "node node_modules/vite/bin/vite.js build --configLoader runner"
   publish = "dist-build"
   functions = "netlify/functions"
 
 [build.environment]
-  # VITE_-prefixed keys are inlined into the client bundle.
+  # Vite inlines VITE_-prefixed vars into the client bundle by design.
   # Exempt them from Netlify's secrets scanner to avoid false-positive deploy failures.
   SECRETS_SCAN_OMIT_KEYS = "VITE_SUPABASE_URL,VITE_SUPABASE_ANON_KEY,VITE_GEMINI_API_KEY,VITE_GROQ_API_KEY,VITE_OPENAI_API_KEY,VITE_ANTHROPIC_API_KEY,VITE_ELEVENLABS_API_KEY"
 
