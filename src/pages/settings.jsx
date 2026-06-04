@@ -9,6 +9,7 @@ const SENSITIVE_LOCAL_KEYS = new Set([
   'vv:gemini_api_key',
   'vv:anthropic_api_key',
   'vv:openai_api_key',
+  'vv:openrouter_api_key',
 ]);
 
 export default function SettingsPage({ onNavigate }) {
@@ -16,6 +17,7 @@ export default function SettingsPage({ onNavigate }) {
   const [geminiKey, setGeminiKey] = useState(() => localStorage.getItem('vv:gemini_api_key') || '');
   const [anthropicKey, setAnthropicKey] = useState(() => localStorage.getItem('vv:anthropic_api_key') || '');
   const [openaiKey, setOpenaiKey] = useState(() => localStorage.getItem('vv:openai_api_key') || '');
+  const [openrouterKey, setOpenrouterKey] = useState(() => localStorage.getItem('vv:openrouter_api_key') || '');
   const [generalMemo, setGeneralMemo] = useState(() => localStorage.getItem('vv:student_general_memo') || '');
   const [saved, setSaved] = useState('');
   const [syncing, setSyncing] = useState(false);
@@ -53,6 +55,8 @@ export default function SettingsPage({ onNavigate }) {
     else localStorage.removeItem('vv:anthropic_api_key');
     if (openaiKey.trim()) localStorage.setItem('vv:openai_api_key', openaiKey.trim());
     else localStorage.removeItem('vv:openai_api_key');
+    if (openrouterKey.trim()) localStorage.setItem('vv:openrouter_api_key', openrouterKey.trim());
+    else localStorage.removeItem('vv:openrouter_api_key');
     setSaved('Keys saved!');
     setTimeout(() => setSaved(''), 2000);
     window.toast?.('API keys saved.', 'ok');
@@ -150,17 +154,27 @@ export default function SettingsPage({ onNavigate }) {
       <Card style={{ padding: 20, marginTop: 20 }}>
         <SectionHeader title="AI Provider Keys" icon={<Icon.spark size={15} />} />
         <p style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', margin: '8px 0 16px', lineHeight: 1.6 }}>
-          Keys are stored in your browser only. Priority: Groq (free, fast) → Gemini (free, high quality) → Anthropic → OpenAI.
-          Keys are not included in platform backups.
+          Keys are stored in your browser only. Priority: Gemini (free) → OpenRouter (free models, auto-cascade) → Groq (free, fast) → Anthropic → OpenAI.
+          Any one key is enough. Keys are not included in platform backups.
         </p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           <Field label="Groq API Key (recommended — free)">
             <input className="input" type="password" value={groqKey} onChange={e => setGroqKey(e.target.value)} placeholder="gsk_…" />
             <a href="https://console.groq.com/keys" target="_blank" rel="noopener noreferrer" style={{ fontSize: 'var(--text-xs)', color: 'var(--accent)', marginTop: 3 }}>Get a free Groq key →</a>
           </Field>
-          <Field label="Gemini API Key (free, high quality)">
+          <Field label="Gemini API Key (free — cascades through Gemini + Gemma)">
             <input className="input" type="password" value={geminiKey} onChange={e => setGeminiKey(e.target.value)} placeholder="AIza…" />
             <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener noreferrer" style={{ fontSize: 'var(--text-xs)', color: 'var(--accent)', marginTop: 3 }}>Get a free Gemini key →</a>
+            <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: 3, lineHeight: 1.5 }}>
+              One key tries: Gemini 2.5 Flash → 2.5 Flash-Lite → 2.0 Flash → 2.0 Flash-Lite → Gemma 3 27B → 12B → 4B, until one answers.
+            </span>
+          </Field>
+          <Field label="OpenRouter API Key (free models — auto-cascade)">
+            <input className="input" type="password" value={openrouterKey} onChange={e => setOpenrouterKey(e.target.value)} placeholder="sk-or-…" />
+            <a href="https://openrouter.ai/keys" target="_blank" rel="noopener noreferrer" style={{ fontSize: 'var(--text-xs)', color: 'var(--accent)', marginTop: 3 }}>Get a free OpenRouter key →</a>
+            <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: 3, lineHeight: 1.5 }}>
+              Tries free models in order (DeepSeek V3 → Llama 3.3 70B → Gemini 2.0 Flash → DeepSeek R1 → Qwen 2.5 72B → …) until one answers.
+            </span>
           </Field>
           <Field label="Anthropic API Key (fallback)">
             <input className="input" type="password" value={anthropicKey} onChange={e => setAnthropicKey(e.target.value)} placeholder="sk-ant-…" />
