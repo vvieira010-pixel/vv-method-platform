@@ -94,21 +94,73 @@ export async function fetchSupabaseUser(url, anonKey, accessToken) {
   return res.json();
 }
 
+/* ── PKCE helpers (needed for Supabase projects created after ~2024) ─────── */
+const PKCE_VERIFIER_KEY = 'vv:pkce_verifier';
+
+/** Generate a cryptographically random PKCE code verifier. */
+function generateVerifier() {
+  const arr = new Uint8Array(32);
+  crypto.getRandomValues(arr);
+  return btoa(String.fromCharCode(...arr)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+}
+
+/** SHA-256 the verifier and base64url-encode → code_challenge (S256). */
+async function challengeFromVerifier(verifier) {
+  const encoded = new TextEncoder().encode(verifier);
+  const hash = await crypto.subtle.digest('SHA-256', encoded);
+  return btoa(String.fromCharCode(...new Uint8Array(hash)))
+    .replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+}
+
 /**
- * Send a passwordless magic-link / OTP email. On click, Supabase redirects to
- * `redirectTo` with the session in the URL hash (handled by App.jsx).
- * `createUser` controls whether a brand-new user is provisioned: teachers use
- * false (must already exist), students use true (first sign-in creates them).
+ * Exchange the PKCE auth code (from ?code= query param) for a full session.
+ * Returns the session object ({ access_token, refresh_token, ... }) or throws.
+ */
+export async function exchangePKCECode(url, anonKey, code) {
+  const verifier = sessionStorage.getItem(PKCE_VERIFIER_KEY) || '';
+  const res = await fetch(`${url}/auth/v1/token?grant_type=pkce`, {
+    method: 'POST',
+    headers: { apikey: anonKey, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ auth_code: code, code_verifier: verifier }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(`PKCE exchange failed: ${err.error_description || err.message || res.status}`);
+  }
+  sessionStorage.removeItem(PKCE_VERIFIER_KEY);
+  return res.json(); // { access_token, refresh_token, expires_in, token_type, user }
+}
+
+/** Check URL query string for the PKCE ?code= param and return it (or null). */
+export function parsePKCECode(search = window.location.search) {
+  const code = new URLSearchParams(search).get('code');
+  return code || null;
+}
+
+/**
+ * Send a passwordless magic-link / OTP email using PKCE flow.
+ * On click, Supabase redirects to `redirectTo?code=xxx` (PKCE) or
+ * `redirectTo#access_token=xxx` (implicit, legacy) — App.jsx handles both.
+ * `createUser` controls whether a brand-new user is provisioned.
  * Returns { ok } or throws with the API error message.
  */
 export async function sendMagicLink(email, redirectTo, { createUser = false } = {}) {
   const { url, anonKey, isConfigured } = getSupabaseConfig();
   if (!isConfigured) throw new Error('Supabase is not configured.');
+  // Generate PKCE pair and persist verifier for the code exchange on return.
+  const verifier = generateVerifier();
+  const challenge = await challengeFromVerifier(verifier);
+  sessionStorage.setItem(PKCE_VERIFIER_KEY, verifier);
   const endpoint = `${url}/auth/v1/otp?redirect_to=${encodeURIComponent(redirectTo)}`;
   const res = await fetch(endpoint, {
     method: 'POST',
     headers: { apikey: anonKey, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email: String(email).trim(), create_user: createUser }),
+    body: JSON.stringify({
+      email: String(email).trim(),
+      create_user: createUser,
+      code_challenge: challenge,
+      code_challenge_method: 's256',
+    }),
   });
   if (!res.ok) {
     let msg = `Magic-link request failed (${res.status})`;

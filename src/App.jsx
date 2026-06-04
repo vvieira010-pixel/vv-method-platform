@@ -9,6 +9,8 @@ import { seedStudentsIfEmpty, getStudents } from './lib/workflow.js';
 import {
   getSupabaseConfig,
   parseSupabaseHashFragment,
+  parsePKCECode,
+  exchangePKCECode,
   storeSupabaseSession,
   readStoredSupabaseSession,
   clearStoredSupabaseSession,
@@ -72,6 +74,30 @@ export default function App() {
       return { role: 'teacher', email, displayName: meta.display_name || email };
     }
 
+    // ── PKCE flow: ?code= in query string (modern Supabase default) ──
+    async function handlePKCE() {
+      const code = parsePKCECode(window.location.search);
+      if (!code) return false;
+      // Clean the URL immediately so the code can't be replayed.
+      history.replaceState(null, '', window.location.pathname);
+      try {
+        const session = await exchangePKCECode(url, anonKey, code);
+        const sbUser = session.user || await fetchSupabaseUser(url, anonKey, session.access_token);
+        storeSupabaseSession({
+          access_token: session.access_token,
+          refresh_token: session.refresh_token || '',
+          expires_at: session.expires_at || Math.floor(Date.now() / 1000) + (session.expires_in || 3600),
+          user: sbUser,
+        });
+        const payload = await resolveAuth(session.access_token, sbUser);
+        if (payload) setAuth(payload);
+      } catch {
+        clearStoredSupabaseSession();
+      }
+      return true;
+    }
+
+    // ── Implicit flow: #access_token= in hash (legacy / fallback) ──
     async function handleHash() {
       const fragment = parseSupabaseHashFragment(window.location.hash);
       if (!fragment?.access_token) return false;
@@ -110,7 +136,9 @@ export default function App() {
       }
     }
 
-    handleHash().then(wasHash => { if (!wasHash) restoreSession(); });
+    handlePKCE().then(wasPKCE => {
+      if (!wasPKCE) handleHash().then(wasHash => { if (!wasHash) restoreSession(); });
+    });
   }, []);
 
   // Seed students from hardcoded list on first run, then load live roster
