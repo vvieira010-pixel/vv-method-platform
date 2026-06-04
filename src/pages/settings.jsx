@@ -12,6 +12,37 @@ const SENSITIVE_LOCAL_KEYS = new Set([
   'vv:openrouter_api_key',
 ]);
 
+/** Password-style input with an eye toggle to reveal/hide the value. */
+function SecretInput({ value, onChange, placeholder }) {
+  const [show, setShow] = useState(false);
+  return (
+    <div style={{ position: 'relative' }}>
+      <input
+        className="input"
+        type={show ? 'text' : 'password'}
+        value={value}
+        onChange={onChange}
+        placeholder={placeholder}
+        style={{ width: '100%', paddingRight: 40 }}
+      />
+      <button
+        type="button"
+        onClick={() => setShow(s => !s)}
+        aria-label={show ? 'Hide key' : 'Show key'}
+        title={show ? 'Hide' : 'Show'}
+        style={{
+          position: 'absolute', right: 6, top: '50%', transform: 'translateY(-50%)',
+          background: 'none', border: 'none', cursor: 'pointer', padding: 6,
+          display: 'grid', placeItems: 'center',
+          color: show ? 'var(--primary)' : 'var(--muted)',
+        }}
+      >
+        <Icon.eye size={16} />
+      </button>
+    </div>
+  );
+}
+
 export default function SettingsPage({ onNavigate }) {
   const [groqKey, setGroqKey] = useState(() => localStorage.getItem('vv:groq_api_key') || '');
   const [geminiKey, setGeminiKey] = useState(() => localStorage.getItem('vv:gemini_api_key') || '');
@@ -159,28 +190,28 @@ export default function SettingsPage({ onNavigate }) {
         </p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           <Field label="Groq API Key (recommended — free)">
-            <input className="input" type="password" value={groqKey} onChange={e => setGroqKey(e.target.value)} placeholder="gsk_…" />
+            <SecretInput value={groqKey} onChange={e => setGroqKey(e.target.value)} placeholder="gsk_…" />
             <a href="https://console.groq.com/keys" target="_blank" rel="noopener noreferrer" style={{ fontSize: 'var(--text-xs)', color: 'var(--accent)', marginTop: 3 }}>Get a free Groq key →</a>
           </Field>
           <Field label="Gemini API Key (free — cascades through Gemini + Gemma)">
-            <input className="input" type="password" value={geminiKey} onChange={e => setGeminiKey(e.target.value)} placeholder="AIza… (add more, comma-separated, to rotate)" />
+            <SecretInput value={geminiKey} onChange={e => setGeminiKey(e.target.value)} placeholder="AIza… (add more, comma-separated, to rotate)" />
             <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener noreferrer" style={{ fontSize: 'var(--text-xs)', color: 'var(--accent)', marginTop: 3 }}>Get a free Gemini key →</a>
             <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: 3, lineHeight: 1.5 }}>
               One key tries: Gemini 2.5 Flash → 2.5 Flash-Lite → 2.0 Flash → 2.0 Flash-Lite → Gemma 3 27B → 12B → 4B. Add several keys (comma-separated) to rotate when one is rate-limited.
             </span>
           </Field>
           <Field label="OpenRouter API Key (free models — auto-cascade)">
-            <input className="input" type="password" value={openrouterKey} onChange={e => setOpenrouterKey(e.target.value)} placeholder="sk-or-…" />
+            <SecretInput value={openrouterKey} onChange={e => setOpenrouterKey(e.target.value)} placeholder="sk-or-…" />
             <a href="https://openrouter.ai/keys" target="_blank" rel="noopener noreferrer" style={{ fontSize: 'var(--text-xs)', color: 'var(--accent)', marginTop: 3 }}>Get a free OpenRouter key →</a>
             <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: 3, lineHeight: 1.5 }}>
               Tries free models in order (DeepSeek V3 → Llama 3.3 70B → Gemini 2.0 Flash → DeepSeek R1 → Qwen 2.5 72B → …) until one answers.
             </span>
           </Field>
           <Field label="Anthropic API Key (fallback)">
-            <input className="input" type="password" value={anthropicKey} onChange={e => setAnthropicKey(e.target.value)} placeholder="sk-ant-…" />
+            <SecretInput value={anthropicKey} onChange={e => setAnthropicKey(e.target.value)} placeholder="sk-ant-…" />
           </Field>
           <Field label="OpenAI API Key (fallback)">
-            <input className="input" type="password" value={openaiKey} onChange={e => setOpenaiKey(e.target.value)} placeholder="sk-…" />
+            <SecretInput value={openaiKey} onChange={e => setOpenaiKey(e.target.value)} placeholder="sk-…" />
           </Field>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
             <Button variant="primary" onClick={saveKeys}>Save Keys</Button>
