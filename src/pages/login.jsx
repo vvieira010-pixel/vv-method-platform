@@ -156,6 +156,13 @@ export default function LoginScreen({ onSignIn, initialMode = 'choose' }) {
     const email = teacherEmail.trim();
     if (!email) { setError('Enter your email to receive a sign-in link.'); return; }
     if (!supabaseReady) { setError('Auth is not configured — check Supabase env vars.'); return; }
+    // Allowlist gate: only the configured teacher email may use this form.
+    // Set VITE_TEACHER_EMAIL in Netlify env to lock it down.
+    const allowedEmail = (import.meta.env.VITE_TEACHER_EMAIL || '').trim().toLowerCase();
+    if (allowedEmail && email.toLowerCase() !== allowedEmail) {
+      setError('This email is not authorised for teacher access.');
+      return;
+    }
     setMagicSending(true);
     try {
       // createUser:true — provisions the Supabase Auth account on first sign-in.
