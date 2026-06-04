@@ -126,13 +126,14 @@ export function ExerciseEditor({ exercise, onChange }) {
   const update = (patch) => onChange({ ...exercise, ...patch });
 
   switch (exercise.type) {
-    case 'mcq':   return <MCQEditor   ex={exercise} update={update} />;
-    case 'blank': return <BlankEditor ex={exercise} update={update} />;
-    case 'short': return <ShortEditor ex={exercise} update={update} />;
-    case 'speak': return <SpeakEditor ex={exercise} update={update} />;
-    case 'order': return <OrderEditor ex={exercise} update={update} />;
-    case 'fix':   return <FixEditor   ex={exercise} update={update} />;
-    case 'flash': return <FlashEditor ex={exercise} update={update} />;
+    case 'mcq':    return <MCQEditor    ex={exercise} update={update} />;
+    case 'blank':  return <BlankEditor  ex={exercise} update={update} />;
+    case 'short':  return <ShortEditor  ex={exercise} update={update} />;
+    case 'speak':  return <SpeakEditor  ex={exercise} update={update} />;
+    case 'order':  return <OrderEditor  ex={exercise} update={update} />;
+    case 'fix':    return <FixEditor    ex={exercise} update={update} />;
+    case 'flash':  return <FlashEditor  ex={exercise} update={update} />;
+    case 'listen': return <ListenEditor ex={exercise} update={update} />;
     default:
       return <p style={{ color: 'var(--muted)', fontSize: 'var(--text-sm)' }}>Unknown exercise type: {exercise.type}</p>;
   }
@@ -431,6 +432,96 @@ function FlashEditor({ ex, update }) {
         <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>
           {filledCount} card{filledCount !== 1 ? 's' : ''} ready
         </span>
+      </div>
+    </div>
+  );
+}
+
+/* ─── 8. LISTENING ───────────────────────────────────────────── */
+function ListenEditor({ ex, update }) {
+  return (
+    <div>
+      <div style={fieldWrap}>
+        <label style={fieldLabel}>Audio script (spoken to student)</label>
+        <textarea
+          className="input" rows={5} value={ex.audioText || ''}
+          onChange={e => update({ audioText: e.target.value })}
+          placeholder={'Girl: I was going to study for two hours, but I kept checking my phone.\nBoy: Maybe put your phone in another room next time.\nGirl: Yeah, that\'s probably the only way I\'ll focus.'}
+        />
+        <div style={hintText}>
+          This text is converted to speech by ElevenLabs (or browser TTS as fallback). Student does <em>not</em> see the script.
+        </div>
+      </div>
+
+      <div style={fieldWrap}>
+        <label style={fieldLabel}>Picture hint (optional — context clue shown before listening)</label>
+        <input
+          className="input" value={ex.pictureHint || ''}
+          onChange={e => update({ pictureHint: e.target.value })}
+          placeholder="A student sitting at a desk with books open, looking tired. A phone is next to the books."
+        />
+      </div>
+
+      <div style={fieldWrap}>
+        <label style={fieldLabel}>Question</label>
+        <textarea
+          className="input" rows={2} value={ex.question || ''}
+          onChange={e => update({ question: e.target.value })}
+          placeholder="What problem did the girl have?"
+        />
+      </div>
+
+      <label style={fieldLabel}>Options (click radio to mark correct)</label>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 8 }}>
+        {(ex.options || ['', '', '', '']).map((opt, i) => (
+          <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <input
+              type="radio" name={`listen-correct-${ex.id}`}
+              checked={ex.correct === i}
+              onChange={() => update({ correct: i })}
+              style={{ accentColor: 'var(--success)', width: 16, height: 16, cursor: 'pointer', flexShrink: 0 }}
+            />
+            <span style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)', width: 18 }}>
+              {String.fromCharCode(65 + i)}.
+            </span>
+            <input
+              className="input" value={opt}
+              onChange={e => {
+                const opts = [...(ex.options || ['', '', '', ''])];
+                opts[i] = e.target.value;
+                update({ options: opts });
+              }}
+              placeholder={`Option ${String.fromCharCode(65 + i)}…`}
+              style={{ flex: 1 }}
+            />
+          </div>
+        ))}
+      </div>
+      {ex.correct != null && (
+        <div style={{ fontSize: 'var(--text-xs)', color: 'var(--success)', fontWeight: 600, marginBottom: 8 }}>
+          Correct answer: {String.fromCharCode(65 + ex.correct)}
+        </div>
+      )}
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 12 }}>
+        <div style={fieldWrap}>
+          <label style={fieldLabel}>Explanation (shown after answering)</label>
+          <input
+            className="input" value={ex.explanation || ''}
+            onChange={e => update({ explanation: e.target.value })}
+            placeholder="She says she kept checking her phone and only finished one chapter."
+          />
+        </div>
+        <div style={fieldWrap}>
+          <label style={fieldLabel}>Max plays</label>
+          <input
+            className="input" type="number" min={0} max={10} step={1}
+            value={ex.plays ?? 2}
+            onChange={e => { const v = Number(e.target.value); update({ plays: isNaN(v) ? 2 : v }); }}
+            style={{ width: 70 }}
+          />
+          <div style={hintText}>0 = unlimited</div>
+        </div>
       </div>
     </div>
   );

@@ -4,11 +4,9 @@
   functions = "netlify/functions"
 
 [build.environment]
-  # Vite inlines VITE_-prefixed vars into the client bundle by design. The
-  # Supabase project URL and anon/publishable key are meant to be public (the
-  # browser uses them; Row Level Security is the protection), so exclude them
-  # from Netlify's secrets scanning to avoid false-positive deploy failures.
-  SECRETS_SCAN_OMIT_KEYS = "VITE_SUPABASE_URL,VITE_SUPABASE_ANON_KEY,VITE_GEMINI_API_KEY,VITE_GROQ_API_KEY"
+  # Vite inlines VITE_-prefixed vars into the client bundle by design.
+  # Exempt them from Netlify's secrets scanner to avoid false-positive deploy failures.
+  SECRETS_SCAN_OMIT_KEYS = "VITE_SUPABASE_URL,VITE_SUPABASE_ANON_KEY,VITE_GEMINI_API_KEY,VITE_GROQ_API_KEY,VITE_OPENAI_API_KEY,VITE_ANTHROPIC_API_KEY,VITE_ELEVENLABS_API_KEY"
 
 [[redirects]]
   from = "/api/anthropic"
