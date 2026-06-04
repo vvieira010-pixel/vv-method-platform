@@ -204,13 +204,9 @@ export default function LoginScreen({ onSignIn, initialMode = 'choose' }) {
     const addr = email.trim();
     if (!addr || !password) { setError('Enter your email and password.'); return; }
     if (!supabaseReady) { setError('Auth is not configured — check Supabase env vars.'); return; }
-    if (teacher) {
-      const allowedEmail = (import.meta.env.VITE_TEACHER_EMAIL || '').trim().toLowerCase();
-      if (allowedEmail && addr.toLowerCase() !== allowedEmail) {
-        setError('This email is not authorised for teacher access.');
-        return;
-      }
-    }
+    // No email allowlist on password sign-in: accounts are created deliberately
+    // in Supabase, and role (teacher vs student) is resolved server-side by
+    // whether the email matches a student roster row (see App.jsx resolveAuth).
     setSigningIn(true);
     try {
       const session = await signInWithPassword(addr, password);
