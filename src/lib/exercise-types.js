@@ -1,17 +1,18 @@
 /**
- * exercise-types.js — Central registry for the 7 interactive exercise types.
+ * exercise-types.js — Central registry for the 8 interactive exercise types.
  * Provides metadata, factory functions, and auto-grading logic.
  */
 
 /* ─── TYPE REGISTRY ─────────────────────────────────────────── */
 export const EX_TYPES = [
-  { id: 'mcq',   label: 'Multiple Choice',  iconKey: 'check',    color: '#0A2C56', bg: 'rgba(11,79,74,.12)',   hint: 'Single best answer',               grading: 'auto'  },
-  { id: 'blank', label: 'Fill the Blank',   iconKey: 'spark',    color: '#25557A', bg: 'rgba(37,85,122,.12)',  hint: '1–3 blanks per item',              grading: 'auto'  },
-  { id: 'short', label: 'Short Answer',     iconKey: 'doc',      color: '#B8761A', bg: 'rgba(184,118,26,.12)', hint: 'AI pre-evaluated',                 grading: 'ai'    },
-  { id: 'speak', label: 'Speaking Prompt',   iconKey: 'mic',      color: '#8A2B26', bg: 'rgba(138,43,38,.12)',  hint: 'Audio + transcript, AI-evaluated', grading: 'ai'    },
-  { id: 'order', label: 'Order Sentences',  iconKey: 'bolt',     color: '#5A2C5C', bg: 'rgba(90,44,92,.12)',   hint: 'Sequence the steps',               grading: 'auto'  },
-  { id: 'fix',   label: 'Error Correction', iconKey: 'search',   color: '#2E6A3F', bg: 'rgba(46,106,63,.12)',  hint: 'Find & fix in a passage',          grading: 'auto'  },
-  { id: 'flash', label: 'Flashcards',       iconKey: 'homework', color: '#1A1F1E', bg: 'rgba(26,31,30,.08)',   hint: 'Term/definition pairs',            grading: 'track' },
+  { id: 'mcq',    label: 'Multiple Choice',  iconKey: 'check',    color: '#0A2C56', bg: 'rgba(11,79,74,.12)',   hint: 'Single best answer',               grading: 'auto'  },
+  { id: 'blank',  label: 'Fill the Blank',   iconKey: 'spark',    color: '#25557A', bg: 'rgba(37,85,122,.12)',  hint: '1–3 blanks per item',              grading: 'auto'  },
+  { id: 'short',  label: 'Short Answer',     iconKey: 'doc',      color: '#B8761A', bg: 'rgba(184,118,26,.12)', hint: 'AI pre-evaluated',                 grading: 'ai'    },
+  { id: 'speak',  label: 'Speaking Prompt',  iconKey: 'mic',      color: '#8A2B26', bg: 'rgba(138,43,38,.12)',  hint: 'Audio + transcript, AI-evaluated', grading: 'ai'    },
+  { id: 'order',  label: 'Order Sentences',  iconKey: 'bolt',     color: '#5A2C5C', bg: 'rgba(90,44,92,.12)',   hint: 'Sequence the steps',               grading: 'auto'  },
+  { id: 'fix',    label: 'Error Correction', iconKey: 'search',   color: '#2E6A3F', bg: 'rgba(46,106,63,.12)',  hint: 'Find & fix in a passage',          grading: 'auto'  },
+  { id: 'flash',  label: 'Flashcards',       iconKey: 'homework', color: '#1A1F1E', bg: 'rgba(26,31,30,.08)',   hint: 'Term/definition pairs',            grading: 'track' },
+  { id: 'listen', label: 'Listening',        iconKey: 'inbox',    color: '#0E5F6B', bg: 'rgba(14,95,107,.12)',  hint: 'Hear audio, answer question',      grading: 'auto'  },
 ];
 
 /** Look up a type by id */
@@ -32,13 +33,14 @@ function exId() {
 }
 
 const FACTORIES = {
-  mcq:   () => ({ id: exId(), type: 'mcq',   question: '', options: ['', '', '', ''], correct: null }),
-  blank: () => ({ id: exId(), type: 'blank', template: '', blanks: [] }),
-  short: () => ({ id: exId(), type: 'short', prompt: '', rubric: '', targetWords: 120 }),
-  speak: () => ({ id: exId(), type: 'speak', prompt: '', targetSeconds: 60 }),
-  order: () => ({ id: exId(), type: 'order', sentences: [''] }),
-  fix:   () => ({ id: exId(), type: 'fix',   errorText: '', correctedText: '', hint: '' }),
-  flash: () => ({ id: exId(), type: 'flash', pairs: [{ term: '', def: '' }] }),
+  mcq:    () => ({ id: exId(), type: 'mcq',    question: '', options: ['', '', '', ''], correct: null }),
+  blank:  () => ({ id: exId(), type: 'blank',  template: '', blanks: [] }),
+  short:  () => ({ id: exId(), type: 'short',  prompt: '', rubric: '', targetWords: 120 }),
+  speak:  () => ({ id: exId(), type: 'speak',  prompt: '', targetSeconds: 60 }),
+  order:  () => ({ id: exId(), type: 'order',  sentences: [''] }),
+  fix:    () => ({ id: exId(), type: 'fix',    errorText: '', correctedText: '', hint: '' }),
+  flash:  () => ({ id: exId(), type: 'flash',  pairs: [{ term: '', def: '' }] }),
+  listen: () => ({ id: exId(), type: 'listen', audioText: '', plays: 2, question: '', options: ['', '', '', ''], correct: null, explanation: '', pictureHint: '' }),
 };
 
 /**
@@ -126,6 +128,17 @@ export function autoGrade(exercise, response) {
       };
     }
 
+    case 'listen': {
+      const isCorrect = response.selected === exercise.correct;
+      return {
+        correct: isCorrect,
+        score: isCorrect ? 1 : 0,
+        feedback: isCorrect
+          ? 'Correct!'
+          : `The correct answer was option ${String.fromCharCode(65 + exercise.correct)}.`,
+      };
+    }
+
     default:
       return null; // AI-evaluated or tracked types
   }
@@ -142,10 +155,11 @@ export function createEmptyResponse(type) {
     case 'mcq':   return { selected: null };
     case 'blank': return { blanks: [] };
     case 'short': return { text: '' };
-    case 'speak': return { audioB64: null, transcript: '' };
-    case 'order': return { order: [] };
-    case 'fix':   return { text: '' };
-    case 'flash': return { idx: 0, learned: 0 };
+    case 'speak':  return { audioB64: null, transcript: '' };
+    case 'order':  return { order: [] };
+    case 'fix':    return { text: '' };
+    case 'flash':  return { idx: 0, learned: 0 };
+    case 'listen': return { selected: null };
     default:      return {};
   }
 }
@@ -168,6 +182,7 @@ export function exercisePreview(exercise) {
       const count = (exercise.pairs || []).filter(p => p.term || p.def).length;
       return `${count} flashcard${count !== 1 ? 's' : ''}`;
     }
+    case 'listen': return exercise.question || 'Listening question…';
     default: return exercise.instruction || '';
   }
 }

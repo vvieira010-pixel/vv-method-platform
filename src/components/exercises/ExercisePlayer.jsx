@@ -5,6 +5,7 @@ import FillBlank from './FillBlank.jsx';
 import ShortAnswer from './ShortAnswer.jsx';
 import OrderSentences from './OrderSentences.jsx';
 import ErrorCorrection from './ErrorCorrection.jsx';
+import Listening from './Listening.jsx';
 
 const TEAL = '#0D9488';
 const NAVY = '#0B1F3A';
@@ -38,7 +39,14 @@ function ExerciseCard({ exercise, index, total, result, onComplete, onNext }) {
       case 'short_answer':    return <ShortAnswer {...props} />;
       case 'order_sentences': return <OrderSentences {...props} />;
       case 'error_correction':return <ErrorCorrection {...props} />;
-      default:                return <InvalidExercise reason={`Unknown type "${exercise.type}".`} />;
+      // New exercise types (v2 id scheme)
+      case 'mcq':    return <MultipleChoice {...props} />;
+      case 'blank':  return <FillBlank {...props} />;
+      case 'short':  return <ShortAnswer {...props} />;
+      case 'order':  return <OrderSentences {...props} />;
+      case 'fix':    return <ErrorCorrection {...props} />;
+      case 'listen': return <Listening {...props} />;
+      default:       return <InvalidExercise reason={`Unknown type "${exercise.type}".`} />;
     }
   }
 
