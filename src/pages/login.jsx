@@ -1,14 +1,12 @@
 /**
  * login.jsx — V.V. Method Platform Login Screen
- * Teacher: Auth0 Universal Login (no password)
- * Student:  Supabase magic link (no password)
+ * Teacher: Supabase magic link (email → one-click sign-in)
+ * Student:  Supabase magic link (same flow)
  */
 
 import { useState, useEffect } from 'react';
-import { useAuth0 } from '@auth0/auth0-react';
 import { injectGlobalCSS } from '../components/shared.jsx';
 import { sendMagicLink, getSupabaseConfig } from '../lib/supabase-storage.js';
-import { getAuth0Config } from '../lib/auth0-config.js';
 
 const CSS = `
   .login-root {
@@ -140,6 +138,7 @@ function injectLoginCSS() {
 
 export default function LoginScreen({ onSignIn, initialMode = 'choose' }) {
   const [mode, setMode] = useState(initialMode);
+  const [teacherEmail, setTeacherEmail] = useState('');
   const [studentEmail, setStudentEmail] = useState('');
   const [error, setError] = useState('');
   const [magicSending, setMagicSending] = useState(false);
@@ -150,6 +149,24 @@ export default function LoginScreen({ onSignIn, initialMode = 'choose' }) {
     injectGlobalCSS();
     injectLoginCSS();
   }, []);
+
+  const handleTeacherMagicLink = async () => {
+    setError('');
+    setMagicSentTo('');
+    const email = teacherEmail.trim();
+    if (!email) { setError('Enter your email to receive a sign-in link.'); return; }
+    if (!supabaseReady) { setError('Auth is not configured — check Supabase env vars.'); return; }
+    setMagicSending(true);
+    try {
+      // Teachers must already exist in Supabase Auth — createUser:false.
+      // resolveAuth in App.jsx resolves role: if email has no student row → teacher.
+      await sendMagicLink(email, window.location.origin, { createUser: false });
+      setMagicSentTo(email);
+    } catch (e) {
+      setError(e.message || 'Could not send the sign-in link.');
+    }
+    setMagicSending(false);
+  };
 
   const handleStudentMagicLink = async () => {
     setError('');
@@ -172,6 +189,7 @@ export default function LoginScreen({ onSignIn, initialMode = 'choose' }) {
   const back = (m) => {
     setMode(m);
     setError('');
+    setTeacherEmail('');
     setStudentEmail('');
     setMagicSentTo('');
   };
@@ -183,9 +201,7 @@ export default function LoginScreen({ onSignIn, initialMode = 'choose' }) {
       : 'Student sign in';
   const formSubcopy = mode === 'choose'
     ? 'Choose teacher or student to continue.'
-    : mode === 'teacher'
-      ? 'Sign in securely via Auth0 — no password needed.'
-      : 'Enter your email and we\'ll send you a sign-in link.';
+    : 'Enter your email and we\'ll send you a one-click sign-in link.';
 
   return (
     <div className="login-root">
@@ -259,7 +275,41 @@ export default function LoginScreen({ onSignIn, initialMode = 'choose' }) {
             </>
           )}
 
-          {mode === 'teacher' && <TeacherAuth0Panel />}
+          {mode === 'teacher' && (
+            <>
+              <label className="login-field-label" htmlFor="login-teacher-email">Your email</label>
+              <input
+                id="login-teacher-email"
+                className="login-input"
+                type="email"
+                autoComplete="email"
+                value={teacherEmail}
+                onChange={e => setTeacherEmail(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && handleTeacherMagicLink()}
+                placeholder="you@email.com"
+                autoFocus
+              />
+              <div className="login-error" role="alert" aria-live="polite">{error}</div>
+              {magicSentTo ? (
+                <div className="login-magic-sent" role="status" aria-live="polite">
+                  ✉️ Check <strong>{magicSentTo}</strong> for your sign-in link.
+                  Open it on this device to continue.
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  className="login-submit-btn teacher"
+                  onClick={handleTeacherMagicLink}
+                  disabled={magicSending}
+                >
+                  {magicSending ? 'Sending…' : 'Send me a sign-in link →'}
+                </button>
+              )}
+              <p className="login-hint">
+                No password — we email you a one-click link to sign in securely.
+              </p>
+            </>
+          )}
 
           {mode === 'student' && (
             <>
@@ -303,33 +353,3 @@ export default function LoginScreen({ onSignIn, initialMode = 'choose' }) {
   );
 }
 
-/* ── Teacher Auth0 panel ─────────────────────────────────────── */
-function TeacherAuth0Panel() {
-  const { loginWithRedirect } = useAuth0();
-  const { isConfigured } = getAuth0Config();
-
-  if (!isConfigured) {
-    return (
-      <div className="login-error" role="alert" style={{ fontSize: 13, lineHeight: 1.6 }}>
-        Auth0 is not configured yet.<br />
-        Add <code>VITE_AUTH0_DOMAIN</code> and <code>VITE_AUTH0_CLIENT_ID</code> to your
-        Netlify environment variables, then redeploy.
-      </div>
-    );
-  }
-
-  return (
-    <>
-      <button
-        type="button"
-        className="login-submit-btn teacher"
-        onClick={() => loginWithRedirect()}
-      >
-        Continue with Auth0 →
-      </button>
-      <p className="login-hint">
-        You'll be redirected to Auth0 to sign in securely. No password required.
-      </p>
-    </>
-  );
-}

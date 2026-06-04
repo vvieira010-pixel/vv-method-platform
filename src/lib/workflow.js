@@ -18,21 +18,21 @@ const K = {
   practiceResources:   'vv:practiceResources',
   practiceSubmissions: 'vv:practiceSubmissions',
   errorBankGlobal:     'vv:errorBankGlobal',
-  reports:     'vv:reports',
-  submissions: 'vv:submissions',
-  corrections: 'vv:corrections',
-  reviews:     'vv:reviews',
-  inbox:       'vv:inbox',
-  progress:    'vv:progress',
-  reviewed:    'vv:reviewed',
-  drafts:      'vv:drafts',
+  reports:             'vv:reports',
+  submissions:         'vv:submissions',
+  corrections:         'vv:corrections',
+  reviews:             'vv:reviews',
+  inbox:               'vv:inbox',
+  progress:            'vv:progress',
+  reviewed:            'vv:reviewed',
+  drafts:              'vv:drafts',
   // Phase 1 new entities
-  studentsCrud:    'vv:studentsCrud',
-  targetProfiles:  'vv:targetProfiles',
-  classEvents:     'vv:classEvents',
-  classEvidence:   'vv:classEvidence',
-  vocabularyBank:  'vv:vocabularyBank',
-  progressNotes:   'vv:progressNotes',
+  studentsCrud:        'vv:studentsCrud',
+  targetProfiles:      'vv:targetProfiles',
+  classEvents:         'vv:classEvents',
+  classEvidence:       'vv:classEvidence',
+  vocabularyBank:      'vv:vocabularyBank',
+  progressNotes:       'vv:progressNotes',
 };
 
 function load(key)     { try { return JSON.parse(localStorage.getItem(key) || '[]'); } catch { return []; } }
@@ -680,15 +680,16 @@ export async function deleteReview(id) {
       save(K.submissions, submissions);
     }
   }
-  if (review?.homeworkId) {
-    const homework = load(K.homework);
-    const hwIdx = homework.findIndex(h => h.id === review.homeworkId);
-    if (hwIdx >= 0) {
-      homework[hwIdx] = { ...homework[hwIdx], status: 'submitted' };
-      delete homework[hwIdx].reviewedAt;
-      save(K.homework, homework);
-    }
+
+  const homework = load(K.homework);
+  const hwIdx = homework.findIndex(h => h.id === review.homeworkId);
+  if (hwIdx >= 0) {
+    homework[hwIdx] = { ...homework[hwIdx], status: 'submitted' };
+    delete homework[hwIdx].reviewedAt;
+    save(K.homework, homework);
   }
+
+  return record;
 }
 
 /* ─── DIAGNOSIS CYCLE STATE ─────────────────────────────────── */
@@ -940,7 +941,7 @@ export async function seedStudentsIfEmpty(STUDENTS) {
     goal: s.goal || 'Pass MET B2', session: s.session || 1,
     totalSessions: s.totalSessions || 24, track: s.track || 'MET',
     timezone: s.timezone || 'America/Sao_Paulo',
-    createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
+    createdAt: s.createdAt || new Date().toISOString(), updatedAt: s.updatedAt || new Date().toISOString(),
   }));
   save(K.studentsCrud, seeded);
   return seeded;
@@ -1057,8 +1058,10 @@ export async function updateClassEventStatus(id, patch) {
   }
   const all = load(K.classEvents);
   const idx = all.findIndex(e => e.id === id);
-  if (idx >= 0) { all[idx] = { ...all[idx], ...patch, updatedAt: new Date().toISOString() }; save(K.classEvents, all); return all[idx]; }
-  return null;
+  if (idx < 0) return null;
+  all[idx] = { ...all[idx], ...patch, updatedAt: new Date().toISOString() };
+  save(K.classEvents, all);
+  return all[idx];
 }
 export async function deleteClassEvent(id) {
   return removeVia('classEvents', K.classEvents, id);
@@ -1127,8 +1130,10 @@ export async function updateClassEvidence(id, patch) {
   }
   const all = load(K.classEvidence);
   const idx = all.findIndex(e => e.id === id);
-  if (idx >= 0) { all[idx] = { ...all[idx], ...patch, updatedAt: new Date().toISOString() }; save(K.classEvidence, all); return all[idx]; }
-  return null;
+  if (idx < 0) return null;
+  all[idx] = { ...all[idx], ...patch, updatedAt: new Date().toISOString() };
+  save(K.classEvidence, all);
+  return all[idx];
 }
 
 /* ─── VOCABULARY BANK ────────────────────────────────────────── */
@@ -1164,14 +1169,14 @@ export async function updateVocabularyEntry(id, patch) {
       const v = (await listVia('vocabularyBank', K.vocabularyBank, null)).find(x => x.id === id);
       if (!v) return null;
       return await dbUpsert('vocabularyBank', { ...v, ...patch });
-    } catch (e) {
-      console.warn('[workflow] updateVocabularyEntry via Supabase failed, using localStorage:', e.message);
-    }
+    } catch (e) { console.warn('[workflow] updateVocabularyEntry via Supabase failed, using localStorage:', e.message); }
   }
   const all = load(K.vocabularyBank);
   const idx = all.findIndex(v => v.id === id);
-  if (idx >= 0) { all[idx] = { ...all[idx], ...patch }; save(K.vocabularyBank, all); return all[idx]; }
-  return null;
+  if (idx < 0) return null;
+  all[idx] = { ...all[idx], ...patch, updatedAt: new Date().toISOString() };
+  save(K.vocabularyBank, all);
+  return all[idx];
 }
 export async function deleteVocabularyEntry(id) {
   return removeVia('vocabularyBank', K.vocabularyBank, id);
@@ -1246,7 +1251,7 @@ export async function deleteSubmission(id) {
  * Push existing localStorage records into Supabase. Idempotent: each record's
  * `${entity}:${id}` is recorded in `vv:syncedIds` and skipped on re-run.
  * Order matters — students before everything (FK + studentId resolution),
- * homework before submissions/reviews. Returns a per-entity count of new rows.
+ * homework before submissions/reviews.
  */
 export async function syncLocalToCloud() {
   if (!getDbContext()) throw new Error('Sign in with Supabase first to sync to the cloud.');
@@ -1287,4 +1292,56 @@ export async function syncLocalToCloud() {
   }
   save('vv:syncedIds', { ids: [...synced] });
   return counts;
+}
+
+/**
+ * EXPORT FUNCTIONALITY (New for Audit Mitigation)
+ * Generates a JSON bundle for a specific student, including all scoped entities.
+ * This mitigates the "Platform Lock-in" risk by providing a portable backup.
+ */
+export async function exportStudentData(studentId) {
+  if (!studentId) throw new Error('studentId is required for export.');
+  
+  // Define all entities that are scoped to a student.
+  const studentScopedEntities = [
+    { key: K.diagnoses, label: 'diagnoses' },
+    { key: K.feedback, label: 'feedback' },
+    { key: K.homework, label: 'homework' },
+    { key: K.practiceAssignments, label: 'practiceAssignments' },
+    { key: K.practiceSubmissions, label: 'practiceSubmissions' },
+    { key: K.reports, label: 'reports' },
+    { key: K.submissions, label: 'submissions' },
+    { key: K.reviews, label: 'reviews' },
+    { key: K.vocabularyBank, label: 'vocabularyBank' },
+    { key: K.progressNotes, label: 'progressNotes' },
+  ];
+
+  const exportPackage = {
+    exportDate: new Date().toISOString(),
+    studentId,
+    data: {}
+  };
+
+  for (const entity of studentScopedEntities) {
+    // listVia handles both Supabase and localStorage automatically.
+    const items = await listVia(entity.label, entity.key, (item => item.studentId === studentId));
+    exportPackage.data[entity.label] = items;
+  }
+
+  // Special case: Error Bank is object-keyed in localStorage.
+  const errorBankObj = loadObj(K.errorBankGlobal);
+  exportPackage.data.errorBank = errorBankObj[studentId] || [];
+
+  // Special case: Target Profiles (may not have studentId in all implementations, but scoped here).
+  const profiles = await listVia('targetProfiles', K.targetProfiles, (p => p.studentId === studentId));
+  exportPackage.data.targetProfiles = profiles;
+
+  // Special case: Class Evidence (linked via classEventId, which is linked to studentId).
+  // This is a complex join. For a simple export, we'll grab all evidence and filter.
+  const allEvidence = await listVia('classEvidence', K.classEvidence, null);
+  const studentClassEvents = await listVia('classEvents', K.classEvents, (e => e.studentId === studentId));
+  const studentEventIds = new Set(studentClassEvents.map(e => e.id));
+  exportPackage.data.classEvidence = allEvidence.filter(ev => studentEventIds.has(ev.classEventId));
+
+  return exportPackage;
 }
