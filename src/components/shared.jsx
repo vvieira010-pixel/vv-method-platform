@@ -802,25 +802,83 @@ const ANTHROPIC_MODEL = import.meta.env.VITE_ANTHROPIC_MODEL || 'claude-sonnet-4
 const OPENAI_MODEL = import.meta.env.VITE_OPENAI_MODEL || 'gpt-4.1-mini';
 const GROQ_MODEL = import.meta.env.VITE_GROQ_MODEL || 'llama-3.3-70b-versatile';
 const GEMINI_MODEL = import.meta.env.VITE_GEMINI_MODEL || 'gemini-2.5-flash';
+// Gemini API key also serves Google's open Gemma models on the same endpoint.
+// Cascade through several; override via VITE_GEMINI_MODELS or 'vv:gemini_models'.
+const GEMINI_DEFAULT_MODELS = [
+  'gemini-2.5-flash',
+  'gemini-2.5-flash-lite',
+  'gemini-2.0-flash',
+  'gemini-2.0-flash-lite',
+  'gemma-3-27b-it',
+  'gemma-3-12b-it',
+  'gemma-3-4b-it',
+];
+function geminiModels() {
+  const parse = s => String(s || '').split(',').map(x => x.trim()).filter(Boolean);
+  const fromEnv = parse(import.meta.env.VITE_GEMINI_MODELS);
+  let fromLs = [];
+  try { fromLs = parse(localStorage.getItem('vv:gemini_models')); } catch { /* storage unavailable */ }
+  // An explicit list override (env or localStorage) wins exactly as given — don't
+  // prepend the default primary model, or an operator could never remove a
+  // retired/rate-limited one. Only the default path honors VITE_GEMINI_MODEL first.
+  const override = fromEnv.length ? fromEnv : fromLs;
+  const list = override.length ? override : [GEMINI_MODEL, ...GEMINI_DEFAULT_MODELS];
+  return list.filter(Boolean).filter((m, i, a) => a.indexOf(m) === i);
+}
+
+// OpenRouter: one key, OpenAI-compatible, cascades through its free models.
+// Override the list via VITE_OPENROUTER_MODELS or the 'vv:openrouter_models'
+// localStorage key (comma-separated). Free model ids end in ':free'; if one is
+// unavailable or rate-limited the cascade simply tries the next.
+const OPENROUTER_API = 'https://openrouter.ai/api/v1/chat/completions';
+const OPENROUTER_DEFAULT_MODELS = [
+  'deepseek/deepseek-chat-v3-0324:free',
+  'meta-llama/llama-3.3-70b-instruct:free',
+  'google/gemini-2.0-flash-exp:free',
+  'deepseek/deepseek-r1-0528:free',
+  'qwen/qwen-2.5-72b-instruct:free',
+  'mistralai/mistral-small-3.2-24b-instruct:free',
+  'meta-llama/llama-3.2-3b-instruct:free',
+];
+function openRouterModels() {
+  const parse = s => String(s || '').split(',').map(x => x.trim()).filter(Boolean);
+  const fromEnv = parse(import.meta.env.VITE_OPENROUTER_MODELS);
+  let fromLs = [];
+  try { fromLs = parse(localStorage.getItem('vv:openrouter_models')); } catch { /* storage unavailable */ }
+  const list = fromEnv.length ? fromEnv : (fromLs.length ? fromLs : OPENROUTER_DEFAULT_MODELS);
+  return list.filter((m, i, a) => a.indexOf(m) === i);
+}
 
 const AI_WINNER_LS = 'vv:ai_last_winner'; // sticky: provider/model that last succeeded this session
+
+// A provider field may hold SEVERAL keys (comma- or newline-separated) so the
+// cascade can rotate to a fresh key when one is rate-limited / out of quota.
+// Combines env value(s) + the localStorage field, deduped, order preserved.
+function multiKeys(envVal, lsKey) {
+  const parse = s => String(s || '').split(/[,\n]/).map(x => x.trim()).filter(Boolean);
+  let fromLs = [];
+  try { fromLs = parse(localStorage.getItem(lsKey)); } catch { /* storage unavailable */ }
+  return [...parse(envVal), ...fromLs].filter((k, i, a) => a.indexOf(k) === i);
+}
 
 export async function callAI(prompt, { max_tokens = 2048, system } = {}) {
   const sys = system || 'You are a helpful MET English teaching assistant.';
   const errors = []; // collect every provider failure so the real cause is surfaced
 
-  const groqKey = import.meta.env.VITE_GROQ_API_KEY || localStorage.getItem('vv:groq_api_key');
-  const geminiKey = import.meta.env.VITE_GEMINI_API_KEY || localStorage.getItem('vv:gemini_api_key');
-  const anthropicKey = import.meta.env.VITE_ANTHROPIC_API_KEY || localStorage.getItem(API_KEY_LS);
-  const openaiKey = import.meta.env.VITE_OPENAI_API_KEY || localStorage.getItem('vv:openai_api_key');
+  // Each provider can carry multiple keys; the cascade rotates through them.
+  const groqKeys = multiKeys(import.meta.env.VITE_GROQ_API_KEY, 'vv:groq_api_key');
+  const geminiKeys = multiKeys(import.meta.env.VITE_GEMINI_API_KEY, 'vv:gemini_api_key');
+  const anthropicKeys = multiKeys(import.meta.env.VITE_ANTHROPIC_API_KEY, API_KEY_LS);
+  const openaiKeys = multiKeys(import.meta.env.VITE_OPENAI_API_KEY, 'vv:openai_api_key');
+  const openrouterKeys = multiKeys(import.meta.env.VITE_OPENROUTER_API_KEY, 'vv:openrouter_api_key');
   const payload = { model: ANTHROPIC_MODEL, max_tokens, system: sys, messages: [{ role: 'user', content: prompt }] };
 
   // ── Provider attempts: each returns a result object on success, or null on failure (pushing to errors) ──
-  async function tryGroq(model) {
+  async function tryGroq(key, model) {
     try {
       const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${groqKey}` },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
         body: JSON.stringify({
           model, temperature: 0.3, max_tokens,
           messages: [{ role: 'system', content: sys }, { role: 'user', content: prompt }],
@@ -838,29 +896,37 @@ export async function callAI(prompt, { max_tokens = 2048, system } = {}) {
     return null;
   }
 
-  async function tryGemini() {
+  async function tryGemini(key, model = GEMINI_MODEL) {
     try {
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${geminiKey}`;
+      const isGemma = /^gemma/i.test(model);
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
+      // Gemma has no system role — fold the system prompt into the user turn.
+      const reqBody = isGemma
+        ? {
+            contents: [{ parts: [{ text: `${sys}\n\n${prompt}` }] }],
+            generationConfig: { temperature: 0.3, maxOutputTokens: max_tokens },
+          }
+        : {
+            systemInstruction: { parts: [{ text: sys }] },
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: { temperature: 0.3, maxOutputTokens: max_tokens },
+          };
       const res = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          systemInstruction: { parts: [{ text: sys }] },
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { temperature: 0.3, maxOutputTokens: max_tokens },
-        }),
+        body: JSON.stringify(reqBody),
       });
       if (res.ok) {
         const data = await res.json();
         const text = data?.candidates?.[0]?.content?.parts?.map(p => p.text).join('') || '';
         if (text) return { content: [{ text }] };
-        errors.push(`Gemini/${GEMINI_MODEL}: empty response (${data?.candidates?.[0]?.finishReason || 'no candidates'})`);
+        errors.push(`Gemini/${model}: empty response (${data?.candidates?.[0]?.finishReason || 'no candidates'})`);
       } else {
         const err = await res.json().catch(() => ({}));
-        errors.push(`Gemini/${GEMINI_MODEL}: ${err.error?.message || res.status}`);
+        errors.push(`Gemini/${model}: ${err.error?.message || res.status}`);
       }
     } catch (e) {
-      errors.push(`Gemini/${GEMINI_MODEL}: ${e.message}`);
+      errors.push(`Gemini/${model}: ${e.message}`);
     }
     return null;
   }
@@ -879,12 +945,12 @@ export async function callAI(prompt, { max_tokens = 2048, system } = {}) {
     return null;
   }
 
-  async function tryAnthropicDirect() {
+  async function tryAnthropicDirect(key) {
     try {
       const res = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json', 'x-api-key': anthropicKey,
+          'Content-Type': 'application/json', 'x-api-key': key,
           'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true',
         },
         body: JSON.stringify(payload),
@@ -898,11 +964,42 @@ export async function callAI(prompt, { max_tokens = 2048, system } = {}) {
     return null;
   }
 
-  async function tryOpenAI() {
+  async function tryOpenRouter(key, model) {
+    try {
+      const res = await fetch(OPENROUTER_API, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${key}`,
+          // Optional ranking headers OpenRouter uses for its free-tier dashboards.
+          'HTTP-Referer': typeof window !== 'undefined' ? window.location.origin : 'https://met-proficiency-mastery.netlify.app',
+          'X-Title': 'MET Proficiency Mastery',
+        },
+        body: JSON.stringify({
+          model, temperature: 0.3, max_tokens,
+          messages: [{ role: 'system', content: sys }, { role: 'user', content: prompt }],
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const text = data?.choices?.[0]?.message?.content || '';
+        if (text) return { content: [{ text }] };
+        errors.push(`OpenRouter/${model}: empty response`);
+      } else {
+        const err = await res.json().catch(() => ({}));
+        errors.push(`OpenRouter/${model}: ${err.error?.message || res.status}`);
+      }
+    } catch (e) {
+      errors.push(`OpenRouter/${model}: ${e.message}`);
+    }
+    return null;
+  }
+
+  async function tryOpenAI(key) {
     try {
       const res = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${openaiKey}` },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
         body: JSON.stringify({
           model: OPENAI_MODEL, temperature: 0.3, max_completion_tokens: max_tokens,
           messages: [{ role: 'system', content: sys }, { role: 'user', content: prompt }],
@@ -920,9 +1017,17 @@ export async function callAI(prompt, { max_tokens = 2048, system } = {}) {
     return null;
   }
 
-  // ── Build the default cascade order (Groq models → Gemini → Anthropic proxy → Anthropic direct → OpenAI) ──
+  // ── Build the default cascade order (Gemini → OpenRouter free models → Groq → Anthropic proxy → Anthropic direct → OpenAI) ──
+  // For each model we rotate through every key for that provider, so a
+  // rate-limited / out-of-quota key fails over to the next key before moving on.
   const attempts = [];
-  if (groqKey) {
+  for (const model of (geminiKeys.length ? geminiModels() : [])) {
+    geminiKeys.forEach((key, ki) => attempts.push({ id: `gemini:${model}#${ki}`, run: () => tryGemini(key, model) }));
+  }
+  for (const model of (openrouterKeys.length ? openRouterModels() : [])) {
+    openrouterKeys.forEach((key, ki) => attempts.push({ id: `openrouter:${model}#${ki}`, run: () => tryOpenRouter(key, model) }));
+  }
+  if (groqKeys.length) {
     const candidateModels = [
       GROQ_MODEL,
       'meta-llama/llama-4-scout-17b-16e-instruct', // 300K TPM — preview, strongest reasoning
@@ -932,12 +1037,13 @@ export async function callAI(prompt, { max_tokens = 2048, system } = {}) {
       'openai/gpt-oss-20b',                        // 250K TPM — production, fast
       'llama-3.1-8b-instant',                      // 250K TPM — production, fastest fallback
     ].filter(Boolean).filter((m, i, arr) => arr.indexOf(m) === i);
-    for (const model of candidateModels) attempts.push({ id: `groq:${model}`, run: () => tryGroq(model) });
+    for (const model of candidateModels) {
+      groqKeys.forEach((key, ki) => attempts.push({ id: `groq:${model}#${ki}`, run: () => tryGroq(key, model) }));
+    }
   }
-  if (geminiKey) attempts.push({ id: 'gemini', run: tryGemini });
   attempts.push({ id: 'anthropic-proxy', run: tryAnthropicProxy }); // always tried; skips silently if not configured
-  if (anthropicKey) attempts.push({ id: 'anthropic-direct', run: tryAnthropicDirect });
-  if (openaiKey) attempts.push({ id: 'openai', run: tryOpenAI });
+  anthropicKeys.forEach((key, ki) => attempts.push({ id: `anthropic-direct#${ki}`, run: () => tryAnthropicDirect(key) }));
+  openaiKeys.forEach((key, ki) => attempts.push({ id: `openai#${ki}`, run: () => tryOpenAI(key) }));
 
   // ── Sticky winner: try the last provider/model that succeeded first, then fall back to the full cascade ──
   let lastWinner = null;

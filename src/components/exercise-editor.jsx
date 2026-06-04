@@ -38,25 +38,54 @@ export function ExTypeBadge({ typeId, size = 'sm' }) {
 
 /* ─── EXERCISE TYPE PICKER ──────────────────────────────────── */
 export function ExerciseTypePicker({ onSelect, onClose }) {
+  const [qty, setQty] = useState(1);
+  const clamp = n => Math.max(1, Math.min(20, Number.isFinite(n) ? n : 1));
+  const stepBtn = {
+    width: 26, height: 26, display: 'grid', placeItems: 'center',
+    border: '1px solid var(--border)', background: 'var(--surface)',
+    borderRadius: 6, cursor: 'pointer', fontSize: 16, lineHeight: 1, color: 'var(--text)',
+  };
   return (
     <Card style={{ padding: 20 }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6, gap: 12, flexWrap: 'wrap' }}>
         <span style={{ fontWeight: 700, fontSize: 'var(--text-sm)', color: 'var(--accent-deep)' }}>
           Choose exercise type
         </span>
-        {onClose && (
-          <Button variant="ghost" size="sm" onClick={onClose}>
-            <Icon.close size={12} /> Cancel
-          </Button>
-        )}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          {/* Quantity stepper — clicking a type below adds this many at once */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+              How many
+            </span>
+            <button type="button" aria-label="Fewer" style={stepBtn} onClick={() => setQty(q => clamp(q - 1))}>−</button>
+            <input
+              type="number" min={1} max={20} value={qty}
+              onChange={e => setQty(clamp(parseInt(e.target.value, 10)))}
+              style={{
+                width: 48, textAlign: 'center', padding: '4px 6px',
+                border: '1px solid var(--border)', borderRadius: 6,
+                fontFamily: 'var(--font-ui)', fontSize: 'var(--text-sm)', color: 'var(--text)',
+              }}
+            />
+            <button type="button" aria-label="More" style={stepBtn} onClick={() => setQty(q => clamp(q + 1))}>+</button>
+          </div>
+          {onClose && (
+            <Button variant="ghost" size="sm" onClick={onClose}>
+              <Icon.close size={12} /> Cancel
+            </Button>
+          )}
+        </div>
       </div>
+      <p style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', margin: '0 0 14px' }}>
+        Pick a type to add {qty > 1 ? <strong>{qty} of them</strong> : 'one'} at once — no need to repeat.
+      </p>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 8 }}>
         {EX_TYPES.map(t => {
           const IconComp = Icon[t.iconKey];
           return (
             <button
               key={t.id}
-              onClick={() => onSelect(t.id)}
+              onClick={() => onSelect(t.id, qty)}
               style={{
                 display: 'flex', alignItems: 'center', gap: 10,
                 padding: '12px 14px', borderRadius: 'var(--radius-md)',

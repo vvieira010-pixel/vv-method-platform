@@ -95,11 +95,13 @@ export default function HomeworkCreate({ diagnosisId, studentId, students, onNav
   }
 
   /* ── Exercise management ── */
-  function addExercise(type) {
-    const ex = createExercise(type);
-    setForm(f => ({ ...f, exercises: [...f.exercises, ex] }));
-    setExpandedEx(ex.id);
+  function addExercise(type, count = 1) {
+    const n = Math.max(1, Math.min(20, Number(count) || 1));
+    const created = Array.from({ length: n }, () => createExercise(type));
+    setForm(f => ({ ...f, exercises: [...f.exercises, ...created] }));
+    setExpandedEx(created[0].id); // expand the first of the batch for editing
     setShowTypePicker(false);
+    if (n > 1) window.toast?.(`Added ${n} ${type} exercises.`, 'ok');
   }
 
   function updateExercise(id, updated) {
