@@ -861,7 +861,7 @@ function multiKeys(envVal, lsKey) {
   return [...parse(envVal), ...fromLs].filter((k, i, a) => a.indexOf(k) === i);
 }
 
-export async function callAI(prompt, { max_tokens = 2048, system } = {}) {
+export async function callAI(prompt, { max_tokens = 2048, system, temperature = 0.3 } = {}) {
   const sys = system || 'You are a helpful MET English teaching assistant.';
   const errors = []; // collect every provider failure so the real cause is surfaced
 
@@ -871,7 +871,7 @@ export async function callAI(prompt, { max_tokens = 2048, system } = {}) {
   const anthropicKeys = multiKeys(import.meta.env.VITE_ANTHROPIC_API_KEY, API_KEY_LS);
   const openaiKeys = multiKeys(import.meta.env.VITE_OPENAI_API_KEY, 'vv:openai_api_key');
   const openrouterKeys = multiKeys(import.meta.env.VITE_OPENROUTER_API_KEY, 'vv:openrouter_api_key');
-  const payload = { model: ANTHROPIC_MODEL, max_tokens, system: sys, messages: [{ role: 'user', content: prompt }] };
+  const payload = { model: ANTHROPIC_MODEL, max_tokens, temperature, system: sys, messages: [{ role: 'user', content: prompt }] };
 
   // ── Provider attempts: each returns a result object on success, or null on failure (pushing to errors) ──
   async function tryGroq(key, model) {
@@ -880,7 +880,7 @@ export async function callAI(prompt, { max_tokens = 2048, system } = {}) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
         body: JSON.stringify({
-          model, temperature: 0.3, max_tokens,
+          model, temperature, max_tokens,
           messages: [{ role: 'system', content: sys }, { role: 'user', content: prompt }],
         }),
       });
@@ -900,7 +900,7 @@ export async function callAI(prompt, { max_tokens = 2048, system } = {}) {
     try {
       const isGemma = /^gemma/i.test(model);
       const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
-      const gen = { temperature: 0.3, maxOutputTokens: max_tokens };
+      const gen = { temperature, maxOutputTokens: max_tokens };
       // Gemini 2.5 Flash / Flash-Lite "think" by default and that thinking consumes
       // the output token budget — leaving empty/truncated answers. Disable it so the
       // whole budget goes to the response. (Only Flash models allow budget 0; 2.5 Pro
@@ -982,7 +982,7 @@ export async function callAI(prompt, { max_tokens = 2048, system } = {}) {
           'X-Title': 'MET Proficiency Mastery',
         },
         body: JSON.stringify({
-          model, temperature: 0.3, max_tokens,
+          model, temperature, max_tokens,
           messages: [{ role: 'system', content: sys }, { role: 'user', content: prompt }],
         }),
       });
@@ -1007,7 +1007,7 @@ export async function callAI(prompt, { max_tokens = 2048, system } = {}) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
         body: JSON.stringify({
-          model: OPENAI_MODEL, temperature: 0.3, max_completion_tokens: max_tokens,
+          model: OPENAI_MODEL, temperature, max_completion_tokens: max_tokens,
           messages: [{ role: 'system', content: sys }, { role: 'user', content: prompt }],
         }),
       });
