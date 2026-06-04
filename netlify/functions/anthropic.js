@@ -32,6 +32,7 @@ export async function handler(event) {
       body: JSON.stringify({
         model: process.env.ANTHROPIC_MODEL || body.model || 'claude-sonnet-4-6',
         max_tokens: body.max_tokens || 2048,
+        ...(typeof body.temperature === 'number' ? { temperature: body.temperature } : {}),
         system: body.system || 'You are a helpful MET English teaching assistant.',
         messages: body.messages,
       }),
