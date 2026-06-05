@@ -12,7 +12,7 @@ import { useState, useEffect } from 'react';
 import { Icon, Card, SectionHeader, Pill, Button, Avatar, StudentFeedbackView } from '../components/shared.jsx';
 import { callAI } from '../components/shared.jsx';
 import { parseAiJson } from '../lib/ai-helpers.js';
-import { buildDiagnosticPrompt } from '../lib/prompts.js';
+import { buildDiagnosticPrompt, buildSectionRegenPrompt } from '../lib/prompts.js';
 import { TARGET_PROFILE_PRESETS } from '../lib/workflow.js';
 import { STUDENT_ERROR_PROFILES, buildErrorProfileContext } from '../lib/error-bank-profiles.js';
 import {
@@ -221,6 +221,35 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
       });
       setSections(initSections);
 
+      // Auto-save draft immediately so navigating away doesn't lose the result.
+      try {
+        const draft = await saveDiagnosis({
+          id: savedDiagnosis?.id,
+          studentId: selectedStudentId || studentId,
+          classEventId: selectedClassEventId || classEventId,
+          targetProfileId: targetProfile?.id,
+          evaluatedSkills: Object.fromEntries(evaluatedSkills.map(k => [k, true])),
+          evidenceCounts: {
+            speaking: normalizedEvidence?.speakingEvidenceCount || 0,
+            writing: normalizedEvidence?.writingEvidenceCount || 0,
+            reading: normalizedEvidence?.readingEvidenceCount || 0,
+            listening: normalizedEvidence?.listeningEvidenceCount || 0,
+            grammar: normalizedEvidence?.grammarEvidenceCount || 0,
+            vocabulary: normalizedEvidence?.vocabularyEvidenceCount || 0,
+            testStrategy: normalizedEvidence?.testStrategyEvidenceCount || 0,
+          },
+          sections: initSections,
+          aiRaw: parsed,
+          status: 'draft',
+          cycleStage: 'needs-diagnosis',
+          classSummary: typeof parsed.classSummary === 'string' ? parsed.classSummary : '',
+          content: { overall_result: '', priorities: parsed.priorityDiagnosis || [], error_bank: parsed.errorBankSuggestions || [] },
+        });
+        if (draft) setSavedDiagnosis(draft);
+      } catch (autoSaveErr) {
+        console.warn('Auto-save draft failed:', autoSaveErr);
+      }
+
       // Warn if the AI returned any section empty/missing so the teacher can Regen before approving.
       const emptyLabels = SECTION_KEYS.filter(({ key }) => isSectionEmpty(parsed[key])).map(({ label }) => label);
       if (emptyLabels.length > 0) {
@@ -261,9 +290,14 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
   async function regenerateSection(key) {
     setRegenerating(key);
     try {
-      const prompt = buildDiagnosticPrompt({ student: selectedStudent, classEvent, classEvidence: normalizedEvidence, targetProfile });
-      const sectionPrompt = `${prompt}\n\nIMPORTANT: Return ONLY the "${key}" field from the JSON structure. No other fields.`;
-      const data = await callAI(sectionPrompt, { max_tokens: 4000, preferredProvider: 'gemini' });
+      const existingSections = Object.fromEntries(
+        Object.entries(sections).filter(([k]) => k !== key)
+      );
+      const prompt = buildSectionRegenPrompt(key, {
+        student: selectedStudent, classEvent, classEvidence: normalizedEvidence,
+        targetProfile, existingSections,
+      });
+      const data = await callAI(prompt, { max_tokens: 2000, preferredProvider: 'gemini' });
       const raw = data.content?.map(b => b.text || '').join('') || '';
       const parsed = parseAiJson(raw);
       const content = parsed[key] ?? parsed;

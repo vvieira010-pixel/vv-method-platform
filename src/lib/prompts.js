@@ -553,51 +553,32 @@ export const buildHomeworkGeneratorPrompt = ({ student, diagnosis }) => {
   const skillAreas = Object.entries(skillDx).filter(([, v]) => v?.evaluated).map(([k]) => k);
   const weaknesses = skillAreas.flatMap(k => skillDx[k]?.weaknesses || []).slice(0, 6);
 
-  return `You are a personalized English homework creator for MET exam preparation.
+  const t = (s, max) => !s || s.length <= max ? (s || '') : s.slice(0, max) + '…';
 
-Your job is to create COMPLETE, READY-TO-USE homework from the diagnosis data below.
-Every task must be fully written out — not described. The student should be able to open the homework and start immediately without any additional explanation from the teacher.
+  return `You are a MET English homework creator. Build 3 complete, student-ready tasks from the diagnosis below.
 
 ━━━ STUDENT ━━━
-Name: ${student?.name || 'Unknown'}
-Current level: ${student?.currentLevel || student?.band || 'B1'}
-Target level: ${student?.targetLevel || student?.bandTarget || 'B2'}
-Exam goal: ${student?.examGoal || student?.goal || 'MET B2'}
-Professional context: ${student?.professionalContext || 'not provided'}
-
-━━━ CLASS SUMMARY ━━━
-${classSummary || 'not provided'}
+${student?.name || 'Unknown'} | ${student?.currentLevel || student?.band || 'B1'} → ${student?.targetLevel || student?.bandTarget || 'B2'} | ${student?.examGoal || 'MET B2'} | ${student?.professionalContext || ''}
 
 ━━━ DIAGNOSIS PRIORITIES ━━━
-${priorities.length > 0 ? priorities.map(p => `${p.rank}. [${p.urgency}] ${p.area}
-   Target: ${p.whatToImprove}
-   How to improve: ${p.howToImprove || 'not specified'}
-   Evidence: ${p.evidence || 'not specified'}`).join('\n\n') : 'No priorities.'}
+${priorities.slice(0, 3).map(p => `${p.rank}. [${p.urgency}] ${p.area}: ${p.whatToImprove}${p.evidence ? ` — "${p.evidence}"` : ''}`).join('\n') || 'No priorities.'}
 
-━━━ ACTUAL ERRORS FROM CLASS ━━━
-${errors.slice(0, 8).map(e => `- Error: "${e.error}" → Correct: "${e.correct}" | Type: ${e.category || '?'} | Priority: ${e.priority || 'medium'}${e.evidence ? `\n  Evidence: "${e.evidence}"` : ''}`).join('\n') || 'none recorded'}
-
-━━━ WEAKNESSES OBSERVED ━━━
-${weaknesses.length > 0 ? weaknesses.map(w => `- ${w}`).join('\n') : 'none'}
+━━━ ERRORS TO TARGET ━━━
+${errors.slice(0, 5).map(e => `- "${e.error}" → "${e.correct}" (${e.category || '?'}, ${e.priority || 'medium'})${e.evidence ? ` — "${e.evidence}"` : ''}`).join('\n') || 'none'}
 
 ━━━ VOCABULARY TARGETS ━━━
-${vocab.slice(0, 6).map(v => `- "${v.wordOrPhrase}" (${v.category}): ${v.meaning || ''} | e.g. ${v.exampleSentence || ''}`).join('\n') || 'none'}
+${vocab.slice(0, 4).map(v => `- ${v.wordOrPhrase}: ${v.meaning || ''}`).join('\n') || 'none'}
 
 ━━━ GRAMMAR TARGETS ━━━
-${grammar.slice(0, 4).map(g => `- ${g.area}: ${g.issue} | Correction direction: ${g.practiceDirection || ''}`).join('\n') || 'none'}
+${grammar.slice(0, 3).map(g => `- ${g.area}: ${g.issue}`).join('\n') || 'none'}
 
-━━━ HOMEWORK CREATION RULES ━━━
-1. Produce 3–4 tasks. Each task must be FULLY WRITTEN OUT.
-2. Grammar task: Write 6–8 complete sentences containing the actual error pattern. Student must identify and correct each one.
-   Example: "Correct these sentences: 1. There are another nurses in the ward. 2. ..."
-3. Vocabulary task: Write sentences with blanks using the target vocabulary. Include the word bank.
-   Example: "Fill in the blank: The patient was ________ to a specialist. (referred / transferred / admitted)"
-4. Writing/Speaking task: Write the complete prompt with specific requirements (word count, structure, time limit).
-   Example: "Write 1–2 paragraphs (80–120 words) about [specific topic]. Use at least 3 of the target words below: ..."
-5. Self-check items must match what the teacher will evaluate — specific, not generic.
-6. Match the student's level: B1–B2 transition. Use healthcare/nursing context when relevant.
-7. Total time: 20–40 minutes. Each task should be achievable in 5–15 minutes.
-8. teacherNotes must tell the teacher EXACTLY what errors or patterns to look for in the submission.
+━━━ RULES ━━━
+- Exactly 3 tasks. Each FULLY WRITTEN — student opens and starts immediately.
+- Grammar: 4–5 sentences with the actual error pattern for the student to correct.
+- Vocabulary: 4–5 fill-in-the-blank sentences with a word bank.
+- Writing/Speaking: one complete prompt (word count, structure, time limit).
+- Use ${student?.professionalContext || 'real, specific'} contexts — not generic filler.
+- B1–B2 level. Total homework time: 20–30 minutes.
 
 Return ONLY valid JSON:
 {
@@ -815,3 +796,85 @@ export const buildDiagnosticPrompt = (data) => {
     .replace('{HOMEWORK_REVIEWED}', trunc(ev.homeworkReviewed || 'none', 800))
     .replace('{ADDITIONAL_NOTES}', trunc(ev.additionalNotes || ev.teacherNotes || 'none', 800));
 };
+
+/* ══════════════════════════════════════════════════════════════
+   SECTION REGEN PROMPT
+   Targeted prompt to regenerate a single diagnosis section.
+   ~2k tokens instead of the full 16k diagnostic prompt.
+══════════════════════════════════════════════════════════════ */
+
+const SECTION_EXTRA_RULES = {
+  skillDiagnosis: `MET Speaking: Task Completion (0-4), Language Resources (0-4), Intelligibility/Delivery (0-4, null if transcript-only).
+MET Writing: Grammatical Accuracy, Vocabulary, Mechanics, Cohesion, Task Completion (each 0-4).
+Unevaluated skills: evaluated:false, score0to80:null, scoreConfidenceLevel:"Not evaluated enough".
+Score confidence levels: "Not evaluated enough" | "Limited evidence" | "Provisional estimate" | "Diagnostic estimate" | "Mock-test estimate" | "Official score imported manually".`,
+
+  studentFeedback: `MANDATORY: Write in second person ("you", "your") — NEVER third person.
+Quote the student's actual words in every strength and fix.
+Banned openers: "Great work", "Well done", "Excellent", "Good job", "It is important", "Furthermore", "Additionally", "Moreover", "Going forward", "In conclusion".
+Banned phrases: "This demonstrates", "Your performance", "You demonstrated", "You exhibited", "Continue to", "Keep up".
+At most 2 sentences across the whole object may reference MET; each must name a concrete consequence.
+Fields: classFocus (2-3 sentences), whatYouDidWell (1-3 items with strength/explanation/example), whatToImprove (0-2 items with area/insteadOf/sayInstead/howToImprove), finalNote (1-2 sentences).`,
+
+  homeworkRecommendation: `Tasks must be FULLY WRITTEN OUT — never just describe what to do.
+Required: at least one reading task, one listening task, and one speaking or writing task.
+Each task "content" field must contain the complete exercise the student can open and start immediately.
+2-4 tasks total, each targeting a different diagnosed weakness.`,
+
+  priorityDiagnosis: `Return EXACTLY 3 items (rank 1-3). Each must have ALL of: rank, urgency (Critical|Developing|Watch), area, evidence (exact or near quote), pattern (recurring|new), whatToImprove, whyItMatters, howToImprove, successCriteria, timeHorizon.`,
+
+  vocabGrammarTargets: `Must have at least 2 vocabularyTargets (wordOrPhrase, category, meaning, exampleSentence) and at least 2 grammarTargets (area, issue, correction, practiceDirection). All drawn from actual evidence — never invented.`,
+
+  errorBankSuggestions: `Each item: error (exact student error), correct (corrected version), category (grammar|vocabulary|pronunciation|register|strategy|cohesion), priority (high|medium|low), evidence (exact quote from transcript/notes), saveToProfile (true/false), explanation (short rule).`,
+};
+
+export function buildSectionRegenPrompt(key, { student, classEvent, classEvidence, targetProfile, existingSections = {} }) {
+  const ev = classEvidence || {};
+  const tp = targetProfile || {};
+  const t = (s, max) => !s || s.length <= max ? (s || '') : s.slice(0, max) + '…';
+
+  const skillLines = [
+    ev.evaluatedSpeaking != null ? `Speaking: ${ev.evaluatedSpeaking ? 'Yes' : 'No'} (${ev.speakingEvidenceCount || 0} turns)` : null,
+    ev.evaluatedWriting != null ? `Writing: ${ev.evaluatedWriting ? 'Yes' : 'No'} (${ev.writingEvidenceCount || 0} turns)` : null,
+    ev.evaluatedReading != null ? `Reading: ${ev.evaluatedReading ? 'Yes' : 'No'} (${ev.readingEvidenceCount || 0} turns)` : null,
+    ev.evaluatedListening != null ? `Listening: ${ev.evaluatedListening ? 'Yes' : 'No'} (${ev.listeningEvidenceCount || 0} turns)` : null,
+    ev.evaluatedGrammar != null ? `Grammar: ${ev.evaluatedGrammar ? 'Yes' : 'No'} (${ev.grammarEvidenceCount || 0} turns)` : null,
+    ev.evaluatedVocabulary != null ? `Vocabulary: ${ev.evaluatedVocabulary ? 'Yes' : 'No'} (${ev.vocabularyEvidenceCount || 0} turns)` : null,
+  ].filter(Boolean).join('\n');
+
+  const contextLines = Object.entries(existingSections)
+    .filter(([k, v]) => k !== key && v?.content != null)
+    .map(([k, v]) => {
+      const raw = typeof v.content === 'string' ? v.content : JSON.stringify(v.content);
+      return `${k}: ${raw.slice(0, 300)}`;
+    })
+    .join('\n');
+
+  const extraRules = SECTION_EXTRA_RULES[key] ? `\n━━━ SECTION RULES ━━━\n${SECTION_EXTRA_RULES[key]}` : '';
+
+  return `You are a MET English teaching assistant. Regenerate ONLY the "${key}" field of an in-progress diagnosis.
+
+━━━ STUDENT ━━━
+Name: ${student?.name || 'Unknown'}
+Level: ${student?.currentLevel || student?.band || 'B1'} → Target: ${student?.targetLevel || student?.bandTarget || 'B2'}
+Exam goal: ${student?.examGoal || student?.goal || 'MET B2'}
+Context: ${student?.professionalContext || 'not provided'}
+
+━━━ CLASS EVIDENCE ━━━
+Date: ${classEvent?.date || 'not set'} | Focus: ${classEvent?.classFocus || 'not specified'}
+Transcript: ${t(ev.studentTranscript || ev.studentAnswer || 'not provided', 1500)}
+Teacher notes: ${t(ev.teacherNotes || 'none', 500)}
+Additional notes: ${t(ev.additionalNotes || 'none', 400)}
+
+━━━ EVALUATED SKILLS ━━━
+${skillLines || 'No skill data.'}
+
+━━━ TARGET PROFILE ━━━
+${tp.label || tp.profileName || 'not selected'} | Overall: ${tp.overallTarget ?? '?'} | Speaking: ${tp.speakingTarget ?? '?'} | Writing: ${tp.writingTarget ?? '?'}
+
+━━━ OTHER DIAGNOSIS SECTIONS (for context) ━━━
+${contextLines || 'No other sections yet.'}
+${extraRules}
+
+Return ONLY valid JSON with the "${key}" field. No markdown, no backticks, no other fields.`;
+}

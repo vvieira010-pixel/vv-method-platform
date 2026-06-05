@@ -854,13 +854,13 @@ function geminiModels() {
 // unavailable or rate-limited the cascade simply tries the next.
 const OPENROUTER_API = 'https://openrouter.ai/api/v1/chat/completions';
 const OPENROUTER_DEFAULT_MODELS = [
-  'deepseek/deepseek-chat-v3-0324:free',
-  'meta-llama/llama-3.3-70b-instruct:free',
-  'google/gemini-2.0-flash-exp:free',
-  'deepseek/deepseek-r1-0528:free',
-  'qwen/qwen-2.5-72b-instruct:free',
-  'mistralai/mistral-small-3.2-24b-instruct:free',
-  'meta-llama/llama-3.2-3b-instruct:free',
+  // Best → fastest. Removed: gemini-2.0-flash-exp:free (retired), mistral-small-3.2 (wrong version).
+  'deepseek/deepseek-chat-v3-0324:free',        // DeepSeek V3 — best overall quality
+  'meta-llama/llama-3.3-70b-instruct:free',     // Llama 3.3 70B — solid, reliable
+  'qwen/qwen-2.5-72b-instruct:free',            // Qwen 2.5 72B — good quality
+  'deepseek/deepseek-r1-0528:free',             // DeepSeek R1 — reasoning model, slower
+  'mistralai/mistral-small-3.1-24b-instruct:free', // Mistral Small 3.1 — decent mid-tier
+  'meta-llama/llama-3.2-3b-instruct:free',      // 3B — last resort only
 ];
 function openRouterModels() {
   const parse = s => String(s || '').split(',').map(x => x.trim()).filter(Boolean);
@@ -883,7 +883,7 @@ function multiKeys(envVal, lsKey) {
   return [...parse(envVal), ...fromLs].filter((k, i, a) => a.indexOf(k) === i);
 }
 
-export async function callAI(prompt, { max_tokens = 2048, system, temperature = 0.3 } = {}) {
+export async function callAI(prompt, { max_tokens = 2048, system, temperature = 0.3, preferredProvider = null } = {}) {
   const sys = system || 'You are a helpful MET English teaching assistant.';
   const errors = []; // collect every provider failure so the real cause is surfaced
 
@@ -1067,13 +1067,13 @@ export async function callAI(prompt, { max_tokens = 2048, system, temperature = 
     openrouterKeys.forEach((key, ki) => baseAttempts.push({ id: `openrouter:${model}#${ki}`, run: withTimeout(() => tryOpenRouter(key, model)) }));
   }
   if (groqKeys.length) {
+    // Ordered best → fastest. openai/gpt-oss-* removed — not valid Groq IDs (always 404/timeout).
     const candidateModels = [
       GROQ_MODEL,
+      'meta-llama/llama-4-maverick-17b-128e-instruct',
       'meta-llama/llama-4-scout-17b-16e-instruct',
       'llama-3.3-70b-versatile',
       'qwen/qwen3-32b',
-      'openai/gpt-oss-120b',
-      'openai/gpt-oss-20b',
       'llama-3.1-8b-instant',
     ].filter(Boolean).filter((m, i, arr) => arr.indexOf(m) === i);
     for (const model of candidateModels) {
@@ -1101,12 +1101,25 @@ export async function callAI(prompt, { max_tokens = 2048, system, temperature = 
     try { localStorage.setItem(ROUND_ROBIN_LS, String((rrIdx + 1) % pivotCount)); } catch { /* ignore */ }
   }
 
-  // ── Sticky winner overrides rotation if one provider has been consistently working ──
+  // ── preferredProvider: move all attempts for that provider to the front (overrides round-robin) ──
+  if (preferredProvider) {
+    const preferred = attempts.filter(a => a.id.startsWith(preferredProvider));
+    const rest = attempts.filter(a => !a.id.startsWith(preferredProvider));
+    if (preferred.length) attempts = [...preferred, ...rest];
+  }
+
+  // ── Sticky winner: honor only when it belongs to the preferred provider (or no preference set).
+  // This prevents a rate-limited provider from being pinned first when the caller
+  // explicitly wants a different one (e.g. preferredProvider:'gemini' should not be
+  // overridden by a cached Groq winner that is now out of quota). ──
   let lastWinner = null;
   try { lastWinner = localStorage.getItem(AI_WINNER_LS); } catch { /* storage unavailable */ }
   if (lastWinner) {
-    const idx = attempts.findIndex(a => a.id === lastWinner);
-    if (idx > 0) attempts = [attempts[idx], ...attempts.filter((_, i) => i !== idx)];
+    const winnerMatchesPref = !preferredProvider || lastWinner.startsWith(preferredProvider);
+    if (winnerMatchesPref) {
+      const idx = attempts.findIndex(a => a.id === lastWinner);
+      if (idx > 0) attempts = [attempts[idx], ...attempts.filter((_, i) => i !== idx)];
+    }
   }
 
   for (const attempt of attempts) {

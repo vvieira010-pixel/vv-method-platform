@@ -146,13 +146,12 @@ export default function HomeworkCreate({ diagnosisId, studentId, students, onNav
       const prompt = hasSelectedExercises
         ? buildSelectedExerciseFillPrompt({ student, diagnosis, selectedExercises: form.exercises })
         : buildHomeworkGeneratorPrompt({ student, diagnosis });
-      // Scale the token budget with how many exercises we're filling (large
-      // batches need a lot of output); the per-call cost is only paid on use.
+      // Budget per exercise ~250 tokens output; cap at 4000 to avoid cascade failures on smaller providers.
       const fillTokens = hasSelectedExercises
-        ? Math.min(16000, Math.max(3000, form.exercises.length * 320))
-        : 3000;
+        ? Math.min(4000, Math.max(2000, form.exercises.length * 250))
+        : 2500;
       // Higher temperature → more natural, varied wording (less "AI-template" feel).
-      const data = await callAI(prompt, { max_tokens: fillTokens, temperature: 0.8 });
+      const data = await callAI(prompt, { max_tokens: fillTokens, temperature: 0.8, preferredProvider: 'gemini' });
       const raw = data.content?.map(b => b.text || '').join('') || '';
       const parsed = parseAiJson(raw);
 
@@ -1025,66 +1024,39 @@ function normalizeTargetSeconds(targetSeconds, duration) {
 }
 
 function buildSelectedExerciseFillPrompt({ student, diagnosis, selectedExercises = [] }) {
-  const basePrompt = buildHomeworkGeneratorPrompt({ student, diagnosis });
+  const priorities = diagnosis?.sections?.priorityDiagnosis?.content || [];
+  const errors = diagnosis?.sections?.errorBankSuggestions?.content || [];
+  const vocab = diagnosis?.sections?.vocabGrammarTargets?.content?.vocabularyTargets || [];
+  const grammar = diagnosis?.sections?.vocabGrammarTargets?.content?.grammarTargets || [];
+
   const selected = selectedExercises.map((ex, idx) => {
     const meta = getExType(ex.type);
-    return `${idx + 1}. type="${ex.type}" (${meta?.label || ex.type})\nCurrent draft: ${exercisePreview(ex) || 'empty'}`;
-  }).join('\n\n');
+    return `${idx + 1}. type="${ex.type}" (${meta?.label || ex.type}) — ${exercisePreview(ex) || 'empty'}`;
+  }).join('\n');
 
-  return `${basePrompt}
+  return `You are a MET English homework assistant. Fill these ${selectedExercises.length} exercise cards with student-ready content.
 
-━━━ SELECTED EXERCISES TO FILL ━━━
-You must fill ONLY these selected exercise cards.
-Keep the same number, order, and type:
+Student: ${student?.name || 'Unknown'} | ${student?.currentLevel || 'B1'} → ${student?.targetLevel || 'B2'} | ${student?.professionalContext || ''}
 
+Priorities: ${priorities.slice(0, 2).map(p => `${p.area}: ${p.whatToImprove}`).join(' | ') || 'none'}
+Errors: ${errors.slice(0, 4).map(e => `"${e.error}" → "${e.correct}"`).join(' | ') || 'none'}
+Vocab: ${vocab.slice(0, 3).map(v => v.wordOrPhrase).join(', ') || 'none'}
+Grammar: ${grammar.slice(0, 2).map(g => `${g.area}: ${g.issue}`).join(' | ') || 'none'}
+
+━━━ EXERCISES TO FILL ━━━
 ${selected}
 
-━━━ EXTRA RULES FOR THIS RUN ━━━
-1. Keep tasks count exactly ${selectedExercises.length}.
-2. Keep each task type exactly matching the selected list and in the same order.
-3. Fill each task with concrete student-ready content.
-4. Return a JSON object with "tasks" array aligned to that selected order.
-5. Use type IDs from this app only: mcq, blank, short, speak, order, fix, flash.
+Rules: keep exact count (${selectedExercises.length}), order, and type. Ground in actual errors above. MCQ distractors must reflect this student's real mistakes. Use ${student?.professionalContext || 'specific, real'} contexts. Vary topics across items. B1–B2 level.
 
-━━━ STYLE & AUTHENTICITY (write like a real exam item-writer, not a chatbot) ━━━
-- Sound human and natural. Use real, specific situations from the student's world
-  (${student?.professionalContext || 'their job / studies / daily life'}) — patients, shifts, colleagues,
-  appointments, real places and names — NOT abstract "A person does X" textbook filler.
-- VARY everything across the ${selectedExercises.length} items: different topics, sentence openings,
-  names, and contexts. Do not reuse the same stem (e.g. avoid every MCQ starting
-  "Which sentence is correct?"). Two items should never feel like copies.
-- Ground the content in THIS student's actual errors and targets above. For MCQ,
-  make the wrong options reflect mistakes this student really makes (plausible,
-  tempting distractors) — never obvious throwaways or "None of the above".
-- Natural English only: contractions where natural, varied vocabulary, no robotic
-  or over-formal phrasing, no meta-commentary, no "Option A/B" labels inside text.
-- Match B1–B2 level: realistic but not artificially simplified.
-
-Return ONLY valid JSON in this shape:
+Return ONLY valid JSON:
 {
-  "title": "optional improved homework title",
-  "objective": "optional objective",
-  "instructions": "optional student instructions",
   "tasks": [
-    {
-      "taskNumber": 1,
-      "type": "exact selected type",
-      "title": "short task title",
-      "content": "full exercise content",
-      "options": ["for mcq only"],
-      "correct": 0,
-      "template": "for blank only",
-      "blanks": ["for blank only"],
-      "prompt": "for short/speak",
-      "rubric": "for short only",
-      "targetWords": 120,
-      "targetSeconds": 60,
-      "sentences": ["for order only"],
-      "errorText": "for fix only",
-      "correctedText": "for fix only",
-      "hint": "for fix only",
-      "pairs": [{ "term": "x", "def": "y" }]
-    }
+    { "taskNumber": 1, "type": "exact type", "title": "short title",
+      "content": "full exercise", "options": ["mcq"], "correct": 0,
+      "template": "blank", "blanks": ["blank"], "prompt": "short/speak",
+      "rubric": "short", "targetWords": 120, "targetSeconds": 60,
+      "sentences": ["order"], "errorText": "fix", "correctedText": "fix",
+      "hint": "fix", "pairs": [{"term":"x","def":"y"}] }
   ],
   "selfCheck": ["specific checks"],
   "teacherNotes": "review focus"
