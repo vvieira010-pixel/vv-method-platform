@@ -297,7 +297,9 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
         student: selectedStudent, classEvent, classEvidence: normalizedEvidence,
         targetProfile, existingSections,
       });
-      const data = await callAI(prompt, { max_tokens: 2000, preferredProvider: 'gemini' });
+      // High-output sections (feedback, homework, skill diagnosis) need more room.
+      const SECTION_BUDGETS = { studentFeedback: 3000, homeworkRecommendation: 3000, skillDiagnosis: 2800, priorityDiagnosis: 2500, errorBankSuggestions: 2200 };
+      const data = await callAI(prompt, { max_tokens: SECTION_BUDGETS[key] || 2000, preferredProvider: 'gemini' });
       const raw = data.content?.map(b => b.text || '').join('') || '';
       const parsed = parseAiJson(raw);
       const content = parsed[key] ?? parsed;
