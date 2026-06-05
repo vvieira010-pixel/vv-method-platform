@@ -1,194 +1,268 @@
 /**
  * login.jsx — V.V. Method Platform Login Screen
  *
- * Click-to-enter model: no passwords typed. The screen lists the teacher and
- * every student; tapping a name signs that person in automatically using a
- * shared internal credential, then reloads so App.jsx resolves the role
- * (teacher vs student) from the Supabase session.
- *
- * Trade-off (accepted for a small private class): anyone with the link can
- * tap in as anyone. There is no per-person secret.
+ * Standard email + password form. Each person signs in with their own
+ * Supabase Auth credentials (email + individual password). No shared secret.
  */
 
 import { useState, useEffect } from 'react';
 import { injectGlobalCSS } from '../components/shared.jsx';
 import { signInWithPassword, storeSupabaseSession, getSupabaseConfig } from '../lib/supabase-storage.js';
-import { STUDENTS } from '../data/students.jsx';
-
-// Shared internal click-login credential (matches the password set on every
-// Supabase Auth account in this project). Not a per-user secret.
-const CLICK_PW = 'vvMET-click-2026';
-const TEACHER = { email: 'vvieira010x@gmail.com', name: 'Teacher Vinicius' };
 
 const CSS = `
-  .login-root {
+  .lp-root {
     min-height: 100vh; min-height: 100dvh;
-    display: grid; grid-template-columns: 1fr 1fr;
+    display: grid; grid-template-columns: 420px 1fr;
     font-family: var(--font-ui); background: #fff;
   }
   @media (max-width: 860px) {
-    .login-root { grid-template-columns: 1fr; }
-    .login-brand-panel { display: none; }
+    .lp-root { grid-template-columns: 1fr; }
+    .lp-brand { display: none; }
   }
-  .login-brand-panel {
-    background: var(--accent-deep); display: flex; align-items: center; justify-content: center;
-    padding: clamp(32px, 5vw, 56px) clamp(28px, 6vw, 64px);
-    min-height: 100dvh; position: relative; overflow: hidden;
-  }
-  .login-brand-inner { width: 100%; max-width: 420px; display: flex; flex-direction: column; gap: 48px; }
-  .login-brand-name   { font-size: 18px; font-weight: 800; color: var(--on-dark); letter-spacing: 0.01em; }
-  .login-brand-sub    { font-size: 11px; color: rgba(241, 250, 238, 0.88); letter-spacing: 0.1em; text-transform: uppercase; margin-top: 3px; }
-  .login-brand-eyebrow {
-    font-size: 11px; font-weight: 700; color: #e8f8f8; letter-spacing: 0.1em;
-    text-transform: uppercase; margin-bottom: 14px; display: inline-block;
-    padding: 4px 8px; background: rgba(61, 166, 166, 0.28); border: 1px solid rgba(168, 218, 220, 0.55);
-  }
-  .login-brand-headline { font-size: clamp(28px, 3.2vw, 36px); font-weight: 800; color: var(--on-dark); line-height: 1.15; margin-bottom: 18px; }
-  .login-brand-copy { color: rgba(241, 250, 238, 0.9); font-size: 14px; line-height: 1.7; }
 
-  .login-form-panel {
+  /* ── Brand panel ── */
+  .lp-brand {
+    background: var(--accent-deep);
+    display: flex; flex-direction: column; justify-content: space-between;
+    padding: 48px 44px; min-height: 100dvh; position: sticky; top: 0;
+    overflow: hidden;
+  }
+  .lp-brand::before {
+    content: ''; position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 20% 80%, rgba(72,199,199,.18) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 10%, rgba(255,255,255,.06) 0%, transparent 50%);
+    pointer-events: none;
+  }
+  .lp-brand-logo { display: flex; align-items: center; gap: 12px; position: relative; }
+  .lp-brand-logo-badge {
+    width: 38px; height: 38px; border-radius: 10px;
+    background: rgba(255,255,255,.15); border: 1.5px solid rgba(255,255,255,.25);
+    display: grid; place-items: center;
+    font-size: 18px; font-weight: 900; color: #fff; letter-spacing: -.02em;
+  }
+  .lp-brand-logo-name { font-size: 15px; font-weight: 800; color: #fff; letter-spacing: .01em; line-height: 1.2; }
+  .lp-brand-logo-sub  { font-size: 11px; color: rgba(241,250,238,.7); letter-spacing: .06em; text-transform: uppercase; }
+
+  .lp-brand-hero { position: relative; }
+  .lp-brand-tag {
+    display: inline-block; margin-bottom: 18px;
+    padding: 4px 10px; border-radius: 4px;
+    background: rgba(72,199,199,.22); border: 1px solid rgba(72,199,199,.4);
+    font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #a8dce0;
+  }
+  .lp-brand-headline {
+    font-size: clamp(26px, 3vw, 34px); font-weight: 800; color: #fff;
+    line-height: 1.2; margin: 0 0 16px; letter-spacing: -.02em;
+  }
+  .lp-brand-copy { font-size: 14px; color: rgba(241,250,238,.8); line-height: 1.75; margin: 0; }
+
+  .lp-brand-features { position: relative; display: flex; flex-direction: column; gap: 10px; }
+  .lp-brand-feature { display: flex; align-items: center; gap: 10px; font-size: 13px; color: rgba(241,250,238,.75); }
+  .lp-brand-feature-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; background: rgba(72,199,199,.7); }
+
+  /* ── Sign-in panel ── */
+  .lp-signin {
     display: flex; align-items: center; justify-content: center;
-    min-height: 100dvh; padding: clamp(28px, 5vw, 56px) clamp(24px, 6vw, 56px); background: #fff;
+    min-height: 100dvh; padding: 56px clamp(24px, 6vw, 64px);
+    overflow-y: auto; background: #fff;
   }
-  .login-form-inner { width: 100%; max-width: 460px; text-align: left; }
-  .login-form-title { font-size: 28px; font-weight: 800; color: var(--text); letter-spacing: -0.01em; margin: 0 0 8px; }
-  .login-form-sub   { font-size: 14.5px; color: var(--muted); margin: 0 0 24px; line-height: 1.55; }
+  .lp-signin-inner { width: 100%; max-width: 420px; }
 
-  .login-section-label {
-    font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
-    color: var(--muted); margin: 22px 0 10px;
+  .lp-greeting { margin-bottom: 36px; }
+  .lp-greeting h1 {
+    font-size: clamp(22px, 3vw, 28px); font-weight: 800;
+    color: var(--text); margin: 0 0 8px; letter-spacing: -.02em;
   }
-  .login-role-card {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 18px 20px; border: 2px solid var(--border); border-radius: 8px;
-    cursor: pointer; background: #fff; width: 100%; text-align: left;
-    transition: border-color 0.15s, box-shadow 0.15s; font-family: var(--font-ui);
-  }
-  .login-role-card:hover:not(:disabled) { border-color: var(--primary); box-shadow: 0 0 0 3px var(--accent-soft); }
-  .login-role-card:disabled { opacity: 0.55; cursor: default; }
-  .login-role-dot { width: 9px; height: 9px; border-radius: 50%; margin-right: 10px; flex-shrink: 0; }
-  .login-role-title { font-size: 15px; font-weight: 700; color: var(--text); display: flex; align-items: center; }
-  .login-role-desc  { font-size: 12.5px; color: var(--muted); margin-top: 2px; }
-  .login-role-arrow { color: #a8b8c0; }
+  .lp-greeting p { font-size: 14px; color: var(--muted); margin: 0; line-height: 1.55; }
 
-  .login-student-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-  @media (max-width: 480px) { .login-student-grid { grid-template-columns: 1fr; } }
-  .login-student-btn {
-    display: flex; align-items: center; gap: 10px;
-    padding: 12px 14px; border: 1.5px solid var(--border); border-radius: 8px;
-    background: #fff; cursor: pointer; font-family: var(--font-ui);
-    font-size: 14px; font-weight: 600; color: var(--text); text-align: left;
-    transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+  /* Form fields */
+  .lp-field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+  .lp-label {
+    font-size: 12px; font-weight: 700; color: var(--text);
+    letter-spacing: .04em; text-transform: uppercase;
   }
-  .login-student-btn:hover:not(:disabled) { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
-  .login-student-btn:disabled { opacity: 0.5; cursor: default; }
-  .login-student-avatar {
-    width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0;
-    background: var(--accent-subtle); color: var(--accent-deep);
-    display: grid; place-items: center; font-size: 13px; font-weight: 700;
+  .lp-input {
+    width: 100%; padding: 12px 14px; box-sizing: border-box;
+    border: 1.5px solid var(--border); border-radius: 8px;
+    font-size: 15px; font-family: var(--font-ui); color: var(--text);
+    background: #fff; outline: none;
+    transition: border-color .15s, box-shadow .15s;
   }
-  .login-error { font-size: 13px; color: var(--danger); margin-top: 14px; min-height: 18px; }
+  .lp-input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(29,140,150,.12);
+  }
+  .lp-input::placeholder { color: var(--muted); }
+
+  .lp-submit {
+    width: 100%; padding: 13px; margin-top: 8px;
+    background: var(--accent-deep); color: #fff;
+    border: none; border-radius: 8px; cursor: pointer;
+    font-size: 15px; font-weight: 700; font-family: var(--font-ui);
+    letter-spacing: .01em;
+    transition: opacity .15s, box-shadow .15s, transform .1s;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .lp-submit:hover:not(:disabled) {
+    box-shadow: 0 4px 16px rgba(29,80,86,.3);
+    transform: translateY(-1px);
+  }
+  .lp-submit:active:not(:disabled) { transform: translateY(0); }
+  .lp-submit:disabled { opacity: .6; cursor: default; }
+
+  /* Spinner */
+  @keyframes lp-spin { to { transform: rotate(360deg); } }
+  .lp-spinner {
+    width: 16px; height: 16px; border-radius: 50%; flex-shrink: 0;
+    border: 2px solid rgba(255,255,255,.35); border-top-color: #fff;
+    animation: lp-spin .7s linear infinite;
+  }
+
+  .lp-error {
+    margin-top: 16px; padding: 12px 16px; border-radius: 8px;
+    background: #fff5f5; border: 1px solid #fed7d7;
+    font-size: 13px; color: var(--danger); line-height: 1.5;
+  }
+
+  .lp-footer {
+    margin-top: 32px; padding-top: 20px; border-top: 1px solid var(--border);
+    font-size: 11.5px; color: var(--muted); text-align: center; line-height: 1.6;
+  }
 `;
 
-let loginCssInjected = false;
-function injectLoginCSS() {
-  if (loginCssInjected || typeof document === 'undefined') return;
+let cssInjected = false;
+function injectCSS() {
+  if (cssInjected || typeof document === 'undefined') return;
   const s = document.createElement('style');
   s.textContent = CSS;
   document.head.appendChild(s);
-  loginCssInjected = true;
+  cssInjected = true;
 }
 
 export default function LoginScreen() {
-  const [busyEmail, setBusyEmail] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const supabaseReady = getSupabaseConfig().isConfigured;
 
   useEffect(() => {
     injectGlobalCSS();
-    injectLoginCSS();
+    injectCSS();
   }, []);
 
-  const enter = async (email) => {
-    if (busyEmail) return;
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (loading) return;
     setError('');
-    if (!supabaseReady) { setError('Sign-in is not configured. Contact your teacher.'); return; }
-    setBusyEmail(email);
+
+    if (!email.trim() || !password.trim()) {
+      setError('Please enter your email and password.');
+      return;
+    }
+    if (!supabaseReady) {
+      setError('Sign-in is not configured. Contact your teacher.');
+      return;
+    }
+
+    setLoading(true);
     try {
-      const session = await signInWithPassword(email, CLICK_PW);
+      const session = await signInWithPassword(email.trim(), password);
       storeSupabaseSession(session);
-      // Reload so App.jsx restoreSession() validates the session and resolves the role.
       window.location.reload();
     } catch (e) {
-      setError(e.message || 'Could not sign in. Try again or contact your teacher.');
-      setBusyEmail('');
+      setError('Incorrect email or password. Try again or contact your teacher.');
+      setLoading(false);
     }
   };
 
   return (
-    <div className="login-root">
+    <div className="lp-root">
+
       {/* ── Brand panel ── */}
-      <div className="login-brand-panel">
-        <div className="login-brand-inner">
+      <div className="lp-brand">
+        <div className="lp-brand-logo">
+          <div className="lp-brand-logo-badge">M</div>
           <div>
-            <div className="login-brand-name">MET Proficiency Mastery</div>
-            <div className="login-brand-sub">Teacher Vinicius</div>
-          </div>
-          <div>
-            <div className="login-brand-eyebrow">Your learning path</div>
-            <div className="login-brand-headline">Clear practice.<br />Better feedback.<br />Real progress.</div>
-            <p className="login-brand-copy">Tap your name to open your lessons, feedback, homework, and practice.</p>
+            <div className="lp-brand-logo-name">MET Proficiency Mastery</div>
+            <div className="lp-brand-logo-sub">Teacher Vinicius</div>
           </div>
         </div>
-      </div>
 
-      {/* ── Picker panel ── */}
-      <div className="login-form-panel">
-        <div className="login-form-inner">
-          <h1 className="login-form-title">Who's signing in?</h1>
-          <p className="login-form-sub">Tap your name to enter — no password needed.</p>
+        <div className="lp-brand-hero">
+          <div className="lp-brand-tag">Your learning path</div>
+          <h2 className="lp-brand-headline">Clear practice.<br />Better feedback.<br />Real progress.</h2>
+          <p className="lp-brand-copy">
+            Everything you need to reach B2 — lessons, feedback, homework, and your full progress history in one place.
+          </p>
+        </div>
 
-          {/* Teacher */}
-          <button
-            type="button"
-            className="login-role-card"
-            onClick={() => enter(TEACHER.email)}
-            disabled={Boolean(busyEmail)}
-            aria-label="Sign in as teacher"
-          >
-            <div>
-              <div className="login-role-title">
-                <span className="login-role-dot" style={{ background: 'var(--primary)' }} />
-                Teacher
-              </div>
-              <div className="login-role-desc">Vinicius — full platform access</div>
+        <div className="lp-brand-features">
+          {['AI-powered skill diagnosis', 'Personalized homework plans', 'Real-time progress tracking'].map(f => (
+            <div key={f} className="lp-brand-feature">
+              <span className="lp-brand-feature-dot" />
+              {f}
             </div>
-            <span className="login-role-arrow" aria-hidden="true">
-              {busyEmail === TEACHER.email ? 'Signing in…' : '→'}
-            </span>
-          </button>
-
-          {/* Students */}
-          <div className="login-section-label">Students</div>
-          <div className="login-student-grid">
-            {STUDENTS.map(s => (
-              <button
-                key={s.id}
-                type="button"
-                className="login-student-btn"
-                onClick={() => enter(s.email)}
-                disabled={Boolean(busyEmail)}
-                aria-label={`Sign in as ${s.name}`}
-              >
-                <span className="login-student-avatar">{(s.firstName || s.name || '?').charAt(0).toUpperCase()}</span>
-                <span>{busyEmail === s.email ? 'Signing in…' : s.firstName || s.name}</span>
-              </button>
-            ))}
-          </div>
-
-          <div className="login-error" role="alert" aria-live="polite">{error}</div>
+          ))}
         </div>
       </div>
+
+      {/* ── Sign-in panel ── */}
+      <div className="lp-signin">
+        <div className="lp-signin-inner">
+
+          <div className="lp-greeting">
+            <h1>Sign in</h1>
+            <p>Enter the email and password your teacher gave you.</p>
+          </div>
+
+          <form onSubmit={handleSubmit} noValidate>
+            <div className="lp-field">
+              <label className="lp-label" htmlFor="lp-email">Email</label>
+              <input
+                id="lp-email"
+                className="lp-input"
+                type="email"
+                autoComplete="email"
+                placeholder="your@email.com"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                disabled={loading}
+                autoFocus
+              />
+            </div>
+
+            <div className="lp-field">
+              <label className="lp-label" htmlFor="lp-password">Password</label>
+              <input
+                id="lp-password"
+                className="lp-input"
+                type="password"
+                autoComplete="current-password"
+                placeholder="••••••••••••••"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                disabled={loading}
+              />
+            </div>
+
+            <button type="submit" className="lp-submit" disabled={loading}>
+              {loading ? <><span className="lp-spinner" /> Signing in…</> : 'Sign in'}
+            </button>
+          </form>
+
+          {error && (
+            <div className="lp-error" role="alert" aria-live="polite">{error}</div>
+          )}
+
+          <div className="lp-footer">
+            MET Proficiency Mastery · Private platform<br />
+            Access is by invitation only.
+          </div>
+
+        </div>
+      </div>
+
     </div>
   );
 }

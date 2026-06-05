@@ -366,6 +366,16 @@ export async function dbList(entityKey) {
   return rows.map(r => cfg.fromRow(r, refs));
 }
 
+/** Fetch a single app record by its app id. Returns null if not found or not in DB mode. Throws on network error. */
+export async function dbGet(entityKey, appId) {
+  const ctx = getDbContext();
+  const cfg = ENTITIES[entityKey];
+  if (!ctx || !cfg || !appId) return null;
+  const refs = await getRefs(ctx);
+  const rows = await sbSelect(ctx, cfg.table, `${idFilter(cfg, appId)}&limit=1`);
+  return rows.length ? cfg.fromRow(rows[0], refs) : null;
+}
+
 function idFilter(cfg, appId) {
   if (cfg.key === 'local_id') return `local_id=eq.${encodeURIComponent(appId)}`;
   if (cfg.key === 'uuid') return `id=eq.${encodeURIComponent(appId)}`;

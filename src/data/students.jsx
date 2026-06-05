@@ -11,7 +11,8 @@ export const STUDENTS = [
     progress: 0, band: 'B1', bandTarget: 'B2',
     currentBand: 'B1', targetBand: 'B2',
     currentStep: 'diagnose', totalXp: 0,
-    email: 'anapbnurse@gmail.com', targetExam: 'MET', timezone: 'America/Sao_Paulo',
+    email: 'anapbnurse@gmail.com', password: 'vvMET-ana-2026',
+    targetExam: 'MET', timezone: 'America/Sao_Paulo',
     coursePackage: '24-session MET prep',
   },
   {
@@ -22,7 +23,8 @@ export const STUDENTS = [
     progress: 0, band: 'B1', bandTarget: 'B2',
     currentBand: 'B1', targetBand: 'B2',
     currentStep: 'diagnose', totalXp: 0,
-    email: 'cybillarodrigues@gmail.com', targetExam: 'MET', timezone: 'America/Sao_Paulo',
+    email: 'cybillarodrigues@gmail.com', password: 'vvMET-cybilla-2026',
+    targetExam: 'MET', timezone: 'America/Sao_Paulo',
     coursePackage: '24-session MET prep',
   },
   {
@@ -33,7 +35,8 @@ export const STUDENTS = [
     progress: 0, band: 'B1', bandTarget: 'B2',
     currentBand: 'B1', targetBand: 'B2',
     currentStep: 'diagnose', totalXp: 0,
-    email: 'fercoli18@hotmail.com', targetExam: 'MET', timezone: 'America/Sao_Paulo',
+    email: 'fercoli18@hotmail.com', password: 'vvMET-fernanda-2026',
+    targetExam: 'MET', timezone: 'America/Sao_Paulo',
     coursePackage: '24-session MET prep',
   },
   {
@@ -44,7 +47,8 @@ export const STUDENTS = [
     progress: 0, band: 'B1', bandTarget: 'B2',
     currentBand: 'B1', targetBand: 'B2',
     currentStep: 'diagnose', totalXp: 0,
-    email: 'helenibamorim@gmail.com', targetExam: 'MET', timezone: 'America/Sao_Paulo',
+    email: 'helenibamorim@gmail.com', password: 'vvMET-helen-2026',
+    targetExam: 'MET', timezone: 'America/Sao_Paulo',
     coursePackage: '24-session MET prep',
   },
   {
@@ -55,7 +59,8 @@ export const STUDENTS = [
     progress: 0, band: 'B1', bandTarget: 'B2',
     currentBand: 'B1', targetBand: 'B2',
     currentStep: 'diagnose', totalXp: 0,
-    email: 'klomacedo10@gmail.com', targetExam: 'MET', timezone: 'America/Sao_Paulo',
+    email: 'klomacedo10@gmail.com', password: 'vvMET-lorena-2026',
+    targetExam: 'MET', timezone: 'America/Sao_Paulo',
     coursePackage: '24-session MET prep',
   },
   {
@@ -66,7 +71,8 @@ export const STUDENTS = [
     progress: 0, band: 'B1', bandTarget: 'B2',
     currentBand: 'B1', targetBand: 'B2',
     currentStep: 'diagnose', totalXp: 0,
-    email: 'assuncao_marina@hotmail.com', targetExam: 'MET', timezone: 'America/Sao_Paulo',
+    email: 'assuncao_marina@hotmail.com', password: 'vvMET-mari-2026',
+    targetExam: 'MET', timezone: 'America/Sao_Paulo',
     coursePackage: '24-session MET prep',
   },
   {
@@ -77,7 +83,8 @@ export const STUDENTS = [
     progress: 0, band: 'B1', bandTarget: 'B2',
     currentBand: 'B1', targetBand: 'B2',
     currentStep: 'diagnose', totalXp: 0,
-    email: 'nildapreviatti@gmail.com', targetExam: 'MET', timezone: 'America/Sao_Paulo',
+    email: 'nildapreviatti@gmail.com', password: 'vvMET-nilda-2026',
+    targetExam: 'MET', timezone: 'America/Sao_Paulo',
     coursePackage: '24-session MET prep',
   },
   {
@@ -88,7 +95,8 @@ export const STUDENTS = [
     progress: 0, band: 'B1', bandTarget: 'B2',
     currentBand: 'B1', targetBand: 'B2',
     currentStep: 'diagnose', totalXp: 0,
-    email: 'rosy-penelupe@hotmail.com', targetExam: 'MET', timezone: 'America/Sao_Paulo',
+    email: 'rosy-penelupe@hotmail.com', password: 'vvMET-rosangela-2026',
+    targetExam: 'MET', timezone: 'America/Sao_Paulo',
     coursePackage: '24-session MET prep',
   },
   {
@@ -99,7 +107,8 @@ export const STUDENTS = [
     progress: 0, band: 'B1', bandTarget: 'B2',
     currentBand: 'B1', targetBand: 'B2',
     currentStep: 'diagnose', totalXp: 0,
-    email: 'sabrina_silva19@hotmail.com', targetExam: 'MET', timezone: 'America/Sao_Paulo',
+    email: 'sabrina_silva19@hotmail.com', password: 'vvMET-sabrina-2026',
+    targetExam: 'MET', timezone: 'America/Sao_Paulo',
     coursePackage: '24-session MET prep',
   },
   {
@@ -110,7 +119,8 @@ export const STUDENTS = [
     progress: 0, band: 'B1', bandTarget: 'B2',
     currentBand: 'B1', targetBand: 'B2',
     currentStep: 'diagnose', totalXp: 0,
-    email: 'tamaralopes27@gmail.com', targetExam: 'MET', timezone: 'America/Sao_Paulo',
+    email: 'tamaralopes27@gmail.com', password: 'vvMET-tamara-2026',
+    targetExam: 'MET', timezone: 'America/Sao_Paulo',
     coursePackage: '24-session MET prep',
   },
   {
@@ -121,7 +131,8 @@ export const STUDENTS = [
     progress: 0, band: 'B1', bandTarget: 'B2',
     currentBand: 'B1', targetBand: 'B2',
     currentStep: 'diagnose', totalXp: 0,
-    email: 'vreis_04@hotmail.com', targetExam: 'MET', timezone: 'America/Sao_Paulo',
+    email: 'vreis_04@hotmail.com', password: 'vvMET-vanessa-2026',
+    targetExam: 'MET', timezone: 'America/Sao_Paulo',
     coursePackage: '24-session MET prep',
   },
 ];

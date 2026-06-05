@@ -12,14 +12,20 @@ import { useState, useEffect } from 'react';
 import { Icon, Card, SectionHeader, Pill, Button, Avatar, StudentFeedbackView } from '../components/shared.jsx';
 import { callAI } from '../components/shared.jsx';
 import { parseAiJson } from '../lib/ai-helpers.js';
-import { buildDiagnosticPrompt, buildSectionRegenPrompt } from '../lib/prompts.js';
+import { 
+  buildSkillDiagnosisPrompt, 
+  buildStudentFeedbackPrompt, 
+  buildHomeworkPrompt, 
+  buildErrorBankPrompt, 
+  buildSectionRegenPrompt 
+} from '../lib/prompts.js';
 import { TARGET_PROFILE_PRESETS } from '../lib/workflow.js';
 import { STUDENT_ERROR_PROFILES, buildErrorProfileContext } from '../lib/error-bank-profiles.js';
 import {
   getStudent, getStudents,
   getTargetProfiles, saveTargetProfile, getActiveTargetProfile, setActiveTargetProfile,
   getClassEvent, getClassEvidence,
-  getDiagnoses, saveDiagnosis, updateDiagnosisCycleStage, updateClassEventStatus,
+  getDiagnoses, getDiagnosis, saveDiagnosis, updateDiagnosisCycleStage, updateClassEventStatus,
   promoteErrorToLongTerm, saveVocabularyEntry, saveProgressNote,
   getHomework,
 } from '../lib/workflow.js';
@@ -82,6 +88,7 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
   const [editText, setEditText] = useState('');
   const [regenerating, setRegenerating] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [generatingStatus, setGeneratingStatus] = useState('Initializing...');
 
   // Student selector (if no studentId passed)
   const [selectedStudentId, setSelectedStudentId] = useState(studentId || '');
@@ -90,7 +97,6 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
 
   useEffect(() => {
     getStudents().then(setAllStudents);
-    if (selectedStudentId) loadStudent(selectedStudentId);
   }, []);
 
   useEffect(() => {
@@ -107,12 +113,10 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
   }, [diagnosisId]);
 
   async function loadStudent(sid) {
-    const s = await getStudent(sid) || allStudents.find(x => x.id === sid);
-    setStudent(s);
-    const tp = await getTargetProfiles(sid);
+    const [s, tp] = await Promise.all([getStudent(sid), getTargetProfiles(sid)]);
+    setStudent(s || allStudents.find(x => x.id === sid));
     setProfiles(tp);
-    const active = tp.find(p => p.isActive) || tp[0] || null;
-    setTargetProfile(active);
+    setTargetProfile(tp.find(p => p.isActive) || tp[0] || null);
   }
 
   async function loadClassData(ceid) {
@@ -123,8 +127,7 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
 
   async function loadExistingDiagnosis(dxId) {
     if (!dxId) return;
-    const diagnoses = await getDiagnoses(); // search all — don't depend on a matching studentId
-    const dx = diagnoses.find(d => d.id === dxId);
+    const dx = await getDiagnosis(dxId);
     if (dx) {
       setSavedDiagnosis(dx);
       if (dx.studentId) {
@@ -189,39 +192,55 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
   async function handleGenerate() {
     if (!prereqOk) return;
     setStep('generating');
+    setGeneratingStatus('Analyzing class evidence...');
     setError('');
 
     try {
       const promptData = { student: selectedStudent, classEvent, classEvidence: normalizedEvidence, targetProfile };
-      let data;
-      try {
-        const prompt = buildDiagnosticPrompt(promptData);
-        // The full diagnosis is one large JSON; too small a budget truncates the
-        // later sections (e.g. Personalized Student Feedback) so they come back empty.
-        data = await callAI(prompt, { max_tokens: 16000, preferredProvider: 'gemini' });
-      } catch (firstError) {
-        if (!shouldRetryCompact(firstError)) throw firstError;
-        const compactPrompt = buildDiagnosticPrompt(promptData, { compact: true });
-        data = await callAI(compactPrompt, { max_tokens: 2600, preferredProvider: 'gemini' });
-      }
-      const raw = data.content?.map(b => b.text || '').join('') || '';
-      if (!raw.trim()) throw new Error('AI returned empty response.');
-      const parsed = parseAiJson(raw);
+      
+      setGeneratingStatus('Running parallel AI analyses (Skills, Feedback, Homework, Errors)...');
+      
+      // Use allSettled to ensure resilient partial success.
+      const results = await Promise.allSettled([
+        callAI(buildSkillDiagnosisPrompt(promptData), { max_tokens: 4000, preferredProvider: 'gemini' }),
+        callAI(buildStudentFeedbackPrompt({ ...promptData, diagnosis: { skillDiagnosis: {} } }), { max_tokens: 2500, preferredProvider: 'gemini' }),
+        callAI(buildHomeworkPrompt(promptData), { max_tokens: 3000, preferredProvider: 'gemini' }),
+        callAI(buildErrorBankPrompt(promptData), { max_tokens: 2500, preferredProvider: 'gemini' }),
+      ]);
 
-      setAiResult(parsed);
-      // Initialize sections with AI content and approval state
-      const initSections = {};
-      SECTION_KEYS.forEach(({ key }) => {
-        initSections[key] = {
-          content: parsed[key] ?? null,
-          approved: false,
-          hidden: false,
-          edited: false,
-        };
-      });
+      setGeneratingStatus('Parsing and structuring results...');
+
+      const [diagnosisRes, feedbackRes, homeworkRes, errorBankRes] = results;
+      const getResContent = (res) => {
+        if (res.status === 'fulfilled') return res.value.content?.map(b => b.text || '').join('') || '';
+        throw new Error(res.reason?.message || 'AI request failed');
+      };
+
+      const parsedDiagnosis = parseAiJson(getResContent(diagnosisRes));
+      const parsedFeedback = parseAiJson(getResContent(feedbackRes));
+      const parsedHomework = parseAiJson(getResContent(homeworkRes));
+      const parsedErrorBank = parseAiJson(getResContent(errorBankRes));
+
+      // Combine results into the sections state, marking failed ones for Regen
+      const initSections = {
+        skillDiagnosis: diagnosisRes.status === 'fulfilled' ? { content: parsedDiagnosis.skillDiagnosis ?? null, approved: false, hidden: false, edited: false } : { content: "Failed to generate — click Regen to retry.", approved: false, hidden: false, edited: false },
+        studentFeedback: feedbackRes.status === 'fulfilled' ? { content: parsedFeedback, approved: false, hidden: false, edited: false } : { content: "Failed to generate — click Regen to retry.", approved: false, hidden: false, edited: false },
+        homeworkRecommendation: homeworkRes.status === 'fulfilled' ? { content: parsedHomework, approved: false, hidden: false, edited: false } : { content: "Failed to generate — click Regen to retry.", approved: false, hidden: false, edited: false },
+        errorBankSuggestions: errorBankRes.status === 'fulfilled' ? { content: parsedErrorBank.errorBankSuggestions ?? [], approved: false, hidden: false, edited: false } : { content: [], approved: false, hidden: false, edited: false },
+        vocabGrammarTargets: errorBankRes.status === 'fulfilled' ? { content: parsedErrorBank.vocabGrammarTargets ?? null, approved: false, hidden: false, edited: false } : { content: null, approved: false, hidden: false, edited: false },
+        readinessCheck: { content: { targetProfileSelected: !!targetProfile, evaluatedSkills: evaluatedSkills, notEvaluatedSkills: [], diagnosisAllowed: true }, approved: true, hidden: false, edited: false },
+        classSummary: { content: parsedDiagnosis.classSummary || '', approved: false, hidden: false, edited: false },
+        targetScoreRelevance: { content: parsedDiagnosis.targetScoreRelevance || {}, approved: false, hidden: false, edited: false },
+        estimatedOverallScore: { content: parsedDiagnosis.estimatedOverallScore || {}, approved: false, hidden: false, edited: false },
+        priorityDiagnosis: { content: parsedDiagnosis.priorityDiagnosis || [], approved: false, hidden: false, edited: false },
+        nextClassFocus: { content: parsedDiagnosis.nextClassFocus || {}, approved: false, hidden: false, edited: false },
+        profileUpdateSuggestions: { content: parsedDiagnosis.profileUpdateSuggestions || {}, approved: false, hidden: false, edited: false },
+      };
+
+      setAiResult(parsedDiagnosis);
       setSections(initSections);
 
-      // Auto-save draft immediately so navigating away doesn't lose the result.
+      // Auto-save draft immediately
       try {
         const draft = await saveDiagnosis({
           id: savedDiagnosis?.id,
@@ -239,21 +258,23 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
             testStrategy: normalizedEvidence?.testStrategyEvidenceCount || 0,
           },
           sections: initSections,
-          aiRaw: parsed,
+          aiRaw: parsedDiagnosis,
           status: 'draft',
           cycleStage: 'needs-diagnosis',
-          classSummary: typeof parsed.classSummary === 'string' ? parsed.classSummary : '',
-          content: { overall_result: '', priorities: parsed.priorityDiagnosis || [], error_bank: parsed.errorBankSuggestions || [] },
+          classSummary: typeof parsedDiagnosis.classSummary === 'string' ? parsedDiagnosis.classSummary : '',
+          content: { 
+            overall_result: typeof parsedDiagnosis.classSummary === 'string' ? parsedDiagnosis.classSummary : '', 
+            priorities: parsedDiagnosis.priorityDiagnosis || [], 
+            error_bank: parsedErrorBank.errorBankSuggestions || [] 
+          },
         });
         if (draft) setSavedDiagnosis(draft);
       } catch (autoSaveErr) {
         console.warn('Auto-save draft failed:', autoSaveErr);
       }
 
-      // Warn if the AI returned any section empty/missing so the teacher can Regen before approving.
-      const emptyLabels = SECTION_KEYS.filter(({ key }) => isSectionEmpty(parsed[key])).map(({ label }) => label);
-      if (emptyLabels.length > 0) {
-        window.toast?.(`Some sections came back empty — use Regen: ${emptyLabels.join(', ')}`, 'warn');
+      if (results.some(r => r.status === 'rejected')) {
+        window.toast?.('Some sections failed to generate — please Regen them.', 'warn');
       }
 
       setStep('review');
@@ -293,11 +314,28 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
       const existingSections = Object.fromEntries(
         Object.entries(sections).filter(([k]) => k !== key)
       );
-      const prompt = buildSectionRegenPrompt(key, {
-        student: selectedStudent, classEvent, classEvidence: normalizedEvidence,
-        targetProfile, existingSections,
-      });
-      // High-output sections (feedback, homework, skill diagnosis) need more room.
+      
+      let prompt;
+      let promptData = { student: selectedStudent, classEvent, classEvidence: normalizedEvidence, targetProfile, existingSections };
+
+      switch (key) {
+        case 'skillDiagnosis':
+          prompt = buildSkillDiagnosisPrompt(promptData);
+          break;
+        case 'studentFeedback':
+          prompt = buildStudentFeedbackPrompt(promptData);
+          break;
+        case 'homeworkRecommendation':
+          prompt = buildHomeworkPrompt(promptData);
+          break;
+        case 'errorBankSuggestions':
+        case 'vocabGrammarTargets':
+          prompt = buildErrorBankPrompt(promptData);
+          break;
+        default:
+          prompt = buildSectionRegenPrompt(key, promptData);
+      }
+
       const SECTION_BUDGETS = { studentFeedback: 3000, homeworkRecommendation: 3000, skillDiagnosis: 2800, priorityDiagnosis: 2500, errorBankSuggestions: 2200 };
       const data = await callAI(prompt, { max_tokens: SECTION_BUDGETS[key] || 2000, preferredProvider: 'gemini' });
       const raw = data.content?.map(b => b.text || '').join('') || '';
@@ -448,7 +486,7 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
     return (
       <div style={{ maxWidth: 600, margin: '80px auto', textAlign: 'center', padding: '0 20px' }}>
         <div style={{ fontSize: 'var(--text-xl)', fontWeight: 700, color: 'var(--accent-deep)', marginBottom: 12 }}>Running Diagnosis…</div>
-        <p style={{ color: 'var(--muted)', marginBottom: 24 }}>AI is analyzing the class evidence for {selectedStudent?.firstName}. This takes 15–30 seconds.</p>
+        <p style={{ color: 'var(--muted)', marginBottom: 24 }}>{generatingStatus}</p>
         <div style={{ height: 4, background: 'var(--bg-deep)', borderRadius: 99, overflow: 'hidden' }}>
           <div style={{ height: '100%', background: 'var(--accent)', borderRadius: 99, animation: 'slideIn 2s ease-in-out infinite alternate' }} />
         </div>
@@ -926,6 +964,7 @@ function SectionContent({ sectionKey, content }) {
 
   if (sectionKey === 'vocabGrammarTargets' && typeof content === 'object') {
     const vocab = Array.isArray(content.vocabularyTargets) ? content.vocabularyTargets : [];
+    const newWords = Array.isArray(content.newHighValueWords) ? content.newHighValueWords : [];
     const grammar = Array.isArray(content.grammarTargets) ? content.grammarTargets : [];
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -937,6 +976,21 @@ function SectionContent({ sectionKey, content }) {
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
                   <strong style={{ fontSize: 'var(--text-sm)' }}>{v.wordOrPhrase}</strong>
                   {v.category && <Pill tone="muted">{v.category}</Pill>}
+                </div>
+                {v.meaning && <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-2)', marginBottom: 2 }}>{v.meaning}</div>}
+                {v.exampleSentence && <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontStyle: 'italic' }}>"{v.exampleSentence}"</div>}
+              </div>
+            ))}
+          </div>
+        )}
+        {newWords.length > 0 && (
+          <div>
+            <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--accent)', textTransform: 'uppercase', marginBottom: 8 }}>New High-Value Words</div>
+            {newWords.map((v, i) => (
+              <div key={i} style={{ padding: 10, background: 'var(--bg)', borderRadius: 'var(--radius-sm)', marginBottom: 6 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                  <strong style={{ fontSize: 'var(--text-sm)' }}>{v.word}</strong>
+                  {v.category && <Pill tone="info">{v.category}</Pill>}
                 </div>
                 {v.meaning && <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-2)', marginBottom: 2 }}>{v.meaning}</div>}
                 {v.exampleSentence && <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontStyle: 'italic' }}>"{v.exampleSentence}"</div>}
@@ -957,7 +1011,7 @@ function SectionContent({ sectionKey, content }) {
             ))}
           </div>
         )}
-        {vocab.length === 0 && grammar.length === 0 && (
+        {vocab.length === 0 && newWords.length === 0 && grammar.length === 0 && (
           <EmptySectionNote message="No vocabulary or grammar targets were generated — click Regen to retry this section." />
         )}
       </div>

@@ -7,7 +7,7 @@
  * Function signatures are unchanged — all callers already `await`.
  */
 
-import { getDbContext, dbHasEntity, dbList, dbUpsert, dbRemove } from './supabase-db.js';
+import { getDbContext, dbHasEntity, dbList, dbGet, dbUpsert, dbRemove } from './supabase-db.js';
 
 const K = {
   sessions:    'vv:sessions',
@@ -178,6 +178,18 @@ export async function clearWorkflowData() {
 /* ─── DIAGNOSES ─────────────────────────────────────────────── */
 export async function getDiagnoses(studentId) {
   return listVia('diagnoses', K.diagnoses, studentId ? (d => d.studentId === studentId) : null);
+}
+export async function getDiagnosis(id) {
+  if (!id) return null;
+  if (dbReady('diagnoses')) {
+    try {
+      const record = await dbGet('diagnoses', id);
+      if (record) return record;
+    } catch (e) {
+      console.warn('[workflow] getDiagnosis via Supabase failed, using localStorage:', e.message);
+    }
+  }
+  return loadWithIds(K.diagnoses).find(r => r.id === id) || null;
 }
 export async function getLatestDiagnosis(studentId) {
   const all = await getDiagnoses(studentId);
