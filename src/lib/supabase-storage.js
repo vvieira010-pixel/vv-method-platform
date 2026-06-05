@@ -4,22 +4,20 @@ export function normalizeSupabaseUrl(url) {
   return String(url || '').trim().replace(/\/+$/, '');
 }
 
-// Public Supabase connection. The anon/publishable key is meant to be exposed
-// in the browser (Row Level Security is the protection), so we ship known-good
-// defaults and only honour env overrides when they actually look valid. This
-// makes the app connect correctly regardless of how the host build env is set.
-const FALLBACK_SUPABASE_URL = 'https://grnzzgzqizoxfcbflnwq.supabase.co';
-const FALLBACK_SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdybnp6Z3pxaXpveGZjYmZsbndxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1ODQ0MzcsImV4cCI6MjA5NjE2MDQzN30.5T7xFRlbJ9GQX9WvhJ5o2nIDgp3T99fJeGk5wCpuVnI';
+// Public Supabase connection — HARDWIRED on purpose.
+// The anon key is meant to be exposed in the browser (Row Level Security is the
+// protection). Env vars are deliberately ignored: misconfigured Vercel env vars
+// were the root cause of the 405/401 sign-in failures, so the connection no
+// longer depends on them at all. To point at a different project, edit here.
+const SUPABASE_URL = 'https://grnzzgzqizoxfcbflnwq.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdybnp6Z3pxaXpveGZjYmZsbndxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1ODQ0MzcsImV4cCI6MjA5NjE2MDQzN30.5T7xFRlbJ9GQX9WvhJ5o2nIDgp3T99fJeGk5wCpuVnI';
 
 export function getSupabaseConfig() {
-  const envUrl = String(import.meta.env.VITE_SUPABASE_URL || '').trim();
-  const envKey = String(import.meta.env.VITE_SUPABASE_ANON_KEY || '').trim();
-  // Honour env values only when they look valid; otherwise use the defaults.
-  const url = normalizeSupabaseUrl(
-    /^https:\/\/[a-z0-9.-]+\.supabase\.co/i.test(envUrl) ? envUrl : FALLBACK_SUPABASE_URL
-  );
-  const anonKey = /^(eyJ|sb_)/.test(envKey) ? envKey : FALLBACK_SUPABASE_ANON_KEY;
-  return { url, anonKey, isConfigured: Boolean(url && anonKey) };
+  return {
+    url: normalizeSupabaseUrl(SUPABASE_URL),
+    anonKey: SUPABASE_ANON_KEY,
+    isConfigured: true,
+  };
 }
 
 export function buildSupabaseHeaders(anonKey, accessToken, extra = {}) {
