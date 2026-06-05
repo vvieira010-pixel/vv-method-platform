@@ -204,7 +204,7 @@ export default function SettingsPage({ onNavigate }) {
             <SecretInput value={openrouterKey} onChange={e => setOpenrouterKey(e.target.value)} placeholder="sk-or-…" />
             <a href="https://openrouter.ai/keys" target="_blank" rel="noopener noreferrer" style={{ fontSize: 'var(--text-xs)', color: 'var(--accent)', marginTop: 3 }}>Get a free OpenRouter key →</a>
             <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: 3, lineHeight: 1.5 }}>
-              Tries free models in order (DeepSeek V3 → Llama 3.3 70B → Gemini 2.0 Flash → DeepSeek R1 → Qwen 2.5 72B → …) until one answers.
+              Tries free models in order (DeepSeek V3 → Llama 3.3 70B → Nemotron 70B → Qwen3 235B → Nemotron Super 49B → Llama 4 Scout → DeepSeek R1 → Gemma 3 27B → Nemotron 12B → Mistral Small → Nemotron 8B → …) until one answers.
             </span>
           </Field>
           <Field label="Anthropic API Key (fallback)">
