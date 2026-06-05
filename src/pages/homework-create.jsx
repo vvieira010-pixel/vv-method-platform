@@ -1024,10 +1024,12 @@ function normalizeTargetSeconds(targetSeconds, duration) {
 }
 
 function buildSelectedExerciseFillPrompt({ student, diagnosis, selectedExercises = [] }) {
-  const priorities = diagnosis?.sections?.priorityDiagnosis?.content || [];
-  const errors = diagnosis?.sections?.errorBankSuggestions?.content || [];
-  const vocab = diagnosis?.sections?.vocabGrammarTargets?.content?.vocabularyTargets || [];
-  const grammar = diagnosis?.sections?.vocabGrammarTargets?.content?.grammarTargets || [];
+  // Coerce to array — AI section content is sometimes an object, not an array.
+  const arr = (v) => (Array.isArray(v) ? v : []);
+  const priorities = arr(diagnosis?.sections?.priorityDiagnosis?.content);
+  const errors = arr(diagnosis?.sections?.errorBankSuggestions?.content);
+  const vocab = arr(diagnosis?.sections?.vocabGrammarTargets?.content?.vocabularyTargets);
+  const grammar = arr(diagnosis?.sections?.vocabGrammarTargets?.content?.grammarTargets);
 
   const selected = selectedExercises.map((ex, idx) => {
     const meta = getExType(ex.type);
