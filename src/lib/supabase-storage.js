@@ -173,6 +173,32 @@ export async function signInWithPassword(email, password) {
 }
 
 /**
+ * Register a NEW account with email + password (Supabase signup grant).
+ * No email is sent when "Confirm email" is OFF in the project's Auth settings —
+ * in that case this returns a full session immediately. If confirmation is ON,
+ * the response carries no access_token and we surface a clear, actionable error.
+ */
+export async function signUpWithPassword(email, password) {
+  const { url, anonKey, isConfigured } = getSupabaseConfig();
+  if (!isConfigured) throw new Error('Supabase is not configured.');
+  const res = await fetch(`${url}/auth/v1/signup`, {
+    method: 'POST',
+    headers: { apikey: anonKey, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: String(email).trim(), password }),
+  });
+  if (!res.ok) {
+    let msg = `Registration failed (${res.status})`;
+    try { const j = await res.json(); msg = j.msg || j.error_description || j.error || msg; } catch {}
+    throw new Error(msg);
+  }
+  const data = await res.json();
+  if (!data?.access_token) {
+    throw new Error('Account created, but email confirmation is on. Ask your teacher to turn off "Confirm email" in Supabase, then sign in.');
+  }
+  return data; // { access_token, refresh_token, expires_in, user, ... }
+}
+
+/**
  * Send a passwordless magic-link / OTP email using PKCE flow.
  * On click, Supabase redirects to `redirectTo?code=xxx` (PKCE) or
  * `redirectTo#access_token=xxx` (implicit, legacy) — App.jsx handles both.

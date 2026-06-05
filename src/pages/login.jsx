@@ -1,13 +1,15 @@
 /**
  * login.jsx — V.V. Method Platform Login Screen
  *
- * Standard email + password form. Each person signs in with their own
- * Supabase Auth credentials (email + individual password). No shared secret.
+ * Email + password form with two modes:
+ *  - "signin"   — existing users (incl. the teacher) sign in.
+ *  - "register" — first-time students set their OWN password (self-register).
+ * Both use Supabase Auth; no shared secret, no passwords stored in the bundle.
  */
 
 import { useState, useEffect } from 'react';
 import { injectGlobalCSS } from '../components/shared.jsx';
-import { signInWithPassword, storeSupabaseSession, getSupabaseConfig } from '../lib/supabase-storage.js';
+import { signInWithPassword, signUpWithPassword, storeSupabaseSession, getSupabaseConfig } from '../lib/supabase-storage.js';
 
 const CSS = `
   .lp-root {
@@ -128,6 +130,17 @@ const CSS = `
     margin-top: 32px; padding-top: 20px; border-top: 1px solid var(--border);
     font-size: 11.5px; color: var(--muted); text-align: center; line-height: 1.6;
   }
+
+  .lp-toggle {
+    margin-top: 20px; text-align: center;
+    font-size: 13px; color: var(--muted);
+  }
+  .lp-toggle button {
+    background: none; border: none; padding: 0; margin-left: 6px;
+    font-size: 13px; font-weight: 700; color: var(--accent-deep);
+    cursor: pointer; font-family: var(--font-ui); text-decoration: underline;
+  }
+  .lp-toggle button:disabled { opacity: .5; cursor: default; }
 `;
 
 let cssInjected = false;
@@ -140,16 +153,24 @@ function injectCSS() {
 }
 
 export default function LoginScreen() {
+  const [mode, setMode] = useState('signin'); // 'signin' | 'register'
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const supabaseReady = getSupabaseConfig().isConfigured;
+  const isRegister = mode === 'register';
 
   useEffect(() => {
     injectGlobalCSS();
     injectCSS();
   }, []);
+
+  const switchMode = () => {
+    if (loading) return;
+    setError('');
+    setMode(m => (m === 'signin' ? 'register' : 'signin'));
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -164,14 +185,24 @@ export default function LoginScreen() {
       setError('Sign-in is not configured. Contact your teacher.');
       return;
     }
+    if (isRegister && password.length < 6) {
+      setError('Choose a password with at least 6 characters.');
+      return;
+    }
 
     setLoading(true);
     try {
-      const session = await signInWithPassword(email.trim(), password);
+      const session = isRegister
+        ? await signUpWithPassword(email.trim(), password)
+        : await signInWithPassword(email.trim(), password);
       storeSupabaseSession(session);
       window.location.reload();
-    } catch (e) {
-      setError('Incorrect email or password. Try again or contact your teacher.');
+    } catch (err) {
+      setError(
+        isRegister
+          ? (err.message || 'Could not create your account. Try again or contact your teacher.')
+          : 'Incorrect email or password. Try again or contact your teacher.'
+      );
       setLoading(false);
     }
   };
@@ -212,8 +243,12 @@ export default function LoginScreen() {
         <div className="lp-signin-inner">
 
           <div className="lp-greeting">
-            <h1>Sign in</h1>
-            <p>Enter the email and password your teacher gave you.</p>
+            <h1>{isRegister ? 'Create your password' : 'Sign in'}</h1>
+            <p>
+              {isRegister
+                ? 'First time here? Enter your email and choose a password to create your account.'
+                : 'Enter the email and password you use for this platform.'}
+            </p>
           </div>
 
           <form onSubmit={handleSubmit} noValidate>
@@ -238,8 +273,8 @@ export default function LoginScreen() {
                 id="lp-password"
                 className="lp-input"
                 type="password"
-                autoComplete="current-password"
-                placeholder="••••••••••••••"
+                autoComplete={isRegister ? 'new-password' : 'current-password'}
+                placeholder={isRegister ? 'Choose a password (min. 6 characters)' : '••••••••••••••'}
                 value={password}
                 onChange={e => setPassword(e.target.value)}
                 disabled={loading}
@@ -247,13 +282,22 @@ export default function LoginScreen() {
             </div>
 
             <button type="submit" className="lp-submit" disabled={loading}>
-              {loading ? <><span className="lp-spinner" /> Signing in…</> : 'Sign in'}
+              {loading
+                ? <><span className="lp-spinner" /> {isRegister ? 'Creating account…' : 'Signing in…'}</>
+                : (isRegister ? 'Create account' : 'Sign in')}
             </button>
           </form>
 
           {error && (
             <div className="lp-error" role="alert" aria-live="polite">{error}</div>
           )}
+
+          <div className="lp-toggle">
+            {isRegister ? 'Already have an account?' : 'First time here?'}
+            <button type="button" onClick={switchMode} disabled={loading}>
+              {isRegister ? 'Sign in' : 'Create your password'}
+            </button>
+          </div>
 
           <div className="lp-footer">
             MET Proficiency Mastery · Private platform<br />
