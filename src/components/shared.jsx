@@ -854,17 +854,21 @@ function geminiModels() {
 // unavailable or rate-limited the cascade simply tries the next.
 const OPENROUTER_API = 'https://openrouter.ai/api/v1/chat/completions';
 const OPENROUTER_DEFAULT_MODELS = [
-  // Best → fastest. Rate limit is PER MODEL on OpenRouter free tier — 6 independent quota buckets.
+  // Best → fastest. Rate limit is PER MODEL on OpenRouter free tier — each is an independent quota bucket.
   // Removed: gemini-2.0-flash-exp:free (retired), mistral-small-3.2 (wrong version number).
-  'deepseek/deepseek-chat-v3-0324:free',           // DeepSeek V3 — best overall quality
-  'meta-llama/llama-3.3-70b-instruct:free',        // Llama 3.3 70B — solid, reliable
-  'qwen/qwen3-235b-a22b:free',                     // Qwen3 235B MoE — very capable, newest
-  'qwen/qwen-2.5-72b-instruct:free',               // Qwen 2.5 72B — proven quality
-  'meta-llama/llama-4-scout:free',                 // Llama 4 Scout — newer, large context
-  'deepseek/deepseek-r1-0528:free',                // DeepSeek R1 — reasoning, slower
-  'google/gemma-3-27b-it:free',                    // Gemma 3 27B — Google, same family as Gemini
-  'mistralai/mistral-small-3.1-24b-instruct:free', // Mistral Small 3.1 — decent mid-tier
-  'meta-llama/llama-3.2-3b-instruct:free',         // 3B — last resort only
+  'deepseek/deepseek-chat-v3-0324:free',               // DeepSeek V3 — best overall quality
+  'meta-llama/llama-3.3-70b-instruct:free',            // Llama 3.3 70B — solid, reliable
+  'nvidia/llama-3.1-nemotron-70b-instruct:free',       // NVIDIA Nemotron 70B — high quality
+  'qwen/qwen3-235b-a22b:free',                         // Qwen3 235B MoE — very capable, newest
+  'qwen/qwen-2.5-72b-instruct:free',                   // Qwen 2.5 72B — proven quality
+  'nvidia/llama-3.3-nemotron-super-49b-v1:free',       // NVIDIA Nemotron Super 49B — strong mid
+  'meta-llama/llama-4-scout:free',                     // Llama 4 Scout — newer, large context
+  'deepseek/deepseek-r1-0528:free',                    // DeepSeek R1 — reasoning, slower
+  'google/gemma-3-27b-it:free',                        // Gemma 3 27B — Google, same family as Gemini
+  'nvidia/nemotron-nano-12b-instruct:free',            // NVIDIA Nemotron Nano 12B VL — compact
+  'mistralai/mistral-small-3.1-24b-instruct:free',     // Mistral Small 3.1 — decent mid-tier
+  'nvidia/llama-3.1-nemotron-nano-8b-v1:free',         // NVIDIA Nemotron Nano 8B — fast fallback
+  'meta-llama/llama-3.2-3b-instruct:free',             // 3B — last resort only
 ];
 function openRouterModels() {
   const parse = s => String(s || '').split(',').map(x => x.trim()).filter(Boolean);
