@@ -964,7 +964,6 @@ function SectionContent({ sectionKey, content }) {
 
   if (sectionKey === 'vocabGrammarTargets' && typeof content === 'object') {
     const vocab = Array.isArray(content.vocabularyTargets) ? content.vocabularyTargets : [];
-    const newWords = Array.isArray(content.newHighValueWords) ? content.newHighValueWords : [];
     const grammar = Array.isArray(content.grammarTargets) ? content.grammarTargets : [];
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -976,21 +975,6 @@ function SectionContent({ sectionKey, content }) {
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
                   <strong style={{ fontSize: 'var(--text-sm)' }}>{v.wordOrPhrase}</strong>
                   {v.category && <Pill tone="muted">{v.category}</Pill>}
-                </div>
-                {v.meaning && <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-2)', marginBottom: 2 }}>{v.meaning}</div>}
-                {v.exampleSentence && <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontStyle: 'italic' }}>"{v.exampleSentence}"</div>}
-              </div>
-            ))}
-          </div>
-        )}
-        {newWords.length > 0 && (
-          <div>
-            <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--accent)', textTransform: 'uppercase', marginBottom: 8 }}>New High-Value Words</div>
-            {newWords.map((v, i) => (
-              <div key={i} style={{ padding: 10, background: 'var(--bg)', borderRadius: 'var(--radius-sm)', marginBottom: 6 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                  <strong style={{ fontSize: 'var(--text-sm)' }}>{v.word}</strong>
-                  {v.category && <Pill tone="info">{v.category}</Pill>}
                 </div>
                 {v.meaning && <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-2)', marginBottom: 2 }}>{v.meaning}</div>}
                 {v.exampleSentence && <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontStyle: 'italic' }}>"{v.exampleSentence}"</div>}
@@ -1011,7 +995,7 @@ function SectionContent({ sectionKey, content }) {
             ))}
           </div>
         )}
-        {vocab.length === 0 && newWords.length === 0 && grammar.length === 0 && (
+        {vocab.length === 0 && grammar.length === 0 && (
           <EmptySectionNote message="No vocabulary or grammar targets were generated — click Regen to retry this section." />
         )}
       </div>
