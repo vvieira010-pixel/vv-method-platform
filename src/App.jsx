@@ -54,24 +54,38 @@ export default function App() {
     if (!isConfigured) return;
 
     /**
-     * Resolve auth payload from a verified Supabase user. Role is determined by
-     * whether the email matches a teacher-created roster row: if a student row
-     * claims this user, they are a student; otherwise a teacher. The claim sets
-     * students.auth_user_id so the student's RLS policies unlock their data.
+     * Resolve auth payload from a verified Supabase user. A user who claims a
+     * roster row by email is a student. Otherwise ONLY the configured teacher
+     * email(s) get the teacher role — any other account (e.g. a self-registered
+     * or mistyped email) is rejected and signed out, so self-registration can
+     * never grant teacher access.
      */
     async function resolveAuth(accessToken, sbUser) {
       const meta = sbUser?.user_metadata || {};
       const email = sbUser?.email || '';
       let claimed = null;
-      try { claimed = await claimStudentByEmail(email); } catch { /* treat as teacher */ }
+      try { claimed = await claimStudentByEmail(email); } catch { /* fall through to the gate below */ }
       if (claimed) {
         setSessionRole('student');
         await ensureProfile('student', { displayName: meta.display_name || email, studentUuid: claimed.id });
         return { role: 'student', studentId: claimed.local_id || claimed.id, email };
       }
-      setSessionRole('teacher');
-      await ensureProfile('teacher', { displayName: meta.display_name || email });
-      return { role: 'teacher', email, displayName: meta.display_name || email };
+      // No roster row claimed → only known teacher email(s) may be a teacher.
+      const teacherEmails = String(import.meta.env.VITE_TEACHER_EMAIL || 'vvieira010x@gmail.com')
+        .split(',').map(e => e.trim().toLowerCase()).filter(Boolean);
+      if (teacherEmails.includes(email.trim().toLowerCase())) {
+        setSessionRole('teacher');
+        await ensureProfile('teacher', { displayName: meta.display_name || email });
+        return { role: 'teacher', email, displayName: meta.display_name || email };
+      }
+      // Unauthorized: not a roster student and not the teacher. Clear the session so the
+      // user returns to the login screen with a notice instead of landing in the teacher app.
+      try {
+        localStorage.setItem('vv:auth_notice', "This email isn't set up for access yet. Ask your teacher to add you to the roster, then register again.");
+      } catch { /* storage unavailable */ }
+      clearStoredSupabaseSession();
+      setSessionRole('');
+      return null;
     }
 
     // ── PKCE flow: ?code= in query string (modern Supabase default) ──

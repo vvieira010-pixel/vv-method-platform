@@ -164,6 +164,11 @@ export default function LoginScreen() {
   useEffect(() => {
     injectGlobalCSS();
     injectCSS();
+    // If resolveAuth rejected an unauthorized account, show why on return to login.
+    try {
+      const notice = localStorage.getItem('vv:auth_notice');
+      if (notice) { setError(notice); localStorage.removeItem('vv:auth_notice'); }
+    } catch { /* storage unavailable */ }
   }, []);
 
   const switchMode = () => {
