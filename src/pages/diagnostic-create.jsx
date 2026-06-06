@@ -813,7 +813,15 @@ function KeyValueCards({ content }) {
 }
 
 function SectionContent({ sectionKey, content }) {
-  if (!content) return <p style={{ color: 'var(--muted)', fontStyle: 'italic' }}>No content generated.</p>;
+  if (!content) return <EmptySectionNote message="Not generated — click Regen to retry this section." />;
+
+  if (typeof content === 'object' && !Array.isArray(content) && Object.keys(content).length === 0) {
+    return <EmptySectionNote message="Not generated — click Regen to retry this section." />;
+  }
+
+  if (typeof content === 'string' && content.trim() === '') {
+    return <EmptySectionNote message="Not generated — click Regen to retry this section." />;
+  }
 
   if (sectionKey === 'classSummary') {
     return <p style={{ lineHeight: 1.7, fontSize: 'var(--text-sm)' }}>{String(content)}</p>;

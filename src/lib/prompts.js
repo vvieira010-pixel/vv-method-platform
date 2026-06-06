@@ -182,6 +182,12 @@ ${SHARED_MET_DATA}
 8. priorityDiagnosis: 3–5 ranked items. urgency "Critical" = blocks the target; "Developing" = active growth area; "Strength" = cite one genuine strength. Every "evidence" MUST be a real quote from the evidence above — never invent. Base priorities only on evaluated skills.
 9. classSummary, nextClassFocus, targetScoreRelevance, profileUpdateSuggestions: base ONLY on what was actually evaluated — never fabricate progress for an unevaluated skill. If almost nothing was evaluated, say so plainly.
 10. profileUpdateSuggestions.progressNote is shown directly to the STUDENT — keep it plain, specific, and honest (no empty praise, no jargon).
+11. REQUIRED OUTPUT — You MUST always return substantive content for every one of these fields, even when evidence is limited (write "limited evidence — [your best estimate]" rather than leaving blank):
+    - classSummary: at least 1 sentence. Never return "".
+    - nextClassFocus: all four keys (primaryFocus, suggestedActivities, warmUp, successCriteria). Never return {}.
+    - targetScoreRelevance: all four keys (gapToTarget, prioritySkillForTarget, estimatedSessionsToTarget, onTrack). Never return {}.
+    - profileUpdateSuggestions: all four keys (progressNote, suggestedLevelChange, recurringErrorsToTrack, masteredItems). Never return {}.
+    - estimatedOverallScore: all three keys (estimate, confidence, note). Never return {}.
 
 RETURN ONLY VALID JSON:
 {
