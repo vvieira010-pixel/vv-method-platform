@@ -6,7 +6,7 @@ import { useState, useEffect } from 'react';
 import { Icon, Card, SectionHeader, Button, Pill } from '../components/shared.jsx';
 import { callAI } from '../components/shared.jsx';
 import { parseAiJson } from '../lib/ai-helpers.js';
-import { buildHomeworkGeneratorPrompt, buildExerciseListPrompt } from '../lib/prompts.js';
+import { buildHomeworkGeneratorPrompt, buildExerciseListPrompt, buildHomeworkGroupPrompt } from '../lib/prompts.js';
 import { getDiagnoses, getStudent, saveHomework, updateClassEventStatus } from '../lib/workflow.js';
 import { EX_TYPES, createExercise, exercisePreview, getExType } from '../lib/exercise-types.js';
 import { ExerciseEditor, ExerciseTypePicker, ExTypeBadge } from '../components/exercise-editor.jsx';
@@ -14,6 +14,16 @@ import { getExerciseModules, getModuleExercises, bankMeta } from '../lib/exercis
 import { getLibraryExercises, saveExerciseToLibrary, deleteLibraryExercise, incrementUsage } from '../lib/exercise-library.js';
 
 const SKILL_TYPES = ['writing', 'speaking', 'grammar', 'vocabulary', 'reading', 'listening', 'mixed'];
+
+// Skill groups available for per-group generation
+const SKILL_GROUPS = [
+  { key: 'speaking',   label: 'Speaking',   icon: '🎙' },
+  { key: 'writing',    label: 'Writing',    icon: '✍️' },
+  { key: 'grammar',    label: 'Grammar',    icon: '📐' },
+  { key: 'vocabulary', label: 'Vocabulary', icon: '📚' },
+  { key: 'reading',    label: 'Reading',    icon: '📖' },
+  { key: 'listening',  label: 'Listening',  icon: '🎧' },
+];
 
 export default function HomeworkCreate({ diagnosisId, studentId, students, onNavigate }) {
   const [diagnosis, setDiagnosis] = useState(null);
@@ -27,6 +37,10 @@ export default function HomeworkCreate({ diagnosisId, studentId, students, onNav
   const [showTypePicker, setShowTypePicker] = useState(false);
   const [expandedEx, setExpandedEx] = useState(null);
   const [showLibrary, setShowLibrary] = useState(false);
+  // Per-skill-group generation config: { speaking: 5, grammar: 4, ... }
+  const [groupGenConfig, setGroupGenConfig] = useState({});
+  const [showGroupGen, setShowGroupGen] = useState(false);
+  const [groupGenStatus, setGroupGenStatus] = useState('');
   // Saved-exercise library (Supabase or localStorage). Reloaded when libVersion bumps.
   const [libVersion, setLibVersion] = useState(0);
   const [libraryExercises, setLibraryExercises] = useState([]);
@@ -133,6 +147,71 @@ export default function HomeworkCreate({ diagnosisId, studentId, students, onNav
   function addCheck() { setForm(f => ({ ...f, selfCheck: [...f.selfCheck, ''] })); }
   function updateCheck(i, v) { setForm(f => ({ ...f, selfCheck: f.selfCheck.map((t, idx) => idx === i ? v : t) })); }
   function removeCheck(i) { setForm(f => ({ ...f, selfCheck: f.selfCheck.filter((_, idx) => idx !== i) })); }
+
+  /* ── Per-skill-group generation ── */
+  async function handleGenerateByGroups() {
+    const selectedGroups = Object.entries(groupGenConfig).filter(([, count]) => count > 0);
+    if (selectedGroups.length === 0) {
+      window.toast?.('Select at least one skill group.', 'warn');
+      return;
+    }
+    setGenerating(true);
+    setGroupGenStatus('');
+    const allGenerated = [];
+    for (const [group, count] of selectedGroups) {
+      setGroupGenStatus(`Generating ${group} exercises (${selectedGroups.indexOf(selectedGroups.find(([g]) => g === group)) + 1}/${selectedGroups.length})…`);
+      try {
+        const prompt = buildHomeworkGroupPrompt({ student, diagnosis, group, count: Number(count) });
+        const data = await callAI(prompt, { max_tokens: 2500, temperature: 0.8, preferredProvider: 'gemini' });
+        const raw = data?.content?.map(b => b.text || '').join('') || '';
+        const parsed = parseAiJson(raw);
+        const items = Array.isArray(parsed) ? parsed : (Array.isArray(parsed?.exercises) ? parsed.exercises : []);
+        const exercises = items.map(ex => {
+          const newEx = createExercise(mapAiType(ex.type));
+          newEx.skillGroup = group;
+          if (newEx.type === 'mcq') {
+            newEx.question = ex.content || ex.question || '';
+            newEx.options = Array.isArray(ex.options) ? normalizeMcqOptions(ex.options) : ['', '', '', ''];
+            newEx.correct = normalizeCorrectIndex(ex.correct, 4);
+          } else if (newEx.type === 'blank') {
+            newEx.template = ex.content || '';
+            newEx.blanks = normalizeBlankAnswers(ex.blanks, ex.content);
+          } else if (newEx.type === 'order') {
+            newEx.sentences = normalizeSentences(ex.sentences, ex.content);
+          } else if (newEx.type === 'fix') {
+            newEx.errorText = ex.content || ex.errorText || '';
+            newEx.correctedText = ex.correctedText || '';
+            newEx.hint = ex.hint || '';
+          } else if (newEx.type === 'flash') {
+            newEx.pairs = normalizeFlashPairs(ex.pairs);
+          } else if (newEx.type === 'speak') {
+            newEx.prompt = ex.content || ex.question || '';
+            newEx.targetSeconds = normalizeTargetSeconds(ex.targetSeconds, null);
+          } else if (newEx.type === 'listen') {
+            newEx.audioText = ex.audioText || ex.content || '';
+            newEx.question = ex.question || '';
+            newEx.options = normalizeMcqOptions(ex.options);
+            newEx.correct = normalizeCorrectIndex(ex.correct, 4);
+            newEx.explanation = ex.explanation || '';
+          } else {
+            newEx.prompt = ex.content || ex.question || '';
+          }
+          return newEx;
+        });
+        allGenerated.push(...exercises);
+        window.toast?.(`${group.charAt(0).toUpperCase() + group.slice(1)}: ${exercises.length} exercises generated.`, 'ok');
+      } catch (e) {
+        window.toast?.(`${group} exercises failed: ${e.message}`, 'warn');
+      }
+    }
+    if (allGenerated.length > 0) {
+      setForm(f => ({ ...f, exercises: [...f.exercises, ...allGenerated] }));
+    }
+    setGroupGenStatus('');
+    setShowGroupGen(false);
+    setGenerating(false);
+    window.toast?.(`${allGenerated.length} exercises added across ${selectedGroups.length} skill groups.`, 'ok');
+  }
 
   /* ── AI generation ── */
   async function handleAiGenerate() {
@@ -348,7 +427,57 @@ export default function HomeworkCreate({ diagnosisId, studentId, students, onNav
         >
           <Icon.refresh size={12} /> {loadingOptions ? 'Loading…' : 'Generate Exercise Options'}
         </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setShowGroupGen(g => !g)}
+          disabled={generating}
+          title="Generate exercises per skill group — each group runs a separate AI call"
+          style={showGroupGen ? { background: 'var(--accent-subtle)', color: 'var(--accent-deep)', borderColor: 'var(--accent-soft)' } : {}}
+        >
+          <Icon.bolt size={12} /> Generate by Skill Group
+        </Button>
       </div>
+
+      {/* ── Per-skill-group generator panel ── */}
+      {showGroupGen && (
+        <div style={{ marginBottom: 16, padding: 16, border: '1px solid var(--accent-soft)', borderRadius: 'var(--radius-md)', background: 'var(--accent-subtle)' }}>
+          <div style={{ fontWeight: 700, fontSize: 'var(--text-sm)', color: 'var(--accent-deep)', marginBottom: 10 }}>
+            Select skill groups — each gets its own AI generation call
+          </div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginBottom: 14 }}>
+            {SKILL_GROUPS.map(({ key, label, icon }) => {
+              const isOn = (groupGenConfig[key] || 0) > 0;
+              return (
+                <div key={key} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 10px', border: `1px solid ${isOn ? 'var(--accent)' : 'var(--border)'}`, borderRadius: 'var(--radius-sm)', background: isOn ? 'var(--accent-soft)' : 'var(--surface)', cursor: 'pointer' }}
+                  onClick={() => setGroupGenConfig(c => ({ ...c, [key]: isOn ? 0 : 5 }))}>
+                  <span>{icon}</span>
+                  <span style={{ fontSize: 'var(--text-sm)', fontWeight: isOn ? 700 : 400, color: isOn ? 'var(--accent-deep)' : 'var(--text)' }}>{label}</span>
+                  {isOn && (
+                    <input
+                      type="number"
+                      min={1} max={10}
+                      value={groupGenConfig[key] || 5}
+                      onClick={e => e.stopPropagation()}
+                      onChange={e => setGroupGenConfig(c => ({ ...c, [key]: Math.max(1, Math.min(10, Number(e.target.value) || 5)) }))}
+                      style={{ width: 38, fontSize: 'var(--text-sm)', border: '1px solid var(--border)', borderRadius: 4, padding: '2px 4px', background: 'var(--surface)', textAlign: 'center' }}
+                    />
+                  )}
+                </div>
+              );
+            })}
+          </div>
+          {groupGenStatus && (
+            <p style={{ fontSize: 'var(--text-sm)', color: 'var(--accent-deep)', marginBottom: 10 }}>{groupGenStatus}</p>
+          )}
+          <div style={{ display: 'flex', gap: 8 }}>
+            <Button variant="primary" size="sm" onClick={handleGenerateByGroups} disabled={generating || Object.values(groupGenConfig).every(v => !v)}>
+              {generating ? 'Generating…' : `Generate ${Object.values(groupGenConfig).filter(Boolean).reduce((a, b) => a + b, 0)} exercises`}
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => { setShowGroupGen(false); setGroupGenConfig({}); }}>Cancel</Button>
+          </div>
+        </div>
+      )}
 
       {/* ── Exercise Library Picker ── */}
       {showLibrary && (

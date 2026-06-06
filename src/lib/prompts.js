@@ -454,6 +454,81 @@ Return ONLY valid JSON:
 };
 
 /* ══════════════════════════════════════════════════════════════
+   HOMEWORK GROUP PROMPT — per-skill-group exercise generation.
+   Called once per selected skill group (speaking, grammar, etc.)
+   so each call is small and cascade-resilient.
+══════════════════════════════════════════════════════════════ */
+export const buildHomeworkGroupPrompt = ({ student, diagnosis, group, count = 5 }) => {
+  const arr = (v) => (Array.isArray(v) ? v : []);
+  const priorities = arr(diagnosis?.sections?.priorityDiagnosis?.content);
+  const errors     = arr(diagnosis?.sections?.errorBankSuggestions?.content);
+  const vocab      = arr(diagnosis?.sections?.vocabGrammarTargets?.content?.vocabularyTargets);
+  const grammar    = arr(diagnosis?.sections?.vocabGrammarTargets?.content?.grammarTargets);
+  const skillDx    = diagnosis?.sections?.skillDiagnosis?.content || {};
+
+  // Pull skill-specific weaknesses when available
+  const skillData  = skillDx[group] || {};
+  const weaknesses = arr(skillData.weaknesses).slice(0, 4);
+
+  // Map group key to recommended exercise types
+  const TYPE_HINTS = {
+    speaking:    'speak, short',
+    writing:     'short, fix',
+    grammar:     'fix, blank, mcq',
+    vocabulary:  'flash, blank, mcq',
+    reading:     'mcq, order, short',
+    listening:   'listen, mcq',
+    mixed:       'mcq, blank, short, fix',
+  };
+  const typeHint = TYPE_HINTS[group] || 'mcq, blank, short';
+  const groupLabel = group.charAt(0).toUpperCase() + group.slice(1);
+
+  return `You are a MET English exam preparation expert. Generate exactly ${count} structured exercises targeting ${groupLabel}.
+
+━━━ STUDENT ━━━
+${student?.name || 'Student'} | ${student?.currentLevel || 'B1'} → ${student?.targetLevel || 'B2'} | ${student?.professionalContext || 'general professional context'}
+
+━━━ SKILL GROUP: ${groupLabel.toUpperCase()} ━━━
+${weaknesses.length ? weaknesses.map(w => `- ${w}`).join('\n') : `Target: B1→B2 ${groupLabel} skills relevant to MET exam`}
+
+━━━ DIAGNOSIS PRIORITIES ━━━
+${priorities.slice(0, 2).map(p => `- [${p.urgency}] ${p.area}: ${p.whatToImprove}`).join('\n') || 'None recorded.'}
+
+━━━ ERRORS TO TARGET ━━━
+${errors.filter(e => (e.category || '').toLowerCase().includes(group) || group === 'mixed').slice(0, 4).map(e => `- "${e.error}" → "${e.correct}" (${e.category})`).join('\n') || errors.slice(0, 3).map(e => `- "${e.error}" → "${e.correct}" (${e.category})`).join('\n') || 'None recorded.'}
+
+━━━ VOCABULARY / GRAMMAR TARGETS ━━━
+${group === 'vocabulary' || group === 'mixed' ? vocab.slice(0, 4).map(v => `- ${v.wordOrPhrase}: ${v.meaning || ''}`).join('\n') || 'None.' : ''}
+${group === 'grammar' || group === 'mixed' ? grammar.slice(0, 3).map(g => `- ${g.area}: ${g.issue}`).join('\n') || 'None.' : ''}
+
+━━━ RULES ━━━
+- Generate exactly ${count} exercises. Every exercise is FULLY WRITTEN — student opens and starts immediately.
+- Recommended types: ${typeHint}. Mix them for variety. Use the 8 structured types: mcq, blank, short, speak, order, fix, flash, listen.
+- Use the student's professional context (${student?.professionalContext || 'healthcare / nursing'}) — not generic filler.
+- B1–B2 level. Each exercise should take 3–5 minutes.
+
+Return ONLY valid JSON — an array of ${count} exercise objects:
+[
+  {
+    "type": "mcq|blank|short|speak|order|fix|flash|listen",
+    "skillGroup": "${group}",
+    "content": "FULLY WRITTEN exercise content — the actual sentences, questions, or scenario",
+    "options": ["A", "B", "C", "D"],
+    "correct": 0,
+    "blanks": ["answer1"],
+    "sentences": ["sentence 1", "sentence 2"],
+    "correctedText": "corrected version (for fix type)",
+    "hint": "optional hint",
+    "pairs": [{"term": "word", "def": "meaning"}],
+    "audioText": "text to read aloud (for listen type)",
+    "question": "the question",
+    "explanation": "why this answer is correct"
+  }
+]
+Include only the fields relevant to the exercise type. The "content" field always contains the main exercise text.`;
+};
+
+/* ══════════════════════════════════════════════════════════════
    EXERCISE LIST PROMPT — used by homework-create.jsx
    Generate a menu of exercise options for the teacher to pick from.
    Restored: was dropped during the module-prompt refactor.

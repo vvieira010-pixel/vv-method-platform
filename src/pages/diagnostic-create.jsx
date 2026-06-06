@@ -224,36 +224,44 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
     try {
       const promptData = { student: selectedStudent, classEvent, classEvidence: normalizedEvidence, targetProfile };
       
-      setGeneratingStatus('Running parallel AI analyses (Skills, Feedback, Homework, Errors)...');
-      
-      // Use allSettled to ensure resilient partial success.
-      const results = await Promise.allSettled([
-        callAI(buildSkillDiagnosisPrompt(promptData), { max_tokens: 6000, preferredProvider: 'gemini' }),
-        callAI(buildStudentFeedbackPrompt({ ...promptData, diagnosis: { skillDiagnosis: {} } }), { max_tokens: 2500, preferredProvider: 'gemini' }),
-        callAI(buildHomeworkPrompt(promptData), { max_tokens: 3000, preferredProvider: 'gemini' }),
-        callAI(buildErrorBankPrompt(promptData), { max_tokens: 2500, preferredProvider: 'gemini' }),
-      ]);
+      // Sequential generation: diagnosis first, then informed layers.
+      const getContent = (res) => (res?.content?.map(b => b.text || '').join('') || '');
 
-      setGeneratingStatus('Parsing and structuring results...');
+      // Phase 1: Core skill diagnosis
+      setGeneratingStatus('Step 1/4 — Generating skill diagnosis…');
+      const diagnosisRaw = await callAI(buildSkillDiagnosisPrompt(promptData), { max_tokens: 6000, preferredProvider: 'gemini' }).catch(() => null);
+      const parsedDiagnosis = diagnosisRaw ? parseAiJson(getContent(diagnosisRaw)) : {};
 
-      const [diagnosisRes, feedbackRes, homeworkRes, errorBankRes] = results;
-      const getResContent = (res) => {
-        if (res.status === 'fulfilled') return res.value.content?.map(b => b.text || '').join('') || '';
-        throw new Error(res.reason?.message || 'AI request failed');
-      };
+      // Phase 2: Error bank + vocab targets (informed by the diagnosis)
+      setGeneratingStatus('Step 2/4 — Analysing errors and vocabulary targets…');
+      const errorBankRaw = await callAI(buildErrorBankPrompt({ ...promptData, diagnosis: parsedDiagnosis }), { max_tokens: 2500, preferredProvider: 'gemini' }).catch(() => null);
+      const parsedErrorBank = errorBankRaw ? parseAiJson(getContent(errorBankRaw)) : {};
 
-      const parsedDiagnosis = parseAiJson(getResContent(diagnosisRes));
-      const parsedFeedback = parseAiJson(getResContent(feedbackRes));
-      const parsedHomework = parseAiJson(getResContent(homeworkRes));
-      const parsedErrorBank = parseAiJson(getResContent(errorBankRes));
+      // Phase 3: Student feedback (informed by the full diagnosis)
+      setGeneratingStatus('Step 3/4 — Writing student feedback…');
+      const feedbackRaw = await callAI(buildStudentFeedbackPrompt({ ...promptData, diagnosis: parsedDiagnosis }), { max_tokens: 2500, preferredProvider: 'gemini' }).catch(() => null);
+      const parsedFeedback = feedbackRaw ? parseAiJson(getContent(feedbackRaw)) : {};
+
+      // Phase 4: Homework recommendation (informed by diagnosis + errors + vocab)
+      setGeneratingStatus('Step 4/4 — Building homework recommendation…');
+      const homeworkRaw = await callAI(buildHomeworkPrompt({
+        ...promptData,
+        diagnosis: parsedDiagnosis,
+        errorBank: parsedErrorBank.errorBankSuggestions,
+        vocabTargets: parsedErrorBank.vocabGrammarTargets,
+      }), { max_tokens: 3000, preferredProvider: 'gemini' }).catch(() => null);
+      const parsedHomework = homeworkRaw ? parseAiJson(getContent(homeworkRaw)) : {};
+
+      setGeneratingStatus('Structuring results…');
 
       // Combine results into the sections state, marking failed ones for Regen
+      const FAILED = { content: "Failed to generate — click Regen to retry.", approved: false, hidden: false, edited: false };
       const initSections = {
-        skillDiagnosis: diagnosisRes.status === 'fulfilled' ? { content: parsedDiagnosis.skillDiagnosis ?? null, approved: false, hidden: false, edited: false } : { content: "Failed to generate — click Regen to retry.", approved: false, hidden: false, edited: false },
-        studentFeedback: feedbackRes.status === 'fulfilled' ? { content: parsedFeedback, approved: false, hidden: false, edited: false } : { content: "Failed to generate — click Regen to retry.", approved: false, hidden: false, edited: false },
-        homeworkRecommendation: homeworkRes.status === 'fulfilled' ? { content: parsedHomework, approved: false, hidden: false, edited: false } : { content: "Failed to generate — click Regen to retry.", approved: false, hidden: false, edited: false },
-        errorBankSuggestions: errorBankRes.status === 'fulfilled' ? { content: parsedErrorBank.errorBankSuggestions ?? [], approved: false, hidden: false, edited: false } : { content: [], approved: false, hidden: false, edited: false },
-        vocabGrammarTargets: errorBankRes.status === 'fulfilled' ? { content: parsedErrorBank.vocabGrammarTargets ?? null, approved: false, hidden: false, edited: false } : { content: null, approved: false, hidden: false, edited: false },
+        skillDiagnosis:        diagnosisRaw  ? { content: parsedDiagnosis.skillDiagnosis ?? null,              approved: false, hidden: false, edited: false } : FAILED,
+        studentFeedback:       feedbackRaw   ? { content: parsedFeedback,                                       approved: false, hidden: false, edited: false } : FAILED,
+        homeworkRecommendation:homeworkRaw   ? { content: parsedHomework,                                       approved: false, hidden: false, edited: false } : FAILED,
+        errorBankSuggestions:  errorBankRaw  ? { content: parsedErrorBank.errorBankSuggestions ?? [],           approved: false, hidden: false, edited: false } : { content: [], approved: false, hidden: false, edited: false },
+        vocabGrammarTargets:   errorBankRaw  ? { content: parsedErrorBank.vocabGrammarTargets ?? null,          approved: false, hidden: false, edited: false } : { content: null, approved: false, hidden: false, edited: false },
         readinessCheck: { content: { targetProfileSelected: !!targetProfile, evaluatedSkills: evaluatedSkills, notEvaluatedSkills: [], diagnosisAllowed: true }, approved: true, hidden: false, edited: false },
         classSummary: { content: parsedDiagnosis.classSummary || '', approved: false, hidden: false, edited: false },
         targetScoreRelevance: { content: parsedDiagnosis.targetScoreRelevance || {}, approved: false, hidden: false, edited: false },

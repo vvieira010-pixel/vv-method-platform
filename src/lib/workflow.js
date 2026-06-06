@@ -834,15 +834,6 @@ export async function getStudents() {
 export async function getStudent(id) {
   return (await getStudents()).find(s => s.id === id) || null;
 }
-export async function getStudentByEmailPassword(email, password) {
-  const normalizedEmail = String(email || '').trim().toLowerCase();
-  const normalizedPassword = String(password || '').trim();
-  if (!normalizedEmail || !normalizedPassword) return null;
-  return load(K.studentsCrud).find(s =>
-    String(s.email || '').trim().toLowerCase() === normalizedEmail &&
-    String(s.password || '').trim() === normalizedPassword
-  ) || null;
-}
 export async function saveStudent(data) {
   const all = load(K.studentsCrud);
   const now = new Date().toISOString();
@@ -853,7 +844,6 @@ export async function saveStudent(data) {
     name: data.name || '',
     firstName: data.firstName || (data.name || '').split(' ')[0] || '',
     email: data.email || '',
-    password: data.password ?? previous.password ?? '',
     currentLevel: data.currentLevel || data.band || 'B1',
     targetLevel: data.targetLevel || data.bandTarget || 'B2',
     examGoal: data.examGoal || data.goal || 'Pass MET B2',
@@ -961,8 +951,9 @@ export async function seedStudentsIfEmpty(STUDENTS) {
 
 /* ─── TARGET PROFILES ────────────────────────────────────────── */
 export const TARGET_PROFILE_PRESETS = {
-  endorsement: { profileName: 'endorsement', label: 'Endorsement Minimum',   overallTarget: 55, speakingTarget: 55, writingTarget: null, readingTarget: null, listeningTarget: null },
-  visascreen:  { profileName: 'visascreen',  label: 'VisaScreen / Work Visa', overallTarget: 58, speakingTarget: 59, writingTarget: null, readingTarget: null, listeningTarget: null },
+  endorsement: { profileName: 'endorsement', label: 'Endorsement Minimum',              overallTarget: 55, speakingTarget: 55, writingTarget: null, readingTarget: null, listeningTarget: null },
+  visascreen:  { profileName: 'visascreen',  label: 'VisaScreen / Work Visa',            overallTarget: 58, speakingTarget: 59, writingTarget: null, readingTarget: null, listeningTarget: null },
+  healthcare:  { profileName: 'healthcare',  label: 'Healthcare Professional Preparation', overallTarget: 58, speakingTarget: 59, writingTarget: null, readingTarget: null, listeningTarget: null },
 };
 
 export async function getTargetProfiles(studentId) {

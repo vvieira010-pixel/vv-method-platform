@@ -530,7 +530,7 @@ export function StudentFeedbackView({ feedback }) {
       {/* Opening card */}
       {feedback.classFocus && (
         <div style={card}>
-          <div style={{ ...cardTitle, color: 'var(--primary)' }}>Your class focus</div>
+          <div style={{ ...cardTitle, color: 'var(--primary)' }}>Current focus</div>
           <p style={{ fontSize: 'var(--text-md)', lineHeight: 1.75, color: 'var(--text)', margin: 0 }}>{feedback.classFocus}</p>
         </div>
       )}
@@ -538,7 +538,7 @@ export function StudentFeedbackView({ feedback }) {
       {/* Strengths card */}
       {wins.length > 0 && (
         <div style={card}>
-          <div style={{ ...cardTitle, color: 'var(--success)' }}><Icon.check size={13} /> What you did well</div>
+          <div style={{ ...cardTitle, color: 'var(--success)' }}><Icon.check size={13} /> What is getting stronger</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             {wins.map((w, i) => (
               <div key={i} style={{ paddingLeft: 14, borderLeft: '3px solid var(--success)' }}>
@@ -562,7 +562,7 @@ export function StudentFeedbackView({ feedback }) {
       {/* Focus areas card */}
       {fixes.length > 0 && (
         <div style={card}>
-          <div style={{ ...cardTitle, color: 'var(--warning-text)' }}>What to improve</div>
+          <div style={{ ...cardTitle, color: 'var(--warning-text)' }}>Try this next</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             {fixes.map((f, i) => (
               <div key={i} style={{ paddingLeft: 14, borderLeft: '3px solid var(--warning-text)' }}>
@@ -590,7 +590,7 @@ export function StudentFeedbackView({ feedback }) {
       {/* Closing card */}
       {feedback.finalNote && (
         <div style={card}>
-          <div style={{ ...cardTitle, color: 'var(--muted)' }}>A note to you</div>
+          <div style={{ ...cardTitle, color: 'var(--muted)' }}>A note from your teacher</div>
           <p style={{ fontSize: 'var(--text-md)', lineHeight: 1.75, margin: 0, color: 'var(--text-2)' }}>
             {feedback.finalNote}
           </p>
