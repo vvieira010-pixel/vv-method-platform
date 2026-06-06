@@ -36,6 +36,7 @@ const SECTION_KEYS = [
   { key: 'readinessCheck',         label: 'Diagnostic Readiness Check',    studentFacing: false },
   { key: 'classSummary',           label: 'Class Summary',                 studentFacing: false },
   { key: 'targetScoreRelevance',   label: 'Target Score Relevance',        studentFacing: false },
+  { key: 'estimatedOverallScore',  label: 'Estimated Overall Score',       studentFacing: false },
   { key: 'skillDiagnosis',         label: 'Skill Diagnosis',               studentFacing: false },
   { key: 'errorBankSuggestions',   label: 'Error Bank Suggestions',        studentFacing: false },
   { key: 'vocabGrammarTargets',    label: 'Vocabulary & Grammar Targets',  studentFacing: false },
@@ -48,6 +49,31 @@ const SECTION_KEYS = [
 
 const REQUIRED_APPROVAL_KEYS = ['skillDiagnosis', 'studentFeedback', 'homeworkRecommendation', 'nextClassFocus'];
 const SECTION_LABELS = Object.fromEntries(SECTION_KEYS.map(section => [section.key, section.label]));
+
+// Review layout: two zones, with thin teacher sections merged into fuller cards.
+// A group with one key renders as its own card; multiple keys render together in
+// one card (each member keeps its own approve/edit/regen controls).
+const SECTION_GROUPS = [
+  {
+    zone: 'teacher', title: 'Teacher Analysis', studentFacing: false,
+    groups: [
+      { title: 'Readiness Check', keys: ['readinessCheck'] },
+      { title: 'Overview', keys: ['classSummary', 'targetScoreRelevance', 'estimatedOverallScore'] },
+      { title: 'Skill Diagnosis', keys: ['skillDiagnosis'] },
+      { title: 'Priorities', keys: ['priorityDiagnosis'] },
+      { title: 'Errors & Targets', keys: ['errorBankSuggestions', 'vocabGrammarTargets'] },
+      { title: 'Class Planning', keys: ['nextClassFocus', 'profileUpdateSuggestions'] },
+    ],
+  },
+  {
+    zone: 'student', title: 'Student-Facing', studentFacing: true,
+    caption: 'This is exactly what your student will see.',
+    groups: [
+      { title: 'Personalized Student Feedback', keys: ['studentFeedback'] },
+      { title: 'Homework Recommendation', keys: ['homeworkRecommendation'] },
+    ],
+  },
+];
 
 function shouldRetryCompact(error) {
   const msg = String(error?.message || error || '').toLowerCase();
@@ -725,51 +751,90 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
             </Card>
           )}
 
-          {/* Sections */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-            {SECTION_KEYS.map(({ key, label, studentFacing }) => {
+          {/* Sections — grouped into Teacher Analysis + Student-Facing zones */}
+          {(() => {
+            // One section's header + body. `embedded` = rendered inside a merged
+            // card (no outer Card chrome); otherwise gets its own card.
+            const renderSection = (key, studentFacing, embedded) => {
               const sec = sections[key];
               if (!sec) return null;
+              const label = SECTION_LABELS[key] || key;
               const isEditing = editingSection === key;
               const isRegenning = regenerating === key;
 
-              return (
-                <Card key={key} style={{ padding: 0, border: sec.approved ? '2px solid var(--success)' : '1px solid var(--border)', overflow: 'hidden' }}>
-                  {/* Section header */}
-                  <div style={{ padding: '12px 16px', background: sec.approved ? 'var(--success-bg)' : 'var(--bg)', display: 'flex', alignItems: 'center', gap: 10, borderBottom: '1px solid var(--divider)' }}>
-                    <span style={{ fontWeight: 700, fontSize: 'var(--text-sm)', flex: 1 }}>{label}</span>
-                    {studentFacing && <Pill tone="info">Student-facing</Pill>}
-                    {sec.edited && <Pill tone="warning">Edited</Pill>}
-                    {sec.hidden && <Pill tone="muted">Hidden</Pill>}
-                    {sec.approved && <Pill tone="success">✓ Approved</Pill>}
-                    <div style={{ display: 'flex', gap: 6 }}>
-                      <Button variant="ghost" size="sm" onClick={() => startEdit(key)} disabled={isRegenning}><Icon.edit size={12} /> Edit</Button>
-                      <Button variant="ghost" size="sm" onClick={() => regenerateSection(key)} disabled={isRegenning}><Icon.refresh size={12} /> {isRegenning ? '…' : 'Regen'}</Button>
-                      <Button variant="ghost" size="sm" onClick={() => toggleHide(key)} style={{ color: sec.hidden ? 'var(--muted)' : 'var(--text)' }}><Icon.eye size={12} /></Button>
-                      <Button variant={sec.approved ? 'ghost' : 'primary'} size="sm" onClick={() => toggleApprove(key)} style={sec.approved ? { color: 'var(--danger)' } : {}}>
-                        {sec.approved ? '✕ Unapprove' : '✓ Approve'}
-                      </Button>
-                    </div>
+              const header = (
+                <div style={{ padding: '12px 16px', background: sec.approved ? 'var(--success-bg)' : (studentFacing ? 'var(--accent-soft)' : 'var(--bg)'), display: 'flex', alignItems: 'center', gap: 10, borderBottom: '1px solid var(--divider)' }}>
+                  <span style={{ fontWeight: 700, fontSize: 'var(--text-sm)', flex: 1 }}>{label}</span>
+                  {studentFacing && <Pill tone="info">Student-facing</Pill>}
+                  {sec.edited && <Pill tone="warning">Edited</Pill>}
+                  {sec.hidden && <Pill tone="muted">Hidden</Pill>}
+                  {sec.approved && <Pill tone="success">✓ Approved</Pill>}
+                  <div style={{ display: 'flex', gap: 6 }}>
+                    <Button variant="ghost" size="sm" onClick={() => startEdit(key)} disabled={isRegenning}><Icon.edit size={12} /> Edit</Button>
+                    <Button variant="ghost" size="sm" onClick={() => regenerateSection(key)} disabled={isRegenning}><Icon.refresh size={12} /> {isRegenning ? '…' : 'Regen'}</Button>
+                    <Button variant="ghost" size="sm" onClick={() => toggleHide(key)} style={{ color: sec.hidden ? 'var(--muted)' : 'var(--text)' }}><Icon.eye size={12} /></Button>
+                    <Button variant={sec.approved ? 'ghost' : 'primary'} size="sm" onClick={() => toggleApprove(key)} style={sec.approved ? { color: 'var(--danger)' } : {}}>
+                      {sec.approved ? '✕ Unapprove' : '✓ Approve'}
+                    </Button>
                   </div>
+                </div>
+              );
 
-                  {/* Section content */}
-                  <div style={{ padding: 16 }}>
-                    {isEditing ? (
-                      <div>
-                        <textarea value={editText} onChange={e => setEditText(e.target.value)} rows={10} style={{ width: '100%', fontFamily: 'var(--font-mono)', fontSize: 'var(--text-xs)', padding: 10, border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', resize: 'vertical' }} />
-                        <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-                          <Button variant="primary" size="sm" onClick={() => saveEdit(key)}>Save Edit</Button>
-                          <Button variant="ghost" size="sm" onClick={() => setEditingSection(null)}>Cancel</Button>
-                        </div>
+              const body = (
+                <div style={{ padding: 16 }}>
+                  {isEditing ? (
+                    <div>
+                      <textarea value={editText} onChange={e => setEditText(e.target.value)} rows={10} style={{ width: '100%', fontFamily: 'var(--font-mono)', fontSize: 'var(--text-xs)', padding: 10, border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', resize: 'vertical' }} />
+                      <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+                        <Button variant="primary" size="sm" onClick={() => saveEdit(key)}>Save Edit</Button>
+                        <Button variant="ghost" size="sm" onClick={() => setEditingSection(null)}>Cancel</Button>
                       </div>
-                    ) : (
-                      <SectionContent sectionKey={key} content={sec.content} />
-                    )}
-                  </div>
+                    </div>
+                  ) : (
+                    <SectionContent sectionKey={key} content={sec.content} />
+                  )}
+                </div>
+              );
+
+              if (embedded) {
+                return <div key={key} style={{ borderTop: '1px solid var(--divider)' }}>{header}{body}</div>;
+              }
+              return (
+                <Card key={key} style={{ padding: 0, overflow: 'hidden', border: sec.approved ? '2px solid var(--success)' : (studentFacing ? '2px solid var(--accent)' : '1px solid var(--border)') }}>
+                  {header}{body}
                 </Card>
               );
-            })}
-          </div>
+            };
+
+            const zoneHeaderStyle = {
+              fontSize: 'var(--text-xs)', fontWeight: 800, letterSpacing: '0.08em',
+              textTransform: 'uppercase', color: 'var(--muted)', margin: '4px 2px 0',
+            };
+
+            return SECTION_GROUPS.map(zone => {
+              const groups = zone.groups.filter(g => g.keys.some(k => sections[k]));
+              if (!groups.length) return null;
+              return (
+                <div key={zone.zone} style={{ display: 'flex', flexDirection: 'column', gap: 14, marginTop: zone.zone === 'student' ? 8 : 0 }}>
+                  <div>
+                    <div style={{ ...zoneHeaderStyle, color: zone.studentFacing ? 'var(--accent-text)' : 'var(--muted)' }}>{zone.title}</div>
+                    {zone.caption && <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', margin: '2px 2px 0' }}>{zone.caption}</div>}
+                  </div>
+                  {groups.map(group => {
+                    const keys = group.keys.filter(k => sections[k]);
+                    if (keys.length === 1) return renderSection(keys[0], zone.studentFacing, false);
+                    // Merged card: one outer card, members stacked inside.
+                    return (
+                      <Card key={group.title} style={{ padding: 0, overflow: 'hidden', border: '1px solid var(--border)' }}>
+                        <div style={{ padding: '10px 16px', background: 'var(--surface)', fontSize: 'var(--text-xs)', fontWeight: 800, letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--text-2)' }}>{group.title}</div>
+                        {keys.map(k => renderSection(k, zone.studentFacing, true))}
+                      </Card>
+                    );
+                  })}
+                </div>
+              );
+            });
+          })()}
 
           {/* Bottom actions */}
           <div style={{ display: 'flex', gap: 10, marginTop: 20, flexWrap: 'wrap' }}>

@@ -200,14 +200,14 @@ RETURN ONLY VALID JSON:
     "vocabulary": { ... },
     "testStrategy": { ... }
   },
-  "classSummary": "2-3 plain sentences: what was actually practised today and how it went. No 'The class focused on...'.",
+  "classSummary": "2-3 plain sentences that tie the whole diagnosis together: what was actually practised today, how it went, and the single most important takeaway. This is the cohesive overview the teacher reads first — not a thin restatement. No 'The class focused on...'.",
   "priorityDiagnosis": [
     { "rank": 1, "urgency": "Critical|Developing|Strength", "area": "short skill/subskill name", "evidence": "exact quote from the evidence", "whatToImprove": "1 concrete sentence", "howToImprove": "1 sentence — one actionable practice direction" }
   ],
   "targetScoreRelevance": { "gapToTarget": "string", "prioritySkillForTarget": "string", "estimatedSessionsToTarget": "string", "onTrack": "string" },
   "nextClassFocus": { "primaryFocus": "string", "suggestedActivities": ["string"], "warmUp": "string", "successCriteria": "string" },
   "profileUpdateSuggestions": { "progressNote": "1-2 student-facing sentences about progress this class", "suggestedLevelChange": "string", "recurringErrorsToTrack": ["string"], "masteredItems": ["string"] },
-  "estimatedOverallScore": { "estimate": "number or 'Not evaluated enough'", "confidence": "string", "note": "string" }
+  "estimatedOverallScore": { "estimate": "number or 'Not evaluated enough'", "confidence": "string", "note": "1 sentence explaining the basis for this estimate — which evaluated skills it rests on and why the confidence level. Never leave blank." }
 }`;
 };
 

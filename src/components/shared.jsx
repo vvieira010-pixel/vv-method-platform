@@ -526,7 +526,7 @@ export function StudentFeedbackView({ feedback }) {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 14, maxWidth: '72ch' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 14, maxWidth: '72ch', borderTop: '3px solid var(--accent)', paddingTop: 14 }}>
       {/* Opening card */}
       {feedback.classFocus && (
         <div style={card}>
