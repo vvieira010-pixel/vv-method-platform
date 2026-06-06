@@ -803,8 +803,8 @@ function KeyValueCards({ content }) {
       {entries.map(([k, v]) => (
         <div key={k} style={{ padding: 10, background: 'var(--bg)', borderRadius: 'var(--radius-sm)' }}>
           <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', marginBottom: 4 }}>{camelToLabel(String(k))}</div>
-          <div style={{ fontSize: 'var(--text-sm)', lineHeight: 1.6 }}>
-            {typeof v === 'object' ? (Array.isArray(v) ? v.map((item, j) => <div key={j}>• {typeof item === 'object' ? Object.values(item).join(' — ') : String(item)}</div>) : Object.entries(v).map(([sk, sv]) => `${camelToLabel(sk)}: ${sv}`).join(' · ')) : String(v)}
+          <div style={{ fontSize: 'var(--text-sm)', lineHeight: 1.6, color: Array.isArray(v) && v.length === 0 ? 'var(--muted)' : 'inherit', fontStyle: Array.isArray(v) && v.length === 0 ? 'italic' : 'normal' }}>
+            {typeof v === 'object' ? (Array.isArray(v) ? (v.length === 0 ? 'None identified' : v.map((item, j) => <div key={j}>• {typeof item === 'object' ? Object.values(item).join(' — ') : String(item)}</div>)) : Object.entries(v).map(([sk, sv]) => `${camelToLabel(sk)}: ${sv}`).join(' · ')) : String(v)}
           </div>
         </div>
       ))}
