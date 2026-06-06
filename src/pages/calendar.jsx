@@ -130,11 +130,11 @@ export default function CalendarPage({ students, onNavigate }) {
         <div>
           <Card style={{ padding: 16 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
-              <Button variant="ghost" size="sm" onClick={() => setViewMonth(v => { const d = new Date(v.year, v.month - 1); return { year: d.getFullYear(), month: d.getMonth() }; })}>‹</Button>
+              <Button variant="ghost" size="sm" aria-label="Previous month" onClick={() => setViewMonth(v => { const d = new Date(v.year, v.month - 1); return { year: d.getFullYear(), month: d.getMonth() }; })}><span aria-hidden="true">‹</span></Button>
               <span style={{ fontWeight: 700, flex: 1, textAlign: 'center' }}>
                 {new Date(year, month).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })}
               </span>
-              <Button variant="ghost" size="sm" onClick={() => setViewMonth(v => { const d = new Date(v.year, v.month + 1); return { year: d.getFullYear(), month: d.getMonth() }; })}>›</Button>
+              <Button variant="ghost" size="sm" aria-label="Next month" onClick={() => setViewMonth(v => { const d = new Date(v.year, v.month + 1); return { year: d.getFullYear(), month: d.getMonth() }; })}><span aria-hidden="true">›</span></Button>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 2 }}>
               {DAYS.map(d => <div key={d} style={{ textAlign: 'center', fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)', padding: '4px 0' }}>{d}</div>)}
@@ -147,9 +147,11 @@ export default function CalendarPage({ students, onNavigate }) {
                 const isSelected = ds === selectedDate;
                 return (
                   <button key={d} onClick={() => setSelectedDate(isSelected ? null : ds)}
+                    aria-label={`${new Date(year, month, d).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}${isSelected ? ', selected' : ''}${dayEvents.length > 0 ? `, ${dayEvents.length} event${dayEvents.length > 1 ? 's' : ''}` : ''}`}
+                    aria-pressed={isSelected}
                     style={{ padding: '6px 4px', borderRadius: 'var(--radius-sm)', border: isSelected ? '2px solid var(--accent)' : isToday ? '2px solid var(--primary)' : '1px solid transparent', background: isSelected ? 'var(--accent-subtle)' : 'transparent', cursor: 'pointer', fontFamily: 'var(--font-ui)', fontSize: 'var(--text-xs)', fontWeight: isToday ? 700 : 400, color: isToday ? 'var(--accent)' : 'var(--text)', position: 'relative', minHeight: 36 }}>
                     {d}
-                    {dayEvents.length > 0 && <div style={{ display: 'flex', justifyContent: 'center', gap: 2, marginTop: 2 }}>
+                    {dayEvents.length > 0 && <div style={{ display: 'flex', justifyContent: 'center', gap: 2, marginTop: 2 }} aria-hidden="true">
                       {dayEvents.slice(0, 3).map((ev, i) => <span key={i} style={{ width: 5, height: 5, borderRadius: '50%', background: ev.status === 'completed' ? 'var(--success)' : ev.status === 'canceled' ? 'var(--danger)' : 'var(--primary)' }} />)}
                     </div>}
                   </button>

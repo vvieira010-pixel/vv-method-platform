@@ -61,7 +61,7 @@ const CSS = `
   }
   .mc-compose-input:focus { border-color: var(--primary); }
   .mc-compose-send {
-    width: 34px; height: 34px; border-radius: var(--radius-sm);
+    width: 40px; height: 40px; border-radius: var(--radius-sm);
     background: var(--accent); color: #fff; border: none; cursor: pointer;
     display: flex; align-items: center; justify-content: center;
     transition: background 0.15s; flex-shrink: 0;
@@ -190,10 +190,10 @@ export function MessageTeacherDock({ student, onSent }) {
   return (
     <div className="mc-dock">
       {open && (
-        <div className="mc-popup">
+        <div className="mc-popup" role="dialog" aria-modal="true" aria-label="Message Teacher" onKeyDown={e => e.key === 'Escape' && setOpen(false)}>
           <div className="mc-popup-header">
-            <span>Message Teacher</span>
-            <button onClick={() => setOpen(false)} style={{ background:'none', border:'none', cursor:'pointer', color:'var(--muted)', fontSize:18 }}>×</button>
+            <span id="mc-popup-title">Message Teacher</span>
+            <button onClick={() => setOpen(false)} aria-label="Close messages" style={{ background:'none', border:'none', cursor:'pointer', color:'var(--muted)', fontSize:18 }}>×</button>
           </div>
           <div className="mc-messages">
             {messages.length === 0 && <div className="mc-empty">No messages yet. Send a question!</div>}
@@ -215,13 +215,13 @@ export function MessageTeacherDock({ student, onSent }) {
               value={text} onChange={e => setText(e.target.value)}
               onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
             />
-            <button className="mc-compose-send" onClick={handleSend}>
+            <button className="mc-compose-send" onClick={handleSend} aria-label="Send message">
               <Icon.send size={14} />
             </button>
           </div>
         </div>
       )}
-      <button className="mc-dock-btn" onClick={() => setOpen(o => !o)} title="Message teacher">
+      <button className="mc-dock-btn" onClick={() => setOpen(o => !o)} aria-label={open ? 'Close messages' : 'Message teacher'} aria-expanded={open}>
         <Icon.inbox size={18} />
         {unread > 0 && <span className="mc-badge">{unread}</span>}
       </button>

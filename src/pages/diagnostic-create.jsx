@@ -492,7 +492,7 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
         <div style={{ fontSize: 'var(--text-xl)', fontWeight: 700, color: 'var(--accent-deep)', marginBottom: 12 }}>Running Diagnosis…</div>
         <p style={{ color: 'var(--muted)', marginBottom: 24 }}>{generatingStatus}</p>
         <div style={{ height: 4, background: 'var(--bg-deep)', borderRadius: 99, overflow: 'hidden' }}>
-          <div style={{ height: '100%', background: 'var(--accent)', borderRadius: 99, animation: 'slideIn 2s ease-in-out infinite alternate' }} />
+          <div role="progressbar" aria-label="Generating diagnosis" aria-valuemin={0} aria-valuemax={100} style={{ height: '100%', background: 'var(--accent)', borderRadius: 99, animation: 'slideIn 2s ease-in-out infinite alternate' }} />
         </div>
         <style>{`@keyframes slideIn { from { width: 20%; margin-left: 0; } to { width: 60%; margin-left: 40%; } }`}</style>
       </div>
@@ -548,6 +548,7 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
             <div style={{ display: 'flex', gap: 8, marginTop: 10, flexWrap: 'wrap' }}>
               {Object.entries(TARGET_PROFILE_PRESETS).map(([key, preset]) => (
                 <button key={key} onClick={() => selectPreset(key)}
+                  aria-pressed={targetProfile?.profileName === preset.profileName}
                   style={{ padding: '8px 14px', borderRadius: 'var(--radius-sm)', border: `2px solid ${targetProfile?.profileName === preset.profileName ? 'var(--accent)' : 'var(--border)'}`, background: targetProfile?.profileName === preset.profileName ? 'var(--accent-subtle)' : 'var(--surface)', cursor: 'pointer', fontFamily: 'var(--font-ui)', fontSize: 'var(--text-sm)', fontWeight: 600 }}>
                   {preset.label}
                   <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontWeight: 400 }}>Overall {preset.overallTarget} · Speaking {preset.speakingTarget}</div>

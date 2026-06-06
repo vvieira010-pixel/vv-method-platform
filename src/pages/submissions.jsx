@@ -34,7 +34,7 @@ export default function SubmissionsPage({ students, onNavigate }) {
 
       <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
         {['pending', 'reviewed', 'all'].map(f => (
-          <button key={f} onClick={() => setFilter(f)} style={{ padding: '6px 14px', borderRadius: 'var(--radius-pill)', border: `1.5px solid ${filter === f ? 'var(--accent)' : 'var(--border)'}`, background: filter === f ? 'var(--accent-subtle)' : 'var(--surface)', color: filter === f ? 'var(--accent)' : 'var(--muted)', fontFamily: 'var(--font-ui)', fontSize: 'var(--text-xs)', fontWeight: 600, cursor: 'pointer', textTransform: 'capitalize' }}>
+          <button key={f} onClick={() => setFilter(f)} aria-pressed={filter === f} style={{ padding: '8px 14px', borderRadius: 'var(--radius-pill)', border: `1.5px solid ${filter === f ? 'var(--accent)' : 'var(--border)'}`, background: filter === f ? 'var(--accent-subtle)' : 'var(--surface)', color: filter === f ? 'var(--accent)' : 'var(--muted)', fontFamily: 'var(--font-ui)', fontSize: 'var(--text-xs)', fontWeight: 600, cursor: 'pointer', textTransform: 'capitalize' }}>
             {f} {f === 'pending' ? `(${pendingCount})` : ''}
           </button>
         ))}

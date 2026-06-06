@@ -27,7 +27,7 @@ const GLOBAL_CSS = `
     --text:         #1a2332;
     --text-2:       #2a3d4e;
     --muted:        #4d6672;
-    --accent-text:  #1d7070;
+    --accent-text:  #0f5555;
     --warning-text: #B45309;
     --success:      #059669;
     --success-bg:   #ECFDF5;
@@ -37,7 +37,7 @@ const GLOBAL_CSS = `
     --warning:      #D97706;
     --warning-bg:   #FFFBEB;
     --warning-soft: #FDE68A;
-    --danger:       #DC2626;
+    --danger:       #B91C1C;
     --danger-bg:    #FEF2F2;
     --danger-soft:  #FECACA;
     --orange:       #F97316;
@@ -47,7 +47,7 @@ const GLOBAL_CSS = `
     --radius-md:    14px;
     --radius-lg:    22px;
     --radius-pill:  999px;
-    --text-xs:      11.5px;
+    --text-xs:      12px;
     --text-sm:      13px;
     --text-md:      14.5px;
     --text-lg:      16px;
@@ -110,10 +110,11 @@ const GLOBAL_CSS = `
   .btn-quiet:hover:not(:disabled) { background: var(--divider); color: var(--text); filter: none; transform: none; }
   .btn-danger   { background: var(--danger); color: #fff; }
   .btn-danger:hover:not(:disabled) { background: #B91C1C; }
-  .btn-sm  { padding: 5px 11px; font-size: var(--text-xs); border-radius: var(--radius-sm); }
+  .btn-sm  { padding: 8px 12px; font-size: var(--text-xs); border-radius: var(--radius-sm); min-height: 32px; }
   .btn-lg  { padding: 11px 22px; font-size: var(--text-md); }
   .btn-block { width: 100%; }
   .btn-icon  { padding: 13px; border-radius: var(--radius-sm); }
+  .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
   .card {
     background: var(--surface);
     border: 1px solid rgba(168, 218, 220, 0.35);
@@ -151,7 +152,7 @@ const GLOBAL_CSS = `
   .shell-main { flex: 1; overflow-y: auto; overflow-x: hidden; }
   .shell-brand { padding: 20px 16px 14px; border-bottom: 1px solid var(--dark-accent-border); }
   .shell-brand-name { font-size: var(--text-lg); font-family: var(--font-display); font-weight: 800; color: #fff; letter-spacing: 0.01em; display: block; }
-  .shell-brand-sub  { font-size: 11px; color: var(--on-dark-muted); letter-spacing: 0.08em; text-transform: uppercase; margin-top: 2px; display: block; }
+  .shell-brand-sub  { font-size: 12px; color: var(--on-dark-muted); letter-spacing: 0.08em; text-transform: uppercase; margin-top: 2px; display: block; }
   .shell-nav { flex: 1; padding: 12px 8px; }
   .shell-nav-section { margin-bottom: 18px; }
   .shell-nav-section-label { font-size: var(--text-xs); font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--on-dark-muted); padding: 0 8px; margin-bottom: 4px; }
@@ -171,7 +172,7 @@ const GLOBAL_CSS = `
   }
   .shell-user { padding: 12px 14px; border-top: 1px solid var(--dark-accent-border); display: flex; align-items: center; gap: 9px; }
   .shell-user-name { font-size: var(--text-xs); color: #fff; font-weight: 600; }
-  .shell-user-role { font-size: 10.5px; color: var(--on-dark-muted); }
+  .shell-user-role { font-size: 12px; color: var(--on-dark-muted); }
   .workflow-strip { display: flex; align-items: center; padding: 0 20px; height: 36px; background: linear-gradient(90deg, rgba(240,248,248,0.82), rgba(244,250,250,0.4)); border-bottom: 1px solid rgba(168,218,220,0.25); overflow-x: auto; scrollbar-width: none; }
   .workflow-strip::-webkit-scrollbar { display: none; }
   .workflow-step { display: flex; align-items: center; gap: 6px; font-size: var(--text-xs); font-weight: 600; color: var(--muted); padding: 0 10px; cursor: pointer; white-space: nowrap; border: none; background: none; font-family: var(--font-ui); height: 100%; transition: color 0.12s; }
