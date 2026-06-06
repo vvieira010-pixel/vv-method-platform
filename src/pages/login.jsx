@@ -237,7 +237,7 @@ export default function LoginScreen() {
         </div>
 
         <div className="lp-brand-features">
-          {['AI-powered skill diagnosis', 'Personalized homework plans', 'Real-time progress tracking'].map(f => (
+          {['Personalized homework plans', 'Real-time progress tracking'].map(f => (
             <div key={f} className="lp-brand-feature">
               <span className="lp-brand-feature-dot" />
               {f}
