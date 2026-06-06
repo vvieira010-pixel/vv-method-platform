@@ -308,7 +308,11 @@ export default function LoginScreen() {
 
           <div className="lp-footer">
             MET Proficiency Mastery · Private platform<br />
-            Access is by invitation only.
+            Access is by invitation only.<br /><br />
+            Having trouble signing in?{' '}
+            <a href="mailto:vvieira010x@gmail.com" style={{ color: 'var(--accent-text)', textDecoration: 'underline' }}>
+              Contact Teacher Vinicius
+            </a>
           </div>
 
         </div>
