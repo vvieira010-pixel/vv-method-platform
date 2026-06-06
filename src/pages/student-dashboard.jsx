@@ -80,10 +80,10 @@ export default function StudentDashboard({ student, onSignOut }) {
         <div className="dash-brand">
           <span className="dash-brand-name">MET Proficiency Mastery</span>
         </div>
-        <nav className="dash-top-nav" aria-label="Student sections">
+        <nav className="dash-top-nav" aria-label="Student sections" role="tablist">
           {TABS.map(t => (
-            <button key={t.id} onClick={() => setTab(t.id)} className={'dash-nav-btn' + (tab === t.id ? ' active' : '')}>
-              <span className="dash-nav-icon">{t.icon}</span>
+            <button key={t.id} role="tab" aria-selected={tab === t.id} onClick={() => setTab(t.id)} className={'dash-nav-btn' + (tab === t.id ? ' active' : '')}>
+              <span className="dash-nav-icon" aria-hidden="true">{t.icon}</span>
               <span className="dash-nav-label">{t.label}</span>
             </button>
           ))}
@@ -804,8 +804,10 @@ function HomeworkView({ student }) {
                     <div style={{ fontWeight: 600, fontSize: 'var(--text-sm)', marginBottom: 8 }}>Self-check:</div>
                     {h.selfCheck.filter(Boolean).map((c, i) => (
                       <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: 6 }}>
-                        <input type="checkbox" style={{ marginTop: 3 }} />
-                        <span style={{ fontSize: 'var(--text-sm)' }}>{c}</span>
+                        <label style={{ display: 'flex', alignItems: 'flex-start', gap: 8, cursor: 'pointer' }}>
+                          <input type="checkbox" style={{ marginTop: 3, flexShrink: 0 }} aria-label={c} />
+                          <span style={{ fontSize: 'var(--text-sm)' }}>{c}</span>
+                        </label>
                       </div>
                     ))}
                   </div>

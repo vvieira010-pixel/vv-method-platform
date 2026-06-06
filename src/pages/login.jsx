@@ -221,7 +221,7 @@ export default function LoginScreen() {
       {/* ── Brand panel ── */}
       <div className="lp-brand">
         <div className="lp-brand-logo">
-          <div className="lp-brand-logo-badge">M</div>
+          <div className="lp-brand-logo-badge" aria-hidden="true">M</div>
           <div>
             <div className="lp-brand-logo-name">MET Proficiency Mastery</div>
             <div className="lp-brand-logo-sub">Teacher Vinicius</div>
@@ -239,7 +239,7 @@ export default function LoginScreen() {
         <div className="lp-brand-features">
           {['Personalized homework plans', 'Real-time progress tracking'].map(f => (
             <div key={f} className="lp-brand-feature">
-              <span className="lp-brand-feature-dot" />
+              <span className="lp-brand-feature-dot" aria-hidden="true" />
               {f}
             </div>
           ))}

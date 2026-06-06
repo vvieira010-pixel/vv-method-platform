@@ -177,7 +177,9 @@ function QuickAction({ icon, label, onClick }) {
   return (
     <button onClick={onClick} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)', background: 'var(--surface)', cursor: 'pointer', fontFamily: 'var(--font-ui)', fontSize: 'var(--text-sm)', fontWeight: 500, color: 'var(--text)', textAlign: 'left', transition: 'background 0.15s' }}
       onMouseEnter={e => e.currentTarget.style.background = 'var(--bg)'}
-      onMouseLeave={e => e.currentTarget.style.background = 'var(--surface)'}>
+      onMouseLeave={e => e.currentTarget.style.background = 'var(--surface)'}
+      onFocus={e => e.currentTarget.style.background = 'var(--bg)'}
+      onBlur={e => e.currentTarget.style.background = 'var(--surface)'}>
       <span style={{ color: 'var(--accent)' }}>{icon}</span>
       {label}
       <Icon.arrowR size={13} style={{ marginLeft: 'auto', color: 'var(--muted)' }} />
