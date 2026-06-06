@@ -1015,7 +1015,32 @@ function SectionContent({ sectionKey, content }) {
     );
   }
 
-  if ((sectionKey === 'targetScoreRelevance' || sectionKey === 'readinessCheck') && typeof content === 'object') {
+  if (sectionKey === 'readinessCheck' && typeof content === 'object') {
+    const fmt = (v) => {
+      if (v === true) return '✓ Yes';
+      if (v === false) return '✗ No';
+      return String(v);
+    };
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {Object.entries(content).map(([k, v]) => {
+          if (Array.isArray(v) && v.length === 0) return null;
+          return (
+            <div key={k} style={{ padding: 10, background: 'var(--bg)', borderRadius: 'var(--radius-sm)' }}>
+              <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', marginBottom: 4 }}>{camelToLabel(k)}</div>
+              <div style={{ fontSize: 'var(--text-sm)', lineHeight: 1.6, color: 'var(--text)' }}>
+                {Array.isArray(v)
+                  ? v.map((item, j) => <div key={j}>• {camelToLabel(String(item))}</div>)
+                  : fmt(v)}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    );
+  }
+
+  if (sectionKey === 'targetScoreRelevance' && typeof content === 'object') {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {Object.entries(content).map(([k, v]) => (
