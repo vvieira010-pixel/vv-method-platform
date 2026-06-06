@@ -17,10 +17,6 @@ const CSS = `
     display: grid; grid-template-columns: 420px 1fr;
     font-family: var(--font-ui); background: #fff;
   }
-  @media (max-width: 860px) {
-    .lp-root { grid-template-columns: 1fr; }
-    .lp-brand { display: none; }
-  }
 
   /* ── Brand panel ── */
   .lp-brand {
@@ -85,16 +81,17 @@ const CSS = `
   }
   .lp-input {
     width: 100%; padding: 12px 14px; box-sizing: border-box;
-    border: 1.5px solid var(--border); border-radius: 8px;
-    font-size: 15px; font-family: var(--font-ui); color: var(--text);
-    background: #fff; outline: none;
+    border: 1.5px solid #8aacac; border-radius: 8px;
+    font-size: 16px; font-family: var(--font-ui); color: var(--text);
+    background: #f3f9f9; outline: none;
     transition: border-color .15s, box-shadow .15s;
   }
   .lp-input:focus {
     border-color: var(--accent);
-    box-shadow: 0 0 0 3px rgba(29,140,150,.12);
+    box-shadow: 0 0 0 3px rgba(29,140,150,.15);
+    background: #fff;
   }
-  .lp-input::placeholder { color: var(--muted); }
+  .lp-input::placeholder { color: #6b8fa0; }
 
   .lp-submit {
     width: 100%; padding: 13px; margin-top: 8px;
@@ -141,6 +138,12 @@ const CSS = `
     cursor: pointer; font-family: var(--font-ui); text-decoration: underline;
   }
   .lp-toggle button:disabled { opacity: .5; cursor: default; }
+
+  @media (max-width: 860px) {
+    .lp-root { grid-template-columns: 1fr; }
+    .lp-brand { display: none; }
+    .lp-signin { padding: 40px 24px; }
+  }
 `;
 
 let cssInjected = false;
