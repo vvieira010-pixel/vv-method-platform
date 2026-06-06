@@ -179,6 +179,9 @@ ${SHARED_MET_DATA}
 5. For speaking with transcript only: score0to4 for Intelligibility/Delivery must be null and note "audio required."
 6. subskillsAssessed should only list subskills you have actual evidence for.
 7. ratingBreakdown for speaking and writing must align with the official MET rating scales.
+8. priorityDiagnosis: 3–5 ranked items. urgency "Critical" = blocks the target; "Developing" = active growth area; "Strength" = cite one genuine strength. Every "evidence" MUST be a real quote from the evidence above — never invent. Base priorities only on evaluated skills.
+9. classSummary, nextClassFocus, targetScoreRelevance, profileUpdateSuggestions: base ONLY on what was actually evaluated — never fabricate progress for an unevaluated skill. If almost nothing was evaluated, say so plainly.
+10. profileUpdateSuggestions.progressNote is shown directly to the STUDENT — keep it plain, specific, and honest (no empty praise, no jargon).
 
 RETURN ONLY VALID JSON:
 {
@@ -190,7 +193,15 @@ RETURN ONLY VALID JSON:
     "grammar": { "evaluated": boolean, "evidenceCount": number, "score0to80": number|null, "scoreConfidenceLevel": string, "scoreProvisional": boolean, "subskillsAssessed": string[], "mainIssues": string[], "strengths": string[], "whatToImproveNext": string },
     "vocabulary": { ... },
     "testStrategy": { ... }
-  }
+  },
+  "classSummary": "2-3 plain sentences: what was actually practised today and how it went. No 'The class focused on...'.",
+  "priorityDiagnosis": [
+    { "rank": 1, "urgency": "Critical|Developing|Strength", "area": "short skill/subskill name", "evidence": "exact quote from the evidence", "whatToImprove": "1 concrete sentence", "howToImprove": "1 sentence — one actionable practice direction" }
+  ],
+  "targetScoreRelevance": { "gapToTarget": "string", "prioritySkillForTarget": "string", "estimatedSessionsToTarget": "string", "onTrack": "string" },
+  "nextClassFocus": { "primaryFocus": "string", "suggestedActivities": ["string"], "warmUp": "string", "successCriteria": "string" },
+  "profileUpdateSuggestions": { "progressNote": "1-2 student-facing sentences about progress this class", "suggestedLevelChange": "string", "recurringErrorsToTrack": ["string"], "masteredItems": ["string"] },
+  "estimatedOverallScore": { "estimate": "number or 'Not evaluated enough'", "confidence": "string", "note": "string" }
 }`;
 };
 
@@ -219,13 +230,22 @@ ${JSON.stringify(diagnosis?.skillDiagnosis || {}, null, 2)}
 
 ${SHARED_MET_DATA}
 
-━━━ VOICE RULES (CRITICAL) ━━━
-• SECOND PERSON ONLY: Use "you", "your". NEVER "the student", "he/she", "this learner".
-• QUOTE-ANCHORED: Every strength and every "what to improve" MUST reference a specific thing the student said or wrote today. Use direct quotes.
-• BANNED OPENERS: Never start with "Great work", "Well done", "Excellent", "Good job", "It is important", "Furthermore", "Additionally", "Moreover", "In addition", "In terms of", "With respect to", "Going forward", "In conclusion", "Overall".
+━━━ VOICE RULES (CRITICAL — this is the #1 priority) ━━━
+Write like a real teacher talking TO this student right after class — warm, specific, human. Not a report.
+
+• SECOND PERSON ONLY: "you", "your". NEVER "the student", "he/she", "this learner".
+• USE THEIR NAME once or twice (it's fine to open finalNote with "${student?.firstName || 'You'}, ..."). Contractions are encouraged — "you're", "that's", "it'll".
+• QUOTE-ANCHORED: every strength and every improvement points to something they actually said or wrote today — quote their real words.
+• NO TEMPLATE / NO SAMENESS: phrase every item DIFFERENTLY. Never reuse one sentence shape (e.g. "You did X, which shows Y"). Vary length — some items can be a single short sentence. It must read hand-written, not filled into a form.
+• BANNED JARGON / AI-WORDS (never use): demonstrate, showcase, leverage, utilize, delve, crucial, essential, foster, robust, navigate, journey, elevate, "in terms of", "when it comes to", "this highlights", "this underscores", "a testament to". Use plain everyday words.
+• BANNED OPENERS: "Great work", "Well done", "Excellent", "Good job", "It is important", "Furthermore", "Additionally", "Moreover", "In addition", "Going forward", "In conclusion", "Overall".
 • BANNED PHRASES: "This demonstrates", "Your performance", "You demonstrated", "You exhibited", "This is crucial for", "This is essential", "This shows that you", "Continue to", "Keep up".
-• BREVITY & NATURAL FLOW: Vary sentence openings. Avoid "AI-speak". If a thought is one sentence, stop.
-• MET BUDGET: At most 2 sentences across the whole feedback may mention the MET exam. Each must be concrete (e.g., "examiners weight delivery in the third descriptor...").
+• BREVITY: if a thought is one sentence, stop. No padding, no restating.
+• MET BUDGET: at most 2 sentences in the whole feedback may mention the MET exam, and each must be concrete (e.g., "examiners weight delivery in the third descriptor...").
+
+TONE EXAMPLE — match the natural version, never the robotic one:
+  ✗ Robotic: "You demonstrated strong task completion, which is crucial for your target band and showcases developing fluency."
+  ✓ Natural: "When you described the night shift on the ward, you kept going for the whole minute without freezing — that steady flow is exactly what the examiners are listening for."
 
 ━━━ OUTPUT FORMAT ━━━
 Return ONLY VALID JSON:

@@ -202,7 +202,7 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
       
       // Use allSettled to ensure resilient partial success.
       const results = await Promise.allSettled([
-        callAI(buildSkillDiagnosisPrompt(promptData), { max_tokens: 4000, preferredProvider: 'gemini' }),
+        callAI(buildSkillDiagnosisPrompt(promptData), { max_tokens: 6000, preferredProvider: 'gemini' }),
         callAI(buildStudentFeedbackPrompt({ ...promptData, diagnosis: { skillDiagnosis: {} } }), { max_tokens: 2500, preferredProvider: 'gemini' }),
         callAI(buildHomeworkPrompt(promptData), { max_tokens: 3000, preferredProvider: 'gemini' }),
         callAI(buildErrorBankPrompt(promptData), { max_tokens: 2500, preferredProvider: 'gemini' }),
@@ -336,7 +336,11 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
           prompt = buildSectionRegenPrompt(key, promptData);
       }
 
-      const SECTION_BUDGETS = { studentFeedback: 3000, homeworkRecommendation: 3000, skillDiagnosis: 2800, priorityDiagnosis: 2500, errorBankSuggestions: 2200 };
+      // The skillDiagnosis prompt now also emits classSummary/priorityDiagnosis/nextClassFocus/
+      // targetScoreRelevance/profileUpdateSuggestions, and regen of any of those runs that full
+      // prompt (default case → buildSectionRegenPrompt → buildSkillDiagnosisPrompt), so they
+      // need the larger budget too.
+      const SECTION_BUDGETS = { studentFeedback: 3000, homeworkRecommendation: 3000, skillDiagnosis: 6000, priorityDiagnosis: 6000, classSummary: 6000, targetScoreRelevance: 6000, nextClassFocus: 6000, profileUpdateSuggestions: 6000, errorBankSuggestions: 2200 };
       const data = await callAI(prompt, { max_tokens: SECTION_BUDGETS[key] || 2000, preferredProvider: 'gemini' });
       const raw = data.content?.map(b => b.text || '').join('') || '';
       const parsed = parseAiJson(raw);
