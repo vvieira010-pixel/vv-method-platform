@@ -38,6 +38,38 @@ function getProgressStage(score) {
   return [...PROGRESS_STAGES].reverse().find(stage => value >= stage.min) || PROGRESS_STAGES[0];
 }
 
+// Progress is the CHANGE in an evaluated skill across classes — a distinct concept
+// from the latest stage (which is a single point-in-time evaluation, not a trend).
+// Pass the full list of approved diagnoses; this reads each one's snapshot for `section`.
+function getSkillTrend(section, diagnoses) {
+  const scores = asArray(diagnoses)
+    .slice()
+    .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
+    .map(d => asArray(d.content?.section_snapshot).find(s => s.section === section))
+    .map(s => Number(s?.score_0_80) || 0)
+    .filter(v => v > 0);
+  if (scores.length === 0) return { dir: 'none', label: 'Not evaluated yet', evaluations: 0 };
+  if (scores.length === 1) return { dir: 'new', label: 'Evaluated once', evaluations: 1 };
+  const delta = scores[0] - scores[1];
+  const nowStage = getProgressStage(scores[0]).order;
+  const prevStage = getProgressStage(scores[1]).order;
+  if (nowStage > prevStage) return { dir: 'up', label: 'Moved up a stage', evaluations: scores.length };
+  if (nowStage < prevStage) return { dir: 'down', label: 'Slipped a stage', evaluations: scores.length };
+  if (delta > 3) return { dir: 'up', label: 'Moving up', evaluations: scores.length };
+  if (delta < -3) return { dir: 'down', label: 'Needs attention', evaluations: scores.length };
+  return { dir: 'steady', label: 'Holding steady', evaluations: scores.length };
+}
+
+function TrendChip({ trend }) {
+  if (!trend || trend.dir === 'none') return null;
+  const glyph = { up: '↑', down: '↓', steady: '→', new: '•' }[trend.dir] || '•';
+  return (
+    <span className={`student-trend-chip student-trend-chip--${trend.dir}`}>
+      <span aria-hidden="true">{glyph}</span> {trend.label}
+    </span>
+  );
+}
+
 function hasVisibleApprovedStudentFeedback(dx) {
   const feedback = dx?.sections?.studentFeedback;
   return dx?.status === 'approved' && feedback?.approved === true && feedback.hidden !== true;
@@ -115,6 +147,7 @@ function HomeView({ student, onTab }) {
   const [pendingHw, setPendingHw] = useState([]);
   const [latestReview, setLatestReview] = useState(null);
   const [snapshot, setSnapshot] = useState([]);
+  const [approvedHistory, setApprovedHistory] = useState([]);
   const [nextClass, setNextClass] = useState(null);
   const [generalMemoText, setGeneralMemoText] = useState(() => localStorage.getItem('vv:student_general_memo') || '');
 
@@ -153,6 +186,7 @@ function HomeView({ student, onTab }) {
         const dx = approvedDx[0];
         setLatestFeedback(dx.sections.studentFeedback.content);
         setSnapshot(asArray(dx.content?.section_snapshot));
+        setApprovedHistory(approvedDx);
       }
     })();
   }, [student.id]);
@@ -165,6 +199,7 @@ function HomeView({ student, onTab }) {
   const pendingTitle = pendingHw[0]?.title || 'No homework pending';
   const evaluatedSkills = snapshot.filter(s => Number(s.score_0_80) > 0);
   const focusSkill = evaluatedSkills[0]?.section || student.focusSkill || 'Waiting for evidence';
+  const focusTrend = evaluatedSkills[0] ? getSkillTrend(focusSkill, approvedHistory) : { dir: 'none' };
   const feedbackFocus = latestFeedback && typeof latestFeedback === 'object'
     ? latestFeedback.nextStep || latestFeedback.focusArea?.area || latestFeedback.focusArea?.explanation || latestFeedback.finalNote
     : '';
@@ -204,7 +239,7 @@ function HomeView({ student, onTab }) {
       <section className="student-metrics" aria-label="Student summary">
         <MetricCard icon={<Icon.calendar size={19} />} label="Next class" value={nextDate} sub={nextTime} tone="blue" />
         <MetricCard icon={<Icon.homework size={19} />} label="Homework" value={pendingHw.length} sub={pendingHw.length === 1 ? 'task pending' : 'tasks pending'} tone="teal" />
-        <MetricCard icon={<Icon.progress size={19} />} label="Current focus" value={focusSkill} sub="from approved diagnosis" tone="purple" />
+        <MetricCard icon={<Icon.progress size={19} />} label="Current focus" value={focusSkill} sub={focusTrend.dir !== 'none' ? `Progress: ${focusTrend.label}` : 'from approved diagnosis'} tone="purple" />
         <MetricCard icon={<Icon.inbox size={19} />} label="Feedback" value={latestFeedback ? 'Ready' : 'Waiting'} sub={latestFeedback ? 'teacher approved' : 'after diagnosis'} tone="orange" />
       </section>
 
@@ -293,7 +328,7 @@ function HomeView({ student, onTab }) {
           </div>
           {evaluatedSkills.length > 0 ? (
             <div className="student-skill-list">
-              {evaluatedSkills.slice(0, 5).map(s => <SkillRow key={s.section} skill={s} />)}
+              {evaluatedSkills.slice(0, 5).map(s => <SkillRow key={s.section} skill={s} trend={getSkillTrend(s.section, approvedHistory)} />)}
             </div>
           ) : (
             <div className="student-empty-card">
@@ -331,7 +366,7 @@ function TodoRow({ done, label, meta }) {
   );
 }
 
-function SkillRow({ skill }) {
+function SkillRow({ skill, trend }) {
   const score = Number(skill.score_0_80) || 0;
   if (score <= 0) return null;
   const stage = getProgressStage(score);
@@ -339,13 +374,19 @@ function SkillRow({ skill }) {
     <div className="student-skill-row">
       <div className="student-skill-top">
         <strong>{skill.section}</strong>
-        <span>{stage.label}</span>
+        <span className="student-skill-stage">Last assessed: {stage.label}</span>
       </div>
       <div>
-        <div className="student-stage-track" aria-label={`${skill.section} progress stage: ${stage.label}`}>
+        <div className="student-stage-track" aria-label={`${skill.section} stage: ${stage.label}`}>
           {PROGRESS_STAGES.map(item => (
             <span key={item.label} className={item.order <= stage.order ? 'active' : ''} />
           ))}
+        </div>
+        <div className="student-skill-meta">
+          <TrendChip trend={trend} />
+          {trend?.dir === 'new' && (
+            <span className="student-skill-hint">Progress shows after your next class</span>
+          )}
         </div>
         {skill.next_step && <div className="student-skill-note">Next: {skill.next_step}</div>}
       </div>
@@ -894,7 +935,7 @@ function ProgressView({ student }) {
           {skills.length > 0 ? (
             <section className="student-readiness-grid">
               {skills.map(skill => (
-                <ProgressProfileCard key={skill.section} skill={skill} />
+                <ProgressProfileCard key={skill.section} skill={skill} trend={getSkillTrend(skill.section, diagnoses)} />
               ))}
             </section>
           ) : (
@@ -951,10 +992,17 @@ function ProgressView({ student }) {
   );
 }
 
-function ProgressProfileCard({ skill }) {
+function ProgressProfileCard({ skill, trend }) {
   const score = Number(skill.score_0_80) || 0;
   if (score <= 0) return null;
   const stage = getProgressStage(score);
+  const trendNote = trend?.dir === 'new'
+    ? 'Evaluated once — your progress trend appears after the next class.'
+    : trend?.dir === 'up'
+      ? 'You are moving in the right direction since your last class.'
+      : trend?.dir === 'down'
+        ? 'This skill needs attention — we will focus here next class.'
+        : 'Holding steady — keep practising to reach the next stage.';
 
   return (
     <article className="student-progress-card">
@@ -966,10 +1014,15 @@ function ProgressProfileCard({ skill }) {
         <span className="student-stage-badge">{stage.label}</span>
       </div>
 
-      <div className="student-stage-track student-stage-track--wide" aria-label={`${skill.section} progress stage: ${stage.label}`}>
+      <div className="student-stage-track student-stage-track--wide" aria-label={`${skill.section} stage: ${stage.label}`}>
         {PROGRESS_STAGES.map(item => (
           <span key={item.label} className={item.order <= stage.order ? 'active' : ''} title={item.label} />
         ))}
+      </div>
+
+      <div className="student-progress-trend">
+        <TrendChip trend={trend} />
+        <span className="student-progress-trend-note">{trendNote}</span>
       </div>
 
       <div className="student-progress-copy-grid">
@@ -978,8 +1031,8 @@ function ProgressProfileCard({ skill }) {
           <p>{skill.next_step || `Keep building more control in ${skill.section}.`}</p>
         </div>
         <div>
-          <strong>Next class target</strong>
-          <p>{skill.next_step || 'Practice this skill with teacher guidance and clear examples.'}</p>
+          <strong>Last assessed</strong>
+          <p>{stage.label} stage · {trend?.evaluations > 1 ? `based on ${trend.evaluations} classes` : 'based on your latest class'}.</p>
         </div>
       </div>
 
