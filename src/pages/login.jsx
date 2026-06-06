@@ -221,7 +221,6 @@ export default function LoginScreen() {
       {/* ── Brand panel ── */}
       <div className="lp-brand">
         <div className="lp-brand-logo">
-          <div className="lp-brand-logo-badge" aria-hidden="true">M</div>
           <div>
             <div className="lp-brand-logo-name">MET Proficiency Mastery</div>
             <div className="lp-brand-logo-sub">Teacher Vinicius</div>
