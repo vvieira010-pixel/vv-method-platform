@@ -896,12 +896,38 @@ export async function callAI(prompt, { max_tokens = 2048, system, temperature = 
   const sys = system || 'You are a helpful MET English teaching assistant.';
   const errors = []; // collect every provider failure so the real cause is surfaced
 
+  // ── Server proxy first (/api/ai). Keeps provider keys OFF the client bundle:
+  // the serverless function runs the cascade with server-only env keys. We try it
+  // before any browser-direct call. It returns { content:[{text}] } on success,
+  // 503 when the server has no keys (→ fall through to localStorage keys below). ──
+  try {
+    const r = await fetch('/api/ai', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt, system: sys, max_tokens, temperature, preferredProvider }),
+    });
+    const ctype = r.headers.get('content-type') || '';
+    if (r.ok && ctype.includes('application/json')) {
+      const data = await r.json();
+      if (data?.content?.[0]?.text) return data;
+    } else if (r.status !== 404 && ctype.includes('application/json')) {
+      // 503 (no server keys) is expected on a fresh deploy — note it but keep going.
+      const e = await r.json().catch(() => ({}));
+      if (r.status !== 503) errors.push(`Server /api/ai: ${e.error?.message || r.status}`);
+    }
+  } catch (e) {
+    errors.push(`Server /api/ai: ${e.message}`);
+  }
+
   // Each provider can carry multiple keys; the cascade rotates through them.
-  const groqKeys = multiKeys(import.meta.env.VITE_GROQ_API_KEY, 'vv:groq_api_key');
-  const geminiKeys = multiKeys(import.meta.env.VITE_GEMINI_API_KEY, 'vv:gemini_api_key');
-  const anthropicKeys = multiKeys(import.meta.env.VITE_ANTHROPIC_API_KEY, API_KEY_LS);
-  const openaiKeys = multiKeys(import.meta.env.VITE_OPENAI_API_KEY, 'vv:openai_api_key');
-  const openrouterKeys = multiKeys(import.meta.env.VITE_OPENROUTER_API_KEY, 'vv:openrouter_api_key');
+  // NOTE: client-direct calls use ONLY keys entered in Settings (localStorage) —
+  // env (VITE_) keys are intentionally NOT read here so they never get bundled
+  // into the public client build. Configure provider keys server-side instead.
+  const groqKeys = multiKeys('', 'vv:groq_api_key');
+  const geminiKeys = multiKeys('', 'vv:gemini_api_key');
+  const anthropicKeys = multiKeys('', API_KEY_LS);
+  const openaiKeys = multiKeys('', 'vv:openai_api_key');
+  const openrouterKeys = multiKeys('', 'vv:openrouter_api_key');
   const payload = { model: ANTHROPIC_MODEL, max_tokens, temperature, system: sys, messages: [{ role: 'user', content: prompt }] };
 
   // ── Provider attempts: each returns a result object on success, or null on failure (pushing to errors) ──
@@ -964,20 +990,6 @@ export async function callAI(prompt, { max_tokens = 2048, system, temperature = 
       }
     } catch (e) {
       errors.push(`Gemini/${model}: ${e.message}`);
-    }
-    return null;
-  }
-
-  async function tryAnthropicProxy() {
-    const serverResponse = await fetch('/api/anthropic', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
-    }).catch(() => null);
-    if (serverResponse?.ok) return serverResponse.json();
-    if (serverResponse && ![404, 405].includes(serverResponse.status)) {
-      const err = await serverResponse.json().catch(() => ({}));
-      const msg = err.error?.message || err.message || `proxy ${serverResponse.status}`;
-      // "not configured" is just an absent key — record it but keep trying other providers
-      if (!/not configured/i.test(msg)) errors.push(`Anthropic proxy: ${msg}`);
     }
     return null;
   }
@@ -1089,7 +1101,6 @@ export async function callAI(prompt, { max_tokens = 2048, system, temperature = 
       groqKeys.forEach((key, ki) => baseAttempts.push({ id: `groq:${model}#${ki}`, run: withTimeout(() => tryGroq(key, model)) }));
     }
   }
-  baseAttempts.push({ id: 'anthropic-proxy', run: tryAnthropicProxy }); // always tried; skips silently if not configured
   anthropicKeys.forEach((key, ki) => baseAttempts.push({ id: `anthropic-direct#${ki}`, run: withTimeout(() => tryAnthropicDirect(key)) }));
   openaiKeys.forEach((key, ki) => baseAttempts.push({ id: `openai#${ki}`, run: withTimeout(() => tryOpenAI(key)) }));
 
@@ -1098,7 +1109,7 @@ export async function callAI(prompt, { max_tokens = 2048, system, temperature = 
   let rrIdx = 0;
   try { rrIdx = parseInt(localStorage.getItem(ROUND_ROBIN_LS) || '0', 10) || 0; } catch { /* ignore */ }
 
-  const pivotProviders = ['gemini', 'openrouter', 'groq', 'anthropic-proxy', 'openai', 'anthropic-direct'];
+  const pivotProviders = ['gemini', 'openrouter', 'groq', 'openai', 'anthropic-direct'];
   const pivotAttempts = baseAttempts.filter(a => pivotProviders.some(p => a.id === p || a.id.startsWith(p + ':')));
   const pivotCount = pivotAttempts.length;
 
@@ -1143,7 +1154,7 @@ export async function callAI(prompt, { max_tokens = 2048, system, temperature = 
   if (errors.length) {
     throw new Error(`All AI providers failed:\n${errors.join('\n')}`);
   }
-  throw new Error('No AI key configured. Add VITE_GROQ_API_KEY or VITE_GEMINI_API_KEY to .env, or set one in Settings.');
+  throw new Error('No AI provider configured. Add a key (e.g. GEMINI_API_KEY) to your Vercel project env vars, or enter one in Settings.');
 }
 
 /* ─── summarizeTranscript ────────────────────────────────────── */

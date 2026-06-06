@@ -18,12 +18,10 @@ const EL_VOICE = '21m00Tcm4TlvDq8ikWAM'; // ElevenLabs — Rachel, natural Ameri
 
 /* ── TTS helpers ──────────────────────────────────────────────── */
 function getElKey() {
+  // Settings-entered key only (localStorage). The env (VITE_) key is intentionally
+  // NOT read here so it can never be inlined into the public client bundle.
   try {
-    return (
-      (import.meta.env && import.meta.env.VITE_ELEVENLABS_API_KEY) ||
-      localStorage.getItem('vv:elevenlabs_api_key') ||
-      ''
-    );
+    return localStorage.getItem('vv:elevenlabs_api_key') || '';
   } catch {
     return '';
   }
