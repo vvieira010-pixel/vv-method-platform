@@ -237,8 +237,8 @@ Return JSON:
             </Card>
           )}
 
-          {/* Diagnosis priorities */}
-          {diagnosis?.sections?.priorityDiagnosis?.content && (
+          {/* Diagnosis priorities (content is sometimes an object, not an array — guard before .map) */}
+          {Array.isArray(diagnosis?.sections?.priorityDiagnosis?.content) && diagnosis.sections.priorityDiagnosis.content.length > 0 && (
             <Card style={{ padding: 18 }}>
               <SectionHeader title="Original Diagnosis Priorities" icon={<Icon.diagnose size={15} />} />
               <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 8 }}>

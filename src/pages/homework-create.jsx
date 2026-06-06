@@ -87,7 +87,7 @@ export default function HomeworkCreate({ diagnosisId, studentId, students, onNav
   }
 
   function inferSkillType(priorities) {
-    const areas = (priorities || []).map(p => (p.area || '').toLowerCase());
+    const areas = (Array.isArray(priorities) ? priorities : []).map(p => (p.area || '').toLowerCase());
     if (areas.some(a => /speak/.test(a))) return 'speaking';
     if (areas.some(a => /writ/.test(a))) return 'writing';
     if (areas.some(a => /vocab/.test(a))) return 'vocabulary';
