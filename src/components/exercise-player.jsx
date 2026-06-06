@@ -119,34 +119,70 @@ function MCQPlayer({ ex, res, update, readOnly }) {
 }
 
 /* ─── 2. FILL THE BLANK ─────────────────────────────────────── */
+const BLANK_MAX_TRIES = 5;
+
 function BlankPlayer({ ex, res, update, readOnly }) {
   const segments = parseBlankTemplate(ex.template);
   const studentBlanks = res?.blanks || [];
   const correctBlanks = ex.blanks || [];
+  const attempts = res?.blankAttempts || {};   // { blankIdx: wrong-try count }
+  const lastTried = res?.lastTried || {};       // { blankIdx: last wrong value counted }
 
-  const getStatus = (blankIdx) => {
-    const val = (studentBlanks[blankIdx] || '').trim().toLowerCase();
+  const acceptedFor = (i) => (correctBlanks[i] || '').split('|').map(a => a.trim().toLowerCase());
+  const isCorrectVal = (i, val) => acceptedFor(i).includes((val || '').trim().toLowerCase());
+  const triesUsed = (i) => attempts[i] || 0;
+  const isRevealed = (i) => triesUsed(i) >= BLANK_MAX_TRIES;
+  const answerFor = (i) => (correctBlanks[i] || '').split('|')[0]?.trim() || '';
+
+  const getStatus = (i) => {
+    const val = (studentBlanks[i] || '').trim().toLowerCase();
     if (!val) return null;
-    const accepted = (correctBlanks[blankIdx] || '').split('|').map(a => a.trim().toLowerCase());
-    return accepted.includes(val) ? 'ok' : 'warn';
+    return isCorrectVal(i, val) ? 'ok' : 'warn';
   };
+
+  // Count one try when a blank loses focus with a non-empty WRONG answer.
+  // Identical consecutive values aren't double-counted. After BLANK_MAX_TRIES
+  // wrong tries, the answer for that blank is revealed.
+  const countTry = (i) => {
+    if (readOnly || isRevealed(i)) return;
+    const raw = (studentBlanks[i] || '').trim();
+    if (!raw || isCorrectVal(i, raw)) return;
+    if (raw.toLowerCase() === (lastTried[i] || '').toLowerCase()) return;
+    update({
+      blankAttempts: { ...attempts, [i]: triesUsed(i) + 1 },
+      lastTried: { ...lastTried, [i]: raw },
+    });
+  };
+
+  const hasAnswers = correctBlanks.length > 0;
+  const anyRevealed = Object.keys(attempts).some(k => triesUsed(k) >= BLANK_MAX_TRIES);
 
   return (
     <div>
-      <p style={{ margin: '0 0 14px', fontSize: 'var(--text-md)', lineHeight: 2.2, color: 'var(--text)' }}>
+      {hasAnswers && !readOnly && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10, padding: '6px 10px', background: 'var(--accent-subtle)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-xs)', color: 'var(--accent-deep)' }}>
+          <Icon.info size={13} />
+          <span>Keep trying — if a blank is tricky, its answer appears after {BLANK_MAX_TRIES} attempts.</span>
+        </div>
+      )}
+      <p style={{ margin: '0 0 14px', fontSize: 'var(--text-md)', lineHeight: 2.4, color: 'var(--text)' }}>
         {segments.map((seg, i) => {
           if (seg.type === 'text') return <span key={i}>{seg.value}</span>;
-          const status = getStatus(seg.index);
-          const color = status === 'ok' ? 'var(--success)' : status === 'warn' ? 'var(--warning)' : 'var(--primary)';
+          const idx = seg.index;
+          const status = getStatus(idx);
+          const revealed = isRevealed(idx);
+          const used = triesUsed(idx);
+          const color = revealed || status === 'ok' ? 'var(--success)' : status === 'warn' ? 'var(--warning)' : 'var(--primary)';
           return (
             <span key={i} style={{ whiteSpace: 'nowrap' }}>
               <input
-                value={studentBlanks[seg.index] || ''}
+                value={studentBlanks[idx] || ''}
                 onChange={e => {
                   const blanks = [...studentBlanks];
-                  blanks[seg.index] = e.target.value;
+                  blanks[idx] = e.target.value;
                   update({ blanks });
                 }}
+                onBlur={() => countTry(idx)}
                 disabled={readOnly}
                 placeholder="___"
                 aria-label={status === 'ok' ? 'Blank, correct' : status === 'warn' ? 'Blank, check your answer' : 'Blank'}
@@ -159,11 +195,26 @@ function BlankPlayer({ ex, res, update, readOnly }) {
                 }}
               />
               {status === 'ok' && <span title="correct" style={{ color: 'var(--success)', fontWeight: 700, marginLeft: 3, fontSize: 'var(--text-sm)' }}>✓</span>}
-              {status === 'warn' && <span title="check this" style={{ color: 'var(--warning)', fontWeight: 700, marginLeft: 3, fontSize: 'var(--text-sm)' }}>!</span>}
+              {status === 'warn' && !revealed && (
+                <span title="check this" style={{ color: 'var(--warning)', fontWeight: 700, marginLeft: 3, fontSize: 'var(--text-xs)' }}>
+                  !{used > 0 ? ` ${used}/${BLANK_MAX_TRIES}` : ''}
+                </span>
+              )}
+              {revealed && (
+                <span title={`Answer shown after ${BLANK_MAX_TRIES} tries`} style={{ marginLeft: 4, fontSize: 'var(--text-sm)', fontWeight: 700, color: 'var(--success)' }}>
+                  → {answerFor(idx)}
+                </span>
+              )}
             </span>
           );
         })}
       </p>
+      {anyRevealed && !readOnly && (
+        <div style={{ fontSize: 'var(--text-xs)', color: 'var(--success)', display: 'flex', alignItems: 'center', gap: 6 }}>
+          <Icon.check size={12} />
+          <span>Answer shown after {BLANK_MAX_TRIES} tries — type it in to finish the blank.</span>
+        </div>
+      )}
     </div>
   );
 }
