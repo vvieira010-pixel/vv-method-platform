@@ -901,6 +901,15 @@ function PreviewExercise({ exercise }) {
     case 'speak':
       return (
         <div>
+          {exercise.imageUrl && (
+            <div style={{ marginBottom: 10, borderRadius: 8, overflow: 'hidden', border: '1px solid var(--border)', background: 'var(--bg)' }}>
+              <img
+                src={exercise.imageUrl}
+                alt={exercise.imageAlt || 'Speaking prompt image'}
+                style={{ width: '100%', maxHeight: 220, objectFit: 'cover', display: 'block' }}
+              />
+            </div>
+          )}
           <div style={{ background: 'var(--surface)', borderRadius: 8, padding: '12px 14px', marginBottom: 10 }}>
             <p style={{ fontWeight: 500, margin: 0 }}>{exercise.prompt || 'Speaking prompt…'}</p>
             <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>Target: {exercise.targetSeconds || 60} seconds</span>
@@ -1169,6 +1178,8 @@ function applyAiTaskToExercise(exercise, aiTask) {
   if (ex.type === 'speak') {
     ex.prompt = aiTask?.prompt || content;
     ex.targetSeconds = normalizeTargetSeconds(aiTask?.targetSeconds, aiTask?.duration);
+    if (aiTask?.imageUrl) ex.imageUrl = aiTask.imageUrl;
+    if (aiTask?.imageAlt) ex.imageAlt = aiTask.imageAlt;
     return ex;
   }
 
