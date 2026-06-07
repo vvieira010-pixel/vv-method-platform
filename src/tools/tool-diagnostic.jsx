@@ -5,6 +5,19 @@ import { parseAiJson } from '../lib/ai-helpers.js';
 import { DIAGNOSTIC_PROMPT } from '../lib/prompts.js';
 import { getStudentMemory } from '../lib/agent-memory.js';
 
+/* ─── Styles ───────────────────────────────────────────────── */
+if (typeof document !== 'undefined' && !document.getElementById('diagnostic-styles')) {
+  const style = document.createElement('style');
+  style.id = 'diagnostic-styles';
+  style.textContent = `
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+  `;
+  document.head.appendChild(style);
+}
+
 /* ─── Helpers ──────────────────────────────────────────────── */
 function clampTwoDecimals(value, min = 0, max = 4) {
   const n = Number(value);
@@ -142,6 +155,7 @@ export default function ToolDiagnostic({ student, students, onSelectStudent, onN
   const [lessonFocus, setLessonFocus] = useState("");
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [loadingMessage, setLoadingMessage] = useState("");
   const [error, setError] = useState("");
   const [saved, setSaved] = useState([]);
   const [viewing, setViewing] = useState(null);
@@ -153,6 +167,8 @@ export default function ToolDiagnostic({ student, students, onSelectStudent, onN
   );
   const [currentLevel, setCurrentLevel] = useState("B1");
   const [targetLevel, setTargetLevel] = useState("B2");
+  const [confirmNewDiag, setConfirmNewDiag] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(null);
   const fileRef = useRef(null);
 
   useEffect(() => {
@@ -232,6 +248,7 @@ export default function ToolDiagnostic({ student, students, onSelectStudent, onN
   const handleGenerate = async () => {
     if (!transcript.trim()) return;
     setLoading(true);
+    setLoadingMessage("Preparing transcript...");
     setError("");
     setResult(null);
     setSavedDiagnosisId(null);
@@ -245,10 +262,12 @@ export default function ToolDiagnostic({ student, students, onSelectStudent, onN
 
     try {
       // Summarize long transcripts to save output token budget
+      setLoadingMessage("Condensing transcript...");
       const condensed = transcript.length > 2000
         ? await summarizeTranscript(transcript)
         : transcript;
 
+      setLoadingMessage("Retrieving student memory...");
       const memory = await getStudentMemory(student?.id);
 
       const replacements = {
@@ -280,11 +299,13 @@ export default function ToolDiagnostic({ student, students, onSelectStudent, onN
       }
 
       // 8000 tokens — the full diagnostic JSON needs room to breathe
+      setLoadingMessage("Analyzing with AI (this may take 30-90 seconds)...");
       const data = await callAI(prompt, { max_tokens: 8000 });
       const raw = data.content?.map(b => b.text || "").join("") || "";
 
       if (!raw.trim()) throw new Error("AI returned an empty response. Check your API key and try again.");
 
+      setLoadingMessage("Processing results...");
       const parsed = parseAiJson(raw);
       setResult(normalizeDiagnosticPayload(parsed));
     } catch (e) {
@@ -299,6 +320,7 @@ export default function ToolDiagnostic({ student, students, onSelectStudent, onN
       }
     }
     setLoading(false);
+    setLoadingMessage("");
   };
 
   /* ── Save ── */
@@ -377,6 +399,7 @@ export default function ToolDiagnostic({ student, students, onSelectStudent, onN
   const handleDelete = async (id) => {
     await deleteSession(id);
     setSaved(prev => prev.filter(d => d.id !== id));
+    setConfirmDelete(null);
     window.toast?.("Deleted.", "info");
   };
 
@@ -480,7 +503,12 @@ export default function ToolDiagnostic({ student, students, onSelectStudent, onN
             />
 
             {/* Skill ratings */}
-            <label style={{ ...labelStyle, marginTop: 16 }}>Skill ratings (0–4)</label>
+            <label style={{ ...labelStyle, marginTop: 16 }}>
+              Skill ratings (0–4 scale)
+              <span style={{ fontSize: "var(--text-xs)", color: "var(--muted)", fontWeight: "normal", display: "block", marginTop: 2 }}>
+                0 = Not evident • 1 = Minimal • 2 = Emerging • 3 = Developing • 4 = Proficient
+              </span>
+            </label>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))", gap: 8, marginTop: 6 }}>
               {SKILL_KEYS.map(sk => (
                 <div key={sk.id} style={{ display: "flex", alignItems: "center", gap: 6 }}>
@@ -490,16 +518,25 @@ export default function ToolDiagnostic({ student, students, onSelectStudent, onN
                     value={skillRatings[sk.id]}
                     onChange={e => setSkillRatings(r => ({ ...r, [sk.id]: clampTwoDecimals(e.target.value) }))}
                     style={{ width: 60, padding: "4px 6px", borderRadius: "var(--radius-sm)", border: "1px solid var(--border)", fontSize: "var(--text-xs)", textAlign: "center" }}
+                    title="Rate only what you observed evidence for"
                   />
                 </div>
               ))}
             </div>
 
-            {/* Generate button */}
+            {/* Generate button with loading state */}
             <div style={{ marginTop: 20 }}>
               <Button variant="primary" size="lg" onClick={handleGenerate} disabled={loading || !transcript.trim()}>
-                {loading ? "Running Diagnostic..." : "Run Full Diagnostic"}
+                {loading ? `${loadingMessage || "Running Diagnostic..."}` : "Run Full Diagnostic"}
               </Button>
+              {loading && (
+                <div style={{ marginTop: 12, padding: "12px 14px", background: "var(--info-bg)", borderRadius: "var(--radius-sm)", border: "1px solid var(--info-soft)" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <div style={{ width: 16, height: 16, borderRadius: "50%", border: "2px solid var(--info)", borderTopColor: "transparent", animation: "spin 1s linear infinite" }} />
+                    <span style={{ color: "var(--info)", fontSize: "var(--text-sm)" }}>{loadingMessage || "Processing..."}</span>
+                  </div>
+                </div>
+              )}
             </div>
             {error && (
               <div style={{ marginTop: 12, padding: "12px 14px", background: "var(--danger-bg)", borderRadius: "var(--radius-sm)", border: "1px solid var(--danger-soft)" }}>
@@ -528,7 +565,7 @@ export default function ToolDiagnostic({ student, students, onSelectStudent, onN
                       <Button variant="primary" size="sm" onClick={handleAssignHomework}>Assign Homework</Button>
                     </>
                   )}
-                  <Button variant="ghost" size="sm" onClick={() => { setResult(null); setSavedDiagnosisId(null); }}>New Diagnosis</Button>
+                  <Button variant="ghost" size="sm" onClick={() => setConfirmNewDiag(true)}>New Diagnosis</Button>
                 </div>
               </div>
             </Card>
@@ -537,6 +574,24 @@ export default function ToolDiagnostic({ student, students, onSelectStudent, onN
             <Card style={{ padding: 18 }}>
               <SectionHeader title="Summary" />
               <p style={{ fontSize: "var(--text-md)", lineHeight: 1.6, marginTop: 8 }}>{result.overall_result}</p>
+            </Card>
+
+            {/* Priorities — moved to top for visual hierarchy */}
+            <Card style={{ padding: 18, border: "2px solid var(--accent-soft)", background: "var(--accent-subtle)" }}>
+              <SectionHeader title="Priority Focus Areas" subtitle="Start here" />
+              <div style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 12 }}>
+                {result.priorities.filter(p => p.area).slice(0, 3).map((p, i) => (
+                  <div key={i} style={{ padding: 14, borderRadius: "var(--radius-sm)", background: "var(--surface)", border: "1px solid var(--border)", borderLeft: `4px solid ${p.urgency === "Critical" ? "var(--danger)" : p.urgency === "Developing" ? "var(--warning)" : "var(--info)"}` }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                      <Pill tone={p.urgency === "Critical" ? "danger" : p.urgency === "Developing" ? "warning" : "info"}>{p.urgency}</Pill>
+                      <span style={{ fontWeight: 700, fontSize: "var(--text-sm)" }}>{p.area}</span>
+                    </div>
+                    {p.evidence && <div style={{ fontSize: "var(--text-xs)", color: "var(--muted)", marginBottom: 4 }}>Evidence: {p.evidence}</div>}
+                    <div style={{ fontSize: "var(--text-sm)", marginBottom: 4 }}>{p.what_to_improve}</div>
+                    {p.how_to_improve && <div style={{ fontSize: "var(--text-xs)", color: "var(--text-2)", marginTop: 2, fontStyle: "italic" }}>Next step: {p.how_to_improve}</div>}
+                  </div>
+                ))}
+              </div>
             </Card>
 
             {/* Section snapshot */}
@@ -557,24 +612,6 @@ export default function ToolDiagnostic({ student, students, onSelectStudent, onN
                     {!isNotEnoughEvidence(s.gap) && (
                       <div style={{ fontSize: "var(--text-xs)", color: "var(--danger)", marginTop: 3 }}>Gap: {s.gap}</div>
                     )}
-                  </div>
-                ))}
-              </div>
-            </Card>
-
-            {/* Priorities */}
-            <Card style={{ padding: 18 }}>
-              <SectionHeader title="Priorities" />
-              <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 10 }}>
-                {result.priorities.filter(p => p.area).map((p, i) => (
-                  <div key={i} style={{ padding: 12, borderRadius: "var(--radius-sm)", background: "var(--bg)" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-                      <Pill tone={p.urgency === "Critical" ? "danger" : p.urgency === "Developing" ? "warning" : "info"}>{p.urgency}</Pill>
-                      <span style={{ fontWeight: 600, fontSize: "var(--text-sm)" }}>{p.area}</span>
-                    </div>
-                    {p.evidence && <div style={{ fontSize: "var(--text-xs)", color: "var(--muted)", marginBottom: 4 }}>Evidence: {p.evidence}</div>}
-                    <div style={{ fontSize: "var(--text-sm)" }}>{p.what_to_improve}</div>
-                    {p.how_to_improve && <div style={{ fontSize: "var(--text-xs)", color: "var(--text-2)", marginTop: 3 }}>How: {p.how_to_improve}</div>}
                   </div>
                 ))}
               </div>
@@ -675,7 +712,7 @@ export default function ToolDiagnostic({ student, students, onSelectStudent, onN
                   <span style={{ fontSize: "var(--text-xs)", color: "var(--muted)", maxWidth: 300, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                     {s.overall_result?.slice(0, 60) || s.progress_note || "—"}
                   </span>
-                  <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); handleDelete(s.id); }}>Delete</Button>
+                  <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); setConfirmDelete(s.id); }}>Delete</Button>
                 </div>
               ))}
             </div>
@@ -714,6 +751,37 @@ export default function ToolDiagnostic({ student, students, onSelectStudent, onN
                 ))}
               </Card>
             )}
+          </div>
+        )}
+
+        {/* Confirmation dialogs */}
+        {confirmNewDiag && (
+          <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000 }}>
+            <Card style={{ padding: 24, maxWidth: 400, boxShadow: "0 8px 24px rgba(0,0,0,0.15)" }}>
+              <h3 style={{ marginTop: 0, marginBottom: 12, fontSize: "var(--text-lg)", fontWeight: 700 }}>Discard current result?</h3>
+              <p style={{ fontSize: "var(--text-sm)", color: "var(--text-2)", marginBottom: 16 }}>
+                You have an unsaved diagnosis result. Starting a new diagnosis will discard it. Save it first if you want to keep this work.
+              </p>
+              <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+                <Button variant="ghost" size="sm" onClick={() => setConfirmNewDiag(false)}>Cancel</Button>
+                <Button variant="danger" size="sm" onClick={() => { setResult(null); setSavedDiagnosisId(null); setConfirmNewDiag(false); }}>Discard & Continue</Button>
+              </div>
+            </Card>
+          </div>
+        )}
+
+        {confirmDelete && (
+          <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000 }}>
+            <Card style={{ padding: 24, maxWidth: 400, boxShadow: "0 8px 24px rgba(0,0,0,0.15)" }}>
+              <h3 style={{ marginTop: 0, marginBottom: 12, fontSize: "var(--text-lg)", fontWeight: 700 }}>Delete this diagnosis?</h3>
+              <p style={{ fontSize: "var(--text-sm)", color: "var(--text-2)", marginBottom: 16 }}>
+                This action cannot be undone. This will permanently delete the diagnosis record and all associated data.
+              </p>
+              <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+                <Button variant="ghost" size="sm" onClick={() => setConfirmDelete(null)}>Cancel</Button>
+                <Button variant="danger" size="sm" onClick={() => handleDelete(confirmDelete)}>Delete</Button>
+              </div>
+            </Card>
           </div>
         )}
       </div>
