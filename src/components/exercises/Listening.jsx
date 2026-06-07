@@ -123,6 +123,7 @@ function speakBrowser(text) {
 export default function Listening({ exercise, onComplete }) {
   const {
     audioText = '',
+    audioSrc = '',   // pre-recorded URL — skips TTS when set
     question = '',
     options = [],
     correct = null,
@@ -154,7 +155,7 @@ export default function Listening({ exercise, onComplete }) {
 
       // Fetch from TTS once, then reuse cached blob URL for replays
       if (!url) {
-        url = await fetchAudio(audioText); // ElevenLabs → OpenAI TTS → null
+        url = audioSrc || await fetchAudio(audioText); // pre-recorded URL → TTS cascade → null
         if (url) setAudioUrl(url);
       }
 
@@ -180,7 +181,7 @@ export default function Listening({ exercise, onComplete }) {
       setError(e.message || 'Could not play audio.');
       setRevealed(true);
     }
-  }, [canPlay, audioText, audioUrl]);
+  }, [canPlay, audioText, audioSrc, audioUrl]);
 
   function handleStop() {
     if (audioRef.current) {
@@ -280,7 +281,7 @@ export default function Listening({ exercise, onComplete }) {
         {/* Play status */}
         <div style={{ fontSize: 12.5, color: 'var(--muted)', textAlign: 'center', lineHeight: 1.5 }}>
           {loading
-            ? 'Generating audio…'
+            ? (audioSrc ? 'Loading audio…' : 'Generating audio…')
             : playing
               ? 'Playing — press ⏹ to stop'
               : playCount === 0
