@@ -198,8 +198,11 @@ function HomeView({ student, onTab }) {
 
   const pendingTitle = pendingHw[0]?.title || 'No homework pending';
   const evaluatedSkills = snapshot.filter(s => Number(s.score_0_80) > 0);
-  const focusSkill = evaluatedSkills[0]?.section || student.focusSkill || 'Waiting for evidence';
+  const fallbackFocus = nextClass?.metSkillFocus || nextClass?.classFocus || student.focusSkill || 'MET speaking organization';
+  const focusSkill = evaluatedSkills[0]?.section || fallbackFocus;
   const focusTrend = evaluatedSkills[0] ? getSkillTrend(focusSkill, approvedHistory) : { dir: 'none' };
+  const strongestSkill = evaluatedSkills.slice().sort((a, b) => Number(b.score_0_80 || 0) - Number(a.score_0_80 || 0))[0];
+  const readinessStage = strongestSkill ? getProgressStage(strongestSkill.score_0_80) : null;
   const feedbackFocus = latestFeedback && typeof latestFeedback === 'object'
     ? latestFeedback.nextStep || latestFeedback.focusArea?.area || latestFeedback.focusArea?.explanation || latestFeedback.finalNote
     : '';
@@ -209,7 +212,10 @@ function HomeView({ student, onTab }) {
       ? { title: 'Finish assigned practice', text: pendingTitle, action: 'Open homework', tab: 'homework' }
       : feedbackFocus
         ? { title: 'Practice the current focus', text: feedbackFocus, action: 'Open feedback', tab: 'feedback' }
-        : { title: 'Prepare for the next class focus', text: nextClass?.classFocus || nextClass?.metSkillFocus || 'Your teacher will confirm the next focus.', action: 'Check homework', tab: 'homework' };
+        : { title: 'Prepare for the next class focus', text: nextClass?.classFocus || nextClass?.metSkillFocus || 'Prepare one clear MET-style answer with a main idea, one example, and a short conclusion.', action: 'View progress', tab: 'progress' };
+  const heroAction = pendingHw.length > 0
+    ? { label: 'Open homework', tab: 'homework', icon: <Icon.homework size={15} /> }
+    : { label: 'View progress', tab: 'progress', icon: <Icon.progress size={15} /> };
   const generalMemo = generalMemoText || 'No general memo posted yet.';
   const individualMemo = student.notes
     || student.goalNote
@@ -230,16 +236,16 @@ function HomeView({ student, onTab }) {
           <h1>Good {timeOfDay()}, {student.firstName}.</h1>
           <p>{student.currentLevel || student.band || 'Current level'} to {student.targetLevel || student.bandTarget || 'target level'} · Session {student.session || 1}/{student.totalSessions || 24}</p>
         </div>
-        <button className="student-hero-action" onClick={() => onTab('homework')}>
-          <Icon.homework size={15} />
-          Open homework
+        <button className="student-hero-action" onClick={() => onTab(heroAction.tab)}>
+          {heroAction.icon}
+          {heroAction.label}
         </button>
       </section>
 
       <section className="student-metrics" aria-label="Student summary">
         <MetricCard icon={<Icon.calendar size={19} />} label="Next class" value={nextDate} sub={nextTime} tone="blue" />
         <MetricCard icon={<Icon.homework size={19} />} label="Homework" value={pendingHw.length} sub={pendingHw.length === 1 ? 'task pending' : 'tasks pending'} tone="teal" />
-        <MetricCard icon={<Icon.progress size={19} />} label="Current focus" value={focusSkill} sub={focusTrend.dir !== 'none' ? `Progress: ${focusTrend.label}` : 'from approved diagnosis'} tone="purple" />
+        <MetricCard icon={<Icon.progress size={19} />} label="Current focus" value={focusSkill} sub={focusTrend.dir !== 'none' ? `Progress: ${focusTrend.label}` : 'next useful practice'} tone="purple" />
         <MetricCard icon={<Icon.inbox size={19} />} label="Feedback" value={latestFeedback ? 'Ready' : 'Waiting'} sub={latestFeedback ? 'teacher approved' : 'after diagnosis'} tone="orange" />
       </section>
 
@@ -299,6 +305,42 @@ function HomeView({ student, onTab }) {
           <button className="student-wide-action" onClick={() => onTab('homework')}>Go to homework <Icon.arrowR size={14} /></button>
         </article>
 
+        <article className="student-panel student-panel--readiness">
+          <div className="student-panel-head">
+            <div>
+              <span className="student-panel-kicker">Progress</span>
+              <h2>Your readiness path</h2>
+            </div>
+            <button className="student-text-action" onClick={() => onTab('progress')}>Open progress</button>
+          </div>
+          {evaluatedSkills.length > 0 ? (
+            <>
+              <div className="student-readiness-summary">
+                <div>
+                  <strong>{readinessStage?.label || 'Starting'}</strong>
+                  <span>{strongestSkill?.section || focusSkill}</span>
+                </div>
+                <TrendChip trend={getSkillTrend(strongestSkill?.section, approvedHistory)} />
+              </div>
+              <div className="student-stage-track student-stage-track--wide" aria-label={`Readiness stage: ${readinessStage?.label || 'Starting'}`}>
+                {PROGRESS_STAGES.map(item => (
+                  <span key={item.label} className={item.order <= (readinessStage?.order || 0) ? 'active' : ''} title={item.label} />
+                ))}
+              </div>
+              <div className="student-skill-list">
+                {evaluatedSkills.slice(0, 3).map(s => <SkillRow key={s.section} skill={s} trend={getSkillTrend(s.section, approvedHistory)} />)}
+              </div>
+            </>
+          ) : (
+            <div className="student-progress-starter">
+              <p>Progress will appear after your teacher evaluates enough samples. Until then, use these steps to prepare evidence for your next diagnosis.</p>
+              <TodoRow done={false} label="Prepare one MET-style answer" meta="Main idea + example + short ending" />
+              <TodoRow done={false} label="Record or write one practice sample" meta="This gives your teacher evidence" />
+              <TodoRow done={false} label="Bring one question to class" meta={nextClass?.metSkillFocus || 'Focus on your next MET skill'} />
+            </div>
+          )}
+        </article>
+
         <article className="student-panel">
           <div className="student-panel-head">
             <div>
@@ -332,7 +374,7 @@ function HomeView({ student, onTab }) {
             </div>
           ) : (
             <div className="student-empty-card">
-              Progress will appear after your teacher evaluates enough samples. Keep completing homework so the next diagnosis can show a real pattern.
+              No evaluated skills yet. Your next class and homework will create the evidence needed for a real progress profile.
             </div>
           )}
         </article>
@@ -929,7 +971,20 @@ function ProgressView({ student }) {
       </section>
 
       {diagnoses.length === 0 ? (
-        <div className="student-empty-card">No diagnoses yet. After your first class, your progress will appear here.</div>
+        <section className="student-panel student-panel--readiness">
+          <div className="student-panel-head">
+            <div>
+              <span className="student-panel-kicker">Starting point</span>
+              <h2>Your first progress steps</h2>
+            </div>
+          </div>
+          <div className="student-progress-starter">
+            <p>No approved diagnosis is ready yet. You can still start building useful evidence for your teacher.</p>
+            <TodoRow done={false} label="Complete the next assigned homework" meta="Homework gives your teacher review evidence" />
+            <TodoRow done={false} label="Prepare one speaking sample" meta="45 seconds with one clear example" />
+            <TodoRow done={false} label="Ask one MET question in class" meta="Use the Messages tab if you need help before class" />
+          </div>
+        </section>
       ) : (
         <>
           {skills.length > 0 ? (

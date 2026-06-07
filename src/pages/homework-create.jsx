@@ -45,6 +45,7 @@ export default function HomeworkCreate({ diagnosisId, studentId, students, onNav
   // Saved-exercise library (Supabase or localStorage). Reloaded when libVersion bumps.
   const [libVersion, setLibVersion] = useState(0);
   const [libraryExercises, setLibraryExercises] = useState([]);
+  const [currentStep, setCurrentStep] = useState(1); // 1: Diagnosis, 2: Select, 3: Review, 4: Assign
 
   useEffect(() => {
     let cancelled = false;
@@ -396,402 +397,146 @@ function getPriorityItems(dx) {
         <Icon.arrowL size={13} /> Back
       </button>
 
+      {/* Wizard Header */}
       <h1 style={S.headline}>Create Homework</h1>
-      {student && (
-        <p style={S.sub}>
-          {student.name} · from diagnosis{' '}
-          {diagnosis ? new Date(diagnosis.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : ''}
-        </p>
-      )}
-
-      {/* Diagnosis summary */}
-      {getPriorityItems(diagnosis)[0] && (
-        <div style={{ marginTop: 16, marginBottom: 20, padding: 14, background: 'var(--accent-subtle)', borderRadius: 'var(--radius-md)', border: '1px solid var(--accent-soft)' }}>
-          <div style={{ fontWeight: 600, fontSize: 'var(--text-sm)', color: 'var(--accent-deep)', marginBottom: 4 }}>
-            Diagnosis Priority:
+      <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
+        {['Diagnosis', 'Select Exercises', 'Review', 'Assign'].map((step, i) => (
+          <div key={step} style={{
+            fontSize: 'var(--text-xs)', fontWeight: 600,
+            color: currentStep === i + 1 ? 'var(--accent)' : 'var(--muted)',
+            paddingBottom: 4, borderBottom: currentStep === i + 1 ? '2px solid var(--accent)' : 'none'
+          }}>
+            {i + 1}. {step}
           </div>
-          <div style={{ fontSize: 'var(--text-sm)' }}>
-            {getPriorityItems(diagnosis)[0].area} — {getPriorityItems(diagnosis)[0].whatToImprove}
-          </div>
-        </div>
-      )}
-
-      {/* Mode tabs + actions */}
-      <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap', alignItems: 'center' }}>
-        <Button variant={!preview ? 'primary' : 'ghost'} size="sm" onClick={() => setPreview(false)}>
-          <Icon.edit size={12} /> Edit
-        </Button>
-        <Button variant={preview ? 'primary' : 'ghost'} size="sm" onClick={() => setPreview(true)}>
-          <Icon.eye size={12} /> Preview as Student
-        </Button>
-        <Button variant="ghost" size="sm" onClick={() => setShowLibrary(true)}>
-          <Icon.doc size={12} /> Add from Library
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={handleGenerateOptions}
-          disabled={!diagnosis || loadingOptions || generating}
-          title={!diagnosis ? 'Open Homework from a diagnosis to generate options.' : ''}
-        >
-          <Icon.refresh size={12} /> {loadingOptions ? 'Loading…' : 'Generate Exercise Options'}
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setShowGroupGen(g => !g)}
-          disabled={generating}
-          title="Generate exercises per skill group — each group runs a separate AI call"
-          style={showGroupGen ? { background: 'var(--accent-subtle)', color: 'var(--accent-deep)', borderColor: 'var(--accent-soft)' } : {}}
-        >
-          <Icon.bolt size={12} /> Generate by Skill Group
-        </Button>
+        ))}
       </div>
 
-      {/* ── Per-skill-group generator panel ── */}
-      {showGroupGen && (
-        <div style={{ marginBottom: 16, padding: 16, border: '1px solid var(--accent-soft)', borderRadius: 'var(--radius-md)', background: 'var(--accent-subtle)' }}>
-          <div style={{ fontWeight: 700, fontSize: 'var(--text-sm)', color: 'var(--accent-deep)', marginBottom: 10 }}>
-            Select skill groups — each gets its own AI generation call
-          </div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginBottom: 14 }}>
-            {SKILL_GROUPS.map(({ key, label, icon }) => {
-              const isOn = (groupGenConfig[key] || 0) > 0;
-              return (
-                <div key={key} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 10px', border: `1px solid ${isOn ? 'var(--accent)' : 'var(--border)'}`, borderRadius: 'var(--radius-sm)', background: isOn ? 'var(--accent-soft)' : 'var(--surface)', cursor: 'pointer' }}
-                  onClick={() => setGroupGenConfig(c => ({ ...c, [key]: isOn ? 0 : 5 }))}>
-                  <span>{icon}</span>
-                  <span style={{ fontSize: 'var(--text-sm)', fontWeight: isOn ? 700 : 400, color: isOn ? 'var(--accent-deep)' : 'var(--text)' }}>{label}</span>
-                  {isOn && (
-                    <input
-                      type="number"
-                      min={1} max={10}
-                      value={groupGenConfig[key] || 5}
-                      onClick={e => e.stopPropagation()}
-                      onChange={e => setGroupGenConfig(c => ({ ...c, [key]: Math.max(1, Math.min(10, Number(e.target.value) || 5)) }))}
-                      style={{ width: 38, fontSize: 'var(--text-sm)', border: '1px solid var(--border)', borderRadius: 4, padding: '2px 4px', background: 'var(--surface)', textAlign: 'center' }}
-                    />
-                  )}
-                </div>
-              );
-            })}
-          </div>
-          {groupGenStatus && (
-            <p style={{ fontSize: 'var(--text-sm)', color: 'var(--accent-deep)', marginBottom: 10 }}>{groupGenStatus}</p>
-          )}
-          <div style={{ display: 'flex', gap: 8 }}>
-            <Button variant="primary" size="sm" onClick={handleGenerateByGroups} disabled={generating || Object.values(groupGenConfig).every(v => !v)}>
-              {generating ? 'Generating…' : `Generate ${Object.values(groupGenConfig).filter(Boolean).reduce((a, b) => a + b, 0)} exercises`}
-            </Button>
-            <Button variant="ghost" size="sm" onClick={() => { setShowGroupGen(false); setGroupGenConfig({}); }}>Cancel</Button>
-          </div>
-        </div>
-      )}
-
-      {/* ── Exercise Library Picker ── */}
-      {showLibrary && (
-        <div
-          onClick={() => setShowLibrary(false)}
-          onKeyDown={e => e.key === 'Escape' && setShowLibrary(false)}
-          style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.45)', zIndex: 60, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}
-        >
-          <div role="dialog" aria-modal="true" aria-labelledby="library-title" onClick={e => e.stopPropagation()} style={{ background: 'var(--surface)', borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-modal)', maxWidth: 680, width: '100%', maxHeight: '82vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-            <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--divider)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <div>
-                <div id="library-title" style={{ fontWeight: 700, fontSize: 'var(--text-md)' }}>{bankMeta.title}</div>
-                <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>{bankMeta.moduleCount} modules · {bankMeta.exerciseCount} exercise sets</div>
-              </div>
-              <button onClick={() => setShowLibrary(false)} aria-label="Close library" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)', fontSize: 20 }}>×</button>
-            </div>
-            <div style={{ padding: 16, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {/* My Exercises — teacher's saved bank */}
-              {libraryExercises.length > 0 && (
-                <div style={{ marginBottom: 4 }}>
-                  <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>
-                    My Exercises ({libraryExercises.length})
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    {libraryExercises.map(libEx => (
-                      <div key={libEx.id} style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', padding: '10px 12px', display: 'flex', gap: 10, alignItems: 'center' }}>
-                        <ExTypeBadge typeId={libEx.type} />
-                        <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--text-sm)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                          {libEx.title}
-                        </span>
-                        <Button variant="primary" size="sm" onClick={() => addFromLibrary(libEx)} style={{ flexShrink: 0 }}>
-                          <Icon.plus size={12} /> Add
-                        </Button>
-                        <button
-                          onClick={() => removeFromLibrary(libEx.id)}
-                          style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--danger)', padding: 4, flexShrink: 0 }}
-                          title="Remove from library"
-                        >
-                          <Icon.trash size={13} />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                  <div style={{ height: 1, background: 'var(--divider)', margin: '14px 0 4px' }} />
-                  <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>
-                    Ready-made modules
-                  </div>
-                </div>
-              )}
-              {getExerciseModules().map(mod => (
-                <div key={mod.id} style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', padding: 14, display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                      <span style={{ fontWeight: 700, fontSize: 'var(--text-sm)' }}>{mod.title}</span>
-                      {mod.levelRange && <Pill tone="muted">{mod.levelRange}</Pill>}
+      {/* Step Content */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: 24, alignItems: 'start' }}>
+        <div>
+          {currentStep === 1 && (
+            <Card style={{ padding: 18 }}>
+              <SectionHeader title="Step 1: Homework Source" />
+              <div style={{ marginTop: 16 }}>
+                <p style={{ fontSize: 'var(--text-md)', marginBottom: 8 }}>Student: <strong>{student?.name || 'Loading...'}</strong></p>
+                {diagnosis && (
+                  <div style={{ padding: 14, background: 'var(--accent-subtle)', borderRadius: 'var(--radius-md)', border: '1px solid var(--accent-soft)' }}>
+                    <div style={{ fontWeight: 600, fontSize: 'var(--text-sm)', color: 'var(--accent-deep)', marginBottom: 4 }}>
+                      Diagnostic Focus:
                     </div>
-                    {mod.targetVocabulary?.length > 0 && (
-                      <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-2)', lineHeight: 1.5 }}>
-                        {mod.targetVocabulary.slice(0, 8).join(' · ')}{mod.targetVocabulary.length > 8 ? ' …' : ''}
-                      </div>
-                    )}
-                    <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: 4 }}>{mod.exerciseCount} exercise sets</div>
-                  </div>
-                  <Button variant="primary" size="sm" onClick={() => addModuleFromLibrary(mod)} style={{ flexShrink: 0 }}>
-                    <Icon.plus size={12} /> Add
-                  </Button>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ── AI Exercise Options Panel ── */}
-      {(loadingOptions || exerciseOptions.length > 0) && (
-        <Card style={{ padding: 18, marginBottom: 16, border: '1px solid var(--accent-soft)', background: 'var(--accent-subtle)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-            <span style={{ fontWeight: 700, fontSize: 'var(--text-sm)', color: 'var(--accent-deep)' }}>
-              AI Exercise Options — click + to add
-            </span>
-            {exerciseOptions.length > 0 && (
-              <Button variant="ghost" size="sm" onClick={() => setExerciseOptions([])} style={{ color: 'var(--muted)' }}>Clear</Button>
-            )}
-          </div>
-          {loadingOptions ? (
-            <p style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)' }}>Generating exercises…</p>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {exerciseOptions.map((ex, i) => (
-                <div key={i} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: '10px 14px', display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                      <span style={{ fontWeight: 700, fontSize: 'var(--text-sm)' }}>{ex.title}</span>
-                      <ExTypeBadge typeId={mapAiType(ex.type)} />
-                      {ex.duration && <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>{ex.duration}</span>}
+                    <div style={{ fontSize: 'var(--text-sm)', marginBottom: 8 }}>
+                      {getPriorityItems(diagnosis)[0]?.area} — {getPriorityItems(diagnosis)[0]?.whatToImprove}
                     </div>
-                    <p style={{ fontSize: 'var(--text-xs)', color: 'var(--text-2)', lineHeight: 1.5, margin: 0, whiteSpace: 'pre-wrap' }}>
-                      {(ex.content || '').slice(0, 220)}{(ex.content || '').length > 220 ? '…' : ''}
-                    </p>
-                  </div>
-                  <Button variant="primary" size="sm" onClick={() => addAiExerciseToList(ex)} style={{ flexShrink: 0 }}>
-                    <Icon.plus size={12} /> Add
-                  </Button>
-                </div>
-              ))}
-            </div>
-          )}
-        </Card>
-      )}
-
-      {preview ? (
-        /* ── PREVIEW MODE ── */
-        <Card style={{ padding: 24 }}>
-          <div style={{ fontWeight: 700, fontSize: 'var(--text-xl)', marginBottom: 4 }}>{form.title || 'Untitled Homework'}</div>
-          {form.description && <p style={{ color: 'var(--text-2)', lineHeight: 1.7, marginBottom: 16 }}>{form.description}</p>}
-          {form.dueDate && (
-            <p style={{ color: 'var(--muted)', fontSize: 'var(--text-sm)', marginBottom: 16 }}>
-              Due: {new Date(form.dueDate).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}
-            </p>
-          )}
-
-          {/* Exercise preview cards */}
-          {form.exercises.map((ex, i) => {
-            const meta = getExType(ex.type);
-            return (
-              <div key={ex.id} style={{ borderTop: i > 0 ? '1px solid var(--divider)' : 'none', paddingTop: i > 0 ? 18 : 0, marginBottom: 18 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-                  <span style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 'var(--text-sm)', color: 'var(--accent)', width: 24 }}>
-                    {i + 1}.
-                  </span>
-                  <ExTypeBadge typeId={ex.type} />
-                </div>
-                <div style={{ padding: '14px 16px', background: 'var(--bg)', borderRadius: 'var(--radius-md)', fontSize: 'var(--text-sm)', lineHeight: 1.6 }}>
-                  <PreviewExercise exercise={ex} />
-                </div>
-              </div>
-            );
-          })}
-
-          {form.selfCheck.filter(Boolean).length > 0 && (
-            <div style={{ marginTop: 16, padding: 14, background: 'var(--bg)', borderRadius: 'var(--radius-sm)' }}>
-              <div style={{ fontWeight: 600, marginBottom: 8 }}>Self-check:</div>
-              {form.selfCheck.filter(Boolean).map((c, i) => (
-                <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: 6 }}>
-                  <input type="checkbox" disabled style={{ marginTop: 3 }} />
-                  <span style={{ fontSize: 'var(--text-sm)' }}>{c}</span>
-                </div>
-              ))}
-            </div>
-          )}
-        </Card>
-      ) : (
-        /* ── EDIT MODE ── */
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-
-          {/* Homework details card */}
-          <Card style={{ padding: 18 }}>
-            <SectionHeader title="Homework Details" />
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 14 }}>
-              <Field label="Title">
-                <input className="input" value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} />
-              </Field>
-              <Field label="Objective (internal — not shown to student)">
-                <input className="input" value={form.objective} onChange={e => setForm(f => ({ ...f, objective: e.target.value }))} placeholder="What this homework targets..." />
-              </Field>
-              <Field label="Instructions for student (optional)">
-                <textarea className="input" rows={3} value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} placeholder="Optional context or instructions before the exercises..." />
-              </Field>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
-                <Field label="Skill focus">
-                  <select className="input" value={form.skillType} onChange={e => setForm(f => ({ ...f, skillType: e.target.value }))}>
-                    {SKILL_TYPES.map(t => <option key={t} value={t}>{t.charAt(0).toUpperCase() + t.slice(1)}</option>)}
-                  </select>
-                </Field>
-                <Field label="Due date">
-                  <input className="input" type="date" value={form.dueDate} onChange={e => setForm(f => ({ ...f, dueDate: e.target.value }))} />
-                </Field>
-              </div>
-            </div>
-          </Card>
-
-          {/* Exercises card */}
-          <Card style={{ padding: 18 }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-              <div>
-                <div style={{ fontWeight: 700, fontSize: 'var(--text-lg)', color: 'var(--text)' }}>
-                  Exercises
-                  <span style={{ fontWeight: 500, fontSize: 'var(--text-sm)', color: 'var(--muted)', marginLeft: 8 }}>
-                    {exerciseCount} {exerciseCount === 1 ? 'exercise' : 'exercises'}
-                  </span>
-                </div>
-                <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: 4 }}>
-                  Choose the exercise types first, then use <strong>Fill Selected with AI</strong> to auto-fill only those cards.
-                </div>
-                {/* Type badges summary */}
-                {exerciseCount > 0 && (
-                  <div style={{ display: 'flex', gap: 6, marginTop: 6, flexWrap: 'wrap' }}>
-                    {Object.entries(typeCounts).map(([type, count]) => (
-                      <ExTypeBadge key={type} typeId={type} />
-                    ))}
+                    <Button variant="ghost" size="sm" onClick={() => onNavigate('diagnostics')}>View Full Diagnosis</Button>
                   </div>
                 )}
-              </div>
-              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                <Button variant="ghost" size="sm" onClick={handleAiGenerate} disabled={generating || loadingOptions}>
-                  <Icon.refresh size={12} /> {generating ? 'Generating…' : (form.exercises.length > 0 ? 'Fill Selected with AI' : 'Regenerate All with AI')}
-                </Button>
-                <Button variant="primary" size="sm" onClick={() => setShowTypePicker(!showTypePicker)}>
-                  <Icon.plus size={12} /> Add Exercise
-                </Button>
-              </div>
-            </div>
-
-            {/* Type picker */}
-            {showTypePicker && (
-              <div style={{ marginBottom: 14 }}>
-                <ExerciseTypePicker onSelect={addExercise} onClose={() => setShowTypePicker(false)} />
-              </div>
-            )}
-
-            {/* Exercise list */}
-            {form.exercises.length === 0 && !showTypePicker && (
-              <div style={{ textAlign: 'center', padding: '28px 16px', border: '1.5px dashed var(--border)', borderRadius: 'var(--radius-md)', background: 'transparent' }}>
-                <p style={{ color: 'var(--muted)', fontSize: 'var(--text-sm)', margin: '0 0 10px' }}>
-                  No exercises yet — add your first one
-                </p>
-                <Button variant="ghost" size="sm" onClick={() => setShowTypePicker(true)}>
-                  <Icon.plus size={12} /> Choose exercise type
-                </Button>
-              </div>
-            )}
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {form.exercises.map((ex, i) => {
-                const isExpanded = expandedEx === ex.id;
-                return (
-                  <ExerciseCard
-                    key={ex.id}
-                    exercise={ex}
-                    index={i}
-                    total={form.exercises.length}
-                    isExpanded={isExpanded}
-                    onToggle={() => setExpandedEx(isExpanded ? null : ex.id)}
-                    onChange={(updated) => updateExercise(ex.id, updated)}
-                    onRemove={() => removeExercise(ex.id)}
-                    onMove={(dir) => moveExercise(i, dir)}
-                    onSaveToLibrary={() => saveToLibrary(ex)}
-                  />
-                );
-              })}
-            </div>
-          </Card>
-
-          {/* Self-check card */}
-          <Card style={{ padding: 18 }}>
-            <SectionHeader
-              title="Self-check Checklist"
-              action={
-                <Button variant="ghost" size="sm" onClick={addCheck}>
-                  <Icon.plus size={12} /> Add item
-                </Button>
-              }
-            />
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 12 }}>
-              {form.selfCheck.map((c, i) => (
-                <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                  <input
-                    className="input" value={c}
-                    onChange={e => updateCheck(i, e.target.value)}
-                    placeholder="e.g. I used past simple correctly"
-                    style={{ flex: 1 }}
-                  />
-                  {form.selfCheck.length > 1 && (
-                    <Button variant="ghost" size="sm" onClick={() => removeCheck(i)} style={{ color: 'var(--danger)' }}>
-                      <Icon.trash size={12} />
-                    </Button>
-                  )}
+                <Field label="Homework Goal" style={{ marginTop: 16 }}>
+                  <input className="input" value={form.objective} onChange={e => setForm(f => ({ ...f, objective: e.target.value }))} placeholder="What this homework targets..." />
+                </Field>
+                <div style={{ marginTop: 24 }}>
+                  <Button variant="primary" onClick={() => setCurrentStep(2)}>
+                    Select Exercises
+                  </Button>
                 </div>
-              ))}
-            </div>
-          </Card>
+              </div>
+            </Card>
+          )}
+          {currentStep === 2 && (
+            <Card style={{ padding: 18 }}>
+              <SectionHeader title="Step 2: Select Exercises" />
+              <div style={{ marginTop: 16 }}>
+                <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+                    <Button variant="ghost" size="sm" onClick={handleGenerateOptions} disabled={!diagnosis || loadingOptions}>
+                      <Icon.refresh size={12} /> Suggest Exercises from Diagnosis
+                    </Button>
+                    <Button variant="primary" size="sm" onClick={() => setShowTypePicker(!showTypePicker)}>
+                      <Icon.plus size={12} /> Add Exercise
+                    </Button>
+                </div>
 
-          {/* Teacher notes */}
-          <Field label="Teacher notes (not shown to student)">
-            <textarea className="input" rows={2} value={form.teacherNotes} onChange={e => setForm(f => ({ ...f, teacherNotes: e.target.value }))} placeholder="Internal notes…" />
-          </Field>
+                {showTypePicker && <ExerciseTypePicker onSelect={addExercise} onClose={() => setShowTypePicker(false)} />}
+                
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {form.exercises.map((ex, i) => (
+                    <ExerciseCard
+                      key={ex.id}
+                      exercise={ex}
+                      index={i}
+                      total={form.exercises.length}
+                      isExpanded={expandedEx === ex.id}
+                      onToggle={() => setExpandedEx(expandedEx === ex.id ? null : ex.id)}
+                      onChange={(updated) => updateExercise(ex.id, updated)}
+                      onRemove={() => removeExercise(ex.id)}
+                      onMove={(dir) => moveExercise(i, dir)}
+                    />
+                  ))}
+                </div>
+
+                <div style={{ display: 'flex', gap: 10, marginTop: 24 }}>
+                  <Button variant="ghost" onClick={() => setCurrentStep(1)}>Back</Button>
+                  <Button variant="primary" onClick={() => setCurrentStep(3)}>Review Student View</Button>
+                </div>
+              </div>
+            </Card>
+          )}
+          {currentStep === 3 && (
+            <Card style={{ padding: 18 }}>
+              <SectionHeader title="Step 3: Review Student View" />
+              <div style={{ marginTop: 16 }}>
+                <div style={{ padding: 24, background: 'var(--bg)', borderRadius: 'var(--radius-md)' }}>
+                  <div style={{ fontWeight: 700, fontSize: 'var(--text-xl)', marginBottom: 4 }}>{form.title || 'Untitled Homework'}</div>
+                  {form.description && <p style={{ color: 'var(--text-2)', lineHeight: 1.7, marginBottom: 16 }}>{form.description}</p>}
+                  
+                  {form.exercises.map((ex, i) => (
+                    <div key={ex.id} style={{ marginBottom: 18 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+                        <span style={{ fontWeight: 700, color: 'var(--accent)' }}>{i + 1}.</span>
+                        <ExTypeBadge typeId={ex.type} />
+                      </div>
+                      <PreviewExercise exercise={ex} />
+                    </div>
+                  ))}
+                </div>
+
+                <div style={{ display: 'flex', gap: 10, marginTop: 24 }}>
+                  <Button variant="ghost" onClick={() => setCurrentStep(2)}>Back</Button>
+                  <Button variant="primary" onClick={() => setCurrentStep(4)}>Proceed to Assign</Button>
+                </div>
+              </div>
+            </Card>
+          )}
+          {currentStep === 4 && (
+            <Card style={{ padding: 18 }}>
+              <SectionHeader title="Step 4: Assign Homework" />
+              <div style={{ marginTop: 16 }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  <Field label="Homework Title">
+                      <input className="input" value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} />
+                  </Field>
+                  <Field label="Due Date">
+                      <input className="input" type="date" value={form.dueDate} onChange={e => setForm(f => ({ ...f, dueDate: e.target.value }))} />
+                  </Field>
+                </div>
+                
+                <div style={{ marginTop: 24, display: 'flex', gap: 10 }}>
+                  <Button variant="ghost" onClick={() => setCurrentStep(3)}>Back</Button>
+                  <Button variant="primary" onClick={handleAssign} disabled={saving}>
+                    {saving ? 'Assigning…' : 'Assign Homework'}
+                  </Button>
+                </div>
+              </div>
+            </Card>
+          )}
         </div>
-      )}
 
-      {/* Action buttons */}
-      <div style={{
-        position: 'sticky',
-        bottom: 0,
-        zIndex: 20,
-        display: 'flex',
-        gap: 10,
-        marginTop: 14,
-        padding: '12px 0 4px',
-        background: 'linear-gradient(180deg, rgba(240,246,246,0.78) 0%, var(--bg) 42%)',
-        borderTop: '1px solid rgba(194,217,217,0.65)',
-      }}>
-        <Button variant="primary" onClick={handleAssign} disabled={saving}>
-          <Icon.send size={13} /> {saving ? 'Assigning…' : 'Approve & Assign to Student'}
-        </Button>
-        <Button variant="ghost" onClick={() => onNavigate('homework')}>Cancel</Button>
+        {/* Persistent Summary Side Panel */}
+        <Card style={{ padding: 18, position: 'sticky', top: 20 }}>
+          <SectionHeader title="Homework Summary" />
+          <div style={{ marginTop: 12, fontSize: 'var(--text-sm)' }}>
+            <p>Exercises: <strong>{exerciseCount} / 10</strong></p>
+            <p>Estimated Time: <strong>{/* Calculation needed */}</strong></p>
+          </div>
+        </Card>
       </div>
     </div>
   );
