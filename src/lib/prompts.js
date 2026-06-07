@@ -531,13 +531,15 @@ Include only the fields relevant to the exercise type. The "content" field alway
    Generate a menu of exercise options for the teacher to pick from.
    Restored: was dropped during the module-prompt refactor.
 ══════════════════════════════════════════════════════════════ */
-export const buildExerciseListPrompt = ({ student, diagnosis }) => {
+export const buildExerciseListPrompt = ({ student, diagnosis, level, skill }) => {
   const priorities = pickArray(diagnosis?.priorityDiagnosis, diagnosis?.sections?.priorityDiagnosis?.content);
   const errors = pickArray(diagnosis?.errorBank, diagnosis?.sections?.errorBankSuggestions?.content);
   const vocab = pickArray(diagnosis?.vocabTargets?.vocabularyTargets, diagnosis?.sections?.vocabGrammarTargets?.content?.vocabularyTargets);
   const grammar = pickArray(diagnosis?.vocabTargets?.grammarTargets, diagnosis?.sections?.vocabGrammarTargets?.content?.grammarTargets);
+  const levelNote = level ? `\nTarget CEFR level: ${level}` : '';
+  const skillNote = skill ? `\nSkill focus: ${skill}` : '';
 
-  return `You are a MET English exam preparation expert. Generate a menu of 7 distinct, ready-to-use exercises for the teacher to choose from.
+  return `You are a MET English exam preparation expert. Generate a menu of 7 distinct, ready-to-use exercises for the teacher to choose from.${levelNote}${skillNote}
 
 ━━━ STUDENT ━━━
 Name: ${student?.name || 'Student'}
