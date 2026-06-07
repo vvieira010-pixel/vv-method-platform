@@ -80,6 +80,7 @@ export default function SubmissionReview({ submissionId, students, onNavigate })
   async function runAiComparison() {
     if (!submission || !homework || !diagnosis) { window.toast?.('Need submission, homework, and diagnosis to compare.', 'warn'); return; }
     setAiComparing(true);
+    const submissionEvidence = buildSubmissionEvidence(submission, homework);
     const prompt = `You are reviewing a student's homework submission against the original diagnosis.
 
 DIAGNOSIS PRIORITIES:
@@ -90,11 +91,16 @@ HOMEWORK OBJECTIVE: ${homework.objective || homework.title}
 STUDENT SUBMISSION:
 ${submission.content || '(no text content)'}
 
-Compare the submission to the diagnosis.
+SUBMISSION EVIDENCE FROM STRUCTURED RESPONSES:
+${submissionEvidence.promptText}
+
+Compare the structured response evidence to the diagnosis. For speaking tasks, evaluate
+what the student actually said in the transcript. Use submission.content only as a
+fallback summary when no structured response transcript is available.
 
 Write "teacherFeedback" as a warm, specific note spoken directly to ${student?.name || 'the student'}:
-reference what they ACTUALLY wrote, name one concrete strength and the single most
-important fix, and end with a clear next step.
+reference what they ACTUALLY wrote or said, name one concrete strength and the
+single most important fix, and end with a clear next step.
 
 Extract up to 5 key errors and suggest corrections.
 
@@ -205,6 +211,7 @@ Return JSON:
   const activityById = Object.fromEntries(
     (homework?.activities || []).map(a => [a.id, a])
   );
+  const submissionEvidence = buildSubmissionEvidence(submission, homework);
   const audioResponses = Object.entries(submission.responses || {})
     .filter(([exId, res]) => res && (audioUrls[exId] || res.audioB64))
     .map(([exId, res], i) => {
@@ -239,6 +246,41 @@ Return JSON:
               {submission.content || <em style={{ color: 'var(--muted)' }}>No text content submitted.</em>}
             </div>
 
+            {submissionEvidence.entries.length > 0 && (
+              <div style={{ marginTop: 14 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 'var(--text-xs)', fontWeight: 800, color: 'var(--accent-deep)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>
+                  <Icon.check size={13} /> Teacher review evidence
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {submissionEvidence.entries.map((entry) => (
+                    <div key={entry.id} style={{ padding: 10, border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', background: 'var(--surface)' }}>
+                      <div style={{ fontSize: 'var(--text-xs)', fontWeight: 800, color: 'var(--accent)', marginBottom: 5 }}>
+                        {entry.title}
+                      </div>
+                      {entry.prompt && (
+                        <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', lineHeight: 1.5, marginBottom: 6 }}>
+                          Prompt: {entry.prompt}
+                        </div>
+                      )}
+                      {entry.transcript ? (
+                        <div style={{ padding: 10, background: 'var(--bg)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-sm)', lineHeight: 1.6, color: 'var(--text-2)', whiteSpace: 'pre-wrap' }}>
+                          <strong style={{ color: 'var(--accent-deep)' }}>Transcript used for review: </strong>{entry.transcript}
+                        </div>
+                      ) : entry.answer ? (
+                        <div style={{ padding: 10, background: 'var(--bg)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-sm)', lineHeight: 1.6, color: 'var(--text-2)', whiteSpace: 'pre-wrap' }}>
+                          {entry.answer}
+                        </div>
+                      ) : (
+                        <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>
+                          Audio submitted. Add a transcript when available so AI can review the exact words.
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Speaking recordings — one audio player per recorded response */}
             {audioResponses.length > 0 && (
               <div style={{ marginTop: 14, display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -250,7 +292,7 @@ Return JSON:
                     <audio controls src={url} style={{ width: '100%', height: 38 }} />
                     {res.transcript && (
                       <div style={{ marginTop: 6, padding: 10, background: 'var(--bg)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-sm)', lineHeight: 1.6, color: 'var(--text-2)', fontStyle: 'italic', whiteSpace: 'pre-wrap' }}>
-                        {res.transcript}
+                        <strong style={{ color: 'var(--accent-deep)', fontStyle: 'normal' }}>Transcript used for review: </strong>{res.transcript}
                       </div>
                     )}
                   </div>
@@ -425,6 +467,56 @@ function Field({ label, children }) {
       {children}
     </label>
   );
+}
+
+function buildSubmissionEvidence(submission, homework) {
+  const activityById = Object.fromEntries((homework?.activities || []).map(a => [a.id, a]));
+  const entries = Object.entries(submission?.responses || {})
+    .map(([exId, res], index) => {
+      const ex = activityById[exId] || {};
+      const transcript = cleanText(res?.transcript);
+      const answer = cleanText(
+        res?.text ?? res?.answer ?? res?.value ?? res?.response ?? res?.shortAnswer
+      );
+      const prompt = cleanText(ex.prompt || ex.question || ex.instruction || ex.audioText || ex.title);
+      const type = ex.type || (res?.audioB64 || res?.audioPath || res?.audioUrl || transcript ? 'speak' : 'response');
+      const hasAudio = Boolean(res?.audioB64 || res?.audioPath || res?.audioUrl);
+
+      if (!transcript && !answer && !hasAudio) return null;
+
+      return {
+        id: exId,
+        type,
+        title: `${type === 'speak' ? 'Speaking' : 'Response'} ${index + 1}`,
+        prompt,
+        transcript,
+        answer,
+        hasAudio,
+      };
+    })
+    .filter(Boolean);
+
+  const promptText = entries.length
+    ? entries.map((entry, index) => {
+      const lines = [
+        `Response ${index + 1} (${entry.type})`,
+        entry.prompt ? `Prompt: ${entry.prompt}` : null,
+        entry.transcript ? `Transcript: ${entry.transcript}` : null,
+        entry.answer ? `Written response: ${entry.answer}` : null,
+        !entry.transcript && entry.hasAudio ? 'Audio submitted but no transcript is available.' : null,
+      ].filter(Boolean);
+      return lines.join('\n');
+    }).join('\n\n')
+    : '(no structured response evidence available)';
+
+  return { entries, promptText };
+}
+
+function cleanText(value) {
+  if (value == null) return '';
+  if (Array.isArray(value)) return value.map(cleanText).filter(Boolean).join('\n');
+  if (typeof value === 'object') return cleanText(JSON.stringify(value));
+  return String(value).trim();
 }
 
 const EMPTY_FORM = { whatImproved: '', activeErrors: '', newErrors: '', corrections: [{ id: Math.random().toString(36).slice(2, 9), original: '', improved: '', note: '' }], overallNote: '', score: '', redoRequired: false, sendFeedback: true };
