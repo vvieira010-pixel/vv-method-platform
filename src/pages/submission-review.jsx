@@ -57,7 +57,7 @@ export default function SubmissionReview({ submissionId, students, onNavigate })
         whatImproved: rev.whatImproved || '',
         activeErrors: rev.activeErrors?.join('\n') || '',
         newErrors: rev.newErrors?.join('\n') || '',
-        corrections: rev.corrections || [{ original: '', improved: '', note: '' }],
+        corrections: (rev.corrections || []).map(c => ({ ...c, id: c.id || Math.random().toString(36).slice(2, 9) })),
         overallNote: rev.overallNote || '',
         score: rev.score ?? '',
         redoRequired: rev.redoRequired || false,
@@ -101,7 +101,6 @@ Extract up to 5 key errors and suggest corrections.
 Return JSON:
 {
   "didStudentImprove": "brief assessment",
-  "correctedErrors": ["errors the student fixed"],
   "activeErrors": ["errors still present"],
   "newErrors": ["new errors not in the diagnosis"],
   "redoRequired": false,
@@ -118,15 +117,38 @@ Return JSON:
       const raw = data.content?.map(b => b.text || '').join('') || '';
       const parsed = parseAiJson(raw);
       setAiComparison(parsed);
-      setForm(f => ({
-        ...f,
-        whatImproved: parsed.didStudentImprove || '',
-        activeErrors: (parsed.activeErrors || []).join('\n'),
-        newErrors: (parsed.newErrors || []).join('\n'),
-        overallNote: parsed.teacherFeedback || '',
-        redoRequired: parsed.redoRequired || false,
-        corrections: parsed.corrections || f.corrections, // Update corrections here
-      }));
+      
+      if (parsed) {
+        setForm(f => {
+          // Merge corrections: If an AI correction matches an existing 'original' text, update it. Otherwise, add it.
+          const newAiCorrections = (parsed.corrections || []).map(ac => ({
+            ...ac,
+            id: ac.id || Math.random().toString(36).slice(2, 9)
+          }));
+
+          const mergedCorrections = [...f.corrections];
+          newAiCorrections.forEach(ac => {
+            const existingIdx = mergedCorrections.findIndex(c => 
+              c.original?.trim().toLowerCase() === ac.original?.trim().toLowerCase()
+            );
+            if (existingIdx >= 0) {
+              mergedCorrections[existingIdx] = { ...mergedCorrections[existingIdx], ...ac };
+            } else {
+              mergedCorrections.push(ac);
+            }
+          });
+
+          return {
+            ...f,
+            whatImproved: parsed.didStudentImprove || f.whatImproved,
+            activeErrors: (parsed.activeErrors || []).join('\n'),
+            newErrors: (parsed.newErrors || []).join('\n'),
+            overallNote: parsed.teacherFeedback || f.overallNote,
+            redoRequired: parsed.redoRequired ?? f.redoRequired,
+            corrections: mergedCorrections,
+          };
+        });
+      }
     } catch (e) {
       window.toast?.(`AI comparison failed: ${e.message}`, 'warn');
     }
@@ -194,7 +216,10 @@ Return JSON:
   function addErrorToCorrections(err) {
     setForm(f => ({
       ...f,
-      corrections: [...f.corrections, { original: err.error, improved: err.correct, note: 'Error Bank suggestion' }],
+      corrections: [
+        ...f.corrections, 
+        { id: Math.random().toString(36).slice(2, 9), original: err.error, improved: err.correct, note: 'Error Bank suggestion' }
+      ],
     }));
   }
 
@@ -277,7 +302,9 @@ Return JSON:
                     <span style={{ color: 'var(--danger)', fontWeight: 600 }}>{err.error}</span>
                     <span style={{ color: 'var(--muted)' }}>→</span>
                     <span style={{ color: 'var(--success)' }}>{err.correct}</span>
-                    <Button variant="ghost" size="sm" style={{ marginLeft: 'auto', fontSize: 10 }} onClick={async (e) => { e.stopPropagation(); await markErrorSolved(submission.studentId, err.id); load(); }}>Solved</Button>
+                    <Button variant="ghost" size="sm" style={{ marginLeft: 'auto', fontSize: 10 }} onClick={async (e) => { e.stopPropagation(); await markErrorSolved(submission.studentId, err.id); load(); }}>
+                      Solved
+                    </Button>
                   </div>
                 ))}
               </div>
@@ -326,27 +353,30 @@ Return JSON:
               <div style={{ marginBottom: 12 }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
                   <label style={fieldLabel}>Corrections</label>
-                  <Button variant="ghost" size="sm" onClick={() => setForm(f => ({ ...f, corrections: [...f.corrections, { original: '', improved: '', note: '' }] }))}>
+                  <Button variant="ghost" size="sm" onClick={() => setForm(f => ({ ...f, corrections: [...f.corrections, { id: Math.random().toString(36).slice(2, 9), original: '', improved: '', note: '' }] }))}>
                     <Icon.plus size={12} /> Add
                   </Button>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   {form.corrections.map((c, i) => (
-                    <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: 6 }}>
+                    <div key={c.id} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: 6 }}>
                       <input className="input" placeholder="Original" value={c.original} onChange={e => {
-                        const next = [...form.corrections]; next[i].original = e.target.value; setForm(f => ({ ...f, corrections: next }));
+                        const next = form.corrections.map((corr, idx) => idx === i ? { ...corr, original: e.target.value } : corr);
+                        setForm(f => ({ ...f, corrections: next }));
                       }} />
                       <input className="input" placeholder="Improved" value={c.improved} onChange={e => {
-                        const next = [...form.corrections]; next[i].improved = e.target.value; setForm(f => ({ ...f, corrections: next }));
+                        const next = form.corrections.map((corr, idx) => idx === i ? { ...corr, improved: e.target.value } : corr);
+                        setForm(f => ({ ...f, corrections: next }));
                       }} />
-                      <Button variant="ghost" size="sm" style={{ color: 'var(--danger)' }} onClick={() => {
+                      <Button variant="ghost" size="sm" onClick={() => {
                         const next = form.corrections.filter((_, idx) => idx !== i);
-                        setForm(f => ({ ...f, corrections: next.length ? next : [{ original: '', improved: '', note: '' }] }));
+                        setForm(f => ({ ...f, corrections: next.length ? next : [{ id: Math.random().toString(36).slice(2, 9), original: '', improved: '', note: '' }] }));
                       }}>
                         <Icon.trash size={12} />
                       </Button>
                       <input className="input" placeholder="Note" value={c.note} onChange={e => {
-                        const next = [...form.corrections]; next[i].note = e.target.value; setForm(f => ({ ...f, corrections: next }));
+                        const next = form.corrections.map((corr, idx) => idx === i ? { ...corr, note: e.target.value } : corr);
+                        setForm(f => ({ ...f, corrections: next }));
                       }} style={{ gridColumn: 'span 3' }} />
                     </div>
                   ))}
@@ -397,6 +427,6 @@ function Field({ label, children }) {
   );
 }
 
-const EMPTY_FORM = { whatImproved: '', activeErrors: '', newErrors: '', corrections: [{ original: '', improved: '', note: '' }], overallNote: '', score: '', redoRequired: false, sendFeedback: true };
+const EMPTY_FORM = { whatImproved: '', activeErrors: '', newErrors: '', corrections: [{ id: Math.random().toString(36).slice(2, 9), original: '', improved: '', note: '' }], overallNote: '', score: '', redoRequired: false, sendFeedback: true };
 const backStyle = { background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)', fontSize: 'var(--text-sm)', display: 'flex', alignItems: 'center', gap: 4, marginBottom: 16, padding: 0, fontFamily: 'var(--font-ui)' };
 const S = { headline: { fontFamily: 'var(--font-display)', fontSize: 'var(--text-2xl)', fontWeight: 700, color: 'var(--accent-deep)', margin: '0 0 4px' }, sub: { fontSize: 'var(--text-sm)', color: 'var(--muted)' } };
