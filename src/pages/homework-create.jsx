@@ -18,6 +18,7 @@ import { EX_TYPES, createExercise, exercisePreview, getExType } from '../lib/exe
 import { ExerciseEditor, ExerciseTypePicker, ExTypeBadge } from '../components/exercise-editor.jsx';
 import { getExerciseModules, getModuleExercises, bankMeta } from '../lib/exercise-bank.js';
 import { getB2Modules, getB2ModuleExercises, b2BankMeta } from '../lib/met-b2-bank.js';
+import { getLifestyleModules, getLifestyleModuleExercises, lifestylePackMeta } from '../lib/lifestyle-pack.js';
 import { getLibraryExercises, saveExerciseToLibrary, deleteLibraryExercise, incrementUsage } from '../lib/exercise-library.js';
 
 const SKILL_TYPES = ['writing', 'speaking', 'grammar', 'vocabulary', 'reading', 'listening', 'mixed'];
@@ -48,6 +49,7 @@ export default function HomeworkCreate({ diagnosisId, studentId, students, onNav
   const [expandedEx, setExpandedEx] = useState(null);
   const [showLibrary, setShowLibrary] = useState(false);
   const [showB2Bank, setShowB2Bank] = useState(false);
+  const [showLifestylePack, setShowLifestylePack] = useState(false);
   // Per-skill-group generation config: { speaking: 5, grammar: 4, ... }
   const [groupGenConfig, setGroupGenConfig] = useState({});
   const [showGroupGen, setShowGroupGen] = useState(false);
@@ -300,6 +302,23 @@ function getPriorityItems(dx) {
     setShowB2Bank(false);
   }
 
+  function addModuleFromLifestylePack(mod) {
+    const exercises = getLifestyleModuleExercises(mod.id);
+    if (!exercises.length) { window.toast?.('No exercises in this section.', 'warn'); return; }
+    setForm(f => ({ ...f, exercises: [...f.exercises, ...exercises] }));
+    window.toast?.(`Added ${exercises.length} lifestyle exercises from "${mod.label}".`, 'ok');
+    setShowLifestylePack(false);
+  }
+
+  async function copyLifestylePrintablePack() {
+    try {
+      await navigator.clipboard.writeText(lifestylePackMeta.printableMarkdown || '');
+      window.toast?.('Printable Markdown copied.', 'ok');
+    } catch {
+      window.toast?.('Could not copy printable Markdown from this browser.', 'warn');
+    }
+  }
+
   /* ── Custom exercise library (teacher's saved bank) ── */
   async function saveToLibrary(ex) {
     try {
@@ -433,8 +452,11 @@ function getPriorityItems(dx) {
                     <Button variant="primary" size="sm" onClick={() => setShowTypePicker(!showTypePicker)}>
                       <Icon.plus size={12} /> Add Exercise
                     </Button>
-                    <Button variant="ghost" size="sm" onClick={() => { setShowB2Bank(v => !v); setShowTypePicker(false); }}>
+                    <Button variant="ghost" size="sm" onClick={() => { setShowB2Bank(v => !v); setShowLifestylePack(false); setShowTypePicker(false); }}>
                       <Icon.homework size={12} /> Browse MET B2 Pack
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={() => { setShowLifestylePack(v => !v); setShowB2Bank(false); setShowTypePicker(false); }}>
+                      <Icon.doc size={12} /> Browse Lifestyle Pack
                     </Button>
                 </div>
 
@@ -493,6 +515,42 @@ function getPriorityItems(dx) {
                             <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', textTransform: 'capitalize' }}>{mod.skill} · {mod.exercises.length} exercises</div>
                           </div>
                           <Button variant="ghost" size="sm" onClick={() => addModuleFromB2Bank(mod)}>Add</Button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {showLifestylePack && (
+                  <div style={{ marginBottom: 16, border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: 'var(--accent-subtle)', borderBottom: '1px solid var(--border)' }}>
+                      <div>
+                        <span style={{ fontWeight: 700, fontSize: 'var(--text-sm)' }}>{lifestylePackMeta.title}</span>
+                        <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: 2 }}>{lifestylePackMeta.level} · {lifestylePackMeta.subtitle}</div>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <Button variant="ghost" size="sm" onClick={copyLifestylePrintablePack}>Copy printable</Button>
+                        <button onClick={() => setShowLifestylePack(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)', fontSize: 16 }}>✕</button>
+                      </div>
+                    </div>
+                    <div style={{ padding: '10px 14px', borderBottom: '1px solid var(--divider)', background: 'var(--surface)', fontSize: 'var(--text-xs)', color: 'var(--muted)', lineHeight: 1.5 }}>
+                      Converted from the bundled JSON pack in <strong>src/components/exercises</strong>. Use the Markdown file as the printable teacher copy.
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 0, maxHeight: 360, overflowY: 'auto' }}>
+                      {getLifestyleModules().map(mod => (
+                        <div key={mod.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', borderBottom: '1px solid var(--divider)', gap: 10 }}>
+                          <div style={{ minWidth: 0 }}>
+                            <div style={{ fontWeight: 600, fontSize: 'var(--text-sm)' }}>{mod.label}</div>
+                            <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', textTransform: 'capitalize' }}>
+                              {mod.skill} · {mod.sourceCount} source tasks · {mod.exerciseCount} platform exercises
+                            </div>
+                            {mod.note && (
+                              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 560 }}>
+                                {mod.note}
+                              </div>
+                            )}
+                          </div>
+                          <Button variant="ghost" size="sm" onClick={() => addModuleFromLifestylePack(mod)}>Add</Button>
                         </div>
                       ))}
                     </div>
