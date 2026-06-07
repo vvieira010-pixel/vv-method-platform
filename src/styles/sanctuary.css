@@ -1,0 +1,299 @@
+:root {
+  --sanctuary-parchment: #F9F7F2;
+  --sanctuary-teal-deep: #0E5F6B;
+  --sanctuary-teal-mid: #1A8C9B;
+  --sanctuary-teal-soft: rgba(14, 95, 107, 0.08);
+  --sanctuary-gold: #C5A059;
+  --sanctuary-coral: #E07A5F;
+  --sanctuary-text: #2C3E50;
+  --sanctuary-muted: #6B7C85;
+  --sanctuary-border: rgba(14, 95, 107, 0.15);
+  --sanctuary-glass: rgba(255, 255, 255, 0.6);
+}
+
+.dash {
+  background-color: var(--sanctuary-parchment);
+  color: var(--sanctuary-text);
+  min-height: 100vh;
+  font-family: 'var(--font-ui)', system-ui, sans-serif;
+  transition: background-color 0.5s ease;
+}
+
+.dash-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 32px;
+  background: transparent;
+  border-bottom: 1px solid var(--sanctuary-border);
+}
+
+.dash-brand-name {
+  font-family: 'var(--font-display)', serif;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--sanctuary-teal-deep);
+}
+
+.dash-top-nav {
+  display: flex;
+  gap: 12px;
+}
+
+.dash-nav-btn {
+  background: none;
+  border: none;
+  padding: 8px 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--sanctuary-muted);
+  font-weight: 500;
+  font-size: 0.9rem;
+  border-radius: 99px;
+  transition: all 0.2s ease;
+}
+
+.dash-nav-btn.active {
+  background: var(--sanctuary-teal-deep);
+  color: white;
+}
+
+.dash-nav-btn:hover:not(.active) {
+  background: var(--sanctuary-teal-soft);
+  color: var(--sanctuary-teal-deep);
+}
+
+.dash-body {
+  padding: 32px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* --- Sanctuary Home --- */
+.student-home {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.student-hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 40px 0;
+  border-bottom: 1px solid var(--sanctuary-border);
+}
+
+.student-hero h1 {
+  font-family: 'var(--font-display)', serif;
+  font-size: 3rem;
+  color: var(--sanctuary-teal-deep);
+  margin: 8px 0;
+}
+
+.student-hero-kicker {
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--sanctuary-gold);
+}
+
+.student-hero-action {
+  background: var(--sanctuary-teal-deep);
+  color: white;
+  border: none;
+  padding: 14px 28px;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.student-hero-action:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(14, 95, 107, 0.2);
+}
+
+.student-metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 20px;
+}
+
+.student-metric {
+  background: white;
+  padding: 24px;
+  border-radius: 20px;
+  border: 1px solid var(--sanctuary-border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.3s ease;
+}
+
+.student-metric:hover {
+  border-color: var(--sanctuary-teal-mid);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+}
+
+.student-metric-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.student-metric-copy span {
+  font-size: 0.8rem;
+  color: var(--sanctuary-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.student-metric-copy strong {
+  font-size: 1.5rem;
+  color: var(--sanctuary-teal-deep);
+}
+
+.student-metric-copy small {
+  font-size: 0.85rem;
+  color: var(--sanctuary-muted);
+}
+
+.student-metric-icon {
+  background: var(--sanctuary-teal-soft);
+  color: var(--sanctuary-teal-deep);
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* --- Sanctuary Grid & Panels --- */
+.student-grid {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 32px;
+}
+
+.student-panel {
+  background: white;
+  border-radius: 24px;
+  padding: 28px;
+  border: 1px solid var(--sanctuary-border);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+  transition: all 0.3s ease;
+}
+
+.student-panel--primary {
+  background: linear-gradient(135deg, #ffffff 0%, #fdfbf7 100%);
+  border: 1px solid var(--sanctuary-teal-soft);
+}
+
+.student-panel-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20px;
+}
+
+.student-panel-kicker {
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--sanctuary-gold);
+  letter-spacing: 0.08em;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.student-panel h2 {
+  font-family: 'var(--font-display)', serif;
+  font-size: 1.5rem;
+  color: var(--sanctuary-teal-deep);
+  margin: 0;
+}
+
+/* --- Practice Studio (Option D) --- */
+.student-practice-studio {
+  background: var(--sanctuary-teal-deep);
+  color: white;
+  border-radius: 24px;
+  padding: 40px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 32px;
+}
+
+.student-practice-studio::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(26,140,155,0.3) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.student-practice-studio h2 {
+  font-family: 'var(--font-display)', serif;
+  font-size: 2.2rem;
+  margin-bottom: 12px;
+  color: white;
+}
+
+.student-practice-studio p {
+  font-size: 1.1rem;
+  opacity: 0.9;
+  margin-bottom: 32px;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.studio-orbs {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.studio-orb {
+  background: rgba(255,255,255,0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.2);
+  padding: 20px 30px;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  width: 180px;
+}
+
+.studio-orb:hover {
+  background: rgba(255,255,255,0.2);
+  transform: translateY(-5px) scale(1.05);
+  box-shadow: 0 12px 24px rgba(0,0,0,0.2);
+}
+
+.studio-orb-icon {
+  font-size: 2rem;
+  margin-bottom: 4px;
+}
+
+.studio-orb-label {
+  font-weight: 600;
+  font-size: 0.9rem;
+}

@@ -7,6 +7,7 @@
  * - Scores/diagnosis only from approved diagnoses
  */
 import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Icon, Avatar, Button, StudentFeedbackView } from '../components/shared.jsx';
 import { getHomework, submitHomework, getDiagnoses, getProgressNotes, getReviews, getClassEvents, getDraft, saveDraft } from '../lib/workflow.js';
 import { isStructuredExercise } from '../lib/exercise-types.js';
@@ -14,7 +15,10 @@ import { ExercisePlayer, HomeworkStepThrough } from '../components/exercise-play
 import { ExTypeBadge } from '../components/exercise-editor.jsx';
 import { MessageTeacherDock, StudentInbox } from '../components/message-center.jsx';
 import { printHomework } from '../lib/print-homework.js';
-import '../styles/logbook.css';
+import '../styles/sanctuary.css';
+
+const TABS = [
+// ... (TABS array remains the same)
 
 const TABS = [
   { id: 'home',     label: 'Home',     icon: <Icon.home size={16} /> },
