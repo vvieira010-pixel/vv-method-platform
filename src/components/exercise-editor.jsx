@@ -299,6 +299,17 @@ function SpeakEditor({ ex, update }) {
         />
       </div>
       <div style={fieldWrap}>
+        <label style={fieldLabel}>Picture URL (optional — shown to student during speaking task)</label>
+        <input
+          className="input" value={ex.imageUrl || ''}
+          onChange={e => update({ imageUrl: e.target.value })}
+          placeholder="https://…/images/speaking/speaking_picture_01_ski_resort.png"
+        />
+        {ex.imageUrl && (
+          <img src={ex.imageUrl} alt="preview" style={{ marginTop: 8, maxWidth: '100%', maxHeight: 160, borderRadius: 8, border: '1px solid var(--border)' }} />
+        )}
+      </div>
+      <div style={fieldWrap}>
         <label style={fieldLabel}>Target duration (seconds)</label>
         <input
           className="input" type="number" min={15} max={300} step={5}
