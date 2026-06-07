@@ -25,7 +25,7 @@ export function ExTypeBadge({ typeId, size = 'sm' }) {
   const fontSize = size === 'sm' ? 'var(--text-xs)' : 'var(--text-sm)';
   const padding = size === 'sm' ? '3px 8px' : '4px 10px';
   return (
-    <span style={{
+    <span className="ex-type-badge" style={{
       display: 'inline-flex', alignItems: 'center', gap: 5,
       background: meta.bg, color: meta.color,
       fontSize, padding, borderRadius: 999, fontWeight: 600,

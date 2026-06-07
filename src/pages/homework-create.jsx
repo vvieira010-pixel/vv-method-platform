@@ -770,7 +770,7 @@ function ExerciseCard({ exercise, index, total, isExpanded, onToggle, onChange, 
   const previewText = exercisePreview(exercise);
 
   return (
-    <div style={{
+    <div className="homework-exercise-card" style={{
       border: isExpanded ? '1.5px solid var(--accent-soft)' : '1px solid var(--border)',
       borderRadius: 'var(--radius-md)',
       background: isExpanded ? 'var(--accent-subtle)' : 'var(--surface)',
@@ -779,6 +779,7 @@ function ExerciseCard({ exercise, index, total, isExpanded, onToggle, onChange, 
     }}>
       {/* Header — always visible */}
       <div
+        className="homework-exercise-card-header"
         onClick={onToggle}
         style={{
           display: 'flex', alignItems: 'center', gap: 10,
@@ -793,13 +794,13 @@ function ExerciseCard({ exercise, index, total, isExpanded, onToggle, onChange, 
           {index + 1}
         </span>
         <ExTypeBadge typeId={exercise.type} />
-        <span style={{
+        <span className="homework-exercise-card-title" style={{
           flex: 1, fontSize: 'var(--text-sm)', color: 'var(--text-2)',
           overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
         }}>
           {previewText}
         </span>
-        <div style={{ display: 'flex', gap: 4, alignItems: 'center', flexShrink: 0 }}>
+        <div className="homework-exercise-card-controls" style={{ display: 'flex', gap: 4, alignItems: 'center', flexShrink: 0 }}>
           {/* Save to reusable library */}
           {onSaveToLibrary && (
             <button
@@ -842,7 +843,7 @@ function ExerciseCard({ exercise, index, total, isExpanded, onToggle, onChange, 
 
       {/* Body — expanded */}
       {isExpanded && (
-        <div style={{ padding: '0 14px 14px', borderTop: '1px solid var(--divider)' }}>
+        <div className="homework-exercise-card-body" style={{ padding: '0 14px 14px', borderTop: '1px solid var(--divider)' }}>
           <div style={{ paddingTop: 14 }}>
             <ExerciseEditor exercise={exercise} onChange={onChange} />
           </div>

@@ -290,7 +290,25 @@ const GLOBAL_CSS = `
   .teacher-priority-copy { flex: 1; min-width: 220px; }
   .homework-create-steps { overflow-x: auto; scrollbar-width: none; }
   .homework-create-steps::-webkit-scrollbar { display: none; }
-  .homework-create-actions { align-items: center; }
+  .homework-create-grid > * { min-width: 0; }
+  .homework-create-actions {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    align-items: stretch;
+    gap: 8px;
+  }
+  .homework-create-actions .btn {
+    width: 100%;
+    min-width: 0;
+    justify-content: center;
+    white-space: normal;
+    line-height: 1.25;
+    text-align: center;
+  }
+  .homework-exercise-card { min-width: 0; }
+  .homework-exercise-card-header { min-width: 0; }
+  .homework-exercise-card-title { min-width: 0; }
+  .homework-exercise-card-controls { min-width: max-content; }
   .exercise-type-picker-controls { flex-wrap: wrap; justify-content: flex-end; }
   .overview-get-started { display: flex; align-items: flex-end; justify-content: space-between; gap: 14px; flex-wrap: wrap; }
   .overview-get-started-actions { display: flex; gap: 8px; flex-wrap: wrap; }
@@ -370,12 +388,41 @@ const GLOBAL_CSS = `
     }
     .homework-create-actions {
       display: grid !important;
-      grid-template-columns: 1fr !important;
+      grid-template-columns: minmax(0, 1fr) !important;
       gap: 8px !important;
     }
     .homework-create-actions .btn {
       width: 100%;
       justify-content: center;
+    }
+    .homework-exercise-card-header {
+      display: grid !important;
+      grid-template-columns: 24px minmax(0, 1fr) auto !important;
+      align-items: start !important;
+      gap: 8px !important;
+      padding: 10px 10px !important;
+    }
+    .homework-exercise-card-header .ex-type-badge {
+      max-width: 100%;
+      min-width: 0;
+      justify-self: start;
+      white-space: normal;
+      line-height: 1.2;
+    }
+    .homework-exercise-card-title {
+      grid-column: 2 / -1;
+      white-space: normal !important;
+      overflow: visible !important;
+      text-overflow: clip !important;
+      line-height: 1.35;
+    }
+    .homework-exercise-card-controls {
+      grid-column: 3;
+      grid-row: 1;
+      align-self: start;
+    }
+    .homework-exercise-card-body {
+      padding: 0 10px 12px !important;
     }
     .exercise-type-picker {
       padding: 12px !important;
