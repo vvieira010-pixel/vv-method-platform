@@ -103,9 +103,12 @@ export function loadExercises(raw) {
   const exercises = [];
   const errors = [];
   list.forEach((ex, i) => {
-    const result = validateExercise(ex);
+    // Handle wrapped database objects
+    const targetEx = ex.exercise_data ? ex.exercise_data : ex;
+    
+    const result = validateExercise(targetEx);
     if (result.valid) {
-      exercises.push(ex);
+      exercises.push(targetEx);
     } else {
       errors.push(`Exercise ${i + 1}: ${result.reason}`);
     }

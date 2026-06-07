@@ -2630,7 +2630,7 @@ function DiagnosisFeedbackWorkspace({
             </p>
           </Card>
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: '1.4fr .8fr', gap: 16 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1.4fr .8fr', gap: 20 }}>
             <Card>
               <SectionHeader title="Student-facing feedback" sub="Warm, clear, and editable before publishing" />
               <textarea
@@ -2665,8 +2665,8 @@ function DiagnosisFeedbackWorkspace({
 
               <Card>
                 <SectionHeader title="Feedback history" sub={`${published.length} published · ${drafts.length} draft(s)`} />
-                {studentItems.slice(0, 5).map(item => (
-                  <div key={item.id} style={{ borderTop: '1px solid var(--divider)', paddingTop: 9, marginTop: 9 }}>
+                {studentItems.slice(0, 5).map((item, i) => (
+                  <div key={item.id} style={{ borderTop: i > 0 ? '1px solid var(--divider)' : 'none', paddingTop: i > 0 ? 11 : 0, marginTop: i > 0 ? 11 : 0 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
                       <strong style={{ fontSize: 13 }}>{item.status === 'published' ? 'Published feedback' : 'Draft feedback'}</strong>
                       <Pill tone={item.status === 'published' ? 'success' : 'muted'}>{item.status || 'draft'}</Pill>
@@ -2677,7 +2677,7 @@ function DiagnosisFeedbackWorkspace({
                   </div>
                 ))}
                 {!studentItems.length && (
-                  <p style={{ fontSize: 13, color: 'var(--muted)', margin: 0 }}>No feedback saved for this student yet.</p>
+                  <p style={{ fontSize: 13, color: 'var(--muted)', marginTop: 6 }}>No feedback saved for this student yet.</p>
                 )}
               </Card>
             </div>

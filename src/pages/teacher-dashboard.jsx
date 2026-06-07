@@ -61,9 +61,9 @@ export default function TeacherDashboard({ students, onNavigate }) {
         <p style={styles.sub}>{today}</p>
       </div>
 
-      <Card style={styles.priorityCard}>
+      <Card className="teacher-priority-card" style={styles.priorityCard}>
         <div style={styles.priorityIcon}>{priority.icon}</div>
-        <div style={{ flex: 1, minWidth: 220 }}>
+        <div className="teacher-priority-copy">
           <div style={styles.priorityKicker}>Today priority</div>
           <h2 style={styles.priorityTitle}>{priority.title}</h2>
           <p style={styles.priorityText}>{priority.text}</p>
@@ -81,7 +81,7 @@ export default function TeacherDashboard({ students, onNavigate }) {
         <KpiCard label="Pending review" value={data.stats.pendingReview} icon={<Icon.doc size={16} />} tone={data.stats.pendingReview > 0 ? 'danger' : ''} onClick={() => onNavigate('submissions')} />
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+      <div className="teacher-dashboard-stack">
         {/* Today's classes */}
         <Card style={{ padding: 18 }}>
           <SectionHeader title="Today's Classes" icon={<Icon.calendar size={15} />} action={<Button variant="ghost" size="sm" onClick={() => onNavigate('calendar')}>View calendar</Button>} />
@@ -250,9 +250,6 @@ const styles = {
   priorityCard: {
     marginBottom: 18,
     padding: 18,
-    display: 'flex',
-    alignItems: 'center',
-    gap: 14,
     border: '1.5px solid rgba(45,139,139,0.32)',
     background: 'linear-gradient(135deg, #ffffff 0%, #f0f8f8 100%)',
   },

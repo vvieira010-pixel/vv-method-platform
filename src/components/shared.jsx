@@ -7,7 +7,7 @@ import { useState, useRef, useEffect } from 'react';
 
 /* ─── CSS CUSTOM PROPERTIES (injected once) ─────────────────── */
 const GLOBAL_CSS = `
-  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@500;700;800&family=JetBrains+Mono:wght@500&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800;1,9..40,400&family=JetBrains+Mono:wght@500&display=swap');
   :root {
     /* ── Ocean Depths theme ── */
     --accent:       #2d8b8b;
@@ -55,7 +55,7 @@ const GLOBAL_CSS = `
     --text-2xl:     22px;
     --text-3xl:     28px;
     --font-ui:      'DM Sans', 'Segoe UI', sans-serif;
-    --font-display: 'Plus Jakarta Sans', 'DM Sans', sans-serif;
+    --font-display: 'DM Sans', 'Segoe UI', sans-serif;
     --font-mono:    'JetBrains Mono', 'Fira Mono', monospace;
     --ease:         cubic-bezier(0.16, 1, 0.3, 1);
     --shadow-card:  0 16px 35px -20px rgba(26, 35, 50, 0.2), 0 3px 8px rgba(26, 35, 50, 0.06);
@@ -142,7 +142,7 @@ const GLOBAL_CSS = `
     display: flex; flex-direction: column; overflow-y: auto; overflow-x: hidden;
     border-right: 1px solid rgba(168,218,220,0.15);
   }
-  .shell-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+  .shell-content { flex: 1; min-width: 0; display: flex; flex-direction: column; overflow: hidden; }
   .shell-topbar {
     height: 58px; flex-shrink: 0; background: rgba(255,255,255,0.78);
     backdrop-filter: blur(8px);
@@ -150,6 +150,9 @@ const GLOBAL_CSS = `
     display: flex; align-items: center; padding: 0 20px; gap: 12px;
   }
   .shell-main { flex: 1; overflow-y: auto; overflow-x: hidden; }
+  .shell-mobile-title { display: none; min-width: 0; }
+  .shell-mobile-title strong { display: block; font-size: var(--text-sm); line-height: 1.1; color: var(--accent-deep); }
+  .shell-mobile-title span { display: block; margin-top: 2px; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent-text); }
   .shell-brand { padding: 20px 16px 14px; border-bottom: 1px solid var(--dark-accent-border); }
   .shell-brand-name { font-size: var(--text-lg); font-family: var(--font-display); font-weight: 800; color: #fff; letter-spacing: 0.01em; display: block; }
   .shell-brand-sub  { font-size: 12px; color: var(--on-dark-muted); letter-spacing: 0.08em; text-transform: uppercase; margin-top: 2px; display: block; }
@@ -205,20 +208,26 @@ const GLOBAL_CSS = `
   @media (max-width: 768px) {
     .shell-mobile-nav {
       display: flex; position: fixed; bottom: 0; left: 0; right: 0;
-      height: 60px; padding-bottom: env(safe-area-inset-bottom, 0px);
-      background: var(--surface); border-top: 1px solid var(--border);
+      height: calc(64px + env(safe-area-inset-bottom, 0px));
+      padding: 7px 8px max(7px, env(safe-area-inset-bottom, 0px));
+      background: rgba(255,255,255,0.96); border-top: 1px solid var(--border);
+      box-shadow: 0 -12px 28px -24px rgba(26,35,50,0.45);
+      overflow-x: auto; overflow-y: hidden; scrollbar-width: none;
       z-index: 50;
     }
-    .shell-main { padding-bottom: 68px; }
+    .shell-mobile-nav::-webkit-scrollbar { display: none; }
+    .shell-main { padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px)); }
   }
   .shell-mobile-nav-btn {
-    flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    flex: 0 0 78px; display: flex; flex-direction: column; align-items: center; justify-content: center;
     gap: 3px; border: none; background: none; cursor: pointer;
-    font-family: var(--font-ui); font-size: 10px; font-weight: 500; line-height: 1;
-    color: var(--muted); padding: 6px 2px; min-height: 44px;
-    transition: color 0.12s;
+    font-family: var(--font-ui); font-size: 10.5px; font-weight: 700; line-height: 1.1;
+    color: var(--muted); padding: 7px 4px; min-height: 48px;
+    border-radius: var(--radius-md);
+    transition: color 0.12s, background 0.12s;
   }
-  .shell-mobile-nav-btn.active { color: var(--primary); font-weight: 700; }
+  .shell-mobile-nav-btn span { max-width: 70px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .shell-mobile-nav-btn.active { color: var(--primary-ink); background: var(--accent-subtle); }
   .shell-mobile-nav-btn:focus-visible { outline: 2px solid var(--primary); outline-offset: -2px; border-radius: var(--radius-sm); }
   @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
   @keyframes pulseDot {
@@ -276,6 +285,9 @@ const GLOBAL_CSS = `
   .teacher-overview-kpis { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; }
   .teacher-overview-split { display: grid; grid-template-columns: 1.5fr 1fr; gap: 14px; align-items: start; }
   .teacher-overview-snapshot { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .teacher-dashboard-stack { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .teacher-priority-card { display: flex; align-items: center; gap: 14px; }
+  .teacher-priority-copy { flex: 1; min-width: 220px; }
   .overview-get-started { display: flex; align-items: flex-end; justify-content: space-between; gap: 14px; flex-wrap: wrap; }
   .overview-get-started-actions { display: flex; gap: 8px; flex-wrap: wrap; }
   .quick-actions-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
@@ -292,10 +304,44 @@ const GLOBAL_CSS = `
     .landing-hero-grid { grid-template-columns: 1fr; }
     .landing-grid-3 { grid-template-columns: 1fr 1fr; }
     .landing-grid-4 { grid-template-columns: 1fr 1fr; }
+    .shell { display: block; }
     .shell-sidebar  { display: none; }
+    .shell-content { width: 100%; height: 100dvh; }
+    .shell-topbar {
+      min-height: 60px; height: auto; padding: 10px 14px;
+      align-items: center; justify-content: space-between;
+      position: sticky; top: 0; z-index: 40;
+    }
+    .shell-topbar > div:first-child { flex: 1; min-width: 0; }
+    .shell-topbar > div:last-child {
+      flex-shrink: 0; gap: 6px !important;
+      max-width: 48%; overflow: hidden;
+    }
+    .shell-topbar > div:last-child > div {
+      gap: 6px !important;
+      max-width: 100%;
+      overflow: hidden;
+    }
+    .shell-topbar > div:last-child span { display: none; }
+    .shell-topbar .btn { padding: 8px 9px; min-height: 34px; }
+    .shell-mobile-title { display: block; }
+    .workflow-strip { height: auto; padding: 8px 0; background: transparent; border-bottom: 0; }
+    .page-shell { padding: 18px 14px; }
+    .card { padding: 16px; border-radius: var(--radius-md); }
+    .section-header { align-items: flex-start; gap: 10px; flex-wrap: wrap; }
+    .section-header .btn { width: 100%; }
+    .btn { white-space: normal; min-height: 40px; }
+    .pill-nav { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 2px; }
     .teacher-overview-hero,
     .teacher-overview-split,
-    .teacher-overview-snapshot { grid-template-columns: 1fr; }
+    .teacher-overview-snapshot,
+    .teacher-dashboard-stack { grid-template-columns: 1fr; }
+    .teacher-priority-card {
+      align-items: flex-start;
+      flex-direction: column;
+    }
+    .teacher-priority-card .btn { width: 100%; }
+    .teacher-priority-copy { min-width: 0; width: 100%; }
     .teacher-overview-kpis { grid-template-columns: 1fr 1fr; }
     .quick-actions-grid { grid-template-columns: 1fr; }
     .cycle-pipeline { grid-template-columns: 1fr; }
@@ -543,7 +589,7 @@ export function StudentFeedbackView({ feedback }) {
           <div style={{ ...cardTitle, color: 'var(--success)' }}><Icon.check size={13} /> What is getting stronger</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             {wins.map((w, i) => (
-              <div key={i} style={{ paddingLeft: 14, borderLeft: '3px solid var(--success)' }}>
+              <div key={i} style={{ padding: 12, background: 'var(--success-bg)', borderRadius: 'var(--radius-sm)' }}>
                 {w.strength && (
                   <div style={{ fontSize: 'var(--text-md)', fontWeight: 700, color: 'var(--text)', marginBottom: 4 }}>{w.strength}</div>
                 )}
@@ -567,7 +613,7 @@ export function StudentFeedbackView({ feedback }) {
           <div style={{ ...cardTitle, color: 'var(--warning-text)' }}>Try this next</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             {fixes.map((f, i) => (
-              <div key={i} style={{ paddingLeft: 14, borderLeft: '3px solid var(--warning-text)' }}>
+              <div key={i} style={{ padding: 12, background: 'var(--warning-bg)', borderRadius: 'var(--radius-sm)' }}>
                 {f.area && (
                   <div style={{ fontSize: 'var(--text-md)', fontWeight: 700, color: 'var(--text)', marginBottom: 4 }}>{f.area}</div>
                 )}
@@ -762,6 +808,7 @@ export function Shell({ tabs = [], active, onTab, children, rightSlot, workflowA
   // Auto-detect which nav section map to use
   const isNewNav = tabs.some(t => t.id === 'dashboard' || t.id === 'students' || t.id === 'diagnostics');
   const NAV_SECTIONS = isNewNav ? NEW_NAV_SECTIONS : LEGACY_NAV_SECTIONS;
+  const activeTab = tabMap[active];
 
   return (
     <div className="shell">
@@ -801,6 +848,10 @@ export function Shell({ tabs = [], active, onTab, children, rightSlot, workflowA
       <div className="shell-content">
         <header className="shell-topbar">
           <div style={{ flex:1 }}>
+            <div className="shell-mobile-title">
+              <strong>{activeTab?.label || 'Workspace'}</strong>
+              <span>MET Teacher</span>
+            </div>
             {workflowActive && <WorkflowStageStrip active={workflowActive} onStage={onWorkflowStage} />}
           </div>
           {rightSlot && <div style={{ display:'flex', alignItems:'center', gap:10 }}>{rightSlot}</div>}
@@ -808,7 +859,7 @@ export function Shell({ tabs = [], active, onTab, children, rightSlot, workflowA
         <main className="shell-main">{children}</main>
       </div>
       <nav className="shell-mobile-nav" aria-label="Mobile navigation">
-        {tabs.slice(0, 5).map(tab => (
+        {tabs.map(tab => (
           <button key={tab.id}
             className={`shell-mobile-nav-btn${active === tab.id ? ' active' : ''}`}
             aria-current={active === tab.id ? 'page' : undefined}

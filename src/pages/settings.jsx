@@ -10,6 +10,7 @@ const SENSITIVE_LOCAL_KEYS = new Set([
   'vv:anthropic_api_key',
   'vv:openai_api_key',
   'vv:openrouter_api_key',
+  'vv:elevenlabs_api_key',
 ]);
 
 /** Password-style input with an eye toggle to reveal/hide the value. */
@@ -49,6 +50,8 @@ export default function SettingsPage({ onNavigate }) {
   const [anthropicKey, setAnthropicKey] = useState(() => localStorage.getItem('vv:anthropic_api_key') || '');
   const [openaiKey, setOpenaiKey] = useState(() => localStorage.getItem('vv:openai_api_key') || '');
   const [openrouterKey, setOpenrouterKey] = useState(() => localStorage.getItem('vv:openrouter_api_key') || '');
+  const [elevenlabsKey, setElevenlabsKey] = useState(() => localStorage.getItem('vv:elevenlabs_api_key') || '');
+  const [piperUrl, setPiperUrl] = useState(() => localStorage.getItem('vv:piper_server_url') || '');
   const [generalMemo, setGeneralMemo] = useState(() => localStorage.getItem('vv:student_general_memo') || '');
   const [saved, setSaved] = useState('');
   const [syncing, setSyncing] = useState(false);
@@ -88,6 +91,10 @@ export default function SettingsPage({ onNavigate }) {
     else localStorage.removeItem('vv:openai_api_key');
     if (openrouterKey.trim()) localStorage.setItem('vv:openrouter_api_key', openrouterKey.trim());
     else localStorage.removeItem('vv:openrouter_api_key');
+    if (elevenlabsKey.trim()) localStorage.setItem('vv:elevenlabs_api_key', elevenlabsKey.trim());
+    else localStorage.removeItem('vv:elevenlabs_api_key');
+    if (piperUrl.trim()) localStorage.setItem('vv:piper_server_url', piperUrl.trim());
+    else localStorage.removeItem('vv:piper_server_url');
     setSaved('Keys saved!');
     setTimeout(() => setSaved(''), 2000);
     window.toast?.('API keys saved.', 'ok');
@@ -213,8 +220,54 @@ export default function SettingsPage({ onNavigate }) {
           <Field label="OpenAI API Key (fallback)">
             <SecretInput value={openaiKey} onChange={e => setOpenaiKey(e.target.value)} placeholder="sk-…" />
           </Field>
-          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 4 }}>
             <Button variant="primary" onClick={saveKeys}>Save Keys</Button>
+            {saved && <span style={{ color: 'var(--success)', fontSize: 'var(--text-sm)' }}>{saved}</span>}
+          </div>
+        </div>
+      </Card>
+
+      {/* TTS Keys */}
+      <Card style={{ padding: 20, marginTop: 14 }}>
+        <SectionHeader title="TTS — Listening Exercise Audio" icon={<Icon.mic size={15} />} />
+        <p style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', margin: '8px 0 4px', lineHeight: 1.6 }}>
+          Audio for listening exercises is generated in this order:
+        </p>
+        <ol style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', margin: '4px 0 16px', paddingLeft: 18, lineHeight: 1.8 }}>
+          <li><strong>ElevenLabs</strong> — highest quality (priority)</li>
+          <li><strong>OpenAI TTS</strong> — good quality, uses your OpenAI key from the AI section above</li>
+          <li><strong>Gemini TTS</strong> — free, uses your Gemini key from the AI section above</li>
+          <li><strong>Piper</strong> — offline/local, if server URL is set below</li>
+          <li><strong>Browser speech</strong> — always available, no key needed</li>
+        </ol>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <Field label="ElevenLabs API Key (priority)">
+            <SecretInput value={elevenlabsKey} onChange={e => setElevenlabsKey(e.target.value)} placeholder="sk_…" />
+            <a href="https://elevenlabs.io/app/settings/api-keys" target="_blank" rel="noopener noreferrer" style={{ fontSize: 'var(--text-xs)', color: 'var(--accent)', marginTop: 3 }}>Get your ElevenLabs key →</a>
+          </Field>
+          <div style={{
+            padding: '10px 14px', borderRadius: 8, fontSize: 'var(--text-xs)',
+            background: 'var(--accent-subtle)', color: 'var(--muted)', lineHeight: 1.6,
+            border: '1px solid var(--accent-soft)',
+          }}>
+            <strong>OpenAI TTS</strong> — uses your OpenAI key from the AI section above. No extra key needed.
+            Voices: <em>alloy</em> (neutral), <em>nova</em> (female), <em>onyx</em> (male). Active automatically if ElevenLabs is not set or fails.
+          </div>
+          <Field label="Piper server URL (optional — local/offline)">
+            <input
+              className="input"
+              type="url"
+              value={piperUrl}
+              onChange={e => setPiperUrl(e.target.value)}
+              placeholder="http://localhost:5050"
+            />
+            <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: 3, lineHeight: 1.5 }}>
+              Run <code>python scripts/piper-server.py --model path/to/voice.onnx</code> on your machine.
+              Free, fully offline, no API key needed. Used only when ElevenLabs and OpenAI are not configured.
+            </span>
+          </Field>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <Button variant="primary" onClick={saveKeys}>Save TTS Keys</Button>
             {saved && <span style={{ color: 'var(--success)', fontSize: 'var(--text-sm)' }}>{saved}</span>}
           </div>
         </div>

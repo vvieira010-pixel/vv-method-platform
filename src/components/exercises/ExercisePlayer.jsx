@@ -12,10 +12,22 @@ const NAVY = '#0B1F3A';
 
 const TYPE_LABELS = {
   multiple_choice: 'Multiple Choice',
+  multiple_choice_single: 'Multiple Choice',
+  multiple_choice_multiple: 'Multiple Choice',
   fill_blank: 'Fill in the Blank',
   short_answer: 'Speaking Practice',
   order_sentences: 'Order Sentences',
   error_correction: 'Error Correction',
+  drag_and_drop_matching: 'Matching',
+  true_false_with_explanation: 'True/False',
+  interactive_scenario_case_study: 'Scenario',
+  timed_quick_fire: 'Quick Fire',
+  mcq: 'Multiple Choice',
+  blank: 'Fill in the Blank',
+  short: 'Speaking Practice',
+  order: 'Ordering',
+  fix: 'Error Correction',
+  listen: 'Listening',
 };
 
 function InvalidExercise({ reason }) {
@@ -34,18 +46,26 @@ function ExerciseCard({ exercise, index, total, result, onComplete, onNext }) {
   function renderExercise() {
     const props = { exercise, onComplete };
     switch (exercise.type) {
-      case 'multiple_choice': return <MultipleChoice {...props} />;
-      case 'fill_blank':      return <FillBlank {...props} />;
-      case 'short_answer':    return <ShortAnswer {...props} />;
-      case 'order_sentences': return <OrderSentences {...props} />;
-      case 'error_correction':return <ErrorCorrection {...props} />;
-      // New exercise types (v2 id scheme)
-      case 'mcq':    return <MultipleChoice {...props} />;
-      case 'blank':  return <FillBlank {...props} />;
-      case 'short':  return <ShortAnswer {...props} />;
-      case 'order':  return <OrderSentences {...props} />;
-      case 'fix':    return <ErrorCorrection {...props} />;
-      case 'listen': return <Listening {...props} />;
+      case 'multiple_choice':
+      case 'multiple_choice_single':
+      case 'multiple_choice_multiple':
+      case 'mcq': return <MultipleChoice {...props} />;
+      case 'fill_blank':
+      case 'blank':      return <FillBlank {...props} />;
+      case 'short_answer':
+      case 'short':      return <ShortAnswer {...props} />;
+      case 'order_sentences':
+      case 'ordering_sequencing':
+      case 'order':      return <OrderSentences {...props} />;
+      case 'error_correction':
+      case 'fix':        return <ErrorCorrection {...props} />;
+      case 'listen':     return <Listening {...props} />;
+      // New types (stubs for now)
+      case 'drag_and_drop_matching':
+      case 'true_false_with_explanation':
+      case 'interactive_scenario_case_study':
+      case 'timed_quick_fire':
+        return <InvalidExercise reason={`Component for type "${exercise.type}" is not yet implemented.`} />;
       default:       return <InvalidExercise reason={`Unknown type "${exercise.type}".`} />;
     }
   }
@@ -120,7 +140,10 @@ function ProgressBar({ current, total }) {
       <div style={{ height: 6, borderRadius: 99, background: 'var(--border)', overflow: 'hidden' }}>
         <div style={{
           height: '100%', borderRadius: 99, background: `linear-gradient(90deg, ${TEAL}, ${NAVY})`,
-          width: `${pct}%`, transition: 'width 0.4s',
+          width: '100%',
+          transform: `scaleX(${pct / 100})`,
+          transformOrigin: 'left',
+          transition: 'transform 0.5s cubic-bezier(0.16, 1, 0.3, 1)',
         }} />
       </div>
     </div>

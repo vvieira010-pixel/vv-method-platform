@@ -1,9 +1,10 @@
 /**
  * Listening.jsx — Student-facing listening exercise component.
  *
- * TTS priority:
- *   1. ElevenLabs (VITE_ELEVENLABS_API_KEY env var or vv:elevenlabs_api_key in localStorage)
- *   2. Browser speechSynthesis (always available, no key needed)
+ * TTS cascade (keys stored in localStorage, never in the client bundle):
+ *   1. ElevenLabs  — vv:elevenlabs_api_key  — highest quality
+ *   2. OpenAI TTS  — vv:openai_api_key      — good quality, reuses AI key
+ *   3. Browser speechSynthesis              — always available, no key needed
  *
  * Flow:
  *   Student presses ▶ → audio plays (limit: exercise.plays, default 2)
@@ -14,27 +15,21 @@ import { useState, useRef, useCallback } from 'react';
 
 const TEAL = '#0D9488';
 const NAVY = '#0B1F3A';
-const EL_VOICE = '21m00Tcm4TlvDq8ikWAM'; // ElevenLabs — Rachel, natural American English
+const EL_VOICE    = '21m00Tcm4TlvDq8ikWAM'; // ElevenLabs — Rachel, natural American English
+const OPENAI_VOICE = 'nova';                  // OpenAI TTS — nova (female, clear, neutral)
+
+/* ── Key helpers ──────────────────────────────────────────────── */
+function lsGet(key) { try { return localStorage.getItem(key) || ''; } catch { return ''; } }
+const getElKey     = () => lsGet('vv:elevenlabs_api_key');
+const getOpenAIKey = () => lsGet('vv:openai_api_key');
+const getPiperUrl  = () => lsGet('vv:piper_server_url');
+const getGeminiKey = () => { const v = lsGet('vv:gemini_api_key'); return v ? v.split(',')[0].trim() : ''; };
 
 /* ── TTS helpers ──────────────────────────────────────────────── */
-function getElKey() {
-  // Settings-entered key only (localStorage). The env (VITE_) key is intentionally
-  // NOT read here so it can never be inlined into the public client bundle.
-  try {
-    return localStorage.getItem('vv:elevenlabs_api_key') || '';
-  } catch {
-    return '';
-  }
-}
-
 async function fetchElevenLabsAudio(text, apiKey) {
   const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${EL_VOICE}`, {
     method: 'POST',
-    headers: {
-      'xi-api-key': apiKey,
-      'Content-Type': 'application/json',
-      Accept: 'audio/mpeg',
-    },
+    headers: { 'xi-api-key': apiKey, 'Content-Type': 'application/json', Accept: 'audio/mpeg' },
     body: JSON.stringify({
       text,
       model_id: 'eleven_multilingual_v2',
@@ -45,8 +40,69 @@ async function fetchElevenLabsAudio(text, apiKey) {
     const err = await res.json().catch(() => ({}));
     throw new Error(err.detail?.message || `ElevenLabs error ${res.status}`);
   }
-  const blob = await res.blob();
-  return URL.createObjectURL(blob);
+  return URL.createObjectURL(await res.blob());
+}
+
+async function fetchOpenAIAudio(text, apiKey) {
+  const res = await fetch('https://api.openai.com/v1/audio/speech', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ model: 'tts-1', input: text, voice: OPENAI_VOICE }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error?.message || `OpenAI TTS error ${res.status}`);
+  }
+  return URL.createObjectURL(await res.blob());
+}
+
+async function fetchGeminiAudio(text, apiKey) {
+  const res = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${apiKey}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text }] }],
+        generationConfig: {
+          responseModalities: ['AUDIO'],
+          speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Kore' } } },
+        },
+      }),
+    }
+  );
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error?.message || `Gemini TTS error ${res.status}`);
+  }
+  const data = await res.json();
+  const part = data.candidates?.[0]?.content?.parts?.[0]?.inlineData;
+  if (!part?.data) throw new Error('Gemini TTS: no audio in response');
+  const bytes = Uint8Array.from(atob(part.data), c => c.charCodeAt(0));
+  return URL.createObjectURL(new Blob([bytes], { type: part.mimeType || 'audio/wav' }));
+}
+
+async function fetchPiperAudio(text, serverUrl) {
+  const res = await fetch(`${serverUrl}/tts`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ text }),
+  });
+  if (!res.ok) throw new Error(`Piper TTS error ${res.status}`);
+  return URL.createObjectURL(await res.blob());
+}
+
+/** ElevenLabs → OpenAI TTS → Gemini TTS → Piper (local) → null */
+async function fetchAudio(text) {
+  const elKey = getElKey();
+  if (elKey) return fetchElevenLabsAudio(text, elKey);
+  const oaiKey = getOpenAIKey();
+  if (oaiKey) return fetchOpenAIAudio(text, oaiKey);
+  const geminiKey = getGeminiKey();
+  if (geminiKey) return fetchGeminiAudio(text, geminiKey);
+  const piperUrl = getPiperUrl();
+  if (piperUrl) return fetchPiperAudio(text, piperUrl);
+  return null;
 }
 
 function speakBrowser(text) {
@@ -94,13 +150,12 @@ export default function Listening({ exercise, onComplete }) {
     setLoading(true);
 
     try {
-      const apiKey = getElKey();
       let url = audioUrl;
 
-      // Fetch from ElevenLabs once, then reuse cached blob URL
-      if (!url && apiKey) {
-        url = await fetchElevenLabsAudio(audioText, apiKey);
-        setAudioUrl(url);
+      // Fetch from TTS once, then reuse cached blob URL for replays
+      if (!url) {
+        url = await fetchAudio(audioText); // ElevenLabs → OpenAI TTS → null
+        if (url) setAudioUrl(url);
       }
 
       setLoading(false);
@@ -108,14 +163,13 @@ export default function Listening({ exercise, onComplete }) {
       setPlayCount(c => c + 1);
 
       if (url) {
-        // ElevenLabs audio
         const audio = new Audio(url);
         audioRef.current = audio;
         audio.onended = () => { setPlaying(false); setRevealed(true); };
         audio.onerror = () => { setPlaying(false); setError('Playback failed — try again.'); };
         await audio.play();
       } else {
-        // Browser TTS fallback (no key configured)
+        // Browser TTS fallback — no API key configured
         await speakBrowser(audioText);
         setPlaying(false);
         setRevealed(true);
@@ -124,8 +178,6 @@ export default function Listening({ exercise, onComplete }) {
       setLoading(false);
       setPlaying(false);
       setError(e.message || 'Could not play audio.');
-      // Accessibility fallback: if audio can't play, reveal the question and the
-      // transcript so the student can still read and complete the exercise.
       setRevealed(true);
     }
   }, [canPlay, audioText, audioUrl]);
