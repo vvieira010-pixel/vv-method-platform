@@ -43,9 +43,10 @@ const SKILL_GROUPS = [
   { key: 'listening',  label: 'Listening',  icon: '🎧' },
 ];
 
-export default function HomeworkCreate({ diagnosisId, studentId, students, onNavigate }) {
+export default function HomeworkCreate({ diagnosisId, studentId, students, onNavigate, initialStep = 1 }) {
   const [diagnosis, setDiagnosis] = useState(null);
   const [student, setStudent] = useState(null);
+  const [selectedStudentId, setSelectedStudentId] = useState(studentId || '');
   const [form, setForm] = useState(EMPTY_FORM);
   const [preview, setPreview] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -66,7 +67,7 @@ export default function HomeworkCreate({ diagnosisId, studentId, students, onNav
   // Saved-exercise library (Supabase or localStorage). Reloaded when libVersion bumps.
   const [libVersion, setLibVersion] = useState(0);
   const [libraryExercises, setLibraryExercises] = useState([]);
-  const [currentStep, setCurrentStep] = useState(1); // 1: Diagnosis, 2: Select, 3: Review, 4: Assign
+  const [currentStep, setCurrentStep] = useState(initialStep); // 1: Diagnosis, 2: Select, 3: Review, 4: Assign
 
   useEffect(() => {
     let cancelled = false;
@@ -76,9 +77,23 @@ export default function HomeworkCreate({ diagnosisId, studentId, students, onNav
 
   useEffect(() => { load(); }, [diagnosisId, studentId]);
 
+  useEffect(() => {
+    if (!selectedStudentId) {
+      if (!studentId) setStudent(null);
+      return;
+    }
+    const rosterStudent = students.find(s => s.id === selectedStudentId);
+    if (rosterStudent) {
+      setStudent(rosterStudent);
+      return;
+    }
+    getStudent(selectedStudentId).then(s => { if (s) setStudent(s); }).catch(() => {});
+  }, [selectedStudentId, studentId, students]);
+
   async function load() {
     let sid = studentId || '';
     if (sid) {
+      setSelectedStudentId(sid);
       const s = await getStudent(sid) || students.find(x => x.id === sid);
       setStudent(s);
     }
@@ -88,6 +103,7 @@ export default function HomeworkCreate({ diagnosisId, studentId, students, onNav
       setDiagnosis(dx);
       if (dx && !sid && dx.studentId) sid = dx.studentId;
       if (sid) {
+        setSelectedStudentId(sid);
         const s = await getStudent(sid) || students.find(x => x.id === sid);
         setStudent(s || null);
       }
@@ -397,7 +413,7 @@ function getPriorityItems(dx) {
   async function handleAssign() {
     if (!form.title.trim()) { window.toast?.('Title is required.', 'warn'); return; }
     if (form.exercises.length === 0) { window.toast?.('Add at least one exercise.', 'warn'); return; }
-    const resolvedStudentId = studentId || student?.id || diagnosis?.studentId || '';
+    const resolvedStudentId = studentId || selectedStudentId || student?.id || diagnosis?.studentId || '';
     if (!resolvedStudentId) { window.toast?.('Select or link a student before assigning homework.', 'warn'); return; }
     const resolvedStudent = student || students.find(s => s.id === resolvedStudentId);
     setSaving(true);
@@ -429,14 +445,14 @@ function getPriorityItems(dx) {
   form.exercises.forEach(e => { typeCounts[e.type] = (typeCounts[e.type] || 0) + 1; });
 
   return (
-    <div style={{ maxWidth: 1120, width: '100%', margin: '0 auto', padding: '22px 24px 14px' }}>
+    <div className="homework-create-page" style={{ maxWidth: 1120, width: '100%', margin: '0 auto', padding: '22px 24px 14px' }}>
       <button onClick={() => onNavigate('homework')} style={backStyle}>
         <Icon.arrowL size={13} /> Back
       </button>
 
       {/* Wizard Header */}
       <h1 style={S.headline}>Create Homework</h1>
-      <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
+      <div className="homework-create-steps" style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
         {['Diagnosis', 'Select Exercises', 'Review', 'Assign'].map((step, i) => (
           <div key={step} style={{
             fontSize: 'var(--text-xs)', fontWeight: 600,
@@ -449,13 +465,26 @@ function getPriorityItems(dx) {
       </div>
 
       {/* Step Content */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: 24, alignItems: 'start' }}>
+      <div className="homework-create-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: 24, alignItems: 'start' }}>
         <div>
           {currentStep === 1 && (
             <Card style={{ padding: 18 }}>
               <SectionHeader title="Step 1: Homework Source" />
               <div style={{ marginTop: 16 }}>
-                <p style={{ fontSize: 'var(--text-md)', marginBottom: 8 }}>Student: <strong>{student?.name || 'Loading...'}</strong></p>
+                {studentId || diagnosis?.studentId ? (
+                  <p style={{ fontSize: 'var(--text-md)', marginBottom: 8 }}>Student: <strong>{student?.name || 'Loading...'}</strong></p>
+                ) : (
+                  <Field label="Student">
+                    <select
+                      className="input"
+                      value={selectedStudentId}
+                      onChange={e => setSelectedStudentId(e.target.value)}
+                    >
+                      <option value="">Choose student before assigning</option>
+                      {students.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                    </select>
+                  </Field>
+                )}
                 {diagnosis && (
                   <div style={{ padding: 14, background: 'var(--accent-subtle)', borderRadius: 'var(--radius-md)', border: '1px solid var(--accent-soft)' }}>
                     <div style={{ fontWeight: 600, fontSize: 'var(--text-sm)', color: 'var(--accent-deep)', marginBottom: 4 }}>
@@ -482,7 +511,7 @@ function getPriorityItems(dx) {
             <Card style={{ padding: 18 }}>
               <SectionHeader title="Step 2: Select Exercises" />
               <div style={{ marginTop: 16 }}>
-                <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
+                <div className="homework-create-actions" style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
                     <Button variant="primary" size="sm" onClick={handleAiGenerate} disabled={!diagnosis || generating}>
                       <Icon.spark size={12} /> {generating ? 'Generating...' : 'Generate MET Homework with AI'}
                     </Button>
@@ -534,7 +563,7 @@ function getPriorityItems(dx) {
                         </label>
                       ))}
                     </div>
-                    <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+                    <div className="homework-create-actions" style={{ display: 'flex', gap: 8, marginTop: 12 }}>
                       <Button variant="primary" size="sm" onClick={handleGenerateByGroups} disabled={generating}>
                         <Icon.spark size={12} /> Generate Selected Skills
                       </Button>
@@ -644,7 +673,7 @@ function getPriorityItems(dx) {
                   ))}
                 </div>
 
-                <div style={{ display: 'flex', gap: 10, marginTop: 24 }}>
+                <div className="homework-create-actions" style={{ display: 'flex', gap: 10, marginTop: 24 }}>
                   <Button variant="ghost" onClick={() => setCurrentStep(1)}>Back</Button>
                   <Button variant="primary" onClick={() => setCurrentStep(3)}>Review Student View</Button>
                 </div>
@@ -679,7 +708,7 @@ function getPriorityItems(dx) {
                   ))}
                 </div>
 
-                <div style={{ display: 'flex', gap: 10, marginTop: 24 }}>
+                <div className="homework-create-actions" style={{ display: 'flex', gap: 10, marginTop: 24 }}>
                   <Button variant="ghost" onClick={() => setCurrentStep(2)}>Back</Button>
                   <Button variant="primary" onClick={() => setCurrentStep(4)}>Proceed to Assign</Button>
                 </div>
@@ -691,6 +720,18 @@ function getPriorityItems(dx) {
               <SectionHeader title="Step 4: Assign Homework" />
               <div style={{ marginTop: 16 }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  {studentId || diagnosis?.studentId ? null : (
+                    <Field label="Student">
+                      <select
+                        className="input"
+                        value={selectedStudentId}
+                        onChange={e => setSelectedStudentId(e.target.value)}
+                      >
+                        <option value="">Choose student</option>
+                        {students.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                      </select>
+                    </Field>
+                  )}
                   <Field label="Homework Title">
                       <input className="input" value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} />
                   </Field>
@@ -699,7 +740,7 @@ function getPriorityItems(dx) {
                   </Field>
                 </div>
                 
-                <div style={{ marginTop: 24, display: 'flex', gap: 10 }}>
+                <div className="homework-create-actions" style={{ marginTop: 24, display: 'flex', gap: 10 }}>
                   <Button variant="ghost" onClick={() => setCurrentStep(3)}>Back</Button>
                   <Button variant="primary" onClick={handleAssign} disabled={saving}>
                     {saving ? 'Assigning…' : 'Assign Homework'}
@@ -711,7 +752,7 @@ function getPriorityItems(dx) {
         </div>
 
         {/* Persistent Summary Side Panel */}
-        <Card style={{ padding: 18, position: 'sticky', top: 20 }}>
+        <Card className="homework-create-summary" style={{ padding: 18, position: 'sticky', top: 20 }}>
           <SectionHeader title="Homework Summary" />
           <div style={{ marginTop: 12, fontSize: 'var(--text-sm)' }}>
             <p>Exercises: <strong>{exerciseCount} / 10</strong></p>

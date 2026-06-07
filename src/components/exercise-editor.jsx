@@ -47,12 +47,12 @@ export function ExerciseTypePicker({ onSelect, onClose }) {
     borderRadius: 6, cursor: 'pointer', fontSize: 16, lineHeight: 1, color: 'var(--text)',
   };
   return (
-    <Card style={{ padding: 20 }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6, gap: 12, flexWrap: 'wrap' }}>
+    <Card className="exercise-type-picker" style={{ padding: 20 }}>
+      <div className="exercise-type-picker-head" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6, gap: 12, flexWrap: 'wrap' }}>
         <span style={{ fontWeight: 700, fontSize: 'var(--text-sm)', color: 'var(--accent-deep)' }}>
           Choose exercise type
         </span>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div className="exercise-type-picker-controls" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           {/* Level selector */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             <span style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Level</span>
@@ -91,7 +91,7 @@ export function ExerciseTypePicker({ onSelect, onClose }) {
       <p style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', margin: '0 0 14px' }}>
         Pick a type to add {qty > 1 ? <strong>{qty} of them</strong> : 'one'} at <strong>{level} level</strong>.
       </p>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 8 }}>
+      <div className="exercise-type-picker-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 8 }}>
         {EX_TYPES.map(t => {
           const IconComp = Icon[t.iconKey];
           return (

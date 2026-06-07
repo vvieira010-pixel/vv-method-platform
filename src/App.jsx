@@ -322,7 +322,11 @@ function renderTeacherPage(view, params, ctx) {
       return <SettingsPage onNavigate={navigate} />;
 
     case 'exercises':
-      return <ExerciseDemo onNavigate={navigate} />;
+      return <HomeworkCreate
+        students={students}
+        onNavigate={navigate}
+        initialStep={2}
+      />;
 
     default:
       return <TeacherDashboard students={students} onNavigate={navigate} />;

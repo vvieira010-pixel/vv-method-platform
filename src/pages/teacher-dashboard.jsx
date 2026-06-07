@@ -56,7 +56,7 @@ export default function TeacherDashboard({ students, onNavigate }) {
   return (
     <div style={styles.shell}>
       {/* Header */}
-      <div style={{ marginBottom: 28 }}>
+      <div style={{ marginBottom: 16 }}>
         <h1 style={styles.headline}>Good {timeOfDay()}, Vini.</h1>
         <p style={styles.sub}>{today}</p>
       </div>
@@ -74,7 +74,7 @@ export default function TeacherDashboard({ students, onNavigate }) {
       </Card>
 
       {/* KPIs */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(140px,1fr))', gap: 12, marginBottom: 28 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(130px,1fr))', gap: 8, marginBottom: 14 }}>
         <KpiCard label="Students" value={data.stats.students} icon={<Icon.student size={16} />} />
         <KpiCard label="Classes today" value={data.stats.classesToday} icon={<Icon.calendar size={16} />} tone={data.stats.classesToday > 0 ? 'info' : ''} />
         <KpiCard label="Need diagnosis" value={data.stats.needsDiagnosis} icon={<Icon.diagnose size={16} />} tone={data.stats.needsDiagnosis > 0 ? 'warning' : ''} onClick={() => onNavigate('diagnostics')} />
@@ -83,12 +83,12 @@ export default function TeacherDashboard({ students, onNavigate }) {
 
       <div className="teacher-dashboard-stack">
         {/* Today's classes */}
-        <Card style={{ padding: 18 }}>
+        <Card style={{ padding: 14 }}>
           <SectionHeader title="Today's Classes" icon={<Icon.calendar size={15} />} action={<Button variant="ghost" size="sm" onClick={() => onNavigate('calendar')}>View calendar</Button>} />
           {data.todayClasses.length === 0 ? (
             <p style={styles.empty}>No classes scheduled today.</p>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 10 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 8 }}>
               {data.todayClasses.map(ev => {
                 const student = students.find(s => s.id === ev.studentId);
                 return (
@@ -107,12 +107,12 @@ export default function TeacherDashboard({ students, onNavigate }) {
         </Card>
 
         {/* Needs diagnosis */}
-        <Card style={{ padding: 18 }}>
+        <Card style={{ padding: 14 }}>
           <SectionHeader title="Classes Needing Diagnosis" icon={<Icon.diagnose size={15} />} action={<Button variant="ghost" size="sm" onClick={() => onNavigate('diagnostics')}>All diagnostics</Button>} />
           {data.needsDiagnosis.length === 0 ? (
             <p style={styles.empty}>All caught up! No classes awaiting diagnosis.</p>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 10 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 8 }}>
               {data.needsDiagnosis.slice(0, 5).map(ev => {
                 const student = students.find(s => s.id === ev.studentId);
                 return (
@@ -133,12 +133,12 @@ export default function TeacherDashboard({ students, onNavigate }) {
         </Card>
 
         {/* Pending submissions */}
-        <Card style={{ padding: 18 }}>
+        <Card style={{ padding: 14 }}>
           <SectionHeader title="Submissions Awaiting Review" icon={<Icon.doc size={15} />} action={<Button variant="ghost" size="sm" onClick={() => onNavigate('submissions')}>All submissions</Button>} />
           {data.pendingSubmissions.length === 0 ? (
             <p style={styles.empty}>No submissions waiting for review.</p>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 10 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 8 }}>
               {data.pendingSubmissions.slice(0, 5).map(sub => {
                 const student = students.find(s => s.id === sub.studentId);
                 return (
@@ -157,9 +157,9 @@ export default function TeacherDashboard({ students, onNavigate }) {
         </Card>
 
         {/* Quick actions */}
-        <Card style={{ padding: 18 }}>
+        <Card style={{ padding: 14 }}>
           <SectionHeader title="Quick Actions" icon={<Icon.spark size={15} />} />
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 10 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 8 }}>
             <QuickAction icon={<Icon.student size={16} />} label="Add new student" onClick={() => onNavigate('students')} />
             <QuickAction icon={<Icon.calendar size={16} />} label="Schedule a class" onClick={() => onNavigate('calendar')} />
             <QuickAction icon={<Icon.diagnose size={16} />} label="Run a diagnosis" onClick={() => onNavigate('diagnostics')} />
@@ -219,12 +219,12 @@ function KpiCard({ label, value, icon, tone, onClick }) {
   const bg = tone === 'warning' ? 'var(--warning-bg)' : tone === 'danger' ? 'var(--danger-bg)' : tone === 'info' ? 'var(--info-bg)' : 'var(--surface)';
   const fg = tone === 'warning' ? 'var(--warning)' : tone === 'danger' ? 'var(--danger)' : tone === 'info' ? 'var(--info)' : 'var(--accent-deep)';
   return (
-    <Card style={{ padding: '14px 16px', background: bg, cursor: onClick ? 'pointer' : 'default' }} onClick={onClick}>
+    <Card style={{ padding: '12px 14px', background: bg, cursor: onClick ? 'pointer' : 'default' }} onClick={onClick}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
         <span style={{ color: fg }}>{icon}</span>
         <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', flex: 1 }}>{label}</span>
       </div>
-      <div style={{ fontSize: 'var(--text-2xl)', fontWeight: 700, color: fg, marginTop: 4 }}>{value}</div>
+      <div style={{ fontSize: 'var(--text-xl)', fontWeight: 700, color: fg, marginTop: 2 }}>{value}</div>
     </Card>
   );
 }
@@ -244,18 +244,18 @@ function QuickAction({ icon, label, onClick }) {
 }
 
 const styles = {
-  shell: { maxWidth: 1000, margin: '0 auto', padding: '28px 20px' },
+  shell: { maxWidth: 1000, margin: '0 auto', padding: '18px 16px' },
   headline: { fontFamily: 'var(--font-display)', fontSize: 'var(--text-2xl)', fontWeight: 700, color: 'var(--accent-deep)', margin: 0 },
   sub: { fontSize: 'var(--text-sm)', color: 'var(--muted)', margin: '4px 0 0' },
   priorityCard: {
-    marginBottom: 18,
-    padding: 18,
+    marginBottom: 12,
+    padding: 14,
     border: '1.5px solid rgba(45,139,139,0.32)',
     background: 'linear-gradient(135deg, #ffffff 0%, #f0f8f8 100%)',
   },
   priorityIcon: {
-    width: 42,
-    height: 42,
+    width: 36,
+    height: 36,
     borderRadius: 'var(--radius-sm)',
     display: 'grid',
     placeItems: 'center',
@@ -264,10 +264,10 @@ const styles = {
     flexShrink: 0,
   },
   priorityKicker: { fontSize: 'var(--text-xs)', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--accent-text)' },
-  priorityTitle: { margin: '2px 0 3px', fontSize: 'var(--text-xl)', color: 'var(--accent-deep)', fontWeight: 800 },
+  priorityTitle: { margin: '1px 0 2px', fontSize: 'var(--text-lg)', color: 'var(--accent-deep)', fontWeight: 800 },
   priorityText: { margin: 0, fontSize: 'var(--text-sm)', color: 'var(--text-2)', lineHeight: 1.5 },
-  empty: { color: 'var(--muted)', fontSize: 'var(--text-sm)', marginTop: 12, fontStyle: 'italic' },
-  listRow: { display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: '1px solid var(--divider)' },
+  empty: { color: 'var(--muted)', fontSize: 'var(--text-sm)', marginTop: 8, fontStyle: 'italic' },
+  listRow: { display: 'flex', alignItems: 'center', gap: 8, padding: '6px 0', borderBottom: '1px solid var(--divider)' },
   rowTitle: { fontWeight: 600, fontSize: 'var(--text-sm)' },
   rowSub: { fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: 2 },
 };
