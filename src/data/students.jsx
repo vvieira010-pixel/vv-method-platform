@@ -1,5 +1,5 @@
 /**
- * students.jsx — Mock student roster for V.V. Method platform
+ * students.jsx — Mock student roster for MET Proficiency Mastery
  */
 
 // Define constants for valid values

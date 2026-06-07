@@ -1,5 +1,5 @@
 /**
- * login.jsx — V.V. Method Platform Login Screen
+ * login.jsx — MET Proficiency Mastery Login Screen
  *
  * Email + password form with two modes:
  *  - "signin"   — existing users (incl. the teacher) sign in.

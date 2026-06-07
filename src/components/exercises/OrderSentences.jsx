@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 
 const TEAL = '#0D9488';
 const NAVY = '#0B1F3A';
@@ -16,11 +16,6 @@ export default function OrderSentences({ exercise, onComplete }) {
   const { sentences, context, instruction } = exercise;
   const [order, setOrder] = useState(() => shuffle(sentences.map((_, i) => i)));
   const [submitted, setSubmitted] = useState(false);
-
-  // re-shuffle on mount only
-  useEffect(() => {
-    setOrder(shuffle(sentences.map((_, i) => i)));
-  }, []);
 
   function move(fromIdx, dir) {
     const toIdx = fromIdx + dir;
@@ -127,7 +122,7 @@ export default function OrderSentences({ exercise, onComplete }) {
               {/* Correct position hint after submit */}
               {submitted && isWrong && (
                 <span style={{ fontSize: 12, color: 'var(--danger)', flexShrink: 0 }}>
-                  pos {sentences.indexOf(sentences[origIdx]) + 1}
+                  should be #{origIdx + 1}
                 </span>
               )}
             </div>

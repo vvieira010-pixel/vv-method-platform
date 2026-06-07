@@ -127,6 +127,11 @@ export default function FillBlank({ exercise, onComplete }) {
               ? 'Correct — well done.'
               : `${results.filter(r => r.correct).length} of ${results.length} correct. Review the answers above.`}
           </div>
+          {exercise.explanation && (
+            <div style={{ marginTop: 8, fontSize: 13.5, color: '#374151', lineHeight: 1.65, padding: '10px 14px', background: '#F8FAFC', borderRadius: 8, border: '1px solid #E2E8F0' }}>
+              {exercise.explanation}
+            </div>
+          )}
         </div>
       )}
     </div>

@@ -370,21 +370,57 @@ export function buildSectionRegenPrompt(key, data) {
    CASCADE GENERATION PROMPTS — 3-step homework building
 ══════════════════════════════════════════════════════════════ */
 
+const EXERCISE_COMPLETENESS_RULES = `Complete exercise JSON requirements:
+- mcq: type, title, question, options with exactly 4 choices, correct as 0-3, explanation.
+- blank: type, title, template with ___ markers, blanks array matching every blank.
+- short: type, title, prompt, rubric, targetWords.
+- speak: type, title, prompt, targetSeconds.
+- order: type, title, sentences array in correct order with at least 3 sentences.
+- fix: type, title, errorText, correctedText, hint.
+- flash: type, title, pairs array with at least 10 { "term", "def" } items.
+- listen: type, title, audioText, question, options with exactly 4 choices, correct as 0-3, explanation, plays.
+Do not return placeholder text. Do not omit answer keys.`;
+
 export const buildHomeworkBlueprintPrompt = ({ student, diagnosis }) => {
   const priorities = pickArray(diagnosis?.priorityDiagnosis, diagnosis?.sections?.priorityDiagnosis?.content);
-  return `Create a homework blueprint for ${student?.name || 'the student'}.
-Priorities: ${priorities.slice(0, 2).map(p => p.area).join(', ')}.
+  return `Create a complete MET homework blueprint for ${student?.name || 'the student'}.
+Priorities: ${priorities.slice(0, 3).map(p => `${p.area}: ${p.whatToImprove || ''}`).join(' | ') || 'MET B1-B2 readiness'}.
 
-Rules: Define a title, pedagogical objective, and 3 specific task types that target these priorities.
-Return JSON: { "title": string, "objective": string, "taskTypes": ["mcq"|"blank"|"short"|"speak"|"order"|"fix"|"flash"|"listen"] }`;
+Rules:
+- Build a balanced MET set with 7 tasks.
+- Include speaking, writing, listening or reading comprehension, grammar, vocabulary, and test strategy.
+- Healthcare/nursing context may appear, but every task must still prepare for MET.
+- Use only these type IDs: mcq, blank, short, speak, order, fix, flash, listen.
+
+Return JSON only:
+{ "title": string, "objective": string, "taskTypes": ["speak","short","listen","mcq","blank","flash","fix"] }`;
 };
 
 export const buildTaskGeneratorPrompt = ({ student, diagnosis, taskBlueprint, taskType }) => {
-  return `Generate a complete, fully-written ${taskType} exercise for ${student?.name || 'the student'}.
+  const priorities = pickArray(diagnosis?.priorityDiagnosis, diagnosis?.sections?.priorityDiagnosis?.content);
+  const errors = pickArray(diagnosis?.errorBank, diagnosis?.sections?.errorBankSuggestions?.content);
+  const vocab = pickArray(diagnosis?.vocabTargets?.vocabularyTargets, diagnosis?.sections?.vocabGrammarTargets?.content?.vocabularyTargets);
+  const grammar = pickArray(diagnosis?.vocabTargets?.grammarTargets, diagnosis?.sections?.vocabGrammarTargets?.content?.grammarTargets);
+
+  return `Generate one complete, fully written ${taskType} exercise for ${student?.name || 'the student'}.
 Target: ${taskBlueprint.objective}.
 
-Rules: Must be fully written out in the "content" field. Professional context: ${student?.professionalContext || 'general'}.
-Return JSON: { "type": "${taskType}", "content": "FULL EXERCISE TEXT", "correct": number, "options": [...], ... }`;
+Student: ${student?.currentLevel || 'B1'} -> ${student?.targetLevel || 'B2'} | Context: ${student?.professionalContext || 'healthcare / nursing'}
+Priorities: ${priorities.slice(0, 3).map(p => `${p.area}: ${p.whatToImprove || ''}`).join(' | ') || 'MET readiness'}
+Errors: ${errors.slice(0, 4).map(e => `"${e.error}" -> "${e.correct}"`).join(' | ') || 'none'}
+Vocabulary: ${vocab.slice(0, 4).map(v => v.wordOrPhrase).join(', ') || 'general MET vocabulary'}
+Grammar: ${grammar.slice(0, 3).map(g => `${g.area}: ${g.issue}`).join(' | ') || 'B1-B2 grammar control'}
+
+${EXERCISE_COMPLETENESS_RULES}
+
+MET focus:
+- Speaking: organize a timed answer with example and clear conclusion.
+- Writing: give a clear opinion, support, transitions, and grammar control.
+- Listening/reading: test main idea, detail, inference, purpose, attitude, or distractor recognition.
+- Grammar/vocabulary: practice the exact language needed to perform better on MET tasks.
+- Test strategy: help the student notice evidence, distractors, timing, or answer organization.
+
+Return ONLY one valid JSON object for type "${taskType}".`;
 };
 
 export const buildFinalRefinementPrompt = ({ student, blueprint, tasks }) => {
@@ -392,7 +428,11 @@ export const buildFinalRefinementPrompt = ({ student, blueprint, tasks }) => {
 Blueprint: ${blueprint.title}
 Tasks: ${JSON.stringify(tasks)}
 
-Rules: Generate student-facing instructions, specific self-check items, and teacher review notes.
+Rules:
+- Generate short, natural student-facing instructions.
+- Generate 3-5 concrete self-check items.
+- Generate teacher review notes focused on what to inspect after submission.
+- Keep language adult, calm, and MET-focused.
 Return JSON: { "instructions": string, "selfCheck": [string], "teacherNotes": string }`;
 };
 
@@ -448,17 +488,23 @@ ${group === 'grammar' || group === 'mixed' ? grammar.slice(0, 3).map(g => `- ${g
 - Recommended types: ${typeHint}. Mix them for variety. Use the 8 structured types: mcq, blank, short, speak, order, fix, flash, listen.
 - Use the student's professional context (${student?.professionalContext || 'healthcare / nursing'}) — not generic filler.
 - B1–B2 level. Each exercise should take 3–5 minutes.
+- Keep every item connected to MET skills: speaking organization, writing support, reading/listening evidence, grammar control, vocabulary range, or test strategy.
+
+${EXERCISE_COMPLETENESS_RULES}
 
 Return ONLY valid JSON — an array of ${count} exercise objects:
 [
   {
     "type": "mcq|blank|short|speak|order|fix|flash|listen",
     "skillGroup": "${group}",
+    "title": "specific MET exercise title",
     "content": "FULLY WRITTEN exercise content — the actual sentences, questions, or scenario",
     "options": ["A", "B", "C", "D"],
     "correct": 0,
+    "template": "sentence with ___ marker",
     "blanks": ["answer1"],
     "sentences": ["sentence 1", "sentence 2"],
+    "errorText": "student-facing text with errors",
     "correctedText": "corrected version (for fix type)",
     "hint": "optional hint",
     "pairs": [{"term": "word", "def": "meaning"}],
@@ -481,7 +527,7 @@ export const buildExerciseListPrompt = ({ student, diagnosis }) => {
   const vocab = pickArray(diagnosis?.vocabTargets?.vocabularyTargets, diagnosis?.sections?.vocabGrammarTargets?.content?.vocabularyTargets);
   const grammar = pickArray(diagnosis?.vocabTargets?.grammarTargets, diagnosis?.sections?.vocabGrammarTargets?.content?.grammarTargets);
 
-  return `You are a MET English exam preparation expert. Generate a menu of 6 distinct, ready-to-use exercises for the teacher to choose from.
+  return `You are a MET English exam preparation expert. Generate a menu of 7 distinct, ready-to-use exercises for the teacher to choose from.
 
 ━━━ STUDENT ━━━
 Name: ${student?.name || 'Student'}
@@ -502,10 +548,13 @@ ${grammar.slice(0, 3).map(g => `- ${g.area}: ${g.issue}`).join('\n') || 'None.'}
 
 ━━━ RULES ━━━
 - Each exercise must be FULLY WRITTEN — the student opens it and starts immediately.
-- Cover different skills: mix grammar, vocabulary, writing, speaking.
+- Cover different MET skills: speaking, writing, reading or listening, grammar, vocabulary, and test strategy.
 - Each exercise should take 5–15 minutes.
 - Match B1–B2 transition level. Healthcare/nursing context when relevant.
 - Use the INTERACTIVE EXERCISE TYPES below to create varied, engaging exercises.
+- Return only exercises that include all required fields and answer keys.
+
+${EXERCISE_COMPLETENESS_RULES}
 
 ━━━ INTERACTIVE EXERCISE TYPES ━━━
 You MUST use these exact type IDs. Each has a specific JSON shape:
@@ -516,18 +565,20 @@ You MUST use these exact type IDs. Each has a specific JSON shape:
 4. "speak" (Speaking Prompt) — prompt + target seconds
 5. "order" (Order Sentences) — sentences array in correct order (student sees shuffled)
 6. "fix" (Error Correction) — errorText + correctedText + hint
-7. "flash" (Flashcards) — pairs of term/definition
+7. "flash" (Flashcards) — at least 10 pairs of term/definition
 8. "listen" (Listening Exercise) — audioText (the text read aloud via TTS) + plays (number of allowed listens, default 2) + question + 4 options + correct answer index + optional explanation
 
-Return ONLY valid JSON — an array of 6 exercises mixing different types:
+Return ONLY valid JSON — an array of 7 exercises mixing different types:
 [
   {
     "title": "Short exercise title",
     "type": "mcq",
     "duration": "5 min",
     "content": "Which sentence uses the correct form?",
+    "question": "Which sentence uses the correct form?",
     "options": ["Option A text", "Option B text", "Option C text", "Option D text"],
     "correct": 1,
+    "explanation": "Why the correct option fits the grammar or MET evidence.",
     "teacherNote": "What to look for"
   },
   {
@@ -535,6 +586,7 @@ Return ONLY valid JSON — an array of 6 exercises mixing different types:
     "type": "blank",
     "duration": "8 min",
     "content": "The nurse gave ___ report to ___ doctor on duty.",
+    "template": "The nurse gave ___ report to ___ doctor on duty.",
     "blanks": ["the|a", "the"],
     "teacherNote": "Check article use before nouns"
   },
@@ -543,6 +595,7 @@ Return ONLY valid JSON — an array of 6 exercises mixing different types:
     "type": "short",
     "duration": "12 min",
     "content": "Write 80–120 words arguing whether...",
+    "prompt": "Write 80–120 words arguing whether...",
     "targetWords": 120,
     "rubric": "Open with stance, give example, close with consequence",
     "teacherNote": "Look for cohesion markers"
@@ -552,6 +605,7 @@ Return ONLY valid JSON — an array of 6 exercises mixing different types:
     "type": "speak",
     "duration": "5 min",
     "content": "Describe a challenging moment at work using past simple. 60 seconds.",
+    "prompt": "Describe a challenging moment at work using past simple. 60 seconds.",
     "targetSeconds": 60,
     "teacherNote": "Check tense consistency"
   },

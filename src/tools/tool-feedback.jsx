@@ -457,7 +457,7 @@ function mapCompatibility(report, form) {
   const overview = (report?.progress_summary?.progress_indicators || []).slice(0, 4).map((item) => ({
     s: item.skill || "Skill",
     r: Number(item.level) >= 70 ? "Achieving" : Number(item.level) >= 50 ? "Developing" : "Priority focus",
-    t: `${item.level || 0}/100`,
+    t: Number(item.level) >= 70 ? "Strong evidence" : Number(item.level) >= 50 ? "Developing evidence" : "Needs more samples",
   }));
   const priorities = (report?.next_steps || []).slice(0, 3).map((step, idx) => ({
     l: `${idx + 1} — ${idx === 0 ? "URGENT" : "HIGH"}`,

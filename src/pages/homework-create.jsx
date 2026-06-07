@@ -6,7 +6,13 @@ import { useState, useEffect } from 'react';
 import { Icon, Card, SectionHeader, Button, Pill } from '../components/shared.jsx';
 import { callAI } from '../components/shared.jsx';
 import { parseAiJson } from '../lib/ai-helpers.js';
-import { buildHomeworkGeneratorPrompt, buildExerciseListPrompt, buildHomeworkGroupPrompt } from '../lib/prompts.js';
+import {
+  buildExerciseListPrompt,
+  buildFinalRefinementPrompt,
+  buildHomeworkBlueprintPrompt,
+  buildHomeworkGroupPrompt,
+  buildTaskGeneratorPrompt,
+} from '../lib/prompts.js';
 import { getDiagnoses, getStudent, saveHomework, updateClassEventStatus } from '../lib/workflow.js';
 import { EX_TYPES, createExercise, exercisePreview, getExType } from '../lib/exercise-types.js';
 import { ExerciseEditor, ExerciseTypePicker, ExTypeBadge } from '../components/exercise-editor.jsx';
@@ -15,6 +21,8 @@ import { getB2Modules, getB2ModuleExercises, b2BankMeta } from '../lib/met-b2-ba
 import { getLibraryExercises, saveExerciseToLibrary, deleteLibraryExercise, incrementUsage } from '../lib/exercise-library.js';
 
 const SKILL_TYPES = ['writing', 'speaking', 'grammar', 'vocabulary', 'reading', 'listening', 'mixed'];
+const HOMEWORK_AI_BASE_OPTIONS = { preferredProvider: 'gemini' };
+const MET_BALANCED_TYPES = ['speak', 'short', 'listen', 'mcq', 'blank', 'flash', 'fix'];
 
 // Skill groups available for per-group generation
 const SKILL_GROUPS = [
@@ -170,48 +178,17 @@ function getPriorityItems(dx) {
     setGenerating(true);
     setGroupGenStatus('');
     const allGenerated = [];
-    for (const [group, count] of selectedGroups) {
-      setGroupGenStatus(`Generating ${group} exercises (${selectedGroups.indexOf(selectedGroups.find(([g]) => g === group)) + 1}/${selectedGroups.length})…`);
+    for (const [index, [group, count]] of selectedGroups.entries()) {
+      setGroupGenStatus(`Generating ${group} exercises (${index + 1}/${selectedGroups.length})...`);
       try {
         const prompt = buildHomeworkGroupPrompt({ student, diagnosis, group, count: Number(count) });
-        const data = await callAI(prompt, { max_tokens: 2500, temperature: 0.8, preferredProvider: 'gemini' });
+        const data = await callAI(prompt, { ...HOMEWORK_AI_BASE_OPTIONS, max_tokens: 3500, temperature: 0.8 });
         const raw = data?.content?.map(b => b.text || '').join('') || '';
         const parsed = parseAiJson(raw);
         const items = Array.isArray(parsed) ? parsed : (Array.isArray(parsed?.exercises) ? parsed.exercises : []);
-        const exercises = items.map(ex => {
-          const newEx = createExercise(mapAiType(ex.type));
-          newEx.skillGroup = group;
-          if (newEx.type === 'mcq') {
-            newEx.question = ex.content || ex.question || '';
-            newEx.options = Array.isArray(ex.options) ? normalizeMcqOptions(ex.options) : ['', '', '', ''];
-            newEx.correct = normalizeCorrectIndex(ex.correct, 4);
-          } else if (newEx.type === 'blank') {
-            newEx.template = ex.content || '';
-            newEx.blanks = normalizeBlankAnswers(ex.blanks, ex.content);
-          } else if (newEx.type === 'order') {
-            newEx.sentences = normalizeSentences(ex.sentences, ex.content);
-          } else if (newEx.type === 'fix') {
-            newEx.errorText = ex.content || ex.errorText || '';
-            newEx.correctedText = ex.correctedText || '';
-            newEx.hint = ex.hint || '';
-          } else if (newEx.type === 'flash') {
-            newEx.pairs = normalizeFlashPairs(ex.pairs);
-          } else if (newEx.type === 'speak') {
-            newEx.prompt = ex.content || ex.question || '';
-            newEx.targetSeconds = normalizeTargetSeconds(ex.targetSeconds, null);
-          } else if (newEx.type === 'listen') {
-            newEx.audioText = ex.audioText || ex.content || '';
-            newEx.question = ex.question || '';
-            newEx.options = normalizeMcqOptions(ex.options);
-            newEx.correct = normalizeCorrectIndex(ex.correct, 4);
-            newEx.explanation = ex.explanation || '';
-          } else {
-            newEx.prompt = ex.content || ex.question || '';
-          }
-          return newEx;
-        });
+        const { exercises, skipped } = buildCompleteExercises(items, { defaultSkillGroup: group });
         allGenerated.push(...exercises);
-        window.toast?.(`${group.charAt(0).toUpperCase() + group.slice(1)}: ${exercises.length} exercises generated.`, 'ok');
+        window.toast?.(`${group.charAt(0).toUpperCase() + group.slice(1)}: ${exercises.length} complete exercises generated${skipped ? `, ${skipped} skipped` : ''}.`, exercises.length ? 'ok' : 'warn');
       } catch (e) {
         window.toast?.(`${group} exercises failed: ${e.message}`, 'warn');
       }
@@ -222,7 +199,7 @@ function getPriorityItems(dx) {
     setGroupGenStatus('');
     setShowGroupGen(false);
     setGenerating(false);
-    window.toast?.(`${allGenerated.length} exercises added across ${selectedGroups.length} skill groups.`, 'ok');
+    window.toast?.(`${allGenerated.length} complete exercises added across ${selectedGroups.length} skill groups.`, allGenerated.length ? 'ok' : 'warn');
   }
 
   /* ── AI generation ── */
@@ -237,34 +214,37 @@ function getPriorityItems(dx) {
     
     try {
       // 1. Generate Blueprint
-      const bpData = await callAI(buildHomeworkBlueprintPrompt({ student, diagnosis }), { temperature: 0.7 });
+      const bpData = await callAI(buildHomeworkBlueprintPrompt({ student, diagnosis }), { ...HOMEWORK_AI_BASE_OPTIONS, max_tokens: 1200, temperature: 0.7 });
       const blueprint = parseAiJson(bpData.content?.map(b => b.text || '').join('') || '');
+      const taskTypes = normalizeTaskTypes(blueprint?.taskTypes);
       
       setGroupGenStatus('Generating tasks...');
       // 2. Generate Tasks
       const tasks = [];
-      for (const taskType of blueprint.taskTypes) {
-        const tData = await callAI(buildTaskGeneratorPrompt({ student, diagnosis, taskBlueprint: blueprint, taskType }), { temperature: 0.8 });
+      for (const taskType of taskTypes) {
+        const tData = await callAI(buildTaskGeneratorPrompt({ student, diagnosis, taskBlueprint: blueprint, taskType }), { ...HOMEWORK_AI_BASE_OPTIONS, max_tokens: 2500, temperature: 0.8 });
         tasks.push(parseAiJson(tData.content?.map(b => b.text || '').join('') || ''));
       }
+      const { exercises, skipped } = buildCompleteExercises(tasks);
+      if (!exercises.length) throw new Error('AI returned tasks, but none were complete enough to add.');
       
       setGroupGenStatus('Refining and finalising...');
       // 3. Final Refinement
-      const refData = await callAI(buildFinalRefinementPrompt({ student, blueprint, tasks }), { temperature: 0.7 });
+      const refData = await callAI(buildFinalRefinementPrompt({ student, blueprint, tasks }), { ...HOMEWORK_AI_BASE_OPTIONS, max_tokens: 1800, temperature: 0.7 });
       const refinement = parseAiJson(refData.content?.map(b => b.text || '').join('') || '');
 
       setForm(f => ({
         ...f,
-        title: blueprint.title,
-        objective: blueprint.objective,
-        description: refinement.instructions,
-        exercises: tasks.map(t => applyAiTaskToExercise(createExercise(mapAiType(t.type)), t)),
-        selfCheck: refinement.selfCheck,
-        teacherNotes: refinement.teacherNotes,
+        title: blueprint?.title || 'MET Practice Homework',
+        objective: blueprint?.objective || f.objective || 'Build MET readiness through targeted practice.',
+        description: refinement?.instructions || 'Complete each exercise carefully. Bring questions to the next class.',
+        exercises,
+        selfCheck: Array.isArray(refinement?.selfCheck) && refinement.selfCheck.length ? refinement.selfCheck : ['I checked my answers before submitting.'],
+        teacherNotes: skipped ? `${refinement?.teacherNotes || ''}\n\n${skipped} incomplete AI exercise(s) were skipped.`.trim() : (refinement?.teacherNotes || ''),
         skillType: inferSkillType(getPriorityItems(diagnosis)),
       }));
       
-      window.toast?.('Homework generated successfully!', 'ok');
+      window.toast?.(`Homework generated successfully: ${exercises.length} complete exercises${skipped ? `, ${skipped} skipped` : ''}.`, 'ok');
     } catch (e) {
       window.toast?.(`Cascade generation failed: ${e.message}`, 'warn');
     }
@@ -279,12 +259,14 @@ function getPriorityItems(dx) {
     setExerciseOptions([]);
     try {
       const prompt = buildExerciseListPrompt({ student, diagnosis });
-      const data = await callAI(prompt, { max_tokens: 4000, temperature: 0.8 });
+      const data = await callAI(prompt, { ...HOMEWORK_AI_BASE_OPTIONS, max_tokens: 5000, temperature: 0.8 });
       const raw = data.content?.map(b => b.text || '').join('') || '';
       const parsed = parseAiJson(raw);
       const list = Array.isArray(parsed) ? parsed : parsed.exercises || [];
-      setExerciseOptions(list);
-      if (list.length === 0) window.toast?.('No exercises returned. Try again.', 'warn');
+      const { exercises, skipped } = buildCompleteExercises(list);
+      setExerciseOptions(exercises);
+      if (exercises.length === 0) window.toast?.('No complete exercises returned. Try again.', 'warn');
+      else window.toast?.(`${exercises.length} complete suggestions ready${skipped ? `, ${skipped} skipped` : ''}.`, 'ok');
     } catch (e) {
       window.toast?.(`Exercise generation failed: ${e.message}`, 'warn');
     }
@@ -292,35 +274,14 @@ function getPriorityItems(dx) {
   }
 
   function addAiExerciseToList(ex) {
-    // Try to map AI exercise to a structured type, fallback to short answer
-    const newEx = createExercise(mapAiType(ex.type));
-    // Populate with AI content
-    if (newEx.type === 'mcq' && ex.options) {
-      newEx.question = ex.content || ex.title || '';
-      newEx.options = Array.isArray(ex.options) ? ex.options : ['', '', '', ''];
-      newEx.correct = typeof ex.correct === 'number' ? ex.correct : null;
-    } else if (newEx.type === 'blank') {
-      newEx.template = ex.content || '';
-      newEx.blanks = Array.isArray(ex.blanks) ? ex.blanks : [];
-    } else if (newEx.type === 'order') {
-      newEx.sentences = Array.isArray(ex.sentences) ? ex.sentences : (ex.content || '').split('\n').filter(Boolean);
-    } else if (newEx.type === 'fix') {
-      newEx.errorText = ex.content || ex.errorText || '';
-      newEx.correctedText = ex.correctedText || '';
-      newEx.hint = ex.hint || '';
-    } else if (newEx.type === 'flash') {
-      newEx.pairs = Array.isArray(ex.pairs) ? ex.pairs : [{ term: '', def: '' }];
-    } else if (newEx.type === 'speak') {
-      newEx.prompt = ex.content || ex.title || '';
-      newEx.targetSeconds = ex.targetSeconds || 60;
-    } else {
-      // short answer fallback
-      newEx.prompt = ex.content || ex.title || '';
+    const newEx = createCompleteExercise(ex);
+    if (!newEx) {
+      window.toast?.('That suggestion is incomplete, so it was not added.', 'warn');
+      return;
     }
-
     setForm(f => ({ ...f, exercises: [...f.exercises, newEx] }));
     setExpandedEx(newEx.id);
-    window.toast?.(`"${ex.title || 'Exercise'}" added.`, 'ok');
+    window.toast?.(`"${newEx.title || 'Exercise'}" added.`, 'ok');
   }
 
   function addModuleFromLibrary(mod) {
@@ -460,8 +421,14 @@ function getPriorityItems(dx) {
               <SectionHeader title="Step 2: Select Exercises" />
               <div style={{ marginTop: 16 }}>
                 <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
+                    <Button variant="primary" size="sm" onClick={handleAiGenerate} disabled={!diagnosis || generating}>
+                      <Icon.spark size={12} /> {generating ? 'Generating...' : 'Generate MET Homework with AI'}
+                    </Button>
                     <Button variant="ghost" size="sm" onClick={handleGenerateOptions} disabled={!diagnosis || loadingOptions}>
-                      <Icon.refresh size={12} /> Suggest Exercises from Diagnosis
+                      <Icon.refresh size={12} /> {loadingOptions ? 'Suggesting...' : 'Suggest Exercises from Diagnosis'}
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={() => setShowGroupGen(v => !v)} disabled={!diagnosis || generating}>
+                      <Icon.check size={12} /> Build by Skill
                     </Button>
                     <Button variant="primary" size="sm" onClick={() => setShowTypePicker(!showTypePicker)}>
                       <Icon.plus size={12} /> Add Exercise
@@ -470,6 +437,45 @@ function getPriorityItems(dx) {
                       <Icon.homework size={12} /> Browse MET B2 Pack
                     </Button>
                 </div>
+
+                {groupGenStatus && (
+                  <div style={{ marginBottom: 12, padding: '8px 10px', border: '1px solid var(--accent-soft)', borderRadius: 'var(--radius-sm)', background: 'var(--accent-subtle)', color: 'var(--accent-deep)', fontSize: 'var(--text-sm)' }}>
+                    {groupGenStatus}
+                  </div>
+                )}
+
+                {showGroupGen && (
+                  <div style={{ marginBottom: 16, padding: 14, border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', background: 'var(--surface)' }}>
+                    <div style={{ fontWeight: 700, fontSize: 'var(--text-sm)', marginBottom: 4 }}>Generate by MET skill</div>
+                    <div style={{ color: 'var(--muted)', fontSize: 'var(--text-xs)', lineHeight: 1.5, marginBottom: 12 }}>
+                      Choose the skills this homework should cover. Each generated item is checked for complete student-ready fields before it is added.
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 8 }}>
+                      {SKILL_GROUPS.map(group => (
+                        <label key={group.key} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', background: 'var(--bg)' }}>
+                          <span aria-hidden="true">{group.icon}</span>
+                          <span style={{ flex: 1, fontSize: 'var(--text-sm)', fontWeight: 600 }}>{group.label}</span>
+                          <input
+                            type="number"
+                            min="0"
+                            max="6"
+                            value={groupGenConfig[group.key] || 0}
+                            onChange={e => setGroupGenConfig(cfg => ({ ...cfg, [group.key]: Math.max(0, Math.min(6, Number(e.target.value) || 0)) }))}
+                            style={{ width: 48, padding: '4px 6px', border: '1px solid var(--border)', borderRadius: 6, fontSize: 'var(--text-sm)' }}
+                          />
+                        </label>
+                      ))}
+                    </div>
+                    <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+                      <Button variant="primary" size="sm" onClick={handleGenerateByGroups} disabled={generating}>
+                        <Icon.spark size={12} /> Generate Selected Skills
+                      </Button>
+                      <Button variant="ghost" size="sm" onClick={() => setShowGroupGen(false)} disabled={generating}>
+                        Close
+                      </Button>
+                    </div>
+                  </div>
+                )}
 
                 {showTypePicker && <ExerciseTypePicker onSelect={addExercise} onClose={() => setShowTypePicker(false)} />}
 
@@ -492,7 +498,31 @@ function getPriorityItems(dx) {
                     </div>
                   </div>
                 )}
-                
+
+                {exerciseOptions.length > 0 && (
+                  <div style={{ marginBottom: 16, padding: 14, border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', background: 'var(--surface)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 10 }}>
+                      <div>
+                        <div style={{ fontWeight: 700, fontSize: 'var(--text-sm)' }}>Complete AI suggestions</div>
+                        <div style={{ color: 'var(--muted)', fontSize: 'var(--text-xs)' }}>Reviewed for complete fields before adding.</div>
+                      </div>
+                      <Button variant="ghost" size="sm" onClick={() => setExerciseOptions([])}>Clear</Button>
+                    </div>
+                    <div style={{ display: 'grid', gap: 8 }}>
+                      {exerciseOptions.map((ex, i) => (
+                        <div key={ex.id || i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', border: '1px solid var(--divider)', borderRadius: 'var(--radius-sm)', background: 'var(--bg)' }}>
+                          <ExTypeBadge typeId={ex.type} />
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontSize: 'var(--text-sm)', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ex.title || exercisePreview(ex)}</div>
+                            <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{exercisePreview(ex)}</div>
+                          </div>
+                          <Button variant="ghost" size="sm" onClick={() => addAiExerciseToList(ex)}>Add</Button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   {form.exercises.map((ex, i) => (
                     <ExerciseCard
@@ -505,6 +535,7 @@ function getPriorityItems(dx) {
                       onChange={(updated) => updateExercise(ex.id, updated)}
                       onRemove={() => removeExercise(ex.id)}
                       onMove={(dir) => moveExercise(i, dir)}
+                      onSaveToLibrary={() => saveToLibrary(ex)}
                     />
                   ))}
                 </div>
@@ -816,11 +847,67 @@ function mapAiType(aiType) {
   const t = (aiType || '').toLowerCase();
   if (/multiple.?choice|mcq/.test(t)) return 'mcq';
   if (/fill|blank/.test(t)) return 'blank';
+  if (/writ|essay|paragraph|response/.test(t)) return 'short';
   if (/speak|audio|record/.test(t)) return 'speak';
   if (/order|sequen/.test(t)) return 'order';
   if (/error|correct|fix/.test(t)) return 'fix';
   if (/flash|card|vocab/.test(t)) return 'flash';
+  if (/listen/.test(t)) return 'listen';
+  if (/read|strategy|test/.test(t)) return 'mcq';
   return 'short'; // fallback
+}
+
+function normalizeTaskTypes(taskTypes) {
+  const fromAi = Array.isArray(taskTypes) ? taskTypes.map(mapAiType) : [];
+  const merged = [...fromAi, ...MET_BALANCED_TYPES].filter((type, idx, arr) => arr.indexOf(type) === idx);
+  return merged.slice(0, 7);
+}
+
+function buildCompleteExercises(items, options = {}) {
+  const exercises = [];
+  let skipped = 0;
+  for (const item of Array.isArray(items) ? items : []) {
+    const exercise = createCompleteExercise(item, options);
+    if (exercise) exercises.push(exercise);
+    else skipped += 1;
+  }
+  return { exercises, skipped };
+}
+
+function createCompleteExercise(aiTask, { defaultSkillGroup } = {}) {
+  if (!aiTask || typeof aiTask !== 'object') return null;
+  const type = mapAiType(aiTask.type || defaultSkillGroup);
+  const ex = applyAiTaskToExercise(createExercise(type, aiTask.level || 'B1'), { ...aiTask, skillGroup: aiTask.skillGroup || defaultSkillGroup });
+  return isStructuredAiExerciseComplete(ex) ? ex : null;
+}
+
+function isStructuredAiExerciseComplete(ex) {
+  if (!ex || !ex.type) return false;
+  if (ex.type === 'mcq') {
+    return Boolean(ex.question)
+      && (ex.options || []).filter(Boolean).length === 4
+      && ex.correct !== null
+      && ex.correct !== undefined
+      && Boolean(ex.explanation);
+  }
+  if (ex.type === 'blank') {
+    const blankCount = (String(ex.template || '').match(/_{3,}/g) || []).length;
+    return Boolean(ex.template) && blankCount > 0 && (ex.blanks || []).filter(Boolean).length >= blankCount;
+  }
+  if (ex.type === 'short') return Boolean(ex.prompt) && Boolean(ex.rubric) && Number(ex.targetWords) > 0;
+  if (ex.type === 'speak') return Boolean(ex.prompt) && Number(ex.targetSeconds) > 0;
+  if (ex.type === 'order') return (ex.sentences || []).filter(Boolean).length >= 3;
+  if (ex.type === 'fix') return Boolean(ex.errorText) && Boolean(ex.correctedText) && Boolean(ex.hint);
+  if (ex.type === 'flash') return (ex.pairs || []).filter(p => p.term && p.def).length >= 10;
+  if (ex.type === 'listen') {
+    return Boolean(ex.audioText)
+      && Boolean(ex.question)
+      && (ex.options || []).filter(Boolean).length === 4
+      && ex.correct !== null
+      && ex.correct !== undefined
+      && Boolean(ex.explanation);
+  }
+  return false;
 }
 
 function buildExercisesFromAiTasks(tasks, fallback) {
@@ -853,13 +940,17 @@ function createExerciseFromAiTask(task) {
 
 function applyAiTaskToExercise(exercise, aiTask) {
   const ex = { ...exercise };
-  const content = aiTask?.content || aiTask?.description || aiTask?.title || '';
+  const content = aiTask?.content || aiTask?.description || aiTask?.question || aiTask?.prompt || aiTask?.title || '';
+  if (aiTask?.title) ex.title = aiTask.title;
+  if (aiTask?.skillGroup) ex.skillGroup = aiTask.skillGroup;
+  if (aiTask?.teacherNote) ex.teacherNote = aiTask.teacherNote;
 
   if (ex.type === 'mcq') {
     const options = normalizeMcqOptions(aiTask?.options);
     ex.question = aiTask?.question || content;
     ex.options = options;
     ex.correct = normalizeCorrectIndex(aiTask?.correct, options.length);
+    ex.explanation = aiTask?.explanation || aiTask?.rationale || aiTask?.teacherNote || 'The correct answer best matches the MET skill focus in this item.';
     return ex;
   }
 
@@ -877,12 +968,12 @@ function applyAiTaskToExercise(exercise, aiTask) {
   if (ex.type === 'fix') {
     ex.errorText = aiTask?.errorText || content;
     ex.correctedText = aiTask?.correctedText || aiTask?.example || ex.correctedText || '';
-    ex.hint = aiTask?.hint || '';
+    ex.hint = aiTask?.hint || aiTask?.teacherNote || '';
     return ex;
   }
 
   if (ex.type === 'flash') {
-    ex.pairs = normalizeFlashPairs(aiTask?.pairs);
+    ex.pairs = normalizeFlashPairs(aiTask?.pairs || aiTask?.cards || aiTask?.items || aiTask?.terms);
     return ex;
   }
 
@@ -892,8 +983,20 @@ function applyAiTaskToExercise(exercise, aiTask) {
     return ex;
   }
 
+  if (ex.type === 'listen') {
+    const options = normalizeMcqOptions(aiTask?.options);
+    ex.audioText = aiTask?.audioText || aiTask?.script || content;
+    ex.question = aiTask?.question || 'What is the speaker mainly trying to do?';
+    ex.options = options;
+    ex.correct = normalizeCorrectIndex(aiTask?.correct, options.length);
+    ex.explanation = aiTask?.explanation || aiTask?.rationale || aiTask?.teacherNote || 'The correct answer follows from the speaker purpose and key details in the audio.';
+    ex.plays = Number.isFinite(Number(aiTask?.plays)) ? Number(aiTask.plays) : 2;
+    if (aiTask?.pictureHint) ex.pictureHint = aiTask.pictureHint;
+    return ex;
+  }
+
   ex.prompt = aiTask?.prompt || content;
-  if (aiTask?.rubric) ex.rubric = aiTask.rubric;
+  ex.rubric = aiTask?.rubric || aiTask?.teacherNote || 'Answer the question clearly, support your idea with one example, and check grammar before submitting.';
   if (Number.isFinite(Number(aiTask?.targetWords))) ex.targetWords = Number(aiTask.targetWords);
   return ex;
 }
@@ -909,6 +1012,10 @@ function normalizeMcqOptions(options) {
 }
 
 function normalizeCorrectIndex(correct, optionCount) {
+  if (typeof correct === 'string') {
+    const trimmed = correct.trim().toUpperCase();
+    if (/^[A-D]$/.test(trimmed)) return trimmed.charCodeAt(0) - 65;
+  }
   const n = Number(correct);
   if (Number.isInteger(n) && n >= 0 && n < optionCount) return n;
   return null;
@@ -931,9 +1038,34 @@ function normalizeSentences(sentences, content) {
 function normalizeFlashPairs(pairs) {
   if (!Array.isArray(pairs) || pairs.length === 0) return [{ term: '', def: '' }];
   const clean = pairs
-    .map(p => ({ term: p?.term || '', def: p?.def || p?.definition || '' }))
+    .map(p => {
+      if (typeof p === 'string') {
+        const [term, ...rest] = p.split(/[:–-]/);
+        return { term: term?.trim() || '', def: rest.join('-').trim() };
+      }
+      return { term: p?.term || p?.word || p?.phrase || '', def: p?.def || p?.definition || p?.meaning || '' };
+    })
     .filter(p => p.term || p.def);
-  return clean.length > 0 ? clean : [{ term: '', def: '' }];
+  const filled = clean.filter(p => p.term && p.def);
+  if (filled.length === 0) return [{ term: '', def: '' }];
+  const fallback = [
+    { term: 'main idea', def: 'the central point of a passage or conversation' },
+    { term: 'specific detail', def: 'a fact or piece of information stated in the text' },
+    { term: 'inference', def: 'a conclusion based on evidence, not directly stated' },
+    { term: 'speaker purpose', def: 'the reason a speaker says something' },
+    { term: 'supporting example', def: 'a detail that makes an answer stronger' },
+    { term: 'transition', def: 'a word or phrase that connects ideas clearly' },
+    { term: 'collocation', def: 'words that naturally go together' },
+    { term: 'distractor', def: 'an answer choice that sounds possible but is not correct' },
+    { term: 'task completion', def: 'answering all parts of the question' },
+    { term: 'clarify', def: 'to make something easier to understand' },
+  ];
+  const seen = new Set(filled.map(p => p.term.toLowerCase()));
+  for (const pair of fallback) {
+    if (filled.length >= 10) break;
+    if (!seen.has(pair.term.toLowerCase())) filled.push(pair);
+  }
+  return filled;
 }
 
 function normalizeTargetSeconds(targetSeconds, duration) {

@@ -364,7 +364,7 @@ export default function ToolHomework({ student, students = [], onSelectStudent, 
                         <span style={{ fontWeight: 600, fontSize: "var(--text-sm)" }}>
                           {hw.find(h => h.id === sub.homeworkId)?.title || 'Submission'}
                         </span>
-                        <Pill tone="success">Reviewed{rev?.score != null ? ` · ${rev.score}/4` : ''}</Pill>
+                        <Pill tone="success">Reviewed</Pill>
                       </div>
                     </Card>
                   );
@@ -437,7 +437,7 @@ export default function ToolHomework({ student, students = [], onSelectStudent, 
 
             <div style={{ display: 'flex', gap: 12, alignItems: 'end' }}>
               <div>
-                <label style={smallLabel}>Score (0–4)</label>
+                <label style={smallLabel}>Teacher-only level note</label>
                 <input className="input" type="number" min="0" max="4" step="0.25" value={reviewForm.score} onChange={e => setReviewForm(f => ({ ...f, score: e.target.value }))} style={{ width: 80 }} />
               </div>
               <Button variant="primary" onClick={handleSaveReview}>Save Review</Button>

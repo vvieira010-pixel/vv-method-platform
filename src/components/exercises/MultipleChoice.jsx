@@ -84,17 +84,24 @@ export default function MultipleChoice({ exercise, onComplete }) {
           Submit answer
         </button>
       ) : (
-        <div style={{
-          padding: '12px 16px', borderRadius: 10,
-          background: isCorrect ? '#ECFDF5' : '#FEF2F2',
-          border: `1px solid ${isCorrect ? '#A7F3D0' : '#FECACA'}`,
-          color: isCorrect ? '#065F46' : '#991B1B',
-          fontSize: 14, fontWeight: 500,
-        }}>
-          {isCorrect
-            ? 'Correct — well done.'
-            : `Not quite. Review the correct answer above.`}
-        </div>
+        <>
+          <div style={{
+            padding: '12px 16px', borderRadius: 10,
+            background: isCorrect ? '#ECFDF5' : '#FEF2F2',
+            border: `1px solid ${isCorrect ? '#A7F3D0' : '#FECACA'}`,
+            color: isCorrect ? '#065F46' : '#991B1B',
+            fontSize: 14, fontWeight: 500,
+          }}>
+            {isCorrect
+              ? 'Correct — well done.'
+              : `Not quite. Review the correct answer above.`}
+          </div>
+          {exercise.explanation && (
+            <div style={{ marginTop: 8, fontSize: 13.5, color: '#374151', lineHeight: 1.65, padding: '10px 14px', background: '#F8FAFC', borderRadius: 8, border: '1px solid #E2E8F0' }}>
+              {exercise.explanation}
+            </div>
+          )}
+        </>
       )}
     </div>
   );

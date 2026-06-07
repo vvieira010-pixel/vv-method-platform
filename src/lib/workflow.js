@@ -1,5 +1,5 @@
 /**
- * workflow.js — V.V. Method data layer
+ * workflow.js — MET Proficiency Mastery data layer
  *
  * Dual-mode persistence: when the user has a live Supabase session, list
  * entities are read/written through src/lib/supabase-db.js (cross-device);

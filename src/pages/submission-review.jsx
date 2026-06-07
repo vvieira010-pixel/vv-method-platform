@@ -384,7 +384,7 @@ Return JSON:
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 10 }}>
-                <Field label="Score (0–10)">
+                <Field label="Teacher-only score (optional)">
                   <input className="input" type="number" min={0} max={10} step={0.5} value={form.score} onChange={e => setForm(f => ({ ...f, score: e.target.value }))} />
                 </Field>
                 <Field label="Redo required?">

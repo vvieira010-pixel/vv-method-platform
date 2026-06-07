@@ -7,7 +7,19 @@ import { getDiagnoses, getFeedback, getHomework, getReports, getPracticeAssignme
 
 const SKILLS = ['Grammar','Reading','Writing','Listening','Speaking','Vocabulary'];
 
-function SkillBar({ label, value, max = 10 }) {
+function SkillBar({ label, value, status, max = 10 }) {
+  if (value == null) {
+    const tone = status === 'Not enough evidence' ? 'var(--warning)' : 'var(--muted)';
+    return (
+      <div style={{ marginBottom: 10 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12.5, marginBottom: 4, gap: 12 }}>
+          <span style={{ fontWeight: 600, color: 'var(--text-2)' }}>{label}</span>
+          <span style={{ fontWeight: 700, color: tone }}>{status || 'Not evaluated yet'}</span>
+        </div>
+        <div style={{ height: 7, background: 'var(--bg-deep)', borderRadius: 999, overflow: 'hidden' }} />
+      </div>
+    );
+  }
   const pct = Math.round(Math.min(100, (value / max) * 100));
   const tone = pct >= 70 ? 'var(--success)' : pct >= 45 ? 'var(--warning)' : 'var(--danger)';
   return (
@@ -54,19 +66,26 @@ export default function ToolReports({ students = [] }) {
     load();
   }, [student?.id]);
 
-  // Diagnosis-informed snapshot (fallback to student progress if missing)
+  // Diagnosis-informed snapshot only. Do not estimate missing skill scores.
   const latestDiagnosis = diagnoses.find(d => d.id === selectedDiagnosisId) || diagnoses[0] || null;
   const diagSnapshot = latestDiagnosis?.content?.section_snapshot || [];
-  const meanFromDiagnosis = diagSnapshot.length
-    ? diagSnapshot.reduce((sum, s) => sum + (Number(s.score_0_4) || 0), 0) / diagSnapshot.length
+  const skills = SKILLS.map(name => {
+    const found = diagSnapshot.find(s => String(s.section || '').toLowerCase() === name.toLowerCase());
+    const score4 = Number(found?.score_0_4);
+    const score80 = Number(found?.score_0_80);
+    const hasScore = Number.isFinite(score4) && score4 > 0;
+    const hasEvidence = Number(found?.evidenceCount || found?.turnsEvaluated || 0) > 0 || score80 > 0;
+    return {
+      name,
+      score: hasScore ? Math.round((score4 / 4) * 10 * 10) / 10 : null,
+      status: hasScore ? 'Evaluated' : hasEvidence ? 'Not enough evidence' : 'Not evaluated yet',
+    };
+  });
+  const evaluatedSkills = skills.filter(s => s.score != null);
+  const avg = evaluatedSkills.length
+    ? evaluatedSkills.reduce((sum, s) => sum + s.score, 0) / evaluatedSkills.length
     : null;
-  const baseScore = meanFromDiagnosis != null ? Math.max(1, Math.min(10, (meanFromDiagnosis / 4) * 10)) : (student ? (student.progress / 100) * 7 + 2 : 5);
-  const skills = SKILLS.map((s, i) => ({
-    name: s,
-    score: Math.min(10, Math.max(1, Math.round(baseScore + Math.sin(i * 1.3) * 1.5))),
-  }));
-  const avg = skills.reduce((sum, s) => sum + s.score, 0) / skills.length;
-  const readiness = Math.round((avg / 10) * 100);
+  const readiness = avg != null ? Math.round((avg / 10) * 100) : null;
   const linkedFeedback = feedback.filter(f => f.diagnosisId === latestDiagnosis?.id);
   const linkedHomework = homework.filter(h => h.diagnosisId === latestDiagnosis?.id);
   const linkedPractice = practice.filter(p => p.diagnosisId === latestDiagnosis?.id);
@@ -84,6 +103,7 @@ export default function ToolReports({ students = [] }) {
         summary: latestDiagnosis.content?.overall_result || latestDiagnosis.classSummary || 'Progress report generated from saved platform history.',
         nextSteps: latestDiagnosis.nextSteps || [],
         readiness,
+        evaluatedSkills: evaluatedSkills.length,
       },
     });
     await load();
@@ -136,10 +156,10 @@ export default function ToolReports({ students = [] }) {
           <>
             {/* KPI row */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 24 }}>
-              <Kpi label="MET Readiness" value={`${readiness}%`} sub={`Target: ${student.targetBand || student.bandTarget}`} />
+              <Kpi label="MET Readiness" value={readiness == null ? 'Not enough' : `${readiness}%`} sub={`Target: ${student.targetBand || student.bandTarget}`} />
               <Kpi label="Current Band" value={student.currentBand || student.band} sub="Assessed" />
               <Kpi label="Session" value={`${student.session}/${student.totalSessions}`} sub="Completed" />
-              <Kpi label="Avg Score" value={avg.toFixed(1)} sub="Out of 10" trendDir={avg > 6 ? 'up' : 'down'} trend={avg > 6 ? '↑ On track' : '↓ Needs focus'} />
+              <Kpi label="Evaluated Skills" value={`${evaluatedSkills.length}/${SKILLS.length}`} sub="Evidence only" />
             </div>
             <div style={{ display: 'flex', gap: 10, marginBottom: 16 }}>
               <Pill tone="info">Diagnoses: {diagnoses.length}</Pill>
@@ -153,7 +173,7 @@ export default function ToolReports({ students = [] }) {
               {/* Skill breakdown */}
               <Card>
                 <div style={{ fontWeight: 700, marginBottom: 14 }}>Skill Breakdown</div>
-                {skills.map(sk => <SkillBar key={sk.name} label={sk.name} value={sk.score} />)}
+                {skills.map(sk => <SkillBar key={sk.name} label={sk.name} value={sk.score} status={sk.status} />)}
               </Card>
 
               {/* Profile summary */}
@@ -177,20 +197,22 @@ export default function ToolReports({ students = [] }) {
                 <Card>
                   <div style={{ fontWeight: 700, marginBottom: 10 }}>Readiness Gauge</div>
                   <div style={{ textAlign: 'center', padding: '16px 0' }}>
-                    <div style={{ fontSize: 52, fontWeight: 800, color: readiness >= 70 ? 'var(--success)' : readiness >= 45 ? 'var(--warning)' : 'var(--danger)', lineHeight: 1 }}>
-                      {readiness}%
+                    <div style={{ fontSize: 52, fontWeight: 800, color: readiness == null ? 'var(--muted)' : readiness >= 70 ? 'var(--success)' : readiness >= 45 ? 'var(--warning)' : 'var(--danger)', lineHeight: 1 }}>
+                      {readiness == null ? '—' : `${readiness}%`}
                     </div>
-                    <div style={{ fontSize: 13, color: 'var(--muted)', marginTop: 6 }}>MET Readiness</div>
+                    <div style={{ fontSize: 13, color: 'var(--muted)', marginTop: 6 }}>
+                      {readiness == null ? 'Not enough evaluated evidence' : 'MET Readiness'}
+                    </div>
                   </div>
                   <div style={{ height: 12, background: 'var(--bg-deep)', borderRadius: 999, overflow: 'hidden', marginBottom: 10 }}>
                     <div style={{
                       height: '100%', borderRadius: 999, transition: 'transform 0.4s',
-                      width: '100%', transform: `scaleX(${readiness / 100})`, transformOrigin: 'left',
-                      background: readiness >= 70 ? 'var(--success)' : readiness >= 45 ? 'var(--warning)' : 'var(--danger)',
+                      width: '100%', transform: `scaleX(${(readiness || 0) / 100})`, transformOrigin: 'left',
+                      background: readiness == null ? 'var(--muted)' : readiness >= 70 ? 'var(--success)' : readiness >= 45 ? 'var(--warning)' : 'var(--danger)',
                     }} />
                   </div>
-                  <Pill tone={readiness >= 70 ? 'success' : readiness >= 45 ? 'warning' : 'danger'}>
-                    {readiness >= 70 ? 'On track for target' : readiness >= 45 ? 'Progressing' : 'Needs acceleration'}
+                  <Pill tone={readiness == null ? 'muted' : readiness >= 70 ? 'success' : readiness >= 45 ? 'warning' : 'danger'}>
+                    {readiness == null ? 'Needs more samples' : readiness >= 70 ? 'On track for target' : readiness >= 45 ? 'Progressing' : 'Needs acceleration'}
                   </Pill>
                 </Card>
               </div>

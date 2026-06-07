@@ -1,5 +1,5 @@
 /**
- * shared.jsx — V.V. Method Platform Design System
+ * shared.jsx — MET Proficiency Mastery Design System
  * Core UI primitives, icons, layout shell, and AI utilities.
  */
 
@@ -43,9 +43,9 @@ const GLOBAL_CSS = `
     --orange:       #F97316;
     --orange-deep:  #EA580C;
     --dark-accent-border: rgba(168,218,220,0.15);
-    --radius-sm:    8px;
-    --radius-md:    14px;
-    --radius-lg:    22px;
+    --radius-sm:    6px;
+    --radius-md:    8px;
+    --radius-lg:    8px;
     --radius-pill:  999px;
     --text-xs:      12px;
     --text-sm:      13px;

@@ -99,6 +99,52 @@ function CorrectionNote({ c }) {
 
 export default function StudentDashboard({ student, onSignOut }) {
   const [tab, setTab] = useState('home');
+  const [dots, setDots] = useState({});
+
+  const lvKey = student?.id ? `vv:student_last_visited:${student.id}` : null;
+
+  function getLastVisited() {
+    if (!lvKey) return {};
+    try { return JSON.parse(localStorage.getItem(lvKey) || '{}'); } catch { return {}; }
+  }
+
+  useEffect(() => {
+    if (!student?.id) return;
+    (async () => {
+      const lv = getLastVisited();
+      const [diagnoses, reviews] = await Promise.all([getDiagnoses(student.id), getReviews(student.id)]);
+      const next = {};
+
+      const approvedDx = (diagnoses || [])
+        .filter(hasVisibleApprovedStudentFeedback)
+        .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+      if (approvedDx.length > 0) {
+        const newestAt = new Date(approvedDx[0].createdAt || 0);
+        const seenAt = lv.feedback ? new Date(lv.feedback) : new Date(0);
+        if (newestAt > seenAt) next.feedback = true;
+      }
+
+      const newestReview = (reviews || [])
+        .sort((a, b) => new Date(b.reviewedAt || b.createdAt || 0) - new Date(a.reviewedAt || a.createdAt || 0))[0];
+      if (newestReview) {
+        const reviewedAt = new Date(newestReview.reviewedAt || newestReview.createdAt || 0);
+        const seenAt = lv.homework ? new Date(lv.homework) : new Date(0);
+        if (reviewedAt > seenAt) next.homework = true;
+      }
+
+      setDots(next);
+    })();
+  }, [student?.id]);
+
+  function handleTabChange(tabId) {
+    setTab(tabId);
+    setDots(prev => prev[tabId] ? { ...prev, [tabId]: false } : prev);
+    if (lvKey) {
+      const lv = getLastVisited();
+      lv[tabId] = new Date().toISOString();
+      localStorage.setItem(lvKey, JSON.stringify(lv));
+    }
+  }
 
   if (!student) {
     return <div style={{ padding: 40, textAlign: 'center', color: 'var(--muted)' }}>
@@ -114,9 +160,10 @@ export default function StudentDashboard({ student, onSignOut }) {
         </div>
         <nav className="dash-top-nav" aria-label="Student sections" role="tablist">
           {TABS.map(t => (
-            <button key={t.id} role="tab" aria-selected={tab === t.id} onClick={() => setTab(t.id)} className={'dash-nav-btn' + (tab === t.id ? ' active' : '')}>
+            <button key={t.id} role="tab" aria-selected={tab === t.id} onClick={() => handleTabChange(t.id)} className={'dash-nav-btn' + (tab === t.id ? ' active' : '')}>
               <span className="dash-nav-icon" aria-hidden="true">{t.icon}</span>
               <span className="dash-nav-label">{t.label}</span>
+              {dots[t.id] && <span className="dash-nav-dot" aria-label="New content available" />}
             </button>
           ))}
         </nav>
@@ -243,7 +290,7 @@ function HomeView({ student, onTab }) {
       <section className="student-metrics" aria-label="Student summary">
         <MetricCard icon={<Icon.calendar size={19} />} label="Next class" value={nextDate} sub={nextTime} tone="blue" />
         <MetricCard icon={<Icon.homework size={19} />} label="Homework" value={pendingHw.length} sub={pendingHw.length === 1 ? 'task pending' : 'tasks pending'} tone="teal" />
-        <MetricCard icon={<Icon.progress size={19} />} label="Current focus" value={focusSkill} sub={focusTrend.dir !== 'none' ? `Progress: ${focusTrend.label}` : 'next useful practice'} tone="purple" />
+        <MetricCard icon={<Icon.progress size={19} />} label="Current focus" value={focusSkill} sub={focusTrend.dir !== 'none' ? `Progress: ${focusTrend.label}` : 'next useful practice'} tone="navy" />
         <MetricCard icon={<Icon.inbox size={19} />} label="Feedback" value={latestFeedback ? 'Ready' : 'Waiting'} sub={latestFeedback ? 'teacher approved' : 'after diagnosis'} tone="orange" />
       </section>
 
@@ -285,61 +332,67 @@ function HomeView({ student, onTab }) {
           </article>
         </section>
 
-        <article className="student-panel student-panel--todo">
-          <div className="student-panel-head">
-            <div>
-              <span className="student-panel-kicker">Today</span>
-              <h2>What to do now</h2>
-            </div>
-          </div>
-          <div className="student-todo-list">
-            {latestReview && (
-              <TodoRow done={false} label="Teacher review ready" meta={latestReview.homeworkTitle} />
-            )}
-            <TodoRow done={!!latestFeedback} label="Review latest feedback" meta={latestFeedback ? 'Available in the Feedback tab' : 'Waiting for teacher approval'} />
-            <TodoRow done={pendingHw.length === 0} label={pendingTitle} meta={pendingHw[0]?.dueDate ? `Due ${new Date(pendingHw[0].dueDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}` : 'Homework area'} />
-            <TodoRow done={false} label="What's next" meta={whatsNext.title} />
-          </div>
-          <button className="student-wide-action" onClick={() => onTab('homework')}>Go to homework <Icon.arrowR size={14} /></button>
-        </article>
+        <section className="student-home-columns">
+          <div className="student-home-main">
+            <article className="student-panel student-panel--todo">
+              <div className="student-panel-head">
+                <div>
+                  <span className="student-panel-kicker">Today</span>
+                  <h2>What to do now</h2>
+                </div>
+              </div>
+              <div className="student-todo-list">
+                {latestReview && (
+                  <TodoRow done={false} label="Teacher review ready" meta={latestReview.homeworkTitle} />
+                )}
+                <TodoRow done={!!latestFeedback} label="Review latest feedback" meta={latestFeedback ? 'Available in the Feedback tab' : 'Waiting for teacher approval'} />
+                <TodoRow done={pendingHw.length === 0} label={pendingTitle} meta={pendingHw[0]?.dueDate ? `Due ${new Date(pendingHw[0].dueDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}` : 'Homework area'} />
+                <TodoRow done={false} label="What's next" meta={whatsNext.title} />
+              </div>
+              <button className="student-wide-action" onClick={() => onTab('homework')}>Go to homework <Icon.arrowR size={14} /></button>
+            </article>
 
-        <article className="student-panel">
-          <div className="student-panel-head">
-            <div>
-              <span className="student-panel-kicker">Teacher feedback</span>
-              <h2>Latest approved note</h2>
-            </div>
-            <button className="student-text-action" onClick={() => onTab('feedback')}>Open feedback</button>
+            <article className="student-panel">
+              <div className="student-panel-head">
+                <div>
+                  <span className="student-panel-kicker">Teacher feedback</span>
+                  <h2>Latest approved note</h2>
+                </div>
+                <button className="student-text-action" onClick={() => onTab('feedback')}>Open feedback</button>
+              </div>
+              {latestFeedback && typeof latestFeedback === 'object' ? (
+                <div className="student-feedback-summary">
+                  <p>{latestFeedback.classFocus || latestFeedback.finalNote || 'Your teacher has approved new feedback for you.'}</p>
+                  <button className="student-wide-action" onClick={() => onTab('feedback')}>Read feedback <Icon.arrowR size={14} /></button>
+                </div>
+              ) : (
+                <div className="student-empty-card">
+                  Your teacher will add feedback after there is enough class evidence. For now, prepare one clear speaking example for your next MET topic.
+                </div>
+              )}
+            </article>
           </div>
-          {latestFeedback && typeof latestFeedback === 'object' ? (
-            <div className="student-feedback-summary">
-              <p>{latestFeedback.classFocus || latestFeedback.finalNote || 'Your teacher has approved new feedback for you.'}</p>
-              <button className="student-wide-action" onClick={() => onTab('feedback')}>Read feedback <Icon.arrowR size={14} /></button>
-            </div>
-          ) : (
-            <div className="student-empty-card">
-              Your teacher will add feedback after there is enough class evidence. For now, prepare one clear speaking example for your next MET topic.
-            </div>
-          )}
-        </article>
 
-        <article className="student-panel">
-          <div className="student-panel-head">
-            <div>
-              <span className="student-panel-kicker">Progress snapshot</span>
-              <h2>Evaluated skills</h2>
-            </div>
-          </div>
-          {evaluatedSkills.length > 0 ? (
-            <div className="student-skill-list">
-              {evaluatedSkills.slice(0, 5).map(s => <SkillRow key={s.section} skill={s} trend={getSkillTrend(s.section, approvedHistory)} />)}
-            </div>
-          ) : (
-            <div className="student-empty-card">
-              No evaluated skills yet. Your next class and homework will create the evidence needed for a real progress profile.
-            </div>
-          )}
-        </article>
+          <aside className="student-home-side">
+            <article className="student-panel">
+              <div className="student-panel-head">
+                <div>
+                  <span className="student-panel-kicker">Progress snapshot</span>
+                  <h2>Evaluated skills</h2>
+                </div>
+              </div>
+              {evaluatedSkills.length > 0 ? (
+                <div className="student-skill-list">
+                  {evaluatedSkills.slice(0, 5).map(s => <SkillRow key={s.section} skill={s} trend={getSkillTrend(s.section, approvedHistory)} />)}
+                </div>
+              ) : (
+                <div className="student-empty-card">
+                  No evaluated skills yet. Your next class and homework will create the evidence needed for a real progress profile.
+                </div>
+              )}
+            </article>
+          </aside>
+        </section>
       </section>
     </div>
   );
@@ -380,7 +433,6 @@ function SkillRow({ skill, trend }) {
         <strong>{skill.section}</strong>
         <span className="student-skill-stage">Last assessed: {stage.label}</span>
       </div>
-      {trend?.dir === 'down' && <TrendChip trend={trend} />}
     </div>
   );
 }
@@ -479,7 +531,7 @@ function FeedbackView({ student, onTab }) {
               <span className="student-panel-kicker">Confidence check</span>
               <h2>Before the next class</h2>
               <div className="student-confidence-list">
-                <TodoRow done={true} label="I understand my teacher’s main feedback" meta="Review the full note above" />
+                <TodoRow done={false} label="I understand my teacher’s main feedback" meta="Review the full note above" />
                 <TodoRow done={!!firstWin} label="I can name one thing I did better" meta={firstWin?.strength || 'Use your feedback note'} />
                 <TodoRow done={false} label="I can practice the next focus" meta={feedback?.nextStep || focusArea?.area || 'Complete the homework task'} />
                 <TodoRow done={false} label="I can bring one question to class" meta="Ask your teacher for help where needed" />
@@ -521,7 +573,7 @@ function HomeworkView({ student }) {
   const [homework, setHomework] = useState([]);
   const [reviews, setReviews] = useState([]);
   const [expanded, setExpanded] = useState(null);
-  const [answer, setAnswer] = useState('');
+  const [answers, setAnswers] = useState({});
   const [responses, setResponses] = useState({}); // { exerciseId: responseObj }
   const [draftMeta, setDraftMeta] = useState({}); // { homeworkId: { updatedAt, currentExerciseId } }
   const [homeworkFilter, setHomeworkFilter] = useState('todo');
@@ -564,12 +616,12 @@ function HomeworkView({ student }) {
 
   // Handle legacy text submission
   async function handleLegacySubmit(hwId) {
-    if (!answer.trim()) { window.toast?.('Please write your answer.', 'warn'); return; }
+    if (!answers[hwId]?.trim()) { window.toast?.('Please write your answer.', 'warn'); return; }
     setSubmitting(true);
-    await submitHomework(hwId, student.id, answer);
+    await submitHomework(hwId, student.id, answers[hwId]);
     const hw = await getHomework(student.id);
     setHomework(hw || []);
-    setAnswer('');
+    setAnswers(prev => { const n = { ...prev }; delete n[hwId]; return n; });
     setExpanded(null);
     setSubmitting(false);
     window.toast?.('Submitted! Your teacher will review soon.', 'ok');
@@ -734,7 +786,7 @@ function HomeworkView({ student }) {
                 {review && (
                   <div style={{ marginBottom: 12, padding: 12, background: 'var(--success-bg)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--success-soft)' }}>
                     <div style={{ fontWeight: 700, color: 'var(--success)', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 10 }}>
-                      <span>Teacher Review{review.score != null ? ` · ${review.score}/10` : ''}</span>
+                      <span>Teacher Review</span>
                       {review.redoRequired && (
                         <span style={{ fontSize: 'var(--text-xs)', fontWeight: 700, padding: '2px 8px', borderRadius: 99, background: 'var(--warning-bg)', color: 'var(--warning)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Redo requested</span>
                       )}
@@ -848,8 +900,8 @@ function HomeworkView({ student }) {
                 {/* Legacy submit form */}
                 {!isStructured && !submitted && !review && (
                   <div className="student-homework-submit">
-                    <textarea value={answer} onChange={e => setAnswer(e.target.value)} rows={5} placeholder="Write your answer here…" />
-                    <Button variant="primary" size="sm" onClick={() => handleLegacySubmit(h.id)} disabled={submitting || !answer.trim()} style={{ marginTop: 8 }}>
+                    <textarea value={answers[h.id] || ''} onChange={e => setAnswers(prev => ({ ...prev, [h.id]: e.target.value }))} rows={5} placeholder="Write your answer here…" />
+                    <Button variant="primary" size="sm" onClick={() => handleLegacySubmit(h.id)} disabled={submitting || !answers[h.id]?.trim()} style={{ marginTop: 8 }}>
                       {submitting ? 'Submitting…' : 'Submit Homework'}
                     </Button>
                   </div>
