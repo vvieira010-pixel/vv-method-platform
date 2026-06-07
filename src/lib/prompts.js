@@ -275,10 +275,18 @@ export const buildHomeworkPrompt = (data) => {
   const { student, diagnosis } = data;
   // Coerce to array — AI section content is sometimes an object, not an array.
   const arr = (v) => (Array.isArray(v) ? v : []);
-  const priorities = arr(diagnosis?.sections?.priorityDiagnosis?.content);
-  const errors = arr(diagnosis?.sections?.errorBankSuggestions?.content);
-  const vocab = arr(diagnosis?.sections?.vocabGrammarTargets?.content?.vocabularyTargets);
-  const grammar = arr(diagnosis?.sections?.vocabGrammarTargets?.content?.grammarTargets);
+  const priorities = arr(diagnosis?.priorityDiagnosis).length
+    ? arr(diagnosis?.priorityDiagnosis)
+    : arr(diagnosis?.sections?.priorityDiagnosis?.content);
+  const errors = arr(data?.errorBank).length
+    ? arr(data?.errorBank)
+    : arr(diagnosis?.sections?.errorBankSuggestions?.content);
+  const vocab = arr(data?.vocabTargets?.vocabularyTargets).length
+    ? arr(data?.vocabTargets?.vocabularyTargets)
+    : arr(diagnosis?.sections?.vocabGrammarTargets?.content?.vocabularyTargets);
+  const grammar = arr(data?.vocabTargets?.grammarTargets).length
+    ? arr(data?.vocabTargets?.grammarTargets)
+    : arr(diagnosis?.sections?.vocabGrammarTargets?.content?.grammarTargets);
 
   return `You are an expert MET Instructional Designer.
 Build 3 complete, student-ready, highly personalized homework tasks based on the diagnosis provided.
@@ -288,12 +296,12 @@ Name: ${student?.name || 'Student'}
 Level: ${student?.currentLevel || 'B1'} → Target: ${student?.targetLevel || 'B2'}
 
 ━━━ DIAGNOSIS PRIORITIES ━━━
-${priorities.map(p => `- [${p.urgency}] ${p.area}: ${p.whatToImprove}`).join('\n') || 'No priorities.'}
+${priorities.map(p => `- [${p.urgency}] ${p.area}: ${p.whatToImprove}`).join('\n') || 'No priorities'}
 
 ━━━ TARGET ERRORS & VOCAB ━━━
-Errors: ${errors.map(e => `"${e.error}" → "${e.correct}"`).join(', ') || 'none'}
-Vocab: ${vocab.map(v => v.wordOrPhrase).join(', ') || 'none'}
-Grammar: ${grammar.map(g => g.area).join(', ') || 'none'}
+Errors: ${errors.map(e => `"${e.error}" → "${e.correct}"`).join(', ') || 'No recurring errors'}
+Vocab: ${vocab.map(v => v.wordOrPhrase).join(', ') || 'No vocabulary targets'}
+Grammar: ${grammar.map(g => g.area).join(', ') || 'No grammar targets'}
 
 ━━━ RULES ━━━
 1. EXACTLY 3 TASKS.

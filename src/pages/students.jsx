@@ -3,7 +3,7 @@
  */
 import { useState, useEffect } from 'react';
 import { Icon, Card, SectionHeader, Pill, Button, Avatar } from '../components/shared.jsx';
-import { getStudents, saveStudent, deleteStudent, getActiveTargetProfile, getLatestDiagnosis, getErrorBank } from '../lib/workflow.js';
+import { getStudents, saveStudent, deleteStudent, getDiagnoses, getHomework, getAllSubmissions, getClassEvents } from '../lib/workflow.js';
 
 export default function StudentsPage({ students: propStudents, onNavigate }) {
   const [students, setStudents] = useState([]);
@@ -12,12 +12,20 @@ export default function StudentsPage({ students: propStudents, onNavigate }) {
   const [form, setForm] = useState(EMPTY_FORM);
   const [search, setSearch] = useState('');
   const [saving, setSaving] = useState(false);
+  const [studentActions, setStudentActions] = useState({});
 
   useEffect(() => { load(); }, []);
 
   async function load() {
-    const s = await getStudents();
+    const [s, diagnoses, homework, submissions, classEvents] = await Promise.all([
+      getStudents(),
+      getDiagnoses(),
+      getHomework(),
+      getAllSubmissions(),
+      getClassEvents(),
+    ]);
     setStudents(s);
+    setStudentActions(buildStudentActions(s, { diagnoses, homework, submissions, classEvents }));
   }
 
   function openAdd() {
@@ -62,7 +70,7 @@ export default function StudentsPage({ students: propStudents, onNavigate }) {
   }
 
   const filtered = students.filter(s =>
-    !search || s.name.toLowerCase().includes(search.toLowerCase())
+    !search || (s.name || '').toLowerCase().includes(search.toLowerCase())
   );
 
   return (
@@ -132,7 +140,7 @@ export default function StudentsPage({ students: propStudents, onNavigate }) {
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {filtered.map(student => (
-            <StudentRow key={student.id} student={student} onProfile={() => onNavigate('students:profile', { studentId: student.id })} onEdit={() => openEdit(student)} onDelete={() => handleDelete(student)} />
+            <StudentRow key={student.id} student={student} nextAction={studentActions[student.id]} onProfile={() => onNavigate('students:profile', { studentId: student.id })} onEdit={() => openEdit(student)} onDelete={() => handleDelete(student)} />
           ))}
         </div>
       )}
@@ -140,7 +148,8 @@ export default function StudentsPage({ students: propStudents, onNavigate }) {
   );
 }
 
-function StudentRow({ student, onProfile, onEdit, onDelete }) {
+function StudentRow({ student, nextAction, onProfile, onEdit, onDelete }) {
+  const action = nextAction || { label: 'Ready for next class', tone: 'success' };
   return (
     <Card style={{ padding: '12px 16px' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
@@ -154,6 +163,7 @@ function StudentRow({ student, onProfile, onEdit, onDelete }) {
         </div>
         <Pill tone="muted">{student.currentLevel}</Pill>
         <Pill tone={student.email ? 'success' : 'warning'}>{student.email ? 'Invite ready' : 'Email needed'}</Pill>
+        <Pill tone={action.tone}>{action.label}</Pill>
         <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>Session {student.session || 1}/{student.totalSessions || 24}</span>
         <div style={{ display: 'flex', gap: 6 }}>
           <Button variant="primary" size="sm" onClick={onProfile}>View Profile</Button>
@@ -163,6 +173,34 @@ function StudentRow({ student, onProfile, onEdit, onDelete }) {
       </div>
     </Card>
   );
+}
+
+function buildStudentActions(students, { diagnoses = [], homework = [], submissions = [], classEvents = [] }) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const doneHomeworkStatuses = new Set(['submitted', 'reviewed', 'completed', 'corrected']);
+  return Object.fromEntries(students.map(student => {
+    const studentId = student.id;
+    const hasPendingSubmission = submissions.some(s => s.studentId === studentId && s.status === 'submitted');
+    if (hasPendingSubmission) return [studentId, { label: 'Review submission', tone: 'danger' }];
+
+    const hasApprovedDiagnosis = diagnoses.some(dx => dx.studentId === studentId && dx.status === 'approved');
+    const hasDraftDiagnosis = diagnoses.some(dx => dx.studentId === studentId && (dx.status || 'draft') !== 'approved');
+    if (!hasApprovedDiagnosis && hasDraftDiagnosis) return [studentId, { label: 'Finish diagnosis', tone: 'warning' }];
+    if (!hasApprovedDiagnosis) return [studentId, { label: 'Needs diagnosis', tone: 'warning' }];
+
+    const pendingHomework = homework.some(h => h.studentId === studentId && !doneHomeworkStatuses.has(h.status));
+    if (pendingHomework) return [studentId, { label: 'Homework pending', tone: 'info' }];
+
+    const nextClass = classEvents
+      .filter(e => e.studentId === studentId && e.status !== 'canceled')
+      .map(e => ({ ...e, startAt: new Date(`${e.date || new Date().toISOString().slice(0, 10)}T${e.startTime || '00:00'}`) }))
+      .filter(e => e.startAt >= today)
+      .sort((a, b) => a.startAt - b.startAt)[0];
+    if (nextClass) return [studentId, { label: 'Next class set', tone: 'success' }];
+
+    return [studentId, { label: 'Plan next class', tone: 'muted' }];
+  }));
 }
 
 function Field({ label, children, style }) {

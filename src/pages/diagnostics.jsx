@@ -55,6 +55,7 @@ export default function DiagnosticsPage({ students, onNavigate }) {
             const student = students.find(s => s.id === dx.studentId);
             const approvedCount = dx.sections ? Object.values(dx.sections).filter(s => s.approved).length : 0;
             const totalCount = dx.sections ? Object.keys(dx.sections).length : 0;
+            const evidence = getEvidenceSummary(dx);
             return (
               <Card key={dx.id} style={{ padding: '14px 18px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
@@ -65,6 +66,13 @@ export default function DiagnosticsPage({ students, onNavigate }) {
                       {new Date(dx.createdAt).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}
                       {dx.classSummary ? ` · ${dx.classSummary.slice(0, 60)}…` : ''}
                     </div>
+                    {evidence.total > 0 && (
+                      <div style={S.evidenceRow} aria-label="Diagnosis evidence coverage">
+                        <span style={S.evidenceChip}>{evidence.evaluated} evaluated</span>
+                        <span style={S.evidenceChip}>{evidence.limited} not enough evidence</span>
+                        <span style={S.evidenceChip}>{evidence.notEvaluated} not evaluated</span>
+                      </div>
+                    )}
                   </div>
                   {totalCount > 0 && <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>{approvedCount}/{totalCount} approved</span>}
                   <Pill tone={dx.status === 'approved' ? 'success' : 'warning'}>{dx.status || 'draft'}</Pill>
@@ -97,7 +105,40 @@ export default function DiagnosticsPage({ students, onNavigate }) {
   );
 }
 
+function getEvidenceSummary(dx) {
+  const skillDiagnosis = dx?.sections?.skillDiagnosis?.content;
+  if (!skillDiagnosis || typeof skillDiagnosis !== 'object') {
+    const snapshot = Array.isArray(dx?.content?.section_snapshot) ? dx.content.section_snapshot : [];
+    return snapshot.reduce((acc, item) => {
+      acc.total += 1;
+      if (Number(item?.score_0_80) > 0) acc.evaluated += 1;
+      else acc.notEvaluated += 1;
+      return acc;
+    }, { total: 0, evaluated: 0, limited: 0, notEvaluated: 0 });
+  }
+  return Object.values(skillDiagnosis).reduce((acc, item) => {
+    acc.total += 1;
+    const evidenceCount = Number(item?.evidenceCount || 0);
+    if (item?.evaluated && evidenceCount > 0 && item?.score0to80 != null) acc.evaluated += 1;
+    else if (item?.evaluated || evidenceCount > 0) acc.limited += 1;
+    else acc.notEvaluated += 1;
+    return acc;
+  }, { total: 0, evaluated: 0, limited: 0, notEvaluated: 0 });
+}
+
 const S = {
   headline: { fontFamily: 'var(--font-display)', fontSize: 'var(--text-2xl)', fontWeight: 700, color: 'var(--accent-deep)', margin: 0 },
   sub: { fontSize: 'var(--text-sm)', color: 'var(--muted)', margin: '4px 0 0' },
+  evidenceRow: { display: 'flex', flexWrap: 'wrap', gap: 5, marginTop: 7 },
+  evidenceChip: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    border: '1px solid var(--border)',
+    borderRadius: 'var(--radius-sm)',
+    padding: '2px 6px',
+    fontSize: '11px',
+    fontWeight: 700,
+    color: 'var(--muted)',
+    background: 'var(--bg)',
+  },
 };

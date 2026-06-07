@@ -27,8 +27,8 @@ export default function TeacherDashboard({ students, onNavigate }) {
 
   async function loadDashboard() {
     const today = new Date().toISOString().slice(0, 10);
-    const [events, submissions, reviews] = await Promise.all([
-      getClassEvents(), getAllSubmissions(), Promise.resolve([]),
+    const [events, submissions] = await Promise.all([
+      getClassEvents(), getAllSubmissions(),
     ]);
 
     const todayClasses = events.filter(e => e.date === today && e.status !== 'canceled');
@@ -51,6 +51,7 @@ export default function TeacherDashboard({ students, onNavigate }) {
   }
 
   const today = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
+  const priority = getTodayPriority(data);
 
   return (
     <div style={styles.shell}>
@@ -59,6 +60,18 @@ export default function TeacherDashboard({ students, onNavigate }) {
         <h1 style={styles.headline}>Good {timeOfDay()}, Vini.</h1>
         <p style={styles.sub}>{today}</p>
       </div>
+
+      <Card style={styles.priorityCard}>
+        <div style={styles.priorityIcon}>{priority.icon}</div>
+        <div style={{ flex: 1, minWidth: 220 }}>
+          <div style={styles.priorityKicker}>Today priority</div>
+          <h2 style={styles.priorityTitle}>{priority.title}</h2>
+          <p style={styles.priorityText}>{priority.text}</p>
+        </div>
+        <Button variant="primary" onClick={() => onNavigate(priority.target, priority.params || {})}>
+          {priority.action} <Icon.arrowR size={14} />
+        </Button>
+      </Card>
 
       {/* KPIs */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(140px,1fr))', gap: 12, marginBottom: 28 }}>
@@ -159,6 +172,49 @@ export default function TeacherDashboard({ students, onNavigate }) {
   );
 }
 
+function getTodayPriority(data) {
+  const firstSubmission = data.pendingSubmissions[0];
+  if (firstSubmission) {
+    return {
+      icon: <Icon.doc size={20} />,
+      title: 'Review the newest submission',
+      text: 'Give the student clear feedback while the homework attempt is still fresh.',
+      action: 'Open review',
+      target: 'submissions:review',
+      params: { submissionId: firstSubmission.id },
+    };
+  }
+  const firstDiagnosis = data.needsDiagnosis[0];
+  if (firstDiagnosis) {
+    return {
+      icon: <Icon.diagnose size={20} />,
+      title: 'Finish the next diagnosis',
+      text: 'Turn the completed class evidence into teacher notes, student feedback, and homework.',
+      action: 'Diagnose class',
+      target: 'diagnostics:create',
+      params: { studentId: firstDiagnosis.studentId, classEventId: firstDiagnosis.id },
+    };
+  }
+  const firstClass = data.todayClasses[0];
+  if (firstClass) {
+    return {
+      icon: <Icon.calendar size={20} />,
+      title: 'Prepare today’s MET class',
+      text: firstClass.classFocus || firstClass.metSkillFocus || 'Check the class plan and confirm the student focus before class.',
+      action: 'Open class',
+      target: 'calendar:class',
+      params: { classEventId: firstClass.id },
+    };
+  }
+  return {
+    icon: <Icon.homework size={20} />,
+    title: 'Plan the next useful practice',
+    text: 'Review the roster and choose the student who needs the next class, diagnosis, or homework step.',
+    action: 'View students',
+    target: 'students',
+  };
+}
+
 function KpiCard({ label, value, icon, tone, onClick }) {
   const bg = tone === 'warning' ? 'var(--warning-bg)' : tone === 'danger' ? 'var(--danger-bg)' : tone === 'info' ? 'var(--info-bg)' : 'var(--surface)';
   const fg = tone === 'warning' ? 'var(--warning)' : tone === 'danger' ? 'var(--danger)' : tone === 'info' ? 'var(--info)' : 'var(--accent-deep)';
@@ -191,6 +247,28 @@ const styles = {
   shell: { maxWidth: 1000, margin: '0 auto', padding: '28px 20px' },
   headline: { fontFamily: 'var(--font-display)', fontSize: 'var(--text-2xl)', fontWeight: 700, color: 'var(--accent-deep)', margin: 0 },
   sub: { fontSize: 'var(--text-sm)', color: 'var(--muted)', margin: '4px 0 0' },
+  priorityCard: {
+    marginBottom: 18,
+    padding: 18,
+    display: 'flex',
+    alignItems: 'center',
+    gap: 14,
+    border: '1.5px solid rgba(45,139,139,0.32)',
+    background: 'linear-gradient(135deg, #ffffff 0%, #f0f8f8 100%)',
+  },
+  priorityIcon: {
+    width: 42,
+    height: 42,
+    borderRadius: 'var(--radius-sm)',
+    display: 'grid',
+    placeItems: 'center',
+    background: 'var(--accent-subtle)',
+    color: 'var(--accent-text)',
+    flexShrink: 0,
+  },
+  priorityKicker: { fontSize: 'var(--text-xs)', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--accent-text)' },
+  priorityTitle: { margin: '2px 0 3px', fontSize: 'var(--text-xl)', color: 'var(--accent-deep)', fontWeight: 800 },
+  priorityText: { margin: 0, fontSize: 'var(--text-sm)', color: 'var(--text-2)', lineHeight: 1.5 },
   empty: { color: 'var(--muted)', fontSize: 'var(--text-sm)', marginTop: 12, fontStyle: 'italic' },
   listRow: { display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: '1px solid var(--divider)' },
   rowTitle: { fontWeight: 600, fontSize: 'var(--text-sm)' },

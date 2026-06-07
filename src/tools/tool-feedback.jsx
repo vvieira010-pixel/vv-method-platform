@@ -2346,7 +2346,7 @@ function ReportPreview({ report, meta, activeSections }) {
 
       {/* ── Footer ─────────────────────────────────────────── */}
       <div style={{ textAlign: "center", padding: "16px 0", borderTop: "1px solid var(--divider)" }}>
-        <p style={{ fontSize: 11, color: "var(--faint)", margin: 0 }}>Teacher Vinicius Vieira · MET Preparation Course · Feedback & Homework</p>
+        <p style={{ fontSize: 11, color: "var(--faint)", margin: 0 }}>Teacher Vinicius Vieira · MET Proficiency Mastery · Feedback & Homework</p>
       </div>
       </>
       )}

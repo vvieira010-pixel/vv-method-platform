@@ -16,6 +16,7 @@ const CSS = `
     min-height: 100vh; min-height: 100dvh;
     display: grid; grid-template-columns: 420px 1fr;
     font-family: var(--font-ui); background: #fff;
+    overflow-x: hidden;
   }
 
   /* ── Brand panel ── */
@@ -62,9 +63,33 @@ const CSS = `
   .lp-signin {
     display: flex; align-items: center; justify-content: center;
     min-height: 100dvh; padding: 56px clamp(24px, 6vw, 64px);
-    overflow-y: auto; background: #fff;
+    overflow-y: auto; overflow-x: hidden; background: #fff;
+    width: 100%; min-width: 0; box-sizing: border-box;
   }
-  .lp-signin-inner { width: 100%; max-width: 420px; }
+  .lp-signin-inner { width: min(100%, 420px); max-width: calc(100vw - 48px); min-width: 0; }
+
+  .lp-mobile-brand {
+    display: none;
+    margin-bottom: 24px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid var(--border);
+  }
+  .lp-mobile-brand-name {
+    display: block;
+    font-size: 16px;
+    font-weight: 800;
+    color: var(--accent-deep);
+    line-height: 1.2;
+  }
+  .lp-mobile-brand-sub {
+    display: block;
+    margin-top: 4px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--accent-text);
+  }
 
   .lp-greeting { margin-bottom: 36px; }
   .lp-greeting h1 {
@@ -101,6 +126,7 @@ const CSS = `
     letter-spacing: .01em;
     transition: opacity .15s, box-shadow .15s, transform .1s;
     display: flex; align-items: center; justify-content: center; gap: 8px;
+    box-sizing: border-box; max-width: 100%;
   }
   .lp-submit:hover:not(:disabled) {
     box-shadow: 0 4px 16px rgba(29,80,86,.3);
@@ -142,7 +168,13 @@ const CSS = `
   @media (max-width: 860px) {
     .lp-root { grid-template-columns: 1fr; }
     .lp-brand { display: none; }
-    .lp-signin { padding: 40px 24px; }
+    .lp-signin { align-items: flex-start; justify-content: flex-start; padding: 36px 24px; }
+    .lp-signin-inner { width: 100%; max-width: 100%; }
+    .lp-mobile-brand { display: block; }
+    .lp-greeting { margin-bottom: 28px; }
+  }
+  @media (max-width: 420px) {
+    .lp-signin { padding: 32px 20px; }
   }
 `;
 
@@ -248,6 +280,10 @@ export default function LoginScreen() {
       {/* ── Sign-in panel ── */}
       <div className="lp-signin">
         <div className="lp-signin-inner">
+          <div className="lp-mobile-brand" aria-label="Platform">
+            <span className="lp-mobile-brand-name">MET Proficiency Mastery</span>
+            <span className="lp-mobile-brand-sub">Michigan English Test Preparation for Nurses</span>
+          </div>
 
           <div className="lp-greeting">
             <h1>{isRegister ? 'Create your password' : 'Sign in'}</h1>

@@ -748,9 +748,10 @@ const LEGACY_NAV_SECTIONS = [
 ];
 // New section map for Phase 1 IDs
 const NEW_NAV_SECTIONS = [
-  { label: 'Main',     ids: ['dashboard', 'students', 'calendar'] },
-  { label: 'Teaching', ids: ['diagnostics', 'homework', 'submissions', 'inbox', 'error-bank'] },
-  { label: 'Reports',  ids: ['reports', 'settings'] },
+  { label: 'Today',    ids: ['dashboard'] },
+  { label: 'Workflow', ids: ['students', 'calendar', 'diagnostics', 'homework', 'submissions'] },
+  { label: 'Support',  ids: ['inbox', 'error-bank', 'reports', 'exercises'] },
+  { label: 'Admin',    ids: ['settings'] },
 ];
 
 export function Shell({ tabs = [], active, onTab, children, rightSlot, workflowActive, onWorkflowStage }) {
@@ -764,8 +765,8 @@ export function Shell({ tabs = [], active, onTab, children, rightSlot, workflowA
     <div className="shell">
       <aside className="shell-sidebar">
         <div className="shell-brand">
-          <span className="shell-brand-name">V.V. Method</span>
-          <span className="shell-brand-sub">MET Preparation</span>
+          <span className="shell-brand-name">MET Proficiency Mastery</span>
+          <span className="shell-brand-sub">Michigan English Test Prep</span>
         </div>
         <nav className="shell-nav" aria-label="Main navigation">
           {NAV_SECTIONS.map(sec => {

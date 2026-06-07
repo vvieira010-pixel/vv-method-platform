@@ -314,7 +314,7 @@ function HomeView({ student, onTab }) {
             </div>
           ) : (
             <div className="student-empty-card">
-              No approved feedback yet. Your teacher will send a clear summary after the next diagnosis.
+              Your teacher will add feedback after there is enough class evidence. For now, prepare one clear speaking example for your next MET topic.
             </div>
           )}
         </article>
@@ -332,7 +332,7 @@ function HomeView({ student, onTab }) {
             </div>
           ) : (
             <div className="student-empty-card">
-              Evaluated skills will appear here after your teacher has enough class evidence.
+              Progress will appear after your teacher evaluates enough samples. Keep completing homework so the next diagnosis can show a real pattern.
             </div>
           )}
         </article>
