@@ -307,7 +307,7 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
         console.warn('Auto-save draft failed:', autoSaveErr);
       }
 
-      if (results.some(r => r.status === 'rejected')) {
+      if (!diagnosisRaw || !errorBankRaw || !feedbackRaw || !homeworkRaw) {
         window.toast?.('Some sections failed to generate — please Regen them.', 'warn');
       }
 

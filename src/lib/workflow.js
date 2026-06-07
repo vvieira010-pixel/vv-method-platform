@@ -865,7 +865,7 @@ export async function saveStudent(data) {
     try { const saved = await dbUpsert('studentsCrud', record); if (saved) return saved; }
     catch (e) { console.warn('[workflow] saveStudent via Supabase failed, using localStorage:', e.message); }
   }
-  if (existing >= 0) all[existing] = { ...all[existing], ...record };
+  if (existing >= 0) all[existing] = { ...withoutRosterPassword(all[existing]), ...record };
   else all.unshift(record);
   save(K.studentsCrud, all);
   return record;
@@ -919,21 +919,13 @@ export async function deleteStudent(id) {
 export async function seedStudentsIfEmpty(STUDENTS) {
   const existing = load(K.studentsCrud);
   if (existing.length > 0) {
-    let changed = false;
-    const seededById = new Map((STUDENTS || []).map(s => [s.id, s]));
-    const patched = existing.map(student => {
-      if (student.password) return student;
-      const seed = seededById.get(student.id);
-      if (!seed?.password) return student;
-      changed = true;
-      return { ...student, password: seed.password };
-    });
+    const patched = existing.map(withoutRosterPassword);
+    const changed = patched.some((student, index) => student !== existing[index]);
     if (changed) save(K.studentsCrud, patched);
     return changed ? patched : existing;
   }
   const seeded = STUDENTS.map(s => ({
     id: s.id, name: s.name, firstName: s.firstName, email: s.email || '',
-    password: s.password || '',
     currentLevel: s.band || s.currentBand || 'B1',
     targetLevel: s.bandTarget || s.targetBand || 'B2',
     examGoal: s.goal || 'Pass MET B2',
@@ -947,6 +939,12 @@ export async function seedStudentsIfEmpty(STUDENTS) {
   }));
   save(K.studentsCrud, seeded);
   return seeded;
+}
+
+function withoutRosterPassword(student) {
+  if (!student || !Object.prototype.hasOwnProperty.call(student, 'password')) return student;
+  const { password, ...safeStudent } = student;
+  return safeStudent;
 }
 
 /* ─── TARGET PROFILES ────────────────────────────────────────── */

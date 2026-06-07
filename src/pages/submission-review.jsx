@@ -191,6 +191,13 @@ Return JSON:
       return { exId, res, label, url: audioUrls[exId] || res.audioB64 };
     });
 
+  function addErrorToCorrections(err) {
+    setForm(f => ({
+      ...f,
+      corrections: [...f.corrections, { original: err.error, improved: err.correct, note: 'Error Bank suggestion' }],
+    }));
+  }
+
   return (
     <div style={{ maxWidth: 960, margin: '0 auto', padding: '28px 20px' }}>
       <button onClick={() => onNavigate('submissions')} style={backStyle}><Icon.arrowL size={13} /> Back to submissions</button>
@@ -263,11 +270,14 @@ Return JSON:
               <SectionHeader title="Active Error Bank" icon={<Icon.warning size={15} />} />
               <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 6 }}>
                 {activeErrorBank.slice(0, 5).map(err => (
-                  <div key={err.id} style={{ fontSize: 'var(--text-xs)', display: 'flex', alignItems: 'center', gap: 8, padding: '5px 8px', background: 'var(--danger-bg)', borderRadius: 'var(--radius-sm)' }}>
+                  <div key={err.id} style={{ fontSize: 'var(--text-xs)', display: 'flex', alignItems: 'center', gap: 8, padding: '5px 8px', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', cursor: 'pointer' }}
+                    onClick={() => addErrorToCorrections(err)}
+                    title="Click to add to corrections"
+                  >
                     <span style={{ color: 'var(--danger)', fontWeight: 600 }}>{err.error}</span>
                     <span style={{ color: 'var(--muted)' }}>→</span>
                     <span style={{ color: 'var(--success)' }}>{err.correct}</span>
-                    <Button variant="ghost" size="sm" style={{ marginLeft: 'auto', fontSize: 10 }} onClick={async () => { await markErrorSolved(submission.studentId, err.id); load(); }}>Solved</Button>
+                    <Button variant="ghost" size="sm" style={{ marginLeft: 'auto', fontSize: 10 }} onClick={async (e) => { e.stopPropagation(); await markErrorSolved(submission.studentId, err.id); load(); }}>Solved</Button>
                   </div>
                 ))}
               </div>
