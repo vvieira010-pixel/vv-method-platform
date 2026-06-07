@@ -1,10 +1,12 @@
 /**
  * Listening.jsx — Student-facing listening exercise component.
  *
- * TTS cascade (keys stored in localStorage, never in the client bundle):
- *   1. ElevenLabs  — vv:elevenlabs_api_key  — highest quality
- *   2. OpenAI TTS  — vv:openai_api_key      — good quality, reuses AI key
- *   3. Browser speechSynthesis              — always available, no key needed
+ * TTS cascade:
+ *   1. Server proxy — /api/tts, using server-side ElevenLabs/OpenAI keys
+ *   2. ElevenLabs   — vv:elevenlabs_api_key browser fallback
+ *   3. Deepgram     — vv:deepgram_api_key browser fallback
+ *   4. OpenAI TTS   — vv:openai_api_key browser fallback
+ *   5. Browser speechSynthesis — always available, no key needed
  *
  * Flow:
  *   Student presses ▶ → audio plays (limit: exercise.plays, default 2)
@@ -16,16 +18,31 @@ import { useState, useRef, useCallback } from 'react';
 const TEAL = '#0D9488';
 const NAVY = '#0B1F3A';
 const EL_VOICE    = '21m00Tcm4TlvDq8ikWAM'; // ElevenLabs — Rachel, natural American English
+const DEEPGRAM_MODEL = 'aura-2-thalia-en';    // Deepgram Aura-2 — clear American English
 const OPENAI_VOICE = 'nova';                  // OpenAI TTS — nova (female, clear, neutral)
 
 /* ── Key helpers ──────────────────────────────────────────────── */
 function lsGet(key) { try { return localStorage.getItem(key) || ''; } catch { return ''; } }
 const getElKey     = () => lsGet('vv:elevenlabs_api_key');
+const getDeepgramKey = () => lsGet('vv:deepgram_api_key');
 const getOpenAIKey = () => lsGet('vv:openai_api_key');
 const getPiperUrl  = () => lsGet('vv:piper_server_url');
 const getGeminiKey = () => { const v = lsGet('vv:gemini_api_key'); return v ? v.split(',')[0].trim() : ''; };
 
 /* ── TTS helpers ──────────────────────────────────────────────── */
+async function fetchServerAudio(text) {
+  const res = await fetch('/api/tts', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ text }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error?.message || `Server TTS error ${res.status}`);
+  }
+  return URL.createObjectURL(await res.blob());
+}
+
 async function fetchElevenLabsAudio(text, apiKey) {
   const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${EL_VOICE}`, {
     method: 'POST',
@@ -52,6 +69,19 @@ async function fetchOpenAIAudio(text, apiKey) {
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
     throw new Error(err.error?.message || `OpenAI TTS error ${res.status}`);
+  }
+  return URL.createObjectURL(await res.blob());
+}
+
+async function fetchDeepgramAudio(text, apiKey) {
+  const res = await fetch(`https://api.deepgram.com/v1/speak?model=${encodeURIComponent(DEEPGRAM_MODEL)}`, {
+    method: 'POST',
+    headers: { Authorization: `Token ${apiKey}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ text }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.err_msg || err.message || `Deepgram TTS error ${res.status}`);
   }
   return URL.createObjectURL(await res.blob());
 }
@@ -92,10 +122,13 @@ async function fetchPiperAudio(text, serverUrl) {
   return URL.createObjectURL(await res.blob());
 }
 
-/** ElevenLabs → OpenAI TTS → Gemini TTS → Piper (local) → null */
+/** Server proxy → ElevenLabs → Deepgram → OpenAI TTS → Gemini TTS → Piper (local) → null */
 async function fetchAudio(text) {
+  try { return await fetchServerAudio(text); } catch (e) { console.warn('[tts] server proxy failed:', e.message); }
   const elKey = getElKey();
   if (elKey) return fetchElevenLabsAudio(text, elKey);
+  const deepgramKey = getDeepgramKey();
+  if (deepgramKey) return fetchDeepgramAudio(text, deepgramKey);
   const oaiKey = getOpenAIKey();
   if (oaiKey) return fetchOpenAIAudio(text, oaiKey);
   const geminiKey = getGeminiKey();

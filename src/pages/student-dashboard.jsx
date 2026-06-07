@@ -1073,7 +1073,7 @@ function ProgressView({ student }) {
       <section className="student-hero">
         <div>
           <p className="student-hero-kicker">MET progress profile</p>
-          <h1>Your readiness path</h1>
+          <h1>Your MET progress path</h1>
           <p>Progress stages show direction without turning your learning into a grade.</p>
         </div>
       </section>

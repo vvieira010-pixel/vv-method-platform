@@ -1,18 +1,18 @@
-/* VV Method Platform — Design System
-   Based on visual reference: teal + orange, rounded cards, system sans */
+/* MET Proficiency Mastery — Design System
+   Navy + teal system for a calm, professional MET preparation platform. */
 
 :root {
-  /* Colors — OKLch palette */
-  --primary: oklch(32% 0.06 210);           /* Deep teal — headers, primary buttons, active states */
-  --primary-hover: oklch(28% 0.07 210);      /* Darker teal for hover */
-  --primary-light: oklch(90% 0.03 210);      /* Light teal for backgrounds */
+  /* Colors */
+  --primary: #1a2332;                        /* Navy — headers, primary buttons, active states */
+  --primary-hover: #131a28;                  /* Darker navy for hover */
+  --primary-light: #edf4f7;                  /* Light blue-gray for backgrounds */
 
-  --accent: oklch(70% 0.15 50);              /* Orange — waveforms, charts, highlights */
-  --accent-hover: oklch(65% 0.16 50);        /* Darker orange for hover */
-  --accent-light: oklch(95% 0.05 50);        /* Light orange for backgrounds */
+  --accent: #2d8b8b;                         /* Teal — evidence, charts, highlights */
+  --accent-hover: #247070;                   /* Darker teal for hover */
+  --accent-light: #e4f2f2;                   /* Soft mint for backgrounds */
 
-  --interaction: oklch(50% 0.08 70);         /* Bronze/brown — microphone, special actions */
-  --interaction-hover: oklch(45% 0.09 70);   /* Darker bronze for hover */
+  --interaction: #3da6a6;                    /* Bright teal — special actions */
+  --interaction-hover: #2d8b8b;              /* Darker teal for hover */
 
   --bg: oklch(98% 0.005 220);                /* Cool off-white background */
   --surface: oklch(100% 0 0);                /* White cards and surfaces */
@@ -37,14 +37,14 @@
   --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', sans-serif;
   --font-mono: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Droid Sans Mono', monospace;
 
-  /* Font sizes — fluid scale */
-  --text-xs: clamp(0.75rem, 0.7rem + 0.25vw, 0.813rem);
-  --text-sm: clamp(0.875rem, 0.8rem + 0.375vw, 1rem);
-  --text-base: clamp(1rem, 0.95rem + 0.25vw, 1.125rem);
-  --text-lg: clamp(1.125rem, 1rem + 0.625vw, 1.375rem);
-  --text-xl: clamp(1.25rem, 1.1rem + 0.75vw, 1.625rem);
-  --text-2xl: clamp(1.5rem, 1.3rem + 1vw, 2rem);
-  --text-3xl: clamp(1.875rem, 1.6rem + 1.375vw, 2.625rem);
+  /* Font sizes */
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+  --text-3xl: 1.875rem;
 
   /* Font weights */
   --weight-normal: 400;
@@ -66,10 +66,10 @@
   --space-20: 5rem;     /* 80px */
 
   /* Border radius */
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
-  --radius-pill: 24px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-pill: 999px;
   --radius-full: 9999px;
 
   /* Shadows */

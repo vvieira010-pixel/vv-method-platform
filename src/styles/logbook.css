@@ -133,7 +133,7 @@
   background: var(--surface);
   border: 1.5px solid var(--divider);
   border-radius: var(--radius-md);
-  box-shadow: none;
+  box-shadow: 0 14px 34px -30px rgba(26, 35, 50, 0.34);
 }
 .student-metric-copy {
   min-width: 0;
@@ -170,10 +170,10 @@
   justify-content: center;
   flex-shrink: 0;
 }
-.student-metric--blue .student-metric-icon { background: #eaf2ff; color: #2563eb; }
+.student-metric--blue .student-metric-icon { background: #edf4f7; color: var(--accent-deep); }
 .student-metric--teal .student-metric-icon { background: var(--accent-subtle); color: var(--primary-ink); }
 .student-metric--navy .student-metric-icon { background: #edf4f7; color: var(--accent-deep); }
-.student-metric--orange .student-metric-icon { background: #fff3e8; color: var(--orange-deep); }
+.student-metric--orange .student-metric-icon { background: #f3f8f8; color: var(--primary-ink); }
 .student-grid {
   display: grid;
   grid-template-columns: 1.5fr 1fr;
@@ -785,7 +785,7 @@
   background: var(--bg-deep);
 }
 .student-stage-track span.active {
-  background: var(--accent);
+  background: linear-gradient(90deg, var(--accent-deep), var(--accent));
 }
 .student-stage-track--wide {
   margin-bottom: 10px;
@@ -832,11 +832,11 @@
   margin-bottom: 12px;
 }
 .student-progress-card {
-  background: var(--surface);
-  border: 1.5px solid rgba(26, 35, 50, 0.2);
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbfb 100%);
+  border: 1px solid rgba(45, 139, 139, 0.2);
   border-radius: 6px;
-  padding: 13px;
-  box-shadow: none;
+  padding: 15px;
+  box-shadow: 0 16px 40px -34px rgba(26, 35, 50, 0.38);
   min-width: 0;
 }
 .student-progress-copy-grid {

@@ -11,6 +11,7 @@ const SENSITIVE_LOCAL_KEYS = new Set([
   'vv:openai_api_key',
   'vv:openrouter_api_key',
   'vv:elevenlabs_api_key',
+  'vv:deepgram_api_key',
 ]);
 
 /** Password-style input with an eye toggle to reveal/hide the value. */
@@ -51,6 +52,7 @@ export default function SettingsPage({ onNavigate }) {
   const [openaiKey, setOpenaiKey] = useState(() => localStorage.getItem('vv:openai_api_key') || '');
   const [openrouterKey, setOpenrouterKey] = useState(() => localStorage.getItem('vv:openrouter_api_key') || '');
   const [elevenlabsKey, setElevenlabsKey] = useState(() => localStorage.getItem('vv:elevenlabs_api_key') || '');
+  const [deepgramKey, setDeepgramKey] = useState(() => localStorage.getItem('vv:deepgram_api_key') || '');
   const [piperUrl, setPiperUrl] = useState(() => localStorage.getItem('vv:piper_server_url') || '');
   const [generalMemo, setGeneralMemo] = useState(() => localStorage.getItem('vv:student_general_memo') || '');
   const [saved, setSaved] = useState('');
@@ -93,6 +95,8 @@ export default function SettingsPage({ onNavigate }) {
     else localStorage.removeItem('vv:openrouter_api_key');
     if (elevenlabsKey.trim()) localStorage.setItem('vv:elevenlabs_api_key', elevenlabsKey.trim());
     else localStorage.removeItem('vv:elevenlabs_api_key');
+    if (deepgramKey.trim()) localStorage.setItem('vv:deepgram_api_key', deepgramKey.trim());
+    else localStorage.removeItem('vv:deepgram_api_key');
     if (piperUrl.trim()) localStorage.setItem('vv:piper_server_url', piperUrl.trim());
     else localStorage.removeItem('vv:piper_server_url');
     setSaved('Keys saved!');
@@ -235,6 +239,7 @@ export default function SettingsPage({ onNavigate }) {
         </p>
         <ol style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', margin: '4px 0 16px', paddingLeft: 18, lineHeight: 1.8 }}>
           <li><strong>ElevenLabs</strong> — highest quality (priority)</li>
+          <li><strong>Deepgram</strong> — fast fallback voice for listening practice</li>
           <li><strong>OpenAI TTS</strong> — good quality, uses your OpenAI key from the AI section above</li>
           <li><strong>Gemini TTS</strong> — free, uses your Gemini key from the AI section above</li>
           <li><strong>Piper</strong> — offline/local, if server URL is set below</li>
@@ -245,13 +250,24 @@ export default function SettingsPage({ onNavigate }) {
             <SecretInput value={elevenlabsKey} onChange={e => setElevenlabsKey(e.target.value)} placeholder="sk_…" />
             <a href="https://elevenlabs.io/app/settings/api-keys" target="_blank" rel="noopener noreferrer" style={{ fontSize: 'var(--text-xs)', color: 'var(--accent)', marginTop: 3 }}>Get your ElevenLabs key →</a>
           </Field>
+          <Field label="Deepgram API Key (fallback)">
+            <SecretInput value={deepgramKey} onChange={e => setDeepgramKey(e.target.value)} placeholder="dg_… or Deepgram key" />
+            <a href="https://console.deepgram.com/" target="_blank" rel="noopener noreferrer" style={{ fontSize: 'var(--text-xs)', color: 'var(--accent)', marginTop: 3 }}>Get your Deepgram key →</a>
+          </Field>
+          <div style={{
+            padding: '10px 14px', borderRadius: 8, fontSize: 'var(--text-xs)',
+            background: 'var(--accent-subtle)', color: 'var(--muted)', lineHeight: 1.6,
+            border: '1px solid var(--accent-soft)',
+          }}>
+            <strong>Voice note</strong> — use one woman voice and one man voice for listening variety. The default server setup uses an ElevenLabs woman voice first, Deepgram's Aura fallback, then OpenAI <em>nova</em>. You can change voices with <code>ELEVENLABS_VOICE_ID</code>, <code>DEEPGRAM_TTS_MODEL</code>, or <code>OPENAI_TTS_VOICE</code> in the server environment.
+          </div>
           <div style={{
             padding: '10px 14px', borderRadius: 8, fontSize: 'var(--text-xs)',
             background: 'var(--accent-subtle)', color: 'var(--muted)', lineHeight: 1.6,
             border: '1px solid var(--accent-soft)',
           }}>
             <strong>OpenAI TTS</strong> — uses your OpenAI key from the AI section above. No extra key needed.
-            Voices: <em>alloy</em> (neutral), <em>nova</em> (female), <em>onyx</em> (male). Active automatically if ElevenLabs is not set or fails.
+            Voices: <em>alloy</em> (neutral), <em>nova</em> (female), <em>onyx</em> (male). Active automatically if ElevenLabs and Deepgram are not set or fail.
           </div>
           <Field label="Piper server URL (optional — local/offline)">
             <input
@@ -263,7 +279,8 @@ export default function SettingsPage({ onNavigate }) {
             />
             <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: 3, lineHeight: 1.5 }}>
               Run <code>python scripts/piper-server.py --model path/to/voice.onnx</code> on your machine.
-              Free, fully offline, no API key needed. Used only when ElevenLabs and OpenAI are not configured.
+              Free, fully offline, no API key needed. Use one woman voice and one man voice for listening variety; Piper voices require both the <code>.onnx</code> file and matching <code>.onnx.json</code>. From your voices list, good starting points are <code>en_US-lessac-medium</code> or <code>en_US-amy-medium</code> for a US woman voice, <code>en_US-ryan-medium</code> or <code>en_US-hfc_male-medium</code> for a US man voice, <code>en_GB-southern_english_female-low</code> for a UK woman voice, and <code>en_GB-northern_english_male-medium</code> for a UK man voice.
+              Listen to samples at <a href="https://rhasspy.github.io/piper-samples" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)' }}>Piper samples</a> and download models from <a href="https://huggingface.co/rhasspy/piper-voices/tree/main" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)' }}>Piper voices</a>. Used only when ElevenLabs, Deepgram, OpenAI, and Gemini are not configured.
             </span>
           </Field>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>

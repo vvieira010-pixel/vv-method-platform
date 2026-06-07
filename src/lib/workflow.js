@@ -922,7 +922,17 @@ export async function seedStudentsIfEmpty(STUDENTS) {
     const patched = existing.map(withoutRosterPassword);
     const changed = patched.some((student, index) => student !== existing[index]);
     if (changed) save(K.studentsCrud, patched);
-    return changed ? patched : existing;
+    const local = changed ? patched : existing;
+    // Sync localStorage students to Supabase when Supabase is connected but empty
+    if (dbReady('studentsCrud')) {
+      try {
+        const sbStudents = await dbList('studentsCrud');
+        if (Array.isArray(sbStudents) && sbStudents.length === 0) {
+          for (const s of local) await saveVia('studentsCrud', K.studentsCrud, s);
+        }
+      } catch { /* Supabase unavailable — localStorage serves */ }
+    }
+    return local;
   }
   const seeded = STUDENTS.map(s => ({
     id: s.id, name: s.name, firstName: s.firstName, email: s.email || '',
@@ -938,6 +948,12 @@ export async function seedStudentsIfEmpty(STUDENTS) {
     createdAt: s.createdAt || new Date().toISOString(), updatedAt: s.updatedAt || new Date().toISOString(),
   }));
   save(K.studentsCrud, seeded);
+  // Also seed to Supabase if connected
+  if (dbReady('studentsCrud')) {
+    try {
+      for (const s of seeded) await saveVia('studentsCrud', K.studentsCrud, s);
+    } catch { /* Supabase unavailable */ }
+  }
   return seeded;
 }
 

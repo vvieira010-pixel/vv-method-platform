@@ -4,6 +4,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Icon, Card, SectionHeader, Button, Avatar, Pill } from '../components/shared.jsx';
 import { getDiagnoses, getHomework, getErrorBank, getAllSubmissions, getProgressNotes } from '../lib/workflow.js';
+import { buildExerciseMix } from '../lib/report-metrics.js';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 
 export default function ReportsPage({ students, onNavigate, workspaceQuery = '' }) {
@@ -139,8 +140,8 @@ export default function ReportsPage({ students, onNavigate, workspaceQuery = '' 
 
           {report.approved.length > 0 && (
             <Card style={{ padding: 18, marginTop: 14 }}>
-              <SectionHeader title="Skill Evidence Coverage (Animated)" icon={<Icon.diagnose size={14} />} />
-              <p style={S.caption}>Approved diagnoses only. Skills with zero evidence count as not evaluated enough.</p>
+              <SectionHeader title="Which MET skills have enough evidence?" icon={<Icon.diagnose size={14} />} />
+              <p style={S.caption}>Approved diagnoses only. Missing evidence stays visible instead of becoming a score.</p>
               <div style={{ width: '100%', height: 320, marginTop: 12 }}>
                 <ResponsiveContainer>
                   <BarChart data={report.skillCoverageChart} margin={{ top: 8, right: 8, left: 0, bottom: 8 }}>
@@ -160,8 +161,8 @@ export default function ReportsPage({ students, onNavigate, workspaceQuery = '' 
 
           <div style={S.splitGrid}>
             <Card style={{ padding: 16 }}>
-              <SectionHeader title="Exercise Mix (Interactive)" icon={<Icon.homework size={14} />} />
-              <p style={S.caption}>Use the exercise filter above to inspect one exercise format at a time.</p>
+              <SectionHeader title="Exercise Status by Format" icon={<Icon.homework size={14} />} />
+              <p style={S.caption}>Submitted and reviewed are separate so teacher backlog does not hide student effort.</p>
               {visibleExerciseRows.length === 0 ? (
                 <p style={S.empty}>No exercise data for this student yet.</p>
               ) : (
@@ -172,10 +173,8 @@ export default function ReportsPage({ students, onNavigate, workspaceQuery = '' 
                         <div style={S.rowTitle}>{row.type}</div>
                         <div style={S.rowSub}>{row.count} assignments · {row.submitted} submitted · {row.reviewed} reviewed</div>
                       </div>
-                      <div style={S.progressTrack}>
-                        <div style={{ ...S.progressFill, width: `${row.completionRate}%` }} />
-                      </div>
-                      <strong style={{ fontSize: 'var(--text-xs)', color: 'var(--accent-deep)' }}>{row.completionRate}%</strong>
+                      <ExerciseStatusBars row={row} />
+                      <strong style={{ fontSize: 'var(--text-xs)', color: 'var(--accent-deep)', textAlign: 'right' }}>{row.reviewedRate}% reviewed</strong>
                     </div>
                   ))}
                 </div>
@@ -276,27 +275,29 @@ function getEvidenceCount(dx, countKey) {
   return 0;
 }
 
-function buildExerciseMix(homework) {
-  const map = new Map();
-
-  homework.forEach((h) => {
-    const type = h.type || h.skillType || 'General';
-    if (!map.has(type)) {
-      map.set(type, { type, count: 0, submitted: 0, reviewed: 0 });
-    }
-    const row = map.get(type);
-    row.count += 1;
-    if (h.status === 'submitted') row.submitted += 1;
-    if (['reviewed', 'corrected', 'completed'].includes(h.status)) row.reviewed += 1;
-  });
-
-  return Array.from(map.values())
-    .map((row) => ({ ...row, completionRate: row.count > 0 ? Math.round((row.reviewed / row.count) * 100) : 0 }))
-    .sort((a, b) => b.count - a.count);
+function ExerciseStatusBars({ row }) {
+  return (
+    <div style={S.statusBars}>
+      <div style={S.statusLine}>
+        <span>Submitted</span>
+        <div style={S.progressTrack}>
+          <div style={{ ...S.progressFillSubmitted, width: `${row.submittedRate}%` }} />
+        </div>
+        <strong>{row.submittedRate}%</strong>
+      </div>
+      <div style={S.statusLine}>
+        <span>Reviewed</span>
+        <div style={S.progressTrack}>
+          <div style={{ ...S.progressFillReviewed, width: `${row.reviewedRate}%` }} />
+        </div>
+        <strong>{row.reviewedRate}%</strong>
+      </div>
+    </div>
+  );
 }
 
 const S = {
-  shell: { maxWidth: 1120, margin: '0 auto', padding: '28px 20px' },
+  shell: { maxWidth: 1120, margin: '0 auto', padding: '28px 20px 40px' },
   hero: {
     display: 'flex',
     alignItems: 'flex-end',
@@ -304,9 +305,11 @@ const S = {
     gap: 12,
     flexWrap: 'wrap',
     marginBottom: 18,
-    padding: 18,
-    borderRadius: 4,
-    background: 'linear-gradient(130deg, #0f2438 0%, #193249 45%, #25627f 100%)',
+    padding: '22px 24px',
+    borderRadius: 8,
+    border: '1px solid rgba(168, 218, 220, 0.18)',
+    background: 'linear-gradient(135deg, #101a28 0%, #172537 50%, #1f4e58 100%)',
+    boxShadow: '0 18px 44px -30px rgba(16, 26, 40, 0.8)',
     color: '#fff',
   },
   heroTag: { fontSize: 'var(--text-xs)', letterSpacing: '0.1em', textTransform: 'uppercase', color: '#9fd6d6', fontWeight: 700, marginBottom: 6 },
@@ -322,24 +325,27 @@ const S = {
   rowSub: { fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: 2, lineHeight: 1.5 },
   exerciseRow: {
     display: 'grid',
-    gridTemplateColumns: 'minmax(0, 1fr) minmax(100px, 1fr) auto',
+    gridTemplateColumns: 'minmax(0, 1fr) minmax(150px, 1.1fr) minmax(74px, auto)',
     alignItems: 'center',
     gap: 10,
     border: '1px solid var(--divider)',
-    borderRadius: 3,
-    padding: '9px 10px',
-    background: '#fff',
+    borderRadius: 6,
+    padding: '11px 12px',
+    background: 'linear-gradient(180deg, #ffffff 0%, #f9fcfc 100%)',
   },
-  progressTrack: { height: 8, borderRadius: 999, background: 'var(--bg-deep)', overflow: 'hidden' },
-  progressFill: { height: '100%', borderRadius: 999, background: 'linear-gradient(90deg, #2d8b8b 0%, #7cc9c9 100%)' },
+  statusBars: { display: 'grid', gap: 5, minWidth: 0 },
+  statusLine: { display: 'grid', gridTemplateColumns: '62px minmax(60px, 1fr) 34px', alignItems: 'center', gap: 7, fontSize: 'var(--text-xs)', color: 'var(--muted)' },
+  progressTrack: { height: 8, borderRadius: 999, background: 'var(--bg-deep)', overflow: 'hidden', boxShadow: 'inset 0 0 0 1px rgba(26,35,50,0.04)' },
+  progressFillSubmitted: { height: '100%', borderRadius: 999, background: 'var(--accent-soft)' },
+  progressFillReviewed: { height: '100%', borderRadius: 999, background: 'var(--accent)' },
   timelineRow: {
     display: 'grid',
     gridTemplateColumns: '28px minmax(0, 1fr)',
     gap: 10,
     border: '1px solid var(--divider)',
-    borderRadius: 3,
-    padding: '9px 10px',
-    background: '#fff',
+    borderRadius: 6,
+    padding: '10px 12px',
+    background: 'linear-gradient(180deg, #ffffff 0%, #f9fcfc 100%)',
   },
   timelineIdx: {
     width: 24,
@@ -352,7 +358,7 @@ const S = {
     fontSize: 'var(--text-xs)',
     fontWeight: 700,
   },
-  noteRow: { display: 'grid', gridTemplateColumns: '72px minmax(0, 1fr)', gap: 8, alignItems: 'start', padding: '7px 9px', borderRadius: 3, background: 'var(--bg)' },
+  noteRow: { display: 'grid', gridTemplateColumns: '72px minmax(0, 1fr)', gap: 8, alignItems: 'start', padding: '9px 11px', borderRadius: 6, background: 'var(--bg)' },
   noteDate: { color: 'var(--muted)', fontSize: 'var(--text-xs)' },
   empty: { fontSize: 'var(--text-sm)', color: 'var(--muted)', margin: '8px 0 0' },
 };
