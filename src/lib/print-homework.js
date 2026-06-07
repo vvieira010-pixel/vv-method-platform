@@ -47,6 +47,13 @@ function exerciseHtml(ex, n) {
   } else if (t === 'flash') {
     body = `<p class="q">Study / match the terms:</p>
       <ul class="pairs">${(ex.pairs || []).map(p => `<li><strong>${esc(p.term)}</strong> — ${esc(p.def)}</li>`).join('')}</ul>`;
+  } else if (t === 'listen') {
+    const opts = (ex.options || []).filter(o => o !== undefined);
+    body = `<p class="q">Listening script:</p>
+      <p class="passage">${esc(ex.audioText || 'Audio script not set yet.')}</p>
+      <p class="q">${esc(ex.question || 'Question not set yet.')}</p>
+      <ol type="A" class="opts">${opts.map(o => `<li>${esc(o)}</li>`).join('')}</ol>
+      <p class="ans">Answer: ______</p>`;
   } else {
     body = `<p class="q">${esc(ex.prompt || ex.question || ex.instruction || '')}</p>${lines(4)}`;
   }

@@ -965,16 +965,31 @@ function PreviewExercise({ exercise }) {
       return (
         <div>
           <div style={{
-            display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12,
+            display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 12,
             padding: '10px 14px', borderRadius: 10,
             background: 'rgba(14,95,107,.08)', border: '1px solid rgba(14,95,107,.25)',
           }}>
             <span style={{ fontSize: 20 }}>▶</span>
-            <div>
+            <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: '#0E5F6B', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                 Listen ({exercise.plays ?? 2}× allowed)
               </div>
-              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>{(exercise.audioText || '').slice(0, 60) || 'Audio text not set…'}</div>
+              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: 4, lineHeight: 1.5 }}>
+                Audio script
+              </div>
+              <div style={{
+                marginTop: 6,
+                padding: '8px 10px',
+                borderRadius: 8,
+                background: 'var(--surface)',
+                border: '1px solid rgba(14,95,107,.16)',
+                color: 'var(--text)',
+                fontSize: 'var(--text-sm)',
+                lineHeight: 1.55,
+                whiteSpace: 'pre-wrap',
+              }}>
+                {exercise.audioText || 'Audio script not set yet.'}
+              </div>
             </div>
           </div>
           <p style={{ fontWeight: 600, marginBottom: 10 }}>{exercise.question || 'Question…'}</p>
