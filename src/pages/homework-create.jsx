@@ -446,7 +446,7 @@ function getPriorityItems(dx) {
     onNavigate('homework');
   }
 
-  function addUnitBankExercise(ex) { setForm(f => ({ ...f, exercises: [...f.exercises, { ...ex }] })); }
+  function addUnitBankExercise(ex) { setForm(f => ({ ...f, exercises: [...f.exercises, { ...ex, id: 'ub_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2) }] })); }
   function handleWizardComplete({ level, skill }) {
     setSelectedLevel(level);
     setSelectedSkill(skill);
