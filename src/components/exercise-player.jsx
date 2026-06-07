@@ -256,6 +256,29 @@ function ShortPlayer({ ex, res, update, readOnly }) {
       <p style={{ margin: '0 0 6px', fontSize: 'var(--text-md)', fontWeight: 600, color: 'var(--text)', lineHeight: 1.55 }}>
         {ex.prompt}
       </p>
+
+      {/* SCAFFOLDING */}
+      {(ex.scaffolding?.vocabulary?.length > 0 || ex.scaffolding?.structure?.length > 0) && (
+        <div style={{ marginBottom: 12, padding: '8px 12px', background: 'var(--accent-subtle)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-xs)' }}>
+          {ex.scaffolding.vocabulary?.length > 0 && (
+            <div style={{ marginBottom: 6 }}>
+              <span style={{ fontWeight: 700, color: 'var(--accent-deep)', marginRight: 6 }}>Vocabulary:</span>
+              {ex.scaffolding.vocabulary.map((word, i) => (
+                <span key={i} style={{ display: 'inline-block', background: 'var(--white)', padding: '2px 6px', borderRadius: 4, marginRight: 4, border: '1px solid var(--accent-soft)' }}>{word}</span>
+              ))}
+            </div>
+          )}
+          {ex.scaffolding.structure?.length > 0 && (
+            <div>
+              <span style={{ fontWeight: 700, color: 'var(--accent-deep)', marginRight: 6 }}>Structure:</span>
+              <ul style={{ margin: '4px 0 0 16px', padding: 0, color: 'var(--text-2)' }}>
+                {ex.scaffolding.structure.map((line, i) => <li key={i}>{line}</li>)}
+              </ul>
+            </div>
+          )}
+        </div>
+      )}
+
       {ex.rubric && (
         <p style={{ margin: '0 0 12px', fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>
           {ex.rubric}
@@ -367,6 +390,28 @@ function SpeakPlayer({ ex, res, update, readOnly }) {
           <span style={{ color: 'var(--muted)', fontWeight: 600 }}> Target: {target} seconds.</span>
         </p>
       </div>
+
+      {/* SCAFFOLDING */}
+      {(ex.scaffolding?.vocabulary?.length > 0 || ex.scaffolding?.structure?.length > 0) && (
+        <div style={{ marginBottom: 12, padding: '8px 12px', background: 'var(--accent-subtle)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-xs)' }}>
+          {ex.scaffolding.vocabulary?.length > 0 && (
+            <div style={{ marginBottom: 6 }}>
+              <span style={{ fontWeight: 700, color: 'var(--accent-deep)', marginRight: 6 }}>Vocabulary:</span>
+              {ex.scaffolding.vocabulary.map((word, i) => (
+                <span key={i} style={{ display: 'inline-block', background: 'var(--white)', padding: '2px 6px', borderRadius: 4, marginRight: 4, border: '1px solid var(--accent-soft)' }}>{word}</span>
+              ))}
+            </div>
+          )}
+          {ex.scaffolding.structure?.length > 0 && (
+            <div>
+              <span style={{ fontWeight: 700, color: 'var(--accent-deep)', marginRight: 6 }}>Structure:</span>
+              <ul style={{ margin: '4px 0 0 16px', padding: 0, color: 'var(--text-2)' }}>
+                {ex.scaffolding.structure.map((line, i) => <li key={i}>{line}</li>)}
+              </ul>
+            </div>
+          )}
+        </div>
+      )}
 
       {status === 'idle' && (
         <>
