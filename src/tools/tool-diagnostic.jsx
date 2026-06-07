@@ -14,6 +14,13 @@ if (typeof document !== 'undefined' && !document.getElementById('diagnostic-styl
       from { transform: rotate(0deg); }
       to { transform: rotate(360deg); }
     }
+    @keyframes diag-card-in {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .diag-card-enter { animation: none !important; opacity: 1 !important; }
+    }
   `;
   document.head.appendChild(style);
 }
