@@ -11,6 +11,7 @@ import { getDiagnoses, getStudent, saveHomework, updateClassEventStatus } from '
 import { EX_TYPES, createExercise, exercisePreview, getExType } from '../lib/exercise-types.js';
 import { ExerciseEditor, ExerciseTypePicker, ExTypeBadge } from '../components/exercise-editor.jsx';
 import { getExerciseModules, getModuleExercises, bankMeta } from '../lib/exercise-bank.js';
+import { getB2Modules, getB2ModuleExercises, b2BankMeta } from '../lib/met-b2-bank.js';
 import { getLibraryExercises, saveExerciseToLibrary, deleteLibraryExercise, incrementUsage } from '../lib/exercise-library.js';
 
 const SKILL_TYPES = ['writing', 'speaking', 'grammar', 'vocabulary', 'reading', 'listening', 'mixed'];
@@ -38,6 +39,7 @@ export default function HomeworkCreate({ diagnosisId, studentId, students, onNav
   const [selectedLevel, setSelectedLevel] = useState('B1'); // New state for level
   const [expandedEx, setExpandedEx] = useState(null);
   const [showLibrary, setShowLibrary] = useState(false);
+  const [showB2Bank, setShowB2Bank] = useState(false);
   // Per-skill-group generation config: { speaking: 5, grammar: 4, ... }
   const [groupGenConfig, setGroupGenConfig] = useState({});
   const [showGroupGen, setShowGroupGen] = useState(false);
@@ -223,19 +225,6 @@ function getPriorityItems(dx) {
     window.toast?.(`${allGenerated.length} exercises added across ${selectedGroups.length} skill groups.`, 'ok');
   }
 
-  import { useState, useEffect } from 'react';
-import { Icon, Card, SectionHeader, Button, Pill } from '../components/shared.jsx';
-import { callAI } from '../components/shared.jsx';
-import { parseAiJson } from '../lib/ai-helpers.js';
-import { buildHomeworkBlueprintPrompt, buildTaskGeneratorPrompt, buildFinalRefinementPrompt, buildExerciseListPrompt, buildHomeworkGroupPrompt } from '../lib/prompts.js';
-import { getDiagnoses, getStudent, saveHomework, updateClassEventStatus } from '../lib/workflow.js';
-import { EX_TYPES, createExercise, exercisePreview, getExType } from '../lib/exercise-types.js';
-import { ExerciseEditor, ExerciseTypePicker, ExTypeBadge } from '../components/exercise-editor.jsx';
-import { getExerciseModules, getModuleExercises, bankMeta } from '../lib/exercise-bank.js';
-import { getLibraryExercises, saveExerciseToLibrary, deleteLibraryExercise, incrementUsage } from '../lib/exercise-library.js';
-
-// ... (rest of the file until handleAiGenerate)
-
   /* ── AI generation ── */
   async function handleAiGenerate() {
     if (!diagnosis) {
@@ -340,6 +329,14 @@ import { getLibraryExercises, saveExerciseToLibrary, deleteLibraryExercise, incr
     setForm(f => ({ ...f, exercises: [...f.exercises, ...exercises] }));
     window.toast?.(`Added ${exercises.length} exercises from "${mod.title}".`, 'ok');
     setShowLibrary(false);
+  }
+
+  function addModuleFromB2Bank(mod) {
+    const exercises = getB2ModuleExercises(mod.id);
+    if (!exercises.length) { window.toast?.('No exercises in this module.', 'warn'); return; }
+    setForm(f => ({ ...f, exercises: [...f.exercises, ...exercises] }));
+    window.toast?.(`Added ${exercises.length} MET B2 exercises from "${mod.label}".`, 'ok');
+    setShowB2Bank(false);
   }
 
   /* ── Custom exercise library (teacher's saved bank) ── */
@@ -462,16 +459,39 @@ import { getLibraryExercises, saveExerciseToLibrary, deleteLibraryExercise, incr
             <Card style={{ padding: 18 }}>
               <SectionHeader title="Step 2: Select Exercises" />
               <div style={{ marginTop: 16 }}>
-                <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+                <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
                     <Button variant="ghost" size="sm" onClick={handleGenerateOptions} disabled={!diagnosis || loadingOptions}>
                       <Icon.refresh size={12} /> Suggest Exercises from Diagnosis
                     </Button>
                     <Button variant="primary" size="sm" onClick={() => setShowTypePicker(!showTypePicker)}>
                       <Icon.plus size={12} /> Add Exercise
                     </Button>
+                    <Button variant="ghost" size="sm" onClick={() => { setShowB2Bank(v => !v); setShowTypePicker(false); }}>
+                      <Icon.homework size={12} /> Browse MET B2 Pack
+                    </Button>
                 </div>
 
                 {showTypePicker && <ExerciseTypePicker onSelect={addExercise} onClose={() => setShowTypePicker(false)} />}
+
+                {showB2Bank && (
+                  <div style={{ marginBottom: 16, border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: 'var(--accent-subtle)', borderBottom: '1px solid var(--border)' }}>
+                      <span style={{ fontWeight: 600, fontSize: 'var(--text-sm)' }}>{b2BankMeta.title}</span>
+                      <button onClick={() => setShowB2Bank(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)', fontSize: 16 }}>✕</button>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 0, maxHeight: 340, overflowY: 'auto' }}>
+                      {getB2Modules().map(mod => (
+                        <div key={mod.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', borderBottom: '1px solid var(--divider)', gap: 10 }}>
+                          <div>
+                            <div style={{ fontWeight: 500, fontSize: 'var(--text-sm)' }}>{mod.label}</div>
+                            <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', textTransform: 'capitalize' }}>{mod.skill} · {mod.exercises.length} exercises</div>
+                          </div>
+                          <Button variant="ghost" size="sm" onClick={() => addModuleFromB2Bank(mod)}>Add</Button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
                 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   {form.exercises.map((ex, i) => (

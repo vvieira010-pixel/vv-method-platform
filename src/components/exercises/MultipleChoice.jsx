@@ -45,7 +45,7 @@ export default function MultipleChoice({ exercise, onComplete }) {
   return (
     <div>
       {context && (
-        <p style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 10, lineHeight: 1.6 }}>{context}</p>
+        <p style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 10, lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{context}</p>
       )}
       <p style={{ fontSize: 15.5, fontWeight: 600, color: NAVY, marginBottom: 16, lineHeight: 1.6 }}>{question}</p>
 
