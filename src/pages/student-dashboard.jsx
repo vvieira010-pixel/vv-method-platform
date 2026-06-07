@@ -54,7 +54,7 @@ function getSkillTrend(section, diagnoses) {
   const nowStage = getProgressStage(scores[0]).order;
   const prevStage = getProgressStage(scores[1]).order;
   if (nowStage > prevStage) return { dir: 'up', label: 'Moved up a stage', evaluations: scores.length };
-  if (nowStage < prevStage) return { dir: 'down', label: 'Slipped a stage', evaluations: scores.length };
+  if (nowStage < prevStage) return { dir: 'down', label: 'Practice focus', evaluations: scores.length };
   if (delta > 3) return { dir: 'up', label: 'Moving up', evaluations: scores.length };
   if (delta < -3) return { dir: 'down', label: 'Needs attention', evaluations: scores.length };
   return { dir: 'steady', label: 'Holding steady', evaluations: scores.length };
@@ -1057,7 +1057,7 @@ function ProgressProfileCard({ skill, trend }) {
     : trend?.dir === 'up'
       ? 'You are moving in the right direction since your last class.'
       : trend?.dir === 'down'
-        ? 'This skill needs attention — we will focus here next class.'
+        ? 'Practice focus for next class.'
         : 'Holding steady — keep practising to reach the next stage.';
 
   return (

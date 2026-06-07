@@ -12,6 +12,7 @@ import {
   buildHomeworkBlueprintPrompt,
   buildHomeworkGroupPrompt,
   buildTaskGeneratorPrompt,
+  buildListeningGeneratorPrompt,
 } from '../lib/prompts.js';
 import { getDiagnoses, getStudent, saveHomework, updateClassEventStatus } from '../lib/workflow.js';
 import { EX_TYPES, createExercise, exercisePreview, getExType } from '../lib/exercise-types.js';
@@ -42,6 +43,7 @@ export default function HomeworkCreate({ diagnosisId, studentId, students, onNav
   const [preview, setPreview] = useState(false);
   const [saving, setSaving] = useState(false);
   const [generating, setGenerating] = useState(false);
+  const [generatingListening, setGeneratingListening] = useState(false);
   const [exerciseOptions, setExerciseOptions] = useState([]);
   const [loadingOptions, setLoadingOptions] = useState(false);
   const [showTypePicker, setShowTypePicker] = useState(false);
@@ -205,6 +207,40 @@ function getPriorityItems(dx) {
   }
 
   /* ── AI generation ── */
+  async function handleGenerateListening() {
+    if (!diagnosis) {
+      window.toast?.('Link a diagnosis first.', 'warn');
+      return;
+    }
+    
+    setGeneratingListening(true);
+    setGroupGenStatus('Creating listening script...');
+    
+    try {
+      const prompt = buildListeningGeneratorPrompt({ student, diagnosis });
+      const data = await callAI(prompt, { ...HOMEWORK_AI_BASE_OPTIONS, max_tokens: 2500, temperature: 0.8 });
+      const parsed = parseAiJson(data.content?.map(b => b.text || '').join('') || '');
+      
+      if (!parsed || parsed.type !== 'listen') throw new Error('AI returned invalid listening task.');
+      
+      const fresh = createExercise('listen');
+      const listeningEx = { 
+        ...fresh, 
+        ...parsed,
+        id: 'ex_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6)
+      };
+
+      setForm(f => ({ ...f, exercises: [...f.exercises, listeningEx] }));
+      setExpandedEx(listeningEx.id);
+      window.toast?.(`Listening task generated successfully!`, 'ok');
+    } catch (e) {
+      window.toast?.(`Listening generation failed: ${e.message}`, 'warn');
+    }
+    
+    setGroupGenStatus('');
+    setGeneratingListening(false);
+  }
+
   async function handleAiGenerate() {
     if (!diagnosis) {
       window.toast?.('Link a diagnosis first.', 'warn');
@@ -442,6 +478,9 @@ function getPriorityItems(dx) {
                 <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
                     <Button variant="primary" size="sm" onClick={handleAiGenerate} disabled={!diagnosis || generating}>
                       <Icon.spark size={12} /> {generating ? 'Generating...' : 'Generate MET Homework with AI'}
+                    </Button>
+                    <Button variant="primary" size="sm" onClick={handleGenerateListening} disabled={!diagnosis || generatingListening}>
+                      <Icon.headphones size={12} /> {generatingListening ? 'Generating...' : 'Generate Listening Task'}
                     </Button>
                     <Button variant="ghost" size="sm" onClick={handleGenerateOptions} disabled={!diagnosis || loadingOptions}>
                       <Icon.refresh size={12} /> {loadingOptions ? 'Suggesting...' : 'Suggest Exercises from Diagnosis'}
