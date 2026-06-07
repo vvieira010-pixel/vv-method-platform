@@ -2589,6 +2589,285 @@
           ]
         }
       ]
+    },
+    {
+      "id": "speaking_picture_tasks",
+      "title": "MET Speaking — Picture Description (Task 1)",
+      "levelRange": "B1-B2",
+      "targetVocabulary": [],
+      "learningObjectives": [
+        "Describe a scene or situation using specific, organised language.",
+        "Speculate about what is happening and why.",
+        "Use MET Task 1 structure: describe → interpret → connect to topic."
+      ],
+      "exerciseCount": 4,
+      "exercises": [
+        {
+          "id": "speaking_picture_01_ski_resort",
+          "type": "speak",
+          "title": "Picture 1 — Ski Resort",
+          "difficulty": "B1-B2",
+          "skillFocus": ["Speaking", "Description", "Speculation"],
+          "imageUrl": "/exercises/speaking/speaking_picture_01_ski_resort.png",
+          "imageAlt": "A busy ski resort with people on the slopes and a lodge in the background",
+          "prompt": "Look at the picture. Describe what you can see, what the people might be doing, and why someone might choose to spend time in a place like this.",
+          "targetSeconds": 60,
+          "scaffolding": {
+            "vocabulary": ["slopes", "crowded", "leisure", "outdoors", "equipment"],
+            "structure": [
+              "In this picture, I can see…",
+              "The people appear to be…",
+              "I think this place is… because…",
+              "Someone might enjoy this because…"
+            ]
+          }
+        },
+        {
+          "id": "speaking_picture_02_airport_check_in",
+          "type": "speak",
+          "title": "Picture 2 — Airport Check-in",
+          "difficulty": "B1-B2",
+          "skillFocus": ["Speaking", "Description", "Speculation"],
+          "imageUrl": "/exercises/speaking/speaking_picture_02_airport_check_in.png",
+          "imageAlt": "People queuing at an airport check-in desk with luggage",
+          "prompt": "Look at the picture. Describe what is happening, how the people might be feeling, and talk about a time you or someone you know experienced a situation like this.",
+          "targetSeconds": 60,
+          "scaffolding": {
+            "vocabulary": ["queue", "luggage", "departure", "anxious", "organised"],
+            "structure": [
+              "The picture shows…",
+              "The people look as if they are…",
+              "They might be feeling… because…",
+              "This reminds me of…"
+            ]
+          }
+        },
+        {
+          "id": "speaking_picture_03_beach_cleanup",
+          "type": "speak",
+          "title": "Picture 3 — Beach Cleanup",
+          "difficulty": "B1-B2",
+          "skillFocus": ["Speaking", "Description", "Opinion"],
+          "imageUrl": "/exercises/speaking/speaking_picture_03_beach_cleanup.png",
+          "imageAlt": "Volunteers collecting rubbish on a beach",
+          "prompt": "Look at the picture. Describe what the people are doing and explain why activities like this are important. Do you think individuals or governments should be responsible for protecting the environment?",
+          "targetSeconds": 60,
+          "scaffolding": {
+            "vocabulary": ["volunteer", "pollution", "environment", "responsibility", "community"],
+            "structure": [
+              "In this image, I can see people who are…",
+              "This activity is important because…",
+              "In my opinion, … should be responsible because…",
+              "For example…"
+            ]
+          }
+        },
+        {
+          "id": "speaking_picture_04_city_cafe",
+          "type": "speak",
+          "title": "Picture 4 — City Café",
+          "difficulty": "B1-B2",
+          "skillFocus": ["Speaking", "Description", "Comparison"],
+          "imageUrl": "/exercises/speaking/speaking_picture_04_city_cafe.png",
+          "imageAlt": "People sitting in a busy city café, some working on laptops",
+          "prompt": "Look at the picture. Describe the scene and the different things people are doing. Would you prefer to work or study in a place like this, or do you prefer somewhere quieter? Give reasons for your answer.",
+          "targetSeconds": 60,
+          "scaffolding": {
+            "vocabulary": ["atmosphere", "distraction", "productive", "social", "concentrate"],
+            "structure": [
+              "The picture shows a… where people are…",
+              "Some people appear to be… while others are…",
+              "Personally, I would / would not prefer this because…",
+              "Compared to a quiet place, a café…"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "science_research",
+      "title": "Science and Research",
+      "levelRange": "B1-B2",
+      "targetVocabulary": [
+        { "word": "discovery", "partOfSpeech": "noun", "definition": "something new that is found or learned" },
+        { "word": "research", "partOfSpeech": "noun", "definition": "careful study to learn new information" },
+        { "word": "evidence", "partOfSpeech": "noun", "definition": "facts or information that show something is true" },
+        { "word": "experiment", "partOfSpeech": "noun", "definition": "a test done to learn or prove something" },
+        { "word": "observe", "partOfSpeech": "verb", "definition": "to watch or study something carefully" },
+        { "word": "theory", "partOfSpeech": "noun", "definition": "an explanation based on evidence and study" },
+        { "word": "analyze", "partOfSpeech": "verb", "definition": "to study something carefully to understand it" },
+        { "word": "data", "partOfSpeech": "noun", "definition": "information collected for study or analysis" },
+        { "word": "pattern", "partOfSpeech": "noun", "definition": "a repeated form, behavior, or result" },
+        { "word": "behavior", "partOfSpeech": "noun", "definition": "the way a person, animal, or thing acts" },
+        { "word": "develop", "partOfSpeech": "verb", "definition": "to grow, change, or improve over time" },
+        { "word": "invention", "partOfSpeech": "noun", "definition": "a new machine, tool, or method" },
+        { "word": "investigate", "partOfSpeech": "verb", "definition": "to examine something carefully to find the truth" },
+        { "word": "explain", "partOfSpeech": "verb", "definition": "to make something clear or easy to understand" },
+        { "word": "result", "partOfSpeech": "noun", "definition": "what happens because of an action or process" },
+        { "word": "process", "partOfSpeech": "noun", "definition": "a series of steps or changes" },
+        { "word": "accurate", "partOfSpeech": "adjective", "definition": "correct and exact" },
+        { "word": "significant", "partOfSpeech": "adjective", "definition": "important or large enough to notice" },
+        { "word": "complex", "partOfSpeech": "adjective", "definition": "having many connected parts; not simple" },
+        { "word": "predict", "partOfSpeech": "verb", "definition": "to say what will probably happen in the future" }
+      ],
+      "learningObjectives": [
+        "Use B1-B2 science and research vocabulary accurately in context.",
+        "Understand how key terms relate to the scientific process.",
+        "Apply target words in MET-style reading and opinion tasks."
+      ],
+      "exerciseCount": 4,
+      "exercises": [
+        {
+          "id": "science_research_fill_blank",
+          "type": "fill_in_the_blank",
+          "title": "Science Words in Context",
+          "difficulty": "B1-B2",
+          "skillFocus": ["Vocabulary", "Grammar in Context"],
+          "platformInteraction": "text_input_or_dropdown",
+          "instructions": "Complete each sentence with one word from the word bank.",
+          "wordBank": ["evidence", "experiment", "accurate", "predict", "significant"],
+          "items": [
+            {
+              "id": "q1",
+              "sentence": "The scientists ran an ______ to test whether sunlight affects plant growth.",
+              "correctAnswer": "experiment",
+              "explanation": "An experiment is a test done to learn or prove something."
+            },
+            {
+              "id": "q2",
+              "sentence": "The researchers could not ______ exactly when the volcano would erupt.",
+              "correctAnswer": "predict",
+              "explanation": "'Predict' means to say what will probably happen in the future."
+            },
+            {
+              "id": "q3",
+              "sentence": "The study found a ______ improvement in students who slept more than eight hours.",
+              "correctAnswer": "significant",
+              "explanation": "'Significant' means important or large enough to notice."
+            },
+            {
+              "id": "q4",
+              "sentence": "You need ______ measurements in science — even small errors change the results.",
+              "correctAnswer": "accurate",
+              "explanation": "'Accurate' means correct and exact."
+            },
+            {
+              "id": "q5",
+              "sentence": "Scientists need ______ before they can accept a new theory.",
+              "correctAnswer": "evidence",
+              "explanation": "Evidence means facts or information that show something is true."
+            }
+          ]
+        },
+        {
+          "id": "science_research_mcq",
+          "type": "multiple_choice_single",
+          "title": "Choose the Right Word",
+          "difficulty": "B1-B2",
+          "skillFocus": ["Vocabulary", "Reading Comprehension"],
+          "platformInteraction": "radio_buttons",
+          "instructions": "Choose the best word to complete each sentence.",
+          "items": [
+            {
+              "id": "q1",
+              "prompt": "Researchers ______ the birds for six months and wrote detailed notes about their habits.",
+              "options": [
+                { "id": "A", "text": "invented" },
+                { "id": "B", "text": "observed" },
+                { "id": "C", "text": "predicted" },
+                { "id": "D", "text": "developed" }
+              ],
+              "correctOptionIds": ["B"],
+              "explanation": "'Observed' means to watch or study something carefully, which matches 'wrote detailed notes about their habits'."
+            },
+            {
+              "id": "q2",
+              "prompt": "The ______ showed a clear link between diet and energy levels.",
+              "options": [
+                { "id": "A", "text": "invention" },
+                { "id": "B", "text": "theory" },
+                { "id": "C", "text": "data" },
+                { "id": "D", "text": "behavior" }
+              ],
+              "correctOptionIds": ["C"],
+              "explanation": "Data means information collected for study or analysis — data can show a link or pattern."
+            },
+            {
+              "id": "q3",
+              "prompt": "The human brain is ______ — scientists are still learning how it works.",
+              "options": [
+                { "id": "A", "text": "accurate" },
+                { "id": "B", "text": "significant" },
+                { "id": "C", "text": "complex" },
+                { "id": "D", "text": "observable" }
+              ],
+              "correctOptionIds": ["C"],
+              "explanation": "'Complex' means having many connected parts; not simple — this fits a brain that is not fully understood."
+            },
+            {
+              "id": "q4",
+              "prompt": "Scientists ______ the causes of the disease for several years before finding a treatment.",
+              "options": [
+                { "id": "A", "text": "explained" },
+                { "id": "B", "text": "developed" },
+                { "id": "C", "text": "investigated" },
+                { "id": "D", "text": "analyzed" }
+              ],
+              "correctOptionIds": ["C"],
+              "explanation": "'Investigated' fits because the scientists were examining the disease carefully to find the truth over time."
+            },
+            {
+              "id": "q5",
+              "prompt": "The ______ of the printing press changed how information was shared across the world.",
+              "options": [
+                { "id": "A", "text": "experiment" },
+                { "id": "B", "text": "invention" },
+                { "id": "C", "text": "discovery" },
+                { "id": "D", "text": "process" }
+              ],
+              "correctOptionIds": ["B"],
+              "explanation": "The printing press was created — it is an invention (a new machine, tool, or method)."
+            }
+          ]
+        },
+        {
+          "id": "science_research_matching",
+          "type": "drag_and_drop_matching",
+          "title": "Match Word to Definition",
+          "difficulty": "B1",
+          "skillFocus": ["Vocabulary Recognition"],
+          "platformInteraction": "matching_columns",
+          "instructions": "Match each word on the left to its correct definition on the right.",
+          "pairs": [
+            { "word": "theory", "definition": "an explanation based on evidence and study" },
+            { "word": "pattern", "definition": "a repeated form, behavior, or result" },
+            { "word": "result", "definition": "what happens because of an action or process" },
+            { "word": "process", "definition": "a series of steps or changes" },
+            { "word": "behavior", "definition": "the way a person, animal, or thing acts" },
+            { "word": "analyze", "definition": "to study something carefully to understand it" },
+            { "word": "develop", "definition": "to grow, change, or improve over time" },
+            { "word": "research", "definition": "careful study to learn new information" }
+          ]
+        },
+        {
+          "id": "science_research_short_answer",
+          "type": "short_answer_reflection",
+          "title": "Your Opinion: Should Science Be Taught Differently?",
+          "difficulty": "B2",
+          "skillFocus": ["Speaking/Writing", "Opinion and Argument"],
+          "platformInteraction": "text_area_with_model_response",
+          "prompt": "Some people think science should be taught mostly through experiments and real-world investigations. Others think it is better to study theory and data in class first. Which approach do you think is better, and why? Use at least four words from this module in your answer.",
+          "instructions": "Write 4–6 sentences. Give your opinion, one reason, and one example. Use at least four words from this module.",
+          "targetWords": 80,
+          "modelResponse": "I think students learn science better through experiments rather than only studying theory. When you do an experiment yourself, you can observe the results directly and analyze what happened. This makes the data feel real, not just numbers in a book. For example, in my school we investigated how temperature affects plant growth — the results were surprising and I still remember them. I believe this process of doing and discovering is more significant than memorizing definitions.",
+          "scoringFocus": [
+            "Clear opinion with reason and example",
+            "Correct use of at least four module words",
+            "Logical sentence structure",
+            "B2-level vocabulary and grammar"
+          ]
+        }
+      ]
     }
   ]
 }

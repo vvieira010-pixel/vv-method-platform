@@ -22,6 +22,13 @@ import { getB2Modules, getB2ModuleExercises, b2BankMeta } from '../lib/met-b2-ba
 import { getLifestyleModules, getLifestyleModuleExercises, lifestylePackMeta } from '../lib/lifestyle-pack.js';
 import { getLibraryExercises, saveExerciseToLibrary, deleteLibraryExercise, incrementUsage } from '../lib/exercise-library.js';
 
+const EMPTY_FORM = {
+  title: '', objective: '', description: '',
+  exercises: [],
+  selfCheck: [''],
+  skillType: 'grammar', dueDate: '', teacherNotes: '',
+};
+
 const SKILL_TYPES = ['writing', 'speaking', 'grammar', 'vocabulary', 'reading', 'listening', 'mixed'];
 const HOMEWORK_AI_BASE_OPTIONS = { preferredProvider: 'gemini' };
 const MET_BALANCED_TYPES = ['speak', 'short', 'listen', 'mcq', 'blank', 'flash', 'fix'];
@@ -648,6 +655,15 @@ function getPriorityItems(dx) {
             <Card style={{ padding: 18 }}>
               <SectionHeader title="Step 3: Review Student View" />
               <div style={{ marginTop: 16 }}>
+                {(() => {
+                  const warn = getHomeworkCognitiveSufficiencyWarning(form.exercises, diagnosis);
+                  return warn ? (
+                    <div style={{ marginBottom: 14, padding: '8px 12px', background: 'var(--warning-bg)', border: '1px solid var(--warning)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-xs)', color: 'var(--warning)', display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+                      <Icon.spark size={13} style={{ flexShrink: 0, marginTop: 1 }} />
+                      <span><strong>Cognitive sufficiency note:</strong> {warn}</span>
+                    </div>
+                  ) : null;
+                })()}
                 <div style={{ padding: 24, background: 'var(--bg)', borderRadius: 'var(--radius-md)' }}>
                   <div style={{ fontWeight: 700, fontSize: 'var(--text-xl)', marginBottom: 4 }}>{form.title || 'Untitled Homework'}</div>
                   {form.description && <p style={{ color: 'var(--text-2)', lineHeight: 1.7, marginBottom: 16 }}>{form.description}</p>}
@@ -1007,6 +1023,25 @@ function isStructuredAiExerciseComplete(ex) {
   return false;
 }
 
+// Returns a warning string if the homework set lacks production exercises when
+// the diagnosis priority is a production skill (speaking or writing).
+// Returns null when no concern is found.
+function getHomeworkCognitiveSufficiencyWarning(exercises, diagnosis) {
+  const priorities = Array.isArray(diagnosis?.priorityDiagnosis)
+    ? diagnosis.priorityDiagnosis
+    : Array.isArray(diagnosis?.sections?.priorityDiagnosis?.content)
+      ? diagnosis.sections.priorityDiagnosis.content
+      : [];
+  const topPriority = (priorities[0]?.area || '').toLowerCase();
+  const isProductionPriority = /speak|writ|produc/.test(topPriority);
+  if (!isProductionPriority) return null;
+  const hasProductionExercise = exercises.some(e => e.type === 'speak' || e.type === 'short');
+  if (!hasProductionExercise) {
+    return `Diagnosis priority is "${priorities[0]?.area}" but no speaking or writing exercise is included. Consider adding at least one.`;
+  }
+  return null;
+}
+
 function buildExercisesFromAiTasks(tasks, fallback) {
   const built = (tasks || []).map(t => createExerciseFromAiTask(t)).filter(Boolean);
   return built.length > 0 ? built : fallback;
@@ -1173,58 +1208,6 @@ function normalizeTargetSeconds(targetSeconds, duration) {
   return 60;
 }
 
-function buildSelectedExerciseFillPrompt({ student, diagnosis, selectedExercises = [] }) {
-  const priorities = getPriorityItems(diagnosis);
-  const errors = Array.isArray(diagnosis?.errorBank)
-    ? diagnosis.errorBank
-    : Array.isArray(diagnosis?.sections?.errorBankSuggestions?.content)
-      ? diagnosis.sections.errorBankSuggestions.content
-      : [];
-  const vocab = Array.isArray(diagnosis?.vocabTargets?.vocabularyTargets)
-    ? diagnosis.vocabTargets.vocabularyTargets
-    : Array.isArray(diagnosis?.sections?.vocabGrammarTargets?.content?.vocabularyTargets)
-      ? diagnosis.sections.vocabGrammarTargets.content.vocabularyTargets
-      : [];
-  const grammar = Array.isArray(diagnosis?.vocabTargets?.grammarTargets)
-    ? diagnosis.vocabTargets.grammarTargets
-    : Array.isArray(diagnosis?.sections?.vocabGrammarTargets?.content?.grammarTargets)
-      ? diagnosis.sections.vocabGrammarTargets.content.grammarTargets
-      : [];
-
-  const selected = selectedExercises.map((ex, idx) => {
-    const meta = getExType(ex.type);
-    return `${idx + 1}. type="${ex.type}" (${meta?.label || ex.type}) — ${exercisePreview(ex) || 'empty'}`;
-  }).join('\n');
-
-  return `You are a MET English homework assistant. Fill these ${selectedExercises.length} exercise cards with student-ready content.
-
-Student: ${student?.name || 'Unknown'} | ${student?.currentLevel || 'B1'} → ${student?.targetLevel || 'B2'} | ${student?.professionalContext || ''}
-
-Priorities: ${priorities.slice(0, 2).map(p => `${p.area}: ${p.whatToImprove}`).join(' | ') || 'none'}
-Errors: ${errors.slice(0, 4).map(e => `"${e.error}" → "${e.correct}"`).join(' | ') || 'none'}
-Vocab: ${vocab.slice(0, 3).map(v => v.wordOrPhrase).join(', ') || 'none'}
-Grammar: ${grammar.slice(0, 2).map(g => `${g.area}: ${g.issue}`).join(' | ') || 'none'}
-
-━━━ EXERCISES TO FILL ━━━
-${selected}
-
-Rules: keep exact count (${selectedExercises.length}), order, and type. Ground in actual errors above. MCQ distractors must reflect this student's real mistakes. Use ${student?.professionalContext || 'specific, real'} contexts. Vary topics across items. B1–B2 level.
-
-Return ONLY valid JSON:
-{
-  "tasks": [
-    { "taskNumber": 1, "type": "exact type", "title": "short title",
-      "content": "full exercise", "options": ["mcq"], "correct": 0,
-      "template": "blank", "blanks": ["blank"], "prompt": "short/speak",
-      "rubric": "short", "targetWords": 120, "targetSeconds": 60,
-      "sentences": ["order"], "errorText": "fix", "correctedText": "fix",
-      "hint": "fix", "pairs": [{"term":"x","def":"y"}] }
-  ],
-  "selfCheck": ["specific checks"],
-  "teacherNotes": "review focus"
-}`;
-}
-
 function Field({ label, children }) {
   return (
     <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
@@ -1243,13 +1226,6 @@ function arrowBtnStyle(disabled) {
     alignItems: 'center', justifyContent: 'center',
   };
 }
-
-const EMPTY_FORM = {
-  title: '', objective: '', description: '',
-  exercises: [],
-  selfCheck: [''],
-  skillType: 'grammar', dueDate: '', teacherNotes: '',
-};
 
 const backStyle = {
   background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)',

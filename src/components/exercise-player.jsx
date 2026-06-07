@@ -246,10 +246,19 @@ function BlankPlayer({ ex, res, update, readOnly }) {
 }
 
 /* ─── 3. SHORT ANSWER ──────────────────────────────────────── */
+
+const WRITING_QUALITY_CHECKS = [
+  { label: 'Task complete', hint: 'I answered what was asked — not a different question.' },
+  { label: 'Supporting detail', hint: 'I developed my main idea with at least one concrete example.' },
+  { label: 'Connectives used correctly', hint: 'My ideas are linked (e.g. however, therefore, as a result) — not just listed.' },
+  { label: 'Grammar errors do not obscure meaning', hint: 'A reader can understand my point even if some errors remain.' },
+];
+
 function ShortPlayer({ ex, res, update, readOnly }) {
   const text = res?.text || '';
   const wc = text.split(/\s+/).filter(Boolean).length;
   const target = ex.targetWords || 120;
+  const [checklistOpen, setChecklistOpen] = useState(false);
 
   return (
     <div>
@@ -280,10 +289,38 @@ function ShortPlayer({ ex, res, update, readOnly }) {
       )}
 
       {ex.rubric && (
-        <p style={{ margin: '0 0 12px', fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>
+        <div style={{ margin: '0 0 12px', padding: '8px 12px', background: 'var(--surface)', borderLeft: '3px solid var(--accent-soft)', borderRadius: '0 var(--radius-sm) var(--radius-sm) 0', fontSize: 'var(--text-xs)', color: 'var(--text-2)', lineHeight: 1.6 }}>
+          <span style={{ fontWeight: 700, color: 'var(--accent-deep)', marginRight: 6 }}>Teacher note:</span>
           {ex.rubric}
-        </p>
+        </div>
       )}
+
+      {/* Quality checklist — collapsible, shown before textarea */}
+      {!readOnly && (
+        <div style={{ marginBottom: 12 }}>
+          <button
+            type="button"
+            onClick={() => setChecklistOpen(v => !v)}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--accent-deep)', fontFamily: 'var(--font-ui)' }}
+          >
+            <span style={{ display: 'inline-flex', transform: checklistOpen ? 'rotate(90deg)' : 'none', transition: 'transform .15s', fontSize: 10 }}>▶</span>
+            Quality checklist — what good MET writing requires
+          </button>
+          {checklistOpen && (
+            <div style={{ marginTop: 8, padding: '8px 12px', background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)' }}>
+              {WRITING_QUALITY_CHECKS.map((c, i) => (
+                <div key={i} style={{ display: 'flex', gap: 8, marginBottom: i < WRITING_QUALITY_CHECKS.length - 1 ? 6 : 0 }}>
+                  <span style={{ fontWeight: 700, color: 'var(--accent)', flexShrink: 0, fontSize: 'var(--text-xs)', marginTop: 1 }}>✓</span>
+                  <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-2)', lineHeight: 1.55 }}>
+                    <strong style={{ color: 'var(--text)' }}>{c.label}:</strong> {c.hint}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
       <textarea
         className="input" rows={6} value={text}
         onChange={e => update({ text: e.target.value })}
@@ -302,7 +339,17 @@ function ShortPlayer({ ex, res, update, readOnly }) {
 }
 
 /* ─── 4. SPEAKING ──────────────────────────────────────────── */
+
+const SPEAKING_STRATEGY_CHECKS = [
+  { label: 'Task type', hint: 'Describe a picture · Share a story · Give an opinion · Weigh pros & cons · Persuade an authority figure — which is this?' },
+  { label: 'First 10–15 seconds', hint: 'Start with your position or description immediately. Don\'t say "I think I will talk about…"' },
+  { label: 'Development', hint: 'One clear main point per reason, developed with a specific example — not two vague points.' },
+  { label: 'Q4 check (if pros & cons)', hint: 'You must cover BOTH sides with roughly equal time. Covering only one side loses ~1/3 of your task score.' },
+  { label: 'Q5 check (if persuading authority)', hint: 'Formal register throughout. Say "I strongly believe…" not "I think maybe…"' },
+];
+
 function SpeakPlayer({ ex, res, update, readOnly }) {
+  const [strategyOpen, setStrategyOpen] = useState(false);
   const [status, setStatus] = useState('idle'); // idle | recording | done
   const [seconds, setSeconds] = useState(0);
   const [typing, setTyping] = useState(false); // "type instead" alternative to recording
@@ -383,6 +430,16 @@ function SpeakPlayer({ ex, res, update, readOnly }) {
 
   return (
     <div>
+      {ex.imageUrl && (
+        <div style={{ marginBottom: 14, borderRadius: 10, overflow: 'hidden', border: '1px solid var(--border)', background: 'var(--bg)' }}>
+          <img
+            src={ex.imageUrl}
+            alt={ex.imageAlt || 'Speaking prompt image'}
+            style={{ width: '100%', maxHeight: 340, objectFit: 'cover', display: 'block' }}
+          />
+        </div>
+      )}
+
       <div style={{ background: 'var(--bg)', borderRadius: 10, padding: '14px 16px', marginBottom: 14 }}>
         <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>Speaking prompt</div>
         <p style={{ margin: 0, fontSize: 'var(--text-md)', color: 'var(--text)', lineHeight: 1.55, fontWeight: 500 }}>
@@ -408,6 +465,32 @@ function SpeakPlayer({ ex, res, update, readOnly }) {
               <ul style={{ margin: '4px 0 0 16px', padding: 0, color: 'var(--text-2)' }}>
                 {ex.scaffolding.structure.map((line, i) => <li key={i}>{line}</li>)}
               </ul>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Strategy checklist — collapsible, shown before recording */}
+      {!readOnly && status === 'idle' && (
+        <div style={{ marginBottom: 14 }}>
+          <button
+            type="button"
+            onClick={() => setStrategyOpen(v => !v)}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--accent-deep)', fontFamily: 'var(--font-ui)' }}
+          >
+            <span style={{ display: 'inline-flex', transform: strategyOpen ? 'rotate(90deg)' : 'none', transition: 'transform .15s', fontSize: 10 }}>▶</span>
+            Strategy reminder — what good MET speaking requires
+          </button>
+          {strategyOpen && (
+            <div style={{ marginTop: 8, padding: '8px 12px', background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)' }}>
+              {SPEAKING_STRATEGY_CHECKS.map((c, i) => (
+                <div key={i} style={{ display: 'flex', gap: 8, marginBottom: i < SPEAKING_STRATEGY_CHECKS.length - 1 ? 6 : 0 }}>
+                  <span style={{ fontWeight: 700, color: 'var(--accent)', flexShrink: 0, fontSize: 'var(--text-xs)', marginTop: 1 }}>→</span>
+                  <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-2)', lineHeight: 1.55 }}>
+                    <strong style={{ color: 'var(--text)' }}>{c.label}:</strong> {c.hint}
+                  </span>
+                </div>
+              ))}
             </div>
           )}
         </div>

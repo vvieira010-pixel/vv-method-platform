@@ -45,7 +45,7 @@ const GLOBAL_CSS = `
     --dark-accent-border: rgba(168,218,220,0.15);
     --radius-sm:    6px;
     --radius-md:    8px;
-    --radius-lg:    8px;
+    --radius-lg:    12px;
     --radius-pill:  999px;
     --text-xs:      12px;
     --text-sm:      13px;
@@ -354,6 +354,7 @@ export const Icon = {
   bolt:     (p) => <SvgIcon d="M13 2L3 14h7l-1 8 12-14h-8l2-6z" {...p} />,
   send:     (p) => <SvgIcon d="M22 2L11 13 M22 2L15 22l-4-9-9-4 22-7z" {...p} />,
   mic:      (p) => <SvgIcon {...p}><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></SvgIcon>,
+  headphones: (p) => <SvgIcon {...p}><path d="M3 18v-6a9 9 0 0118 0v6"/><path d="M21 19a2 2 0 01-2 2h-1a2 2 0 01-2-2v-3a2 2 0 012-2h3v5z"/><path d="M3 19a2 2 0 002 2h1a2 2 0 002-2v-3a2 2 0 00-2-2H3v5z"/></SvgIcon>,
   star:     (p) => <SvgIcon d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" {...p} />,
   spark:    (p) => <SvgIcon d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" {...p} />,
   info:     (p) => <SvgIcon {...p}><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></SvgIcon>,

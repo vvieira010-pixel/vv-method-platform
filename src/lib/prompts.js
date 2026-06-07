@@ -424,13 +424,23 @@ Return ONLY one valid JSON object for type "${taskType}".`;
 };
 
 export const buildFinalRefinementPrompt = ({ student, blueprint, tasks }) => {
+  const types = (tasks || []).map(t => (t?.type || t?.skillGroup || '')).filter(Boolean).join(', ');
   return `Review and refine this homework for ${student?.name || 'the student'}.
 Blueprint: ${blueprint.title}
+Exercise types included: ${types || 'mixed'}
 Tasks: ${JSON.stringify(tasks)}
 
 Rules:
 - Generate short, natural student-facing instructions.
-- Generate 3-5 concrete self-check items.
+- Generate 3-5 DISCIPLINE-SPECIFIC self-check items. Each must name the MET standard being checked — not generic reminders like "check before submitting". Examples of good self-check items:
+  • For speaking: "Did I state my position in the first 10–15 seconds?"
+  • For Q4 speaking: "Did I cover both sides with roughly equal time (~40 seconds per side)?"
+  • For Q5 speaking: "Did I use formal register throughout — no hedging, no 'maybe'?"
+  • For writing: "Did I develop my main idea with at least one concrete example?"
+  • For writing: "Do my connectives link ideas, or do they just list them?"
+  • For listening/reading MCQ: "Did I choose the answer based on what was actually said/written, or was I tricked by familiar words?"
+  • For fill-in-blank: "Does my answer fit both the grammar AND the meaning of the sentence?"
+  Match self-check items to the actual exercise types in this homework set.
 - Generate teacher review notes focused on what to inspect after submission.
 - Keep language adult, calm, and MET-focused.
 Return JSON: { "instructions": string, "selfCheck": [string], "teacherNotes": string }`;

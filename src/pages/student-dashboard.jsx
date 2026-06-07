@@ -18,15 +18,37 @@ import { printHomework } from '../lib/print-homework.js';
 import '../styles/sanctuary.css';
 
 const TABS = [
-// ... (TABS array remains the same)
-
-const TABS = [
   { id: 'home',     label: 'Home',     icon: <Icon.home size={16} /> },
   { id: 'homework', label: 'Homework', icon: <Icon.homework size={16} /> },
   { id: 'feedback', label: 'Feedback', icon: <Icon.inbox size={16} /> },
   { id: 'progress', label: 'Progress', icon: <Icon.progress size={16} /> },
-  { id: 'messages', label: 'Messages', icon: <Icon.inbox size={16} /> },
+  { id: 'messages', label: 'Messages', icon: <Icon.feedback size={16} /> },
 ];
+
+// Plain-language definitions for MET rubric terms that appear in teacher feedback.
+// Keys are lowercase substrings to match against feedback text.
+const MET_CONCEPT_GLOSSARY = {
+  'task completion':   'Answering the actual task — all required parts, with enough supporting detail.',
+  'register':          'The level of formality — formal for authority figures (Q5), neutral for pros/cons (Q4).',
+  'cohesion':          'How well your ideas connect using linking words (however, therefore, as a result).',
+  'intelligibility':   'How clearly a listener can understand you — independent of grammar or vocabulary.',
+  'fluency':           'Smooth delivery without long pauses or frequent restarts.',
+  'task relevance':    'Staying on topic throughout — not drifting from what the task asked for.',
+  'supporting detail': 'The specific example or reason that backs up your main point.',
+  'distractor':        'An answer choice that sounds right because of familiar words but is actually wrong.',
+  'inference':         'Reading or listening for meaning that is implied but not directly stated.',
+  'speaker purpose':   'Why the speaker said something — their intent, not just the topic.',
+  'collocations':      'Words that naturally go together in English (e.g. "make a decision", not "do a decision").',
+  'connector':         'A word or phrase that links ideas (e.g. although, therefore, in contrast).',
+};
+
+function getRelevantGlossaryTerms(feedbackText) {
+  if (!feedbackText) return [];
+  const lower = feedbackText.toLowerCase();
+  return Object.entries(MET_CONCEPT_GLOSSARY)
+    .filter(([term]) => lower.includes(term))
+    .map(([term, definition]) => ({ term, definition }));
+}
 
 const PROGRESS_STAGES = [
   { label: 'Starting', order: 1, min: 1 },
@@ -229,7 +251,6 @@ function HomeView({ student, onTab }) {
         .sort((a, b) => a.startAt - b.startAt);
       setNextClass(upcoming[0] || null);
 
-      // Only show feedback after teacher approval and when the section is not hidden.
       const approvedDx = (diagnoses || [])
         .filter(hasVisibleApprovedStudentFeedback)
         .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
@@ -255,21 +276,11 @@ function HomeView({ student, onTab }) {
   const feedbackFocus = latestFeedback && typeof latestFeedback === 'object'
     ? latestFeedback.nextStep || latestFeedback.focusArea?.area || latestFeedback.focusArea?.explanation || latestFeedback.finalNote
     : '';
-  const whatsNext = latestReview
-    ? { title: 'Read your teacher review', text: latestReview.homeworkTitle, action: 'Open reviewed homework', tab: 'homework' }
-    : pendingHw.length > 0
-      ? { title: 'Finish assigned practice', text: pendingTitle, action: 'Open homework', tab: 'homework' }
-      : feedbackFocus
-        ? { title: 'Practice the current focus', text: feedbackFocus, action: 'Open feedback', tab: 'feedback' }
-        : { title: 'Prepare for the next class focus', text: nextClass?.classFocus || nextClass?.metSkillFocus || 'Prepare one clear MET-style answer with a main idea, one example, and a short conclusion.', action: 'View progress', tab: 'progress' };
+
   const heroAction = pendingHw.length > 0
     ? { label: 'Open homework', tab: 'homework', icon: <Icon.homework size={15} /> }
     : { label: 'View progress', tab: 'progress', icon: <Icon.progress size={15} /> };
-  const generalMemo = generalMemoText || 'No general memo posted yet.';
-  const individualMemo = student.notes
-    || student.goalNote
-    || (feedbackFocus ? `Current personal focus: ${feedbackFocus}` : '')
-    || `Goal: ${student.examGoal || student.goal || 'MET preparation'}.`;
+
   const nextDate = nextClass?.startAt
     ? nextClass.startAt.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })
     : 'Not scheduled';
@@ -298,60 +309,70 @@ function HomeView({ student, onTab }) {
         <MetricCard icon={<Icon.inbox size={19} />} label="Feedback" value={latestFeedback ? 'Ready' : 'Waiting'} sub={latestFeedback ? 'teacher approved' : 'after diagnosis'} tone="orange" />
       </section>
 
-      <section className="student-grid">
-        <article className="student-panel student-panel--primary">
-          <div className="student-panel-head">
-            <div>
-              <span className="student-panel-kicker">Next class</span>
-              <h2>{nextClass?.title || 'Your next MET class'}</h2>
+      {pendingHw.length === 0 && (
+        <div className="student-practice-studio">
+          <div>
+            <h2>The Practice Studio</h2>
+            <p>Your mind is ready. While your teacher prepares your next assignment, sharpen your skills with a self-paced session.</p>
+            <div className="studio-orbs">
+              <button className="studio-orb" onClick={() => onTab('homework')} aria-label="Listening Sprint">
+                <span className="studio-orb-icon" aria-hidden="true">🎧</span>
+                <span className="studio-orb-label">Listening Sprint</span>
+              </button>
+              <button className="studio-orb" onClick={() => onTab('progress')} aria-label="Vocab Deep-Dive">
+                <span className="studio-orb-icon" aria-hidden="true">📚</span>
+                <span className="studio-orb-label">Vocab Deep-Dive</span>
+              </button>
+              <button className="studio-orb" onClick={() => onTab('feedback')} aria-label="Speaking Mirror">
+                <span className="studio-orb-icon" aria-hidden="true">🎙</span>
+                <span className="studio-orb-label">Speaking Mirror</span>
+              </button>
             </div>
-            <span className="student-pill">{nextDate}</span>
           </div>
-          <div className="student-next-layout">
-            <div>
-              <p className="student-focus-line">{nextClass?.classFocus || nextClass?.metSkillFocus || 'Your teacher will confirm the class focus.'}</p>
-              <div className="student-detail-list">
-                <span><Icon.calendar size={14} /> {nextTime}</span>
-                <span><Icon.progress size={14} /> {nextClass?.metSkillFocus || focusSkill}</span>
+        </div>
+      )}
+
+      <section className="student-grid">
+        <div className="student-home-main">
+          <article className="student-panel student-panel--primary">
+            <div className="student-panel-head">
+              <div>
+                <span className="student-panel-kicker">Upcoming</span>
+                <h2>{nextClass?.title || 'Your next MET class'}</h2>
+              </div>
+              <span className="student-pill">{nextDate}</span>
+            </div>
+            <div className="student-next-layout">
+              <div>
+                <p className="student-focus-line">{nextClass?.classFocus || nextClass?.metSkillFocus || 'Your teacher will confirm the class focus.'}</p>
+                <div className="student-detail-list">
+                  <span><Icon.calendar size={14} /> {nextTime}</span>
+                  <span><Icon.progress size={14} /> {nextClass?.metSkillFocus || focusSkill}</span>
+                </div>
+              </div>
+              <div className="student-prep-box">
+                <strong>What's Next</strong>
+                <p>{latestReview ? latestReview.homeworkTitle : pendingHw[0]?.title || 'Prepare your MET speaking samples'}</p>
+                <button type="button" onClick={() => onTab('homework')}>Enter Study Area</button>
               </div>
             </div>
-            <div className="student-prep-box">
-              <strong>What's Next</strong>
-              <p>{whatsNext.text}</p>
-              <button type="button" onClick={() => onTab(whatsNext.tab)}>{whatsNext.action}</button>
-            </div>
-          </div>
-        </article>
-
-        <section className="student-memo-board" aria-label="Memo board">
-          <article>
-            <span className="student-panel-kicker">General memo</span>
-            <h2>Memo Board</h2>
-            <p>{generalMemo}</p>
           </article>
-          <article>
-            <span className="student-panel-kicker">Individual memo</span>
-            <h2>{student.firstName}'s note</h2>
-            <p>{individualMemo}</p>
-          </article>
-        </section>
 
-        <section className="student-home-columns">
-          <div className="student-home-main">
+          <div
+            className="student-home-columns"
+            style={{ display: 'grid', gap: '24px', marginTop: '32px' }}
+          >
             <article className="student-panel student-panel--todo">
               <div className="student-panel-head">
                 <div>
-                  <span className="student-panel-kicker">Today</span>
+                  <span className="student-panel-kicker">Daily Agenda</span>
                   <h2>What to do now</h2>
                 </div>
               </div>
               <div className="student-todo-list">
-                {latestReview && (
-                  <TodoRow done={false} label="Teacher review ready" meta={latestReview.homeworkTitle} />
-                )}
+                {latestReview && <TodoRow done={false} label="Teacher review ready" meta={latestReview.homeworkTitle} />}
                 <TodoRow done={!!latestFeedback} label="Review latest feedback" meta={latestFeedback ? 'Available in the Feedback tab' : 'Waiting for teacher approval'} />
                 <TodoRow done={pendingHw.length === 0} label={pendingTitle} meta={pendingHw[0]?.dueDate ? `Due ${new Date(pendingHw[0].dueDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}` : 'Homework area'} />
-                <TodoRow done={false} label="What's next" meta={whatsNext.title} />
               </div>
               <button className="student-wide-action" onClick={() => onTab('homework')}>Go to homework <Icon.arrowR size={14} /></button>
             </article>
@@ -359,7 +380,7 @@ function HomeView({ student, onTab }) {
             <article className="student-panel">
               <div className="student-panel-head">
                 <div>
-                  <span className="student-panel-kicker">Teacher feedback</span>
+                  <span className="student-panel-kicker">Teacher Insights</span>
                   <h2>Latest approved note</h2>
                 </div>
                 <button className="student-text-action" onClick={() => onTab('feedback')}>Open feedback</button>
@@ -371,32 +392,48 @@ function HomeView({ student, onTab }) {
                 </div>
               ) : (
                 <div className="student-empty-card">
-                  Your teacher will add feedback after there is enough class evidence. For now, prepare one clear speaking example for your next MET topic.
+                  Your teacher will add feedback after there is enough class evidence.
                 </div>
               )}
             </article>
           </div>
+        </div>
 
-          <aside className="student-home-side">
-            <article className="student-panel">
-              <div className="student-panel-head">
-                <div>
-                  <span className="student-panel-kicker">Progress snapshot</span>
-                  <h2>Evaluated skills</h2>
-                </div>
+        <aside className="student-home-side">
+          <article className="student-panel">
+            <div className="student-panel-head">
+              <div>
+                <span className="student-panel-kicker">Readiness Snapshot</span>
+                <h2>Evaluated skills</h2>
               </div>
-              {evaluatedSkills.length > 0 ? (
-                <div className="student-skill-list">
-                  {evaluatedSkills.slice(0, 5).map(s => <SkillRow key={s.section} skill={s} trend={getSkillTrend(s.section, approvedHistory)} />)}
-                </div>
-              ) : (
-                <div className="student-empty-card">
-                  No evaluated skills yet. Your next class and homework will create the evidence needed for a real progress profile.
-                </div>
-              )}
+            </div>
+            {evaluatedSkills.length > 0 ? (
+              <div className="student-skill-list">
+                {evaluatedSkills.slice(0, 5).map(s => <SkillRow key={s.section} skill={s} trend={getSkillTrend(s.section, approvedHistory)} />)}
+              </div>
+            ) : (
+              <div className="student-empty-card">
+                No evaluated skills yet. Your next class will create the evidence.
+              </div>
+            )}
+          </article>
+
+          <section
+            className="student-memo-board"
+            style={{ marginTop: '24px' }}
+          >
+            <article className="student-panel" style={{ marginBottom: '16px' }}>
+              <span className="student-panel-kicker">General memo</span>
+              <h2>Memo Board</h2>
+              <p>{generalMemoText || 'No general memo posted yet.'}</p>
             </article>
-          </aside>
-        </section>
+            <article className="student-panel">
+              <span className="student-panel-kicker">Personal note</span>
+              <h2>{student.firstName}'s note</h2>
+              <p>{student.notes || student.goalNote || 'Your goal is MET preparation.'}</p>
+            </article>
+          </section>
+        </aside>
       </section>
     </div>
   );
@@ -443,6 +480,7 @@ function SkillRow({ skill, trend }) {
 
 function FeedbackView({ student, onTab }) {
   const [feedbackItems, setFeedbackItems] = useState([]);
+  const [selfAssessment, setSelfAssessment] = useState(null);
 
   useEffect(() => {
     (async () => {
@@ -457,8 +495,17 @@ function FeedbackView({ student, onTab }) {
           snapshot: asArray(dx.content?.section_snapshot),
         }));
       setFeedbackItems(approved);
+      if (approved[0]?.id) {
+        const stored = localStorage.getItem(`vv:feedback_selfassess:${approved[0].id}`);
+        if (stored) setSelfAssessment(stored);
+      }
     })();
   }, [student.id]);
+
+  function handleSelfAssessment(value, diagnosisId) {
+    setSelfAssessment(value);
+    if (diagnosisId) localStorage.setItem(`vv:feedback_selfassess:${diagnosisId}`, value);
+  }
 
   const latest = feedbackItems[0];
   const feedback = latest?.feedback;
@@ -479,7 +526,7 @@ function FeedbackView({ student, onTab }) {
       <section className="student-hero">
         <div>
           <p className="student-hero-kicker">Feedback</p>
-          <h1>Your teacher’s latest notes</h1>
+          <h1>Your teacher's latest notes</h1>
           <p>Simple, approved feedback you can use before the next class.</p>
         </div>
         <button className="student-hero-action" onClick={() => onTab('homework')}>
@@ -496,7 +543,7 @@ function FeedbackView({ student, onTab }) {
         <>
           <section className="student-progress-profile">
             <div>
-              <span className="student-panel-kicker">Today’s progress</span>
+              <span className="student-panel-kicker">Today's progress</span>
               <h2>{primarySkill ? `${primarySkill.section} progress` : 'MET progress'}</h2>
               <p>{feedback.classFocus || 'Your teacher has shared a short summary of your latest class.'}</p>
             </div>
@@ -515,6 +562,30 @@ function FeedbackView({ student, onTab }) {
               <h2>{focusArea?.area || primarySkill?.section || 'Next MET skill'}</h2>
               <p className="student-readable-copy">{focusArea?.explanation || focusArea?.howToImprove || focusArea?.metImportance || nextStep}</p>
             </article>
+
+            {(() => {
+              const allFeedbackText = [
+                focusArea?.area, focusArea?.explanation, focusArea?.howToImprove,
+                ...(highlights || []).map(h => `${h.strength} ${h.explanation}`),
+                nextStep,
+              ].filter(Boolean).join(' ');
+              const terms = getRelevantGlossaryTerms(allFeedbackText);
+              if (terms.length === 0) return null;
+              return (
+                <article className="student-panel">
+                  <span className="student-panel-kicker">Concepts in your feedback</span>
+                  <h2>What these terms mean</h2>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 4 }}>
+                    {terms.map(({ term, definition }) => (
+                      <div key={term} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', fontSize: 'var(--text-sm)', lineHeight: 1.6 }}>
+                        <span style={{ fontWeight: 700, color: 'var(--accent)', flexShrink: 0, textTransform: 'capitalize' }}>{term}:</span>
+                        <span style={{ color: 'var(--text-2)' }}>{definition}</span>
+                      </div>
+                    ))}
+                  </div>
+                </article>
+              );
+            })()}
 
             <article className="student-panel student-panel--primary">
               <div className="student-panel-head">
@@ -535,11 +606,43 @@ function FeedbackView({ student, onTab }) {
               <span className="student-panel-kicker">Confidence check</span>
               <h2>Before the next class</h2>
               <div className="student-confidence-list">
-                <TodoRow done={false} label="I understand my teacher’s main feedback" meta="Review the full note above" />
+                <TodoRow done={false} label="I understand my teacher's main feedback" meta="Review the full note above" />
                 <TodoRow done={!!firstWin} label="I can name one thing I did better" meta={firstWin?.strength || 'Use your feedback note'} />
                 <TodoRow done={false} label="I can practice the next focus" meta={feedback?.nextStep || focusArea?.area || 'Complete the homework task'} />
                 <TodoRow done={false} label="I can bring one question to class" meta="Ask your teacher for help where needed" />
               </div>
+            </article>
+
+            <article className="student-panel">
+              <span className="student-panel-kicker">Your view</span>
+              <h2>Does this feedback match your experience?</h2>
+              <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-2)', marginBottom: 12, lineHeight: 1.6 }}>
+                Your answer helps your teacher prepare the next class. There is no wrong response.
+              </p>
+              {selfAssessment ? (
+                <div style={{ fontSize: 'var(--text-sm)', color: 'var(--success)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span>✓</span>
+                  <span>You said: <strong>{selfAssessment}</strong> — your teacher will see this.</span>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  {['Yes, it matches', 'Partly', 'Not sure'].map(option => (
+                    <button
+                      key={option}
+                      type="button"
+                      onClick={() => handleSelfAssessment(option, latest?.id)}
+                      style={{
+                        padding: '7px 16px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)',
+                        background: 'var(--surface)', color: 'var(--text)', cursor: 'pointer',
+                        fontSize: 'var(--text-sm)', fontFamily: 'var(--font-ui)', fontWeight: 500,
+                        transition: 'border-color .15s, background .15s',
+                      }}
+                    >
+                      {option}
+                    </button>
+                  ))}
+                </div>
+              )}
             </article>
           </section>
 

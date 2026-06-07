@@ -15,7 +15,7 @@
   background-color: var(--sanctuary-parchment);
   color: var(--sanctuary-text);
   min-height: 100vh;
-  font-family: 'var(--font-ui)', system-ui, sans-serif;
+  font-family: var(--font-ui), system-ui, sans-serif;
   transition: background-color 0.5s ease;
 }
 
