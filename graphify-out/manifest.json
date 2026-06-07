@@ -1,350 +1,2162 @@
 {
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\met_b2_vocab_interactive_exercises.json": {
+    "mtime": 1780852431.65601,
+    "ast_hash": "5098214287e422ee39aad7df13a3597e",
+    "semantic_hash": "5098214287e422ee39aad7df13a3597e"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\migrate_met_exercises.py": {
+    "mtime": 1780860592.410198,
+    "ast_hash": "22eb4dc770f45fff0890396aece07f6a",
+    "semantic_hash": "22eb4dc770f45fff0890396aece07f6a"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\migrate_met_exercises.sql": {
+    "mtime": 1780860592.4132836,
+    "ast_hash": "f6af78fa4ada8552e3dc0912373decd3",
+    "semantic_hash": "f6af78fa4ada8552e3dc0912373decd3"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\package.json": {
+    "mtime": 1780566454.498704,
+    "ast_hash": "bf0b9b67306cc9ed8844ab036e5678c6",
+    "semantic_hash": "bf0b9b67306cc9ed8844ab036e5678c6"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\skills-lock.json": {
+    "mtime": 1780864039.357136,
+    "ast_hash": "2cfab0a1690b36219ccb64b0e228a6ee",
+    "semantic_hash": "2cfab0a1690b36219ccb64b0e228a6ee"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\vercel.json": {
+    "mtime": 1780860597.594174,
+    "ast_hash": "52c5b084c05ab3846d80aec816b2f971",
+    "semantic_hash": "52c5b084c05ab3846d80aec816b2f971"
+  },
   "C:\\Users\\vviei\\.claude\\projects\\Platform\\vite.config.js": {
-    "mtime": 1780599104.391258,
-    "hash": "e051d0b7b6143ce262f31ec91fab188b"
+    "mtime": 1780872324.5182083,
+    "ast_hash": "28312a910eb8435910471c4548e50de5",
+    "semantic_hash": "28312a910eb8435910471c4548e50de5"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\api\\ai.js": {
+    "mtime": 1780860592.132988,
+    "ast_hash": "ac8106410846ed6a194b2af0e178b2c7",
+    "semantic_hash": "ac8106410846ed6a194b2af0e178b2c7"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\api\\tts.js": {
+    "mtime": 1780872322.0322118,
+    "ast_hash": "c24a47d8a729b4b01f892732081d3928",
+    "semantic_hash": "c24a47d8a729b4b01f892732081d3928"
   },
   "C:\\Users\\vviei\\.claude\\projects\\Platform\\dist-build\\assets\\ai-helpers-CHq6A125.js": {
-    "mtime": 1780620004.368225,
-    "hash": "94b900a602e7dabc77318d84a9300a8e"
+    "mtime": 1780873796.635156,
+    "ast_hash": "94b900a602e7dabc77318d84a9300a8e",
+    "semantic_hash": "94b900a602e7dabc77318d84a9300a8e"
   },
-  "C:\\Users\\vviei\\.claude\\projects\\Platform\\dist-build\\assets\\calendar-CYcau4Wm.js": {
-    "mtime": 1780620004.3677654,
-    "hash": "d901bc2d8d01b562faea3b05c05a7e35"
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\dist-build\\assets\\calendar-DeV4yMbV.js": {
+    "mtime": 1780873796.6325088,
+    "ast_hash": "a564ebbcfbc3c190284d7309e4bae187",
+    "semantic_hash": "a564ebbcfbc3c190284d7309e4bae187"
   },
-  "C:\\Users\\vviei\\.claude\\projects\\Platform\\dist-build\\assets\\class-record-B_Mx15qJ.js": {
-    "mtime": 1780620004.3667629,
-    "hash": "1944b781d67c4b972797e9d8a23c09a2"
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\dist-build\\assets\\class-record-DHcMJdaw.js": {
+    "mtime": 1780873796.635156,
+    "ast_hash": "5118137857aaca2f0b50d831e565dc0f",
+    "semantic_hash": "5118137857aaca2f0b50d831e565dc0f"
   },
-  "C:\\Users\\vviei\\.claude\\projects\\Platform\\dist-build\\assets\\diagnostic-create-B8ByurQt.js": {
-    "mtime": 1780620004.368225,
-    "hash": "788dd3cbfeedb928207b63d0c7e8687a"
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\dist-build\\assets\\diagnostic-create-BCZco896.js": {
+    "mtime": 1780873796.6325088,
+    "ast_hash": "7a3484dbbc86ce8ebeb4d8e0fa09ded8",
+    "semantic_hash": "7a3484dbbc86ce8ebeb4d8e0fa09ded8"
   },
-  "C:\\Users\\vviei\\.claude\\projects\\Platform\\dist-build\\assets\\diagnostics-nVWXEFDc.js": {
-    "mtime": 1780620004.3677654,
-    "hash": "1b03bf8b1d0d840b4fa2dc16d10f1120"
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\dist-build\\assets\\diagnostics-s3-5TYp3.js": {
+    "mtime": 1780873796.6336946,
+    "ast_hash": "fd29f37d5eb75bd1b4f3d7111d4c7066",
+    "semantic_hash": "fd29f37d5eb75bd1b4f3d7111d4c7066"
   },
-  "C:\\Users\\vviei\\.claude\\projects\\Platform\\dist-build\\assets\\error-bank-CYK_u7bf.js": {
-    "mtime": 1780620004.368225,
-    "hash": "26bb9df1618dd9b988ed3b9af6523ea6"
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\dist-build\\assets\\error-bank-DjSfrTCS.js": {
+    "mtime": 1780873796.635156,
+    "ast_hash": "79e49823ba3caabbdfde8f2f99309597",
+    "semantic_hash": "79e49823ba3caabbdfde8f2f99309597"
   },
-  "C:\\Users\\vviei\\.claude\\projects\\Platform\\dist-build\\assets\\exercise-demo-BCQLpVTs.js": {
-    "mtime": 1780620004.368225,
-    "hash": "a46990bab3dbbc0ef8f956ecab0ba0bd"
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\dist-build\\assets\\exercise-demo-CM_fRtbO.js": {
+    "mtime": 1780873796.6414053,
+    "ast_hash": "f65f96ac0be6687f087a55b02d28a445",
+    "semantic_hash": "f65f96ac0be6687f087a55b02d28a445"
   },
-  "C:\\Users\\vviei\\.claude\\projects\\Platform\\dist-build\\assets\\homework-Bb_LyqN8.js": {
-    "mtime": 1780620004.3677654,
-    "hash": "985929fa0d29a675d75014fdb3bee853"
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\dist-build\\assets\\homework-create-BNVeV1_9.js": {
+    "mtime": 1780873796.635156,
+    "ast_hash": "e7573bcad5caf25c8c7774d707630d48",
+    "semantic_hash": "e7573bcad5caf25c8c7774d707630d48"
   },
-  "C:\\Users\\vviei\\.claude\\projects\\Platform\\dist-build\\assets\\homework-create-Bz1DnQLQ.js": {
-    "mtime": 1780620004.368225,
-    "hash": "94321beb130f2c5362202e827b76af44"
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\dist-build\\assets\\homework-OwLZzOa_.js": {
+    "mtime": 1780873796.635156,
+    "ast_hash": "ae37b2f4315c58c2e6a9f2b2281c8c0f",
+    "semantic_hash": "ae37b2f4315c58c2e6a9f2b2281c8c0f"
   },
-  "C:\\Users\\vviei\\.claude\\projects\\Platform\\dist-build\\assets\\index-CuxeF7_i.js": {
-    "mtime": 1780620004.368225,
-    "hash": "5ff4cac00f020f6cd0390cfbef2ff1e6"
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\dist-build\\assets\\index-Ds_zYUz1.js": {
+    "mtime": 1780873796.6325088,
+    "ast_hash": "3027168693c7f59d8063a8abdac2eb24",
+    "semantic_hash": "3027168693c7f59d8063a8abdac2eb24"
   },
-  "C:\\Users\\vviei\\.claude\\projects\\Platform\\dist-build\\assets\\prompts-DD7Y__bX.js": {
-    "mtime": 1780620004.368225,
-    "hash": "dad29f7be40ea0f9d7629f8ff5da62aa"
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\dist-build\\assets\\prompts-BBaVP9Gn.js": {
+    "mtime": 1780873796.6336946,
+    "ast_hash": "e5877eb50da2d7c9159684cb4027bb97",
+    "semantic_hash": "e5877eb50da2d7c9159684cb4027bb97"
   },
-  "C:\\Users\\vviei\\.claude\\projects\\Platform\\dist-build\\assets\\reports-gbuGTV8n.js": {
-    "mtime": 1780620004.368225,
-    "hash": "03eeb2f0a9f1cf86a6c79e42bb503a6c"
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\dist-build\\assets\\reports-BeWC2aTG.js": {
+    "mtime": 1780873796.6414053,
+    "ast_hash": "526c37b77a6f8f4cdf8b8d23fbb556e7",
+    "semantic_hash": "526c37b77a6f8f4cdf8b8d23fbb556e7"
   },
-  "C:\\Users\\vviei\\.claude\\projects\\Platform\\dist-build\\assets\\settings-054RdGoM.js": {
-    "mtime": 1780620004.368225,
-    "hash": "3b6317bc12548e326cd5d8b268a8b2b6"
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\dist-build\\assets\\settings-BoD-fxFB.js": {
+    "mtime": 1780873796.6436253,
+    "ast_hash": "8ad09acd39b8480abe7821417de28432",
+    "semantic_hash": "8ad09acd39b8480abe7821417de28432"
   },
-  "C:\\Users\\vviei\\.claude\\projects\\Platform\\dist-build\\assets\\student-profile-DZgyUAck.js": {
-    "mtime": 1780620004.3677654,
-    "hash": "6333e4201a3050590a2c601ba7ebee24"
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\dist-build\\assets\\student-profile-B-VbtCZK.js": {
+    "mtime": 1780873796.6336946,
+    "ast_hash": "726e1bed5ea0d9dc7c4f67cf300458e4",
+    "semantic_hash": "726e1bed5ea0d9dc7c4f67cf300458e4"
   },
-  "C:\\Users\\vviei\\.claude\\projects\\Platform\\dist-build\\assets\\students-Cgitp1Pr.js": {
-    "mtime": 1780620004.3657596,
-    "hash": "942dbc0de02f5d6aac3146efe7a933ac"
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\dist-build\\assets\\students-BlB-LiA7.js": {
+    "mtime": 1780873796.6315043,
+    "ast_hash": "f88d6bc00561c7a9a891c8c0d535b9a3",
+    "semantic_hash": "f88d6bc00561c7a9a891c8c0d535b9a3"
   },
-  "C:\\Users\\vviei\\.claude\\projects\\Platform\\dist-build\\assets\\submission-review-BNKGp9Ie.js": {
-    "mtime": 1780620004.368225,
-    "hash": "8579d2b7d1a87417482bff66586e085d"
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\dist-build\\assets\\submission-review-FESnrhnt.js": {
+    "mtime": 1780873796.635156,
+    "ast_hash": "6c84ff164d0fef696f4eb2a4d1c141c9",
+    "semantic_hash": "6c84ff164d0fef696f4eb2a4d1c141c9"
   },
-  "C:\\Users\\vviei\\.claude\\projects\\Platform\\dist-build\\assets\\submissions-D0c63XCG.js": {
-    "mtime": 1780620004.368225,
-    "hash": "0bcfa6c3473f57ff43573caf57da7c21"
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\dist-build\\assets\\submissions-CBV-cRIr.js": {
+    "mtime": 1780873796.635156,
+    "ast_hash": "9fff9e855b39bcc4c6a566ab140cd5d7",
+    "semantic_hash": "9fff9e855b39bcc4c6a566ab140cd5d7"
   },
-  "C:\\Users\\vviei\\.claude\\projects\\Platform\\dist-build\\assets\\teacher-dashboard-Bogl_Wr-.js": {
-    "mtime": 1780620004.3667629,
-    "hash": "3d06b3d921d2b7376b16e7ff337c5665"
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\dist-build\\assets\\teacher-dashboard-BDawt5z8.js": {
+    "mtime": 1780873796.6325088,
+    "ast_hash": "04a723e9149db78b06a9bc112c2ad1c6",
+    "semantic_hash": "04a723e9149db78b06a9bc112c2ad1c6"
   },
-  "C:\\Users\\vviei\\.claude\\projects\\Platform\\dist-build\\assets\\tool-inbox-X3Ik9E0_.js": {
-    "mtime": 1780620004.368225,
-    "hash": "7ef232b7877b70f0a8abe437d95a5462"
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\dist-build\\assets\\tool-inbox-BuKSJDIo.js": {
+    "mtime": 1780873796.6414053,
+    "ast_hash": "cf34a73917b8dc189f8c7050c22e5ab9",
+    "semantic_hash": "cf34a73917b8dc189f8c7050c22e5ab9"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\component_crx_cache\\metadata.json": {
+    "mtime": 1780860597.1641057,
+    "ast_hash": "2aa9e263ee3796d9ce358460a2451b4c",
+    "semantic_hash": "2aa9e263ee3796d9ce358460a2451b4c"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\background_compiled.js": {
+    "mtime": 1780860596.331405,
+    "ast_hash": "fa441abe86843f544bc30e47f86e78d0",
+    "semantic_hash": "fa441abe86843f544bc30e47f86e78d0"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\manifest.json": {
+    "mtime": 1780860596.3454049,
+    "ast_hash": "7e634fea16f3e6b73347d6f18c76aed7",
+    "semantic_hash": "7e634fea16f3e6b73347d6f18c76aed7"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\offscreen_compiled.js": {
+    "mtime": 1780860596.356636,
+    "ast_hash": "d59394df75c01cd0a1529a7f92b85f9c",
+    "semantic_hash": "d59394df75c01cd0a1529a7f92b85f9c"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\af\\messages.json": {
+    "mtime": 1780860595.6452372,
+    "ast_hash": "60105a2617dc1803816d1f552ec70b07",
+    "semantic_hash": "60105a2617dc1803816d1f552ec70b07"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\am\\messages.json": {
+    "mtime": 1780860595.647718,
+    "ast_hash": "a9e5b7b0d0259f49094b8975771f91cb",
+    "semantic_hash": "a9e5b7b0d0259f49094b8975771f91cb"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\ar\\messages.json": {
+    "mtime": 1780860595.657029,
+    "ast_hash": "b038bc8d8a69ed4889f5894516041f27",
+    "semantic_hash": "b038bc8d8a69ed4889f5894516041f27"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\az\\messages.json": {
+    "mtime": 1780860595.6611824,
+    "ast_hash": "840424dace0f9f877d65b986950f08f9",
+    "semantic_hash": "840424dace0f9f877d65b986950f08f9"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\be\\messages.json": {
+    "mtime": 1780860595.663356,
+    "ast_hash": "5a29f073996a4707831fae6ae0368d15",
+    "semantic_hash": "5a29f073996a4707831fae6ae0368d15"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\bg\\messages.json": {
+    "mtime": 1780860595.6902776,
+    "ast_hash": "3556fab5325676b3930566a0b548ce65",
+    "semantic_hash": "3556fab5325676b3930566a0b548ce65"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\bn\\messages.json": {
+    "mtime": 1780860595.6922772,
+    "ast_hash": "43ec9e8ed61cdf79fd33f5b26b19ed7f",
+    "semantic_hash": "43ec9e8ed61cdf79fd33f5b26b19ed7f"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\ca\\messages.json": {
+    "mtime": 1780860595.6956065,
+    "ast_hash": "891515640edd66093c2126cf164dc536",
+    "semantic_hash": "891515640edd66093c2126cf164dc536"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\cs\\messages.json": {
+    "mtime": 1780860595.6974788,
+    "ast_hash": "9c848014c23535f42c2fb2a27d7cebf9",
+    "semantic_hash": "9c848014c23535f42c2fb2a27d7cebf9"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\cy\\messages.json": {
+    "mtime": 1780860595.700286,
+    "ast_hash": "a7ff4315e53d61af801a7e0ad07511b0",
+    "semantic_hash": "a7ff4315e53d61af801a7e0ad07511b0"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\da\\messages.json": {
+    "mtime": 1780860595.70832,
+    "ast_hash": "c9800fd848a0e6c7bc948f9051f6a99b",
+    "semantic_hash": "c9800fd848a0e6c7bc948f9051f6a99b"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\de\\messages.json": {
+    "mtime": 1780860595.713446,
+    "ast_hash": "b96b800b34cbdffee244c625ed1ccc04",
+    "semantic_hash": "b96b800b34cbdffee244c625ed1ccc04"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\el\\messages.json": {
+    "mtime": 1780860595.7195272,
+    "ast_hash": "d549d0d0ceed23e48c13ea0f2b5e1491",
+    "semantic_hash": "d549d0d0ceed23e48c13ea0f2b5e1491"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\en\\messages.json": {
+    "mtime": 1780860595.725116,
+    "ast_hash": "4ccbe0180105c9d8b28b3930b8090851",
+    "semantic_hash": "4ccbe0180105c9d8b28b3930b8090851"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\en_CA\\messages.json": {
+    "mtime": 1780860595.72761,
+    "ast_hash": "4ccbe0180105c9d8b28b3930b8090851",
+    "semantic_hash": "4ccbe0180105c9d8b28b3930b8090851"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\en_GB\\messages.json": {
+    "mtime": 1780860595.728163,
+    "ast_hash": "f253226c20b18476d95015b2447a5122",
+    "semantic_hash": "f253226c20b18476d95015b2447a5122"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\en_US\\messages.json": {
+    "mtime": 1780860595.7292461,
+    "ast_hash": "765a858fc4597acf90fffb07a94df341",
+    "semantic_hash": "765a858fc4597acf90fffb07a94df341"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\es\\messages.json": {
+    "mtime": 1780860595.731382,
+    "ast_hash": "f7f46408b1e0dad2a5f32a9b494a9bda",
+    "semantic_hash": "f7f46408b1e0dad2a5f32a9b494a9bda"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\es_419\\messages.json": {
+    "mtime": 1780860595.7333837,
+    "ast_hash": "f432f4bd84291984e222657fc7cbf9ed",
+    "semantic_hash": "f432f4bd84291984e222657fc7cbf9ed"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\et\\messages.json": {
+    "mtime": 1780860595.7484798,
+    "ast_hash": "8d1922655e6803eb8f627a712c74e7d3",
+    "semantic_hash": "8d1922655e6803eb8f627a712c74e7d3"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\eu\\messages.json": {
+    "mtime": 1780860595.7509472,
+    "ast_hash": "923ac8c398d4bf68ee4226888b360534",
+    "semantic_hash": "923ac8c398d4bf68ee4226888b360534"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\fa\\messages.json": {
+    "mtime": 1780860595.7540615,
+    "ast_hash": "9fcaa6552cfc3b5f5a8eb471eb5a1cc9",
+    "semantic_hash": "9fcaa6552cfc3b5f5a8eb471eb5a1cc9"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\fi\\messages.json": {
+    "mtime": 1780860595.7581935,
+    "ast_hash": "1bf71898aea505353bd6b316d1603de4",
+    "semantic_hash": "1bf71898aea505353bd6b316d1603de4"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\fil\\messages.json": {
+    "mtime": 1780860595.7603781,
+    "ast_hash": "a466cea3c169ba18d078160f6712e7a5",
+    "semantic_hash": "a466cea3c169ba18d078160f6712e7a5"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\fr\\messages.json": {
+    "mtime": 1780860595.7622318,
+    "ast_hash": "899bb1202b78c19176d0c7f2700ba694",
+    "semantic_hash": "899bb1202b78c19176d0c7f2700ba694"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\fr_CA\\messages.json": {
+    "mtime": 1780860595.7635953,
+    "ast_hash": "2d909d065b850a4cf44351e0840b5a55",
+    "semantic_hash": "2d909d065b850a4cf44351e0840b5a55"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\gl\\messages.json": {
+    "mtime": 1780860595.764616,
+    "ast_hash": "0f060f7834df29c4e2b7f0637de135b6",
+    "semantic_hash": "0f060f7834df29c4e2b7f0637de135b6"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\gu\\messages.json": {
+    "mtime": 1780860595.777453,
+    "ast_hash": "83cceb50bb5602873c5e81912ebf9767",
+    "semantic_hash": "83cceb50bb5602873c5e81912ebf9767"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\hi\\messages.json": {
+    "mtime": 1780860595.7818553,
+    "ast_hash": "8e1c9a8a2214faa1fce3d50b58a3e6df",
+    "semantic_hash": "8e1c9a8a2214faa1fce3d50b58a3e6df"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\hr\\messages.json": {
+    "mtime": 1780860595.7838843,
+    "ast_hash": "babf46d5de402cb8678fcd6abfe5d1a3",
+    "semantic_hash": "babf46d5de402cb8678fcd6abfe5d1a3"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\hu\\messages.json": {
+    "mtime": 1780860595.79127,
+    "ast_hash": "84a17f82cec39f2c47cdb1cb30bf769a",
+    "semantic_hash": "84a17f82cec39f2c47cdb1cb30bf769a"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\hy\\messages.json": {
+    "mtime": 1780860595.7932682,
+    "ast_hash": "8835c994788eeb4ea662d29c871eb83f",
+    "semantic_hash": "8835c994788eeb4ea662d29c871eb83f"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\id\\messages.json": {
+    "mtime": 1780860595.7944438,
+    "ast_hash": "bd25d0071a68b3c5fbbef13bb575c0fb",
+    "semantic_hash": "bd25d0071a68b3c5fbbef13bb575c0fb"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\is\\messages.json": {
+    "mtime": 1780860595.7964678,
+    "ast_hash": "ba584ede8c3b56530d448943dc963b86",
+    "semantic_hash": "ba584ede8c3b56530d448943dc963b86"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\it\\messages.json": {
+    "mtime": 1780860595.7984824,
+    "ast_hash": "12dc6d0c564ff7fb702fb8c49af58513",
+    "semantic_hash": "12dc6d0c564ff7fb702fb8c49af58513"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\iw\\messages.json": {
+    "mtime": 1780860595.8000014,
+    "ast_hash": "a2bfe74af088c230ad8995d4088cb660",
+    "semantic_hash": "a2bfe74af088c230ad8995d4088cb660"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\ja\\messages.json": {
+    "mtime": 1780860595.8135812,
+    "ast_hash": "bc289b0c1b067cee9e4fd9d2cbdeb860",
+    "semantic_hash": "bc289b0c1b067cee9e4fd9d2cbdeb860"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\ka\\messages.json": {
+    "mtime": 1780860595.8152838,
+    "ast_hash": "c7bb275e3fde81394bb96fd64c5ebc46",
+    "semantic_hash": "c7bb275e3fde81394bb96fd64c5ebc46"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\kk\\messages.json": {
+    "mtime": 1780860595.823919,
+    "ast_hash": "b2e059cd08ed44741bf92c1b6a02fff0",
+    "semantic_hash": "b2e059cd08ed44741bf92c1b6a02fff0"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\km\\messages.json": {
+    "mtime": 1780860595.8259082,
+    "ast_hash": "c08365e1d9937cc10d7a7fe287a003e1",
+    "semantic_hash": "c08365e1d9937cc10d7a7fe287a003e1"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\kn\\messages.json": {
+    "mtime": 1780860595.8279545,
+    "ast_hash": "736d69a75162596687661bf7f151f305",
+    "semantic_hash": "736d69a75162596687661bf7f151f305"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\ko\\messages.json": {
+    "mtime": 1780860595.8296044,
+    "ast_hash": "34bf424c8090abdfa272723bf82b7cd5",
+    "semantic_hash": "34bf424c8090abdfa272723bf82b7cd5"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\lo\\messages.json": {
+    "mtime": 1780860596.2042968,
+    "ast_hash": "63f81d3ca92c6eeeeafd76203dcd2a80",
+    "semantic_hash": "63f81d3ca92c6eeeeafd76203dcd2a80"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\lt\\messages.json": {
+    "mtime": 1780860596.2084436,
+    "ast_hash": "93d8292657dbd1c566f30998c7a740ad",
+    "semantic_hash": "93d8292657dbd1c566f30998c7a740ad"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\lv\\messages.json": {
+    "mtime": 1780860596.2100434,
+    "ast_hash": "59855ba1443f898f160b55a2f43892ae",
+    "semantic_hash": "59855ba1443f898f160b55a2f43892ae"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\ml\\messages.json": {
+    "mtime": 1780860596.2111447,
+    "ast_hash": "0539e5b4e95687effc2b708c78ea523c",
+    "semantic_hash": "0539e5b4e95687effc2b708c78ea523c"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\mn\\messages.json": {
+    "mtime": 1780860596.213039,
+    "ast_hash": "65155c571dbb4fb282b8967271c1ba84",
+    "semantic_hash": "65155c571dbb4fb282b8967271c1ba84"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\mr\\messages.json": {
+    "mtime": 1780860596.2150466,
+    "ast_hash": "64c20a73b5c0e8989a4d0ac84ed0728d",
+    "semantic_hash": "64c20a73b5c0e8989a4d0ac84ed0728d"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\ms\\messages.json": {
+    "mtime": 1780860596.219303,
+    "ast_hash": "3d448a29ff5e0ea017d7e9c358723a2e",
+    "semantic_hash": "3d448a29ff5e0ea017d7e9c358723a2e"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\my\\messages.json": {
+    "mtime": 1780860596.2244222,
+    "ast_hash": "441b34e5d1df39c8eae26df1286dab6d",
+    "semantic_hash": "441b34e5d1df39c8eae26df1286dab6d"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\ne\\messages.json": {
+    "mtime": 1780860596.2310383,
+    "ast_hash": "6a8a2416aef32cc8c9950606122e1110",
+    "semantic_hash": "6a8a2416aef32cc8c9950606122e1110"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\nl\\messages.json": {
+    "mtime": 1780860596.23304,
+    "ast_hash": "5d2e86df06a1e81544e2cb4854d6f01f",
+    "semantic_hash": "5d2e86df06a1e81544e2cb4854d6f01f"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\no\\messages.json": {
+    "mtime": 1780860596.2383418,
+    "ast_hash": "f2a1f9e288ff74cde66bdd890e3c627d",
+    "semantic_hash": "f2a1f9e288ff74cde66bdd890e3c627d"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\pa\\messages.json": {
+    "mtime": 1780860596.2403667,
+    "ast_hash": "c1d665c691fe399b6efb4b3259601601",
+    "semantic_hash": "c1d665c691fe399b6efb4b3259601601"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\pl\\messages.json": {
+    "mtime": 1780860596.2433593,
+    "ast_hash": "ca0d97f673b1c54765eb9113cd0d7206",
+    "semantic_hash": "ca0d97f673b1c54765eb9113cd0d7206"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\pt_BR\\messages.json": {
+    "mtime": 1780860596.2443576,
+    "ast_hash": "9710f318753f685606dbba8c505175bc",
+    "semantic_hash": "9710f318753f685606dbba8c505175bc"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\pt_PT\\messages.json": {
+    "mtime": 1780860596.2463586,
+    "ast_hash": "dfbe6ede201913422997bfd7637f939d",
+    "semantic_hash": "dfbe6ede201913422997bfd7637f939d"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\ro\\messages.json": {
+    "mtime": 1780860596.2478652,
+    "ast_hash": "6868b6da675c55fffed9b846c175c971",
+    "semantic_hash": "6868b6da675c55fffed9b846c175c971"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\ru\\messages.json": {
+    "mtime": 1780860596.2577765,
+    "ast_hash": "84503a77b01a1d56c0afc9218024908d",
+    "semantic_hash": "84503a77b01a1d56c0afc9218024908d"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\si\\messages.json": {
+    "mtime": 1780860596.2603047,
+    "ast_hash": "02a87d95c5662f59a5cfc40409adc888",
+    "semantic_hash": "02a87d95c5662f59a5cfc40409adc888"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\sk\\messages.json": {
+    "mtime": 1780860596.262614,
+    "ast_hash": "0c8e4242ca7b2db0d1b4355e048ed566",
+    "semantic_hash": "0c8e4242ca7b2db0d1b4355e048ed566"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\sl\\messages.json": {
+    "mtime": 1780860596.2657123,
+    "ast_hash": "e73aaaffc6fcc0d30c3b59304c5a33ae",
+    "semantic_hash": "e73aaaffc6fcc0d30c3b59304c5a33ae"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\sr\\messages.json": {
+    "mtime": 1780860596.273865,
+    "ast_hash": "687c11ef7d478666dabede72b6e1836d",
+    "semantic_hash": "687c11ef7d478666dabede72b6e1836d"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\sv\\messages.json": {
+    "mtime": 1780860596.275857,
+    "ast_hash": "9e8c4cd456913dd89cc66854296e871d",
+    "semantic_hash": "9e8c4cd456913dd89cc66854296e871d"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\sw\\messages.json": {
+    "mtime": 1780860596.278275,
+    "ast_hash": "f9fcae9f118e1c5244234eaec33c6e1a",
+    "semantic_hash": "f9fcae9f118e1c5244234eaec33c6e1a"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\ta\\messages.json": {
+    "mtime": 1780860596.2794418,
+    "ast_hash": "1f50416d59432fec9fa8b7a08c690f71",
+    "semantic_hash": "1f50416d59432fec9fa8b7a08c690f71"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\te\\messages.json": {
+    "mtime": 1780860596.28145,
+    "ast_hash": "69efc0bb480ad5f9a7242743e09d52bb",
+    "semantic_hash": "69efc0bb480ad5f9a7242743e09d52bb"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\th\\messages.json": {
+    "mtime": 1780860596.2936385,
+    "ast_hash": "0c28bb5e75e361f2ff1cc288ed5c470f",
+    "semantic_hash": "0c28bb5e75e361f2ff1cc288ed5c470f"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\tr\\messages.json": {
+    "mtime": 1780860596.2960098,
+    "ast_hash": "eeaf6fee5b33d55bac0e89145d8b220d",
+    "semantic_hash": "eeaf6fee5b33d55bac0e89145d8b220d"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\uk\\messages.json": {
+    "mtime": 1780860596.299909,
+    "ast_hash": "32d0cfc5e9fad70a35a28744e8394a25",
+    "semantic_hash": "32d0cfc5e9fad70a35a28744e8394a25"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\ur\\messages.json": {
+    "mtime": 1780860596.3053608,
+    "ast_hash": "26579e62308fefe015f57a0060e68bf4",
+    "semantic_hash": "26579e62308fefe015f57a0060e68bf4"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\vi\\messages.json": {
+    "mtime": 1780860596.3095706,
+    "ast_hash": "7fb8a3976d8faa7d5f845bfa0871b17e",
+    "semantic_hash": "7fb8a3976d8faa7d5f845bfa0871b17e"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\zh_CN\\messages.json": {
+    "mtime": 1780860596.3115816,
+    "ast_hash": "fe9740f42ae37842989726403b540b17",
+    "semantic_hash": "fe9740f42ae37842989726403b540b17"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\zh_HK\\messages.json": {
+    "mtime": 1780860596.3144107,
+    "ast_hash": "9d01d298eaa2212e8adaa255c9c7b5cd",
+    "semantic_hash": "9d01d298eaa2212e8adaa255c9c7b5cd"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\zh_TW\\messages.json": {
+    "mtime": 1780860596.3273423,
+    "ast_hash": "6f5db2bcef663a9abe4501936f8171ba",
+    "semantic_hash": "6f5db2bcef663a9abe4501936f8171ba"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\zu\\messages.json": {
+    "mtime": 1780860596.3283763,
+    "ast_hash": "ede01de4f1581eb8a4665bf641f6ff19",
+    "semantic_hash": "ede01de4f1581eb8a4665bf641f6ff19"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_metadata\\verified_contents.json": {
+    "mtime": 1780860596.3304045,
+    "ast_hash": "2c1c9eca822882e196cc30ab0fe4b410",
+    "semantic_hash": "2c1c9eca822882e196cc30ab0fe4b410"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\extensions_crx_cache\\metadata.json": {
+    "mtime": 1780860597.1661582,
+    "ast_hash": "2aa9e263ee3796d9ce358460a2451b4c",
+    "semantic_hash": "2aa9e263ee3796d9ce358460a2451b4c"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\component_crx_cache\\metadata.json": {
+    "mtime": 1780860594.932313,
+    "ast_hash": "2aa9e263ee3796d9ce358460a2451b4c",
+    "semantic_hash": "2aa9e263ee3796d9ce358460a2451b4c"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\background_compiled.js": {
+    "mtime": 1780860593.940077,
+    "ast_hash": "fa441abe86843f544bc30e47f86e78d0",
+    "semantic_hash": "fa441abe86843f544bc30e47f86e78d0"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\manifest.json": {
+    "mtime": 1780860593.9629495,
+    "ast_hash": "7e634fea16f3e6b73347d6f18c76aed7",
+    "semantic_hash": "7e634fea16f3e6b73347d6f18c76aed7"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\offscreen_compiled.js": {
+    "mtime": 1780860593.993672,
+    "ast_hash": "d59394df75c01cd0a1529a7f92b85f9c",
+    "semantic_hash": "d59394df75c01cd0a1529a7f92b85f9c"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\af\\messages.json": {
+    "mtime": 1780860593.4248252,
+    "ast_hash": "60105a2617dc1803816d1f552ec70b07",
+    "semantic_hash": "60105a2617dc1803816d1f552ec70b07"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\am\\messages.json": {
+    "mtime": 1780860593.4297833,
+    "ast_hash": "a9e5b7b0d0259f49094b8975771f91cb",
+    "semantic_hash": "a9e5b7b0d0259f49094b8975771f91cb"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\ar\\messages.json": {
+    "mtime": 1780860593.4332778,
+    "ast_hash": "b038bc8d8a69ed4889f5894516041f27",
+    "semantic_hash": "b038bc8d8a69ed4889f5894516041f27"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\az\\messages.json": {
+    "mtime": 1780860593.4377992,
+    "ast_hash": "840424dace0f9f877d65b986950f08f9",
+    "semantic_hash": "840424dace0f9f877d65b986950f08f9"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\be\\messages.json": {
+    "mtime": 1780860593.4426959,
+    "ast_hash": "5a29f073996a4707831fae6ae0368d15",
+    "semantic_hash": "5a29f073996a4707831fae6ae0368d15"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\bg\\messages.json": {
+    "mtime": 1780860593.4461994,
+    "ast_hash": "3556fab5325676b3930566a0b548ce65",
+    "semantic_hash": "3556fab5325676b3930566a0b548ce65"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\bn\\messages.json": {
+    "mtime": 1780860593.44824,
+    "ast_hash": "43ec9e8ed61cdf79fd33f5b26b19ed7f",
+    "semantic_hash": "43ec9e8ed61cdf79fd33f5b26b19ed7f"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\ca\\messages.json": {
+    "mtime": 1780860593.4642181,
+    "ast_hash": "891515640edd66093c2126cf164dc536",
+    "semantic_hash": "891515640edd66093c2126cf164dc536"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\cs\\messages.json": {
+    "mtime": 1780860593.4753983,
+    "ast_hash": "9c848014c23535f42c2fb2a27d7cebf9",
+    "semantic_hash": "9c848014c23535f42c2fb2a27d7cebf9"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\cy\\messages.json": {
+    "mtime": 1780860593.494053,
+    "ast_hash": "a7ff4315e53d61af801a7e0ad07511b0",
+    "semantic_hash": "a7ff4315e53d61af801a7e0ad07511b0"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\da\\messages.json": {
+    "mtime": 1780860593.496439,
+    "ast_hash": "c9800fd848a0e6c7bc948f9051f6a99b",
+    "semantic_hash": "c9800fd848a0e6c7bc948f9051f6a99b"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\de\\messages.json": {
+    "mtime": 1780860593.4984574,
+    "ast_hash": "b96b800b34cbdffee244c625ed1ccc04",
+    "semantic_hash": "b96b800b34cbdffee244c625ed1ccc04"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\el\\messages.json": {
+    "mtime": 1780860593.5001702,
+    "ast_hash": "d549d0d0ceed23e48c13ea0f2b5e1491",
+    "semantic_hash": "d549d0d0ceed23e48c13ea0f2b5e1491"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\en\\messages.json": {
+    "mtime": 1780860593.5113132,
+    "ast_hash": "4ccbe0180105c9d8b28b3930b8090851",
+    "semantic_hash": "4ccbe0180105c9d8b28b3930b8090851"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\en_CA\\messages.json": {
+    "mtime": 1780860593.5138135,
+    "ast_hash": "4ccbe0180105c9d8b28b3930b8090851",
+    "semantic_hash": "4ccbe0180105c9d8b28b3930b8090851"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\en_GB\\messages.json": {
+    "mtime": 1780860593.5153306,
+    "ast_hash": "f253226c20b18476d95015b2447a5122",
+    "semantic_hash": "f253226c20b18476d95015b2447a5122"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\en_US\\messages.json": {
+    "mtime": 1780860593.5167165,
+    "ast_hash": "765a858fc4597acf90fffb07a94df341",
+    "semantic_hash": "765a858fc4597acf90fffb07a94df341"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\es\\messages.json": {
+    "mtime": 1780860593.5253315,
+    "ast_hash": "f7f46408b1e0dad2a5f32a9b494a9bda",
+    "semantic_hash": "f7f46408b1e0dad2a5f32a9b494a9bda"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\es_419\\messages.json": {
+    "mtime": 1780860593.5293713,
+    "ast_hash": "f432f4bd84291984e222657fc7cbf9ed",
+    "semantic_hash": "f432f4bd84291984e222657fc7cbf9ed"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\et\\messages.json": {
+    "mtime": 1780860593.5308826,
+    "ast_hash": "8d1922655e6803eb8f627a712c74e7d3",
+    "semantic_hash": "8d1922655e6803eb8f627a712c74e7d3"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\eu\\messages.json": {
+    "mtime": 1780860593.532017,
+    "ast_hash": "923ac8c398d4bf68ee4226888b360534",
+    "semantic_hash": "923ac8c398d4bf68ee4226888b360534"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\fa\\messages.json": {
+    "mtime": 1780860593.5360296,
+    "ast_hash": "9fcaa6552cfc3b5f5a8eb471eb5a1cc9",
+    "semantic_hash": "9fcaa6552cfc3b5f5a8eb471eb5a1cc9"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\fi\\messages.json": {
+    "mtime": 1780860593.545666,
+    "ast_hash": "1bf71898aea505353bd6b316d1603de4",
+    "semantic_hash": "1bf71898aea505353bd6b316d1603de4"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\fil\\messages.json": {
+    "mtime": 1780860593.565363,
+    "ast_hash": "a466cea3c169ba18d078160f6712e7a5",
+    "semantic_hash": "a466cea3c169ba18d078160f6712e7a5"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\fr\\messages.json": {
+    "mtime": 1780860593.5700328,
+    "ast_hash": "899bb1202b78c19176d0c7f2700ba694",
+    "semantic_hash": "899bb1202b78c19176d0c7f2700ba694"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\fr_CA\\messages.json": {
+    "mtime": 1780860593.5761442,
+    "ast_hash": "2d909d065b850a4cf44351e0840b5a55",
+    "semantic_hash": "2d909d065b850a4cf44351e0840b5a55"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\gl\\messages.json": {
+    "mtime": 1780860593.593045,
+    "ast_hash": "0f060f7834df29c4e2b7f0637de135b6",
+    "semantic_hash": "0f060f7834df29c4e2b7f0637de135b6"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\gu\\messages.json": {
+    "mtime": 1780860593.5990129,
+    "ast_hash": "83cceb50bb5602873c5e81912ebf9767",
+    "semantic_hash": "83cceb50bb5602873c5e81912ebf9767"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\hi\\messages.json": {
+    "mtime": 1780860593.6118362,
+    "ast_hash": "8e1c9a8a2214faa1fce3d50b58a3e6df",
+    "semantic_hash": "8e1c9a8a2214faa1fce3d50b58a3e6df"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\hr\\messages.json": {
+    "mtime": 1780860593.613988,
+    "ast_hash": "babf46d5de402cb8678fcd6abfe5d1a3",
+    "semantic_hash": "babf46d5de402cb8678fcd6abfe5d1a3"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\hu\\messages.json": {
+    "mtime": 1780860593.617416,
+    "ast_hash": "84a17f82cec39f2c47cdb1cb30bf769a",
+    "semantic_hash": "84a17f82cec39f2c47cdb1cb30bf769a"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\hy\\messages.json": {
+    "mtime": 1780860593.6298292,
+    "ast_hash": "8835c994788eeb4ea662d29c871eb83f",
+    "semantic_hash": "8835c994788eeb4ea662d29c871eb83f"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\id\\messages.json": {
+    "mtime": 1780860593.633346,
+    "ast_hash": "bd25d0071a68b3c5fbbef13bb575c0fb",
+    "semantic_hash": "bd25d0071a68b3c5fbbef13bb575c0fb"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\is\\messages.json": {
+    "mtime": 1780860593.653147,
+    "ast_hash": "ba584ede8c3b56530d448943dc963b86",
+    "semantic_hash": "ba584ede8c3b56530d448943dc963b86"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\it\\messages.json": {
+    "mtime": 1780860593.6636183,
+    "ast_hash": "12dc6d0c564ff7fb702fb8c49af58513",
+    "semantic_hash": "12dc6d0c564ff7fb702fb8c49af58513"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\iw\\messages.json": {
+    "mtime": 1780860593.665622,
+    "ast_hash": "a2bfe74af088c230ad8995d4088cb660",
+    "semantic_hash": "a2bfe74af088c230ad8995d4088cb660"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\ja\\messages.json": {
+    "mtime": 1780860593.6737354,
+    "ast_hash": "bc289b0c1b067cee9e4fd9d2cbdeb860",
+    "semantic_hash": "bc289b0c1b067cee9e4fd9d2cbdeb860"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\ka\\messages.json": {
+    "mtime": 1780860593.6776922,
+    "ast_hash": "c7bb275e3fde81394bb96fd64c5ebc46",
+    "semantic_hash": "c7bb275e3fde81394bb96fd64c5ebc46"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\kk\\messages.json": {
+    "mtime": 1780860593.6793907,
+    "ast_hash": "b2e059cd08ed44741bf92c1b6a02fff0",
+    "semantic_hash": "b2e059cd08ed44741bf92c1b6a02fff0"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\km\\messages.json": {
+    "mtime": 1780860593.6821039,
+    "ast_hash": "c08365e1d9937cc10d7a7fe287a003e1",
+    "semantic_hash": "c08365e1d9937cc10d7a7fe287a003e1"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\kn\\messages.json": {
+    "mtime": 1780860593.6884272,
+    "ast_hash": "736d69a75162596687661bf7f151f305",
+    "semantic_hash": "736d69a75162596687661bf7f151f305"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\ko\\messages.json": {
+    "mtime": 1780860593.6934557,
+    "ast_hash": "34bf424c8090abdfa272723bf82b7cd5",
+    "semantic_hash": "34bf424c8090abdfa272723bf82b7cd5"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\lo\\messages.json": {
+    "mtime": 1780860593.696455,
+    "ast_hash": "63f81d3ca92c6eeeeafd76203dcd2a80",
+    "semantic_hash": "63f81d3ca92c6eeeeafd76203dcd2a80"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\lt\\messages.json": {
+    "mtime": 1780860593.6984696,
+    "ast_hash": "93d8292657dbd1c566f30998c7a740ad",
+    "semantic_hash": "93d8292657dbd1c566f30998c7a740ad"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\lv\\messages.json": {
+    "mtime": 1780860593.7307775,
+    "ast_hash": "59855ba1443f898f160b55a2f43892ae",
+    "semantic_hash": "59855ba1443f898f160b55a2f43892ae"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\ml\\messages.json": {
+    "mtime": 1780860593.7443945,
+    "ast_hash": "0539e5b4e95687effc2b708c78ea523c",
+    "semantic_hash": "0539e5b4e95687effc2b708c78ea523c"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\mn\\messages.json": {
+    "mtime": 1780860593.751005,
+    "ast_hash": "65155c571dbb4fb282b8967271c1ba84",
+    "semantic_hash": "65155c571dbb4fb282b8967271c1ba84"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\mr\\messages.json": {
+    "mtime": 1780860593.760158,
+    "ast_hash": "64c20a73b5c0e8989a4d0ac84ed0728d",
+    "semantic_hash": "64c20a73b5c0e8989a4d0ac84ed0728d"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\ms\\messages.json": {
+    "mtime": 1780860593.7626634,
+    "ast_hash": "3d448a29ff5e0ea017d7e9c358723a2e",
+    "semantic_hash": "3d448a29ff5e0ea017d7e9c358723a2e"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\my\\messages.json": {
+    "mtime": 1780860593.767782,
+    "ast_hash": "441b34e5d1df39c8eae26df1286dab6d",
+    "semantic_hash": "441b34e5d1df39c8eae26df1286dab6d"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\ne\\messages.json": {
+    "mtime": 1780860593.7754307,
+    "ast_hash": "6a8a2416aef32cc8c9950606122e1110",
+    "semantic_hash": "6a8a2416aef32cc8c9950606122e1110"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\nl\\messages.json": {
+    "mtime": 1780860593.7784462,
+    "ast_hash": "5d2e86df06a1e81544e2cb4854d6f01f",
+    "semantic_hash": "5d2e86df06a1e81544e2cb4854d6f01f"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\no\\messages.json": {
+    "mtime": 1780860593.7821386,
+    "ast_hash": "f2a1f9e288ff74cde66bdd890e3c627d",
+    "semantic_hash": "f2a1f9e288ff74cde66bdd890e3c627d"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\pa\\messages.json": {
+    "mtime": 1780860593.792441,
+    "ast_hash": "c1d665c691fe399b6efb4b3259601601",
+    "semantic_hash": "c1d665c691fe399b6efb4b3259601601"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\pl\\messages.json": {
+    "mtime": 1780860593.7946618,
+    "ast_hash": "ca0d97f673b1c54765eb9113cd0d7206",
+    "semantic_hash": "ca0d97f673b1c54765eb9113cd0d7206"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\pt_BR\\messages.json": {
+    "mtime": 1780860593.798173,
+    "ast_hash": "9710f318753f685606dbba8c505175bc",
+    "semantic_hash": "9710f318753f685606dbba8c505175bc"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\pt_PT\\messages.json": {
+    "mtime": 1780860593.8100276,
+    "ast_hash": "dfbe6ede201913422997bfd7637f939d",
+    "semantic_hash": "dfbe6ede201913422997bfd7637f939d"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\ro\\messages.json": {
+    "mtime": 1780860593.8183496,
+    "ast_hash": "6868b6da675c55fffed9b846c175c971",
+    "semantic_hash": "6868b6da675c55fffed9b846c175c971"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\ru\\messages.json": {
+    "mtime": 1780860593.8250856,
+    "ast_hash": "84503a77b01a1d56c0afc9218024908d",
+    "semantic_hash": "84503a77b01a1d56c0afc9218024908d"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\si\\messages.json": {
+    "mtime": 1780860593.8275914,
+    "ast_hash": "02a87d95c5662f59a5cfc40409adc888",
+    "semantic_hash": "02a87d95c5662f59a5cfc40409adc888"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\sk\\messages.json": {
+    "mtime": 1780860593.8328953,
+    "ast_hash": "0c8e4242ca7b2db0d1b4355e048ed566",
+    "semantic_hash": "0c8e4242ca7b2db0d1b4355e048ed566"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\sl\\messages.json": {
+    "mtime": 1780860593.840677,
+    "ast_hash": "e73aaaffc6fcc0d30c3b59304c5a33ae",
+    "semantic_hash": "e73aaaffc6fcc0d30c3b59304c5a33ae"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\sr\\messages.json": {
+    "mtime": 1780860593.8440166,
+    "ast_hash": "687c11ef7d478666dabede72b6e1836d",
+    "semantic_hash": "687c11ef7d478666dabede72b6e1836d"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\sv\\messages.json": {
+    "mtime": 1780860593.8452773,
+    "ast_hash": "9e8c4cd456913dd89cc66854296e871d",
+    "semantic_hash": "9e8c4cd456913dd89cc66854296e871d"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\sw\\messages.json": {
+    "mtime": 1780860593.8483028,
+    "ast_hash": "f9fcae9f118e1c5244234eaec33c6e1a",
+    "semantic_hash": "f9fcae9f118e1c5244234eaec33c6e1a"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\ta\\messages.json": {
+    "mtime": 1780860593.8524892,
+    "ast_hash": "1f50416d59432fec9fa8b7a08c690f71",
+    "semantic_hash": "1f50416d59432fec9fa8b7a08c690f71"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\te\\messages.json": {
+    "mtime": 1780860593.8573115,
+    "ast_hash": "69efc0bb480ad5f9a7242743e09d52bb",
+    "semantic_hash": "69efc0bb480ad5f9a7242743e09d52bb"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\th\\messages.json": {
+    "mtime": 1780860593.8598356,
+    "ast_hash": "0c28bb5e75e361f2ff1cc288ed5c470f",
+    "semantic_hash": "0c28bb5e75e361f2ff1cc288ed5c470f"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\tr\\messages.json": {
+    "mtime": 1780860593.867599,
+    "ast_hash": "eeaf6fee5b33d55bac0e89145d8b220d",
+    "semantic_hash": "eeaf6fee5b33d55bac0e89145d8b220d"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\uk\\messages.json": {
+    "mtime": 1780860593.8803186,
+    "ast_hash": "32d0cfc5e9fad70a35a28744e8394a25",
+    "semantic_hash": "32d0cfc5e9fad70a35a28744e8394a25"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\ur\\messages.json": {
+    "mtime": 1780860593.897607,
+    "ast_hash": "26579e62308fefe015f57a0060e68bf4",
+    "semantic_hash": "26579e62308fefe015f57a0060e68bf4"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\vi\\messages.json": {
+    "mtime": 1780860593.8997412,
+    "ast_hash": "7fb8a3976d8faa7d5f845bfa0871b17e",
+    "semantic_hash": "7fb8a3976d8faa7d5f845bfa0871b17e"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\zh_CN\\messages.json": {
+    "mtime": 1780860593.9112785,
+    "ast_hash": "fe9740f42ae37842989726403b540b17",
+    "semantic_hash": "fe9740f42ae37842989726403b540b17"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\zh_HK\\messages.json": {
+    "mtime": 1780860593.9139183,
+    "ast_hash": "9d01d298eaa2212e8adaa255c9c7b5cd",
+    "semantic_hash": "9d01d298eaa2212e8adaa255c9c7b5cd"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\zh_TW\\messages.json": {
+    "mtime": 1780860593.924168,
+    "ast_hash": "6f5db2bcef663a9abe4501936f8171ba",
+    "semantic_hash": "6f5db2bcef663a9abe4501936f8171ba"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_locales\\zu\\messages.json": {
+    "mtime": 1780860593.931016,
+    "ast_hash": "ede01de4f1581eb8a4665bf641f6ff19",
+    "semantic_hash": "ede01de4f1581eb8a4665bf641f6ff19"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\_metadata\\verified_contents.json": {
+    "mtime": 1780860593.9361181,
+    "ast_hash": "2c1c9eca822882e196cc30ab0fe4b410",
+    "semantic_hash": "2c1c9eca822882e196cc30ab0fe4b410"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\extensions_crx_cache\\metadata.json": {
+    "mtime": 1780860594.9361072,
+    "ast_hash": "2aa9e263ee3796d9ce358460a2451b4c",
+    "semantic_hash": "2aa9e263ee3796d9ce358460a2451b4c"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\scripts\\convert-homework-listening.js": {
+    "mtime": 1780860597.240264,
+    "ast_hash": "47e1d833badbb891b67d74230aaa9170",
+    "semantic_hash": "47e1d833badbb891b67d74230aaa9170"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\scripts\\converted-listening-exercises.json": {
+    "mtime": 1780860597.2434855,
+    "ast_hash": "d088dcab08a2713c8a1d48435a959da4",
+    "semantic_hash": "d088dcab08a2713c8a1d48435a959da4"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\scripts\\piper-server.py": {
+    "mtime": 1780873089.9161515,
+    "ast_hash": "b92d9f030cfd16c7908679284968679b",
+    "semantic_hash": "b92d9f030cfd16c7908679284968679b"
   },
   "C:\\Users\\vviei\\.claude\\projects\\Platform\\src\\App.jsx": {
-    "mtime": 1780599104.351347,
-    "hash": "b2557dff81783a4f1cd8ddebfd42ca1c"
+    "mtime": 1780860630.3582046,
+    "ast_hash": "79a3855c63f0c0e0917ff8de77f4479b",
+    "semantic_hash": "79a3855c63f0c0e0917ff8de77f4479b"
   },
   "C:\\Users\\vviei\\.claude\\projects\\Platform\\src\\main.jsx": {
     "mtime": 1780566463.7986987,
-    "hash": "cc5758aaf511e86eef45e337455ff8c0"
+    "ast_hash": "cc5758aaf511e86eef45e337455ff8c0",
+    "semantic_hash": "cc5758aaf511e86eef45e337455ff8c0"
   },
   "C:\\Users\\vviei\\.claude\\projects\\Platform\\src\\components\\error-boundary.jsx": {
-    "mtime": 1780573293.9622462,
-    "hash": "cf8706006291fb3e2e119b6a6dfc9ac6"
+    "mtime": 1780860597.2654288,
+    "ast_hash": "cf8706006291fb3e2e119b6a6dfc9ac6",
+    "semantic_hash": "cf8706006291fb3e2e119b6a6dfc9ac6"
   },
   "C:\\Users\\vviei\\.claude\\projects\\Platform\\src\\components\\exercise-editor.jsx": {
-    "mtime": 1780599104.3523462,
-    "hash": "7bad11a522be7f2d326a5c78e8a50154"
+    "mtime": 1780861823.6232412,
+    "ast_hash": "b9811ef7843ad8bf5fd3f0136283185c",
+    "semantic_hash": "b9811ef7843ad8bf5fd3f0136283185c"
   },
   "C:\\Users\\vviei\\.claude\\projects\\Platform\\src\\components\\exercise-player.jsx": {
-    "mtime": 1780618896.4507582,
-    "hash": "9f0962cf462ae43a3fe9ada8db0a76c0"
+    "mtime": 1780860630.361581,
+    "ast_hash": "db19ca07fdc6fc01e3dbf1c9224e352a",
+    "semantic_hash": "db19ca07fdc6fc01e3dbf1c9224e352a"
   },
   "C:\\Users\\vviei\\.claude\\projects\\Platform\\src\\components\\gamification.jsx": {
-    "mtime": 1780482175.233755,
-    "hash": "bf47daeb5b861fe39a873a34d3a5e288"
+    "mtime": 1780860597.36601,
+    "ast_hash": "bf47daeb5b861fe39a873a34d3a5e288",
+    "semantic_hash": "bf47daeb5b861fe39a873a34d3a5e288"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\src\\components\\homework-set-wizard.jsx": {
+    "mtime": 1780859318.6348078,
+    "ast_hash": "1e4c346ef98c4d380dea6931f2496d22",
+    "semantic_hash": "1e4c346ef98c4d380dea6931f2496d22"
   },
   "C:\\Users\\vviei\\.claude\\projects\\Platform\\src\\components\\message-center.jsx": {
-    "mtime": 1780573293.9622462,
-    "hash": "eb80a343b390ccb5b3f93be87dc70eb2"
+    "mtime": 1780860630.3650582,
+    "ast_hash": "322bb560109df4bdfd87709c16c9e304",
+    "semantic_hash": "322bb560109df4bdfd87709c16c9e304"
   },
   "C:\\Users\\vviei\\.claude\\projects\\Platform\\src\\components\\shared.jsx": {
-    "mtime": 1780628406.5104473,
-    "hash": "0880f88ebb63b0d90ae1c48c0516f976"
+    "mtime": 1780860630.3753238,
+    "ast_hash": "2e7c7b80b25ae5ad502dd91819b82634",
+    "semantic_hash": "2e7c7b80b25ae5ad502dd91819b82634"
   },
   "C:\\Users\\vviei\\.claude\\projects\\Platform\\src\\components\\tweaks-panel.jsx": {
     "mtime": 1780190806.1887367,
-    "hash": "b5e58b4f3a6d8f4f422d5ebc2df9978d"
+    "ast_hash": "b5e58b4f3a6d8f4f422d5ebc2df9978d",
+    "semantic_hash": "b5e58b4f3a6d8f4f422d5ebc2df9978d"
   },
   "C:\\Users\\vviei\\.claude\\projects\\Platform\\src\\components\\exercises\\ErrorCorrection.jsx": {
-    "mtime": 1780471701.6686554,
-    "hash": "4e634ea8e965ada16962c75adf2d70de"
+    "mtime": 1780860597.2926638,
+    "ast_hash": "bfc30f6c2f76b440d623d4ea6ed7c1e3",
+    "semantic_hash": "bfc30f6c2f76b440d623d4ea6ed7c1e3"
   },
   "C:\\Users\\vviei\\.claude\\projects\\Platform\\src\\components\\exercises\\ExercisePlayer.jsx": {
-    "mtime": 1780599104.3553672,
-    "hash": "18ce3867739f534666483739ff8fc13d"
+    "mtime": 1780860597.2943578,
+    "ast_hash": "339627f58d6583e0017608a190d5d147",
+    "semantic_hash": "339627f58d6583e0017608a190d5d147"
   },
   "C:\\Users\\vviei\\.claude\\projects\\Platform\\src\\components\\exercises\\FillBlank.jsx": {
-    "mtime": 1780471701.67066,
-    "hash": "e25d5d1444ae74cd87727b6d21f2641a"
+    "mtime": 1780860597.299515,
+    "ast_hash": "9ada3722e2c5dae2e0dc41179922b1a2",
+    "semantic_hash": "9ada3722e2c5dae2e0dc41179922b1a2"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\src\\components\\exercises\\lifestyle_b1_b2_platform_pack.json": {
+    "mtime": 1780860597.3494692,
+    "ast_hash": "3dce0fdb485d4628388910fe1d14e94a",
+    "semantic_hash": "3dce0fdb485d4628388910fe1d14e94a"
   },
   "C:\\Users\\vviei\\.claude\\projects\\Platform\\src\\components\\exercises\\Listening.jsx": {
-    "mtime": 1780618896.4527595,
-    "hash": "8b28b1ade31c7ea50d72e6212692f39b"
+    "mtime": 1780872322.9382627,
+    "ast_hash": "c4d1dd86190bcd9df6c8c428c87a76f9",
+    "semantic_hash": "c4d1dd86190bcd9df6c8c428c87a76f9"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\src\\components\\exercises\\Matching.jsx": {
+    "mtime": 1780860597.3090348,
+    "ast_hash": "5903a9489981d3c3a77cd57dd2095293",
+    "semantic_hash": "5903a9489981d3c3a77cd57dd2095293"
   },
   "C:\\Users\\vviei\\.claude\\projects\\Platform\\src\\components\\exercises\\MultipleChoice.jsx": {
-    "mtime": 1780471701.6718287,
-    "hash": "fe29bd3e22cd349ac3b338c69afe2989"
+    "mtime": 1780860597.31028,
+    "ast_hash": "fbd5adf117b366065696879f0a75bdaa",
+    "semantic_hash": "fbd5adf117b366065696879f0a75bdaa"
   },
   "C:\\Users\\vviei\\.claude\\projects\\Platform\\src\\components\\exercises\\OrderSentences.jsx": {
-    "mtime": 1780471701.6728406,
-    "hash": "eba40a3588f98ac4bf678974005213ef"
+    "mtime": 1780860597.3126922,
+    "ast_hash": "9b457bf67a0433074272186cf4b960d4",
+    "semantic_hash": "9b457bf67a0433074272186cf4b960d4"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\src\\components\\exercises\\QuickFire.jsx": {
+    "mtime": 1780860597.3140202,
+    "ast_hash": "3fb5720f0e412510f1bf0bb0e15f65c1",
+    "semantic_hash": "3fb5720f0e412510f1bf0bb0e15f65c1"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\src\\components\\exercises\\Scenario.jsx": {
+    "mtime": 1780860597.3239095,
+    "ast_hash": "9012ced3200c16b407b7e90594f89909",
+    "semantic_hash": "9012ced3200c16b407b7e90594f89909"
   },
   "C:\\Users\\vviei\\.claude\\projects\\Platform\\src\\components\\exercises\\ShortAnswer.jsx": {
-    "mtime": 1780471701.6735282,
-    "hash": "f00d7f426e7e67925c02fbe94903226b"
+    "mtime": 1780860597.3274064,
+    "ast_hash": "f00d7f426e7e67925c02fbe94903226b",
+    "semantic_hash": "f00d7f426e7e67925c02fbe94903226b"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\src\\components\\exercises\\TrueFalse.jsx": {
+    "mtime": 1780860597.3300147,
+    "ast_hash": "9a014d44e3ebb564921fc0dbe5ca1924",
+    "semantic_hash": "9a014d44e3ebb564921fc0dbe5ca1924"
   },
   "C:\\Users\\vviei\\.claude\\projects\\Platform\\src\\components\\exercises\\validateExercise.js": {
-    "mtime": 1780599104.3563507,
-    "hash": "61ae552976e24f1cc3f8d4582296f2f5"
+    "mtime": 1780860597.3631752,
+    "ast_hash": "ea49ef66035571c1c7376f3c6678a255",
+    "semantic_hash": "ea49ef66035571c1c7376f3c6678a255"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\src\\data\\grammar-doctor-data.js": {
+    "mtime": 1780859112.9779987,
+    "ast_hash": "8eb778dd1f7b2ffb4e4a4c87cff10fa0",
+    "semantic_hash": "8eb778dd1f7b2ffb4e4a4c87cff10fa0"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\src\\data\\level-up-data.js": {
+    "mtime": 1780859112.8460703,
+    "ast_hash": "fc78faf04b3f961b18ab2640fedbb83c",
+    "semantic_hash": "fc78faf04b3f961b18ab2640fedbb83c"
   },
   "C:\\Users\\vviei\\.claude\\projects\\Platform\\src\\data\\listening-education.js": {
-    "mtime": 1780599104.3589787,
-    "hash": "e86f1e453a37bfe5a02259155eb0159f"
+    "mtime": 1780860597.3901474,
+    "ast_hash": "e86f1e453a37bfe5a02259155eb0159f",
+    "semantic_hash": "e86f1e453a37bfe5a02259155eb0159f"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\src\\data\\met-b2-skills-bank.json": {
+    "mtime": 1780860597.396171,
+    "ast_hash": "b3dba86a994c8838d21ef05962231951",
+    "semantic_hash": "b3dba86a994c8838d21ef05962231951"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\src\\data\\met-vocab-bank.json": {
+    "mtime": 1780860597.4015708,
+    "ast_hash": "737fc8e59697da2cbd791649c1688f13",
+    "semantic_hash": "737fc8e59697da2cbd791649c1688f13"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\src\\data\\practice-units-1-5.js": {
+    "mtime": 1780859112.1071458,
+    "ast_hash": "bd26dac068831c5140ebd3a3b25d1595",
+    "semantic_hash": "bd26dac068831c5140ebd3a3b25d1595"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\src\\data\\practice-units-6-10.js": {
+    "mtime": 1780859112.773232,
+    "ast_hash": "c36da297001eab6799f7500e69e0d73d",
+    "semantic_hash": "c36da297001eab6799f7500e69e0d73d"
   },
   "C:\\Users\\vviei\\.claude\\projects\\Platform\\src\\data\\students.jsx": {
-    "mtime": 1780573293.9622462,
-    "hash": "572bb6d3eaae2ff0a67d8aa7ae9c190d"
+    "mtime": 1780860597.4102516,
+    "ast_hash": "4be25622a13355178afa77420d35ea7b",
+    "semantic_hash": "4be25622a13355178afa77420d35ea7b"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\src\\data\\vocabulary-swapper-data.js": {
+    "mtime": 1780859113.0505476,
+    "ast_hash": "0630051c45d4439b5304a91be4f3cc69",
+    "semantic_hash": "0630051c45d4439b5304a91be4f3cc69"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\src\\lib\\agent-memory.js": {
+    "mtime": 1780860597.4130962,
+    "ast_hash": "35330eadd639bd88a8684496383c5c72",
+    "semantic_hash": "35330eadd639bd88a8684496383c5c72"
   },
   "C:\\Users\\vviei\\.claude\\projects\\Platform\\src\\lib\\ai-helpers.js": {
-    "mtime": 1780573293.9622462,
-    "hash": "5f088a381838e154386728273dff6841"
+    "mtime": 1780860597.4156194,
+    "ast_hash": "5f088a381838e154386728273dff6841",
+    "semantic_hash": "5f088a381838e154386728273dff6841"
   },
   "C:\\Users\\vviei\\.claude\\projects\\Platform\\src\\lib\\error-bank-profiles.js": {
     "mtime": 1780190806.6848388,
-    "hash": "a3f95762215196f14d35d894aacaf591"
+    "ast_hash": "a3f95762215196f14d35d894aacaf591",
+    "semantic_hash": "a3f95762215196f14d35d894aacaf591"
   },
   "C:\\Users\\vviei\\.claude\\projects\\Platform\\src\\lib\\exercise-bank.js": {
-    "mtime": 1780313166.272081,
-    "hash": "da7f5f37a7e153ed7e9f8c491755cbec"
+    "mtime": 1780852431.7034469,
+    "ast_hash": "da7f5f37a7e153ed7e9f8c491755cbec",
+    "semantic_hash": "da7f5f37a7e153ed7e9f8c491755cbec"
   },
   "C:\\Users\\vviei\\.claude\\projects\\Platform\\src\\lib\\exercise-library.js": {
-    "mtime": 1780599104.359984,
-    "hash": "6a9cf0fb26122f41d80c8b92c55f3524"
+    "mtime": 1780860597.427291,
+    "ast_hash": "6a9cf0fb26122f41d80c8b92c55f3524",
+    "semantic_hash": "6a9cf0fb26122f41d80c8b92c55f3524"
   },
   "C:\\Users\\vviei\\.claude\\projects\\Platform\\src\\lib\\exercise-types.js": {
-    "mtime": 1780618896.4550214,
-    "hash": "27508bd37c862b3323de0a05862b6393"
+    "mtime": 1780860597.4293902,
+    "ast_hash": "16a25b460c1ad513ad351d1459fa692b",
+    "semantic_hash": "16a25b460c1ad513ad351d1459fa692b"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\src\\lib\\lifestyle-pack.js": {
+    "mtime": 1780860597.431299,
+    "ast_hash": "84faa4b7f6ca9fa5df318b07af82a4ae",
+    "semantic_hash": "84faa4b7f6ca9fa5df318b07af82a4ae"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\src\\lib\\met-b2-bank.js": {
+    "mtime": 1780860597.433675,
+    "ast_hash": "6bb2619aa427f57b7cc76c8e0ddcc4fb",
+    "semantic_hash": "6bb2619aa427f57b7cc76c8e0ddcc4fb"
   },
   "C:\\Users\\vviei\\.claude\\projects\\Platform\\src\\lib\\print-homework.js": {
-    "mtime": 1780599104.3629842,
-    "hash": "89d8e63c6fd9b1cea2f924210a8c6457"
+    "mtime": 1780860597.4416554,
+    "ast_hash": "89d8e63c6fd9b1cea2f924210a8c6457",
+    "semantic_hash": "89d8e63c6fd9b1cea2f924210a8c6457"
   },
   "C:\\Users\\vviei\\.claude\\projects\\Platform\\src\\lib\\prompts.js": {
-    "mtime": 1780626325.4648545,
-    "hash": "a871f4c5c4adbfa25eda8964bd3af6b4"
+    "mtime": 1780860735.533942,
+    "ast_hash": "512dbce40b63685c284b2a65b6b546d8",
+    "semantic_hash": "512dbce40b63685c284b2a65b6b546d8"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\src\\lib\\report-metrics.js": {
+    "mtime": 1780873381.671214,
+    "ast_hash": "870463857c526458aa85459c0c38fac0",
+    "semantic_hash": "870463857c526458aa85459c0c38fac0"
   },
   "C:\\Users\\vviei\\.claude\\projects\\Platform\\src\\lib\\supabase-db.js": {
-    "mtime": 1780599104.366983,
-    "hash": "d41831366204624611022f6754547f93"
+    "mtime": 1780860597.4466507,
+    "ast_hash": "9249e94fbd6b74b059cf5cdcd4904a00",
+    "semantic_hash": "9249e94fbd6b74b059cf5cdcd4904a00"
   },
   "C:\\Users\\vviei\\.claude\\projects\\Platform\\src\\lib\\supabase-storage.js": {
-    "mtime": 1780619974.2010026,
-    "hash": "b35c494981acab29762bccb44e022409"
+    "mtime": 1780860597.4487605,
+    "ast_hash": "07cc0208b07948e571e1fb21878d2294",
+    "semantic_hash": "07cc0208b07948e571e1fb21878d2294"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\src\\lib\\unit-bank.js": {
+    "mtime": 1780859149.1245596,
+    "ast_hash": "14ca9cb8bc58df588968e5a051bd8b4c",
+    "semantic_hash": "14ca9cb8bc58df588968e5a051bd8b4c"
   },
   "C:\\Users\\vviei\\.claude\\projects\\Platform\\src\\lib\\workflow.js": {
-    "mtime": 1780599104.3690057,
-    "hash": "314159cea7dc3dec6f7b75b43a9850cf"
+    "mtime": 1780866453.247742,
+    "ast_hash": "09f5f5fd7220f2e8f0e280879f0df090",
+    "semantic_hash": "09f5f5fd7220f2e8f0e280879f0df090"
   },
   "C:\\Users\\vviei\\.claude\\projects\\Platform\\src\\pages\\calendar.jsx": {
-    "mtime": 1780338865.3083394,
-    "hash": "9fa14af9be0380ddd99659dfb2a5788d"
+    "mtime": 1780860630.37785,
+    "ast_hash": "bd22a93c57d891891f46bc8547692b4b",
+    "semantic_hash": "bd22a93c57d891891f46bc8547692b4b"
   },
   "C:\\Users\\vviei\\.claude\\projects\\Platform\\src\\pages\\class-record.jsx": {
-    "mtime": 1780573293.9781225,
-    "hash": "e816ede562f518b5d6bbbe5654476801"
+    "mtime": 1780860597.4625113,
+    "ast_hash": "e816ede562f518b5d6bbbe5654476801",
+    "semantic_hash": "e816ede562f518b5d6bbbe5654476801"
   },
   "C:\\Users\\vviei\\.claude\\projects\\Platform\\src\\pages\\diagnostic-create.jsx": {
-    "mtime": 1780627265.9729557,
-    "hash": "52aa33b909a13e1e8cf1a06665ab59da"
+    "mtime": 1780860597.4666736,
+    "ast_hash": "0902c3c0f7ef5f926f00314ce1c56339",
+    "semantic_hash": "0902c3c0f7ef5f926f00314ce1c56339"
   },
   "C:\\Users\\vviei\\.claude\\projects\\Platform\\src\\pages\\diagnostics.jsx": {
-    "mtime": 1780599104.3730094,
-    "hash": "a5648e6a81215262ff641f1df19fabeb"
+    "mtime": 1780860630.3804276,
+    "ast_hash": "58d2e24b8e08ce6860910726c9ea4e0a",
+    "semantic_hash": "58d2e24b8e08ce6860910726c9ea4e0a"
   },
   "C:\\Users\\vviei\\.claude\\projects\\Platform\\src\\pages\\error-bank.jsx": {
-    "mtime": 1780338865.3103385,
-    "hash": "c53110e33104a93a4abf9e4d10ae8817"
+    "mtime": 1780852431.7303312,
+    "ast_hash": "e586d3f6045072e20c086bdd914e1348",
+    "semantic_hash": "e586d3f6045072e20c086bdd914e1348"
   },
   "C:\\Users\\vviei\\.claude\\projects\\Platform\\src\\pages\\exercise-demo.jsx": {
-    "mtime": 1780471701.6825445,
-    "hash": "fde4f8f4968204233b515f240c7f3874"
+    "mtime": 1780860597.47916,
+    "ast_hash": "fde4f8f4968204233b515f240c7f3874",
+    "semantic_hash": "fde4f8f4968204233b515f240c7f3874"
   },
   "C:\\Users\\vviei\\.claude\\projects\\Platform\\src\\pages\\homework-create.jsx": {
-    "mtime": 1780626502.1125615,
-    "hash": "7c756c37e7acc9e628e641b9b597fec8"
+    "mtime": 1780861014.316401,
+    "ast_hash": "f1c1aff80f67057d90a4a50fbf78cba2",
+    "semantic_hash": "f1c1aff80f67057d90a4a50fbf78cba2"
   },
   "C:\\Users\\vviei\\.claude\\projects\\Platform\\src\\pages\\homework.jsx": {
-    "mtime": 1780599104.3754935,
-    "hash": "8ab63659331fa92f8b5a34c760922c12"
+    "mtime": 1780860630.3908224,
+    "ast_hash": "8ab63659331fa92f8b5a34c760922c12",
+    "semantic_hash": "8ab63659331fa92f8b5a34c760922c12"
   },
   "C:\\Users\\vviei\\.claude\\projects\\Platform\\src\\pages\\login.jsx": {
-    "mtime": 1780618896.45703,
-    "hash": "423239761ab91a9a4831c558d235d319"
+    "mtime": 1780860689.0413573,
+    "ast_hash": "13e16ec165238228b509cfa1350cc28e",
+    "semantic_hash": "13e16ec165238228b509cfa1350cc28e"
   },
   "C:\\Users\\vviei\\.claude\\projects\\Platform\\src\\pages\\reports.jsx": {
-    "mtime": 1780338865.3210914,
-    "hash": "3a781c2bcff41716b2ca9076bec08e4f"
+    "mtime": 1780873724.4031136,
+    "ast_hash": "5a4f4e9dbdc19dbcff267cd6a6c2f358",
+    "semantic_hash": "5a4f4e9dbdc19dbcff267cd6a6c2f358"
   },
   "C:\\Users\\vviei\\.claude\\projects\\Platform\\src\\pages\\settings.jsx": {
-    "mtime": 1780630292.2153842,
-    "hash": "3b78342efe3a3b7b43b880a0972cadd8"
+    "mtime": 1780873089.5593705,
+    "ast_hash": "e368e324578dea8cd9a738733fc8d563",
+    "semantic_hash": "e368e324578dea8cd9a738733fc8d563"
   },
   "C:\\Users\\vviei\\.claude\\projects\\Platform\\src\\pages\\student-dashboard.jsx": {
-    "mtime": 1780599104.3784945,
-    "hash": "e3c7cbb60414d43dfeba01728130a827"
+    "mtime": 1780873259.816831,
+    "ast_hash": "7be1f38adf75a5d9d5ec8857315f0b65",
+    "semantic_hash": "7be1f38adf75a5d9d5ec8857315f0b65"
   },
   "C:\\Users\\vviei\\.claude\\projects\\Platform\\src\\pages\\student-profile.jsx": {
     "mtime": 1780190810.4364514,
-    "hash": "bf337c1a03d5c241124360dcdf9eb0c3"
+    "ast_hash": "bf337c1a03d5c241124360dcdf9eb0c3",
+    "semantic_hash": "bf337c1a03d5c241124360dcdf9eb0c3"
   },
   "C:\\Users\\vviei\\.claude\\projects\\Platform\\src\\pages\\students.jsx": {
-    "mtime": 1780573294.0087206,
-    "hash": "6ffcc64882a4498601eea523d4f97fa7"
+    "mtime": 1780860630.4016528,
+    "ast_hash": "6a6f086b5658dc952e4f4363d9aace16",
+    "semantic_hash": "6a6f086b5658dc952e4f4363d9aace16"
   },
   "C:\\Users\\vviei\\.claude\\projects\\Platform\\src\\pages\\submission-review.jsx": {
-    "mtime": 1780599104.3795993,
-    "hash": "4ead1deb752dae464292e2a97a973232"
+    "mtime": 1780871523.243963,
+    "ast_hash": "2a8d7a49b1d524d0dadd963477556617",
+    "semantic_hash": "2a8d7a49b1d524d0dadd963477556617"
   },
   "C:\\Users\\vviei\\.claude\\projects\\Platform\\src\\pages\\submissions.jsx": {
-    "mtime": 1780573294.011602,
-    "hash": "925dc3b2a73453baee8a2fbfd591142e"
+    "mtime": 1780860630.407133,
+    "ast_hash": "f8aeb6ebc1e7e89e1b1afc490c3d6f30",
+    "semantic_hash": "f8aeb6ebc1e7e89e1b1afc490c3d6f30"
   },
   "C:\\Users\\vviei\\.claude\\projects\\Platform\\src\\pages\\teacher-dashboard.jsx": {
-    "mtime": 1780338865.3882506,
-    "hash": "45aca26d0b229caba0afa47500c93579"
+    "mtime": 1780860630.4085267,
+    "ast_hash": "404d64d167789e2cb0e561125239f238",
+    "semantic_hash": "404d64d167789e2cb0e561125239f238"
   },
   "C:\\Users\\vviei\\.claude\\projects\\Platform\\src\\pages\\teacher-home.jsx": {
     "mtime": 1780190811.4881568,
-    "hash": "08239994223bc220c92fab76f52b55e9"
+    "ast_hash": "08239994223bc220c92fab76f52b55e9",
+    "semantic_hash": "08239994223bc220c92fab76f52b55e9"
   },
   "C:\\Users\\vviei\\.claude\\projects\\Platform\\src\\tools\\tool-calendar.jsx": {
     "mtime": 1780313166.3227115,
-    "hash": "775e505d92c7e8b1cd225b358e862882"
+    "ast_hash": "775e505d92c7e8b1cd225b358e862882",
+    "semantic_hash": "775e505d92c7e8b1cd225b358e862882"
   },
   "C:\\Users\\vviei\\.claude\\projects\\Platform\\src\\tools\\tool-diagnostic.jsx": {
-    "mtime": 1780482175.2677288,
-    "hash": "498344f41c2dda0d944d575935fcdfff"
+    "mtime": 1780860597.5383754,
+    "ast_hash": "3886f485331a0f1e628b6687c3e2c86a",
+    "semantic_hash": "3886f485331a0f1e628b6687c3e2c86a"
   },
   "C:\\Users\\vviei\\.claude\\projects\\Platform\\src\\tools\\tool-feedback.jsx": {
-    "mtime": 1780599104.3839877,
-    "hash": "3416486846c408a84c7d8021f8db0311"
+    "mtime": 1780860597.5441034,
+    "ast_hash": "20f9f840750c42bd8896e379f2ee87e8",
+    "semantic_hash": "20f9f840750c42bd8896e379f2ee87e8"
   },
   "C:\\Users\\vviei\\.claude\\projects\\Platform\\src\\tools\\tool-homework.jsx": {
-    "mtime": 1780599104.386259,
-    "hash": "f1ac70d9ef5c8ef9f612713fe48562ca"
+    "mtime": 1780860597.5495114,
+    "ast_hash": "dfa8f570f3ec35e2e9f6d487b60fe0ff",
+    "semantic_hash": "dfa8f570f3ec35e2e9f6d487b60fe0ff"
   },
   "C:\\Users\\vviei\\.claude\\projects\\Platform\\src\\tools\\tool-inbox.jsx": {
-    "mtime": 1780338865.3995864,
-    "hash": "4073e681bbab8ccbbdc5c0894f6f25f7"
+    "mtime": 1780852431.7808685,
+    "ast_hash": "a83d501b449b1284735db396a39678b0",
+    "semantic_hash": "a83d501b449b1284735db396a39678b0"
   },
   "C:\\Users\\vviei\\.claude\\projects\\Platform\\src\\tools\\tool-portal.jsx": {
-    "mtime": 1780482175.2695065,
-    "hash": "5acef542104a0686e9211a85c334bff1"
+    "mtime": 1780860597.5535207,
+    "ast_hash": "5acef542104a0686e9211a85c334bff1",
+    "semantic_hash": "5acef542104a0686e9211a85c334bff1"
   },
   "C:\\Users\\vviei\\.claude\\projects\\Platform\\src\\tools\\tool-practice-studio.jsx": {
     "mtime": 1780313166.3342297,
-    "hash": "15cd6aa8924587d9b054e3e22bf845a8"
+    "ast_hash": "15cd6aa8924587d9b054e3e22bf845a8",
+    "semantic_hash": "15cd6aa8924587d9b054e3e22bf845a8"
   },
   "C:\\Users\\vviei\\.claude\\projects\\Platform\\src\\tools\\tool-reports.jsx": {
-    "mtime": 1780482175.2715306,
-    "hash": "32daa81698291a5747ecebda86afddb9"
+    "mtime": 1780873217.9239018,
+    "ast_hash": "dfee8dd3c0151d6e1278513c3045e4e4",
+    "semantic_hash": "dfee8dd3c0151d6e1278513c3045e4e4"
   },
   "C:\\Users\\vviei\\.claude\\projects\\Platform\\src\\tools\\tool-templates.jsx": {
     "mtime": 1780190813.119695,
-    "hash": "be901c77cd2258ef7ddd514d3008c2c2"
+    "ast_hash": "be901c77cd2258ef7ddd514d3008c2c2",
+    "semantic_hash": "be901c77cd2258ef7ddd514d3008c2c2"
   },
   "C:\\Users\\vviei\\.claude\\projects\\Platform\\supabase\\migrations\\20260603140000_add_exercises_table.sql": {
-    "mtime": 1780599104.389259,
-    "hash": "eef758fedfd82bea2185a03b0239307f"
+    "mtime": 1780860597.56589,
+    "ast_hash": "eef758fedfd82bea2185a03b0239307f",
+    "semantic_hash": "eef758fedfd82bea2185a03b0239307f"
   },
   "C:\\Users\\vviei\\.claude\\projects\\Platform\\supabase\\migrations\\20260603160000_student_claim_and_audio_bucket.sql": {
-    "mtime": 1780599104.3902593,
-    "hash": "b445ed0bd2f60bad82ba1fe42785b70e"
+    "mtime": 1780860597.5695188,
+    "ast_hash": "b445ed0bd2f60bad82ba1fe42785b70e",
+    "semantic_hash": "b445ed0bd2f60bad82ba1fe42785b70e"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\supabase\\migrations\\20260605000000_harden_function_security_advisors.sql": {
+    "mtime": 1780860597.5709538,
+    "ast_hash": "5249e155b67c8ca66ed5133560160b91",
+    "semantic_hash": "5249e155b67c8ca66ed5133560160b91"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\supabase\\migrations\\20260605000001_claim_student_by_email_rpc.sql": {
+    "mtime": 1780860597.5772476,
+    "ast_hash": "332b274848f83fcdb0c67d62460eb444",
+    "semantic_hash": "332b274848f83fcdb0c67d62460eb444"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\tests\\homework-create-icons.test.js": {
+    "mtime": 1780860597.5794394,
+    "ast_hash": "d8220cc00b9af73cdb2b8c3b532b0e16",
+    "semantic_hash": "d8220cc00b9af73cdb2b8c3b532b0e16"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\tests\\report-metrics.test.js": {
+    "mtime": 1780873390.8504455,
+    "ast_hash": "a1aa2992854c4afc135369b500cb7eee",
+    "semantic_hash": "a1aa2992854c4afc135369b500cb7eee"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\tests\\student-dashboard-copy.test.js": {
+    "mtime": 1780860597.581931,
+    "ast_hash": "29ed50e20f0ffde690928c86d16d0734",
+    "semantic_hash": "29ed50e20f0ffde690928c86d16d0734"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\tests\\submission-review-transcripts.test.js": {
+    "mtime": 1780871441.0405548,
+    "ast_hash": "a720000f1cec8a23bbae33962e1b382b",
+    "semantic_hash": "a720000f1cec8a23bbae33962e1b382b"
   },
   "C:\\Users\\vviei\\.claude\\projects\\Platform\\AGENTS.md": {
-    "mtime": 1780599104.3458543,
-    "hash": "ca1c05067403f9a73a7272b237e970d2"
+    "mtime": 1780860592.1060271,
+    "ast_hash": "ca1c05067403f9a73a7272b237e970d2",
+    "semantic_hash": "ca1c05067403f9a73a7272b237e970d2"
   },
   "C:\\Users\\vviei\\.claude\\projects\\Platform\\CLAUDE.md": {
-    "mtime": 1780629032.2697752,
-    "hash": "747e73a5e1af4b72c0d65c9169c23199"
+    "mtime": 1780860592.1075394,
+    "ast_hash": "747e73a5e1af4b72c0d65c9169c23199",
+    "semantic_hash": "747e73a5e1af4b72c0d65c9169c23199"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\DESIGN_SYSTEM_UPDATE.md": {
+    "mtime": 1780852431.6171837,
+    "ast_hash": "3c014427f524477b5ef861d151ff3497",
+    "semantic_hash": "3c014427f524477b5ef861d151ff3497"
   },
   "C:\\Users\\vviei\\.claude\\projects\\Platform\\index.html": {
     "mtime": 1780167520.9700646,
-    "hash": "d9f9dc31c40222e0db9e52c6bc93eeee"
+    "ast_hash": "d9f9dc31c40222e0db9e52c6bc93eeee",
+    "semantic_hash": "d9f9dc31c40222e0db9e52c6bc93eeee"
   },
   "C:\\Users\\vviei\\.claude\\projects\\Platform\\PRODUCT.md": {
-    "mtime": 1780482175.2198362,
-    "hash": "a1bf56fbb5a2b0ccec91e73080378baa"
+    "mtime": 1780860592.1274812,
+    "ast_hash": "a1bf56fbb5a2b0ccec91e73080378baa",
+    "semantic_hash": "a1bf56fbb5a2b0ccec91e73080378baa"
   },
   "C:\\Users\\vviei\\.claude\\projects\\Platform\\Deployment\\Deploy via Supabase.md": {
     "mtime": 1780175151.837637,
-    "hash": "8d8cc3d429d5a68468fa60a448a0f12c"
+    "ast_hash": "8d8cc3d429d5a68468fa60a448a0f12c",
+    "semantic_hash": "8d8cc3d429d5a68468fa60a448a0f12c"
   },
   "C:\\Users\\vviei\\.claude\\projects\\Platform\\dist-build\\index.html": {
-    "mtime": 1780620004.368225,
-    "hash": "7cd2d0d8bc9a82b8c6a16e496d812ff7"
+    "mtime": 1780873796.6436253,
+    "ast_hash": "8178cb63cdd391924d0eeb1b4e855db1",
+    "semantic_hash": "8178cb63cdd391924d0eeb1b4e855db1"
   },
   "C:\\Users\\vviei\\.claude\\projects\\Platform\\docs\\supabase-migration-plan.md": {
-    "mtime": 1780573293.9484637,
-    "hash": "bf3373d23defa9371defeb491bf07b2c"
+    "mtime": 1780860592.1443658,
+    "ast_hash": "bf3373d23defa9371defeb491bf07b2c",
+    "semantic_hash": "bf3373d23defa9371defeb491bf07b2c"
   },
   "C:\\Users\\vviei\\.claude\\projects\\Platform\\Exercises\\Exercises for platform - MET.md": {
     "mtime": 1780175151.8386989,
-    "hash": "f961214319269153e54c4fa2433174a1"
+    "ast_hash": "f961214319269153e54c4fa2433174a1",
+    "semantic_hash": "f961214319269153e54c4fa2433174a1"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\audit-notes.md": {
+    "mtime": 1780860592.4623127,
+    "ast_hash": "0655979cf310aafea2c08e8514b2e7c8",
+    "semantic_hash": "0655979cf310aafea2c08e8514b2e7c8"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\offscreen.html": {
+    "mtime": 1780860596.3465803,
+    "ast_hash": "13920ac62a557e075818d9d32c6e4ff3",
+    "semantic_hash": "13920ac62a557e075818d9d32c6e4ff3"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\offscreen.html": {
+    "mtime": 1780860593.9639509,
+    "ast_hash": "13920ac62a557e075818d9d32c6e4ff3",
+    "semantic_hash": "13920ac62a557e075818d9d32c6e4ff3"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\dashboard-audit\\dashboard-platform-audit.md": {
+    "mtime": 1780860597.1809063,
+    "ast_hash": "683d99eef994a0c15586d4cbb9ad8072",
+    "semantic_hash": "683d99eef994a0c15586d4cbb9ad8072"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\dashboard-audit\\screenshot-capture-status.md": {
+    "mtime": 1780860597.183056,
+    "ast_hash": "98afe17984d10a65cc350cf72715d159",
+    "semantic_hash": "98afe17984d10a65cc350cf72715d159"
   },
   "C:\\Users\\vviei\\.claude\\projects\\Platform\\src\\components\\test.txt": {
     "mtime": 1780167520.9794593,
-    "hash": "9c48ac5f9675c2072f524acc99a450fd"
+    "ast_hash": "9c48ac5f9675c2072f524acc99a450fd",
+    "semantic_hash": "9c48ac5f9675c2072f524acc99a450fd"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\src\\components\\exercises\\deep-research-report.md": {
+    "mtime": 1780860597.3440099,
+    "ast_hash": "e4f844ebbf72445b89dd9d395251587a",
+    "semantic_hash": "e4f844ebbf72445b89dd9d395251587a"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\src\\components\\exercises\\lifestyle_b1_b2_printable_pack.md": {
+    "mtime": 1780860597.3608637,
+    "ast_hash": "75141aeeff1a4669129d47fe0d0fbf25",
+    "semantic_hash": "75141aeeff1a4669129d47fe0d0fbf25"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\mpv7s5vl-Captura-de-tela-2026-06-01-070940.png": {
+    "mtime": 1780852431.6643028,
+    "ast_hash": "190c5746050cfe14c92d6cd622e6a130",
+    "semantic_hash": "190c5746050cfe14c92d6cd622e6a130"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\mpv7s5vy-Captura-de-tela-2026-05-30-231826.png": {
+    "mtime": 1780852431.6673024,
+    "ast_hash": "9b303ed515d8bfcaaf6e28f3ff6b4559",
+    "semantic_hash": "9b303ed515d8bfcaaf6e28f3ff6b4559"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\mpv7s5vy-Captura-de-tela-2026-06-01-070921.png": {
+    "mtime": 1780852431.6694715,
+    "ast_hash": "c1757599c2f018d1bd6ff7417a9a7a0f",
+    "semantic_hash": "c1757599c2f018d1bd6ff7417a9a7a0f"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\audit-artifacts\\vv-homework-desktop-final.png": {
+    "mtime": 1780852431.6302996,
+    "ast_hash": "44d40f9ef8a9e49937949908163ff722",
+    "semantic_hash": "44d40f9ef8a9e49937949908163ff722"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\audit-artifacts\\vv-homework-desktop.png": {
+    "mtime": 1780852431.6352258,
+    "ast_hash": "7aa6ee6b9f6304059488690e4d309192",
+    "semantic_hash": "7aa6ee6b9f6304059488690e4d309192"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\audit-artifacts\\vv-homework-mobile-dock-fixed.png": {
+    "mtime": 1780852431.6397605,
+    "ast_hash": "88a69e9354bb426257b28f1992fef91d",
+    "semantic_hash": "88a69e9354bb426257b28f1992fef91d"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\audit-artifacts\\vv-homework-mobile-final.png": {
+    "mtime": 1780852431.6454437,
+    "ast_hash": "ad92638305a7d6c1c605206287f0c7d3",
+    "semantic_hash": "ad92638305a7d6c1c605206287f0c7d3"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\audit-artifacts\\vv-homework-mobile.png": {
+    "mtime": 1780852431.6494937,
+    "ast_hash": "704aff4b90c03bae4b904e5927e3f221",
+    "semantic_hash": "704aff4b90c03bae4b904e5927e3f221"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\dist-build\\exercises\\speaking\\speaking_picture_01_ski_resort.png": {
+    "mtime": 1780860597.1991413,
+    "ast_hash": "cdc9897195a806276e912c86b895b4e2",
+    "semantic_hash": "cdc9897195a806276e912c86b895b4e2"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\dist-build\\exercises\\speaking\\speaking_picture_02_airport_check_in.png": {
+    "mtime": 1780860597.2110233,
+    "ast_hash": "323dacff6938a3b427038e80b4cb70dd",
+    "semantic_hash": "323dacff6938a3b427038e80b4cb70dd"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\dist-build\\exercises\\speaking\\speaking_picture_03_beach_cleanup.png": {
+    "mtime": 1780860597.2166276,
+    "ast_hash": "54e61f73e552afe9b67e582aabcc24bc",
+    "semantic_hash": "54e61f73e552afe9b67e582aabcc24bc"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\dist-build\\exercises\\speaking\\speaking_picture_04_city_cafe.png": {
+    "mtime": 1780860597.2320602,
+    "ast_hash": "038a1c18344346cabdc83b42f8d8b1ff",
+    "semantic_hash": "038a1c18344346cabdc83b42f8d8b1ff"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\01-login-desktop.png": {
+    "mtime": 1780860592.4603114,
+    "ast_hash": "94dd2e5e89316aae9f676963efcc36c6",
+    "semantic_hash": "94dd2e5e89316aae9f676963efcc36c6"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\02-login-mobile.png": {
+    "mtime": 1780860592.4613097,
+    "ast_hash": "0d25c8d0ed932313628d1e34c36c90d0",
+    "semantic_hash": "0d25c8d0ed932313628d1e34c36c90d0"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\images\\drive-sync128.png": {
+    "mtime": 1780860596.334606,
+    "ast_hash": "709684b66326d11d3b6bc37bad801d46",
+    "semantic_hash": "709684b66326d11d3b6bc37bad801d46"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\images\\drive-sync16.png": {
+    "mtime": 1780860596.3356066,
+    "ast_hash": "37734998ccaeaad85afbf1e32dbaade7",
+    "semantic_hash": "37734998ccaeaad85afbf1e32dbaade7"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\images\\drive-sync256.png": {
+    "mtime": 1780860596.342585,
+    "ast_hash": "3722806f51355c391f9343dc60bfa052",
+    "semantic_hash": "3722806f51355c391f9343dc60bfa052"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\images\\drive-sync64.png": {
+    "mtime": 1780860596.344023,
+    "ast_hash": "620b6077ef48269cb59667320a634857",
+    "semantic_hash": "620b6077ef48269cb59667320a634857"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Web Applications\\Manifest Resources\\aghbiahbpaijignceidepookljebhfak\\Icons\\128.png": {
+    "mtime": 1780860596.6405637,
+    "ast_hash": "f0f63c37c02c159fb631decfb0fc1c7a",
+    "semantic_hash": "f0f63c37c02c159fb631decfb0fc1c7a"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Web Applications\\Manifest Resources\\aghbiahbpaijignceidepookljebhfak\\Icons\\192.png": {
+    "mtime": 1780860596.6456747,
+    "ast_hash": "4a02d038eeea11fbae84a923e37e4966",
+    "semantic_hash": "4a02d038eeea11fbae84a923e37e4966"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Web Applications\\Manifest Resources\\aghbiahbpaijignceidepookljebhfak\\Icons\\256.png": {
+    "mtime": 1780860596.6494808,
+    "ast_hash": "6dabcc9819be7e1b638921e03869bca6",
+    "semantic_hash": "6dabcc9819be7e1b638921e03869bca6"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Web Applications\\Manifest Resources\\aghbiahbpaijignceidepookljebhfak\\Icons\\32.png": {
+    "mtime": 1780860596.6529913,
+    "ast_hash": "2f1881da261cfaea89605ee7a5e33e40",
+    "semantic_hash": "2f1881da261cfaea89605ee7a5e33e40"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Web Applications\\Manifest Resources\\aghbiahbpaijignceidepookljebhfak\\Icons\\48.png": {
+    "mtime": 1780860596.657986,
+    "ast_hash": "2eb94e169eea40562e73ae9b1cf8fe31",
+    "semantic_hash": "2eb94e169eea40562e73ae9b1cf8fe31"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Web Applications\\Manifest Resources\\aghbiahbpaijignceidepookljebhfak\\Icons\\64.png": {
+    "mtime": 1780860596.66027,
+    "ast_hash": "fd4f64c4c98c0d336c4ff7ac36f07307",
+    "semantic_hash": "fd4f64c4c98c0d336c4ff7ac36f07307"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Web Applications\\Manifest Resources\\aghbiahbpaijignceidepookljebhfak\\Icons\\96.png": {
+    "mtime": 1780860596.661281,
+    "ast_hash": "335ee5754c3904530b8147769da3b768",
+    "semantic_hash": "335ee5754c3904530b8147769da3b768"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Web Applications\\Manifest Resources\\aghbiahbpaijignceidepookljebhfak\\Trusted Icons\\Icons\\192.png": {
+    "mtime": 1780860596.6636353,
+    "ast_hash": "4a02d038eeea11fbae84a923e37e4966",
+    "semantic_hash": "4a02d038eeea11fbae84a923e37e4966"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Web Applications\\Manifest Resources\\agimnkijcaahngcdmfeangaknmldooml\\Icons\\128.png": {
+    "mtime": 1780860596.6703465,
+    "ast_hash": "8a5c8fbf7b03f3247dde95c8834abe99",
+    "semantic_hash": "8a5c8fbf7b03f3247dde95c8834abe99"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Web Applications\\Manifest Resources\\agimnkijcaahngcdmfeangaknmldooml\\Icons\\192.png": {
+    "mtime": 1780860596.678889,
+    "ast_hash": "48db912e1656fdbc289c704fbdf1f37a",
+    "semantic_hash": "48db912e1656fdbc289c704fbdf1f37a"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Web Applications\\Manifest Resources\\agimnkijcaahngcdmfeangaknmldooml\\Icons\\256.png": {
+    "mtime": 1780860596.680213,
+    "ast_hash": "42e1c8f772479e7e6d46a8420a0b5476",
+    "semantic_hash": "42e1c8f772479e7e6d46a8420a0b5476"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Web Applications\\Manifest Resources\\agimnkijcaahngcdmfeangaknmldooml\\Icons\\32.png": {
+    "mtime": 1780860596.6816552,
+    "ast_hash": "e4847d3a4975d5ebf607098e345de0b6",
+    "semantic_hash": "e4847d3a4975d5ebf607098e345de0b6"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Web Applications\\Manifest Resources\\agimnkijcaahngcdmfeangaknmldooml\\Icons\\48.png": {
+    "mtime": 1780860596.68318,
+    "ast_hash": "f43720c23db7a78076bd96cbd8695fb5",
+    "semantic_hash": "f43720c23db7a78076bd96cbd8695fb5"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Web Applications\\Manifest Resources\\agimnkijcaahngcdmfeangaknmldooml\\Icons\\64.png": {
+    "mtime": 1780860596.6854165,
+    "ast_hash": "11bd4fb05e4d3ac9d62a62e9482d3208",
+    "semantic_hash": "11bd4fb05e4d3ac9d62a62e9482d3208"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Web Applications\\Manifest Resources\\agimnkijcaahngcdmfeangaknmldooml\\Icons\\96.png": {
+    "mtime": 1780860596.690497,
+    "ast_hash": "a582e127fc4ec2578f4b3720aa7ee6f0",
+    "semantic_hash": "a582e127fc4ec2578f4b3720aa7ee6f0"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Web Applications\\Manifest Resources\\agimnkijcaahngcdmfeangaknmldooml\\Trusted Icons\\Icons\\192.png": {
+    "mtime": 1780860596.693495,
+    "ast_hash": "48db912e1656fdbc289c704fbdf1f37a",
+    "semantic_hash": "48db912e1656fdbc289c704fbdf1f37a"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Web Applications\\Manifest Resources\\fhihpiojkbmbpdjeoajapmgkhlnakfjf\\Icons\\128.png": {
+    "mtime": 1780860596.6956222,
+    "ast_hash": "dc5a27eacf2a8a63b553389bd973d3bf",
+    "semantic_hash": "dc5a27eacf2a8a63b553389bd973d3bf"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Web Applications\\Manifest Resources\\fhihpiojkbmbpdjeoajapmgkhlnakfjf\\Icons\\192.png": {
+    "mtime": 1780860596.697339,
+    "ast_hash": "080f33a1141b367a099304ba38db175a",
+    "semantic_hash": "080f33a1141b367a099304ba38db175a"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Web Applications\\Manifest Resources\\fhihpiojkbmbpdjeoajapmgkhlnakfjf\\Icons\\256.png": {
+    "mtime": 1780860596.6983721,
+    "ast_hash": "c8bc7c49e3457f56c6d3691a574f6522",
+    "semantic_hash": "c8bc7c49e3457f56c6d3691a574f6522"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Web Applications\\Manifest Resources\\fhihpiojkbmbpdjeoajapmgkhlnakfjf\\Icons\\32.png": {
+    "mtime": 1780860596.714818,
+    "ast_hash": "520121a67f0bdc7a327bd49d50090dac",
+    "semantic_hash": "520121a67f0bdc7a327bd49d50090dac"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Web Applications\\Manifest Resources\\fhihpiojkbmbpdjeoajapmgkhlnakfjf\\Icons\\48.png": {
+    "mtime": 1780860596.7158194,
+    "ast_hash": "539eec393ad75f86b7713183f12aaa72",
+    "semantic_hash": "539eec393ad75f86b7713183f12aaa72"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Web Applications\\Manifest Resources\\fhihpiojkbmbpdjeoajapmgkhlnakfjf\\Icons\\64.png": {
+    "mtime": 1780860596.718844,
+    "ast_hash": "b1cd49e456462625b8a0c6fd5323e113",
+    "semantic_hash": "b1cd49e456462625b8a0c6fd5323e113"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Web Applications\\Manifest Resources\\fhihpiojkbmbpdjeoajapmgkhlnakfjf\\Icons\\96.png": {
+    "mtime": 1780860596.719658,
+    "ast_hash": "c9e3ae8a15bbf9c68005738327077850",
+    "semantic_hash": "c9e3ae8a15bbf9c68005738327077850"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Web Applications\\Manifest Resources\\fhihpiojkbmbpdjeoajapmgkhlnakfjf\\Trusted Icons\\Icons\\192.png": {
+    "mtime": 1780860596.7267087,
+    "ast_hash": "080f33a1141b367a099304ba38db175a",
+    "semantic_hash": "080f33a1141b367a099304ba38db175a"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Web Applications\\Manifest Resources\\fmgjjmmmlfnkbppncabfkddbjimcfncm\\Icons\\128.png": {
+    "mtime": 1780860596.7295766,
+    "ast_hash": "bd781c7334836b0bf49aaf34004efe7a",
+    "semantic_hash": "bd781c7334836b0bf49aaf34004efe7a"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Web Applications\\Manifest Resources\\fmgjjmmmlfnkbppncabfkddbjimcfncm\\Icons\\192.png": {
+    "mtime": 1780860596.7305896,
+    "ast_hash": "8c876c8e681dbfc2401c40f8d1553686",
+    "semantic_hash": "8c876c8e681dbfc2401c40f8d1553686"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Web Applications\\Manifest Resources\\fmgjjmmmlfnkbppncabfkddbjimcfncm\\Icons\\256.png": {
+    "mtime": 1780860596.7316217,
+    "ast_hash": "cf805d2a011cde34de3f8d9a7d4bc092",
+    "semantic_hash": "cf805d2a011cde34de3f8d9a7d4bc092"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Web Applications\\Manifest Resources\\fmgjjmmmlfnkbppncabfkddbjimcfncm\\Icons\\32.png": {
+    "mtime": 1780860596.7437952,
+    "ast_hash": "0d7db6969a7efc36008149c728c29ddf",
+    "semantic_hash": "0d7db6969a7efc36008149c728c29ddf"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Web Applications\\Manifest Resources\\fmgjjmmmlfnkbppncabfkddbjimcfncm\\Icons\\48.png": {
+    "mtime": 1780860596.747865,
+    "ast_hash": "7b51e7da0af70739e61b5caacbd69743",
+    "semantic_hash": "7b51e7da0af70739e61b5caacbd69743"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Web Applications\\Manifest Resources\\fmgjjmmmlfnkbppncabfkddbjimcfncm\\Icons\\64.png": {
+    "mtime": 1780860596.7493944,
+    "ast_hash": "da8aa0fba0810335777ca27ac8e6fbba",
+    "semantic_hash": "da8aa0fba0810335777ca27ac8e6fbba"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Web Applications\\Manifest Resources\\fmgjjmmmlfnkbppncabfkddbjimcfncm\\Icons\\96.png": {
+    "mtime": 1780860596.7572782,
+    "ast_hash": "6815816161607c85942f0ce66cc3681b",
+    "semantic_hash": "6815816161607c85942f0ce66cc3681b"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Web Applications\\Manifest Resources\\fmgjjmmmlfnkbppncabfkddbjimcfncm\\Trusted Icons\\Icons\\192.png": {
+    "mtime": 1780860596.7611942,
+    "ast_hash": "8c876c8e681dbfc2401c40f8d1553686",
+    "semantic_hash": "8c876c8e681dbfc2401c40f8d1553686"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Web Applications\\Manifest Resources\\kefjledonklijopmnomlcbpllchaibag\\Icons\\128.png": {
+    "mtime": 1780860596.7654357,
+    "ast_hash": "96136a74899db6f12319c565e81c970e",
+    "semantic_hash": "96136a74899db6f12319c565e81c970e"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Web Applications\\Manifest Resources\\kefjledonklijopmnomlcbpllchaibag\\Icons\\192.png": {
+    "mtime": 1780860596.768753,
+    "ast_hash": "cd7bb2e919de14b3808703d4a83b979a",
+    "semantic_hash": "cd7bb2e919de14b3808703d4a83b979a"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Web Applications\\Manifest Resources\\kefjledonklijopmnomlcbpllchaibag\\Icons\\256.png": {
+    "mtime": 1780860596.7752686,
+    "ast_hash": "5c49c102ec8d9371f2dfa3d0643ef6d0",
+    "semantic_hash": "5c49c102ec8d9371f2dfa3d0643ef6d0"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Web Applications\\Manifest Resources\\kefjledonklijopmnomlcbpllchaibag\\Icons\\32.png": {
+    "mtime": 1780860596.7766697,
+    "ast_hash": "bf7aa030f9cbc7aba123d10adb3ab321",
+    "semantic_hash": "bf7aa030f9cbc7aba123d10adb3ab321"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Web Applications\\Manifest Resources\\kefjledonklijopmnomlcbpllchaibag\\Icons\\48.png": {
+    "mtime": 1780860596.7782247,
+    "ast_hash": "8c8ee64ca82892ca7f689204ed4cc3b2",
+    "semantic_hash": "8c8ee64ca82892ca7f689204ed4cc3b2"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Web Applications\\Manifest Resources\\kefjledonklijopmnomlcbpllchaibag\\Icons\\64.png": {
+    "mtime": 1780860596.7792377,
+    "ast_hash": "b4ff70e58f0f20ca3c6ba5cb1c24b7ae",
+    "semantic_hash": "b4ff70e58f0f20ca3c6ba5cb1c24b7ae"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Web Applications\\Manifest Resources\\kefjledonklijopmnomlcbpllchaibag\\Icons\\96.png": {
+    "mtime": 1780860596.7798865,
+    "ast_hash": "c62bd5eb4951f8ada1ee2c3382de1ed1",
+    "semantic_hash": "c62bd5eb4951f8ada1ee2c3382de1ed1"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Web Applications\\Manifest Resources\\kefjledonklijopmnomlcbpllchaibag\\Trusted Icons\\Icons\\192.png": {
+    "mtime": 1780860596.7828176,
+    "ast_hash": "cd7bb2e919de14b3808703d4a83b979a",
+    "semantic_hash": "cd7bb2e919de14b3808703d4a83b979a"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Web Applications\\Manifest Resources\\mpnpojknpmmopombnjdcgaaiekajbnjb\\Icons\\128.png": {
+    "mtime": 1780860596.793491,
+    "ast_hash": "7f2647b43af20c3530f13c7501bd1a67",
+    "semantic_hash": "7f2647b43af20c3530f13c7501bd1a67"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Web Applications\\Manifest Resources\\mpnpojknpmmopombnjdcgaaiekajbnjb\\Icons\\192.png": {
+    "mtime": 1780860596.7948968,
+    "ast_hash": "f46e19a9dd68f17fdf463f2e15ee24ab",
+    "semantic_hash": "f46e19a9dd68f17fdf463f2e15ee24ab"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Web Applications\\Manifest Resources\\mpnpojknpmmopombnjdcgaaiekajbnjb\\Icons\\256.png": {
+    "mtime": 1780860596.7954042,
+    "ast_hash": "1f6e75ba736475a5c9dabae11e074996",
+    "semantic_hash": "1f6e75ba736475a5c9dabae11e074996"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Web Applications\\Manifest Resources\\mpnpojknpmmopombnjdcgaaiekajbnjb\\Icons\\32.png": {
+    "mtime": 1780860596.797415,
+    "ast_hash": "8fc407c5a96f560cfbb46503741dd11f",
+    "semantic_hash": "8fc407c5a96f560cfbb46503741dd11f"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Web Applications\\Manifest Resources\\mpnpojknpmmopombnjdcgaaiekajbnjb\\Icons\\48.png": {
+    "mtime": 1780860596.8117664,
+    "ast_hash": "ef0cb119cf767fbaae142e536e69d816",
+    "semantic_hash": "ef0cb119cf767fbaae142e536e69d816"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Web Applications\\Manifest Resources\\mpnpojknpmmopombnjdcgaaiekajbnjb\\Icons\\64.png": {
+    "mtime": 1780860596.8267887,
+    "ast_hash": "ebdb41edc62e8b7bf4395f4b07c52f3c",
+    "semantic_hash": "ebdb41edc62e8b7bf4395f4b07c52f3c"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Web Applications\\Manifest Resources\\mpnpojknpmmopombnjdcgaaiekajbnjb\\Icons\\96.png": {
+    "mtime": 1780860596.827994,
+    "ast_hash": "97ec8e114ca15b60b18172b194912586",
+    "semantic_hash": "97ec8e114ca15b60b18172b194912586"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Web Applications\\Manifest Resources\\mpnpojknpmmopombnjdcgaaiekajbnjb\\Trusted Icons\\Icons\\192.png": {
+    "mtime": 1780860596.8306057,
+    "ast_hash": "f46e19a9dd68f17fdf463f2e15ee24ab",
+    "semantic_hash": "f46e19a9dd68f17fdf463f2e15ee24ab"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Web Applications\\Manifest Resources\\pommaclcbfghclhalboakcipcmmndhcj\\Icons\\128.png": {
+    "mtime": 1780860596.8336072,
+    "ast_hash": "8864cdaa8555412c916c8c6968d1776d",
+    "semantic_hash": "8864cdaa8555412c916c8c6968d1776d"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Web Applications\\Manifest Resources\\pommaclcbfghclhalboakcipcmmndhcj\\Icons\\192.png": {
+    "mtime": 1780860596.844175,
+    "ast_hash": "cf278d1af643feba9fdad47b614f2d68",
+    "semantic_hash": "cf278d1af643feba9fdad47b614f2d68"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Web Applications\\Manifest Resources\\pommaclcbfghclhalboakcipcmmndhcj\\Icons\\256.png": {
+    "mtime": 1780860596.8461876,
+    "ast_hash": "8d4ed9f0594bff17cda73d3e0ad8b3b4",
+    "semantic_hash": "8d4ed9f0594bff17cda73d3e0ad8b3b4"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Web Applications\\Manifest Resources\\pommaclcbfghclhalboakcipcmmndhcj\\Icons\\32.png": {
+    "mtime": 1780860596.8461876,
+    "ast_hash": "987fa238bcf012da1929b0613c7040b9",
+    "semantic_hash": "987fa238bcf012da1929b0613c7040b9"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Web Applications\\Manifest Resources\\pommaclcbfghclhalboakcipcmmndhcj\\Icons\\48.png": {
+    "mtime": 1780860596.8482358,
+    "ast_hash": "9fc42c5bb8be7115afd5a2555ff73df6",
+    "semantic_hash": "9fc42c5bb8be7115afd5a2555ff73df6"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Web Applications\\Manifest Resources\\pommaclcbfghclhalboakcipcmmndhcj\\Icons\\64.png": {
+    "mtime": 1780860596.8492491,
+    "ast_hash": "20558c5db5bcab29475b2c55ece35c90",
+    "semantic_hash": "20558c5db5bcab29475b2c55ece35c90"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Web Applications\\Manifest Resources\\pommaclcbfghclhalboakcipcmmndhcj\\Icons\\96.png": {
+    "mtime": 1780860596.8813775,
+    "ast_hash": "5f449d0b68ed5f64b21f39570ee0966b",
+    "semantic_hash": "5f449d0b68ed5f64b21f39570ee0966b"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile\\Default\\Web Applications\\Manifest Resources\\pommaclcbfghclhalboakcipcmmndhcj\\Trusted Icons\\Icons\\192.png": {
+    "mtime": 1780860596.893356,
+    "ast_hash": "cf278d1af643feba9fdad47b614f2d68",
+    "semantic_hash": "cf278d1af643feba9fdad47b614f2d68"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\images\\drive-sync128.png": {
+    "mtime": 1780860593.9477754,
+    "ast_hash": "709684b66326d11d3b6bc37bad801d46",
+    "semantic_hash": "709684b66326d11d3b6bc37bad801d46"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\images\\drive-sync16.png": {
+    "mtime": 1780860593.9539099,
+    "ast_hash": "37734998ccaeaad85afbf1e32dbaade7",
+    "semantic_hash": "37734998ccaeaad85afbf1e32dbaade7"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\images\\drive-sync256.png": {
+    "mtime": 1780860593.9559069,
+    "ast_hash": "3722806f51355c391f9343dc60bfa052",
+    "semantic_hash": "3722806f51355c391f9343dc60bfa052"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Extensions\\lmjegmlicamnimmfhcmpkclmigmmcbeh\\3.10_0\\images\\drive-sync64.png": {
+    "mtime": 1780860593.960949,
+    "ast_hash": "620b6077ef48269cb59667320a634857",
+    "semantic_hash": "620b6077ef48269cb59667320a634857"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Web Applications\\Manifest Resources\\aghbiahbpaijignceidepookljebhfak\\Icons\\128.png": {
+    "mtime": 1780860594.40579,
+    "ast_hash": "f0f63c37c02c159fb631decfb0fc1c7a",
+    "semantic_hash": "f0f63c37c02c159fb631decfb0fc1c7a"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Web Applications\\Manifest Resources\\aghbiahbpaijignceidepookljebhfak\\Icons\\192.png": {
+    "mtime": 1780860594.411833,
+    "ast_hash": "4a02d038eeea11fbae84a923e37e4966",
+    "semantic_hash": "4a02d038eeea11fbae84a923e37e4966"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Web Applications\\Manifest Resources\\aghbiahbpaijignceidepookljebhfak\\Icons\\256.png": {
+    "mtime": 1780860594.4128358,
+    "ast_hash": "6dabcc9819be7e1b638921e03869bca6",
+    "semantic_hash": "6dabcc9819be7e1b638921e03869bca6"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Web Applications\\Manifest Resources\\aghbiahbpaijignceidepookljebhfak\\Icons\\32.png": {
+    "mtime": 1780860594.413835,
+    "ast_hash": "2f1881da261cfaea89605ee7a5e33e40",
+    "semantic_hash": "2f1881da261cfaea89605ee7a5e33e40"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Web Applications\\Manifest Resources\\aghbiahbpaijignceidepookljebhfak\\Icons\\48.png": {
+    "mtime": 1780860594.4161026,
+    "ast_hash": "2eb94e169eea40562e73ae9b1cf8fe31",
+    "semantic_hash": "2eb94e169eea40562e73ae9b1cf8fe31"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Web Applications\\Manifest Resources\\aghbiahbpaijignceidepookljebhfak\\Icons\\64.png": {
+    "mtime": 1780860594.4174166,
+    "ast_hash": "fd4f64c4c98c0d336c4ff7ac36f07307",
+    "semantic_hash": "fd4f64c4c98c0d336c4ff7ac36f07307"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Web Applications\\Manifest Resources\\aghbiahbpaijignceidepookljebhfak\\Icons\\96.png": {
+    "mtime": 1780860594.423029,
+    "ast_hash": "335ee5754c3904530b8147769da3b768",
+    "semantic_hash": "335ee5754c3904530b8147769da3b768"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Web Applications\\Manifest Resources\\aghbiahbpaijignceidepookljebhfak\\Trusted Icons\\Icons\\192.png": {
+    "mtime": 1780860594.4292872,
+    "ast_hash": "4a02d038eeea11fbae84a923e37e4966",
+    "semantic_hash": "4a02d038eeea11fbae84a923e37e4966"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Web Applications\\Manifest Resources\\agimnkijcaahngcdmfeangaknmldooml\\Icons\\128.png": {
+    "mtime": 1780860594.4353192,
+    "ast_hash": "8a5c8fbf7b03f3247dde95c8834abe99",
+    "semantic_hash": "8a5c8fbf7b03f3247dde95c8834abe99"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Web Applications\\Manifest Resources\\agimnkijcaahngcdmfeangaknmldooml\\Icons\\192.png": {
+    "mtime": 1780860594.441471,
+    "ast_hash": "48db912e1656fdbc289c704fbdf1f37a",
+    "semantic_hash": "48db912e1656fdbc289c704fbdf1f37a"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Web Applications\\Manifest Resources\\agimnkijcaahngcdmfeangaknmldooml\\Icons\\256.png": {
+    "mtime": 1780860594.4428463,
+    "ast_hash": "42e1c8f772479e7e6d46a8420a0b5476",
+    "semantic_hash": "42e1c8f772479e7e6d46a8420a0b5476"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Web Applications\\Manifest Resources\\agimnkijcaahngcdmfeangaknmldooml\\Icons\\32.png": {
+    "mtime": 1780860594.4444056,
+    "ast_hash": "e4847d3a4975d5ebf607098e345de0b6",
+    "semantic_hash": "e4847d3a4975d5ebf607098e345de0b6"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Web Applications\\Manifest Resources\\agimnkijcaahngcdmfeangaknmldooml\\Icons\\48.png": {
+    "mtime": 1780860594.4460056,
+    "ast_hash": "f43720c23db7a78076bd96cbd8695fb5",
+    "semantic_hash": "f43720c23db7a78076bd96cbd8695fb5"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Web Applications\\Manifest Resources\\agimnkijcaahngcdmfeangaknmldooml\\Icons\\64.png": {
+    "mtime": 1780860594.449057,
+    "ast_hash": "11bd4fb05e4d3ac9d62a62e9482d3208",
+    "semantic_hash": "11bd4fb05e4d3ac9d62a62e9482d3208"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Web Applications\\Manifest Resources\\agimnkijcaahngcdmfeangaknmldooml\\Icons\\96.png": {
+    "mtime": 1780860594.4534483,
+    "ast_hash": "a582e127fc4ec2578f4b3720aa7ee6f0",
+    "semantic_hash": "a582e127fc4ec2578f4b3720aa7ee6f0"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Web Applications\\Manifest Resources\\agimnkijcaahngcdmfeangaknmldooml\\Trusted Icons\\Icons\\192.png": {
+    "mtime": 1780860594.4600537,
+    "ast_hash": "48db912e1656fdbc289c704fbdf1f37a",
+    "semantic_hash": "48db912e1656fdbc289c704fbdf1f37a"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Web Applications\\Manifest Resources\\fhihpiojkbmbpdjeoajapmgkhlnakfjf\\Icons\\128.png": {
+    "mtime": 1780860594.5252805,
+    "ast_hash": "dc5a27eacf2a8a63b553389bd973d3bf",
+    "semantic_hash": "dc5a27eacf2a8a63b553389bd973d3bf"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Web Applications\\Manifest Resources\\fhihpiojkbmbpdjeoajapmgkhlnakfjf\\Icons\\192.png": {
+    "mtime": 1780860594.5293021,
+    "ast_hash": "080f33a1141b367a099304ba38db175a",
+    "semantic_hash": "080f33a1141b367a099304ba38db175a"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Web Applications\\Manifest Resources\\fhihpiojkbmbpdjeoajapmgkhlnakfjf\\Icons\\256.png": {
+    "mtime": 1780860594.5333114,
+    "ast_hash": "c8bc7c49e3457f56c6d3691a574f6522",
+    "semantic_hash": "c8bc7c49e3457f56c6d3691a574f6522"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Web Applications\\Manifest Resources\\fhihpiojkbmbpdjeoajapmgkhlnakfjf\\Icons\\32.png": {
+    "mtime": 1780860594.5423589,
+    "ast_hash": "520121a67f0bdc7a327bd49d50090dac",
+    "semantic_hash": "520121a67f0bdc7a327bd49d50090dac"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Web Applications\\Manifest Resources\\fhihpiojkbmbpdjeoajapmgkhlnakfjf\\Icons\\48.png": {
+    "mtime": 1780860594.5448,
+    "ast_hash": "539eec393ad75f86b7713183f12aaa72",
+    "semantic_hash": "539eec393ad75f86b7713183f12aaa72"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Web Applications\\Manifest Resources\\fhihpiojkbmbpdjeoajapmgkhlnakfjf\\Icons\\64.png": {
+    "mtime": 1780860594.5459175,
+    "ast_hash": "b1cd49e456462625b8a0c6fd5323e113",
+    "semantic_hash": "b1cd49e456462625b8a0c6fd5323e113"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Web Applications\\Manifest Resources\\fhihpiojkbmbpdjeoajapmgkhlnakfjf\\Icons\\96.png": {
+    "mtime": 1780860594.5459175,
+    "ast_hash": "c9e3ae8a15bbf9c68005738327077850",
+    "semantic_hash": "c9e3ae8a15bbf9c68005738327077850"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Web Applications\\Manifest Resources\\fhihpiojkbmbpdjeoajapmgkhlnakfjf\\Trusted Icons\\Icons\\192.png": {
+    "mtime": 1780860594.5489433,
+    "ast_hash": "080f33a1141b367a099304ba38db175a",
+    "semantic_hash": "080f33a1141b367a099304ba38db175a"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Web Applications\\Manifest Resources\\fmgjjmmmlfnkbppncabfkddbjimcfncm\\Icons\\128.png": {
+    "mtime": 1780860594.5528672,
+    "ast_hash": "bd781c7334836b0bf49aaf34004efe7a",
+    "semantic_hash": "bd781c7334836b0bf49aaf34004efe7a"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Web Applications\\Manifest Resources\\fmgjjmmmlfnkbppncabfkddbjimcfncm\\Icons\\192.png": {
+    "mtime": 1780860594.5673056,
+    "ast_hash": "8c876c8e681dbfc2401c40f8d1553686",
+    "semantic_hash": "8c876c8e681dbfc2401c40f8d1553686"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Web Applications\\Manifest Resources\\fmgjjmmmlfnkbppncabfkddbjimcfncm\\Icons\\256.png": {
+    "mtime": 1780860594.5700662,
+    "ast_hash": "cf805d2a011cde34de3f8d9a7d4bc092",
+    "semantic_hash": "cf805d2a011cde34de3f8d9a7d4bc092"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Web Applications\\Manifest Resources\\fmgjjmmmlfnkbppncabfkddbjimcfncm\\Icons\\32.png": {
+    "mtime": 1780860594.572077,
+    "ast_hash": "0d7db6969a7efc36008149c728c29ddf",
+    "semantic_hash": "0d7db6969a7efc36008149c728c29ddf"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Web Applications\\Manifest Resources\\fmgjjmmmlfnkbppncabfkddbjimcfncm\\Icons\\48.png": {
+    "mtime": 1780860594.573076,
+    "ast_hash": "7b51e7da0af70739e61b5caacbd69743",
+    "semantic_hash": "7b51e7da0af70739e61b5caacbd69743"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Web Applications\\Manifest Resources\\fmgjjmmmlfnkbppncabfkddbjimcfncm\\Icons\\64.png": {
+    "mtime": 1780860594.5744472,
+    "ast_hash": "da8aa0fba0810335777ca27ac8e6fbba",
+    "semantic_hash": "da8aa0fba0810335777ca27ac8e6fbba"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Web Applications\\Manifest Resources\\fmgjjmmmlfnkbppncabfkddbjimcfncm\\Icons\\96.png": {
+    "mtime": 1780860594.5744472,
+    "ast_hash": "6815816161607c85942f0ce66cc3681b",
+    "semantic_hash": "6815816161607c85942f0ce66cc3681b"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Web Applications\\Manifest Resources\\fmgjjmmmlfnkbppncabfkddbjimcfncm\\Trusted Icons\\Icons\\192.png": {
+    "mtime": 1780860594.5829442,
+    "ast_hash": "8c876c8e681dbfc2401c40f8d1553686",
+    "semantic_hash": "8c876c8e681dbfc2401c40f8d1553686"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Web Applications\\Manifest Resources\\kefjledonklijopmnomlcbpllchaibag\\Icons\\128.png": {
+    "mtime": 1780860594.5888722,
+    "ast_hash": "96136a74899db6f12319c565e81c970e",
+    "semantic_hash": "96136a74899db6f12319c565e81c970e"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Web Applications\\Manifest Resources\\kefjledonklijopmnomlcbpllchaibag\\Icons\\192.png": {
+    "mtime": 1780860594.5949538,
+    "ast_hash": "cd7bb2e919de14b3808703d4a83b979a",
+    "semantic_hash": "cd7bb2e919de14b3808703d4a83b979a"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Web Applications\\Manifest Resources\\kefjledonklijopmnomlcbpllchaibag\\Icons\\256.png": {
+    "mtime": 1780860594.601835,
+    "ast_hash": "5c49c102ec8d9371f2dfa3d0643ef6d0",
+    "semantic_hash": "5c49c102ec8d9371f2dfa3d0643ef6d0"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Web Applications\\Manifest Resources\\kefjledonklijopmnomlcbpllchaibag\\Icons\\32.png": {
+    "mtime": 1780860594.6038349,
+    "ast_hash": "bf7aa030f9cbc7aba123d10adb3ab321",
+    "semantic_hash": "bf7aa030f9cbc7aba123d10adb3ab321"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Web Applications\\Manifest Resources\\kefjledonklijopmnomlcbpllchaibag\\Icons\\48.png": {
+    "mtime": 1780860594.6058302,
+    "ast_hash": "8c8ee64ca82892ca7f689204ed4cc3b2",
+    "semantic_hash": "8c8ee64ca82892ca7f689204ed4cc3b2"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Web Applications\\Manifest Resources\\kefjledonklijopmnomlcbpllchaibag\\Icons\\64.png": {
+    "mtime": 1780860594.6073384,
+    "ast_hash": "b4ff70e58f0f20ca3c6ba5cb1c24b7ae",
+    "semantic_hash": "b4ff70e58f0f20ca3c6ba5cb1c24b7ae"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Web Applications\\Manifest Resources\\kefjledonklijopmnomlcbpllchaibag\\Icons\\96.png": {
+    "mtime": 1780860594.610046,
+    "ast_hash": "c62bd5eb4951f8ada1ee2c3382de1ed1",
+    "semantic_hash": "c62bd5eb4951f8ada1ee2c3382de1ed1"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Web Applications\\Manifest Resources\\kefjledonklijopmnomlcbpllchaibag\\Trusted Icons\\Icons\\192.png": {
+    "mtime": 1780860594.619616,
+    "ast_hash": "cd7bb2e919de14b3808703d4a83b979a",
+    "semantic_hash": "cd7bb2e919de14b3808703d4a83b979a"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Web Applications\\Manifest Resources\\mpnpojknpmmopombnjdcgaaiekajbnjb\\Icons\\128.png": {
+    "mtime": 1780860594.6426294,
+    "ast_hash": "7f2647b43af20c3530f13c7501bd1a67",
+    "semantic_hash": "7f2647b43af20c3530f13c7501bd1a67"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Web Applications\\Manifest Resources\\mpnpojknpmmopombnjdcgaaiekajbnjb\\Icons\\192.png": {
+    "mtime": 1780860594.6787794,
+    "ast_hash": "f46e19a9dd68f17fdf463f2e15ee24ab",
+    "semantic_hash": "f46e19a9dd68f17fdf463f2e15ee24ab"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Web Applications\\Manifest Resources\\mpnpojknpmmopombnjdcgaaiekajbnjb\\Icons\\256.png": {
+    "mtime": 1780860594.680086,
+    "ast_hash": "1f6e75ba736475a5c9dabae11e074996",
+    "semantic_hash": "1f6e75ba736475a5c9dabae11e074996"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Web Applications\\Manifest Resources\\mpnpojknpmmopombnjdcgaaiekajbnjb\\Icons\\32.png": {
+    "mtime": 1780860594.6810977,
+    "ast_hash": "8fc407c5a96f560cfbb46503741dd11f",
+    "semantic_hash": "8fc407c5a96f560cfbb46503741dd11f"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Web Applications\\Manifest Resources\\mpnpojknpmmopombnjdcgaaiekajbnjb\\Icons\\48.png": {
+    "mtime": 1780860594.6841617,
+    "ast_hash": "ef0cb119cf767fbaae142e536e69d816",
+    "semantic_hash": "ef0cb119cf767fbaae142e536e69d816"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Web Applications\\Manifest Resources\\mpnpojknpmmopombnjdcgaaiekajbnjb\\Icons\\64.png": {
+    "mtime": 1780860594.6940026,
+    "ast_hash": "ebdb41edc62e8b7bf4395f4b07c52f3c",
+    "semantic_hash": "ebdb41edc62e8b7bf4395f4b07c52f3c"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Web Applications\\Manifest Resources\\mpnpojknpmmopombnjdcgaaiekajbnjb\\Icons\\96.png": {
+    "mtime": 1780860594.696004,
+    "ast_hash": "97ec8e114ca15b60b18172b194912586",
+    "semantic_hash": "97ec8e114ca15b60b18172b194912586"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Web Applications\\Manifest Resources\\mpnpojknpmmopombnjdcgaaiekajbnjb\\Trusted Icons\\Icons\\192.png": {
+    "mtime": 1780860594.706598,
+    "ast_hash": "f46e19a9dd68f17fdf463f2e15ee24ab",
+    "semantic_hash": "f46e19a9dd68f17fdf463f2e15ee24ab"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Web Applications\\Manifest Resources\\pommaclcbfghclhalboakcipcmmndhcj\\Icons\\128.png": {
+    "mtime": 1780860594.7264159,
+    "ast_hash": "8864cdaa8555412c916c8c6968d1776d",
+    "semantic_hash": "8864cdaa8555412c916c8c6968d1776d"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Web Applications\\Manifest Resources\\pommaclcbfghclhalboakcipcmmndhcj\\Icons\\192.png": {
+    "mtime": 1780860594.729526,
+    "ast_hash": "cf278d1af643feba9fdad47b614f2d68",
+    "semantic_hash": "cf278d1af643feba9fdad47b614f2d68"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Web Applications\\Manifest Resources\\pommaclcbfghclhalboakcipcmmndhcj\\Icons\\256.png": {
+    "mtime": 1780860594.730857,
+    "ast_hash": "8d4ed9f0594bff17cda73d3e0ad8b3b4",
+    "semantic_hash": "8d4ed9f0594bff17cda73d3e0ad8b3b4"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Web Applications\\Manifest Resources\\pommaclcbfghclhalboakcipcmmndhcj\\Icons\\32.png": {
+    "mtime": 1780860594.7331011,
+    "ast_hash": "987fa238bcf012da1929b0613c7040b9",
+    "semantic_hash": "987fa238bcf012da1929b0613c7040b9"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Web Applications\\Manifest Resources\\pommaclcbfghclhalboakcipcmmndhcj\\Icons\\48.png": {
+    "mtime": 1780860594.7465122,
+    "ast_hash": "9fc42c5bb8be7115afd5a2555ff73df6",
+    "semantic_hash": "9fc42c5bb8be7115afd5a2555ff73df6"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Web Applications\\Manifest Resources\\pommaclcbfghclhalboakcipcmmndhcj\\Icons\\64.png": {
+    "mtime": 1780860594.74977,
+    "ast_hash": "20558c5db5bcab29475b2c55ece35c90",
+    "semantic_hash": "20558c5db5bcab29475b2c55ece35c90"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Web Applications\\Manifest Resources\\pommaclcbfghclhalboakcipcmmndhcj\\Icons\\96.png": {
+    "mtime": 1780860594.7625659,
+    "ast_hash": "5f449d0b68ed5f64b21f39570ee0966b",
+    "semantic_hash": "5f449d0b68ed5f64b21f39570ee0966b"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\product-audit\\chrome-profile-mobile\\Default\\Web Applications\\Manifest Resources\\pommaclcbfghclhalboakcipcmmndhcj\\Trusted Icons\\Icons\\192.png": {
+    "mtime": 1780860594.767053,
+    "ast_hash": "cf278d1af643feba9fdad47b614f2d68",
+    "semantic_hash": "cf278d1af643feba9fdad47b614f2d68"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\public\\exercises\\speaking\\speaking_picture_01_ski_resort.png": {
+    "mtime": 1780860597.1991413,
+    "ast_hash": "cdc9897195a806276e912c86b895b4e2",
+    "semantic_hash": "cdc9897195a806276e912c86b895b4e2"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\public\\exercises\\speaking\\speaking_picture_02_airport_check_in.png": {
+    "mtime": 1780860597.2110233,
+    "ast_hash": "323dacff6938a3b427038e80b4cb70dd",
+    "semantic_hash": "323dacff6938a3b427038e80b4cb70dd"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\public\\exercises\\speaking\\speaking_picture_03_beach_cleanup.png": {
+    "mtime": 1780860597.2166276,
+    "ast_hash": "54e61f73e552afe9b67e582aabcc24bc",
+    "semantic_hash": "54e61f73e552afe9b67e582aabcc24bc"
+  },
+  "C:\\Users\\vviei\\.claude\\projects\\Platform\\public\\exercises\\speaking\\speaking_picture_04_city_cafe.png": {
+    "mtime": 1780860597.2320602,
+    "ast_hash": "038a1c18344346cabdc83b42f8d8b1ff",
+    "semantic_hash": "038a1c18344346cabdc83b42f8d8b1ff"
   }
 }
