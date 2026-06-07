@@ -297,7 +297,7 @@ function ExerciseStatusBars({ row }) {
 }
 
 const S = {
-  shell: { maxWidth: 1120, margin: '0 auto', padding: '28px 20px' },
+  shell: { maxWidth: 1120, margin: '0 auto', padding: '28px 20px 40px' },
   hero: {
     display: 'flex',
     alignItems: 'flex-end',
@@ -305,9 +305,11 @@ const S = {
     gap: 12,
     flexWrap: 'wrap',
     marginBottom: 18,
-    padding: 18,
-    borderRadius: 4,
-    background: 'linear-gradient(130deg, #0f2438 0%, #193249 45%, #25627f 100%)',
+    padding: '22px 24px',
+    borderRadius: 8,
+    border: '1px solid rgba(168, 218, 220, 0.18)',
+    background: 'linear-gradient(135deg, #101a28 0%, #172537 50%, #1f4e58 100%)',
+    boxShadow: '0 18px 44px -30px rgba(16, 26, 40, 0.8)',
     color: '#fff',
   },
   heroTag: { fontSize: 'var(--text-xs)', letterSpacing: '0.1em', textTransform: 'uppercase', color: '#9fd6d6', fontWeight: 700, marginBottom: 6 },
@@ -327,13 +329,13 @@ const S = {
     alignItems: 'center',
     gap: 10,
     border: '1px solid var(--divider)',
-    borderRadius: 3,
-    padding: '9px 10px',
-    background: '#fff',
+    borderRadius: 6,
+    padding: '11px 12px',
+    background: 'linear-gradient(180deg, #ffffff 0%, #f9fcfc 100%)',
   },
   statusBars: { display: 'grid', gap: 5, minWidth: 0 },
   statusLine: { display: 'grid', gridTemplateColumns: '62px minmax(60px, 1fr) 34px', alignItems: 'center', gap: 7, fontSize: 'var(--text-xs)', color: 'var(--muted)' },
-  progressTrack: { height: 8, borderRadius: 999, background: 'var(--bg-deep)', overflow: 'hidden' },
+  progressTrack: { height: 8, borderRadius: 999, background: 'var(--bg-deep)', overflow: 'hidden', boxShadow: 'inset 0 0 0 1px rgba(26,35,50,0.04)' },
   progressFillSubmitted: { height: '100%', borderRadius: 999, background: 'var(--accent-soft)' },
   progressFillReviewed: { height: '100%', borderRadius: 999, background: 'var(--accent)' },
   timelineRow: {
@@ -341,9 +343,9 @@ const S = {
     gridTemplateColumns: '28px minmax(0, 1fr)',
     gap: 10,
     border: '1px solid var(--divider)',
-    borderRadius: 3,
-    padding: '9px 10px',
-    background: '#fff',
+    borderRadius: 6,
+    padding: '10px 12px',
+    background: 'linear-gradient(180deg, #ffffff 0%, #f9fcfc 100%)',
   },
   timelineIdx: {
     width: 24,
@@ -356,7 +358,7 @@ const S = {
     fontSize: 'var(--text-xs)',
     fontWeight: 700,
   },
-  noteRow: { display: 'grid', gridTemplateColumns: '72px minmax(0, 1fr)', gap: 8, alignItems: 'start', padding: '7px 9px', borderRadius: 3, background: 'var(--bg)' },
+  noteRow: { display: 'grid', gridTemplateColumns: '72px minmax(0, 1fr)', gap: 8, alignItems: 'start', padding: '9px 11px', borderRadius: 6, background: 'var(--bg)' },
   noteDate: { color: 'var(--muted)', fontSize: 'var(--text-xs)' },
   empty: { fontSize: 'var(--text-sm)', color: 'var(--muted)', margin: '8px 0 0' },
 };
