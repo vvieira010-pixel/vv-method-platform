@@ -21,6 +21,8 @@ import { getExerciseModules, getModuleExercises, bankMeta } from '../lib/exercis
 import { getB2Modules, getB2ModuleExercises, b2BankMeta } from '../lib/met-b2-bank.js';
 import { getLifestyleModules, getLifestyleModuleExercises, lifestylePackMeta } from '../lib/lifestyle-pack.js';
 import { getLibraryExercises, saveExerciseToLibrary, deleteLibraryExercise, incrementUsage } from '../lib/exercise-library.js';
+import HomeworkSetWizard from '../components/homework-set-wizard.jsx';
+import { getUnitsByLevel, getSkillExercises, SUBJECT_OPTIONS } from '../lib/unit-bank.js';
 
 const EMPTY_FORM = {
   title: '', objective: '', description: '',
@@ -56,6 +58,10 @@ export default function HomeworkCreate({ diagnosisId, studentId, students, onNav
   const [loadingOptions, setLoadingOptions] = useState(false);
   const [showTypePicker, setShowTypePicker] = useState(false);
   const [selectedLevel, setSelectedLevel] = useState('B1'); // New state for level
+  const [wizardDone, setWizardDone] = useState(false);
+  const [selectedSkill, setSelectedSkill] = useState(null);
+  const [showUnitBank, setShowUnitBank] = useState(false);
+  const [unitBankExercises, setUnitBankExercises] = useState([]);
   const [expandedEx, setExpandedEx] = useState(null);
   const [showLibrary, setShowLibrary] = useState(false);
   const [showB2Bank, setShowB2Bank] = useState(false);
@@ -319,7 +325,7 @@ function getPriorityItems(dx) {
     setLoadingOptions(true);
     setExerciseOptions([]);
     try {
-      const prompt = buildExerciseListPrompt({ student, diagnosis });
+      const prompt = buildExerciseListPrompt({ student, diagnosis, level: selectedLevel, skill: selectedSkill });
       const data = await callAI(prompt, { ...HOMEWORK_AI_BASE_OPTIONS, max_tokens: 5000, temperature: 0.8 });
       const raw = data.content?.map(b => b.text || '').join('') || '';
       const parsed = parseAiJson(raw);
@@ -440,6 +446,17 @@ function getPriorityItems(dx) {
     onNavigate('homework');
   }
 
+  function addUnitBankExercise(ex) { setForm(f => ({ ...f, exercises: [...f.exercises, { ...ex, id: 'ub_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2) }] })); }
+  function handleWizardComplete({ level, skill }) {
+    setSelectedLevel(level);
+    setSelectedSkill(skill);
+    const units = getUnitsByLevel(level);
+    setUnitBankExercises(getSkillExercises(units, skill, 12));
+    setWizardDone(true);
+  }
+  if (!wizardDone) return <HomeworkSetWizard onComplete={handleWizardComplete} onSkip={() => setWizardDone(true)} />;
+  const subjectLabel = SUBJECT_OPTIONS.find(s => s.id === selectedSkill)?.label;
+
   const exerciseCount = form.exercises.length;
   const typeCounts = {};
   form.exercises.forEach(e => { typeCounts[e.type] = (typeCounts[e.type] || 0) + 1; });
@@ -452,6 +469,13 @@ function getPriorityItems(dx) {
 
       {/* Wizard Header */}
       <h1 style={S.headline}>Create Homework</h1>
+      {(selectedLevel || subjectLabel) && (
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 12 }}>
+          {selectedLevel && <Pill tone="info">{selectedLevel}</Pill>}
+          {subjectLabel && <Pill tone="info">{subjectLabel}</Pill>}
+          <button onClick={() => setWizardDone(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>Change</button>
+        </div>
+      )}
       <div className="homework-create-steps" style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
         {['Diagnosis', 'Select Exercises', 'Review', 'Assign'].map((step, i) => (
           <div key={step} style={{
@@ -629,6 +653,33 @@ function getPriorityItems(dx) {
                         </div>
                       ))}
                     </div>
+                  </div>
+                )}
+
+                {unitBankExercises.length > 0 && (
+                  <div style={{ marginBottom: 16, border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
+                    <button
+                      onClick={() => setShowUnitBank(v => !v)}
+                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', padding: '10px 14px', background: 'var(--accent-subtle)', border: 'none', cursor: 'pointer', borderBottom: showUnitBank ? '1px solid var(--border)' : 'none' }}
+                    >
+                      <span style={{ fontWeight: 600, fontSize: 'var(--text-sm)' }}>
+                        📚 Unit Bank — {subjectLabel || 'exercises'} from {selectedLevel} units ({unitBankExercises.length})
+                      </span>
+                      <Icon.chevronDown size={14} style={{ transform: showUnitBank ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s' }} />
+                    </button>
+                    {showUnitBank && (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 0, maxHeight: 360, overflowY: 'auto' }}>
+                        {unitBankExercises.map((ex, i) => (
+                          <div key={ex.id || i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderBottom: '1px solid var(--divider)' }}>
+                            <ExTypeBadge typeId={ex.type} />
+                            <div style={{ flex: 1, minWidth: 0, fontSize: 'var(--text-sm)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              {ex.question || ex.prompt || ex.errorText || (ex.pairs?.[0] ? `${ex.pairs[0].term} — ${ex.pairs[0].def}` : '')}
+                            </div>
+                            <Button variant="ghost" size="sm" onClick={() => addUnitBankExercise(ex)}>Add</Button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 )}
 

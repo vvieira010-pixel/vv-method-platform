@@ -299,6 +299,17 @@ function SpeakEditor({ ex, update }) {
         />
       </div>
       <div style={fieldWrap}>
+        <label style={fieldLabel}>Picture URL (optional — shown to student during speaking task)</label>
+        <input
+          className="input" value={ex.imageUrl || ''}
+          onChange={e => update({ imageUrl: e.target.value })}
+          placeholder="https://…/images/speaking/speaking_picture_01_ski_resort.png"
+        />
+        {ex.imageUrl && (
+          <img src={ex.imageUrl} alt="preview" style={{ marginTop: 8, maxWidth: '100%', maxHeight: 160, borderRadius: 8, border: '1px solid var(--border)' }} />
+        )}
+      </div>
+      <div style={fieldWrap}>
         <label style={fieldLabel}>Target duration (seconds)</label>
         <input
           className="input" type="number" min={15} max={300} step={5}
@@ -454,14 +465,24 @@ function ListenEditor({ ex, update }) {
   return (
     <div>
       <div style={fieldWrap}>
-        <label style={fieldLabel}>Audio script (spoken to student)</label>
+        <label style={fieldLabel}>Pre-recorded audio URL (optional — overrides TTS)</label>
+        <input
+          className="input" value={ex.audioSrc || ''}
+          onChange={e => update({ audioSrc: e.target.value })}
+          placeholder="https://…/audio/listening/asking-for-directions-pt1.mp3"
+        />
+        <div style={hintText}>Paste a direct MP3/WAV URL. When set, this plays instead of generating speech below.</div>
+      </div>
+
+      <div style={fieldWrap}>
+        <label style={fieldLabel}>Audio script (spoken to student via TTS, or transcript fallback)</label>
         <textarea
           className="input" rows={5} value={ex.audioText || ''}
           onChange={e => update({ audioText: e.target.value })}
           placeholder={'Girl: I was going to study for two hours, but I kept checking my phone.\nBoy: Maybe put your phone in another room next time.\nGirl: Yeah, that\'s probably the only way I\'ll focus.'}
         />
         <div style={hintText}>
-          This text is converted to speech by ElevenLabs (or browser TTS as fallback). Student does <em>not</em> see the script.
+          Used as TTS source (ElevenLabs / browser fallback) when no URL above. Shown as transcript after the student answers.
         </div>
       </div>
 

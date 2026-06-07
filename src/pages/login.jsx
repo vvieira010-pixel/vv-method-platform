@@ -21,7 +21,7 @@ const CSS = `
 
   /* ── Brand panel ── */
   .lp-brand {
-    background: var(--accent-deep);
+    background: linear-gradient(180deg, #0F172A 0%, #1E293B 100%);
     display: flex; flex-direction: column; justify-content: space-between;
     padding: 48px 44px; min-height: 100dvh; position: sticky; top: 0;
     overflow: hidden;
