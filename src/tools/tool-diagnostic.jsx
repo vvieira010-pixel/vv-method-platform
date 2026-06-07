@@ -3,6 +3,7 @@ import { Icon, Card, SectionHeader, Pill, Button, PillNav, Avatar, callAI, summa
 import { createSession, getSessions, deleteSession, saveDiagnosis, getStudentCycleState, updateDiagnosisCycleStage, getLatestDiagnosis } from '../lib/workflow.js';
 import { parseAiJson } from '../lib/ai-helpers.js';
 import { DIAGNOSTIC_PROMPT } from '../lib/prompts.js';
+import { getStudentMemory } from '../lib/agent-memory.js';
 
 /* ─── Helpers ──────────────────────────────────────────────── */
 function clampTwoDecimals(value, min = 0, max = 4) {
@@ -248,16 +249,18 @@ export default function ToolDiagnostic({ student, students, onSelectStudent, onN
         ? await summarizeTranscript(transcript)
         : transcript;
 
+      const memory = await getStudentMemory(student?.id);
+
       const replacements = {
         "{STUDENT_NAME}": studentName,
         "{CURRENT_LEVEL}": currentLevel || "not provided",
         "{TARGET_LEVEL}": targetLevel || "not provided",
         "{EXAM_GOAL}": student?.goal || "MET B2",
         "{EXAM_DATE}": "not provided",
-        "{PROFESSIONAL_CONTEXT}": "not provided",
+        "{PROFESSIONAL_CONTEXT}": student?.professionalContext || "not provided",
         "{STUDENT_GOAL}": student?.goal || "not provided",
-        "{PREVIOUS_STRENGTHS}": "not provided",
-        "{PREVIOUS_ERRORS}": "not provided",
+        "{PREVIOUS_STRENGTHS}": memory.strengths || "not provided",
+        "{PREVIOUS_ERRORS}": memory.errors || "not provided",
         "{EMOTIONAL_STATE}": "not provided",
         "{LESSON_DATE}": new Date().toISOString().slice(0, 10),
         "{LESSON_FOCUS}": lessonFocus || "not specified",
