@@ -486,20 +486,26 @@ export async function ensureProfile(role, { displayName, studentUuid } = {}) {
 }
 
 /**
- * Attach the signed-in user to a teacher-created roster row matched by email
- * (the "students self-claim by email" RLS policy gates this). Returns the
- * claimed student's { id (uuid), local_id } or null if there is no matching row
- * (⇒ the user is a teacher, not a student).
+ * Attach the signed-in user to a teacher-created roster row matched by email.
+ * Uses the `claim_student_by_email` SECURITY DEFINER RPC, which links the
+ * caller's row using their OWN verified JWT email server-side (it can't claim
+ * anyone else's). The direct RLS self-claim UPDATE policy proved unreliable in
+ * practice, so we no longer depend on it. Returns the claimed student's
+ * { id (uuid), local_id } or null if there is no matching row (⇒ the user is a
+ * teacher, not a student). The `email` arg is ignored (the server reads the JWT).
  */
 export async function claimStudentByEmail(email) {
   const ctx = getDbContext();
-  if (!ctx || !email) return null;
+  if (!ctx) return null;
   try {
-    // No-op if already claimed by someone else or none matches.
-    await sbUpdate(ctx, 'students', `email=eq.${encodeURIComponent(email)}&auth_user_id=is.null`, { auth_user_id: ctx.authUid });
+    const res = await sbFetch(ctx, 'rpc/claim_student_by_email', { method: 'POST', body: '{}' });
+    const rows = await res.json();
+    invalidateRefs();
+    if (Array.isArray(rows) && rows[0]) return rows[0];
   } catch (e) {
-    console.warn('[supabase-db] claimStudentByEmail update failed:', e.message);
+    console.warn('[supabase-db] claimStudentByEmail RPC failed:', e.message);
   }
+  // Fallback: already claimed in a prior session — find the row by auth uid.
   try {
     const mine = await sbSelect(ctx, 'students', `auth_user_id=eq.${ctx.authUid}&select=id,local_id&limit=1`);
     invalidateRefs();

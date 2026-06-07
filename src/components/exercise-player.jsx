@@ -44,28 +44,47 @@ export function ExercisePlayer({ exercise, response, onResponse, readOnly = fals
 }
 
 /* ─── 1. MULTIPLE CHOICE ────────────────────────────────────── */
+const MCQ_MAX_TRIES = 5;
+
 function MCQPlayer({ ex, res, update, readOnly }) {
   const pick = res?.selected ?? null;
-  // Selection and grading are separate: choosing an option no longer reveals the
-  // result. The student confirms with "Check answer" (or it's shown read-only in review).
-  const [checked, setChecked] = useState(false);
-  const showResult = readOnly || checked;
+  const solved = res?.mcqSolved || false;
+  const wrongPicks = res?.mcqWrongPicks || [];
+  // Reveal the answer after the student has ruled out the wrong options — capped
+  // at 5 tries (most MCQs have fewer than 5 wrong options).
+  const wrongLimit = Math.min(MCQ_MAX_TRIES, Math.max(1, (ex.options?.length || 2) - 1));
+  const revealed = wrongPicks.length >= wrongLimit;
+  const done = solved || revealed;
+  const showCorrect = readOnly || done;
+
+  const check = () => {
+    if (readOnly || done || pick == null || wrongPicks.includes(pick)) return;
+    if (pick === ex.correct) update({ mcqSolved: true });
+    else update({ mcqWrongPicks: [...wrongPicks, pick] });
+  };
 
   return (
     <div>
       <p style={{ margin: '0 0 14px', fontSize: 'var(--text-md)', fontWeight: 600, color: 'var(--text)', lineHeight: 1.55 }}>
         {ex.question}
       </p>
+      {!readOnly && !done && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10, padding: '6px 10px', background: 'var(--accent-subtle)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-xs)', color: 'var(--accent-deep)' }}>
+          <Icon.info size={13} />
+          <span>Pick and press Check. The correct answer is shown after {wrongLimit} {wrongLimit === 1 ? 'try' : 'tries'}.</span>
+        </div>
+      )}
       <div role="radiogroup" aria-label={ex.question || 'Answer options'} style={{ display: 'grid', gap: 8 }}>
         {(ex.options || []).map((opt, i) => {
           const selected = pick === i;
           const isRight = i === ex.correct;
+          const isWrongTried = wrongPicks.includes(i);
           let borderColor = 'var(--border)';
           let bg = 'var(--surface)';
-          if (showResult && selected && isRight)  { borderColor = 'var(--success)'; bg = 'var(--success-bg)'; }
-          if (showResult && selected && !isRight)  { borderColor = 'var(--danger)'; bg = 'var(--danger-bg)'; }
-          if (showResult && !selected && isRight)  { borderColor = 'var(--success)'; bg = 'var(--surface)'; }
-          if (!showResult && selected)              { borderColor = 'var(--primary)'; bg = 'var(--accent-subtle)'; }
+          if (showCorrect && isRight)              { borderColor = 'var(--success)'; bg = 'var(--success-bg)'; }
+          else if (isWrongTried)                   { borderColor = 'var(--danger)'; bg = 'var(--danger-bg)'; }
+          else if (selected && !done)              { borderColor = 'var(--primary)'; bg = 'var(--accent-subtle)'; }
+          const optionDisabled = readOnly || done || isWrongTried;
 
           return (
             <button
@@ -73,13 +92,14 @@ function MCQPlayer({ ex, res, update, readOnly }) {
               type="button"
               role="radio"
               aria-checked={selected}
-              disabled={readOnly || showResult}
-              onClick={() => { if (!readOnly && !showResult) update({ selected: i }); }}
+              disabled={optionDisabled}
+              onClick={() => { if (!optionDisabled) update({ selected: i }); }}
               style={{
                 display: 'flex', alignItems: 'center', gap: 12,
-                padding: '12px 14px', borderRadius: 10, width: '100%', textAlign: 'left',
+                padding: '14px 16px', borderRadius: 10, width: '100%', textAlign: 'left',
                 border: `1.5px solid ${borderColor}`, background: bg,
-                cursor: (readOnly || showResult) ? 'default' : 'pointer',
+                cursor: optionDisabled ? 'default' : 'pointer',
+                opacity: isWrongTried && !showCorrect ? 0.7 : 1,
                 transition: 'all .15s var(--ease)', fontFamily: 'var(--font-ui)',
               }}
             >
@@ -92,26 +112,32 @@ function MCQPlayer({ ex, res, update, readOnly }) {
                 {selected && <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#fff' }} />}
               </div>
               <span style={{ fontSize: 'var(--text-sm)', color: 'var(--text)', flex: 1 }}>{opt}</span>
-              {showResult && isRight && <Icon.check size={16} color="var(--success)" />}
+              {showCorrect && isRight && <><Icon.check size={16} color="var(--success)" /><span className="sr-only">Correct answer</span></>}
+              {isWrongTried && !showCorrect && <><span aria-hidden="true" style={{ color: 'var(--danger)', fontWeight: 700, fontSize: 'var(--text-sm)' }}>✗</span><span className="sr-only">Incorrect</span></>}
             </button>
           );
         })}
       </div>
 
-      {!showResult && pick !== null && (
-        <Button variant="primary" size="sm" onClick={() => setChecked(true)} style={{ marginTop: 12 }}>
+      {!done && pick !== null && !wrongPicks.includes(pick) && (
+        <Button variant="primary" size="sm" onClick={check} style={{ marginTop: 12 }}>
           Check answer
         </Button>
       )}
 
-      {showResult && (
-        <div style={{
-          marginTop: 14, padding: '10px 14px', borderRadius: 10,
-          background: pick === ex.correct ? 'var(--success-bg)' : 'var(--danger-bg)',
-          color: pick === ex.correct ? 'var(--success)' : 'var(--danger)',
-          fontSize: 'var(--text-sm)',
-        }}>
-          {pick === ex.correct ? '✓ Correct!' : 'Not quite — check the highlighted answer above.'}
+      {solved && (
+        <div style={{ marginTop: 14, padding: '10px 14px', borderRadius: 10, background: 'var(--success-bg)', color: 'var(--success)', fontSize: 'var(--text-sm)' }}>
+          ✓ Correct!
+        </div>
+      )}
+      {!solved && revealed && (
+        <div style={{ marginTop: 14, padding: '10px 14px', borderRadius: 10, background: 'var(--success-bg)', color: 'var(--success)', fontSize: 'var(--text-sm)' }}>
+          Answer shown after {wrongLimit} {wrongLimit === 1 ? 'try' : 'tries'} — the correct option is highlighted above.
+        </div>
+      )}
+      {!done && wrongPicks.length > 0 && (
+        <div style={{ marginTop: 14, padding: '10px 14px', borderRadius: 10, background: 'var(--warning-bg)', color: 'var(--warning)', fontSize: 'var(--text-sm)' }}>
+          Not quite — try another option. ({wrongPicks.length}/{wrongLimit})
         </div>
       )}
     </div>
@@ -119,34 +145,70 @@ function MCQPlayer({ ex, res, update, readOnly }) {
 }
 
 /* ─── 2. FILL THE BLANK ─────────────────────────────────────── */
+const BLANK_MAX_TRIES = 5;
+
 function BlankPlayer({ ex, res, update, readOnly }) {
   const segments = parseBlankTemplate(ex.template);
   const studentBlanks = res?.blanks || [];
   const correctBlanks = ex.blanks || [];
+  const attempts = res?.blankAttempts || {};   // { blankIdx: wrong-try count }
+  const lastTried = res?.lastTried || {};       // { blankIdx: last wrong value counted }
 
-  const getStatus = (blankIdx) => {
-    const val = (studentBlanks[blankIdx] || '').trim().toLowerCase();
+  const acceptedFor = (i) => (correctBlanks[i] || '').split('|').map(a => a.trim().toLowerCase());
+  const isCorrectVal = (i, val) => acceptedFor(i).includes((val || '').trim().toLowerCase());
+  const triesUsed = (i) => attempts[i] || 0;
+  const isRevealed = (i) => triesUsed(i) >= BLANK_MAX_TRIES;
+  const answerFor = (i) => (correctBlanks[i] || '').split('|')[0]?.trim() || '';
+
+  const getStatus = (i) => {
+    const val = (studentBlanks[i] || '').trim().toLowerCase();
     if (!val) return null;
-    const accepted = (correctBlanks[blankIdx] || '').split('|').map(a => a.trim().toLowerCase());
-    return accepted.includes(val) ? 'ok' : 'warn';
+    return isCorrectVal(i, val) ? 'ok' : 'warn';
   };
+
+  // Count one try when a blank loses focus with a non-empty WRONG answer.
+  // Identical consecutive values aren't double-counted. After BLANK_MAX_TRIES
+  // wrong tries, the answer for that blank is revealed.
+  const countTry = (i) => {
+    if (readOnly || isRevealed(i)) return;
+    const raw = (studentBlanks[i] || '').trim();
+    if (!raw || isCorrectVal(i, raw)) return;
+    if (raw.toLowerCase() === (lastTried[i] || '').toLowerCase()) return;
+    update({
+      blankAttempts: { ...attempts, [i]: triesUsed(i) + 1 },
+      lastTried: { ...lastTried, [i]: raw },
+    });
+  };
+
+  const hasAnswers = correctBlanks.length > 0;
+  const anyRevealed = Object.keys(attempts).some(k => triesUsed(k) >= BLANK_MAX_TRIES);
 
   return (
     <div>
-      <p style={{ margin: '0 0 14px', fontSize: 'var(--text-md)', lineHeight: 2.2, color: 'var(--text)' }}>
+      {hasAnswers && !readOnly && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10, padding: '6px 10px', background: 'var(--accent-subtle)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-xs)', color: 'var(--accent-deep)' }}>
+          <Icon.info size={13} />
+          <span>Keep trying — if a blank is tricky, its answer appears after {BLANK_MAX_TRIES} attempts.</span>
+        </div>
+      )}
+      <p style={{ margin: '0 0 14px', fontSize: 'var(--text-md)', lineHeight: 2.4, color: 'var(--text)' }}>
         {segments.map((seg, i) => {
           if (seg.type === 'text') return <span key={i}>{seg.value}</span>;
-          const status = getStatus(seg.index);
-          const color = status === 'ok' ? 'var(--success)' : status === 'warn' ? 'var(--warning)' : 'var(--primary)';
+          const idx = seg.index;
+          const status = getStatus(idx);
+          const revealed = isRevealed(idx);
+          const used = triesUsed(idx);
+          const color = revealed || status === 'ok' ? 'var(--success)' : status === 'warn' ? 'var(--warning)' : 'var(--primary)';
           return (
             <span key={i} style={{ whiteSpace: 'nowrap' }}>
               <input
-                value={studentBlanks[seg.index] || ''}
+                value={studentBlanks[idx] || ''}
                 onChange={e => {
                   const blanks = [...studentBlanks];
-                  blanks[seg.index] = e.target.value;
+                  blanks[idx] = e.target.value;
                   update({ blanks });
                 }}
+                onBlur={() => countTry(idx)}
                 disabled={readOnly}
                 placeholder="___"
                 aria-label={status === 'ok' ? 'Blank, correct' : status === 'warn' ? 'Blank, check your answer' : 'Blank'}
@@ -159,11 +221,26 @@ function BlankPlayer({ ex, res, update, readOnly }) {
                 }}
               />
               {status === 'ok' && <span title="correct" style={{ color: 'var(--success)', fontWeight: 700, marginLeft: 3, fontSize: 'var(--text-sm)' }}>✓</span>}
-              {status === 'warn' && <span title="check this" style={{ color: 'var(--warning)', fontWeight: 700, marginLeft: 3, fontSize: 'var(--text-sm)' }}>!</span>}
+              {status === 'warn' && !revealed && (
+                <span title="check this" style={{ color: 'var(--warning)', fontWeight: 700, marginLeft: 3, fontSize: 'var(--text-xs)' }}>
+                  !{used > 0 ? ` ${used}/${BLANK_MAX_TRIES}` : ''}
+                </span>
+              )}
+              {revealed && (
+                <span title={`Answer shown after ${BLANK_MAX_TRIES} tries`} style={{ marginLeft: 4, fontSize: 'var(--text-sm)', fontWeight: 700, color: 'var(--success)' }}>
+                  → {answerFor(idx)}
+                </span>
+              )}
             </span>
           );
         })}
       </p>
+      {anyRevealed && !readOnly && (
+        <div style={{ fontSize: 'var(--text-xs)', color: 'var(--success)', display: 'flex', alignItems: 'center', gap: 6 }}>
+          <Icon.check size={12} />
+          <span>Answer shown after {BLANK_MAX_TRIES} tries — type it in to finish the blank.</span>
+        </div>
+      )}
     </div>
   );
 }
@@ -179,6 +256,29 @@ function ShortPlayer({ ex, res, update, readOnly }) {
       <p style={{ margin: '0 0 6px', fontSize: 'var(--text-md)', fontWeight: 600, color: 'var(--text)', lineHeight: 1.55 }}>
         {ex.prompt}
       </p>
+
+      {/* SCAFFOLDING */}
+      {(ex.scaffolding?.vocabulary?.length > 0 || ex.scaffolding?.structure?.length > 0) && (
+        <div style={{ marginBottom: 12, padding: '8px 12px', background: 'var(--accent-subtle)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-xs)' }}>
+          {ex.scaffolding.vocabulary?.length > 0 && (
+            <div style={{ marginBottom: 6 }}>
+              <span style={{ fontWeight: 700, color: 'var(--accent-deep)', marginRight: 6 }}>Vocabulary:</span>
+              {ex.scaffolding.vocabulary.map((word, i) => (
+                <span key={i} style={{ display: 'inline-block', background: 'var(--white)', padding: '2px 6px', borderRadius: 4, marginRight: 4, border: '1px solid var(--accent-soft)' }}>{word}</span>
+              ))}
+            </div>
+          )}
+          {ex.scaffolding.structure?.length > 0 && (
+            <div>
+              <span style={{ fontWeight: 700, color: 'var(--accent-deep)', marginRight: 6 }}>Structure:</span>
+              <ul style={{ margin: '4px 0 0 16px', padding: 0, color: 'var(--text-2)' }}>
+                {ex.scaffolding.structure.map((line, i) => <li key={i}>{line}</li>)}
+              </ul>
+            </div>
+          )}
+        </div>
+      )}
+
       {ex.rubric && (
         <p style={{ margin: '0 0 12px', fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>
           {ex.rubric}
@@ -290,6 +390,28 @@ function SpeakPlayer({ ex, res, update, readOnly }) {
           <span style={{ color: 'var(--muted)', fontWeight: 600 }}> Target: {target} seconds.</span>
         </p>
       </div>
+
+      {/* SCAFFOLDING */}
+      {(ex.scaffolding?.vocabulary?.length > 0 || ex.scaffolding?.structure?.length > 0) && (
+        <div style={{ marginBottom: 12, padding: '8px 12px', background: 'var(--accent-subtle)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-xs)' }}>
+          {ex.scaffolding.vocabulary?.length > 0 && (
+            <div style={{ marginBottom: 6 }}>
+              <span style={{ fontWeight: 700, color: 'var(--accent-deep)', marginRight: 6 }}>Vocabulary:</span>
+              {ex.scaffolding.vocabulary.map((word, i) => (
+                <span key={i} style={{ display: 'inline-block', background: 'var(--white)', padding: '2px 6px', borderRadius: 4, marginRight: 4, border: '1px solid var(--accent-soft)' }}>{word}</span>
+              ))}
+            </div>
+          )}
+          {ex.scaffolding.structure?.length > 0 && (
+            <div>
+              <span style={{ fontWeight: 700, color: 'var(--accent-deep)', marginRight: 6 }}>Structure:</span>
+              <ul style={{ margin: '4px 0 0 16px', padding: 0, color: 'var(--text-2)' }}>
+                {ex.scaffolding.structure.map((line, i) => <li key={i}>{line}</li>)}
+              </ul>
+            </div>
+          )}
+        </div>
+      )}
 
       {status === 'idle' && (
         <>
@@ -451,12 +573,26 @@ function orderArrowStyle(disabled) {
 }
 
 /* ─── 6. ERROR CORRECTION ──────────────────────────────────── */
+const FIX_MAX_TRIES = 5;
+
 function FixPlayer({ ex, res, update, readOnly }) {
   const text = res?.text ?? ex.errorText;
   const corrected = (ex.correctedText || '').trim().toLowerCase().replace(/\s+/g, ' ');
   const current = (text || '').trim().toLowerCase().replace(/\s+/g, ' ');
   const isFixed = corrected && current === corrected;
   const hasChanged = text !== ex.errorText;
+  const attempts = res?.fixAttempts || 0;
+  const lastTried = res?.fixLastTried || '';
+  const revealed = !!ex.correctedText && attempts >= FIX_MAX_TRIES;
+
+  // Count a try when the student checks a changed-but-still-wrong fix. Identical
+  // consecutive submissions aren't double-counted. After FIX_MAX_TRIES, reveal the
+  // correct version.
+  const check = () => {
+    if (readOnly || isFixed || revealed || !hasChanged) return;
+    if (current === lastTried) return;
+    update({ fixAttempts: attempts + 1, fixLastTried: current });
+  };
 
   return (
     <div>
@@ -473,13 +609,19 @@ function FixPlayer({ ex, res, update, readOnly }) {
           <Icon.spark size={11} /> {ex.hint}
         </div>
       )}
+      {!readOnly && !isFixed && !revealed && !!ex.correctedText && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10, padding: '6px 10px', background: 'var(--accent-subtle)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-xs)', color: 'var(--accent-deep)' }}>
+          <Icon.info size={13} />
+          <span>Edit the text, then press Check. The correct version is shown after {FIX_MAX_TRIES} tries.</span>
+        </div>
+      )}
       <textarea
         className="input" rows={4} value={text}
         onChange={e => update({ text: e.target.value })}
         disabled={readOnly}
         style={{ fontSize: 'var(--text-sm)', lineHeight: 1.75 }}
       />
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 10 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 10, gap: 10 }}>
         <span style={{ fontSize: 'var(--text-xs)', color: 'var(--faint)' }}>
           Edit the text above to fix the errors.
         </span>
@@ -489,6 +631,24 @@ function FixPlayer({ ex, res, update, readOnly }) {
           </Pill>
         )}
       </div>
+      {!readOnly && !isFixed && !revealed && !!ex.correctedText && (
+        <Button variant="ghost" size="sm" onClick={check} disabled={!hasChanged || current === lastTried} style={{ marginTop: 8 }}>
+          Check my fix
+        </Button>
+      )}
+      {!isFixed && !revealed && attempts > 0 && (
+        <div style={{ marginTop: 10, fontSize: 'var(--text-xs)', color: 'var(--warning)' }}>
+          Not fixed yet — keep editing. ({attempts}/{FIX_MAX_TRIES})
+        </div>
+      )}
+      {revealed && !isFixed && (
+        <div style={{ marginTop: 12, padding: '10px 14px', borderRadius: 'var(--radius-sm)', background: 'var(--success-bg)' }}>
+          <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--success)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>
+            Correct version (shown after {FIX_MAX_TRIES} tries)
+          </div>
+          <div style={{ fontSize: 'var(--text-sm)', lineHeight: 1.7, color: 'var(--text)' }}>{ex.correctedText}</div>
+        </div>
+      )}
     </div>
   );
 }

@@ -179,6 +179,15 @@ ${SHARED_MET_DATA}
 5. For speaking with transcript only: score0to4 for Intelligibility/Delivery must be null and note "audio required."
 6. subskillsAssessed should only list subskills you have actual evidence for.
 7. ratingBreakdown for speaking and writing must align with the official MET rating scales.
+8. priorityDiagnosis: 3–5 ranked items. urgency "Critical" = blocks the target; "Developing" = active growth area; "Strength" = cite one genuine strength. Every "evidence" MUST be a real quote from the evidence above — never invent. Base priorities only on evaluated skills.
+9. classSummary, nextClassFocus, targetScoreRelevance, profileUpdateSuggestions: base ONLY on what was actually evaluated — never fabricate progress for an unevaluated skill. If almost nothing was evaluated, say so plainly.
+10. profileUpdateSuggestions.progressNote is shown directly to the STUDENT — keep it plain, specific, and honest (no empty praise, no jargon).
+11. REQUIRED OUTPUT — You MUST always return substantive content for every one of these fields, even when evidence is limited (write "limited evidence — [your best estimate]" rather than leaving blank):
+    - classSummary: at least 1 sentence. Never return "".
+    - nextClassFocus: all four keys (primaryFocus, suggestedActivities, warmUp, successCriteria). Never return {}.
+    - targetScoreRelevance: all four keys (gapToTarget, prioritySkillForTarget, estimatedSessionsToTarget, onTrack). Never return {}.
+    - profileUpdateSuggestions: all four keys (progressNote, suggestedLevelChange, recurringErrorsToTrack, masteredItems). Never return {}.
+    - estimatedOverallScore: all three keys (estimate, confidence, note). Never return {}.
 
 RETURN ONLY VALID JSON:
 {
@@ -190,7 +199,15 @@ RETURN ONLY VALID JSON:
     "grammar": { "evaluated": boolean, "evidenceCount": number, "score0to80": number|null, "scoreConfidenceLevel": string, "scoreProvisional": boolean, "subskillsAssessed": string[], "mainIssues": string[], "strengths": string[], "whatToImproveNext": string },
     "vocabulary": { ... },
     "testStrategy": { ... }
-  }
+  },
+  "classSummary": "2-3 plain sentences that tie the whole diagnosis together: what was actually practised today, how it went, and the single most important takeaway. This is the cohesive overview the teacher reads first — not a thin restatement. No 'The class focused on...'.",
+  "priorityDiagnosis": [
+    { "rank": 1, "urgency": "Critical|Developing|Strength", "area": "short skill/subskill name", "evidence": "exact quote from the evidence", "whatToImprove": "1 concrete sentence", "howToImprove": "1 sentence — one actionable practice direction" }
+  ],
+  "targetScoreRelevance": { "gapToTarget": "string", "prioritySkillForTarget": "string", "estimatedSessionsToTarget": "string", "onTrack": "string" },
+  "nextClassFocus": { "primaryFocus": "string", "suggestedActivities": ["string"], "warmUp": "string", "successCriteria": "string" },
+  "profileUpdateSuggestions": { "progressNote": "1-2 student-facing sentences about progress this class", "suggestedLevelChange": "string", "recurringErrorsToTrack": ["string"], "masteredItems": ["string"] },
+  "estimatedOverallScore": { "estimate": "number or 'Not evaluated enough'", "confidence": "string", "note": "1 sentence explaining the basis for this estimate — which evaluated skills it rests on and why the confidence level. Never leave blank." }
 }`;
 };
 
@@ -219,13 +236,22 @@ ${JSON.stringify(diagnosis?.skillDiagnosis || {}, null, 2)}
 
 ${SHARED_MET_DATA}
 
-━━━ VOICE RULES (CRITICAL) ━━━
-• SECOND PERSON ONLY: Use "you", "your". NEVER "the student", "he/she", "this learner".
-• QUOTE-ANCHORED: Every strength and every "what to improve" MUST reference a specific thing the student said or wrote today. Use direct quotes.
-• BANNED OPENERS: Never start with "Great work", "Well done", "Excellent", "Good job", "It is important", "Furthermore", "Additionally", "Moreover", "In addition", "In terms of", "With respect to", "Going forward", "In conclusion", "Overall".
+━━━ VOICE RULES (CRITICAL — this is the #1 priority) ━━━
+Write like a real teacher talking TO this student right after class — warm, specific, human. Not a report.
+
+• SECOND PERSON ONLY: "you", "your". NEVER "the student", "he/she", "this learner".
+• USE THEIR NAME once or twice (it's fine to open finalNote with "${student?.firstName || 'You'}, ..."). Contractions are encouraged — "you're", "that's", "it'll".
+• QUOTE-ANCHORED: every strength and every improvement points to something they actually said or wrote today — quote their real words.
+• NO TEMPLATE / NO SAMENESS: phrase every item DIFFERENTLY. Never reuse one sentence shape (e.g. "You did X, which shows Y"). Vary length — some items can be a single short sentence. It must read hand-written, not filled into a form.
+• BANNED JARGON / AI-WORDS (never use): demonstrate, showcase, leverage, utilize, delve, crucial, essential, foster, robust, navigate, journey, elevate, "in terms of", "when it comes to", "this highlights", "this underscores", "a testament to". Use plain everyday words.
+• BANNED OPENERS: "Great work", "Well done", "Excellent", "Good job", "It is important", "Furthermore", "Additionally", "Moreover", "In addition", "Going forward", "In conclusion", "Overall".
 • BANNED PHRASES: "This demonstrates", "Your performance", "You demonstrated", "You exhibited", "This is crucial for", "This is essential", "This shows that you", "Continue to", "Keep up".
-• BREVITY & NATURAL FLOW: Vary sentence openings. Avoid "AI-speak". If a thought is one sentence, stop.
-• MET BUDGET: At most 2 sentences across the whole feedback may mention the MET exam. Each must be concrete (e.g., "examiners weight delivery in the third descriptor...").
+• BREVITY: if a thought is one sentence, stop. No padding, no restating.
+• MET BUDGET: at most 2 sentences in the whole feedback may mention the MET exam, and each must be concrete (e.g., "examiners weight delivery in the third descriptor...").
+
+TONE EXAMPLE — match the natural version, never the robotic one:
+  ✗ Robotic: "You demonstrated strong task completion, which is crucial for your target band and showcases developing fluency."
+  ✓ Natural: "When you described the night shift on the ward, you kept going for the whole minute without freezing — that steady flow is exactly what the examiners are listening for."
 
 ━━━ OUTPUT FORMAT ━━━
 Return ONLY VALID JSON:
@@ -247,10 +273,12 @@ Return ONLY VALID JSON:
  */
 export const buildHomeworkPrompt = (data) => {
   const { student, diagnosis } = data;
-  const priorities = diagnosis?.sections?.priorityDiagnosis?.content || [];
-  const errors = diagnosis?.sections?.errorBankSuggestions?.content || [];
-  const vocab = diagnosis?.sections?.vocabGrammarTargets?.content?.vocabularyTargets || [];
-  const grammar = diagnosis?.sections?.vocabGrammarTargets?.content?.grammarTargets || [];
+  // Coerce to array — AI section content is sometimes an object, not an array.
+  const arr = (v) => (Array.isArray(v) ? v : []);
+  const priorities = arr(diagnosis?.sections?.priorityDiagnosis?.content);
+  const errors = arr(diagnosis?.sections?.errorBankSuggestions?.content);
+  const vocab = arr(diagnosis?.sections?.vocabGrammarTargets?.content?.vocabularyTargets);
+  const grammar = arr(diagnosis?.sections?.vocabGrammarTargets?.content?.grammarTargets);
 
   return `You are an expert MET Instructional Designer.
 Build 3 complete, student-ready, highly personalized homework tasks based on the diagnosis provided.
@@ -260,8 +288,7 @@ Name: ${student?.name || 'Student'}
 Level: ${student?.currentLevel || 'B1'} → Target: ${student?.targetLevel || 'B2'}
 
 ━━━ DIAGNOSIS PRIORITIES ━━━
-${priorities.map(p => `- [${p.urgency}] ${p.area}: ${p.whatToImprove}`).join('
-') || 'No priorities.'}
+${priorities.map(p => `- [${p.urgency}] ${p.area}: ${p.whatToImprove}`).join('\n') || 'No priorities.'}
 
 ━━━ TARGET ERRORS & VOCAB ━━━
 Errors: ${errors.map(e => `"${e.error}" → "${e.correct}"`).join(', ') || 'none'}
@@ -337,3 +364,286 @@ export function buildSectionRegenPrompt(key, data) {
 }
 
 // (Other existing build functions can be kept or deprecated)
+
+/* ══════════════════════════════════════════════════════════════
+   HOMEWORK GENERATOR PROMPT — used by homework-create.jsx
+   Restored: was dropped during the module-prompt refactor.
+══════════════════════════════════════════════════════════════ */
+export const buildHomeworkGeneratorPrompt = ({ student, diagnosis }) => {
+  // AI section content shape varies (sometimes object, sometimes array) — coerce
+  // to an array before any .slice/.map so a non-array shape can't crash generation.
+  const arr = (v) => (Array.isArray(v) ? v : []);
+  const priorities = arr(diagnosis?.sections?.priorityDiagnosis?.content);
+  const errors = arr(diagnosis?.sections?.errorBankSuggestions?.content);
+  const vocab = arr(diagnosis?.sections?.vocabGrammarTargets?.content?.vocabularyTargets);
+  const grammar = arr(diagnosis?.sections?.vocabGrammarTargets?.content?.grammarTargets);
+  const skillDx = diagnosis?.sections?.skillDiagnosis?.content || {};
+  const classSummary = diagnosis?.sections?.classSummary?.content || '';
+
+  const topPriority = priorities[0];
+  const skillAreas = Object.entries(skillDx).filter(([, v]) => v?.evaluated).map(([k]) => k);
+  const weaknesses = skillAreas.flatMap(k => skillDx[k]?.weaknesses || []).slice(0, 6);
+
+  const t = (s, max) => !s || s.length <= max ? (s || '') : s.slice(0, max) + '…';
+
+  return `You are a MET English homework creator. Build 3 complete, student-ready tasks from the diagnosis below.
+
+━━━ STUDENT ━━━
+${student?.name || 'Unknown'} | ${student?.currentLevel || student?.band || 'B1'} → ${student?.targetLevel || student?.bandTarget || 'B2'} | ${student?.examGoal || 'MET B2'} | ${student?.professionalContext || ''}
+
+━━━ DIAGNOSIS PRIORITIES ━━━
+${priorities.slice(0, 3).map(p => `${p.rank}. [${p.urgency}] ${p.area}: ${p.whatToImprove}${p.evidence ? ` — "${p.evidence}"` : ''}`).join('\n') || 'No priorities.'}
+
+━━━ ERRORS TO TARGET ━━━
+${errors.slice(0, 5).map(e => `- "${e.error}" → "${e.correct}" (${e.category || '?'}, ${e.priority || 'medium'})${e.evidence ? ` — "${e.evidence}"` : ''}`).join('\n') || 'none'}
+
+━━━ VOCABULARY TARGETS ━━━
+${vocab.slice(0, 4).map(v => `- ${v.wordOrPhrase}: ${v.meaning || ''}`).join('\n') || 'none'}
+
+━━━ GRAMMAR TARGETS ━━━
+${grammar.slice(0, 3).map(g => `- ${g.area}: ${g.issue}`).join('\n') || 'none'}
+
+━━━ RULES ━━━
+- Exactly 3 tasks. Each FULLY WRITTEN — student opens and starts immediately.
+- Grammar: 4–5 sentences with the actual error pattern for the student to correct.
+- Vocabulary: 4–5 fill-in-the-blank sentences with a word bank.
+- Writing/Speaking: one complete prompt (word count, structure, time limit).
+- Use ${student?.professionalContext || 'real, specific'} contexts — not generic filler.
+- B1–B2 level. Total homework time: 20–30 minutes.
+
+Return ONLY valid JSON:
+{
+  "title": "specific title — reflects the actual target, not generic (e.g. 'Other / Another — Grammar Drill + Speaking Practice')",
+  "objective": "exact link to top priority — state skill and specific sub-target",
+  "instructions": "friendly, clear instructions in second person — tell the student what they will practice and why it matters for MET",
+  "tasks": [
+    {
+      "taskNumber": 1,
+      "type": "grammar|vocabulary|writing|speaking|reading|listening",
+      "description": "one-line task title",
+      "content": "FULLY WRITTEN OUT EXERCISE — the actual sentences, questions, prompt, or scenario the student will work with. This field must contain the complete task content, not a description of what to create.",
+      "example": "a worked example or model showing the expected format and level (optional but recommended for grammar and vocabulary tasks)",
+      "expectedOutput": "exactly what the student must write or record and submit"
+    },
+    {
+      "taskNumber": 2,
+      "type": "...",
+      "description": "...",
+      "content": "FULLY WRITTEN OUT exercise content",
+      "example": "...",
+      "expectedOutput": "..."
+    },
+    {
+      "taskNumber": 3,
+      "type": "...",
+      "description": "...",
+      "content": "FULLY WRITTEN OUT exercise content",
+      "example": "...",
+      "expectedOutput": "..."
+    }
+  ],
+  "expectedSubmissionType": "text|audio|file|mixed",
+  "selfCheck": [
+    "specific check tied to homework target (e.g. 'I used 'another' with singular nouns only')",
+    "item 2 — specific to the vocabulary or grammar target",
+    "item 3 — specific to the writing/speaking task"
+  ],
+  "teacherNotes": "what to look for when reviewing: reference the specific error patterns and targets from the diagnosis",
+  "dueDateSuggestion": "Before next class"
+}`;
+};
+
+/* ══════════════════════════════════════════════════════════════
+   HOMEWORK GROUP PROMPT — per-skill-group exercise generation.
+   Called once per selected skill group (speaking, grammar, etc.)
+   so each call is small and cascade-resilient.
+══════════════════════════════════════════════════════════════ */
+export const buildHomeworkGroupPrompt = ({ student, diagnosis, group, count = 5 }) => {
+  const arr = (v) => (Array.isArray(v) ? v : []);
+  const priorities = arr(diagnosis?.sections?.priorityDiagnosis?.content);
+  const errors     = arr(diagnosis?.sections?.errorBankSuggestions?.content);
+  const vocab      = arr(diagnosis?.sections?.vocabGrammarTargets?.content?.vocabularyTargets);
+  const grammar    = arr(diagnosis?.sections?.vocabGrammarTargets?.content?.grammarTargets);
+  const skillDx    = diagnosis?.sections?.skillDiagnosis?.content || {};
+
+  // Pull skill-specific weaknesses when available
+  const skillData  = skillDx[group] || {};
+  const weaknesses = arr(skillData.weaknesses).slice(0, 4);
+
+  // Map group key to recommended exercise types
+  const TYPE_HINTS = {
+    speaking:    'speak, short',
+    writing:     'short, fix',
+    grammar:     'fix, blank, mcq',
+    vocabulary:  'flash, blank, mcq',
+    reading:     'mcq, order, short',
+    listening:   'listen, mcq',
+    mixed:       'mcq, blank, short, fix',
+  };
+  const typeHint = TYPE_HINTS[group] || 'mcq, blank, short';
+  const groupLabel = group.charAt(0).toUpperCase() + group.slice(1);
+
+  return `You are a MET English exam preparation expert. Generate exactly ${count} structured exercises targeting ${groupLabel}.
+
+━━━ STUDENT ━━━
+${student?.name || 'Student'} | ${student?.currentLevel || 'B1'} → ${student?.targetLevel || 'B2'} | ${student?.professionalContext || 'general professional context'}
+
+━━━ SKILL GROUP: ${groupLabel.toUpperCase()} ━━━
+${weaknesses.length ? weaknesses.map(w => `- ${w}`).join('\n') : `Target: B1→B2 ${groupLabel} skills relevant to MET exam`}
+
+━━━ DIAGNOSIS PRIORITIES ━━━
+${priorities.slice(0, 2).map(p => `- [${p.urgency}] ${p.area}: ${p.whatToImprove}`).join('\n') || 'None recorded.'}
+
+━━━ ERRORS TO TARGET ━━━
+${errors.filter(e => (e.category || '').toLowerCase().includes(group) || group === 'mixed').slice(0, 4).map(e => `- "${e.error}" → "${e.correct}" (${e.category})`).join('\n') || errors.slice(0, 3).map(e => `- "${e.error}" → "${e.correct}" (${e.category})`).join('\n') || 'None recorded.'}
+
+━━━ VOCABULARY / GRAMMAR TARGETS ━━━
+${group === 'vocabulary' || group === 'mixed' ? vocab.slice(0, 4).map(v => `- ${v.wordOrPhrase}: ${v.meaning || ''}`).join('\n') || 'None.' : ''}
+${group === 'grammar' || group === 'mixed' ? grammar.slice(0, 3).map(g => `- ${g.area}: ${g.issue}`).join('\n') || 'None.' : ''}
+
+━━━ RULES ━━━
+- Generate exactly ${count} exercises. Every exercise is FULLY WRITTEN — student opens and starts immediately.
+- Recommended types: ${typeHint}. Mix them for variety. Use the 8 structured types: mcq, blank, short, speak, order, fix, flash, listen.
+- Use the student's professional context (${student?.professionalContext || 'healthcare / nursing'}) — not generic filler.
+- B1–B2 level. Each exercise should take 3–5 minutes.
+
+Return ONLY valid JSON — an array of ${count} exercise objects:
+[
+  {
+    "type": "mcq|blank|short|speak|order|fix|flash|listen",
+    "skillGroup": "${group}",
+    "content": "FULLY WRITTEN exercise content — the actual sentences, questions, or scenario",
+    "options": ["A", "B", "C", "D"],
+    "correct": 0,
+    "blanks": ["answer1"],
+    "sentences": ["sentence 1", "sentence 2"],
+    "correctedText": "corrected version (for fix type)",
+    "hint": "optional hint",
+    "pairs": [{"term": "word", "def": "meaning"}],
+    "audioText": "text to read aloud (for listen type)",
+    "question": "the question",
+    "explanation": "why this answer is correct"
+  }
+]
+Include only the fields relevant to the exercise type. The "content" field always contains the main exercise text.`;
+};
+
+/* ══════════════════════════════════════════════════════════════
+   EXERCISE LIST PROMPT — used by homework-create.jsx
+   Generate a menu of exercise options for the teacher to pick from.
+   Restored: was dropped during the module-prompt refactor.
+══════════════════════════════════════════════════════════════ */
+export const buildExerciseListPrompt = ({ student, diagnosis }) => {
+  // Coerce to array — AI section content is sometimes an object, not an array.
+  const arr = (v) => (Array.isArray(v) ? v : []);
+  const priorities = arr(diagnosis?.sections?.priorityDiagnosis?.content);
+  const errors = arr(diagnosis?.sections?.errorBankSuggestions?.content);
+  const vocab = arr(diagnosis?.sections?.vocabGrammarTargets?.content?.vocabularyTargets);
+  const grammar = arr(diagnosis?.sections?.vocabGrammarTargets?.content?.grammarTargets);
+
+  return `You are a MET English exam preparation expert. Generate a menu of 6 distinct, ready-to-use exercises for the teacher to choose from.
+
+━━━ STUDENT ━━━
+Name: ${student?.name || 'Student'}
+Level: ${student?.currentLevel || 'B1'} → Target: ${student?.targetLevel || 'B2'}
+Context: ${student?.professionalContext || 'general'}
+
+━━━ DIAGNOSIS PRIORITIES ━━━
+${priorities.slice(0, 3).map(p => `- [${p.urgency}] ${p.area}: ${p.whatToImprove}`).join('\n') || 'No priorities recorded.'}
+
+━━━ ACTIVE ERRORS ━━━
+${errors.slice(0, 6).map(e => `- "${e.error}" → "${e.correct}" (${e.category})`).join('\n') || 'None recorded.'}
+
+━━━ VOCABULARY TARGETS ━━━
+${vocab.slice(0, 5).map(v => `- ${v.wordOrPhrase}`).join('\n') || 'None.'}
+
+━━━ GRAMMAR TARGETS ━━━
+${grammar.slice(0, 3).map(g => `- ${g.area}: ${g.issue}`).join('\n') || 'None.'}
+
+━━━ RULES ━━━
+- Each exercise must be FULLY WRITTEN — the student opens it and starts immediately.
+- Cover different skills: mix grammar, vocabulary, writing, speaking.
+- Each exercise should take 5–15 minutes.
+- Match B1–B2 transition level. Healthcare/nursing context when relevant.
+- Use the INTERACTIVE EXERCISE TYPES below to create varied, engaging exercises.
+
+━━━ INTERACTIVE EXERCISE TYPES ━━━
+You MUST use these exact type IDs. Each has a specific JSON shape:
+
+1. "mcq" (Multiple Choice) — question + 4 options + correct answer index
+2. "blank" (Fill the Blank) — template with ___ markers + correct answers (pipe-separated alternatives)
+3. "short" (Short Answer) — prompt + rubric hint + target word count
+4. "speak" (Speaking Prompt) — prompt + target seconds
+5. "order" (Order Sentences) — sentences array in correct order (student sees shuffled)
+6. "fix" (Error Correction) — errorText + correctedText + hint
+7. "flash" (Flashcards) — pairs of term/definition
+8. "listen" (Listening Exercise) — audioText (the text read aloud via TTS) + plays (number of allowed listens, default 2) + question + 4 options + correct answer index + optional explanation
+
+Return ONLY valid JSON — an array of 6 exercises mixing different types:
+[
+  {
+    "title": "Short exercise title",
+    "type": "mcq",
+    "duration": "5 min",
+    "content": "Which sentence uses the correct form?",
+    "options": ["Option A text", "Option B text", "Option C text", "Option D text"],
+    "correct": 1,
+    "teacherNote": "What to look for"
+  },
+  {
+    "title": "Fill in the blanks — articles",
+    "type": "blank",
+    "duration": "8 min",
+    "content": "The nurse gave ___ report to ___ doctor on duty.",
+    "blanks": ["the|a", "the"],
+    "teacherNote": "Check article use before nouns"
+  },
+  {
+    "title": "Opinion paragraph",
+    "type": "short",
+    "duration": "12 min",
+    "content": "Write 80–120 words arguing whether...",
+    "targetWords": 120,
+    "rubric": "Open with stance, give example, close with consequence",
+    "teacherNote": "Look for cohesion markers"
+  },
+  {
+    "title": "Speaking — past experience",
+    "type": "speak",
+    "duration": "5 min",
+    "content": "Describe a challenging moment at work using past simple. 60 seconds.",
+    "targetSeconds": 60,
+    "teacherNote": "Check tense consistency"
+  },
+  {
+    "title": "Patient admission steps",
+    "type": "order",
+    "duration": "5 min",
+    "content": "Put these steps in order",
+    "sentences": ["Step 1 in correct order", "Step 2", "Step 3", "Step 4"],
+    "teacherNote": "Checks procedural vocabulary"
+  },
+  {
+    "title": "Fix the errors — tenses",
+    "type": "fix",
+    "duration": "8 min",
+    "content": "Text with errors here",
+    "errorText": "Text with errors that student sees",
+    "correctedText": "Corrected version for grading",
+    "hint": "Look at: verb tenses, articles",
+    "teacherNote": "Focus on past simple vs present perfect"
+  },
+  {
+    "title": "Listen and answer — speaker purpose",
+    "type": "listen",
+    "duration": "5 min",
+    "audioText": "The short dialogue or monologue text that will be read aloud by TTS. Keep it 2–4 sentences, realistic, at B1–B2 level.",
+    "plays": 2,
+    "question": "What is the speaker's main purpose?",
+    "options": ["To complain about a procedure", "To request information about a patient", "To explain a treatment plan", "To apologise for a delay"],
+    "correct": 1,
+    "explanation": "The speaker asks directly about the patient's status, making option B the correct answer.",
+    "teacherNote": "Targets speaker_purpose subskill — check if student identified intent vs topic"
+  }
+]`;
+};

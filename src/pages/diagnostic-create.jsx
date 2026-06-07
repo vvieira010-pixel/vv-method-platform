@@ -36,6 +36,7 @@ const SECTION_KEYS = [
   { key: 'readinessCheck',         label: 'Diagnostic Readiness Check',    studentFacing: false },
   { key: 'classSummary',           label: 'Class Summary',                 studentFacing: false },
   { key: 'targetScoreRelevance',   label: 'Target Score Relevance',        studentFacing: false },
+  { key: 'estimatedOverallScore',  label: 'Estimated Overall Score',       studentFacing: false },
   { key: 'skillDiagnosis',         label: 'Skill Diagnosis',               studentFacing: false },
   { key: 'errorBankSuggestions',   label: 'Error Bank Suggestions',        studentFacing: false },
   { key: 'vocabGrammarTargets',    label: 'Vocabulary & Grammar Targets',  studentFacing: false },
@@ -48,6 +49,31 @@ const SECTION_KEYS = [
 
 const REQUIRED_APPROVAL_KEYS = ['skillDiagnosis', 'studentFeedback', 'homeworkRecommendation', 'nextClassFocus'];
 const SECTION_LABELS = Object.fromEntries(SECTION_KEYS.map(section => [section.key, section.label]));
+
+// Review layout: two zones, with thin teacher sections merged into fuller cards.
+// A group with one key renders as its own card; multiple keys render together in
+// one card (each member keeps its own approve/edit/regen controls).
+const SECTION_GROUPS = [
+  {
+    zone: 'teacher', title: 'Teacher Analysis', studentFacing: false,
+    groups: [
+      { title: 'Readiness Check', keys: ['readinessCheck'] },
+      { title: 'Overview', keys: ['classSummary', 'targetScoreRelevance', 'estimatedOverallScore'] },
+      { title: 'Skill Diagnosis', keys: ['skillDiagnosis'] },
+      { title: 'Priorities', keys: ['priorityDiagnosis'] },
+      { title: 'Errors & Targets', keys: ['errorBankSuggestions', 'vocabGrammarTargets'] },
+      { title: 'Class Planning', keys: ['nextClassFocus', 'profileUpdateSuggestions'] },
+    ],
+  },
+  {
+    zone: 'student', title: 'Student-Facing', studentFacing: true,
+    caption: 'This is exactly what your student will see.',
+    groups: [
+      { title: 'Personalized Student Feedback', keys: ['studentFeedback'] },
+      { title: 'Homework Recommendation', keys: ['homeworkRecommendation'] },
+    ],
+  },
+];
 
 function shouldRetryCompact(error) {
   const msg = String(error?.message || error || '').toLowerCase();
@@ -198,36 +224,44 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
     try {
       const promptData = { student: selectedStudent, classEvent, classEvidence: normalizedEvidence, targetProfile };
       
-      setGeneratingStatus('Running parallel AI analyses (Skills, Feedback, Homework, Errors)...');
-      
-      // Use allSettled to ensure resilient partial success.
-      const results = await Promise.allSettled([
-        callAI(buildSkillDiagnosisPrompt(promptData), { max_tokens: 4000, preferredProvider: 'gemini' }),
-        callAI(buildStudentFeedbackPrompt({ ...promptData, diagnosis: { skillDiagnosis: {} } }), { max_tokens: 2500, preferredProvider: 'gemini' }),
-        callAI(buildHomeworkPrompt(promptData), { max_tokens: 3000, preferredProvider: 'gemini' }),
-        callAI(buildErrorBankPrompt(promptData), { max_tokens: 2500, preferredProvider: 'gemini' }),
-      ]);
+      // Sequential generation: diagnosis first, then informed layers.
+      const getContent = (res) => (res?.content?.map(b => b.text || '').join('') || '');
 
-      setGeneratingStatus('Parsing and structuring results...');
+      // Phase 1: Core skill diagnosis
+      setGeneratingStatus('Step 1/4 — Generating skill diagnosis…');
+      const diagnosisRaw = await callAI(buildSkillDiagnosisPrompt(promptData), { max_tokens: 6000, preferredProvider: 'gemini' }).catch(() => null);
+      const parsedDiagnosis = diagnosisRaw ? parseAiJson(getContent(diagnosisRaw)) : {};
 
-      const [diagnosisRes, feedbackRes, homeworkRes, errorBankRes] = results;
-      const getResContent = (res) => {
-        if (res.status === 'fulfilled') return res.value.content?.map(b => b.text || '').join('') || '';
-        throw new Error(res.reason?.message || 'AI request failed');
-      };
+      // Phase 2: Error bank + vocab targets (informed by the diagnosis)
+      setGeneratingStatus('Step 2/4 — Analysing errors and vocabulary targets…');
+      const errorBankRaw = await callAI(buildErrorBankPrompt({ ...promptData, diagnosis: parsedDiagnosis }), { max_tokens: 2500, preferredProvider: 'gemini' }).catch(() => null);
+      const parsedErrorBank = errorBankRaw ? parseAiJson(getContent(errorBankRaw)) : {};
 
-      const parsedDiagnosis = parseAiJson(getResContent(diagnosisRes));
-      const parsedFeedback = parseAiJson(getResContent(feedbackRes));
-      const parsedHomework = parseAiJson(getResContent(homeworkRes));
-      const parsedErrorBank = parseAiJson(getResContent(errorBankRes));
+      // Phase 3: Student feedback (informed by the full diagnosis)
+      setGeneratingStatus('Step 3/4 — Writing student feedback…');
+      const feedbackRaw = await callAI(buildStudentFeedbackPrompt({ ...promptData, diagnosis: parsedDiagnosis }), { max_tokens: 2500, preferredProvider: 'gemini' }).catch(() => null);
+      const parsedFeedback = feedbackRaw ? parseAiJson(getContent(feedbackRaw)) : {};
+
+      // Phase 4: Homework recommendation (informed by diagnosis + errors + vocab)
+      setGeneratingStatus('Step 4/4 — Building homework recommendation…');
+      const homeworkRaw = await callAI(buildHomeworkPrompt({
+        ...promptData,
+        diagnosis: parsedDiagnosis,
+        errorBank: parsedErrorBank.errorBankSuggestions,
+        vocabTargets: parsedErrorBank.vocabGrammarTargets,
+      }), { max_tokens: 3000, preferredProvider: 'gemini' }).catch(() => null);
+      const parsedHomework = homeworkRaw ? parseAiJson(getContent(homeworkRaw)) : {};
+
+      setGeneratingStatus('Structuring results…');
 
       // Combine results into the sections state, marking failed ones for Regen
+      const FAILED = { content: "Failed to generate — click Regen to retry.", approved: false, hidden: false, edited: false };
       const initSections = {
-        skillDiagnosis: diagnosisRes.status === 'fulfilled' ? { content: parsedDiagnosis.skillDiagnosis ?? null, approved: false, hidden: false, edited: false } : { content: "Failed to generate — click Regen to retry.", approved: false, hidden: false, edited: false },
-        studentFeedback: feedbackRes.status === 'fulfilled' ? { content: parsedFeedback, approved: false, hidden: false, edited: false } : { content: "Failed to generate — click Regen to retry.", approved: false, hidden: false, edited: false },
-        homeworkRecommendation: homeworkRes.status === 'fulfilled' ? { content: parsedHomework, approved: false, hidden: false, edited: false } : { content: "Failed to generate — click Regen to retry.", approved: false, hidden: false, edited: false },
-        errorBankSuggestions: errorBankRes.status === 'fulfilled' ? { content: parsedErrorBank.errorBankSuggestions ?? [], approved: false, hidden: false, edited: false } : { content: [], approved: false, hidden: false, edited: false },
-        vocabGrammarTargets: errorBankRes.status === 'fulfilled' ? { content: parsedErrorBank.vocabGrammarTargets ?? null, approved: false, hidden: false, edited: false } : { content: null, approved: false, hidden: false, edited: false },
+        skillDiagnosis:        diagnosisRaw  ? { content: parsedDiagnosis.skillDiagnosis ?? null,              approved: false, hidden: false, edited: false } : FAILED,
+        studentFeedback:       feedbackRaw   ? { content: parsedFeedback,                                       approved: false, hidden: false, edited: false } : FAILED,
+        homeworkRecommendation:homeworkRaw   ? { content: parsedHomework,                                       approved: false, hidden: false, edited: false } : FAILED,
+        errorBankSuggestions:  errorBankRaw  ? { content: parsedErrorBank.errorBankSuggestions ?? [],           approved: false, hidden: false, edited: false } : { content: [], approved: false, hidden: false, edited: false },
+        vocabGrammarTargets:   errorBankRaw  ? { content: parsedErrorBank.vocabGrammarTargets ?? null,          approved: false, hidden: false, edited: false } : { content: null, approved: false, hidden: false, edited: false },
         readinessCheck: { content: { targetProfileSelected: !!targetProfile, evaluatedSkills: evaluatedSkills, notEvaluatedSkills: [], diagnosisAllowed: true }, approved: true, hidden: false, edited: false },
         classSummary: { content: parsedDiagnosis.classSummary || '', approved: false, hidden: false, edited: false },
         targetScoreRelevance: { content: parsedDiagnosis.targetScoreRelevance || {}, approved: false, hidden: false, edited: false },
@@ -336,7 +370,11 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
           prompt = buildSectionRegenPrompt(key, promptData);
       }
 
-      const SECTION_BUDGETS = { studentFeedback: 3000, homeworkRecommendation: 3000, skillDiagnosis: 2800, priorityDiagnosis: 2500, errorBankSuggestions: 2200 };
+      // The skillDiagnosis prompt now also emits classSummary/priorityDiagnosis/nextClassFocus/
+      // targetScoreRelevance/profileUpdateSuggestions, and regen of any of those runs that full
+      // prompt (default case → buildSectionRegenPrompt → buildSkillDiagnosisPrompt), so they
+      // need the larger budget too.
+      const SECTION_BUDGETS = { studentFeedback: 3000, homeworkRecommendation: 3000, skillDiagnosis: 6000, priorityDiagnosis: 6000, classSummary: 6000, targetScoreRelevance: 6000, nextClassFocus: 6000, profileUpdateSuggestions: 6000, errorBankSuggestions: 2200 };
       const data = await callAI(prompt, { max_tokens: SECTION_BUDGETS[key] || 2000, preferredProvider: 'gemini' });
       const raw = data.content?.map(b => b.text || '').join('') || '';
       const parsed = parseAiJson(raw);
@@ -488,7 +526,7 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
         <div style={{ fontSize: 'var(--text-xl)', fontWeight: 700, color: 'var(--accent-deep)', marginBottom: 12 }}>Running Diagnosis…</div>
         <p style={{ color: 'var(--muted)', marginBottom: 24 }}>{generatingStatus}</p>
         <div style={{ height: 4, background: 'var(--bg-deep)', borderRadius: 99, overflow: 'hidden' }}>
-          <div style={{ height: '100%', background: 'var(--accent)', borderRadius: 99, animation: 'slideIn 2s ease-in-out infinite alternate' }} />
+          <div role="progressbar" aria-label="Generating diagnosis" aria-valuemin={0} aria-valuemax={100} style={{ height: '100%', background: 'var(--accent)', borderRadius: 99, animation: 'slideIn 2s ease-in-out infinite alternate' }} />
         </div>
         <style>{`@keyframes slideIn { from { width: 20%; margin-left: 0; } to { width: 60%; margin-left: 40%; } }`}</style>
       </div>
@@ -544,6 +582,7 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
             <div style={{ display: 'flex', gap: 8, marginTop: 10, flexWrap: 'wrap' }}>
               {Object.entries(TARGET_PROFILE_PRESETS).map(([key, preset]) => (
                 <button key={key} onClick={() => selectPreset(key)}
+                  aria-pressed={targetProfile?.profileName === preset.profileName}
                   style={{ padding: '8px 14px', borderRadius: 'var(--radius-sm)', border: `2px solid ${targetProfile?.profileName === preset.profileName ? 'var(--accent)' : 'var(--border)'}`, background: targetProfile?.profileName === preset.profileName ? 'var(--accent-subtle)' : 'var(--surface)', cursor: 'pointer', fontFamily: 'var(--font-ui)', fontSize: 'var(--text-sm)', fontWeight: 600 }}>
                   {preset.label}
                   <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontWeight: 400 }}>Overall {preset.overallTarget} · Speaking {preset.speakingTarget}</div>
@@ -720,51 +759,90 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
             </Card>
           )}
 
-          {/* Sections */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-            {SECTION_KEYS.map(({ key, label, studentFacing }) => {
+          {/* Sections — grouped into Teacher Analysis + Student-Facing zones */}
+          {(() => {
+            // One section's header + body. `embedded` = rendered inside a merged
+            // card (no outer Card chrome); otherwise gets its own card.
+            const renderSection = (key, studentFacing, embedded) => {
               const sec = sections[key];
               if (!sec) return null;
+              const label = SECTION_LABELS[key] || key;
               const isEditing = editingSection === key;
               const isRegenning = regenerating === key;
 
-              return (
-                <Card key={key} style={{ padding: 0, border: sec.approved ? '2px solid var(--success)' : '1px solid var(--border)', overflow: 'hidden' }}>
-                  {/* Section header */}
-                  <div style={{ padding: '12px 16px', background: sec.approved ? 'var(--success-bg)' : 'var(--bg)', display: 'flex', alignItems: 'center', gap: 10, borderBottom: '1px solid var(--divider)' }}>
-                    <span style={{ fontWeight: 700, fontSize: 'var(--text-sm)', flex: 1 }}>{label}</span>
-                    {studentFacing && <Pill tone="info">Student-facing</Pill>}
-                    {sec.edited && <Pill tone="warning">Edited</Pill>}
-                    {sec.hidden && <Pill tone="muted">Hidden</Pill>}
-                    {sec.approved && <Pill tone="success">✓ Approved</Pill>}
-                    <div style={{ display: 'flex', gap: 6 }}>
-                      <Button variant="ghost" size="sm" onClick={() => startEdit(key)} disabled={isRegenning}><Icon.edit size={12} /> Edit</Button>
-                      <Button variant="ghost" size="sm" onClick={() => regenerateSection(key)} disabled={isRegenning}><Icon.refresh size={12} /> {isRegenning ? '…' : 'Regen'}</Button>
-                      <Button variant="ghost" size="sm" onClick={() => toggleHide(key)} style={{ color: sec.hidden ? 'var(--muted)' : 'var(--text)' }}><Icon.eye size={12} /></Button>
-                      <Button variant={sec.approved ? 'ghost' : 'primary'} size="sm" onClick={() => toggleApprove(key)} style={sec.approved ? { color: 'var(--danger)' } : {}}>
-                        {sec.approved ? '✕ Unapprove' : '✓ Approve'}
-                      </Button>
-                    </div>
+              const header = (
+                <div style={{ padding: '12px 16px', background: sec.approved ? 'var(--success-bg)' : (studentFacing ? 'var(--accent-soft)' : 'var(--bg)'), display: 'flex', alignItems: 'center', gap: 10, borderBottom: '1px solid var(--divider)' }}>
+                  <span style={{ fontWeight: 700, fontSize: 'var(--text-sm)', flex: 1 }}>{label}</span>
+                  {studentFacing && <Pill tone="info">Student-facing</Pill>}
+                  {sec.edited && <Pill tone="warning">Edited</Pill>}
+                  {sec.hidden && <Pill tone="muted">Hidden</Pill>}
+                  {sec.approved && <Pill tone="success">✓ Approved</Pill>}
+                  <div style={{ display: 'flex', gap: 6 }}>
+                    <Button variant="ghost" size="sm" onClick={() => startEdit(key)} disabled={isRegenning}><Icon.edit size={12} /> Edit</Button>
+                    <Button variant="ghost" size="sm" onClick={() => regenerateSection(key)} disabled={isRegenning}><Icon.refresh size={12} /> {isRegenning ? '…' : 'Regen'}</Button>
+                    <Button variant="ghost" size="sm" onClick={() => toggleHide(key)} style={{ color: sec.hidden ? 'var(--muted)' : 'var(--text)' }}><Icon.eye size={12} /></Button>
+                    <Button variant={sec.approved ? 'ghost' : 'primary'} size="sm" onClick={() => toggleApprove(key)} style={sec.approved ? { color: 'var(--danger)' } : {}}>
+                      {sec.approved ? '✕ Unapprove' : '✓ Approve'}
+                    </Button>
                   </div>
+                </div>
+              );
 
-                  {/* Section content */}
-                  <div style={{ padding: 16 }}>
-                    {isEditing ? (
-                      <div>
-                        <textarea value={editText} onChange={e => setEditText(e.target.value)} rows={10} style={{ width: '100%', fontFamily: 'var(--font-mono)', fontSize: 'var(--text-xs)', padding: 10, border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', resize: 'vertical' }} />
-                        <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-                          <Button variant="primary" size="sm" onClick={() => saveEdit(key)}>Save Edit</Button>
-                          <Button variant="ghost" size="sm" onClick={() => setEditingSection(null)}>Cancel</Button>
-                        </div>
+              const body = (
+                <div style={{ padding: 16 }}>
+                  {isEditing ? (
+                    <div>
+                      <textarea value={editText} onChange={e => setEditText(e.target.value)} rows={10} style={{ width: '100%', fontFamily: 'var(--font-mono)', fontSize: 'var(--text-xs)', padding: 10, border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', resize: 'vertical' }} />
+                      <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+                        <Button variant="primary" size="sm" onClick={() => saveEdit(key)}>Save Edit</Button>
+                        <Button variant="ghost" size="sm" onClick={() => setEditingSection(null)}>Cancel</Button>
                       </div>
-                    ) : (
-                      <SectionContent sectionKey={key} content={sec.content} />
-                    )}
-                  </div>
+                    </div>
+                  ) : (
+                    <SectionContent sectionKey={key} content={sec.content} />
+                  )}
+                </div>
+              );
+
+              if (embedded) {
+                return <div key={key} style={{ borderTop: '1px solid var(--divider)' }}>{header}{body}</div>;
+              }
+              return (
+                <Card key={key} style={{ padding: 0, overflow: 'hidden', border: sec.approved ? '2px solid var(--success)' : (studentFacing ? '2px solid var(--accent)' : '1px solid var(--border)') }}>
+                  {header}{body}
                 </Card>
               );
-            })}
-          </div>
+            };
+
+            const zoneHeaderStyle = {
+              fontSize: 'var(--text-xs)', fontWeight: 800, letterSpacing: '0.08em',
+              textTransform: 'uppercase', color: 'var(--muted)', margin: '4px 2px 0',
+            };
+
+            return SECTION_GROUPS.map(zone => {
+              const groups = zone.groups.filter(g => g.keys.some(k => sections[k]));
+              if (!groups.length) return null;
+              return (
+                <div key={zone.zone} style={{ display: 'flex', flexDirection: 'column', gap: 14, marginTop: zone.zone === 'student' ? 8 : 0 }}>
+                  <div>
+                    <div style={{ ...zoneHeaderStyle, color: zone.studentFacing ? 'var(--accent-text)' : 'var(--muted)' }}>{zone.title}</div>
+                    {zone.caption && <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', margin: '2px 2px 0' }}>{zone.caption}</div>}
+                  </div>
+                  {groups.map(group => {
+                    const keys = group.keys.filter(k => sections[k]);
+                    if (keys.length === 1) return renderSection(keys[0], zone.studentFacing, false);
+                    // Merged card: one outer card, members stacked inside.
+                    return (
+                      <Card key={group.title} style={{ padding: 0, overflow: 'hidden', border: '1px solid var(--border)' }}>
+                        <div style={{ padding: '10px 16px', background: 'var(--surface)', fontSize: 'var(--text-xs)', fontWeight: 800, letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--text-2)' }}>{group.title}</div>
+                        {keys.map(k => renderSection(k, zone.studentFacing, true))}
+                      </Card>
+                    );
+                  })}
+                </div>
+              );
+            });
+          })()}
 
           {/* Bottom actions */}
           <div style={{ display: 'flex', gap: 10, marginTop: 20, flexWrap: 'wrap' }}>
@@ -798,8 +876,8 @@ function KeyValueCards({ content }) {
       {entries.map(([k, v]) => (
         <div key={k} style={{ padding: 10, background: 'var(--bg)', borderRadius: 'var(--radius-sm)' }}>
           <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', marginBottom: 4 }}>{camelToLabel(String(k))}</div>
-          <div style={{ fontSize: 'var(--text-sm)', lineHeight: 1.6 }}>
-            {typeof v === 'object' ? (Array.isArray(v) ? v.map((item, j) => <div key={j}>• {typeof item === 'object' ? Object.values(item).join(' — ') : String(item)}</div>) : Object.entries(v).map(([sk, sv]) => `${camelToLabel(sk)}: ${sv}`).join(' · ')) : String(v)}
+          <div style={{ fontSize: 'var(--text-sm)', lineHeight: 1.6, color: Array.isArray(v) && v.length === 0 ? 'var(--muted)' : 'inherit', fontStyle: Array.isArray(v) && v.length === 0 ? 'italic' : 'normal' }}>
+            {typeof v === 'object' ? (Array.isArray(v) ? (v.length === 0 ? 'None identified' : v.map((item, j) => <div key={j}>• {typeof item === 'object' ? Object.values(item).join(' — ') : String(item)}</div>)) : Object.entries(v).map(([sk, sv]) => `${camelToLabel(sk)}: ${sv}`).join(' · ')) : String(v)}
           </div>
         </div>
       ))}
@@ -808,7 +886,15 @@ function KeyValueCards({ content }) {
 }
 
 function SectionContent({ sectionKey, content }) {
-  if (!content) return <p style={{ color: 'var(--muted)', fontStyle: 'italic' }}>No content generated.</p>;
+  if (!content) return <EmptySectionNote message="Not generated — click Regen to retry this section." />;
+
+  if (typeof content === 'object' && !Array.isArray(content) && Object.keys(content).length === 0) {
+    return <EmptySectionNote message="Not generated — click Regen to retry this section." />;
+  }
+
+  if (typeof content === 'string' && content.trim() === '') {
+    return <EmptySectionNote message="Not generated — click Regen to retry this section." />;
+  }
 
   if (sectionKey === 'classSummary') {
     return <p style={{ lineHeight: 1.7, fontSize: 'var(--text-sm)' }}>{String(content)}</p>;
@@ -964,7 +1050,6 @@ function SectionContent({ sectionKey, content }) {
 
   if (sectionKey === 'vocabGrammarTargets' && typeof content === 'object') {
     const vocab = Array.isArray(content.vocabularyTargets) ? content.vocabularyTargets : [];
-    const newWords = Array.isArray(content.newHighValueWords) ? content.newHighValueWords : [];
     const grammar = Array.isArray(content.grammarTargets) ? content.grammarTargets : [];
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -976,21 +1061,6 @@ function SectionContent({ sectionKey, content }) {
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
                   <strong style={{ fontSize: 'var(--text-sm)' }}>{v.wordOrPhrase}</strong>
                   {v.category && <Pill tone="muted">{v.category}</Pill>}
-                </div>
-                {v.meaning && <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-2)', marginBottom: 2 }}>{v.meaning}</div>}
-                {v.exampleSentence && <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontStyle: 'italic' }}>"{v.exampleSentence}"</div>}
-              </div>
-            ))}
-          </div>
-        )}
-        {newWords.length > 0 && (
-          <div>
-            <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--accent)', textTransform: 'uppercase', marginBottom: 8 }}>New High-Value Words</div>
-            {newWords.map((v, i) => (
-              <div key={i} style={{ padding: 10, background: 'var(--bg)', borderRadius: 'var(--radius-sm)', marginBottom: 6 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                  <strong style={{ fontSize: 'var(--text-sm)' }}>{v.word}</strong>
-                  {v.category && <Pill tone="info">{v.category}</Pill>}
                 </div>
                 {v.meaning && <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-2)', marginBottom: 2 }}>{v.meaning}</div>}
                 {v.exampleSentence && <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontStyle: 'italic' }}>"{v.exampleSentence}"</div>}
@@ -1011,14 +1081,39 @@ function SectionContent({ sectionKey, content }) {
             ))}
           </div>
         )}
-        {vocab.length === 0 && newWords.length === 0 && grammar.length === 0 && (
+        {vocab.length === 0 && grammar.length === 0 && (
           <EmptySectionNote message="No vocabulary or grammar targets were generated — click Regen to retry this section." />
         )}
       </div>
     );
   }
 
-  if ((sectionKey === 'targetScoreRelevance' || sectionKey === 'readinessCheck') && typeof content === 'object') {
+  if (sectionKey === 'readinessCheck' && typeof content === 'object') {
+    const fmt = (v) => {
+      if (v === true) return '✓ Yes';
+      if (v === false) return '✗ No';
+      return String(v);
+    };
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {Object.entries(content).map(([k, v]) => {
+          if (Array.isArray(v) && v.length === 0) return null;
+          return (
+            <div key={k} style={{ padding: 10, background: 'var(--bg)', borderRadius: 'var(--radius-sm)' }}>
+              <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', marginBottom: 4 }}>{camelToLabel(k)}</div>
+              <div style={{ fontSize: 'var(--text-sm)', lineHeight: 1.6, color: 'var(--text)' }}>
+                {Array.isArray(v)
+                  ? v.map((item, j) => <div key={j}>• {camelToLabel(String(item))}</div>)
+                  : fmt(v)}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    );
+  }
+
+  if (sectionKey === 'targetScoreRelevance' && typeof content === 'object') {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {Object.entries(content).map(([k, v]) => (

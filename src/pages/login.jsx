@@ -1,23 +1,21 @@
 /**
  * login.jsx — V.V. Method Platform Login Screen
  *
- * Standard email + password form. Each person signs in with their own
- * Supabase Auth credentials (email + individual password). No shared secret.
+ * Email + password form with two modes:
+ *  - "signin"   — existing users (incl. the teacher) sign in.
+ *  - "register" — first-time students set their OWN password (self-register).
+ * Both use Supabase Auth; no shared secret, no passwords stored in the bundle.
  */
 
 import { useState, useEffect } from 'react';
 import { injectGlobalCSS } from '../components/shared.jsx';
-import { signInWithPassword, storeSupabaseSession, getSupabaseConfig } from '../lib/supabase-storage.js';
+import { signInWithPassword, signUpWithPassword, storeSupabaseSession, getSupabaseConfig } from '../lib/supabase-storage.js';
 
 const CSS = `
   .lp-root {
     min-height: 100vh; min-height: 100dvh;
     display: grid; grid-template-columns: 420px 1fr;
     font-family: var(--font-ui); background: #fff;
-  }
-  @media (max-width: 860px) {
-    .lp-root { grid-template-columns: 1fr; }
-    .lp-brand { display: none; }
   }
 
   /* ── Brand panel ── */
@@ -83,16 +81,17 @@ const CSS = `
   }
   .lp-input {
     width: 100%; padding: 12px 14px; box-sizing: border-box;
-    border: 1.5px solid var(--border); border-radius: 8px;
-    font-size: 15px; font-family: var(--font-ui); color: var(--text);
-    background: #fff; outline: none;
+    border: 1.5px solid #8aacac; border-radius: 8px;
+    font-size: 16px; font-family: var(--font-ui); color: var(--text);
+    background: #f3f9f9; outline: none;
     transition: border-color .15s, box-shadow .15s;
   }
   .lp-input:focus {
     border-color: var(--accent);
-    box-shadow: 0 0 0 3px rgba(29,140,150,.12);
+    box-shadow: 0 0 0 3px rgba(29,140,150,.15);
+    background: #fff;
   }
-  .lp-input::placeholder { color: var(--muted); }
+  .lp-input::placeholder { color: #6b8fa0; }
 
   .lp-submit {
     width: 100%; padding: 13px; margin-top: 8px;
@@ -128,6 +127,23 @@ const CSS = `
     margin-top: 32px; padding-top: 20px; border-top: 1px solid var(--border);
     font-size: 11.5px; color: var(--muted); text-align: center; line-height: 1.6;
   }
+
+  .lp-toggle {
+    margin-top: 20px; text-align: center;
+    font-size: 13px; color: var(--muted);
+  }
+  .lp-toggle button {
+    background: none; border: none; padding: 0; margin-left: 6px;
+    font-size: 13px; font-weight: 700; color: var(--accent-deep);
+    cursor: pointer; font-family: var(--font-ui); text-decoration: underline;
+  }
+  .lp-toggle button:disabled { opacity: .5; cursor: default; }
+
+  @media (max-width: 860px) {
+    .lp-root { grid-template-columns: 1fr; }
+    .lp-brand { display: none; }
+    .lp-signin { padding: 40px 24px; }
+  }
 `;
 
 let cssInjected = false;
@@ -140,16 +156,29 @@ function injectCSS() {
 }
 
 export default function LoginScreen() {
+  const [mode, setMode] = useState('signin'); // 'signin' | 'register'
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const supabaseReady = getSupabaseConfig().isConfigured;
+  const isRegister = mode === 'register';
 
   useEffect(() => {
     injectGlobalCSS();
     injectCSS();
+    // If resolveAuth rejected an unauthorized account, show why on return to login.
+    try {
+      const notice = localStorage.getItem('vv:auth_notice');
+      if (notice) { setError(notice); localStorage.removeItem('vv:auth_notice'); }
+    } catch { /* storage unavailable */ }
   }, []);
+
+  const switchMode = () => {
+    if (loading) return;
+    setError('');
+    setMode(m => (m === 'signin' ? 'register' : 'signin'));
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -164,14 +193,24 @@ export default function LoginScreen() {
       setError('Sign-in is not configured. Contact your teacher.');
       return;
     }
+    if (isRegister && password.length < 6) {
+      setError('Choose a password with at least 6 characters.');
+      return;
+    }
 
     setLoading(true);
     try {
-      const session = await signInWithPassword(email.trim(), password);
+      const session = isRegister
+        ? await signUpWithPassword(email.trim(), password)
+        : await signInWithPassword(email.trim(), password);
       storeSupabaseSession(session);
       window.location.reload();
-    } catch (e) {
-      setError('Incorrect email or password. Try again or contact your teacher.');
+    } catch (err) {
+      setError(
+        isRegister
+          ? (err.message || 'Could not create your account. Try again or contact your teacher.')
+          : 'Incorrect email or password. Try again or contact your teacher.'
+      );
       setLoading(false);
     }
   };
@@ -182,7 +221,6 @@ export default function LoginScreen() {
       {/* ── Brand panel ── */}
       <div className="lp-brand">
         <div className="lp-brand-logo">
-          <div className="lp-brand-logo-badge">M</div>
           <div>
             <div className="lp-brand-logo-name">MET Proficiency Mastery</div>
             <div className="lp-brand-logo-sub">Teacher Vinicius</div>
@@ -198,9 +236,9 @@ export default function LoginScreen() {
         </div>
 
         <div className="lp-brand-features">
-          {['AI-powered skill diagnosis', 'Personalized homework plans', 'Real-time progress tracking'].map(f => (
+          {['Personalized homework plans', 'Real-time progress tracking'].map(f => (
             <div key={f} className="lp-brand-feature">
-              <span className="lp-brand-feature-dot" />
+              <span className="lp-brand-feature-dot" aria-hidden="true" />
               {f}
             </div>
           ))}
@@ -212,8 +250,12 @@ export default function LoginScreen() {
         <div className="lp-signin-inner">
 
           <div className="lp-greeting">
-            <h1>Sign in</h1>
-            <p>Enter the email and password your teacher gave you.</p>
+            <h1>{isRegister ? 'Create your password' : 'Sign in'}</h1>
+            <p>
+              {isRegister
+                ? 'First time here? Enter your email and choose a password to create your account.'
+                : 'Enter the email and password you use for this platform.'}
+            </p>
           </div>
 
           <form onSubmit={handleSubmit} noValidate>
@@ -238,8 +280,8 @@ export default function LoginScreen() {
                 id="lp-password"
                 className="lp-input"
                 type="password"
-                autoComplete="current-password"
-                placeholder="••••••••••••••"
+                autoComplete={isRegister ? 'new-password' : 'current-password'}
+                placeholder={isRegister ? 'Choose a password (min. 6 characters)' : '••••••••••••••'}
                 value={password}
                 onChange={e => setPassword(e.target.value)}
                 disabled={loading}
@@ -247,7 +289,9 @@ export default function LoginScreen() {
             </div>
 
             <button type="submit" className="lp-submit" disabled={loading}>
-              {loading ? <><span className="lp-spinner" /> Signing in…</> : 'Sign in'}
+              {loading
+                ? <><span className="lp-spinner" /> {isRegister ? 'Creating account…' : 'Signing in…'}</>
+                : (isRegister ? 'Create account' : 'Sign in')}
             </button>
           </form>
 
@@ -255,9 +299,20 @@ export default function LoginScreen() {
             <div className="lp-error" role="alert" aria-live="polite">{error}</div>
           )}
 
+          <div className="lp-toggle">
+            {isRegister ? 'Already have an account?' : 'First time here?'}
+            <button type="button" onClick={switchMode} disabled={loading}>
+              {isRegister ? 'Sign in' : 'Create your password'}
+            </button>
+          </div>
+
           <div className="lp-footer">
             MET Proficiency Mastery · Private platform<br />
-            Access is by invitation only.
+            Access is by invitation only.<br /><br />
+            Having trouble signing in?{' '}
+            <a href="mailto:vvieira010x@gmail.com" style={{ color: 'var(--accent-text)', textDecoration: 'underline' }}>
+              Contact Teacher Vinicius
+            </a>
           </div>
 
         </div>

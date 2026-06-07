@@ -668,6 +668,69 @@
   font-style: italic;
   margin-top: 7px;
 }
+.student-skill-stage {
+  color: var(--muted);
+  font-weight: 700;
+  text-align: right;
+}
+.student-skill-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+.student-skill-hint {
+  color: var(--muted);
+  font-size: var(--text-xs);
+  font-style: italic;
+}
+/* Progress (trend) — a distinct concept from the latest evaluated stage. */
+.student-trend-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 9px;
+  border-radius: 999px;
+  font-size: var(--text-xs);
+  font-weight: 700;
+  line-height: 1.6;
+  border: 1px solid transparent;
+}
+.student-trend-chip--up {
+  background: #e7f6ec;
+  color: #1b7a3d;
+  border-color: #bfe6cb;
+}
+.student-trend-chip--down {
+  background: #fdecec;
+  color: #b3261e;
+  border-color: #f3c9c7;
+}
+.student-trend-chip--steady {
+  background: #eef1f6;
+  color: #4a5568;
+  border-color: #d6dce6;
+}
+.student-trend-chip--new {
+  background: #eef4fd;
+  color: #2b5fac;
+  border-color: #cfe0f7;
+}
+.student-progress-trend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin: 12px 0;
+}
+.student-progress-trend-note {
+  color: var(--text-2);
+  font-size: var(--text-xs);
+  line-height: 1.55;
+  flex: 1;
+  min-width: 180px;
+}
 .student-stage-track {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));

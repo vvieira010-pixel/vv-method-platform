@@ -94,8 +94,9 @@ Compare the submission to the diagnosis.
 
 Write "teacherFeedback" as a warm, specific note spoken directly to ${student?.name || 'the student'}:
 reference what they ACTUALLY wrote, name one concrete strength and the single most
-important fix, and end with a clear next step. Sound like a real teacher — natural,
-encouraging and honest, never a generic AI template. No empty praise, no mention of AI.
+important fix, and end with a clear next step.
+
+Extract up to 5 key errors and suggest corrections.
 
 Return JSON:
 {
@@ -105,12 +106,15 @@ Return JSON:
   "newErrors": ["new errors not in the diagnosis"],
   "redoRequired": false,
   "continuationFocus": "what to focus on next class",
-  "teacherFeedback": "feedback paragraph to send to student"
+  "teacherFeedback": "feedback paragraph to send to student",
+  "corrections": [
+    { "original": "error text", "improved": "corrected text", "note": "brief explanation" }
+  ]
 }`;
 
     try {
       // Warmer temperature → more human teacher voice in the feedback.
-      const data = await callAI(prompt, { max_tokens: 2000, temperature: 0.7 });
+      const data = await callAI(prompt, { max_tokens: 2500, temperature: 0.7 });
       const raw = data.content?.map(b => b.text || '').join('') || '';
       const parsed = parseAiJson(raw);
       setAiComparison(parsed);
@@ -121,6 +125,7 @@ Return JSON:
         newErrors: (parsed.newErrors || []).join('\n'),
         overallNote: parsed.teacherFeedback || '',
         redoRequired: parsed.redoRequired || false,
+        corrections: parsed.corrections || f.corrections, // Update corrections here
       }));
     } catch (e) {
       window.toast?.(`AI comparison failed: ${e.message}`, 'warn');
@@ -237,8 +242,8 @@ Return JSON:
             </Card>
           )}
 
-          {/* Diagnosis priorities */}
-          {diagnosis?.sections?.priorityDiagnosis?.content && (
+          {/* Diagnosis priorities (content is sometimes an object, not an array — guard before .map) */}
+          {Array.isArray(diagnosis?.sections?.priorityDiagnosis?.content) && diagnosis.sections.priorityDiagnosis.content.length > 0 && (
             <Card style={{ padding: 18 }}>
               <SectionHeader title="Original Diagnosis Priorities" icon={<Icon.diagnose size={15} />} />
               <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -306,6 +311,38 @@ Return JSON:
               <Field label="Overall feedback to student">
                 <textarea className="input" rows={4} value={form.overallNote} onChange={e => setForm(f => ({ ...f, overallNote: e.target.value }))} placeholder="Feedback the student will see…" />
               </Field>
+
+              {/* Interactive Corrections UI */}
+              <div style={{ marginBottom: 12 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                  <label style={fieldLabel}>Corrections</label>
+                  <Button variant="ghost" size="sm" onClick={() => setForm(f => ({ ...f, corrections: [...f.corrections, { original: '', improved: '', note: '' }] }))}>
+                    <Icon.plus size={12} /> Add
+                  </Button>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {form.corrections.map((c, i) => (
+                    <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: 6 }}>
+                      <input className="input" placeholder="Original" value={c.original} onChange={e => {
+                        const next = [...form.corrections]; next[i].original = e.target.value; setForm(f => ({ ...f, corrections: next }));
+                      }} />
+                      <input className="input" placeholder="Improved" value={c.improved} onChange={e => {
+                        const next = [...form.corrections]; next[i].improved = e.target.value; setForm(f => ({ ...f, corrections: next }));
+                      }} />
+                      <Button variant="ghost" size="sm" style={{ color: 'var(--danger)' }} onClick={() => {
+                        const next = form.corrections.filter((_, idx) => idx !== i);
+                        setForm(f => ({ ...f, corrections: next.length ? next : [{ original: '', improved: '', note: '' }] }));
+                      }}>
+                        <Icon.trash size={12} />
+                      </Button>
+                      <input className="input" placeholder="Note" value={c.note} onChange={e => {
+                        const next = [...form.corrections]; next[i].note = e.target.value; setForm(f => ({ ...f, corrections: next }));
+                      }} style={{ gridColumn: 'span 3' }} />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 10 }}>
                 <Field label="Score (0–10)">
                   <input className="input" type="number" min={0} max={10} step={0.5} value={form.score} onChange={e => setForm(f => ({ ...f, score: e.target.value }))} />
