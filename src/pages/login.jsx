@@ -27,7 +27,7 @@ const CSS = `
     margin: 0 0 20px; padding-bottom: 16px; border-bottom: 1px solid var(--border);
   }
   .login-brand-panel {
-    background: var(--accent-deep); display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(180deg, #0F172A 0%, #1E293B 100%); display: flex; align-items: center; justify-content: center;
     padding: clamp(32px, 5vw, 56px) clamp(28px, 6vw, 64px);
     position: relative; overflow: hidden;
   }

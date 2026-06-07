@@ -11,6 +11,8 @@ import { getDiagnoses, getStudent, saveHomework, updateClassEventStatus } from '
 import { EX_TYPES, createExercise, exercisePreview, getExType } from '../lib/exercise-types.js';
 import { ExerciseEditor, ExerciseTypePicker, ExTypeBadge } from '../components/exercise-editor.jsx';
 import { getExerciseModules, getModuleExercises, bankMeta } from '../lib/exercise-bank.js';
+import HomeworkSetWizard from '../components/homework-set-wizard.jsx';
+import { getUnitsByLevel, getSkillExercises, SUBJECT_OPTIONS } from '../lib/unit-bank.js';
 
 const SKILL_TYPES = ['writing', 'speaking', 'grammar', 'vocabulary', 'reading', 'listening', 'mixed'];
 
@@ -26,6 +28,11 @@ export default function HomeworkCreate({ diagnosisId, studentId, students, onNav
   const [showTypePicker, setShowTypePicker] = useState(false);
   const [expandedEx, setExpandedEx] = useState(null);
   const [showLibrary, setShowLibrary] = useState(false);
+  const [wizardDone, setWizardDone] = useState(false);
+  const [selectedLevel, setSelectedLevel] = useState(null);
+  const [selectedSkill, setSelectedSkill] = useState(null);
+  const [showUnitBank, setShowUnitBank] = useState(false);
+  const [unitBankExercises, setUnitBankExercises] = useState([]);
 
   useEffect(() => { load(); }, [diagnosisId, studentId]);
 
@@ -157,7 +164,7 @@ ${text.slice(0, 14000)}`;
 
       // If teacher already selected exercise types/cards, generate for those choices first.
       if (selectedTypes.length > 0) {
-        const basePrompt = buildExerciseListPrompt({ student, diagnosis });
+        const basePrompt = buildExerciseListPrompt({ student, diagnosis, level: selectedLevel, skill: selectedSkill });
         const typeSummary = summarizeTypes(selectedTypes);
         const flashRequired = selectedTypes.includes('flash');
         const typedPrompt = `${basePrompt}
@@ -234,7 +241,7 @@ ${flashRequired ? `- For every "flash" exercise, include a "pairs" array with at
     setLoadingOptions(true);
     setExerciseOptions([]);
     try {
-      const prompt = buildExerciseListPrompt({ student, diagnosis });
+      const prompt = buildExerciseListPrompt({ student, diagnosis, level: selectedLevel, skill: selectedSkill });
       const data = await callAI(prompt, { max_tokens: 4000 });
       const raw = data.content?.map(b => b.text || '').join('') || '';
       const parsed = await parseAiJsonWithRepair(raw, 'Array of exercise objects or object with exercises array.');
@@ -291,9 +298,32 @@ ${flashRequired ? `- For every "flash" exercise, include a "pairs" array with at
     onNavigate('homework');
   }
 
+  function addUnitBankExercise(ex) {
+    setForm(f => ({ ...f, exercises: [...f.exercises, { ...ex }] }));
+    window.toast?.('Exercise added from Unit Bank.', 'ok');
+  }
+
+  function handleWizardComplete({ level, skill }) {
+    setSelectedLevel(level);
+    setSelectedSkill(skill);
+    const units = getUnitsByLevel(level);
+    setUnitBankExercises(getSkillExercises(units, skill, 12));
+    setWizardDone(true);
+  }
+
+  if (!wizardDone) {
+    return (
+      <HomeworkSetWizard
+        onComplete={handleWizardComplete}
+        onSkip={() => setWizardDone(true)}
+      />
+    );
+  }
+
   const exerciseCount = form.exercises.length;
   const typeCounts = {};
   form.exercises.forEach(e => { typeCounts[e.type] = (typeCounts[e.type] || 0) + 1; });
+  const subjectLabel = SUBJECT_OPTIONS.find(s => s.id === selectedSkill)?.label;
 
   return (
     <div style={{ width: '100%', maxWidth: 'none', margin: 0, padding: '28px 24px' }}>
@@ -307,6 +337,18 @@ ${flashRequired ? `- For every "flash" exercise, include a "pairs" array with at
           {student.name} · from diagnosis{' '}
           {diagnosis ? new Date(diagnosis.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : ''}
         </p>
+      )}
+      {(selectedLevel || subjectLabel) && (
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 8, flexWrap: 'wrap' }}>
+          {selectedLevel && <Pill tone="info">{selectedLevel}</Pill>}
+          {subjectLabel && <Pill tone="info">{subjectLabel}</Pill>}
+          <button
+            onClick={() => setWizardDone(false)}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', fontSize: 'var(--text-xs)', padding: 0 }}
+          >
+            Change
+          </button>
+        </div>
       )}
 
       {/* Diagnosis summary */}
@@ -415,6 +457,52 @@ ${flashRequired ? `- For every "flash" exercise, include a "pairs" array with at
                   </Button>
                 </div>
               ))}
+            </div>
+          )}
+        </Card>
+      )}
+
+      {/* ── Unit Bank Panel ── */}
+      {unitBankExercises.length > 0 && (
+        <Card style={{ padding: 18, marginBottom: 16, border: '1px solid var(--border-strong, var(--border))' }}>
+          <button
+            onClick={() => setShowUnitBank(v => !v)}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', padding: 0 }}
+          >
+            <span style={{ fontWeight: 700, fontSize: 'var(--text-sm)', display: 'flex', alignItems: 'center', gap: 8 }}>
+              📚 Unit Bank
+              {selectedLevel && subjectLabel && (
+                <span style={{ fontWeight: 400, color: 'var(--text-muted)', fontSize: 'var(--text-xs)' }}>
+                  — {subjectLabel} exercises from {selectedLevel} units ({unitBankExercises.length})
+                </span>
+              )}
+            </span>
+            <span style={{ display: 'inline-flex', transform: showUnitBank ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s', color: 'var(--muted)' }}>
+              <Icon.chevronDown size={14} />
+            </span>
+          </button>
+
+          {showUnitBank && (
+            <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {unitBankExercises.map((ex, i) => {
+                const preview = ex.question || ex.prompt || (ex.pairs ? `${ex.pairs.length} flashcard pairs` : ex.errorText || '');
+                return (
+                  <div key={ex.id || i} style={{ background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: '10px 14px', display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                        <ExTypeBadge typeId={ex.type} />
+                        {ex._sourceLabel && <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>{ex._sourceLabel}</span>}
+                      </div>
+                      <p style={{ fontSize: 'var(--text-xs)', color: 'var(--text-2)', lineHeight: 1.5, margin: 0, whiteSpace: 'pre-wrap' }}>
+                        {String(preview).slice(0, 200)}{String(preview).length > 200 ? '…' : ''}
+                      </p>
+                    </div>
+                    <Button variant="primary" size="sm" onClick={() => addUnitBankExercise(ex)} style={{ flexShrink: 0 }}>
+                      <Icon.plus size={12} /> Add
+                    </Button>
+                  </div>
+                );
+              })}
             </div>
           )}
         </Card>

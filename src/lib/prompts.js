@@ -591,13 +591,15 @@ Return ONLY valid JSON:
    Each exercise is fully written — teacher selects, edits, assigns.
 ══════════════════════════════════════════════════════════════ */
 
-export const buildExerciseListPrompt = ({ student, diagnosis }) => {
+export const buildExerciseListPrompt = ({ student, diagnosis, level, skill }) => {
   const priorities = diagnosis?.sections?.priorityDiagnosis?.content || [];
   const errors = diagnosis?.sections?.errorBankSuggestions?.content || [];
   const vocab = diagnosis?.sections?.vocabGrammarTargets?.content?.vocabularyTargets || [];
   const grammar = diagnosis?.sections?.vocabGrammarTargets?.content?.grammarTargets || [];
+  const levelNote = level ? `\nTarget CEFR level: ${level}` : '';
+  const skillNote = skill ? `\nSkill focus: ${skill}` : '';
 
-  return `You are a MET English exam preparation expert. Generate a menu of 6 distinct, ready-to-use exercises for the teacher to choose from.
+  return `You are a MET English exam preparation expert. Generate a menu of 6 distinct, ready-to-use exercises for the teacher to choose from.${levelNote}${skillNote}
 
 ━━━ STUDENT ━━━
 Name: ${student?.name || 'Student'}
