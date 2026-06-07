@@ -367,88 +367,33 @@ export function buildSectionRegenPrompt(key, data) {
 // (Other existing build functions can be kept or deprecated)
 
 /* ══════════════════════════════════════════════════════════════
-   HOMEWORK GENERATOR PROMPT — used by homework-create.jsx
-   Restored: was dropped during the module-prompt refactor.
+   CASCADE GENERATION PROMPTS — 3-step homework building
 ══════════════════════════════════════════════════════════════ */
-export const buildHomeworkGeneratorPrompt = ({ student, diagnosis }) => {
+
+export const buildHomeworkBlueprintPrompt = ({ student, diagnosis }) => {
   const priorities = pickArray(diagnosis?.priorityDiagnosis, diagnosis?.sections?.priorityDiagnosis?.content);
-  const errors = pickArray(diagnosis?.errorBank, diagnosis?.sections?.errorBankSuggestions?.content);
-  const vocab = pickArray(diagnosis?.vocabTargets?.vocabularyTargets, diagnosis?.sections?.vocabGrammarTargets?.content?.vocabularyTargets);
-  const grammar = pickArray(diagnosis?.vocabTargets?.grammarTargets, diagnosis?.sections?.vocabGrammarTargets?.content?.grammarTargets);
-  const skillDx = diagnosis?.sections?.skillDiagnosis?.content || {};
-  const classSummary = diagnosis?.sections?.classSummary?.content || '';
+  return `Create a homework blueprint for ${student?.name || 'the student'}.
+Priorities: ${priorities.slice(0, 2).map(p => p.area).join(', ')}.
 
-  const topPriority = priorities[0];
-  const skillAreas = Object.entries(skillDx).filter(([, v]) => v?.evaluated).map(([k]) => k);
-  const weaknesses = skillAreas.flatMap(k => skillDx[k]?.weaknesses || []).slice(0, 6);
+Rules: Define a title, pedagogical objective, and 3 specific task types that target these priorities.
+Return JSON: { "title": string, "objective": string, "taskTypes": ["mcq"|"blank"|"short"|"speak"|"order"|"fix"|"flash"|"listen"] }`;
+};
 
-  const t = (s, max) => !s || s.length <= max ? (s || '') : s.slice(0, max) + '…';
+export const buildTaskGeneratorPrompt = ({ student, diagnosis, taskBlueprint, taskType }) => {
+  return `Generate a complete, fully-written ${taskType} exercise for ${student?.name || 'the student'}.
+Target: ${taskBlueprint.objective}.
 
-  return `You are a MET English homework creator. Build 3 complete, student-ready tasks from the diagnosis below.
+Rules: Must be fully written out in the "content" field. Professional context: ${student?.professionalContext || 'general'}.
+Return JSON: { "type": "${taskType}", "content": "FULL EXERCISE TEXT", "correct": number, "options": [...], ... }`;
+};
 
-━━━ STUDENT ━━━
-${student?.name || 'Unknown'} | ${student?.currentLevel || student?.band || 'B1'} → ${student?.targetLevel || student?.bandTarget || 'B2'} | ${student?.examGoal || 'MET B2'} | ${student?.professionalContext || ''}
+export const buildFinalRefinementPrompt = ({ student, blueprint, tasks }) => {
+  return `Review and refine this homework for ${student?.name || 'the student'}.
+Blueprint: ${blueprint.title}
+Tasks: ${JSON.stringify(tasks)}
 
-━━━ DIAGNOSIS PRIORITIES ━━━
-${priorities.slice(0, 3).map(p => `${p.rank}. [${p.urgency}] ${p.area}: ${p.whatToImprove}${p.evidence ? ` — "${p.evidence}"` : ''}`).join('\n') || 'No priorities.'}
-
-━━━ ERRORS TO TARGET ━━━
-${errors.slice(0, 5).map(e => `- "${e.error}" → "${e.correct}" (${e.category || '?'}, ${e.priority || 'medium'})${e.evidence ? ` — "${e.evidence}"` : ''}`).join('\n') || 'none'}
-
-━━━ VOCABULARY TARGETS ━━━
-${vocab.slice(0, 4).map(v => `- ${v.wordOrPhrase}: ${v.meaning || ''}`).join('\n') || 'none'}
-
-━━━ GRAMMAR TARGETS ━━━
-${grammar.slice(0, 3).map(g => `- ${g.area}: ${g.issue}`).join('\n') || 'none'}
-
-━━━ RULES ━━━
-- Exactly 3 tasks. Each FULLY WRITTEN — student opens and starts immediately.
-- Grammar: 4–5 sentences with the actual error pattern for the student to correct.
-- Vocabulary: 4–5 fill-in-the-blank sentences with a word bank.
-- Writing/Speaking: one complete prompt (word count, structure, time limit).
-- Use ${student?.professionalContext || 'real, specific'} contexts — not generic filler.
-- B1–B2 level. Total homework time: 20–30 minutes.
-
-Return ONLY valid JSON:
-{
-  "title": "specific title — reflects the actual target, not generic (e.g. 'Other / Another — Grammar Drill + Speaking Practice')",
-  "objective": "exact link to top priority — state skill and specific sub-target",
-  "instructions": "friendly, clear instructions in second person — tell the student what they will practice and why it matters for MET",
-  "tasks": [
-    {
-      "taskNumber": 1,
-      "type": "grammar|vocabulary|writing|speaking|reading|listening",
-      "description": "one-line task title",
-      "content": "FULLY WRITTEN OUT EXERCISE — the actual sentences, questions, prompt, or scenario the student will work with. This field must contain the complete task content, not a description of what to create.",
-      "example": "a worked example or model showing the expected format and level (optional but recommended for grammar and vocabulary tasks)",
-      "expectedOutput": "exactly what the student must write or record and submit"
-    },
-    {
-      "taskNumber": 2,
-      "type": "...",
-      "description": "...",
-      "content": "FULLY WRITTEN OUT exercise content",
-      "example": "...",
-      "expectedOutput": "..."
-    },
-    {
-      "taskNumber": 3,
-      "type": "...",
-      "description": "...",
-      "content": "FULLY WRITTEN OUT exercise content",
-      "example": "...",
-      "expectedOutput": "..."
-    }
-  ],
-  "expectedSubmissionType": "text|audio|file|mixed",
-  "selfCheck": [
-    "specific check tied to homework target (e.g. 'I used 'another' with singular nouns only')",
-    "item 2 — specific to the vocabulary or grammar target",
-    "item 3 — specific to the writing/speaking task"
-  ],
-  "teacherNotes": "what to look for when reviewing: reference the specific error patterns and targets from the diagnosis",
-  "dueDateSuggestion": "Before next class"
-}`;
+Rules: Generate student-facing instructions, specific self-check items, and teacher review notes.
+Return JSON: { "instructions": string, "selfCheck": [string], "teacherNotes": string }`;
 };
 
 /* ══════════════════════════════════════════════════════════════

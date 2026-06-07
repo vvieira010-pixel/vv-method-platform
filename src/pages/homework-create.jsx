@@ -223,47 +223,64 @@ function getPriorityItems(dx) {
     window.toast?.(`${allGenerated.length} exercises added across ${selectedGroups.length} skill groups.`, 'ok');
   }
 
+  import { useState, useEffect } from 'react';
+import { Icon, Card, SectionHeader, Button, Pill } from '../components/shared.jsx';
+import { callAI } from '../components/shared.jsx';
+import { parseAiJson } from '../lib/ai-helpers.js';
+import { buildHomeworkBlueprintPrompt, buildTaskGeneratorPrompt, buildFinalRefinementPrompt, buildExerciseListPrompt, buildHomeworkGroupPrompt } from '../lib/prompts.js';
+import { getDiagnoses, getStudent, saveHomework, updateClassEventStatus } from '../lib/workflow.js';
+import { EX_TYPES, createExercise, exercisePreview, getExType } from '../lib/exercise-types.js';
+import { ExerciseEditor, ExerciseTypePicker, ExTypeBadge } from '../components/exercise-editor.jsx';
+import { getExerciseModules, getModuleExercises, bankMeta } from '../lib/exercise-bank.js';
+import { getLibraryExercises, saveExerciseToLibrary, deleteLibraryExercise, incrementUsage } from '../lib/exercise-library.js';
+
+// ... (rest of the file until handleAiGenerate)
+
   /* ── AI generation ── */
   async function handleAiGenerate() {
-    const hasSelectedExercises = form.exercises.length > 0;
-    if (!diagnosis && !hasSelectedExercises) {
-      window.toast?.('Link a diagnosis or add exercises first.', 'warn');
+    if (!diagnosis) {
+      window.toast?.('Link a diagnosis first.', 'warn');
       return;
     }
+    
     setGenerating(true);
+    setGroupGenStatus('Creating blueprint...');
+    
     try {
-      const prompt = hasSelectedExercises
-        ? buildSelectedExerciseFillPrompt({ student, diagnosis, selectedExercises: form.exercises })
-        : buildHomeworkGeneratorPrompt({ student, diagnosis });
-      // Budget per exercise ~250 tokens output; cap at 4000 to avoid cascade failures on smaller providers.
-      const fillTokens = hasSelectedExercises
-        ? Math.min(4000, Math.max(2000, form.exercises.length * 250))
-        : 2500;
-      // Higher temperature → more natural, varied wording (less "AI-template" feel).
-      const data = await callAI(prompt, { max_tokens: fillTokens, temperature: 0.8, preferredProvider: 'gemini' });
-      const raw = data.content?.map(b => b.text || '').join('') || '';
-      const parsed = parseAiJson(raw);
-
-      const aiTasks = Array.isArray(parsed)
-        ? parsed
-        : (Array.isArray(parsed.tasks) ? parsed.tasks : []);
+      // 1. Generate Blueprint
+      const bpData = await callAI(buildHomeworkBlueprintPrompt({ student, diagnosis }), { temperature: 0.7 });
+      const blueprint = parseAiJson(bpData.content?.map(b => b.text || '').join('') || '');
+      
+      setGroupGenStatus('Generating tasks...');
+      // 2. Generate Tasks
+      const tasks = [];
+      for (const taskType of blueprint.taskTypes) {
+        const tData = await callAI(buildTaskGeneratorPrompt({ student, diagnosis, taskBlueprint: blueprint, taskType }), { temperature: 0.8 });
+        tasks.push(parseAiJson(tData.content?.map(b => b.text || '').join('') || ''));
+      }
+      
+      setGroupGenStatus('Refining and finalising...');
+      // 3. Final Refinement
+      const refData = await callAI(buildFinalRefinementPrompt({ student, blueprint, tasks }), { temperature: 0.7 });
+      const refinement = parseAiJson(refData.content?.map(b => b.text || '').join('') || '');
 
       setForm(f => ({
         ...f,
-        title: parsed.title || f.title,
-        objective: parsed.objective || f.objective,
-        description: parsed.instructions || f.description,
-        exercises: hasSelectedExercises
-          ? fillSelectedExercisesWithAi(f.exercises, aiTasks)
-          : buildExercisesFromAiTasks(aiTasks, f.exercises),
-        selfCheck: Array.isArray(parsed.selfCheck) ? parsed.selfCheck : f.selfCheck,
+        title: blueprint.title,
+        objective: blueprint.objective,
+        description: refinement.instructions,
+        exercises: tasks.map(t => applyAiTaskToExercise(createExercise(mapAiType(t.type)), t)),
+        selfCheck: refinement.selfCheck,
+        teacherNotes: refinement.teacherNotes,
         skillType: inferSkillType(getPriorityItems(diagnosis)),
-        teacherNotes: parsed.teacherNotes || parsed.teacherReviewNotes || f.teacherNotes,
       }));
-      window.toast?.(hasSelectedExercises ? 'Selected exercises filled with AI.' : 'Homework regenerated from diagnosis.', 'ok');
+      
+      window.toast?.('Homework generated successfully!', 'ok');
     } catch (e) {
-      window.toast?.(`AI generation failed: ${e.message}`, 'warn');
+      window.toast?.(`Cascade generation failed: ${e.message}`, 'warn');
     }
+    
+    setGroupGenStatus('');
     setGenerating(false);
   }
 
