@@ -5,16 +5,40 @@ piper-server.py — local Piper TTS server for MET Platform listening exercises.
 Requirements:
   pip install piper-tts
 
-Download a voice model first (example — en_US lessac medium, ~60 MB):
+Download a voice model first. Piper voices require TWO files:
+  1. the .onnx model
+  2. the matching .onnx.json config
+
+Good English starting points for listening variety from voices.json:
+  - US woman: en_US-lessac-medium or en_US-amy-medium
+  - US man:   en_US-ryan-medium or en_US-hfc_male-medium
+  - UK woman: en_GB-southern_english_female-low
+  - UK man:   en_GB-northern_english_male-medium
+
+Listen first:
+  https://rhasspy.github.io/piper-samples
+
+Download voices:
+  https://huggingface.co/rhasspy/piper-voices/tree/main
+
+Example — en_US lessac medium (~60 MB):
   python -c "
   from huggingface_hub import hf_hub_download
   hf_hub_download('rhasspy/piper-voices', 'en/en_US/lessac/medium/en_US-lessac-medium.onnx', local_dir='piper-models')
   hf_hub_download('rhasspy/piper-voices', 'en/en_US/lessac/medium/en_US-lessac-medium.onnx.json', local_dir='piper-models')
   "
+
+Example — en_US ryan medium:
+  python -c "
+  from huggingface_hub import hf_hub_download
+  hf_hub_download('rhasspy/piper-voices', 'en/en_US/ryan/medium/en_US-ryan-medium.onnx', local_dir='piper-models')
+  hf_hub_download('rhasspy/piper-voices', 'en/en_US/ryan/medium/en_US-ryan-medium.onnx.json', local_dir='piper-models')
+  "
   (or download the .onnx + .onnx.json from https://huggingface.co/rhasspy/piper-voices)
 
 Usage:
   python scripts/piper-server.py --model piper-models/en/en_US/lessac/medium/en_US-lessac-medium.onnx
+  python scripts/piper-server.py --model piper-models/en/en_US/ryan/medium/en_US-ryan-medium.onnx
 
 The server listens on http://localhost:5050 by default.
   POST /tts  Content-Type: application/json  { "text": "Hello world" }  → audio/wav

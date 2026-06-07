@@ -4,8 +4,9 @@
 import { useEffect, useState } from 'react';
 import { Card, SectionHeader, Kpi, Avatar, Pill, Button } from '../components/shared.jsx';
 import { getDiagnoses, getFeedback, getHomework, getReports, getPracticeAssignments, saveReport } from '../lib/workflow.js';
+import { REPORT_SKILLS, buildReadinessEvidence, buildSkillsFromDiagnosis, getReadinessDisplay } from '../lib/report-metrics.js';
 
-const SKILLS = ['Grammar','Reading','Writing','Listening','Speaking','Vocabulary'];
+const SKILLS = REPORT_SKILLS;
 
 function SkillBar({ label, value, status, max = 10 }) {
   if (value == null) {
@@ -68,24 +69,11 @@ export default function ToolReports({ students = [] }) {
 
   // Diagnosis-informed snapshot only. Do not estimate missing skill scores.
   const latestDiagnosis = diagnoses.find(d => d.id === selectedDiagnosisId) || diagnoses[0] || null;
-  const diagSnapshot = latestDiagnosis?.content?.section_snapshot || [];
-  const skills = SKILLS.map(name => {
-    const found = diagSnapshot.find(s => String(s.section || '').toLowerCase() === name.toLowerCase());
-    const score4 = Number(found?.score_0_4);
-    const score80 = Number(found?.score_0_80);
-    const hasScore = Number.isFinite(score4) && score4 > 0;
-    const hasEvidence = Number(found?.evidenceCount || found?.turnsEvaluated || 0) > 0 || score80 > 0;
-    return {
-      name,
-      score: hasScore ? Math.round((score4 / 4) * 10 * 10) / 10 : null,
-      status: hasScore ? 'Evaluated' : hasEvidence ? 'Not enough evidence' : 'Not evaluated yet',
-    };
-  });
-  const evaluatedSkills = skills.filter(s => s.score != null);
-  const avg = evaluatedSkills.length
-    ? evaluatedSkills.reduce((sum, s) => sum + s.score, 0) / evaluatedSkills.length
-    : null;
-  const readiness = avg != null ? Math.round((avg / 10) * 100) : null;
+  const skills = buildSkillsFromDiagnosis(latestDiagnosis, SKILLS);
+  const readinessEvidence = buildReadinessEvidence(skills);
+  const readinessDisplay = getReadinessDisplay(readinessEvidence);
+  const evaluatedSkills = readinessEvidence.evaluatedSkills;
+  const readiness = readinessEvidence.readiness;
   const linkedFeedback = feedback.filter(f => f.diagnosisId === latestDiagnosis?.id);
   const linkedHomework = homework.filter(h => h.diagnosisId === latestDiagnosis?.id);
   const linkedPractice = practice.filter(p => p.diagnosisId === latestDiagnosis?.id);
@@ -104,6 +92,11 @@ export default function ToolReports({ students = [] }) {
         nextSteps: latestDiagnosis.nextSteps || [],
         readiness,
         evaluatedSkills: evaluatedSkills.length,
+        readinessEvidence: {
+          evaluatedSkills: readinessEvidence.evaluatedCount,
+          totalSkills: readinessEvidence.totalCount,
+          requiredSkills: readinessEvidence.requiredCount,
+        },
       },
     });
     await load();
@@ -113,7 +106,7 @@ export default function ToolReports({ students = [] }) {
   return (
     <div className="page-shell">
       <div className="page-inner">
-        <SectionHeader title="Reports" sub="MET readiness and skill progress by student" />
+        <SectionHeader title="Reports" sub="Evidence coverage and skill progress by student" />
         {!latestDiagnosis && (
           <Card style={{ margin: '12px 0 18px' }}>
             <SectionHeader title="Reports" sub="Diagnosis required first" />
@@ -156,7 +149,7 @@ export default function ToolReports({ students = [] }) {
           <>
             {/* KPI row */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 24 }}>
-              <Kpi label="MET Readiness" value={readiness == null ? 'Not enough' : `${readiness}%`} sub={`Target: ${student.targetBand || student.bandTarget}`} />
+              <Kpi label="MET Readiness" value={readinessDisplay.value} sub={readinessDisplay.sub} />
               <Kpi label="Current Band" value={student.currentBand || student.band} sub="Assessed" />
               <Kpi label="Session" value={`${student.session}/${student.totalSessions}`} sub="Completed" />
               <Kpi label="Evaluated Skills" value={`${evaluatedSkills.length}/${SKILLS.length}`} sub="Evidence only" />
@@ -195,13 +188,13 @@ export default function ToolReports({ students = [] }) {
                 </Card>
 
                 <Card>
-                  <div style={{ fontWeight: 700, marginBottom: 10 }}>Readiness Gauge</div>
+                  <div style={{ fontWeight: 700, marginBottom: 10 }}>Readiness Evidence</div>
                   <div style={{ textAlign: 'center', padding: '16px 0' }}>
                     <div style={{ fontSize: 52, fontWeight: 800, color: readiness == null ? 'var(--muted)' : readiness >= 70 ? 'var(--success)' : readiness >= 45 ? 'var(--warning)' : 'var(--danger)', lineHeight: 1 }}>
                       {readiness == null ? '—' : `${readiness}%`}
                     </div>
                     <div style={{ fontSize: 13, color: 'var(--muted)', marginTop: 6 }}>
-                      {readiness == null ? 'Not enough evaluated evidence' : 'MET Readiness'}
+                      {readinessDisplay.label}
                     </div>
                   </div>
                   <div style={{ height: 12, background: 'var(--bg-deep)', borderRadius: 999, overflow: 'hidden', marginBottom: 10 }}>
@@ -211,8 +204,8 @@ export default function ToolReports({ students = [] }) {
                       background: readiness == null ? 'var(--muted)' : readiness >= 70 ? 'var(--success)' : readiness >= 45 ? 'var(--warning)' : 'var(--danger)',
                     }} />
                   </div>
-                  <Pill tone={readiness == null ? 'muted' : readiness >= 70 ? 'success' : readiness >= 45 ? 'warning' : 'danger'}>
-                    {readiness == null ? 'Needs more samples' : readiness >= 70 ? 'On track for target' : readiness >= 45 ? 'Progressing' : 'Needs acceleration'}
+                  <Pill tone={readinessDisplay.tone}>
+                    {readiness == null ? 'Needs broader skill coverage' : readiness >= 70 ? 'On track for target' : readiness >= 45 ? 'Progressing' : 'Needs acceleration'}
                   </Pill>
                 </Card>
               </div>

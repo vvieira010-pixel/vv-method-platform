@@ -279,7 +279,8 @@ export default function SettingsPage({ onNavigate }) {
             />
             <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: 3, lineHeight: 1.5 }}>
               Run <code>python scripts/piper-server.py --model path/to/voice.onnx</code> on your machine.
-              Free, fully offline, no API key needed. Used only when ElevenLabs and OpenAI are not configured.
+              Free, fully offline, no API key needed. Use one woman voice and one man voice for listening variety; Piper voices require both the <code>.onnx</code> file and matching <code>.onnx.json</code>. From your voices list, good starting points are <code>en_US-lessac-medium</code> or <code>en_US-amy-medium</code> for a US woman voice, <code>en_US-ryan-medium</code> or <code>en_US-hfc_male-medium</code> for a US man voice, <code>en_GB-southern_english_female-low</code> for a UK woman voice, and <code>en_GB-northern_english_male-medium</code> for a UK man voice.
+              Listen to samples at <a href="https://rhasspy.github.io/piper-samples" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)' }}>Piper samples</a> and download models from <a href="https://huggingface.co/rhasspy/piper-voices/tree/main" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)' }}>Piper voices</a>. Used only when ElevenLabs, Deepgram, OpenAI, and Gemini are not configured.
             </span>
           </Field>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
