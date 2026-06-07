@@ -429,4 +429,5 @@ function Field({ label, children }) {
 
 const EMPTY_FORM = { whatImproved: '', activeErrors: '', newErrors: '', corrections: [{ id: Math.random().toString(36).slice(2, 9), original: '', improved: '', note: '' }], overallNote: '', score: '', redoRequired: false, sendFeedback: true };
 const backStyle = { background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)', fontSize: 'var(--text-sm)', display: 'flex', alignItems: 'center', gap: 4, marginBottom: 16, padding: 0, fontFamily: 'var(--font-ui)' };
+const fieldLabel = { fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em' };
 const S = { headline: { fontFamily: 'var(--font-display)', fontSize: 'var(--text-2xl)', fontWeight: 700, color: 'var(--accent-deep)', margin: '0 0 4px' }, sub: { fontSize: 'var(--text-sm)', color: 'var(--muted)' } };
