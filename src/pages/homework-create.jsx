@@ -35,6 +35,7 @@ export default function HomeworkCreate({ diagnosisId, studentId, students, onNav
   const [exerciseOptions, setExerciseOptions] = useState([]);
   const [loadingOptions, setLoadingOptions] = useState(false);
   const [showTypePicker, setShowTypePicker] = useState(false);
+  const [selectedLevel, setSelectedLevel] = useState('B1'); // New state for level
   const [expandedEx, setExpandedEx] = useState(null);
   const [showLibrary, setShowLibrary] = useState(false);
   // Per-skill-group generation config: { speaking: 5, grammar: 4, ... }
@@ -109,13 +110,13 @@ export default function HomeworkCreate({ diagnosisId, studentId, students, onNav
   }
 
   /* ── Exercise management ── */
-  function addExercise(type, count = 1) {
+  function addExercise(type, count = 1, level = 'B1') {
     const n = Math.max(1, Math.min(20, Number(count) || 1));
-    const created = Array.from({ length: n }, () => createExercise(type));
+    const created = Array.from({ length: n }, () => createExercise(type, level));
     setForm(f => ({ ...f, exercises: [...f.exercises, ...created] }));
     setExpandedEx(created[0].id); // expand the first of the batch for editing
     setShowTypePicker(false);
-    if (n > 1) window.toast?.(`Added ${n} ${type} exercises.`, 'ok');
+    if (n > 1) window.toast?.(`Added ${n} ${level} ${type} exercises.`, 'ok');
   }
 
   function updateExercise(id, updated) {

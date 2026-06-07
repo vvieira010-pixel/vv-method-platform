@@ -35,8 +35,8 @@ function exId() {
 const FACTORIES = {
   mcq:    () => ({ id: exId(), type: 'mcq',    question: '', options: ['', '', '', ''], correct: null }),
   blank:  () => ({ id: exId(), type: 'blank',  template: '', blanks: [] }),
-  short:  () => ({ id: exId(), type: 'short',  prompt: '', rubric: '', targetWords: 120 }),
-  speak:  () => ({ id: exId(), type: 'speak',  prompt: '', targetSeconds: 60 }),
+  short:  () => ({ id: exId(), type: 'short',  prompt: '', rubric: '', targetWords: 120, scaffolding: { vocabulary: [], structure: [] } }),
+  speak:  () => ({ id: exId(), type: 'speak',  prompt: '', targetSeconds: 60, scaffolding: { vocabulary: [], structure: [] } }),
   order:  () => ({ id: exId(), type: 'order',  sentences: [''] }),
   fix:    () => ({ id: exId(), type: 'fix',    errorText: '', correctedText: '', hint: '' }),
   flash:  () => ({ id: exId(), type: 'flash',  pairs: [{ term: '', def: '' }] }),
@@ -45,13 +45,14 @@ const FACTORIES = {
 
 /**
  * Create a new empty exercise of the given type.
- * @param {'mcq'|'blank'|'short'|'speak'|'order'|'fix'|'flash'} type
- * @returns {object} exercise object with default empty fields
+ * @param {'mcq'|'blank'|'short'|'speak'|'order'|'fix'|'flash'|'listen'} type
+ * @param {string} [level='B1'] Proficiency level (e.g., 'A2', 'B1', 'B2')
+ * @returns {object} exercise object with default fields
  */
-export function createExercise(type) {
+export function createExercise(type, level = 'B1') {
   const factory = FACTORIES[type];
   if (!factory) throw new Error(`Unknown exercise type: ${type}`);
-  return factory();
+  return { ...factory(), level };
 }
 
 /* ─── AUTO-GRADING ──────────────────────────────────────────── */

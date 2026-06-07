@@ -39,6 +39,7 @@ export function ExTypeBadge({ typeId, size = 'sm' }) {
 /* ─── EXERCISE TYPE PICKER ──────────────────────────────────── */
 export function ExerciseTypePicker({ onSelect, onClose }) {
   const [qty, setQty] = useState(1);
+  const [level, setLevel] = useState('B1'); // New state for level
   const clamp = n => Math.max(1, Math.min(20, Number.isFinite(n) ? n : 1));
   const stepBtn = {
     width: 26, height: 26, display: 'grid', placeItems: 'center',
@@ -52,7 +53,18 @@ export function ExerciseTypePicker({ onSelect, onClose }) {
           Choose exercise type
         </span>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          {/* Quantity stepper — clicking a type below adds this many at once */}
+          {/* Level selector */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Level</span>
+            <select
+              value={level}
+              onChange={e => setLevel(e.target.value)}
+              style={{ padding: '4px 6px', border: '1px solid var(--border)', borderRadius: 6, fontSize: 'var(--text-sm)' }}
+            >
+              {['A1', 'A2', 'B1', 'B2', 'C1'].map(l => <option key={l} value={l}>{l}</option>)}
+            </select>
+          </div>
+          {/* Quantity stepper */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             <span style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
               How many
@@ -77,7 +89,7 @@ export function ExerciseTypePicker({ onSelect, onClose }) {
         </div>
       </div>
       <p style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', margin: '0 0 14px' }}>
-        Pick a type to add {qty > 1 ? <strong>{qty} of them</strong> : 'one'} at once — no need to repeat.
+        Pick a type to add {qty > 1 ? <strong>{qty} of them</strong> : 'one'} at <strong>{level} level</strong>.
       </p>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 8 }}>
         {EX_TYPES.map(t => {
@@ -85,7 +97,7 @@ export function ExerciseTypePicker({ onSelect, onClose }) {
           return (
             <button
               key={t.id}
-              onClick={() => onSelect(t.id, qty)}
+              onClick={() => onSelect(t.id, qty, level)} // Pass level here
               style={{
                 display: 'flex', alignItems: 'center', gap: 10,
                 padding: '12px 14px', borderRadius: 'var(--radius-md)',
