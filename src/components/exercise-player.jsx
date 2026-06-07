@@ -6,16 +6,8 @@ import { useState, useRef, useEffect } from 'react';
 import { Icon, Card, Button, Pill } from './shared.jsx';
 import { getExType, parseBlankTemplate, shuffleArray, autoGrade } from '../lib/exercise-types.js';
 import { ExTypeBadge } from './exercise-editor.jsx';
-
-const EXERCISE_LABELS = {
-  mcq: 'Listening Comprehension',
-  blank: 'Fill the Blank',
-  short: 'Written Response',
-  speak: 'Speaking Response',
-  order: 'Sentence Order',
-  fix: 'Error Correction',
-  flash: 'Flashcards',
-};
+import Listening from './exercises/Listening.jsx';
+import { getDbContext, uploadSubmissionAudio, createSignedAudioUrl } from '../lib/supabase-db.js';
 
 /**
  * ExercisePlayer — switches on exercise.type, renders the right interactive UI.
@@ -33,197 +25,119 @@ export function ExercisePlayer({ exercise, response, onResponse, readOnly = fals
     onResponse?.({ ...response, ...patch });
   };
 
-  let content = null;
   switch (exercise.type) {
-    case 'mcq':   content = <MCQPlayer ex={exercise} res={response} update={update} readOnly={readOnly} />; break;
-    case 'blank': content = <BlankPlayer ex={exercise} res={response} update={update} readOnly={readOnly} />; break;
-    case 'short': content = <ShortPlayer ex={exercise} res={response} update={update} readOnly={readOnly} />; break;
-    case 'speak': content = <SpeakPlayer ex={exercise} res={response} update={update} readOnly={readOnly} />; break;
-    case 'order': content = <OrderPlayer ex={exercise} res={response} update={update} readOnly={readOnly} />; break;
-    case 'fix':   content = <FixPlayer ex={exercise} res={response} update={update} readOnly={readOnly} />; break;
-    case 'flash': content = <FlashPlayer ex={exercise} res={response} update={update} readOnly={readOnly} />; break;
+    case 'mcq':   return <MCQPlayer   ex={exercise} res={response} update={update} readOnly={readOnly} />;
+    case 'blank': return <BlankPlayer ex={exercise} res={response} update={update} readOnly={readOnly} />;
+    case 'short': return <ShortPlayer ex={exercise} res={response} update={update} readOnly={readOnly} />;
+    case 'speak': return <SpeakPlayer ex={exercise} res={response} update={update} readOnly={readOnly} />;
+    case 'order': return <OrderPlayer ex={exercise} res={response} update={update} readOnly={readOnly} />;
+    case 'fix':   return <FixPlayer   ex={exercise} res={response} update={update} readOnly={readOnly} />;
+    case 'flash': return <FlashPlayer ex={exercise} res={response} update={update} readOnly={readOnly} />;
+    case 'listen': return <Listening exercise={exercise} onComplete={(result) => update({ selected: result?.correct ? exercise.correct : -1 })} />;
     default:
-      content = (
+      return (
         <div style={{ padding: 14, fontSize: 'var(--text-sm)', color: 'var(--text-2)', lineHeight: 1.6 }}>
           {exercise.instruction || exercise.prompt || 'Exercise content'}
         </div>
       );
-      break;
-  }
-
-  const checklist = buildPracticeChecklist(exercise);
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-      {content}
-      <WhatYouPracticed checklist={checklist} />
-    </div>
-  );
-}
-
-function exerciseLabel(type) {
-  return EXERCISE_LABELS[type] || 'Exercise';
-}
-
-function hasCompletedResponse(ex, res = {}) {
-  switch (ex?.type) {
-    case 'mcq':
-      return res.selected !== undefined && res.selected !== null;
-    case 'blank': {
-      const expected = Math.max(ex.blanks?.length || 0, parseBlankTemplate(ex.template || '').filter(s => s.type === 'blank').length);
-      return expected === 0 || (res.blanks || []).filter(Boolean).length >= expected;
-    }
-    case 'short':
-      return Boolean((res.text || '').trim());
-    case 'speak':
-      return Boolean(res.audioB64 || (res.transcript || '').trim());
-    case 'order':
-      return Array.isArray(res.order) && res.order.length === (ex.sentences || []).length;
-    case 'fix':
-      return Boolean((res.text || '').trim()) && res.text !== ex.errorText;
-    case 'flash':
-      return (res.learned || 0) > 0 || (res.idx || 0) > 0;
-    default:
-      return true;
-  }
-}
-
-function WhatYouPracticed({ checklist }) {
-  return (
-    <div style={{ borderTop: '1px solid var(--divider)', paddingTop: 12 }}>
-      <div style={{ fontSize: 'var(--text-xs)', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--accent)', marginBottom: 8 }}>
-        What You Practiced
-      </div>
-      <div style={{ display: 'grid', gap: 7 }}>
-        {checklist.map((item, idx) => (
-          <label key={`${item.label}-${idx}`} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 'var(--text-sm)', lineHeight: 1.5, color: 'var(--text-2)' }}>
-            <input type="checkbox" checked readOnly />
-            <span><strong>{item.label}:</strong> {item.value}</span>
-          </label>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function buildPracticeChecklist(ex) {
-  const mainSkill = {
-    mcq: 'Listening and reading comprehension',
-    blank: 'Vocabulary and grammar accuracy',
-    short: 'Written communication and idea development',
-    speak: 'Spoken fluency and answer organization',
-    order: 'Cohesion and logical sequencing',
-    fix: 'Grammar editing and self-correction',
-    flash: 'Vocabulary recall and active usage',
-  }[ex?.type] || 'Target language practice';
-
-  const subskill = {
-    mcq: 'Finding key clues and selecting evidence-based answers',
-    blank: 'Choosing precise words or forms in context',
-    short: 'Building clear answers with support',
-    speak: 'Delivering complete MET-style responses',
-    order: 'Connecting ideas in the right order',
-    fix: 'Noticing and correcting recurring mistakes',
-    flash: 'Retrieving meaning quickly under time pressure',
-  }[ex?.type] || 'Applying language with control';
-
-  const usefulLanguage = normalizePracticeText(
-    ex?.modelResponse ||
-    ex?.example ||
-    ex?.explanation ||
-    ex?.prompt ||
-    ex?.question
-  ) || 'Useful language from this task to reuse in your next response.';
-
-  const grammarVocabStrategy = {
-    mcq: 'Strategy: remove options with weak evidence before choosing.',
-    blank: 'Grammar/Vocabulary: check collocation and sentence fit before finalizing.',
-    short: 'Strategy: plan statement + reason + support before writing.',
-    speak: 'Strategy: pause briefly, then answer in complete ideas.',
-    order: 'Strategy: find sequence markers (first, then, however, finally).',
-    fix: 'Grammar: compare your correction with the original error pattern.',
-    flash: 'Vocabulary: say each term in a real sentence to keep it active.',
-  }[ex?.type] || 'Use one grammar or vocabulary upgrade in your next attempt.';
-
-  const metOrRealConnection = normalizePracticeText(
-    ex?.metConnection ||
-    ex?.realCommunicationConnection
-  ) || defaultConnection(ex?.type);
-
-  return [
-    { label: 'Main skill', value: mainSkill },
-    { label: 'Subskill', value: subskill },
-    { label: 'Useful language', value: usefulLanguage },
-    { label: 'Grammar/Vocabulary/Strategy', value: grammarVocabStrategy },
-    { label: 'MET or real communication connection', value: metOrRealConnection },
-  ];
-}
-
-function normalizePracticeText(text) {
-  if (!text) return '';
-  const clean = String(text).replace(/\s+/g, ' ').trim();
-  if (clean.length <= 150) return clean;
-  return `${clean.slice(0, 147)}...`;
-}
-
-function defaultConnection(type) {
-  switch (type) {
-    case 'mcq':
-      return 'Supports MET listening/reading choices and everyday evidence-based decisions.';
-    case 'blank':
-      return 'Builds accuracy you need for MET tasks and clear professional messages.';
-    case 'short':
-      return 'Helps you write stronger MET responses and clearer real-world messages.';
-    case 'speak':
-      return 'Improves MET speaking timing and confident communication in real conversations.';
-    case 'order':
-      return 'Improves coherence for MET speaking/writing and natural communication flow.';
-    case 'fix':
-      return 'Builds editing habits for MET accuracy and professional communication.';
-    case 'flash':
-      return 'Strengthens quick word access for MET performance and daily communication.';
-    default:
-      return 'Connects directly to stronger MET performance and clearer communication.';
   }
 }
 
 /* ─── 1. MULTIPLE CHOICE ────────────────────────────────────── */
+const MCQ_MAX_TRIES = 5;
+
 function MCQPlayer({ ex, res, update, readOnly }) {
   const pick = res?.selected ?? null;
-  const showResult = pick !== null;
+  const solved = res?.mcqSolved || false;
+  const wrongPicks = res?.mcqWrongPicks || [];
+  // Reveal the answer after the student has ruled out the wrong options — capped
+  // at 5 tries (most MCQs have fewer than 5 wrong options).
+  const wrongLimit = Math.min(MCQ_MAX_TRIES, Math.max(1, (ex.options?.length || 2) - 1));
+  const revealed = wrongPicks.length >= wrongLimit;
+  const done = solved || revealed;
+  const showCorrect = readOnly || done;
+
+  const check = () => {
+    if (readOnly || done || pick == null || wrongPicks.includes(pick)) return;
+    if (pick === ex.correct) update({ mcqSolved: true });
+    else update({ mcqWrongPicks: [...wrongPicks, pick] });
+  };
 
   return (
     <div>
-      <p className="hw-prompt-title">
+      <p style={{ margin: '0 0 14px', fontSize: 'var(--text-md)', fontWeight: 600, color: 'var(--text)', lineHeight: 1.55 }}>
         {ex.question}
       </p>
-      <div className="hw-choice-list">
+      {!readOnly && !done && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10, padding: '6px 10px', background: 'var(--accent-subtle)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-xs)', color: 'var(--accent-deep)' }}>
+          <Icon.info size={13} />
+          <span>Pick and press Check. The correct answer is shown after {wrongLimit} {wrongLimit === 1 ? 'try' : 'tries'}.</span>
+        </div>
+      )}
+      <div role="radiogroup" aria-label={ex.question || 'Answer options'} style={{ display: 'grid', gap: 8 }}>
         {(ex.options || []).map((opt, i) => {
           const selected = pick === i;
           const isRight = i === ex.correct;
+          const isWrongTried = wrongPicks.includes(i);
+          let borderColor = 'var(--border)';
+          let bg = 'var(--surface)';
+          if (showCorrect && isRight)              { borderColor = 'var(--success)'; bg = 'var(--success-bg)'; }
+          else if (isWrongTried)                   { borderColor = 'var(--danger)'; bg = 'var(--danger-bg)'; }
+          else if (selected && !done)              { borderColor = 'var(--primary)'; bg = 'var(--accent-subtle)'; }
+          const optionDisabled = readOnly || done || isWrongTried;
 
           return (
             <button
               key={i}
-              onClick={() => !readOnly && update({ selected: i })}
               type="button"
-              className={'hw-choice' + (selected ? ' is-selected' : '')}
-              disabled={readOnly}
+              role="radio"
+              aria-checked={selected}
+              disabled={optionDisabled}
+              onClick={() => { if (!optionDisabled) update({ selected: i }); }}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 12,
+                padding: '14px 16px', borderRadius: 10, width: '100%', textAlign: 'left',
+                border: `1.5px solid ${borderColor}`, background: bg,
+                cursor: optionDisabled ? 'default' : 'pointer',
+                opacity: isWrongTried && !showCorrect ? 0.7 : 1,
+                transition: 'all .15s var(--ease)', fontFamily: 'var(--font-ui)',
+              }}
             >
-              <span className="hw-choice-dot" />
-              <span>{opt}</span>
-              {showResult && isRight && <Icon.check size={16} color="var(--success)" />}
+              <div style={{
+                width: 20, height: 20, borderRadius: '50%',
+                border: `2px solid ${selected ? 'var(--primary)' : 'var(--border)'}`,
+                background: selected ? 'var(--primary)' : 'transparent',
+                display: 'grid', placeItems: 'center', flexShrink: 0,
+              }}>
+                {selected && <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#fff' }} />}
+              </div>
+              <span style={{ fontSize: 'var(--text-sm)', color: 'var(--text)', flex: 1 }}>{opt}</span>
+              {showCorrect && isRight && <><Icon.check size={16} color="var(--success)" /><span className="sr-only">Correct answer</span></>}
+              {isWrongTried && !showCorrect && <><span aria-hidden="true" style={{ color: 'var(--danger)', fontWeight: 700, fontSize: 'var(--text-sm)' }}>✗</span><span className="sr-only">Incorrect</span></>}
             </button>
           );
         })}
       </div>
-      {showResult && (
-        <div style={{
-          marginTop: 14, padding: '10px 14px', borderRadius: 14,
-          background: pick === ex.correct ? 'var(--success-bg)' : 'var(--danger-bg)',
-          color: pick === ex.correct ? 'var(--success)' : 'var(--danger)',
-          fontSize: 'var(--text-sm)',
-        }}>
-          {pick === ex.correct ? '✓ Correct!' : 'Not quite — check the highlighted answer above.'}
+
+      {!done && pick !== null && !wrongPicks.includes(pick) && (
+        <Button variant="primary" size="sm" onClick={check} style={{ marginTop: 12 }}>
+          Check answer
+        </Button>
+      )}
+
+      {solved && (
+        <div style={{ marginTop: 14, padding: '10px 14px', borderRadius: 10, background: 'var(--success-bg)', color: 'var(--success)', fontSize: 'var(--text-sm)' }}>
+          ✓ Correct!
+        </div>
+      )}
+      {!solved && revealed && (
+        <div style={{ marginTop: 14, padding: '10px 14px', borderRadius: 10, background: 'var(--success-bg)', color: 'var(--success)', fontSize: 'var(--text-sm)' }}>
+          Answer shown after {wrongLimit} {wrongLimit === 1 ? 'try' : 'tries'} — the correct option is highlighted above.
+        </div>
+      )}
+      {!done && wrongPicks.length > 0 && (
+        <div style={{ marginTop: 14, padding: '10px 14px', borderRadius: 10, background: 'var(--warning-bg)', color: 'var(--warning)', fontSize: 'var(--text-sm)' }}>
+          Not quite — try another option. ({wrongPicks.length}/{wrongLimit})
         </div>
       )}
     </div>
@@ -231,72 +145,188 @@ function MCQPlayer({ ex, res, update, readOnly }) {
 }
 
 /* ─── 2. FILL THE BLANK ─────────────────────────────────────── */
+const BLANK_MAX_TRIES = 5;
+
 function BlankPlayer({ ex, res, update, readOnly }) {
   const segments = parseBlankTemplate(ex.template);
   const studentBlanks = res?.blanks || [];
   const correctBlanks = ex.blanks || [];
+  const attempts = res?.blankAttempts || {};   // { blankIdx: wrong-try count }
+  const lastTried = res?.lastTried || {};       // { blankIdx: last wrong value counted }
 
-  const getStatus = (blankIdx) => {
-    const val = (studentBlanks[blankIdx] || '').trim().toLowerCase();
+  const acceptedFor = (i) => (correctBlanks[i] || '').split('|').map(a => a.trim().toLowerCase());
+  const isCorrectVal = (i, val) => acceptedFor(i).includes((val || '').trim().toLowerCase());
+  const triesUsed = (i) => attempts[i] || 0;
+  const isRevealed = (i) => triesUsed(i) >= BLANK_MAX_TRIES;
+  const answerFor = (i) => (correctBlanks[i] || '').split('|')[0]?.trim() || '';
+
+  const getStatus = (i) => {
+    const val = (studentBlanks[i] || '').trim().toLowerCase();
     if (!val) return null;
-    const accepted = (correctBlanks[blankIdx] || '').split('|').map(a => a.trim().toLowerCase());
-    return accepted.includes(val) ? 'ok' : 'warn';
+    return isCorrectVal(i, val) ? 'ok' : 'warn';
   };
+
+  // Count one try when a blank loses focus with a non-empty WRONG answer.
+  // Identical consecutive values aren't double-counted. After BLANK_MAX_TRIES
+  // wrong tries, the answer for that blank is revealed.
+  const countTry = (i) => {
+    if (readOnly || isRevealed(i)) return;
+    const raw = (studentBlanks[i] || '').trim();
+    if (!raw || isCorrectVal(i, raw)) return;
+    if (raw.toLowerCase() === (lastTried[i] || '').toLowerCase()) return;
+    update({
+      blankAttempts: { ...attempts, [i]: triesUsed(i) + 1 },
+      lastTried: { ...lastTried, [i]: raw },
+    });
+  };
+
+  const hasAnswers = correctBlanks.length > 0;
+  const anyRevealed = Object.keys(attempts).some(k => triesUsed(k) >= BLANK_MAX_TRIES);
 
   return (
     <div>
-      <p style={{ margin: '0 0 14px', fontSize: 'var(--text-md)', lineHeight: 2.2, color: 'var(--text)' }}>
+      {hasAnswers && !readOnly && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10, padding: '6px 10px', background: 'var(--accent-subtle)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-xs)', color: 'var(--accent-deep)' }}>
+          <Icon.info size={13} />
+          <span>Keep trying — if a blank is tricky, its answer appears after {BLANK_MAX_TRIES} attempts.</span>
+        </div>
+      )}
+      <p style={{ margin: '0 0 14px', fontSize: 'var(--text-md)', lineHeight: 2.4, color: 'var(--text)' }}>
         {segments.map((seg, i) => {
           if (seg.type === 'text') return <span key={i}>{seg.value}</span>;
-          const status = getStatus(seg.index);
-          const color = status === 'ok' ? 'var(--success)' : status === 'warn' ? 'var(--warning)' : 'var(--primary)';
+          const idx = seg.index;
+          const status = getStatus(idx);
+          const revealed = isRevealed(idx);
+          const used = triesUsed(idx);
+          const color = revealed || status === 'ok' ? 'var(--success)' : status === 'warn' ? 'var(--warning)' : 'var(--primary)';
           return (
-            <input
-              key={i}
-              value={studentBlanks[seg.index] || ''}
-              onChange={e => {
-                const blanks = [...studentBlanks];
-                blanks[seg.index] = e.target.value;
-                update({ blanks });
-              }}
-              disabled={readOnly}
-              placeholder="___"
-              style={{
-                border: 'none', borderBottom: `2px solid ${color}`,
-                outline: 'none', fontSize: 'var(--text-md)', width: 130,
-                padding: '2px 6px', textAlign: 'center',
-                fontFamily: 'var(--font-ui)', fontWeight: 600,
-                color, background: 'transparent',
-              }}
-            />
+            <span key={i} style={{ whiteSpace: 'nowrap' }}>
+              <input
+                value={studentBlanks[idx] || ''}
+                onChange={e => {
+                  const blanks = [...studentBlanks];
+                  blanks[idx] = e.target.value;
+                  update({ blanks });
+                }}
+                onBlur={() => countTry(idx)}
+                disabled={readOnly}
+                placeholder="___"
+                aria-label={status === 'ok' ? 'Blank, correct' : status === 'warn' ? 'Blank, check your answer' : 'Blank'}
+                style={{
+                  border: 'none', borderBottom: `2px solid ${color}`,
+                  outline: 'none', fontSize: 'var(--text-md)', width: 130,
+                  padding: '2px 6px', textAlign: 'center',
+                  fontFamily: 'var(--font-ui)', fontWeight: 600,
+                  color, background: 'transparent',
+                }}
+              />
+              {status === 'ok' && <span title="correct" style={{ color: 'var(--success)', fontWeight: 700, marginLeft: 3, fontSize: 'var(--text-sm)' }}>✓</span>}
+              {status === 'warn' && !revealed && (
+                <span title="check this" style={{ color: 'var(--warning)', fontWeight: 700, marginLeft: 3, fontSize: 'var(--text-xs)' }}>
+                  !{used > 0 ? ` ${used}/${BLANK_MAX_TRIES}` : ''}
+                </span>
+              )}
+              {revealed && (
+                <span title={`Answer shown after ${BLANK_MAX_TRIES} tries`} style={{ marginLeft: 4, fontSize: 'var(--text-sm)', fontWeight: 700, color: 'var(--success)' }}>
+                  → {answerFor(idx)}
+                </span>
+              )}
+            </span>
           );
         })}
       </p>
+      {anyRevealed && !readOnly && (
+        <div style={{ fontSize: 'var(--text-xs)', color: 'var(--success)', display: 'flex', alignItems: 'center', gap: 6 }}>
+          <Icon.check size={12} />
+          <span>Answer shown after {BLANK_MAX_TRIES} tries — type it in to finish the blank.</span>
+        </div>
+      )}
     </div>
   );
 }
 
 /* ─── 3. SHORT ANSWER ──────────────────────────────────────── */
+
+const WRITING_QUALITY_CHECKS = [
+  { label: 'Task complete', hint: 'I answered what was asked — not a different question.' },
+  { label: 'Supporting detail', hint: 'I developed my main idea with at least one concrete example.' },
+  { label: 'Connectives used correctly', hint: 'My ideas are linked (e.g. however, therefore, as a result) — not just listed.' },
+  { label: 'Grammar errors do not obscure meaning', hint: 'A reader can understand my point even if some errors remain.' },
+];
+
 function ShortPlayer({ ex, res, update, readOnly }) {
   const text = res?.text || '';
   const wc = text.split(/\s+/).filter(Boolean).length;
   const target = ex.targetWords || 120;
+  const [checklistOpen, setChecklistOpen] = useState(false);
 
   return (
     <div>
-      <p className="hw-prompt-title">
+      <p style={{ margin: '0 0 6px', fontSize: 'var(--text-md)', fontWeight: 600, color: 'var(--text)', lineHeight: 1.55 }}>
         {ex.prompt}
       </p>
-      {ex.rubric && (
-        <p className="hw-soft-note">
-          {ex.rubric}
-        </p>
+
+      {/* SCAFFOLDING */}
+      {(ex.scaffolding?.vocabulary?.length > 0 || ex.scaffolding?.structure?.length > 0) && (
+        <div style={{ marginBottom: 12, padding: '8px 12px', background: 'var(--accent-subtle)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-xs)' }}>
+          {ex.scaffolding.vocabulary?.length > 0 && (
+            <div style={{ marginBottom: 6 }}>
+              <span style={{ fontWeight: 700, color: 'var(--accent-deep)', marginRight: 6 }}>Vocabulary:</span>
+              {ex.scaffolding.vocabulary.map((word, i) => (
+                <span key={i} style={{ display: 'inline-block', background: 'var(--white)', padding: '2px 6px', borderRadius: 4, marginRight: 4, border: '1px solid var(--accent-soft)' }}>{word}</span>
+              ))}
+            </div>
+          )}
+          {ex.scaffolding.structure?.length > 0 && (
+            <div>
+              <span style={{ fontWeight: 700, color: 'var(--accent-deep)', marginRight: 6 }}>Structure:</span>
+              <ul style={{ margin: '4px 0 0 16px', padding: 0, color: 'var(--text-2)' }}>
+                {ex.scaffolding.structure.map((line, i) => <li key={i}>{line}</li>)}
+              </ul>
+            </div>
+          )}
+        </div>
       )}
+
+      {ex.rubric && (
+        <div style={{ margin: '0 0 12px', padding: '8px 12px', background: 'var(--surface)', borderLeft: '3px solid var(--accent-soft)', borderRadius: '0 var(--radius-sm) var(--radius-sm) 0', fontSize: 'var(--text-xs)', color: 'var(--text-2)', lineHeight: 1.6 }}>
+          <span style={{ fontWeight: 700, color: 'var(--accent-deep)', marginRight: 6 }}>Teacher note:</span>
+          {ex.rubric}
+        </div>
+      )}
+
+      {/* Quality checklist — collapsible, shown before textarea */}
+      {!readOnly && (
+        <div style={{ marginBottom: 12 }}>
+          <button
+            type="button"
+            onClick={() => setChecklistOpen(v => !v)}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--accent-deep)', fontFamily: 'var(--font-ui)' }}
+          >
+            <span style={{ display: 'inline-flex', transform: checklistOpen ? 'rotate(90deg)' : 'none', transition: 'transform .15s', fontSize: 10 }}>▶</span>
+            Quality checklist — what good MET writing requires
+          </button>
+          {checklistOpen && (
+            <div style={{ marginTop: 8, padding: '8px 12px', background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)' }}>
+              {WRITING_QUALITY_CHECKS.map((c, i) => (
+                <div key={i} style={{ display: 'flex', gap: 8, marginBottom: i < WRITING_QUALITY_CHECKS.length - 1 ? 6 : 0 }}>
+                  <span style={{ fontWeight: 700, color: 'var(--accent)', flexShrink: 0, fontSize: 'var(--text-xs)', marginTop: 1 }}>✓</span>
+                  <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-2)', lineHeight: 1.55 }}>
+                    <strong style={{ color: 'var(--text)' }}>{c.label}:</strong> {c.hint}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
       <textarea
-        className="hw-textarea" rows={6} value={text}
+        className="input" rows={6} value={text}
         onChange={e => update({ text: e.target.value })}
         disabled={readOnly}
-        placeholder="Type your response here..."
+        placeholder="Start writing your answer…"
+        style={{ fontSize: 'var(--text-sm)', lineHeight: 1.7 }}
       />
       <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8 }}>
         <span style={{ fontSize: 'var(--text-xs)', color: 'var(--faint)' }}>{wc} words</span>
@@ -309,9 +339,21 @@ function ShortPlayer({ ex, res, update, readOnly }) {
 }
 
 /* ─── 4. SPEAKING ──────────────────────────────────────────── */
+
+const SPEAKING_STRATEGY_CHECKS = [
+  { label: 'Task type', hint: 'Describe a picture · Share a story · Give an opinion · Weigh pros & cons · Persuade an authority figure — which is this?' },
+  { label: 'First 10–15 seconds', hint: 'Start with your position or description immediately. Don\'t say "I think I will talk about…"' },
+  { label: 'Development', hint: 'One clear main point per reason, developed with a specific example — not two vague points.' },
+  { label: 'Q4 check (if pros & cons)', hint: 'You must cover BOTH sides with roughly equal time. Covering only one side loses ~1/3 of your task score.' },
+  { label: 'Q5 check (if persuading authority)', hint: 'Formal register throughout. Say "I strongly believe…" not "I think maybe…"' },
+];
+
 function SpeakPlayer({ ex, res, update, readOnly }) {
+  const [strategyOpen, setStrategyOpen] = useState(false);
   const [status, setStatus] = useState('idle'); // idle | recording | done
   const [seconds, setSeconds] = useState(0);
+  const [typing, setTyping] = useState(false); // "type instead" alternative to recording
+  const [playbackUrl, setPlaybackUrl] = useState(res?.audioB64 || null);
   const timerRef = useRef(null);
   const mediaRef = useRef(null);
   const chunksRef = useRef([]);
@@ -326,11 +368,30 @@ function SpeakPlayer({ ex, res, update, readOnly }) {
       mediaRef.current = new MediaRecorder(stream);
       chunksRef.current = [];
       mediaRef.current.ondataavailable = e => { if (e.data.size > 0) chunksRef.current.push(e.data); };
-      mediaRef.current.onstop = () => {
+      mediaRef.current.onstop = async () => {
         const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
-        const reader = new FileReader();
-        reader.onloadend = () => update({ audioB64: reader.result, transcript: res?.transcript || '' });
-        reader.readAsDataURL(blob);
+        // Immediate local playback regardless of where it's persisted.
+        setPlaybackUrl(URL.createObjectURL(blob));
+        const ctx = getDbContext();
+        if (ctx) {
+          // Signed-in: upload to private Storage, persist only the object path.
+          try {
+            const rand = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now());
+            const path = `${ctx.authUid}/${rand}/${ex.id || 'audio'}.webm`;
+            await uploadSubmissionAudio(blob, path);
+            update({ audioPath: path, audioB64: null, transcript: res?.transcript || '' });
+          } catch (e) {
+            console.warn('[speak] audio upload failed, storing inline instead:', e.message);
+            const reader = new FileReader();
+            reader.onloadend = () => update({ audioB64: reader.result, audioPath: null, transcript: res?.transcript || '' });
+            reader.readAsDataURL(blob);
+          }
+        } else {
+          // localStorage mode: keep the legacy base64-in-record behaviour.
+          const reader = new FileReader();
+          reader.onloadend = () => update({ audioB64: reader.result, transcript: res?.transcript || '' });
+          reader.readAsDataURL(blob);
+        }
         stream.getTracks().forEach(t => t.stop());
       };
       mediaRef.current.start();
@@ -352,85 +413,168 @@ function SpeakPlayer({ ex, res, update, readOnly }) {
     clearInterval(timerRef.current);
     setSeconds(0);
     setStatus('idle');
-    update({ audioB64: null, transcript: '' });
+    setPlaybackUrl(null);
+    update({ audioB64: null, audioPath: null, transcript: '' });
   };
 
   useEffect(() => () => { clearInterval(timerRef.current); mediaRef.current?.stream?.getTracks().forEach(t => t.stop()); }, []);
 
-  // If we already have audio from a previous session
-  useEffect(() => { if (res?.audioB64) setStatus('done'); }, []);
-
-  const level = status === 'recording'
-    ? 38 + Math.round(Math.abs(Math.sin(seconds * 1.2)) * 46)
-    : status === 'done'
-      ? 100
-      : 8;
+  // Restore a previously-recorded answer (base64 inline, or a signed URL for a Storage path).
+  useEffect(() => {
+    if (res?.audioB64) { setPlaybackUrl(res.audioB64); setStatus('done'); return; }
+    if (res?.audioPath) {
+      setStatus('done');
+      createSignedAudioUrl(res.audioPath).then(url => { if (url) setPlaybackUrl(url); });
+    }
+  }, []);
 
   return (
-    <div className="speak-shell">
-      <div className="speak-segment" aria-label="Response mode">
-        <button type="button" className="is-active">Speaking</button>
-        <button type="button">Writing</button>
+    <div>
+      {ex.imageUrl && (
+        <div style={{ marginBottom: 14, borderRadius: 10, overflow: 'hidden', border: '1px solid var(--border)', background: 'var(--bg)' }}>
+          <img
+            src={ex.imageUrl}
+            alt={ex.imageAlt || 'Speaking prompt image'}
+            style={{ width: '100%', maxHeight: 340, objectFit: 'cover', display: 'block' }}
+          />
+        </div>
+      )}
+
+      <div style={{ background: 'var(--bg)', borderRadius: 10, padding: '14px 16px', marginBottom: 14 }}>
+        <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>Speaking prompt</div>
+        <p style={{ margin: 0, fontSize: 'var(--text-md)', color: 'var(--text)', lineHeight: 1.55, fontWeight: 500 }}>
+          {ex.prompt}
+          <span style={{ color: 'var(--muted)', fontWeight: 600 }}> Target: {target} seconds.</span>
+        </p>
       </div>
 
-      <div className="speak-panel">
-        <h3>{status === 'done' ? 'Review Your Response' : 'Record Your Response'}</h3>
-        <p>{ex.prompt}</p>
-        <p>Click the microphone to start recording your answer. Max duration: {target}s.</p>
+      {/* SCAFFOLDING */}
+      {(ex.scaffolding?.vocabulary?.length > 0 || ex.scaffolding?.structure?.length > 0) && (
+        <div style={{ marginBottom: 12, padding: '8px 12px', background: 'var(--accent-subtle)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-xs)' }}>
+          {ex.scaffolding.vocabulary?.length > 0 && (
+            <div style={{ marginBottom: 6 }}>
+              <span style={{ fontWeight: 700, color: 'var(--accent-deep)', marginRight: 6 }}>Vocabulary:</span>
+              {ex.scaffolding.vocabulary.map((word, i) => (
+                <span key={i} style={{ display: 'inline-block', background: 'var(--white)', padding: '2px 6px', borderRadius: 4, marginRight: 4, border: '1px solid var(--accent-soft)' }}>{word}</span>
+              ))}
+            </div>
+          )}
+          {ex.scaffolding.structure?.length > 0 && (
+            <div>
+              <span style={{ fontWeight: 700, color: 'var(--accent-deep)', marginRight: 6 }}>Structure:</span>
+              <ul style={{ margin: '4px 0 0 16px', padding: 0, color: 'var(--text-2)' }}>
+                {ex.scaffolding.structure.map((line, i) => <li key={i}>{line}</li>)}
+              </ul>
+            </div>
+          )}
+        </div>
+      )}
 
-        {status !== 'done' && (
+      {/* Strategy checklist — collapsible, shown before recording */}
+      {!readOnly && status === 'idle' && (
+        <div style={{ marginBottom: 14 }}>
           <button
             type="button"
-            className={'speak-record' + (status === 'recording' ? ' is-recording' : '')}
-            onClick={status === 'recording' ? stop : start}
-            disabled={readOnly}
-            aria-label={status === 'recording' ? 'Stop recording' : 'Start recording'}
+            onClick={() => setStrategyOpen(v => !v)}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--accent-deep)', fontFamily: 'var(--font-ui)' }}
           >
-            {status === 'recording' ? (
-              <span style={{ width: 22, height: 22, borderRadius: 5, background: '#fff' }} />
-            ) : (
-              <Icon.mic size={42} />
-            )}
+            <span style={{ display: 'inline-flex', transform: strategyOpen ? 'rotate(90deg)' : 'none', transition: 'transform .15s', fontSize: 10 }}>▶</span>
+            Strategy reminder — what good MET speaking requires
           </button>
-        )}
+          {strategyOpen && (
+            <div style={{ marginTop: 8, padding: '8px 12px', background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)' }}>
+              {SPEAKING_STRATEGY_CHECKS.map((c, i) => (
+                <div key={i} style={{ display: 'flex', gap: 8, marginBottom: i < SPEAKING_STRATEGY_CHECKS.length - 1 ? 6 : 0 }}>
+                  <span style={{ fontWeight: 700, color: 'var(--accent)', flexShrink: 0, fontSize: 'var(--text-xs)', marginTop: 1 }}>→</span>
+                  <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-2)', lineHeight: 1.55 }}>
+                    <strong style={{ color: 'var(--text)' }}>{c.label}:</strong> {c.hint}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
-        {status === 'done' && res?.audioB64 && (
-          <div className="speak-audio">
-            <audio controls src={res.audioB64} style={{ width: '100%', height: 36 }} />
+      {status === 'idle' && (
+        <>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+            <Button variant="primary" onClick={start} disabled={readOnly}>
+              <Icon.mic size={13} /> Start recording
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => setTyping(t => !t)} disabled={readOnly}>
+              {typing ? 'Hide typing' : 'Type my answer instead'}
+            </Button>
           </div>
-        )}
+          {typing && (
+            <div style={{ marginTop: 12 }}>
+              <span style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                Your written answer
+              </span>
+              <textarea
+                className="input" rows={5} value={res?.transcript || ''}
+                onChange={e => update({ transcript: e.target.value })}
+                disabled={readOnly}
+                placeholder="Type your full answer here — this counts as your response if you can't record."
+                style={{ fontSize: 'var(--text-sm)', lineHeight: 1.7, marginTop: 6 }}
+              />
+            </div>
+          )}
+        </>
+      )}
 
-        <div className="speak-level">
-          <div className="speak-level-row">
-            <span>Audio Level</span>
-            <span>{fmt(seconds)} / {fmt(target)}</span>
+      {status === 'recording' && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+          <Button variant="danger" onClick={stop}>
+            <span style={{ width: 8, height: 8, background: '#fff', display: 'inline-block', borderRadius: 2 }} />
+            Stop · {fmt(seconds)}
+          </Button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 'var(--text-sm)', color: 'var(--danger)' }}>
+            <span style={{
+              width: 8, height: 8, borderRadius: 999, background: 'var(--danger)',
+              animation: 'vv-pulse 1s ease-in-out infinite',
+            }} />
+            Recording
           </div>
-          <div className="speak-level-track">
-            <div className="speak-level-fill" style={{ width: `${Math.min(100, level)}%` }} />
+          <style>{`@keyframes vv-pulse { 0%,100%{opacity:1} 50%{opacity:.3} }`}</style>
+          {/* Mini waveform */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 2, marginLeft: 'auto' }}>
+            {Array.from({ length: 24 }).map((_, i) => (
+              <span key={i} style={{
+                width: 2, height: 22,
+                background: 'var(--primary)', borderRadius: 999,
+                transform: `scaleY(${(4 + Math.abs(Math.sin(seconds * 0.7 + i * 0.4)) * 18) / 22})`,
+                transformOrigin: 'bottom', transition: 'transform .2s',
+              }} />
+            ))}
           </div>
         </div>
+      )}
 
-        {status === 'done' && (
+      {status === 'done' && (
+        <div>
+          {playbackUrl && (
+            <div style={{ marginBottom: 12, padding: 10, background: 'var(--bg)', borderRadius: 8 }}>
+              <audio controls src={playbackUrl} style={{ width: '100%', height: 36 }} />
+            </div>
+          )}
+          <div style={{ marginBottom: 8 }}>
+            <span style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+              Optional — type a transcript
+            </span>
+          </div>
           <textarea
-            className="hw-textarea"
-            rows={3}
-            value={res?.transcript || ''}
+            className="input" rows={3} value={res?.transcript || ''}
             onChange={e => update({ transcript: e.target.value })}
             disabled={readOnly}
-            placeholder="Optional transcript..."
-            style={{ minHeight: 92, maxWidth: 420 }}
+            placeholder="Type what you said…"
+            style={{ fontSize: 'var(--text-sm)' }}
           />
-        )}
-      </div>
-
-      {!readOnly && (
-        <div className="speak-actions">
-          <button type="button" className="speak-reset" onClick={reset}>
-            <Icon.refresh size={14} /> Reset
-          </button>
-          <span style={{ color: '#5c7585', fontSize: 'var(--text-xs)', fontWeight: 700 }}>
-            {status === 'recording' ? 'Recording now' : status === 'done' ? 'Ready to submit' : 'Waiting to record'}
-          </span>
+          {!readOnly && (
+            <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+              <Button variant="ghost" size="sm" onClick={reset}>Re-record</Button>
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -512,12 +656,26 @@ function orderArrowStyle(disabled) {
 }
 
 /* ─── 6. ERROR CORRECTION ──────────────────────────────────── */
+const FIX_MAX_TRIES = 5;
+
 function FixPlayer({ ex, res, update, readOnly }) {
   const text = res?.text ?? ex.errorText;
   const corrected = (ex.correctedText || '').trim().toLowerCase().replace(/\s+/g, ' ');
   const current = (text || '').trim().toLowerCase().replace(/\s+/g, ' ');
   const isFixed = corrected && current === corrected;
   const hasChanged = text !== ex.errorText;
+  const attempts = res?.fixAttempts || 0;
+  const lastTried = res?.fixLastTried || '';
+  const revealed = !!ex.correctedText && attempts >= FIX_MAX_TRIES;
+
+  // Count a try when the student checks a changed-but-still-wrong fix. Identical
+  // consecutive submissions aren't double-counted. After FIX_MAX_TRIES, reveal the
+  // correct version.
+  const check = () => {
+    if (readOnly || isFixed || revealed || !hasChanged) return;
+    if (current === lastTried) return;
+    update({ fixAttempts: attempts + 1, fixLastTried: current });
+  };
 
   return (
     <div>
@@ -534,13 +692,19 @@ function FixPlayer({ ex, res, update, readOnly }) {
           <Icon.spark size={11} /> {ex.hint}
         </div>
       )}
+      {!readOnly && !isFixed && !revealed && !!ex.correctedText && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10, padding: '6px 10px', background: 'var(--accent-subtle)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-xs)', color: 'var(--accent-deep)' }}>
+          <Icon.info size={13} />
+          <span>Edit the text, then press Check. The correct version is shown after {FIX_MAX_TRIES} tries.</span>
+        </div>
+      )}
       <textarea
         className="input" rows={4} value={text}
         onChange={e => update({ text: e.target.value })}
         disabled={readOnly}
         style={{ fontSize: 'var(--text-sm)', lineHeight: 1.75 }}
       />
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 10 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 10, gap: 10 }}>
         <span style={{ fontSize: 'var(--text-xs)', color: 'var(--faint)' }}>
           Edit the text above to fix the errors.
         </span>
@@ -550,6 +714,24 @@ function FixPlayer({ ex, res, update, readOnly }) {
           </Pill>
         )}
       </div>
+      {!readOnly && !isFixed && !revealed && !!ex.correctedText && (
+        <Button variant="ghost" size="sm" onClick={check} disabled={!hasChanged || current === lastTried} style={{ marginTop: 8 }}>
+          Check my fix
+        </Button>
+      )}
+      {!isFixed && !revealed && attempts > 0 && (
+        <div style={{ marginTop: 10, fontSize: 'var(--text-xs)', color: 'var(--warning)' }}>
+          Not fixed yet — keep editing. ({attempts}/{FIX_MAX_TRIES})
+        </div>
+      )}
+      {revealed && !isFixed && (
+        <div style={{ marginTop: 12, padding: '10px 14px', borderRadius: 'var(--radius-sm)', background: 'var(--success-bg)' }}>
+          <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--success)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>
+            Correct version (shown after {FIX_MAX_TRIES} tries)
+          </div>
+          <div style={{ fontSize: 'var(--text-sm)', lineHeight: 1.7, color: 'var(--text)' }}>{ex.correctedText}</div>
+        </div>
+      )}
     </div>
   );
 }
@@ -617,26 +799,21 @@ function FlashPlayer({ ex, res, update, readOnly }) {
         </div>
       </div>
 
-      {/* Main actions: 2 clear buttons */}
-      <div style={{ display: 'flex', gap: 8, marginTop: 14, marginBottom: 8 }}>
-        <Button variant="ghost" size="sm" onClick={() => setFlipped(f => !f)} style={{ flex: 1 }}>
-          <Icon.refresh size={12} /> Flip card
-        </Button>
-        {!readOnly && (
-          <Button variant="primary" size="sm" onClick={mark} style={{ flex: 1 }}>
-            <Icon.check size={12} /> I learned this
-          </Button>
-        )}
-      </div>
-
-      {/* Navigation */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
+      {/* Controls */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 14, gap: 8 }}>
         <Button variant="ghost" size="sm" onClick={prev} disabled={idx === 0}>
           <Icon.arrowL size={12} /> Previous
         </Button>
-        <Button variant="ghost" size="sm" onClick={next} disabled={idx === pairs.length - 1}>
-          Next <Icon.arrowR size={12} />
-        </Button>
+        <div style={{ display: 'flex', gap: 8 }}>
+          {flipped && !readOnly && (
+            <Button variant="primary" size="sm" onClick={mark}>
+              <Icon.check size={12} /> Learned
+            </Button>
+          )}
+          <Button variant="ghost" size="sm" onClick={next} disabled={idx === pairs.length - 1}>
+            Next <Icon.arrowR size={12} />
+          </Button>
+        </div>
       </div>
     </div>
   );
@@ -648,8 +825,14 @@ function FlashPlayer({ ex, res, update, readOnly }) {
  * HomeworkStepThrough — renders exercises one at a time with progress bar + navigation.
  * Used in the student dashboard to walk through a homework set.
  */
-export function HomeworkStepThrough({ exercises, responses, onResponse, onSubmit, readOnly = false, homework = null }) {
+export function HomeworkStepThrough({ exercises, responses, onResponse, onSubmit, onSave, initialExerciseId, readOnly = false }) {
   const [currentIdx, setCurrentIdx] = useState(0);
+
+  useEffect(() => {
+    if (!initialExerciseId || !Array.isArray(exercises)) return;
+    const idx = exercises.findIndex(ex => ex.id === initialExerciseId);
+    if (idx >= 0) setCurrentIdx(idx);
+  }, [initialExerciseId]);
 
   if (!exercises || exercises.length === 0) return null;
 
@@ -657,107 +840,55 @@ export function HomeworkStepThrough({ exercises, responses, onResponse, onSubmit
   const current = exercises[currentIdx];
   const currentRes = responses?.[current?.id] || {};
   const progress = ((currentIdx + 1) / total) * 100;
-  const completedCount = exercises.filter(ex => hasCompletedResponse(ex, responses?.[ex.id])).length;
-  const canSubmit = readOnly || completedCount === total;
-  const estimatedMinutes = homework?.estimatedTime || homework?.estimatedMinutes || Math.max(8, total * 4);
 
   const goPrev = () => setCurrentIdx(i => Math.max(i - 1, 0));
   const goNext = () => setCurrentIdx(i => Math.min(i + 1, total - 1));
   const isLast = currentIdx === total - 1;
 
   return (
-    <div className="hw-workspace">
-      <div className="hw-player-head">
-        <div>
-          <div className="hw-player-kicker">Level B2 / Academic Practice</div>
-          <div className="hw-player-title">{homework?.title || 'Homework Workspace'}</div>
-        </div>
-        <div className="hw-time-pill">
-          <Icon.practice size={15} /> {estimatedMinutes} min focus
-        </div>
-      </div>
-
-      <div className="hw-audio-strip" aria-label="Homework activity player">
-        <div className="hw-play-orb">
-          <Icon.arrowR size={22} />
-        </div>
-        <div>
-          <div className="hw-strip-label">Task focus: {exerciseLabel(current.type)}</div>
-          <div className="hw-wave" aria-hidden="true">
-            {Array.from({ length: 54 }).map((_, i) => (
-              <span
-                key={i}
-                className={i <= Math.round((currentIdx + 1) / total * 54) ? 'is-hot' : ''}
-                style={{ height: 8 + Math.abs(Math.sin(i * 0.65)) * 24 }}
-              />
-            ))}
-          </div>
-        </div>
-        <div className="hw-strip-progress">
-          <span>{String(currentIdx + 1).padStart(2, '0')} / {String(total).padStart(2, '0')}</span>
-          <div className="hw-volume-track"><div className="hw-volume-fill" /></div>
+    <div className="student-step-through">
+      {/* Progress bar */}
+      <div className="student-step-progress">
+        <span style={{ fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--text-2)', whiteSpace: 'nowrap' }}>
+          Exercise {currentIdx + 1} / {total}
+        </span>
+        <div style={{ flex: 1, height: 5, background: 'var(--divider)', borderRadius: 999, overflow: 'hidden' }}>
+          <div style={{ width: '100%', height: '100%', background: 'linear-gradient(90deg, var(--primary), var(--accent))', borderRadius: 999, transform: `scaleX(${progress / 100})`, transformOrigin: 'left', transition: 'transform 0.3s var(--ease)' }} />
         </div>
       </div>
 
-      <div className="hw-stage-grid">
-        <section className="hw-question-card">
-          <div className="hw-question-top">
-            <span className="hw-question-number">{currentIdx + 1}</span>
-            <div className="hw-question-type">{exerciseLabel(current.type)}</div>
-          </div>
-          <ExercisePlayer
-            exercise={current}
-            response={currentRes}
-            onResponse={(updated) => onResponse?.(current.id, updated)}
-            readOnly={readOnly}
-          />
-        </section>
+      {/* Current exercise */}
+      <Card small className="student-exercise-mini-card" style={{ marginBottom: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+          <ExTypeBadge typeId={current.type} size="md" />
+        </div>
+        <ExercisePlayer
+          exercise={current}
+          response={currentRes}
+          onResponse={(updated) => onResponse?.(current.id, updated)}
+          readOnly={readOnly}
+        />
+      </Card>
 
-        <aside className="hw-side-card">
-          <div className="hw-side-label">Progress</div>
-          <div className="hw-step-list">
-            {exercises.map((ex, i) => {
-              const done = hasCompletedResponse(ex, responses?.[ex.id]);
-              return (
-                <div
-                  key={ex.id || i}
-                  className={'hw-step-dot' + (i === currentIdx ? ' is-current' : '') + (done ? ' is-done' : '')}
-                >
-                  <span>{done ? <Icon.check size={11} /> : i + 1}</span>
-                  <span>{exerciseLabel(ex.type)}</span>
-                </div>
-              );
-            })}
-          </div>
-          <div className="hw-progress-track">
-            <div className="hw-progress-fill" style={{ width: `${progress}%` }} />
-          </div>
-          <p style={{ margin: '14px 0 0', color: '#5c7585', fontSize: 'var(--text-xs)', lineHeight: 1.55 }}>
-            Complete each response, then submit it for teacher review.
-          </p>
-        </aside>
-      </div>
-
-      <div className="hw-workspace-footer">
-        <div style={{ display: 'flex', gap: 8 }}>
-          <button type="button" className="hw-nav-button" onClick={goPrev} disabled={currentIdx === 0}>
-            <Icon.arrowL size={12} /> Previous
-          </button>
-          {!isLast && (
-            <button type="button" className="hw-nav-button" onClick={goNext}>
+      {/* Navigation */}
+      <div className="student-step-actions">
+        <Button variant="ghost" size="sm" onClick={goPrev} disabled={currentIdx === 0}>
+          <Icon.arrowL size={12} /> Previous
+        </Button>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+          <Button variant="ghost" size="sm" onClick={() => onSave?.(current?.id)} disabled={readOnly}>
+            <Icon.check size={12} /> Save progress
+          </Button>
+          {isLast ? (
+            <Button variant="primary" onClick={onSubmit} disabled={readOnly}>
+              <Icon.check size={13} /> Submit Homework
+            </Button>
+          ) : (
+            <Button variant="primary" size="sm" onClick={goNext}>
               Next <Icon.arrowR size={12} />
-            </button>
+            </Button>
           )}
         </div>
-        {isLast ? (
-          <button type="button" className="hw-submit-button" onClick={onSubmit} disabled={!canSubmit}>
-            <Icon.check size={13} /> Submit Homework
-          </button>
-        ) : (
-          <span style={{ color: '#5c7585', fontSize: 'var(--text-xs)', fontWeight: 700, alignSelf: 'center' }}>
-            {completedCount}/{total} complete
-          </span>
-        )}
       </div>
     </div>
   );

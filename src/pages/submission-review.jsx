@@ -6,10 +6,11 @@ import { Icon, Card, SectionHeader, Pill, Button, Avatar } from '../components/s
 import { callAI } from '../components/shared.jsx';
 import { parseAiJson } from '../lib/ai-helpers.js';
 import {
-  getAllSubmissions, getHomework, getReviews, saveReview,
+  getAllSubmissions, getHomework, getReviews, saveReview, deleteReview,
   getDiagnoses, getErrorBank, promoteErrorToLongTerm, markErrorSolved, saveProgressNote,
-  getStudent,
+  getStudent, sendMessage,
 } from '../lib/workflow.js';
+import { createSignedAudioUrl } from '../lib/supabase-db.js';
 
 export default function SubmissionReview({ submissionId, students, onNavigate }) {
   const [submission, setSubmission] = useState(null);
@@ -22,6 +23,7 @@ export default function SubmissionReview({ submissionId, students, onNavigate })
   const [aiComparing, setAiComparing] = useState(false);
   const [aiComparison, setAiComparison] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [audioUrls, setAudioUrls] = useState({}); // exId → playable URL (signed for Storage paths)
 
   useEffect(() => { load(); }, [submissionId]);
 
@@ -30,6 +32,16 @@ export default function SubmissionReview({ submissionId, students, onNavigate })
     const sub = allSubs.find(s => s.id === submissionId);
     if (!sub) return;
     setSubmission(sub);
+
+    // Resolve a playable URL for each recorded response: base64 inline plays as-is,
+    // a Storage path needs a short-lived signed URL, a stored URL is used directly.
+    const urls = {};
+    for (const [exId, r] of Object.entries(sub.responses || {})) {
+      if (r?.audioB64) urls[exId] = r.audioB64;
+      else if (r?.audioUrl) urls[exId] = r.audioUrl;
+      else if (r?.audioPath) { const u = await createSignedAudioUrl(r.audioPath); if (u) urls[exId] = u; }
+    }
+    setAudioUrls(urls);
 
     const [hw, revs] = await Promise.all([
       getHomework(sub.studentId),
@@ -45,7 +57,7 @@ export default function SubmissionReview({ submissionId, students, onNavigate })
         whatImproved: rev.whatImproved || '',
         activeErrors: rev.activeErrors?.join('\n') || '',
         newErrors: rev.newErrors?.join('\n') || '',
-        corrections: rev.corrections || [{ original: '', improved: '', note: '' }],
+        corrections: (rev.corrections || []).map(c => ({ ...c, id: c.id || Math.random().toString(36).slice(2, 9) })),
         overallNote: rev.overallNote || '',
         score: rev.score ?? '',
         redoRequired: rev.redoRequired || false,
@@ -78,30 +90,65 @@ HOMEWORK OBJECTIVE: ${homework.objective || homework.title}
 STUDENT SUBMISSION:
 ${submission.content || '(no text content)'}
 
-Compare the submission to the diagnosis. Return JSON:
+Compare the submission to the diagnosis.
+
+Write "teacherFeedback" as a warm, specific note spoken directly to ${student?.name || 'the student'}:
+reference what they ACTUALLY wrote, name one concrete strength and the single most
+important fix, and end with a clear next step.
+
+Extract up to 5 key errors and suggest corrections.
+
+Return JSON:
 {
   "didStudentImprove": "brief assessment",
-  "correctedErrors": ["errors the student fixed"],
   "activeErrors": ["errors still present"],
   "newErrors": ["new errors not in the diagnosis"],
   "redoRequired": false,
   "continuationFocus": "what to focus on next class",
-  "teacherFeedback": "feedback paragraph to send to student"
+  "teacherFeedback": "feedback paragraph to send to student",
+  "corrections": [
+    { "original": "error text", "improved": "corrected text", "note": "brief explanation" }
+  ]
 }`;
 
     try {
-      const data = await callAI(prompt, { max_tokens: 2000 });
+      // Warmer temperature → more human teacher voice in the feedback.
+      const data = await callAI(prompt, { max_tokens: 2500, temperature: 0.7 });
       const raw = data.content?.map(b => b.text || '').join('') || '';
       const parsed = parseAiJson(raw);
       setAiComparison(parsed);
-      setForm(f => ({
-        ...f,
-        whatImproved: parsed.didStudentImprove || '',
-        activeErrors: (parsed.activeErrors || []).join('\n'),
-        newErrors: (parsed.newErrors || []).join('\n'),
-        overallNote: parsed.teacherFeedback || '',
-        redoRequired: parsed.redoRequired || false,
-      }));
+      
+      if (parsed) {
+        setForm(f => {
+          // Merge corrections: If an AI correction matches an existing 'original' text, update it. Otherwise, add it.
+          const newAiCorrections = (parsed.corrections || []).map(ac => ({
+            ...ac,
+            id: ac.id || Math.random().toString(36).slice(2, 9)
+          }));
+
+          const mergedCorrections = [...f.corrections];
+          newAiCorrections.forEach(ac => {
+            const existingIdx = mergedCorrections.findIndex(c => 
+              c.original?.trim().toLowerCase() === ac.original?.trim().toLowerCase()
+            );
+            if (existingIdx >= 0) {
+              mergedCorrections[existingIdx] = { ...mergedCorrections[existingIdx], ...ac };
+            } else {
+              mergedCorrections.push(ac);
+            }
+          });
+
+          return {
+            ...f,
+            whatImproved: parsed.didStudentImprove || f.whatImproved,
+            activeErrors: (parsed.activeErrors || []).join('\n'),
+            newErrors: (parsed.newErrors || []).join('\n'),
+            overallNote: parsed.teacherFeedback || f.overallNote,
+            redoRequired: parsed.redoRequired ?? f.redoRequired,
+            corrections: mergedCorrections,
+          };
+        });
+      }
     } catch (e) {
       window.toast?.(`AI comparison failed: ${e.message}`, 'warn');
     }
@@ -131,8 +178,21 @@ Compare the submission to the diagnosis. Return JSON:
       await saveProgressNote({ studentId: submission?.studentId, sourceType: 'review', sourceId: rev.id, note: form.whatImproved });
     }
 
+    if (form.sendFeedback && submission?.studentId) {
+      await sendMessage({
+        fromRole: 'teacher',
+        fromName: 'Teacher',
+        toRole: 'student',
+        toStudentId: submission.studentId,
+        type: 'homework-review',
+        homeworkId: homework?.id,
+        reviewId: rev.id,
+        body: `Your homework review is ready: ${homework?.title || 'Homework'}.\n\n${form.overallNote || form.whatImproved || 'Open Homework to read your teacher review.'}`,
+      });
+    }
+
     setSaving(false);
-    window.toast?.('Review saved!', 'ok');
+    window.toast?.(form.sendFeedback ? 'Review saved and student notified.' : 'Review saved.', 'ok');
     setExistingReview(rev);
   }
 
@@ -140,13 +200,36 @@ Compare the submission to the diagnosis. Return JSON:
 
   const activeErrorBank = errors.filter(e => e.status === 'active');
 
+  // Speaking recordings live in submission.responses keyed by exercise id.
+  // Map each one to its prompt from the homework activities for a readable label.
+  const activityById = Object.fromEntries(
+    (homework?.activities || []).map(a => [a.id, a])
+  );
+  const audioResponses = Object.entries(submission.responses || {})
+    .filter(([exId, res]) => res && (audioUrls[exId] || res.audioB64))
+    .map(([exId, res], i) => {
+      const ex = activityById[exId];
+      const label = ex?.prompt || ex?.question || ex?.title || `Speaking response ${i + 1}`;
+      return { exId, res, label, url: audioUrls[exId] || res.audioB64 };
+    });
+
+  function addErrorToCorrections(err) {
+    setForm(f => ({
+      ...f,
+      corrections: [
+        ...f.corrections, 
+        { id: Math.random().toString(36).slice(2, 9), original: err.error, improved: err.correct, note: 'Error Bank suggestion' }
+      ],
+    }));
+  }
+
   return (
     <div style={{ maxWidth: 960, margin: '0 auto', padding: '28px 20px' }}>
       <button onClick={() => onNavigate('submissions')} style={backStyle}><Icon.arrowL size={13} /> Back to submissions</button>
       <h1 style={S.headline}>Submission Review</h1>
       {student && <p style={S.sub}>{student.name} · {homework?.title}</p>}
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginTop: 20 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 20, marginTop: 20 }}>
         {/* Left: submission + diagnosis */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           {/* Student submission */}
@@ -155,6 +238,26 @@ Compare the submission to the diagnosis. Return JSON:
             <div style={{ marginTop: 10, padding: 12, background: 'var(--bg)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-sm)', lineHeight: 1.7, minHeight: 100, whiteSpace: 'pre-wrap' }}>
               {submission.content || <em style={{ color: 'var(--muted)' }}>No text content submitted.</em>}
             </div>
+
+            {/* Speaking recordings — one audio player per recorded response */}
+            {audioResponses.length > 0 && (
+              <div style={{ marginTop: 14, display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {audioResponses.map(({ exId, res, label, url }) => (
+                  <div key={exId}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--accent)', marginBottom: 6 }}>
+                      <Icon.mic size={13} /> {label}
+                    </div>
+                    <audio controls src={url} style={{ width: '100%', height: 38 }} />
+                    {res.transcript && (
+                      <div style={{ marginTop: 6, padding: 10, background: 'var(--bg)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-sm)', lineHeight: 1.6, color: 'var(--text-2)', fontStyle: 'italic', whiteSpace: 'pre-wrap' }}>
+                        {res.transcript}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+
             <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: 8 }}>
               Submitted: {new Date(submission.submittedAt).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}
             </div>
@@ -171,13 +274,13 @@ Compare the submission to the diagnosis. Return JSON:
             </Card>
           )}
 
-          {/* Diagnosis priorities */}
-          {diagnosis?.sections?.priorityDiagnosis?.content && (
+          {/* Diagnosis priorities (content is sometimes an object, not an array — guard before .map) */}
+          {Array.isArray(diagnosis?.sections?.priorityDiagnosis?.content) && diagnosis.sections.priorityDiagnosis.content.length > 0 && (
             <Card style={{ padding: 18 }}>
               <SectionHeader title="Original Diagnosis Priorities" icon={<Icon.diagnose size={15} />} />
               <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {diagnosis.sections.priorityDiagnosis.content.map((p, i) => (
-                  <div key={i} style={{ padding: 10, background: 'var(--bg)', borderRadius: 'var(--radius-sm)', borderLeft: `3px solid ${i === 0 ? 'var(--danger)' : i === 1 ? 'var(--warning)' : 'var(--info)'}` }}>
+                  <div key={i} style={{ padding: 10, background: 'var(--bg)', borderRadius: 'var(--radius-sm)' }}>
                     <div style={{ fontWeight: 600, fontSize: 'var(--text-sm)' }}>#{p.rank} {p.area}</div>
                     <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-2)', marginTop: 2 }}>{p.whatToImprove}</div>
                   </div>
@@ -192,11 +295,16 @@ Compare the submission to the diagnosis. Return JSON:
               <SectionHeader title="Active Error Bank" icon={<Icon.warning size={15} />} />
               <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 6 }}>
                 {activeErrorBank.slice(0, 5).map(err => (
-                  <div key={err.id} style={{ fontSize: 'var(--text-xs)', display: 'flex', alignItems: 'center', gap: 8, padding: '5px 8px', background: 'var(--danger-bg)', borderRadius: 'var(--radius-sm)' }}>
+                  <div key={err.id} style={{ fontSize: 'var(--text-xs)', display: 'flex', alignItems: 'center', gap: 8, padding: '5px 8px', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', cursor: 'pointer' }}
+                    onClick={() => addErrorToCorrections(err)}
+                    title="Click to add to corrections"
+                  >
                     <span style={{ color: 'var(--danger)', fontWeight: 600 }}>{err.error}</span>
                     <span style={{ color: 'var(--muted)' }}>→</span>
                     <span style={{ color: 'var(--success)' }}>{err.correct}</span>
-                    <Button variant="ghost" size="sm" style={{ marginLeft: 'auto', fontSize: 10 }} onClick={async () => { await markErrorSolved(submission.studentId, err.id); load(); }}>Solved</Button>
+                    <Button variant="ghost" size="sm" style={{ marginLeft: 'auto', fontSize: 10 }} onClick={async (e) => { e.stopPropagation(); await markErrorSolved(submission.studentId, err.id); load(); }}>
+                      Solved
+                    </Button>
                   </div>
                 ))}
               </div>
@@ -240,8 +348,43 @@ Compare the submission to the diagnosis. Return JSON:
               <Field label="Overall feedback to student">
                 <textarea className="input" rows={4} value={form.overallNote} onChange={e => setForm(f => ({ ...f, overallNote: e.target.value }))} placeholder="Feedback the student will see…" />
               </Field>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                <Field label="Score (0–10)">
+
+              {/* Interactive Corrections UI */}
+              <div style={{ marginBottom: 12 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                  <label style={fieldLabel}>Corrections</label>
+                  <Button variant="ghost" size="sm" onClick={() => setForm(f => ({ ...f, corrections: [...f.corrections, { id: Math.random().toString(36).slice(2, 9), original: '', improved: '', note: '' }] }))}>
+                    <Icon.plus size={12} /> Add
+                  </Button>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {form.corrections.map((c, i) => (
+                    <div key={c.id} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: 6 }}>
+                      <input className="input" placeholder="Original" value={c.original} onChange={e => {
+                        const next = form.corrections.map((corr, idx) => idx === i ? { ...corr, original: e.target.value } : corr);
+                        setForm(f => ({ ...f, corrections: next }));
+                      }} />
+                      <input className="input" placeholder="Improved" value={c.improved} onChange={e => {
+                        const next = form.corrections.map((corr, idx) => idx === i ? { ...corr, improved: e.target.value } : corr);
+                        setForm(f => ({ ...f, corrections: next }));
+                      }} />
+                      <Button variant="ghost" size="sm" onClick={() => {
+                        const next = form.corrections.filter((_, idx) => idx !== i);
+                        setForm(f => ({ ...f, corrections: next.length ? next : [{ id: Math.random().toString(36).slice(2, 9), original: '', improved: '', note: '' }] }));
+                      }}>
+                        <Icon.trash size={12} />
+                      </Button>
+                      <input className="input" placeholder="Note" value={c.note} onChange={e => {
+                        const next = form.corrections.map((corr, idx) => idx === i ? { ...corr, note: e.target.value } : corr);
+                        setForm(f => ({ ...f, corrections: next }));
+                      }} style={{ gridColumn: 'span 3' }} />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 10 }}>
+                <Field label="Teacher-only score (optional)">
                   <input className="input" type="number" min={0} max={10} step={0.5} value={form.score} onChange={e => setForm(f => ({ ...f, score: e.target.value }))} />
                 </Field>
                 <Field label="Redo required?">
@@ -261,7 +404,14 @@ Compare the submission to the diagnosis. Return JSON:
           <Button variant="primary" onClick={handleSave} disabled={saving} style={{ alignSelf: 'flex-start' }}>
             {saving ? 'Saving…' : 'Save Review' + (form.sendFeedback ? ' & Send Feedback' : '')}
           </Button>
-          {existingReview && <Pill tone="success" style={{ alignSelf: 'flex-start' }}>✓ Review saved</Pill>}
+          {existingReview && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+              <Pill tone="success">✓ Review saved</Pill>
+              <Button variant="ghost" size="sm" style={{ color: 'var(--danger)' }} onClick={async () => { if (confirm('Delete this teacher review?')) { await deleteReview(existingReview.id); window.toast?.('Review deleted.', 'info'); onNavigate('submissions'); } }}>
+                <Icon.trash size={12} /> Delete review
+              </Button>
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -277,6 +427,7 @@ function Field({ label, children }) {
   );
 }
 
-const EMPTY_FORM = { whatImproved: '', activeErrors: '', newErrors: '', corrections: [{ original: '', improved: '', note: '' }], overallNote: '', score: '', redoRequired: false, sendFeedback: true };
+const EMPTY_FORM = { whatImproved: '', activeErrors: '', newErrors: '', corrections: [{ id: Math.random().toString(36).slice(2, 9), original: '', improved: '', note: '' }], overallNote: '', score: '', redoRequired: false, sendFeedback: true };
 const backStyle = { background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)', fontSize: 'var(--text-sm)', display: 'flex', alignItems: 'center', gap: 4, marginBottom: 16, padding: 0, fontFamily: 'var(--font-ui)' };
+const fieldLabel = { fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em' };
 const S = { headline: { fontFamily: 'var(--font-display)', fontSize: 'var(--text-2xl)', fontWeight: 700, color: 'var(--accent-deep)', margin: '0 0 4px' }, sub: { fontSize: 'var(--text-sm)', color: 'var(--muted)' } };

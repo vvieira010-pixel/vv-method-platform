@@ -6,7 +6,17 @@ import { TweaksPanel, TweakSection, TweakRadio, TweakColor } from './components/
 import { Icon, Avatar, Button, Shell } from './components/shared.jsx';
 import { STUDENTS } from './data/students.jsx';
 import { seedStudentsIfEmpty, getStudents } from './lib/workflow.js';
-import './styles/design-system.css';
+import {
+  getSupabaseConfig,
+  parseSupabaseHashFragment,
+  parsePKCECode,
+  exchangePKCECode,
+  storeSupabaseSession,
+  readStoredSupabaseSession,
+  clearStoredSupabaseSession,
+  fetchSupabaseUser,
+} from './lib/supabase-storage.js';
+import { claimStudentByEmail, ensureProfile, setSessionRole } from './lib/supabase-db.js';
 
 // Lazy-loaded teacher pages
 const TeacherDashboard  = lazy(() => import('./pages/teacher-dashboard.jsx'));
@@ -23,6 +33,7 @@ const SubmissionReview  = lazy(() => import('./pages/submission-review.jsx'));
 const ErrorBankPage     = lazy(() => import('./pages/error-bank.jsx'));
 const ReportsPage       = lazy(() => import('./pages/reports.jsx'));
 const SettingsPage      = lazy(() => import('./pages/settings.jsx'));
+const ExerciseDemo      = lazy(() => import('./pages/exercise-demo.jsx'));
 const InboxPage         = lazy(() => import('./tools/tool-inbox.jsx'));
 
 export default function App() {
@@ -36,7 +47,113 @@ export default function App() {
     ...window.TWEAK_DEFAULTS,
   }));
   const [students, setStudents] = useState([]);
-  const [workspaceSearch, setWorkspaceSearch] = useState('');
+
+  // ── Supabase auth: handle implicit-flow hash redirect + restore stored session ──
+  useEffect(() => {
+    const { url, anonKey, isConfigured } = getSupabaseConfig();
+    if (!isConfigured) return;
+
+    /**
+     * Resolve auth payload from a verified Supabase user. A user who claims a
+     * roster row by email is a student. Otherwise ONLY the configured teacher
+     * email(s) get the teacher role — any other account (e.g. a self-registered
+     * or mistyped email) is rejected and signed out, so self-registration can
+     * never grant teacher access.
+     */
+    async function resolveAuth(accessToken, sbUser) {
+      const meta = sbUser?.user_metadata || {};
+      const email = sbUser?.email || '';
+      let claimed = null;
+      try { claimed = await claimStudentByEmail(email); } catch { /* fall through to the gate below */ }
+      if (claimed) {
+        setSessionRole('student');
+        await ensureProfile('student', { displayName: meta.display_name || email, studentUuid: claimed.id });
+        return { role: 'student', studentId: claimed.local_id || claimed.id, email };
+      }
+      // No roster row claimed → only known teacher email(s) may be a teacher.
+      const teacherEmails = String(import.meta.env.VITE_TEACHER_EMAIL || 'vvieira010x@gmail.com')
+        .split(',').map(e => e.trim().toLowerCase()).filter(Boolean);
+      if (teacherEmails.includes(email.trim().toLowerCase())) {
+        setSessionRole('teacher');
+        await ensureProfile('teacher', { displayName: meta.display_name || email });
+        return { role: 'teacher', email, displayName: meta.display_name || email };
+      }
+      // Unauthorized: not a roster student and not the teacher. Clear the session so the
+      // user returns to the login screen with a notice instead of landing in the teacher app.
+      try {
+        localStorage.setItem('vv:auth_notice', "This email isn't set up for access yet. Ask your teacher to add you to the roster, then register again.");
+      } catch { /* storage unavailable */ }
+      clearStoredSupabaseSession();
+      setSessionRole('');
+      return null;
+    }
+
+    // ── PKCE flow: ?code= in query string (modern Supabase default) ──
+    async function handlePKCE() {
+      const code = parsePKCECode(window.location.search);
+      if (!code) return false;
+      // Clean the URL immediately so the code can't be replayed.
+      history.replaceState(null, '', window.location.pathname);
+      try {
+        const session = await exchangePKCECode(url, anonKey, code);
+        const sbUser = session.user || await fetchSupabaseUser(url, anonKey, session.access_token);
+        storeSupabaseSession({
+          access_token: session.access_token,
+          refresh_token: session.refresh_token || '',
+          expires_at: session.expires_at || Math.floor(Date.now() / 1000) + (session.expires_in || 3600),
+          user: sbUser,
+        });
+        const payload = await resolveAuth(session.access_token, sbUser);
+        if (payload) setAuth(payload);
+      } catch {
+        clearStoredSupabaseSession();
+      }
+      return true;
+    }
+
+    // ── Implicit flow: #access_token= in hash (legacy / fallback) ──
+    async function handleHash() {
+      const fragment = parseSupabaseHashFragment(window.location.hash);
+      if (!fragment?.access_token) return false;
+
+      // Always clean the URL first so the token isn't bookmarked or leaked.
+      history.replaceState(null, '', window.location.pathname + window.location.search);
+
+      try {
+        // Validate by fetching the actual user from Supabase — rejects forged tokens.
+        const sbUser = await fetchSupabaseUser(url, anonKey, fragment.access_token);
+        storeSupabaseSession({
+          access_token: fragment.access_token,
+          refresh_token: fragment.refresh_token,
+          expires_at: fragment.expires_at || Math.floor(Date.now() / 1000) + fragment.expires_in,
+          user: sbUser,
+        });
+        const payload = await resolveAuth(fragment.access_token, sbUser);
+        if (payload) setAuth(payload);
+      } catch {
+        // Token invalid or Supabase unreachable — do not sign in.
+        clearStoredSupabaseSession();
+      }
+      return true;
+    }
+
+    async function restoreSession() {
+      const stored = readStoredSupabaseSession();
+      if (!stored?.access_token) return;
+      try {
+        // Re-validate the stored token so a stale or tampered session is rejected.
+        const sbUser = await fetchSupabaseUser(url, anonKey, stored.access_token);
+        const payload = await resolveAuth(stored.access_token, sbUser);
+        if (payload) setAuth(payload);
+      } catch {
+        clearStoredSupabaseSession();
+      }
+    }
+
+    handlePKCE().then(wasPKCE => {
+      if (!wasPKCE) handleHash().then(wasHash => { if (!wasHash) restoreSession(); });
+    });
+  }, []);
 
   // Seed students from hardcoded list on first run, then load live roster
   useEffect(() => {
@@ -80,14 +197,21 @@ export default function App() {
   };
 
   const handleSignIn = (payload) => setAuth(payload);
-  const handleSignOut = () => { setAuth(null); setView('dashboard'); setViewParams({}); };
+  const handleSignOut = () => {
+    clearStoredSupabaseSession();
+    setSessionRole('');
+    setAuth(null);
+    setView('dashboard');
+    setViewParams({});
+  };
 
   if (!auth) {
     return <LoginScreen onSignIn={handleSignIn} initialMode="choose" />;
   }
 
   if (auth.role === 'student') {
-    const student = students.find(s => s.id === auth.studentId) || students[0];
+    const student = students.find(s => s.id === auth.studentId);
+    if (!student) return <PageLoader />;
     return (
       <ErrorBoundary label="Dashboard unavailable">
         <StudentDashboard student={student} onSignOut={handleSignOut} />
@@ -106,6 +230,7 @@ export default function App() {
     { id: 'inbox',        label: 'Inbox',        icon: <Icon.inbox size={16} /> },
     { id: 'error-bank',   label: 'Error Bank',   icon: <Icon.warning size={16} /> },
     { id: 'reports',      label: 'Reports',      icon: <Icon.progress size={16} /> },
+    { id: 'exercises',    label: 'Exercises',    icon: <Icon.doc size={16} /> },
     { id: 'settings',     label: 'Settings',     icon: <Icon.settings size={16} /> },
   ];
 
@@ -119,17 +244,10 @@ export default function App() {
 
   return (
     <>
-      <Shell
-        tabs={teacherTabs}
-        active={view}
-        onTab={(id) => navigate(id)}
-        rightSlot={rightSlot}
-        searchValue={workspaceSearch}
-        onSearchChange={setWorkspaceSearch}
-      >
+      <Shell tabs={teacherTabs} active={view} onTab={(id) => navigate(id)} rightSlot={rightSlot}>
         <ErrorBoundary label="Page unavailable">
           <Suspense fallback={<PageLoader />}>
-            {renderTeacherPage(view, viewParams, { students, navigate, workspaceSearch })}
+            {renderTeacherPage(view, viewParams, { students, navigate })}
           </Suspense>
         </ErrorBoundary>
       </Shell>
@@ -140,26 +258,26 @@ export default function App() {
 }
 
 function renderTeacherPage(view, params, ctx) {
-  const { students, navigate, workspaceSearch } = ctx;
+  const { students, navigate } = ctx;
 
   switch (view) {
     case 'dashboard':
       return <TeacherDashboard students={students} onNavigate={navigate} />;
 
     case 'students':
-      return <StudentsPage students={students} onNavigate={navigate} workspaceQuery={workspaceSearch} />;
+      return <StudentsPage students={students} onNavigate={navigate} />;
 
     case 'students:profile':
       return <StudentProfile studentId={params.studentId} students={students} onNavigate={navigate} />;
 
     case 'calendar':
-      return <CalendarPage students={students} onNavigate={navigate} workspaceQuery={workspaceSearch} />;
+      return <CalendarPage students={students} onNavigate={navigate} />;
 
     case 'calendar:class':
       return <ClassRecord classEventId={params.classEventId} students={students} onNavigate={navigate} />;
 
     case 'diagnostics':
-      return <DiagnosticsPage students={students} onNavigate={navigate} workspaceQuery={workspaceSearch} />;
+      return <DiagnosticsPage students={students} onNavigate={navigate} />;
 
     case 'diagnostics:create':
       return <DiagnosticCreate
@@ -171,7 +289,7 @@ function renderTeacherPage(view, params, ctx) {
       />;
 
     case 'homework':
-      return <HomeworkPage students={students} onNavigate={navigate} workspaceQuery={workspaceSearch} />;
+      return <HomeworkPage students={students} onNavigate={navigate} />;
 
     case 'homework:create':
       return <HomeworkCreate
@@ -182,7 +300,7 @@ function renderTeacherPage(view, params, ctx) {
       />;
 
     case 'submissions':
-      return <SubmissionsPage students={students} onNavigate={navigate} workspaceQuery={workspaceSearch} />;
+      return <SubmissionsPage students={students} onNavigate={navigate} />;
 
     case 'submissions:review':
       return <SubmissionReview
@@ -192,16 +310,23 @@ function renderTeacherPage(view, params, ctx) {
       />;
 
     case 'inbox':
-      return <InboxPage students={students} onNavigate={navigate} workspaceQuery={workspaceSearch} />;
+      return <InboxPage students={students} onNavigate={navigate} />;
 
     case 'error-bank':
-      return <ErrorBankPage students={students} onNavigate={navigate} workspaceQuery={workspaceSearch} />;
+      return <ErrorBankPage students={students} onNavigate={navigate} />;
 
     case 'reports':
-      return <ReportsPage students={students} onNavigate={navigate} workspaceQuery={workspaceSearch} />;
+      return <ReportsPage students={students} onNavigate={navigate} />;
 
     case 'settings':
       return <SettingsPage onNavigate={navigate} />;
+
+    case 'exercises':
+      return <HomeworkCreate
+        students={students}
+        onNavigate={navigate}
+        initialStep={2}
+      />;
 
     default:
       return <TeacherDashboard students={students} onNavigate={navigate} />;

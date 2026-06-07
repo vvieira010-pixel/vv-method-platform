@@ -7,6 +7,19 @@ import { getHomework, saveHomework, deleteHomework, getSubmissions, getDiagnoses
 import { isStructuredExercise, autoGrade, exercisePreview } from '../lib/exercise-types.js';
 import { ExTypeBadge } from '../components/exercise-editor.jsx';
 import { ExercisePlayer } from '../components/exercise-player.jsx';
+import { createSignedAudioUrl } from '../lib/supabase-db.js';
+
+/** Plays a recorded speaking response — base64 inline, a stored URL, or a signed Storage path. */
+function SpeakResponseAudio({ response }) {
+  const [url, setUrl] = useState(response?.audioB64 || response?.audioUrl || null);
+  useEffect(() => {
+    if (response?.audioB64) { setUrl(response.audioB64); return; }
+    if (response?.audioUrl) { setUrl(response.audioUrl); return; }
+    if (response?.audioPath) { createSignedAudioUrl(response.audioPath).then(u => { if (u) setUrl(u); }); }
+  }, [response?.audioB64, response?.audioUrl, response?.audioPath]);
+  if (!url) return null;
+  return <audio controls src={url} style={{ width: '100%', height: 36, marginTop: 6 }} />;
+}
 
 const TYPES = [
   { id: 'grammar',    label: 'Grammar'    },
@@ -351,7 +364,7 @@ export default function ToolHomework({ student, students = [], onSelectStudent, 
                         <span style={{ fontWeight: 600, fontSize: "var(--text-sm)" }}>
                           {hw.find(h => h.id === sub.homeworkId)?.title || 'Submission'}
                         </span>
-                        <Pill tone="success">Reviewed{rev?.score != null ? ` · ${rev.score}/4` : ''}</Pill>
+                        <Pill tone="success">Reviewed</Pill>
                       </div>
                     </Card>
                   );
@@ -424,7 +437,7 @@ export default function ToolHomework({ student, students = [], onSelectStudent, 
 
             <div style={{ display: 'flex', gap: 12, alignItems: 'end' }}>
               <div>
-                <label style={smallLabel}>Score (0–4)</label>
+                <label style={smallLabel}>Teacher-only level note</label>
                 <input className="input" type="number" min="0" max="4" step="0.25" value={reviewForm.score} onChange={e => setReviewForm(f => ({ ...f, score: e.target.value }))} style={{ width: 80 }} />
               </div>
               <Button variant="primary" onClick={handleSaveReview}>Save Review</Button>
@@ -523,15 +536,13 @@ function StructuredResponsePreview({ exercise, response }) {
       return (
         <div style={rs}>
           <strong>Prompt:</strong> {exercise.prompt} ({exercise.targetSeconds}s target)<br />
-          {response.audioB64 && (
-            <audio controls src={response.audioB64} style={{ width: '100%', height: 36, marginTop: 6 }} />
-          )}
+          <SpeakResponseAudio response={response} />
           {response.transcript && (
             <div style={{ marginTop: 6, padding: 8, background: 'var(--surface)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)', fontStyle: 'italic' }}>
               {response.transcript}
             </div>
           )}
-          {!response.audioB64 && !response.transcript && <span style={{ color: 'var(--faint)' }}>No audio or transcript</span>}
+          {!response.audioB64 && !response.audioPath && !response.transcript && <span style={{ color: 'var(--faint)' }}>No audio or transcript</span>}
         </div>
       );
     case 'order': {

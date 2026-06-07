@@ -2,45 +2,175 @@
  * student-dashboard.jsx — Student portal showing only teacher-approved content
  *
  * Rules:
- * - Student feedback visible only if sections.studentFeedback.approved === true
+ * - Student feedback visible only if sections.studentFeedback.approved === true and not hidden
  * - Homework visible only after teacher assigns it
  * - Scores/diagnosis only from approved diagnoses
  */
 import { useState, useEffect } from 'react';
-import { Icon, Avatar, Button, Card, StudentFeedbackView } from '../components/shared.jsx';
-import { getHomework, submitHomework, getDiagnoses, getProgressNotes, getReviews, getAllSubmissions, getClassEvents, getClassEvidence, getProgress } from '../lib/workflow.js';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Icon, Avatar, Button, StudentFeedbackView } from '../components/shared.jsx';
+import { getHomework, submitHomework, getDiagnoses, getProgressNotes, getReviews, getClassEvents, getDraft, saveDraft } from '../lib/workflow.js';
 import { isStructuredExercise } from '../lib/exercise-types.js';
 import { ExercisePlayer, HomeworkStepThrough } from '../components/exercise-player.jsx';
 import { ExTypeBadge } from '../components/exercise-editor.jsx';
-import { StudentInbox } from '../components/message-center.jsx';
-import {
-  ResponsiveContainer,
-  ScatterChart,
-  Scatter,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ReferenceLine,
-  ReferenceArea,
-  RadarChart,
-  Radar,
-  PolarGrid,
-  PolarAngleAxis,
-  PolarRadiusAxis,
-  Legend,
-} from 'recharts';
-import '../styles/logbook.css';
+import { MessageTeacherDock, StudentInbox } from '../components/message-center.jsx';
+import { printHomework } from '../lib/print-homework.js';
+import '../styles/sanctuary.css';
 
 const TABS = [
   { id: 'home',     label: 'Home',     icon: <Icon.home size={16} /> },
   { id: 'homework', label: 'Homework', icon: <Icon.homework size={16} /> },
+  { id: 'feedback', label: 'Feedback', icon: <Icon.inbox size={16} /> },
   { id: 'progress', label: 'Progress', icon: <Icon.progress size={16} /> },
-  { id: 'messages', label: 'Messages', icon: <Icon.inbox size={16} /> },
+  { id: 'messages', label: 'Messages', icon: <Icon.feedback size={16} /> },
 ];
+
+// Plain-language definitions for MET rubric terms that appear in teacher feedback.
+// Keys are lowercase substrings to match against feedback text.
+const MET_CONCEPT_GLOSSARY = {
+  'task completion':   'Answering the actual task — all required parts, with enough supporting detail.',
+  'register':          'The level of formality — formal for authority figures (Q5), neutral for pros/cons (Q4).',
+  'cohesion':          'How well your ideas connect using linking words (however, therefore, as a result).',
+  'intelligibility':   'How clearly a listener can understand you — independent of grammar or vocabulary.',
+  'fluency':           'Smooth delivery without long pauses or frequent restarts.',
+  'task relevance':    'Staying on topic throughout — not drifting from what the task asked for.',
+  'supporting detail': 'The specific example or reason that backs up your main point.',
+  'distractor':        'An answer choice that sounds right because of familiar words but is actually wrong.',
+  'inference':         'Reading or listening for meaning that is implied but not directly stated.',
+  'speaker purpose':   'Why the speaker said something — their intent, not just the topic.',
+  'collocations':      'Words that naturally go together in English (e.g. "make a decision", not "do a decision").',
+  'connector':         'A word or phrase that links ideas (e.g. although, therefore, in contrast).',
+};
+
+function getRelevantGlossaryTerms(feedbackText) {
+  if (!feedbackText) return [];
+  const lower = feedbackText.toLowerCase();
+  return Object.entries(MET_CONCEPT_GLOSSARY)
+    .filter(([term]) => lower.includes(term))
+    .map(([term, definition]) => ({ term, definition }));
+}
+
+const PROGRESS_STAGES = [
+  { label: 'Starting', order: 1, min: 1 },
+  { label: 'Building', order: 2, min: 17 },
+  { label: 'Developing', order: 3, min: 33 },
+  { label: 'Improving', order: 4, min: 49 },
+  { label: 'Ready for Mock Practice', order: 5, min: 65 },
+];
+
+function getProgressStage(score) {
+  const value = Number(score) || 0;
+  if (value <= 0) return { label: 'Not evaluated enough', order: 0, min: 0 };
+  return [...PROGRESS_STAGES].reverse().find(stage => value >= stage.min) || PROGRESS_STAGES[0];
+}
+
+// Progress is the CHANGE in an evaluated skill across classes — a distinct concept
+// from the latest stage (which is a single point-in-time evaluation, not a trend).
+// Pass the full list of approved diagnoses; this reads each one's snapshot for `section`.
+function getSkillTrend(section, diagnoses) {
+  const scores = asArray(diagnoses)
+    .slice()
+    .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
+    .map(d => asArray(d.content?.section_snapshot).find(s => s.section === section))
+    .map(s => Number(s?.score_0_80) || 0)
+    .filter(v => v > 0);
+  if (scores.length === 0) return { dir: 'none', label: 'Not evaluated yet', evaluations: 0 };
+  if (scores.length === 1) return { dir: 'new', label: 'Evaluated once', evaluations: 1 };
+  const delta = scores[0] - scores[1];
+  const nowStage = getProgressStage(scores[0]).order;
+  const prevStage = getProgressStage(scores[1]).order;
+  if (nowStage > prevStage) return { dir: 'up', label: 'Moved up a stage', evaluations: scores.length };
+  if (nowStage < prevStage) return { dir: 'down', label: 'Practice focus', evaluations: scores.length };
+  if (delta > 3) return { dir: 'up', label: 'Moving up', evaluations: scores.length };
+  if (delta < -3) return { dir: 'down', label: 'Needs attention', evaluations: scores.length };
+  return { dir: 'steady', label: 'Holding steady', evaluations: scores.length };
+}
+
+function TrendChip({ trend }) {
+  if (!trend || trend.dir === 'none') return null;
+  const glyph = { up: '↑', down: '↓', steady: '→', new: '•' }[trend.dir] || '•';
+  return (
+    <span className={`student-trend-chip student-trend-chip--${trend.dir}`}>
+      <span aria-hidden="true">{glyph}</span> {trend.label}
+    </span>
+  );
+}
+
+function hasVisibleApprovedStudentFeedback(dx) {
+  const feedback = dx?.sections?.studentFeedback;
+  return dx?.status === 'approved' && feedback?.approved === true && feedback.hidden !== true;
+}
+
+// AI section content is sometimes an object, not an array — coerce before any array op.
+const asArray = (v) => (Array.isArray(v) ? v : []);
+
+// Searchable text of one structured exercise, used to attach a teacher correction inline.
+function exerciseSearchText(ex) {
+  return [ex.question, ex.template, ex.prompt, ex.content, ex.errorText, ex.correctedText,
+    ...asArray(ex.options), ...asArray(ex.sentences)]
+    .filter(Boolean).join(' ').toLowerCase();
+}
+
+// One teacher correction shown inline (original → improved (note)).
+function CorrectionNote({ c }) {
+  return (
+    <div style={{ fontSize: 'var(--text-sm)', padding: 8, marginTop: 8, background: 'var(--success-bg)', borderRadius: 'var(--radius-sm)', borderLeft: '3px solid var(--success)' }}>
+      {c.original && <span style={{ color: 'var(--danger)', textDecoration: 'line-through' }}>{c.original}</span>}
+      {c.original && c.improved && ' → '}
+      {c.improved && <span style={{ color: 'var(--success)', fontWeight: 600 }}>{c.improved}</span>}
+      {c.note && <span style={{ color: 'var(--muted)', marginLeft: 6 }}>({c.note})</span>}
+    </div>
+  );
+}
 
 export default function StudentDashboard({ student, onSignOut }) {
   const [tab, setTab] = useState('home');
+  const [dots, setDots] = useState({});
+
+  const lvKey = student?.id ? `vv:student_last_visited:${student.id}` : null;
+
+  function getLastVisited() {
+    if (!lvKey) return {};
+    try { return JSON.parse(localStorage.getItem(lvKey) || '{}'); } catch { return {}; }
+  }
+
+  useEffect(() => {
+    if (!student?.id) return;
+    (async () => {
+      const lv = getLastVisited();
+      const [diagnoses, reviews] = await Promise.all([getDiagnoses(student.id), getReviews(student.id)]);
+      const next = {};
+
+      const approvedDx = (diagnoses || [])
+        .filter(hasVisibleApprovedStudentFeedback)
+        .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+      if (approvedDx.length > 0) {
+        const newestAt = new Date(approvedDx[0].createdAt || 0);
+        const seenAt = lv.feedback ? new Date(lv.feedback) : new Date(0);
+        if (newestAt > seenAt) next.feedback = true;
+      }
+
+      const newestReview = (reviews || [])
+        .sort((a, b) => new Date(b.reviewedAt || b.createdAt || 0) - new Date(a.reviewedAt || a.createdAt || 0))[0];
+      if (newestReview) {
+        const reviewedAt = new Date(newestReview.reviewedAt || newestReview.createdAt || 0);
+        const seenAt = lv.homework ? new Date(lv.homework) : new Date(0);
+        if (reviewedAt > seenAt) next.homework = true;
+      }
+
+      setDots(next);
+    })();
+  }, [student?.id]);
+
+  function handleTabChange(tabId) {
+    setTab(tabId);
+    setDots(prev => prev[tabId] ? { ...prev, [tabId]: false } : prev);
+    if (lvKey) {
+      const lv = getLastVisited();
+      lv[tabId] = new Date().toISOString();
+      localStorage.setItem(lvKey, JSON.stringify(lv));
+    }
+  }
 
   if (!student) {
     return <div style={{ padding: 40, textAlign: 'center', color: 'var(--muted)' }}>
@@ -54,6 +184,15 @@ export default function StudentDashboard({ student, onSignOut }) {
         <div className="dash-brand">
           <span className="dash-brand-name">MET Proficiency Mastery</span>
         </div>
+        <nav className="dash-top-nav" aria-label="Student sections" role="tablist">
+          {TABS.map(t => (
+            <button key={t.id} role="tab" aria-selected={tab === t.id} onClick={() => handleTabChange(t.id)} className={'dash-nav-btn' + (tab === t.id ? ' active' : '')}>
+              <span className="dash-nav-icon" aria-hidden="true">{t.icon}</span>
+              <span className="dash-nav-label">{t.label}</span>
+              {dots[t.id] && <span className="dash-nav-dot" aria-label="New content available" />}
+            </button>
+          ))}
+        </nav>
         <div className="dash-topbar-right">
           <span className="dash-topbar-name">{student.firstName}</span>
           <Avatar name={student.name} size={30} tone="auto" />
@@ -66,18 +205,11 @@ export default function StudentDashboard({ student, onSignOut }) {
       <div className="dash-body">
         {tab === 'home' && <HomeView student={student} onTab={setTab} />}
         {tab === 'homework' && <HomeworkView student={student} />}
+        {tab === 'feedback' && <FeedbackView student={student} onTab={setTab} />}
         {tab === 'progress' && <ProgressView student={student} />}
         {tab === 'messages' && <StudentInbox student={student} />}
       </div>
-
-      <nav className="dash-bottom-nav">
-        {TABS.map(t => (
-          <button key={t.id} onClick={() => setTab(t.id)} className={'dash-nav-btn' + (tab === t.id ? ' active' : '')}>
-            <span className="dash-nav-icon">{t.icon}</span>
-            <span className="dash-nav-label">{t.label}</span>
-          </button>
-        ))}
-      </nav>
+      <MessageTeacherDock student={student} onSent={() => setTab('messages')} />
     </div>
   );
 }
@@ -85,28 +217,49 @@ export default function StudentDashboard({ student, onSignOut }) {
 /* ─── HOME ─── */
 function HomeView({ student, onTab }) {
   const [latestFeedback, setLatestFeedback] = useState(null);
-  const [nextClassFocus, setNextClassFocus] = useState(null);
-  const [upcomingClass, setUpcomingClass] = useState(null);
   const [pendingHw, setPendingHw] = useState([]);
+  const [latestReview, setLatestReview] = useState(null);
+  const [snapshot, setSnapshot] = useState([]);
+  const [approvedHistory, setApprovedHistory] = useState([]);
+  const [nextClass, setNextClass] = useState(null);
+  const [generalMemoText, setGeneralMemoText] = useState(() => localStorage.getItem('vv:student_general_memo') || '');
 
   useEffect(() => {
     (async () => {
-      const [hw, diagnoses, classEvents] = await Promise.all([
+      const [hw, diagnoses, classEvents, reviews] = await Promise.all([
         getHomework(student.id),
         getDiagnoses(student.id),
         getClassEvents(student.id),
+        getReviews(student.id),
       ]);
-      setPendingHw((hw || []).filter(h => h.status === 'not-started' || h.status === 'in-progress'));
+      const doneStatuses = new Set(['submitted', 'reviewed', 'completed', 'corrected']);
+      setPendingHw((hw || []).filter(h => !doneStatuses.has(h.status)));
 
-      // Only show feedback from approved diagnoses
-      const approvedDx = (diagnoses || []).filter(dx => dx.status === 'approved' && dx.sections?.studentFeedback?.approved);
+      const newestReview = (reviews || [])
+        .sort((a, b) => new Date(b.reviewedAt || b.createdAt || 0) - new Date(a.reviewedAt || a.createdAt || 0))[0];
+      if (newestReview) {
+        const reviewedHw = (hw || []).find(item => item.id === newestReview.homeworkId);
+        setLatestReview({ ...newestReview, homeworkTitle: reviewedHw?.title || 'Homework review' });
+      }
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const upcoming = (classEvents || [])
+        .filter(e => e.status !== 'cancelled')
+        .map(e => ({ ...e, startAt: new Date(`${e.date || new Date().toISOString().slice(0, 10)}T${e.startTime || '00:00'}`) }))
+        .filter(e => e.startAt >= today)
+        .sort((a, b) => a.startAt - b.startAt);
+      setNextClass(upcoming[0] || null);
+
+      const approvedDx = (diagnoses || [])
+        .filter(hasVisibleApprovedStudentFeedback)
+        .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
       if (approvedDx.length > 0) {
         const dx = approvedDx[0];
         setLatestFeedback(dx.sections.studentFeedback.content);
-        setNextClassFocus(dx.sections?.nextClassFocus?.content || null);
+        setSnapshot(asArray(dx.content?.section_snapshot));
+        setApprovedHistory(approvedDx);
       }
-
-      setUpcomingClass(buildUpcomingClassInfo(classEvents || [], approvedDx[0]?.sections?.nextClassFocus?.content || null));
     })();
   }, [student.id]);
 
@@ -115,60 +268,409 @@ function HomeView({ student, onTab }) {
     return h < 12 ? 'morning' : h < 17 ? 'afternoon' : 'evening';
   }
 
-  return (
-    <div style={{ padding: '20px 16px', maxWidth: 980, margin: '0 auto' }}>
-      <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-2xl)', fontWeight: 700, color: 'var(--accent-deep)', margin: '0 0 4px' }}>
-        Good {timeOfDay()}, {student.firstName}.
-      </h1>
-      <p style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', margin: '0 0 20px' }}>
-        {student.currentLevel || student.band} → {student.targetLevel || student.bandTarget} · Session {student.session || 1}/{student.totalSessions || 24}
-      </p>
+  const pendingTitle = pendingHw[0]?.title || 'No homework pending';
+  const evaluatedSkills = snapshot.filter(s => Number(s.score_0_80) > 0);
+  const fallbackFocus = nextClass?.metSkillFocus || nextClass?.classFocus || student.focusSkill || 'MET speaking organization';
+  const focusSkill = evaluatedSkills[0]?.section || fallbackFocus;
+  const focusTrend = evaluatedSkills[0] ? getSkillTrend(focusSkill, approvedHistory) : { dir: 'none' };
+  const feedbackFocus = latestFeedback && typeof latestFeedback === 'object'
+    ? latestFeedback.nextStep || latestFeedback.focusArea?.area || latestFeedback.focusArea?.explanation || latestFeedback.finalNote
+    : '';
 
-      {/* Latest approved feedback */}
-      {latestFeedback && typeof latestFeedback === 'object' ? (
-        <div style={{ padding: 18, borderRadius: 'var(--radius-md)', background: 'var(--surface)', border: '1px solid var(--border)', marginBottom: 16 }}>
-          <div style={{ fontWeight: 700, fontSize: 'var(--text-md)', color: 'var(--accent-deep)', marginBottom: 12 }}>
-            Latest Feedback from Teacher
-          </div>
-          <StudentFeedbackView
-            feedback={latestFeedback}
-            nextClassFocus={nextClassFocus}
-            upcomingClass={upcomingClass}
-            homeworkAssigned={buildHomeworkAssignedSummary(pendingHw)}
-            onOpenHomework={() => onTab('homework')}
-          />
+  const heroAction = pendingHw.length > 0
+    ? { label: 'Open homework', tab: 'homework', icon: <Icon.homework size={15} /> }
+    : { label: 'View progress', tab: 'progress', icon: <Icon.progress size={15} /> };
+
+  const nextDate = nextClass?.startAt
+    ? nextClass.startAt.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })
+    : 'Not scheduled';
+  const nextTime = nextClass?.startAt
+    ? nextClass.startAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    : 'Teacher will confirm';
+
+  return (
+    <div className="student-home">
+      <section className="student-hero">
+        <div>
+          <p className="student-hero-kicker">MET preparation dashboard</p>
+          <h1>Good {timeOfDay()}, {student.firstName}.</h1>
+          <p>{student.currentLevel || student.band || 'Current level'} to {student.targetLevel || student.bandTarget || 'target level'} · Session {student.session || 1}/{student.totalSessions || 24}</p>
         </div>
-      ) : (
-        <div style={{ padding: 16, borderRadius: 'var(--radius-md)', background: 'var(--bg)', border: '1px solid var(--border)', marginBottom: 16 }}>
-          <p style={{ color: 'var(--muted)', fontSize: 'var(--text-sm)', margin: 0 }}>No feedback available yet. Your teacher will send feedback after your next diagnosis.</p>
+        <button className="student-hero-action" onClick={() => onTab(heroAction.tab)}>
+          {heroAction.icon}
+          {heroAction.label}
+        </button>
+      </section>
+
+      <section className="student-metrics" aria-label="Student summary">
+        <MetricCard icon={<Icon.calendar size={19} />} label="Next class" value={nextDate} sub={nextTime} tone="blue" />
+        <MetricCard icon={<Icon.homework size={19} />} label="Homework" value={pendingHw.length} sub={pendingHw.length === 1 ? 'task pending' : 'tasks pending'} tone="teal" />
+        <MetricCard icon={<Icon.progress size={19} />} label="Current focus" value={focusSkill} sub={focusTrend.dir !== 'none' ? `Progress: ${focusTrend.label}` : 'next useful practice'} tone="navy" />
+        <MetricCard icon={<Icon.inbox size={19} />} label="Feedback" value={latestFeedback ? 'Ready' : 'Waiting'} sub={latestFeedback ? 'teacher approved' : 'after diagnosis'} tone="orange" />
+      </section>
+
+      {pendingHw.length === 0 && (
+        <div className="student-practice-studio">
+          <div>
+            <h2>The Practice Studio</h2>
+            <p>Your mind is ready. While your teacher prepares your next assignment, sharpen your skills with a self-paced session.</p>
+            <div className="studio-orbs">
+              <button className="studio-orb" onClick={() => onTab('homework')} aria-label="Listening Sprint">
+                <span className="studio-orb-icon" aria-hidden="true">🎧</span>
+                <span className="studio-orb-label">Listening Sprint</span>
+              </button>
+              <button className="studio-orb" onClick={() => onTab('progress')} aria-label="Vocab Deep-Dive">
+                <span className="studio-orb-icon" aria-hidden="true">📚</span>
+                <span className="studio-orb-label">Vocab Deep-Dive</span>
+              </button>
+              <button className="studio-orb" onClick={() => onTab('feedback')} aria-label="Speaking Mirror">
+                <span className="studio-orb-icon" aria-hidden="true">🎙</span>
+                <span className="studio-orb-label">Speaking Mirror</span>
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
-      {/* Stats */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
-        <MiniStat label="Session" value={`${student.session || 1}/${student.totalSessions || 24}`} />
-        <MiniStat label="Pending HW" value={pendingHw.length} />
-        <MiniStat label="Level" value={student.currentLevel || student.band || 'B1'} />
-      </div>
+      <section className="student-grid">
+        <div className="student-home-main">
+          <article className="student-panel student-panel--primary">
+            <div className="student-panel-head">
+              <div>
+                <span className="student-panel-kicker">Upcoming</span>
+                <h2>{nextClass?.title || 'Your next MET class'}</h2>
+              </div>
+              <span className="student-pill">{nextDate}</span>
+            </div>
+            <div className="student-next-layout">
+              <div>
+                <p className="student-focus-line">{nextClass?.classFocus || nextClass?.metSkillFocus || 'Your teacher will confirm the class focus.'}</p>
+                <div className="student-detail-list">
+                  <span><Icon.calendar size={14} /> {nextTime}</span>
+                  <span><Icon.progress size={14} /> {nextClass?.metSkillFocus || focusSkill}</span>
+                </div>
+              </div>
+              <div className="student-prep-box">
+                <strong>What's Next</strong>
+                <p>{latestReview ? latestReview.homeworkTitle : pendingHw[0]?.title || 'Prepare your MET speaking samples'}</p>
+                <button type="button" onClick={() => onTab('homework')}>Enter Study Area</button>
+              </div>
+            </div>
+          </article>
 
-      <div style={{ marginTop: 14, padding: 12, border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', background: 'var(--surface)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' }}>
-        <div>
-          <div style={{ fontWeight: 700, fontSize: 'var(--text-sm)', color: 'var(--accent-deep)' }}>Need help between classes?</div>
-          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: 2 }}>Send a quick message to your teacher.</div>
+          <div
+            className="student-home-columns"
+            style={{ display: 'grid', gap: '24px', marginTop: '32px' }}
+          >
+            <article className="student-panel student-panel--todo">
+              <div className="student-panel-head">
+                <div>
+                  <span className="student-panel-kicker">Daily Agenda</span>
+                  <h2>What to do now</h2>
+                </div>
+              </div>
+              <div className="student-todo-list">
+                {latestReview && <TodoRow done={false} label="Teacher review ready" meta={latestReview.homeworkTitle} />}
+                <TodoRow done={!!latestFeedback} label="Review latest feedback" meta={latestFeedback ? 'Available in the Feedback tab' : 'Waiting for teacher approval'} />
+                <TodoRow done={pendingHw.length === 0} label={pendingTitle} meta={pendingHw[0]?.dueDate ? `Due ${new Date(pendingHw[0].dueDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}` : 'Homework area'} />
+              </div>
+              <button className="student-wide-action" onClick={() => onTab('homework')}>Go to homework <Icon.arrowR size={14} /></button>
+            </article>
+
+            <article className="student-panel">
+              <div className="student-panel-head">
+                <div>
+                  <span className="student-panel-kicker">Teacher Insights</span>
+                  <h2>Latest approved note</h2>
+                </div>
+                <button className="student-text-action" onClick={() => onTab('feedback')}>Open feedback</button>
+              </div>
+              {latestFeedback && typeof latestFeedback === 'object' ? (
+                <div className="student-feedback-summary">
+                  <p>{latestFeedback.classFocus || latestFeedback.finalNote || 'Your teacher has approved new feedback for you.'}</p>
+                  <button className="student-wide-action" onClick={() => onTab('feedback')}>Read feedback <Icon.arrowR size={14} /></button>
+                </div>
+              ) : (
+                <div className="student-empty-card">
+                  Your teacher will add feedback after there is enough class evidence.
+                </div>
+              )}
+            </article>
+          </div>
         </div>
-        <Button variant="primary" size="sm" onClick={() => onTab('messages')}>
-          <Icon.inbox size={13} /> Message Teacher
-        </Button>
+
+        <aside className="student-home-side">
+          <article className="student-panel">
+            <div className="student-panel-head">
+              <div>
+                <span className="student-panel-kicker">Readiness Snapshot</span>
+                <h2>Evaluated skills</h2>
+              </div>
+            </div>
+            {evaluatedSkills.length > 0 ? (
+              <div className="student-skill-list">
+                {evaluatedSkills.slice(0, 5).map(s => <SkillRow key={s.section} skill={s} trend={getSkillTrend(s.section, approvedHistory)} />)}
+              </div>
+            ) : (
+              <div className="student-empty-card">
+                No evaluated skills yet. Your next class will create the evidence.
+              </div>
+            )}
+          </article>
+
+          <section
+            className="student-memo-board"
+            style={{ marginTop: '24px' }}
+          >
+            <article className="student-panel" style={{ marginBottom: '16px' }}>
+              <span className="student-panel-kicker">General memo</span>
+              <h2>Memo Board</h2>
+              <p>{generalMemoText || 'No general memo posted yet.'}</p>
+            </article>
+            <article className="student-panel">
+              <span className="student-panel-kicker">Personal note</span>
+              <h2>{student.firstName}'s note</h2>
+              <p>{student.notes || student.goalNote || 'Your goal is MET preparation.'}</p>
+            </article>
+          </section>
+        </aside>
+      </section>
+    </div>
+  );
+}
+
+function MetricCard({ icon, label, value, sub, tone }) {
+  return (
+    <article className={`student-metric student-metric--${tone}`}>
+      <div className="student-metric-copy">
+        <span>{label}</span>
+        <strong>{value}</strong>
+        <small>{sub}</small>
+      </div>
+      <div className="student-metric-icon">{icon}</div>
+    </article>
+  );
+}
+
+function TodoRow({ done, label, meta }) {
+  return (
+    <div className={'student-todo-row' + (done ? ' done' : '')}>
+      <span className="student-todo-check">{done ? '✓' : ''}</span>
+      <span>
+        <strong>{label}</strong>
+        <small>{meta}</small>
+      </span>
+    </div>
+  );
+}
+
+function SkillRow({ skill, trend }) {
+  const score = Number(skill.score_0_80) || 0;
+  if (score <= 0) return null;
+  const stage = getProgressStage(score);
+  return (
+    <div className="student-skill-row">
+      <div className="student-skill-top">
+        <strong>{skill.section}</strong>
+        <span className="student-skill-stage">Last assessed: {stage.label}</span>
       </div>
     </div>
   );
 }
 
-function MiniStat({ label, value }) {
+function FeedbackView({ student, onTab }) {
+  const [feedbackItems, setFeedbackItems] = useState([]);
+  const [selfAssessment, setSelfAssessment] = useState(null);
+
+  useEffect(() => {
+    (async () => {
+      const diagnoses = await getDiagnoses(student.id);
+      const approved = (diagnoses || [])
+        .filter(hasVisibleApprovedStudentFeedback)
+        .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
+        .map(dx => ({
+          id: dx.id,
+          createdAt: dx.createdAt,
+          feedback: dx.sections.studentFeedback.content,
+          snapshot: asArray(dx.content?.section_snapshot),
+        }));
+      setFeedbackItems(approved);
+      if (approved[0]?.id) {
+        const stored = localStorage.getItem(`vv:feedback_selfassess:${approved[0].id}`);
+        if (stored) setSelfAssessment(stored);
+      }
+    })();
+  }, [student.id]);
+
+  function handleSelfAssessment(value, diagnosisId) {
+    setSelfAssessment(value);
+    if (diagnosisId) localStorage.setItem(`vv:feedback_selfassess:${diagnosisId}`, value);
+  }
+
+  const latest = feedbackItems[0];
+  const feedback = latest?.feedback;
+  const primarySkill = latest?.snapshot?.find(s => Number(s.score_0_80) > 0) || null;
+  const stage = primarySkill ? getProgressStage(Number(primarySkill.score_0_80) || 0) : null;
+  const highlights = Array.isArray(feedback?.highlights)
+    ? feedback.highlights
+    : (Array.isArray(feedback?.whatYouDidWell) ? feedback.whatYouDidWell : []);
+  const rawFocusArea = feedback?.focusArea || (Array.isArray(feedback?.whatToImprove) ? feedback.whatToImprove[0] : null);
+  const focusArea = typeof rawFocusArea === 'string'
+    ? { area: rawFocusArea, explanation: rawFocusArea }
+    : rawFocusArea;
+  const firstWin = highlights[0];
+  const nextStep = feedback?.nextStep || focusArea?.howToImprove || primarySkill?.next_step || 'Practice one clear next step before your next class.';
+
   return (
-    <div style={{ padding: 10, borderRadius: 'var(--radius-sm)', background: 'var(--surface)', border: '1px solid var(--border)', textAlign: 'center' }}>
-      <div style={{ fontSize: 'var(--text-xl)', fontWeight: 700, color: 'var(--accent-deep)' }}>{value}</div>
-      <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>{label}</div>
+    <div className="student-feedback-page">
+      <section className="student-hero">
+        <div>
+          <p className="student-hero-kicker">Feedback</p>
+          <h1>Your teacher's latest notes</h1>
+          <p>Simple, approved feedback you can use before the next class.</p>
+        </div>
+        <button className="student-hero-action" onClick={() => onTab('homework')}>
+          <Icon.homework size={15} />
+          Practice next
+        </button>
+      </section>
+
+      {!feedback ? (
+        <div className="student-empty-card">
+          No approved feedback yet. After your teacher reviews your diagnosis, your feedback will appear here.
+        </div>
+      ) : (
+        <>
+          <section className="student-progress-profile">
+            <div>
+              <span className="student-panel-kicker">Today's progress</span>
+              <h2>{primarySkill ? `${primarySkill.section} progress` : 'MET progress'}</h2>
+              <p>{feedback.classFocus || 'Your teacher has shared a short summary of your latest class.'}</p>
+            </div>
+            {stage && <span className="student-stage-badge">{stage.label}</span>}
+          </section>
+
+          <section className="student-feedback-grid">
+            <article className="student-panel">
+              <span className="student-panel-kicker">What improved</span>
+              <h2>{firstWin?.strength || 'You made progress'}</h2>
+              <p className="student-readable-copy">{firstWin?.explanation || feedback.finalNote || 'Your teacher noticed improvement in your latest class.'}</p>
+            </article>
+
+            <article className="student-panel">
+              <span className="student-panel-kicker">Current focus</span>
+              <h2>{focusArea?.area || primarySkill?.section || 'Next MET skill'}</h2>
+              <p className="student-readable-copy">{focusArea?.explanation || focusArea?.howToImprove || focusArea?.metImportance || nextStep}</p>
+            </article>
+
+            {(() => {
+              const allFeedbackText = [
+                focusArea?.area, focusArea?.explanation, focusArea?.howToImprove,
+                ...(highlights || []).map(h => `${h.strength} ${h.explanation}`),
+                nextStep,
+              ].filter(Boolean).join(' ');
+              const terms = getRelevantGlossaryTerms(allFeedbackText);
+              if (terms.length === 0) return null;
+              return (
+                <article className="student-panel">
+                  <span className="student-panel-kicker">Concepts in your feedback</span>
+                  <h2>What these terms mean</h2>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 4 }}>
+                    {terms.map(({ term, definition }) => (
+                      <div key={term} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', fontSize: 'var(--text-sm)', lineHeight: 1.6 }}>
+                        <span style={{ fontWeight: 700, color: 'var(--accent)', flexShrink: 0, textTransform: 'capitalize' }}>{term}:</span>
+                        <span style={{ color: 'var(--text-2)' }}>{definition}</span>
+                      </div>
+                    ))}
+                  </div>
+                </article>
+              );
+            })()}
+
+            <article className="student-panel student-panel--primary">
+              <div className="student-panel-head">
+                <div>
+                  <span className="student-panel-kicker">Full feedback</span>
+                  <h2>Teacher-approved feedback</h2>
+                </div>
+                {latest.createdAt && (
+                  <span className="student-muted-pill">
+                    {new Date(latest.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+                  </span>
+                )}
+              </div>
+              <StudentFeedbackView feedback={feedback} />
+            </article>
+
+            <article className="student-panel">
+              <span className="student-panel-kicker">Confidence check</span>
+              <h2>Before the next class</h2>
+              <div className="student-confidence-list">
+                <TodoRow done={false} label="I understand my teacher's main feedback" meta="Review the full note above" />
+                <TodoRow done={!!firstWin} label="I can name one thing I did better" meta={firstWin?.strength || 'Use your feedback note'} />
+                <TodoRow done={false} label="I can practice the next focus" meta={feedback?.nextStep || focusArea?.area || 'Complete the homework task'} />
+                <TodoRow done={false} label="I can bring one question to class" meta="Ask your teacher for help where needed" />
+              </div>
+            </article>
+
+            <article className="student-panel">
+              <span className="student-panel-kicker">Your view</span>
+              <h2>Does this feedback match your experience?</h2>
+              <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-2)', marginBottom: 12, lineHeight: 1.6 }}>
+                Your answer helps your teacher prepare the next class. There is no wrong response.
+              </p>
+              {selfAssessment ? (
+                <div style={{ fontSize: 'var(--text-sm)', color: 'var(--success)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span>✓</span>
+                  <span>You said: <strong>{selfAssessment}</strong> — your teacher will see this.</span>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  {['Yes, it matches', 'Partly', 'Not sure'].map(option => (
+                    <button
+                      key={option}
+                      type="button"
+                      onClick={() => handleSelfAssessment(option, latest?.id)}
+                      style={{
+                        padding: '7px 16px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)',
+                        background: 'var(--surface)', color: 'var(--text)', cursor: 'pointer',
+                        fontSize: 'var(--text-sm)', fontFamily: 'var(--font-ui)', fontWeight: 500,
+                        transition: 'border-color .15s, background .15s',
+                      }}
+                    >
+                      {option}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </article>
+          </section>
+
+          {feedbackItems.length > 1 && (
+            <section className="student-panel student-feedback-history">
+              <div className="student-panel-head">
+                <div>
+                  <span className="student-panel-kicker">History</span>
+                  <h2>Past feedback</h2>
+                </div>
+                <span className="student-muted-pill">{feedbackItems.length - 1} older</span>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {feedbackItems.slice(1).map(item => (
+                  <details key={item.id} style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', background: 'var(--surface)', padding: '10px 12px' }}>
+                    <summary style={{ cursor: 'pointer', fontWeight: 700, fontSize: 'var(--text-sm)', color: 'var(--text)' }}>
+                      {item.createdAt ? new Date(item.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : 'Previous feedback'}
+                    </summary>
+                    <div style={{ marginTop: 12 }}>
+                      <StudentFeedbackView feedback={item.feedback} />
+                    </div>
+                  </details>
+                ))}
+              </div>
+            </section>
+          )}
+        </>
+      )}
     </div>
   );
 }
@@ -178,7 +680,10 @@ function HomeworkView({ student }) {
   const [homework, setHomework] = useState([]);
   const [reviews, setReviews] = useState([]);
   const [expanded, setExpanded] = useState(null);
+  const [answers, setAnswers] = useState({});
   const [responses, setResponses] = useState({}); // { exerciseId: responseObj }
+  const [draftMeta, setDraftMeta] = useState({}); // { homeworkId: { updatedAt, currentExerciseId } }
+  const [homeworkFilter, setHomeworkFilter] = useState('todo');
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -189,14 +694,52 @@ function HomeworkView({ student }) {
     })();
   }, [student.id]);
 
-  // Handle interactive exercise submission
-  async function handleStructuredSubmit(hwId, exercisesInput = null) {
+  // Check if homework has structured exercises
+  function hasStructuredExercises(h) {
+    return (h.activities || []).some(a => isStructuredExercise(a));
+  }
+
+  function homeworkDraftKey(hwId) {
+    return `student-homework:${student.id}:${hwId}`;
+  }
+
+  async function toggleHomework(h) {
+    const willOpen = expanded !== h.id;
+    setExpanded(willOpen ? h.id : null);
+    if (!willOpen || h.status === 'submitted') return;
+
+    const draft = await getDraft(homeworkDraftKey(h.id));
+    if (draft?.responses && typeof draft.responses === 'object') {
+      setResponses(prev => ({ ...prev, ...draft.responses }));
+      setDraftMeta(prev => ({
+        ...prev,
+        [h.id]: {
+          updatedAt: draft.updatedAt,
+          currentExerciseId: draft.currentExerciseId,
+        },
+      }));
+    }
+  }
+
+  // Handle legacy text submission
+  async function handleLegacySubmit(hwId) {
+    if (!answers[hwId]?.trim()) { window.toast?.('Please write your answer.', 'warn'); return; }
     setSubmitting(true);
-    // Build a summary text from exercise responses for backward compatibility
+    await submitHomework(hwId, student.id, answers[hwId]);
+    const hw = await getHomework(student.id);
+    setHomework(hw || []);
+    setAnswers(prev => { const n = { ...prev }; delete n[hwId]; return n; });
+    setExpanded(null);
+    setSubmitting(false);
+    window.toast?.('Submitted! Your teacher will review soon.', 'ok');
+  }
+
+  // Handle structured exercise submission
+  async function handleStructuredSubmit(hwId) {
+    setSubmitting(true);
+    // Build a summary text from structured responses for backward compatibility
     const hw = homework.find(h => h.id === hwId);
-    const exercises = Array.isArray(exercisesInput) && exercisesInput.length > 0
-      ? exercisesInput
-      : getInteractiveExercises(hw);
+    const exercises = (hw?.activities || []).filter(a => isStructuredExercise(a));
     const summaryParts = exercises.map(ex => {
       const res = responses[ex.id];
       if (!res) return `[${ex.type}] — no response`;
@@ -212,12 +755,15 @@ function HomeworkView({ student }) {
       }
     });
     const content = summaryParts.join('\n\n---\n\n');
-    await submitHomework(hwId, student.id, content, responses);
+    const exerciseResponses = Object.fromEntries(exercises.map(ex => [ex.id, responses[ex.id] || {}]));
+    await submitHomework(hwId, student.id, content, exerciseResponses);
+    await saveDraft(homeworkDraftKey(hwId), null);
     const hwList = await getHomework(student.id);
     setHomework(hwList || []);
     setResponses({});
+    setDraftMeta(prev => ({ ...prev, [hwId]: null }));
     setExpanded(null);
-      setSubmitting(false);
+    setSubmitting(false);
     window.toast?.('Submitted! Your teacher will review soon.', 'ok');
   }
 
@@ -226,52 +772,98 @@ function HomeworkView({ student }) {
     setResponses(prev => ({ ...prev, [exerciseId]: updatedRes }));
   }
 
-  const pendingCount = homework.filter(h => h.status !== 'submitted' && h.status !== 'reviewed' && h.status !== 'corrected').length;
+  async function saveStructuredProgress(hwId, currentExerciseId) {
+    const hw = homework.find(h => h.id === hwId);
+    const exerciseIds = new Set((hw?.activities || []).filter(a => isStructuredExercise(a)).map(ex => ex.id));
+    const exerciseResponses = Object.fromEntries(
+      Object.entries(responses).filter(([exerciseId]) => exerciseIds.has(exerciseId))
+    );
+    const draft = {
+      responses: exerciseResponses,
+      currentExerciseId,
+      updatedAt: new Date().toISOString(),
+    };
+    await saveDraft(homeworkDraftKey(hwId), draft);
+    setDraftMeta(prev => ({ ...prev, [hwId]: draft }));
+    window.toast?.('Progress saved. You can continue later.', 'ok');
+  }
+
+  const reviewedIds = new Set(reviews.map(r => r.homeworkId));
+  const sortedHomework = [...homework].sort((a, b) => new Date(b.reviewedAt || b.assignedAt || b.createdAt || 0) - new Date(a.reviewedAt || a.assignedAt || a.createdAt || 0));
+  const visibleHomework = sortedHomework.filter(h => {
+    const reviewed = reviewedIds.has(h.id) || h.status === 'reviewed' || h.status === 'corrected' || h.status === 'completed';
+    if (homeworkFilter === 'todo') return !reviewed && h.status !== 'submitted';
+    if (homeworkFilter === 'submitted') return h.status === 'submitted' && !reviewed;
+    if (homeworkFilter === 'reviewed') return reviewed;
+    return true;
+  });
+  const reviewedCount = sortedHomework.filter(h => reviewedIds.has(h.id) || h.status === 'reviewed' || h.status === 'corrected' || h.status === 'completed').length;
 
   return (
-    <div className="student-hw-page">
-      <section className="student-hw-hero">
+    <div className="student-homework-page">
+      <section className="student-hero">
         <div>
-          <div className="student-hw-kicker">Student Workspace</div>
-          <h2 className="student-hw-title">My Homework</h2>
-          <p className="student-hw-subtitle">
-            Complete each task clearly, submit it, and your teacher will review it before feedback appears here.
-          </p>
+          <p className="student-hero-kicker">Homework</p>
+          <h1>Assigned practice</h1>
+          <p>Complete the tasks your teacher assigned, then submit them for review.</p>
         </div>
-        <div className="student-hw-meter">
-          <div className="student-hw-meter-value">{pendingCount}</div>
-          <div className="student-hw-meter-label">task{pendingCount === 1 ? '' : 's'} waiting</div>
-        </div>
+        <span className="student-stage-badge">{homework.length} assigned</span>
       </section>
 
-      {homework.length === 0 && <p style={{ color: 'var(--muted)', padding: '16px 0' }}>No homework assigned yet. Your teacher will assign homework after your next class.</p>}
-      <div className="student-hw-list">
-      {homework.map(h => {
+      {homework.length === 0 && (
+        <div className="student-empty-card">
+          No homework assigned yet. Your teacher will assign practice after your next class.
+        </div>
+      )}
+
+      {homework.length > 0 && (
+        <div className="student-homework-filters" aria-label="Homework filters">
+          {[
+            ['todo', 'To do'],
+            ['submitted', 'Submitted'],
+            ['reviewed', `Reviewed (${reviewedCount})`],
+            ['all', 'All'],
+          ].map(([id, label]) => (
+            <button key={id} type="button" className={homeworkFilter === id ? 'active' : ''} onClick={() => setHomeworkFilter(id)}>
+              {label}
+            </button>
+          ))}
+        </div>
+      )}
+
+      <section className="student-homework-list">
+      {homework.length > 0 && visibleHomework.length === 0 && (
+        <div className="student-empty-card">
+          No homework in this view.
+        </div>
+      )}
+      {visibleHomework.map(h => {
         const review = reviews.find(r => r.homeworkId === h.id);
         const isExpanded = expanded === h.id;
         const submitted = h.status === 'submitted';
         const statusTone = review ? 'success' : submitted ? 'warning' : 'muted';
-        const statusLabel = review ? 'Reviewed' : submitted ? 'Submitted' : h.status;
-        const interactiveExercises = getInteractiveExercises(h);
+        const statusLabel = review ? 'Reviewed' : submitted ? 'Submitted' : (h.status || 'Not started');
+        const isStructured = hasStructuredExercises(h);
+        const structuredExercises = isStructured ? (h.activities || []).filter(a => isStructuredExercise(a)) : [];
 
-        // Exercise type badges for interactive homework
+        // Exercise type badges for structured homework
         const typeSummary = {};
-        interactiveExercises.forEach(e => { typeSummary[e.type] = (typeSummary[e.type] || 0) + 1; });
+        structuredExercises.forEach(e => { typeSummary[e.type] = (typeSummary[e.type] || 0) + 1; });
 
         return (
-          <div key={h.id} className="hw-assignment-card">
+          <article key={h.id} className={'student-homework-card' + (isExpanded ? ' is-expanded' : '')}>
             {/* Header */}
             <button
-              type="button"
-              className={'hw-assignment-head' + (isExpanded ? ' is-open' : '')}
-              onClick={() => setExpanded(isExpanded ? null : h.id)}
+              className="student-homework-card-head"
+              onClick={() => toggleHomework(h)}
             >
-              <div>
-                <div className="hw-assignment-title">{h.title}</div>
-                <div className="hw-assignment-meta">
-                  {interactiveExercises.length > 0 ? (
+              <div className="student-homework-title">
+                <span className="student-panel-kicker">Assigned homework</span>
+                <h2>{h.title || 'Homework task'}</h2>
+                <div className="student-homework-meta">
+                  {isStructured ? (
                     <>
-                      <span>{interactiveExercises.length} exercise{interactiveExercises.length !== 1 ? 's' : ''}</span>
+                      <span>{structuredExercises.length} exercise{structuredExercises.length !== 1 ? 's' : ''}</span>
                       {Object.keys(typeSummary).map(type => (
                         <ExTypeBadge key={type} typeId={type} />
                       ))}
@@ -279,57 +871,122 @@ function HomeworkView({ student }) {
                   ) : (
                     <span>{h.type}</span>
                   )}
-                  {h.dueDate && <span>· Due {new Date(h.dueDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</span>}
+                  {h.dueDate && <span>Due {new Date(h.dueDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</span>}
+                  {draftMeta[h.id]?.updatedAt && !submitted && !review && (
+                    <span>Saved {new Date(draftMeta[h.id].updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                  )}
                 </div>
               </div>
-              <span className={'hw-status-pill' + (statusTone === 'success' ? ' is-success' : statusTone === 'warning' ? ' is-warning' : '')}>{statusLabel}</span>
+              <span className={`student-homework-status student-homework-status--${statusTone}`}>{statusLabel}</span>
             </button>
 
             {/* Expanded content */}
             {isExpanded && (
-              <div className="hw-expanded">
-                {(h.objective || h.description) && (
-                  <div className="hw-context-grid">
+              <div className="student-homework-content">
+                <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 4 }}>
+                  <Button variant="ghost" size="sm" onClick={() => printHomework(h, { studentName: student?.name })}>
+                    <Icon.print size={13} /> Print
+                  </Button>
+                </div>
+
+                {/* Teacher review summary — header at top; per-exercise corrections shown inline below */}
+                {review && (
+                  <div style={{ marginBottom: 12, padding: 12, background: 'var(--success-bg)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--success-soft)' }}>
+                    <div style={{ fontWeight: 700, color: 'var(--success)', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <span>Teacher Review</span>
+                      {review.redoRequired && (
+                        <span style={{ fontSize: 'var(--text-xs)', fontWeight: 700, padding: '2px 8px', borderRadius: 99, background: 'var(--warning-bg)', color: 'var(--warning)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Redo requested</span>
+                      )}
+                    </div>
+                    {review.whatImproved && (
+                      <div style={{ marginBottom: 8, fontSize: 'var(--text-sm)', lineHeight: 1.6 }}>
+                        <strong style={{ color: 'var(--success)' }}>What improved: </strong>{review.whatImproved}
+                      </div>
+                    )}
+                    {review.overallNote && <p style={{ fontSize: 'var(--text-sm)', lineHeight: 1.7, margin: 0 }}>{review.overallNote}</p>}
+                  </div>
+                )}
+
+                {(h.objective || h.description || h.estimatedTime || h.metSkillConnection) && (
+                  <div className="student-homework-brief">
                     {h.objective && (
-                      <div className="hw-context-box">
-                        <div className="hw-context-label">Goal</div>
-                        {h.objective}
+                      <div>
+                        <strong>Goal</strong>
+                        <p>{h.objective}</p>
+                      </div>
+                    )}
+                    {h.estimatedTime && (
+                      <div>
+                        <strong>Time</strong>
+                        <p>{h.estimatedTime}</p>
+                      </div>
+                    )}
+                    {h.metSkillConnection && (
+                      <div>
+                        <strong>MET skill</strong>
+                        <p>{h.metSkillConnection}</p>
                       </div>
                     )}
                     {h.description && (
-                      <div className="hw-context-box">
-                        <div className="hw-context-label">Instructions</div>
-                        <div style={{ whiteSpace: 'pre-wrap' }}>{h.description}</div>
+                      <div className="student-homework-brief-wide">
+                        <strong>Instructions</strong>
+                        <p>{h.description}</p>
                       </div>
                     )}
                   </div>
                 )}
 
-                {/* ── INTERACTIVE EXERCISES: step-through ── */}
-                {interactiveExercises.length > 0 && !submitted && !review && (
+                {/* ── STRUCTURED EXERCISES: step-through ── */}
+                {isStructured && !submitted && !review && (
                   <HomeworkStepThrough
-                    exercises={interactiveExercises}
+                    exercises={structuredExercises}
                     responses={responses}
                     onResponse={updateResponse}
-                    onSubmit={() => handleStructuredSubmit(h.id, interactiveExercises)}
+                    onSave={(exerciseId) => saveStructuredProgress(h.id, exerciseId)}
+                    onSubmit={() => handleStructuredSubmit(h.id)}
+                    initialExerciseId={draftMeta[h.id]?.currentExerciseId}
                     readOnly={false}
-                    homework={h}
                   />
                 )}
 
-                {/* ── INTERACTIVE EXERCISES: submitted (read-only) ── */}
-                {interactiveExercises.length > 0 && (submitted || review) && (
-                  <div>
-                    {interactiveExercises.map((ex, i) => (
-                      <div key={ex.id} style={{ borderTop: i > 0 ? '1px solid var(--divider)' : 'none', paddingTop: i > 0 ? 14 : 0, marginBottom: 14 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                          <span style={{ fontWeight: 700, fontSize: 'var(--text-sm)', color: 'var(--accent)' }}>{i + 1}.</span>
-                          <ExTypeBadge typeId={ex.type} />
+                {/* ── STRUCTURED EXERCISES: submitted — each exercise + its teacher correction inline ── */}
+                {isStructured && (submitted || review) && (() => {
+                  const corrections = asArray(review?.corrections);
+                  const matchedByEx = structuredExercises.map(ex => {
+                    const t = exerciseSearchText(ex);
+                    return corrections.filter(c => c.original && t.includes(String(c.original).toLowerCase()));
+                  });
+                  const matched = new Set(matchedByEx.flat());
+                  const unmatched = corrections.filter(c => !matched.has(c));
+                  return (
+                    <div>
+                      {structuredExercises.map((ex, i) => (
+                        <div key={ex.id} style={{ borderTop: i > 0 ? '1px solid var(--divider)' : 'none', paddingTop: i > 0 ? 14 : 0, marginBottom: 14 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                            <span style={{ fontWeight: 700, fontSize: 'var(--text-sm)', color: 'var(--accent)' }}>{i + 1}.</span>
+                            <ExTypeBadge typeId={ex.type} />
+                          </div>
+                          <ExercisePlayer exercise={ex} response={{}} onResponse={() => {}} readOnly={true} />
+                          {matchedByEx[i].map((c, ci) => <CorrectionNote key={ci} c={c} />)}
                         </div>
-                        <ExercisePlayer exercise={ex} response={{}} onResponse={() => {}} readOnly={true} />
-                      </div>
+                      ))}
+                      {unmatched.length > 0 && (
+                        <div style={{ marginTop: 4, marginBottom: 6 }}>
+                          <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>More corrections</div>
+                          {unmatched.map((c, ci) => <CorrectionNote key={ci} c={c} />)}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
+
+                {/* ── LEGACY: plain text activities ── */}
+                {!isStructured && (
+                  <>
+                    {(h.activities || []).map((a, i) => (
+                      <div key={i} className="student-homework-activity">{a.instruction}</div>
                     ))}
-                  </div>
+                  </>
                 )}
 
                 {/* Self-check */}
@@ -338,53 +995,37 @@ function HomeworkView({ student }) {
                     <div style={{ fontWeight: 600, fontSize: 'var(--text-sm)', marginBottom: 8 }}>Self-check:</div>
                     {h.selfCheck.filter(Boolean).map((c, i) => (
                       <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: 6 }}>
-                        <input type="checkbox" style={{ marginTop: 3 }} />
-                        <span style={{ fontSize: 'var(--text-sm)' }}>{c}</span>
+                        <label style={{ display: 'flex', alignItems: 'flex-start', gap: 8, cursor: 'pointer' }}>
+                          <input type="checkbox" style={{ marginTop: 3, flexShrink: 0 }} aria-label={c} />
+                          <span style={{ fontSize: 'var(--text-sm)' }}>{c}</span>
+                        </label>
                       </div>
                     ))}
                   </div>
                 )}
 
+                {/* Legacy submit form */}
+                {!isStructured && !submitted && !review && (
+                  <div className="student-homework-submit">
+                    <textarea value={answers[h.id] || ''} onChange={e => setAnswers(prev => ({ ...prev, [h.id]: e.target.value }))} rows={5} placeholder="Write your answer here…" />
+                    <Button variant="primary" size="sm" onClick={() => handleLegacySubmit(h.id)} disabled={submitting || !answers[h.id]?.trim()} style={{ marginTop: 8 }}>
+                      {submitting ? 'Submitting…' : 'Submit Homework'}
+                    </Button>
+                  </div>
+                )}
+
                 {/* Submitted status */}
                 {submitted && !review && (
-                  <div style={{ marginTop: 12, padding: 12, background: 'var(--warning-bg)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-sm)', color: 'var(--warning)', fontWeight: 500 }}>
+                  <div className="student-homework-waiting">
                     Submitted ✓ — Waiting for your teacher to review.
                   </div>
                 )}
 
-                {/* Teacher review */}
-                {review && (
-                  <div style={{ marginTop: 14, padding: 14, background: 'var(--success-bg)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--success-soft)' }}>
-                    <div style={{ fontWeight: 700, color: 'var(--success)', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 10 }}>
-                      <span>Teacher Review {review.score != null ? `· ${review.score}/10` : ''}</span>
-                      {review.redoRequired && (
-                        <span style={{ fontSize: 'var(--text-xs)', fontWeight: 700, padding: '2px 8px', borderRadius: 99, background: 'var(--warning-bg)', color: 'var(--warning)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Redo requested</span>
-                      )}
-                    </div>
-                    {review.whatImproved && (
-                      <div style={{ marginBottom: 10, padding: 8, background: 'rgba(255,255,255,0.6)', borderRadius: 'var(--radius-sm)', borderLeft: '3px solid var(--success)' }}>
-                        <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--success)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4 }}>What improved</div>
-                        <div style={{ fontSize: 'var(--text-sm)', lineHeight: 1.6 }}>{review.whatImproved}</div>
-                      </div>
-                    )}
-                    {review.overallNote && <p style={{ fontSize: 'var(--text-sm)', lineHeight: 1.7, marginBottom: 10 }}>{review.overallNote}</p>}
-                    {review.corrections?.length > 0 && (
-                      <div style={{ marginTop: 10, marginBottom: 10 }}>
-                        <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>Corrections</div>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                          {review.corrections.map((c, i) => (
-                            <div key={i} style={{ fontSize: 'var(--text-sm)', padding: 8, background: 'rgba(255,255,255,0.6)', borderRadius: 'var(--radius-sm)' }}>
-                              <span style={{ color: 'var(--danger)', textDecoration: 'line-through' }}>{c.original}</span>
-                              {' → '}
-                              <span style={{ color: 'var(--success)', fontWeight: 600 }}>{c.improved}</span>
-                              {c.note && <span style={{ color: 'var(--muted)', marginLeft: 6 }}>({c.note})</span>}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
+                {/* Teacher review — remaining items (score/notes at top, corrections inline above) */}
+                {review && ((Array.isArray(review.activeErrors) && review.activeErrors.length > 0) || (Array.isArray(review.newErrors) && review.newErrors.length > 0)) && (
+                  <div style={{ marginTop: 12, padding: 12, background: 'var(--bg)', borderRadius: 'var(--radius-sm)' }}>
                     {Array.isArray(review.activeErrors) && review.activeErrors.length > 0 && (
-                      <div style={{ marginTop: 8 }}>
+                      <div style={{ marginBottom: 8 }}>
                         <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--warning)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4 }}>Still working on</div>
                         {review.activeErrors.map((e, i) => (
                           <div key={i} style={{ fontSize: 'var(--text-sm)', color: 'var(--text-2)', marginLeft: 8 }}>• {e}</div>
@@ -392,7 +1033,7 @@ function HomeworkView({ student }) {
                       </div>
                     )}
                     {Array.isArray(review.newErrors) && review.newErrors.length > 0 && (
-                      <div style={{ marginTop: 8 }}>
+                      <div>
                         <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--danger)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4 }}>New to work on</div>
                         {review.newErrors.map((e, i) => (
                           <div key={i} style={{ fontSize: 'var(--text-sm)', color: 'var(--text-2)', marginLeft: 8 }}>• {e}</div>
@@ -403,709 +1044,167 @@ function HomeworkView({ student }) {
                 )}
               </div>
             )}
-          </div>
+          </article>
         );
       })}
-      </div>
+      </section>
     </div>
   );
-}
-
-function getInteractiveExercises(homeworkItem) {
-  const activities = Array.isArray(homeworkItem?.activities) ? homeworkItem.activities : [];
-
-  const normalized = activities
-    .map((activity, idx) => {
-      if (isStructuredExercise(activity)) {
-        if (activity.id) return activity;
-        return { ...activity, id: `${homeworkItem?.id || 'hw'}_ex_${idx}` };
-      }
-
-      const prompt = legacyActivityToPrompt(activity);
-      if (!prompt) return null;
-
-      return {
-        id: `${homeworkItem?.id || 'hw'}_legacy_${idx}`,
-        type: 'short',
-        prompt,
-        rubric: 'Write a complete MET-style answer with one reason and one example.',
-        targetWords: 80,
-      };
-    })
-    .filter(Boolean);
-
-  if (normalized.length > 0) return normalized;
-
-  const fallbackPrompt = buildHomeworkFallbackPrompt(homeworkItem);
-  if (!fallbackPrompt) return [];
-
-  return [{
-    id: `${homeworkItem?.id || 'hw'}_fallback_0`,
-    type: 'short',
-    prompt: fallbackPrompt,
-    rubric: 'Write a complete MET-style answer with one reason and one example.',
-    targetWords: 80,
-  }];
-}
-
-function legacyActivityToPrompt(activity) {
-  if (typeof activity === 'string') return activity.trim();
-  if (!activity || typeof activity !== 'object') return '';
-  return String(
-    activity.prompt ||
-    activity.instruction ||
-    activity.description ||
-    activity.content ||
-    activity.task ||
-    ''
-  ).trim();
-}
-
-function buildHomeworkFallbackPrompt(homeworkItem) {
-  const parts = [
-    homeworkItem?.description,
-    homeworkItem?.objective,
-    homeworkItem?.title,
-  ]
-    .map((v) => String(v || '').trim())
-    .filter(Boolean);
-
-  if (parts.length === 0) return '';
-  return `Based on your homework instructions, write one complete MET-style response:\n\n${parts.join('\n\n')}`;
-}
-
-function buildUpcomingClassInfo(classEvents, nextClassFocus) {
-  if (!Array.isArray(classEvents) || classEvents.length === 0) return null;
-  const now = new Date();
-
-  const upcoming = classEvents
-    .filter((ev) => ev?.date)
-    .map((ev) => ({ ...ev, startsAt: parseEventStart(ev) }))
-    .filter((ev) => ev.startsAt && ev.startsAt >= now)
-    .sort((a, b) => a.startsAt - b.startsAt);
-
-  if (upcoming.length === 0) return null;
-
-  const next = upcoming[0];
-  const dayName = next.startsAt.toLocaleDateString('en-US', { weekday: 'long' });
-  const dateLabel = next.startsAt.toLocaleDateString('en-GB', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' });
-  const timeLabel = formatClassTime(next.startTime, next.endTime);
-  const scheduleBySlot = summarizeWeeklySchedule(upcoming);
-
-  return {
-    available: true,
-    dateLabel,
-    timeLabel,
-    weeklySchedule: scheduleBySlot || `${dayName}${next.startTime ? ` at ${next.startTime}` : ''}`,
-    nextClassFocus: next.classFocus || next.metSkillFocus || nextClassFocus?.primaryFocus || '',
-  };
-}
-
-function parseEventStart(ev) {
-  if (!ev?.date) return null;
-  const start = ev.startTime ? `${ev.date}T${ev.startTime}:00` : `${ev.date}T09:00:00`;
-  const d = new Date(start);
-  return Number.isNaN(d.getTime()) ? null : d;
-}
-
-function formatClassTime(startTime, endTime) {
-  if (startTime && endTime) return `${startTime}–${endTime}`;
-  if (startTime) return startTime;
-  return 'Time to be confirmed';
-}
-
-function summarizeWeeklySchedule(upcoming) {
-  const slots = {};
-  for (const ev of upcoming.slice(0, 8)) {
-    const day = ev.startsAt.toLocaleDateString('en-US', { weekday: 'long' });
-    const slot = `${day}${ev.startTime ? ` at ${ev.startTime}` : ''}`;
-    slots[slot] = (slots[slot] || 0) + 1;
-  }
-  const ordered = Object.entries(slots).sort((a, b) => b[1] - a[1]).map(([label]) => label);
-  return ordered.slice(0, 2).join(' · ');
-}
-
-function buildHomeworkAssignedSummary(pendingHw) {
-  if (!Array.isArray(pendingHw) || pendingHw.length === 0) return { count: 0 };
-  const first = pendingHw[0];
-  return {
-    count: pendingHw.length,
-    title: first?.title || '',
-    dueDateLabel: first?.dueDate
-      ? new Date(first.dueDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
-      : '',
-  };
 }
 
 /* ─── PROGRESS ─── */
 function ProgressView({ student }) {
   const [diagnoses, setDiagnoses] = useState([]);
   const [notes, setNotes] = useState([]);
-  const [classSessions, setClassSessions] = useState([]);
-  const [storedProgress, setStoredProgress] = useState(null);
-  const [selectedSession, setSelectedSession] = useState(null);
 
   useEffect(() => {
     (async () => {
-      const [dx, pn, events, progressRaw] = await Promise.all([
-        getDiagnoses(student.id),
-        getProgressNotes(student.id),
-        getClassEvents(student.id),
-        getProgress(student.id),
-      ]);
+      const [dx, pn] = await Promise.all([getDiagnoses(student.id), getProgressNotes(student.id)]);
       setDiagnoses((dx || []).filter(d => d.status === 'approved'));
       setNotes(pn || []);
-      setStoredProgress(progressRaw || null);
-
-      const completedEvents = (events || []).filter((ev) =>
-        ev?.status === 'completed' || ev?.diagnosticStatus === 'draft' || ev?.diagnosticStatus === 'approved'
-      );
-      if (!completedEvents.length) {
-        setClassSessions([]);
-        return;
-      }
-      const evidenceList = await Promise.all(completedEvents.map((ev) => getClassEvidence(ev.id)));
-      setClassSessions(buildClassEvidenceSessions(completedEvents, evidenceList));
     })();
   }, [student.id]);
 
-  const sessionSeries = buildSessionSeries(diagnoses, classSessions, storedProgress);
-  const latestSession = sessionSeries[sessionSeries.length - 1] || null;
-  const cards = buildTrajectoryCards(sessionSeries);
-  const quadrantData = buildQuadrantData(latestSession);
-  const radarData = buildRadarProfile(sessionSeries);
+  const latest = diagnoses[0];
+  const skills = asArray(latest?.content?.section_snapshot).filter(skill => Number(skill.score_0_80) > 0);
 
   return (
-    <div style={{ padding: '20px 16px', maxWidth: 1120, margin: '0 auto' }}>
-      <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-xl)', fontWeight: 700, margin: '0 0 16px' }}>My Progress</h2>
+    <div className="student-progress-page">
+      <section className="student-hero">
+        <div>
+          <p className="student-hero-kicker">MET progress profile</p>
+          <h1>Your readiness path</h1>
+          <p>Progress stages show direction without turning your learning into a grade.</p>
+        </div>
+      </section>
 
       {diagnoses.length === 0 ? (
-        <p style={{ color: 'var(--muted)' }}>No diagnoses yet. After your first class, your progress will appear here.</p>
+        <section className="student-panel student-panel--readiness">
+          <div className="student-panel-head">
+            <div>
+              <span className="student-panel-kicker">Starting point</span>
+              <h2>Your first progress steps</h2>
+            </div>
+          </div>
+          <div className="student-progress-starter">
+            <p>No approved diagnosis is ready yet. You can still start building useful evidence for your teacher.</p>
+            <TodoRow done={false} label="Complete the next assigned homework" meta="Homework gives your teacher review evidence" />
+            <TodoRow done={false} label="Prepare one speaking sample" meta="45 seconds with one clear example" />
+            <TodoRow done={false} label="Ask one MET question in class" meta="Use the Messages tab if you need help before class" />
+          </div>
+        </section>
       ) : (
         <>
-          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.12em', fontWeight: 700, marginBottom: 10 }}>
-            Speaking Score Trajectory — tap a card to see details
-          </div>
+          {skills.length > 0 ? (
+            <section className="student-readiness-grid">
+              {skills.map(skill => (
+                <ProgressProfileCard key={skill.section} skill={skill} trend={getSkillTrend(skill.section, diagnoses)} />
+              ))}
+            </section>
+          ) : (
+            <div className="student-empty-card" style={{ marginBottom: 18 }}>
+              No evaluated skills are ready to show yet. When a class evaluates speaking only, only speaking progress will appear here.
+            </div>
+          )}
 
-          <div className="progress-session-grid" style={{ marginBottom: 20 }}>
-            {cards.map((card, idx) => (
-              <button
-                key={card.key}
-                type="button"
-                onClick={() => card.session ? setSelectedSession({ ...card.session, idx: card.session.idx }) : null}
-                style={{
-                  textAlign: 'left',
-                  background: 'var(--surface)',
-                  border: '1px solid var(--border)',
-                  borderRadius: 11,
-                  padding: 16,
-                  borderLeft: `4px solid ${card.color}`,
-                  cursor: card.session ? 'pointer' : 'default',
-                  fontFamily: 'var(--font-ui)',
-                }}
-              >
-                <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700, marginBottom: 6 }}>
-                  {card.title}
-                </div>
-                <div style={{ fontSize: 42, fontWeight: 800, color: 'var(--accent-deep)', lineHeight: 1.05, marginBottom: 6 }}>
-                  {card.value}
-                </div>
-                <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-2)', marginBottom: 6 }}>{card.subtitle}</div>
-                <div style={{ fontSize: 'var(--text-xs)', color: card.footerTone || 'var(--muted)', fontWeight: 600 }}>{card.footer}</div>
-              </button>
-            ))}
-          </div>
-
-          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.12em', fontWeight: 700, marginBottom: 10 }}>
-            Progress Analysis
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 14, marginBottom: 18 }}>
-            <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 11, padding: 14 }}>
-              <div style={{ fontSize: 'var(--text-sm)', fontWeight: 700, color: 'var(--text)' }}>
-                Sub-skill Quadrant
-              </div>
-              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginBottom: 10 }}>
-                X = current score · Y = MET importance
-              </div>
-              <div style={{ width: '100%', height: 320 }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <ScatterChart margin={{ top: 8, right: 20, bottom: 20, left: 4 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-                    <XAxis
-                      type="number"
-                      dataKey="x"
-                      domain={[1, 4]}
-                      ticks={[1, 1.5, 2, 2.5, 3, 3.5, 4]}
-                      tick={{ fontSize: 11, fill: 'var(--muted)' }}
-                      label={{ value: 'Current score (0-4 raw)', position: 'insideBottom', offset: -8, fill: 'var(--muted)', fontSize: 11 }}
-                    />
-                    <YAxis
-                      type="number"
-                      dataKey="y"
-                      domain={[1.5, 4]}
-                      ticks={[2, 2.5, 3, 3.5, 4]}
-                      tick={{ fontSize: 11, fill: 'var(--muted)' }}
-                      label={{ value: 'MET importance', angle: -90, position: 'insideLeft', fill: 'var(--muted)', fontSize: 11 }}
-                    />
-                    <ReferenceArea x1={1} x2={2.8} y1={2.8} y2={4} fill="#f3e8e8" fillOpacity={0.55} />
-                    <ReferenceArea x1={2.8} x2={4} y1={2.8} y2={4} fill="#e9f4ef" fillOpacity={0.6} />
-                    <ReferenceLine x={2.8} stroke="#90a4ae" strokeDasharray="4 4" />
-                    <ReferenceLine y={2.8} stroke="#90a4ae" strokeDasharray="4 4" />
-                    <Tooltip content={<QuadrantTooltip />} />
-                    <Scatter name="Exceeding" data={quadrantData.filter((d) => d.level === 'exceeding')} fill="#1a7f5a" />
-                    <Scatter name="Achieving" data={quadrantData.filter((d) => d.level === 'achieving')} fill="#1a5f9e" />
-                    <Scatter name="Developing" data={quadrantData.filter((d) => d.level === 'developing')} fill="#b05a00" />
-                  </ScatterChart>
-                </ResponsiveContainer>
-              </div>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14, paddingTop: 8, borderTop: '1px solid var(--divider)', fontSize: 'var(--text-xs)', fontWeight: 700 }}>
-                <span style={{ color: '#1a7f5a' }}>Exceeding (3.5)</span>
-                <span style={{ color: '#1a5f9e' }}>Achieving (2.7)</span>
-                <span style={{ color: '#b05a00' }}>Developing (1.8)</span>
+          <section className="student-panel">
+            <div className="student-panel-head">
+              <div>
+                <span className="student-panel-kicker">Progress history</span>
+                <h2>Recent approved diagnoses</h2>
               </div>
             </div>
-
-            <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 11, padding: 14 }}>
-              <div style={{ fontSize: 'var(--text-sm)', fontWeight: 700, color: 'var(--text)' }}>
-                Speaking Profile — MET 3 Criteria
-              </div>
-              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginBottom: 10 }}>
-                Pentagon = 5 sub-skills
-              </div>
-              <div style={{ width: '100%', height: 320 }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <RadarChart data={radarData} outerRadius="72%">
-                    <PolarGrid stroke="var(--border)" />
-                    <PolarAngleAxis dataKey="skill" tick={{ fill: 'var(--text)', fontSize: 11 }} />
-                    <PolarRadiusAxis angle={30} domain={[0, 10]} tick={{ fill: 'var(--muted)', fontSize: 10 }} />
-                    <Tooltip formatter={(v) => `${v}/10`} />
-                    <Legend verticalAlign="bottom" iconType="line" wrapperStyle={{ fontSize: 11, paddingTop: 8 }} />
-                    <Radar name="S1 current" dataKey="baseline" stroke="#1a5f9e" fill="#1a5f9e" fillOpacity={0.08} />
-                    <Radar name="S2 actual" dataKey="actual" stroke="#b05a00" fill="#b05a00" fillOpacity={0.08} />
-                    <Radar name="S3 projected" dataKey="projected" stroke="#2d8b8b" fill="#2d8b8b" fillOpacity={0.08} />
-                    <Radar name="Goal 8.0" dataKey="goal" stroke="#1a7f5a" strokeDasharray="4 4" fill="none" />
-                  </RadarChart>
-                </ResponsiveContainer>
-              </div>
+            <div className="student-history-list">
+              {diagnoses.map((dx, i) => (
+                <div key={dx.id} className="student-history-item">
+                  <div>
+                    <strong>Class #{diagnoses.length - i}</strong>
+                    {dx.sections?.profileUpdateSuggestions?.content?.progressNote && (
+                      <p>{dx.sections.profileUpdateSuggestions.content.progressNote}</p>
+                    )}
+                  </div>
+                  <span>{new Date(dx.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                </div>
+              ))}
             </div>
-          </div>
-
-          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.12em', fontWeight: 700, marginBottom: 10 }}>
-            Session Timeline
-          </div>
-          <div className="progress-session-grid">
-            {sessionSeries.map((s, idx) => (
-              <button
-                key={s.id || idx}
-                type="button"
-                onClick={() => setSelectedSession({ ...s, idx })}
-                style={{ textAlign: 'left', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 11, padding: 16, borderLeft: `4px solid ${sessionBorderColor(s.score10)}`, cursor: 'pointer', fontFamily: 'var(--font-ui)' }}
-              >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                  <span style={{ fontSize: 'var(--text-sm)', fontWeight: 700, color: 'var(--text)' }}>Session {idx + 1}</span>
-                  <span style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--accent-deep)' }}>{s.score10 ? `${s.score10}/10` : '—'}</span>
-                </div>
-                <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginBottom: 7 }}>{s.dateLabel}</div>
-                <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-2)', lineHeight: 1.55 }}>
-                  {s.note || 'Session evaluation recorded from diagnosis evidence.'}
-                </div>
-              </button>
-            ))}
-          </div>
+          </section>
         </>
       )}
 
-      {/* Progress notes */}
       {notes.length > 0 && (
-        <div style={{ marginTop: 20 }}>
-          <div style={{ fontWeight: 600, fontSize: 'var(--text-sm)', marginBottom: 10 }}>Notes from Teacher</div>
-          {notes.map(n => (
-            <div key={n.id} style={{ padding: '10px 14px', background: 'var(--bg)', borderRadius: 'var(--radius-sm)', marginBottom: 8, fontSize: 'var(--text-sm)', lineHeight: 1.6 }}>
-              <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginRight: 8 }}>
-                {new Date(n.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
-              </span>
-              {n.note}
+        <section className="student-panel">
+          <div className="student-panel-head">
+            <div>
+              <span className="student-panel-kicker">Teacher notes</span>
+              <h2>Extra notes</h2>
             </div>
-          ))}
-        </div>
+          </div>
+          <div className="student-history-list">
+            {notes.map(n => (
+              <div key={n.id} className="student-history-item">
+                <div>
+                  <strong>{new Date(n.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</strong>
+                  <p>{n.note}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
       )}
-
-      <SessionDetailModal
-        session={selectedSession}
-        onClose={() => setSelectedSession(null)}
-      />
     </div>
   );
 }
 
-function SessionDetailModal({ session, onClose }) {
-  if (!session) return null;
+function ProgressProfileCard({ skill, trend }) {
+  const score = Number(skill.score_0_80) || 0;
+  if (score <= 0) return null;
+  const stage = getProgressStage(score);
+  const trendNote = trend?.dir === 'new'
+    ? 'Evaluated once — your progress trend appears after the next class.'
+    : trend?.dir === 'up'
+      ? 'You are moving in the right direction since your last class.'
+      : trend?.dir === 'down'
+        ? 'Practice focus for next class.'
+        : 'Holding steady — keep practising to reach the next stage.';
+
   return (
-    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.42)', zIndex: 80, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-      <div onClick={(e) => e.stopPropagation()} style={{ width: '100%', maxWidth: 560, maxHeight: '88vh', overflowY: 'auto', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12 }}>
-        <div style={{ padding: '16px 18px', borderBottom: '1px solid var(--divider)', display: 'flex', justifyContent: 'space-between', gap: 12 }}>
-          <div>
-            <div style={{ fontSize: 'var(--text-lg)', fontWeight: 800, color: 'var(--accent-deep)' }}>Session {session.idx + 1}</div>
-            <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>{session.dateLabel}</div>
-          </div>
-          <button onClick={onClose} style={{ border: '1px solid var(--border)', background: 'var(--surface)', borderRadius: 8, width: 28, height: 28, cursor: 'pointer' }}>×</button>
+    <article className="student-progress-card">
+      <div className="student-panel-head">
+        <div>
+          <span className="student-panel-kicker">Skill progress</span>
+          <h2>{skill.section}</h2>
         </div>
-        <div style={{ padding: 16 }}>
-          <div style={{ marginBottom: 10, fontSize: 'var(--text-sm)' }}><strong>Session score:</strong> {session.score10 != null ? `${session.score10}/10` : 'Not set'}</div>
-          <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-2)', lineHeight: 1.6, marginBottom: 12 }}>
-            {session.note || 'No teacher note recorded for this session.'}
-          </div>
-          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700, marginBottom: 8 }}>
-            Skill Breakdown (1–10)
-          </div>
-          <SkillBars scores={session.skillScores || []} />
+        <span className="student-stage-badge">{stage.label}</span>
+      </div>
+
+      <div className="student-stage-track student-stage-track--wide" aria-label={`${skill.section} stage: ${stage.label}`}>
+        {PROGRESS_STAGES.map(item => (
+          <span key={item.label} className={item.order <= stage.order ? 'active' : ''} title={item.label} />
+        ))}
+      </div>
+
+      <div className="student-progress-trend">
+        <TrendChip trend={trend} />
+        <span className="student-progress-trend-note">{trendNote}</span>
+      </div>
+
+      <div className="student-progress-copy-grid">
+        <div>
+          <strong>Current focus</strong>
+          <p>{skill.next_step || `Keep building more control in ${skill.section}.`}</p>
+        </div>
+        <div>
+          <strong>Last assessed</strong>
+          <p>{stage.label} stage · {trend?.evaluations > 1 ? `based on ${trend.evaluations} classes` : 'based on your latest class'}.</p>
         </div>
       </div>
-    </div>
+
+      <div className="student-confidence-list">
+        <TodoRow done={stage.order >= 2} label={`I understand the ${skill.section} task`} meta="Foundation step" />
+        <TodoRow done={stage.order >= 3} label="I can complete it with support" meta="Building control" />
+        <TodoRow done={stage.order >= 4} label="I can do it more independently" meta="Consistency step" />
+        <TodoRow done={stage.order >= 5} label="I can try timed mock practice" meta="Ready for mock practice" />
+      </div>
+    </article>
   );
-}
-
-function SkillBars({ scores }) {
-  if (!scores?.length) return <p style={{ color: 'var(--muted)', fontSize: 'var(--text-sm)', margin: 0 }}>No evaluated skills yet.</p>;
-  return (
-    <div style={{ display: 'grid', gap: 8 }}>
-      {scores.slice(0, 6).map((s) => (
-        <div key={s.name} style={{ display: 'grid', gridTemplateColumns: '88px 1fr 40px', alignItems: 'center', gap: 8 }}>
-          <span style={{ fontSize: 11, color: 'var(--text-2)' }}>{s.name}</span>
-          <div style={{ width: '100%', height: 8, background: 'var(--bg-deep)', borderRadius: 99, overflow: 'hidden' }}>
-            <div style={{ width: `${Math.min(100, (s.score10 / 10) * 100)}%`, height: '100%', background: '#1a5f9e' }} />
-          </div>
-          <span style={{ fontSize: 11, color: 'var(--accent-deep)', fontWeight: 700 }}>{s.score10}</span>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function QuadrantTooltip({ active, payload }) {
-  if (!active || !payload?.length) return null;
-  const p = payload[0]?.payload;
-  if (!p) return null;
-  return (
-    <div style={{ background: '#fff', border: '1px solid var(--border)', borderRadius: 8, padding: '8px 10px', boxShadow: 'var(--shadow-sm)' }}>
-      <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text)' }}>{p.skill}</div>
-      <div style={{ fontSize: 11, color: 'var(--muted)' }}>Current: {p.raw.toFixed(1)} / 4</div>
-      <div style={{ fontSize: 11, color: 'var(--muted)' }}>Importance: {p.y.toFixed(1)} / 4</div>
-    </div>
-  );
-}
-
-function buildTrajectoryCards(sessionSeries) {
-  const first = sessionSeries[0] || null;
-  const latest = sessionSeries[sessionSeries.length - 1] || null;
-  const prev = sessionSeries.length > 1 ? sessionSeries[sessionSeries.length - 2] : null;
-  const trend = latest?.score10 != null && prev?.score10 != null ? round1(latest.score10 - prev.score10) : 0;
-  const projectedScore = latest?.score10 != null ? clamp10(round1(latest.score10 + Math.max(0.3, trend || 0.6))) : null;
-  const targetMet = projectedScore != null && projectedScore >= 8;
-
-  return [
-    {
-      key: 'baseline',
-      title: `S1 — Baseline`,
-      value: first?.score10 != null ? `${first.score10}` : '—',
-      subtitle: first ? `Session 1 baseline` : 'No baseline yet',
-      footer: first ? `Overall: ${first.score10}` : '',
-      color: '#1a5f9e',
-      session: first ? { ...first, idx: 0 } : null,
-    },
-    {
-      key: 'actual',
-      title: `S${latest?.idx != null ? latest.idx + 1 : sessionSeries.length} — Actual`,
-      value: latest?.score10 != null ? `${latest.score10}` : '—',
-      subtitle: latest ? `Session ${latest.idx + 1} performance` : 'No recent session',
-      footer: latest ? `Δ ${trend >= 0 ? '+' : ''}${trend.toFixed(1)}` : '',
-      color: '#b05a00',
-      session: latest ? { ...latest, idx: latest.idx } : null,
-    },
-    {
-      key: 'projected',
-      title: `S${(latest?.idx ?? sessionSeries.length) + 2} — Projected`,
-      value: projectedScore != null ? `${projectedScore}` : '—',
-      subtitle: 'Two sessions out',
-      footer: targetMet ? '✓ Target met' : 'On track',
-      footerTone: targetMet ? '#1a7f5a' : 'var(--muted)',
-      color: '#1a7f5a',
-      session: null,
-    },
-  ];
-}
-
-function buildQuadrantData(latestSession) {
-  const items = Array.isArray(latestSession?.skillScores) ? latestSession.skillScores : [];
-  const fallback = latestSession?.score10 != null ? latestSession.score10 : 6;
-
-  const source = items.length
-    ? items
-    : [
-      { name: 'Task completion', score10: fallback },
-      { name: 'Vocabulary', score10: fallback },
-      { name: 'Grammar', score10: fallback },
-      { name: 'Fluency & coherence', score10: fallback },
-      { name: 'Pronunciation', score10: fallback },
-    ];
-
-  return source.slice(0, 7).map((s) => {
-    const score10 = clamp10(s.score10) ?? fallback;
-    const raw = round1(score10 / 2.5);
-    const importance = round1(skillImportance(s.name, score10));
-    return {
-      skill: toMetricLabel(s.name),
-      raw,
-      x: raw,
-      y: importance,
-      level: raw >= 3.2 ? 'exceeding' : raw >= 2.4 ? 'achieving' : 'developing',
-    };
-  });
-}
-
-function buildRadarProfile(sessionSeries) {
-  const first = sessionSeries[0] || null;
-  const latest = sessionSeries[sessionSeries.length - 1] || null;
-  const prev = sessionSeries.length > 1 ? sessionSeries[sessionSeries.length - 2] : null;
-  const trend = latest?.score10 != null && prev?.score10 != null ? round1(latest.score10 - prev.score10) : 0;
-  const boost = Math.max(0.3, trend || 0.6);
-
-  const preferredOrder = ['Task completion', 'Vocabulary', 'Grammar', 'Fluency & coherence', 'Pronunciation'];
-  const latestMap = mapSkillScores(latest?.skillScores);
-  const baselineMap = mapSkillScores(first?.skillScores);
-
-  const categories = preferredOrder.map((name) => {
-    const actual = latestMap.get(name) ?? latest?.score10 ?? 6;
-    const baseline = baselineMap.get(name) ?? first?.score10 ?? actual;
-    const projected = clamp10(round1(actual + boost));
-    return {
-      skill: name,
-      baseline: clamp10(baseline) ?? 6,
-      actual: clamp10(actual) ?? 6,
-      projected: projected ?? 6,
-      goal: 8,
-    };
-  });
-
-  return categories;
-}
-
-function mapSkillScores(scores) {
-  const m = new Map();
-  (Array.isArray(scores) ? scores : []).forEach((s) => {
-    const score = clamp10(s?.score10);
-    if (score == null) return;
-    const key = toMetricLabel(s.name);
-    if (!m.has(key)) m.set(key, score);
-  });
-  return m;
-}
-
-function toMetricLabel(name) {
-  const text = String(name || '').toLowerCase();
-  if (text.includes('task')) return 'Task completion';
-  if (text.includes('vocab')) return 'Vocabulary';
-  if (text.includes('gram')) return 'Grammar';
-  if (text.includes('fluency') || text.includes('coherence') || text.includes('speak') || text.includes('reading') || text.includes('writing') || text.includes('listening')) {
-    return 'Fluency & coherence';
-  }
-  if (text.includes('pronunciation') || text.includes('pronunc')) return 'Pronunciation';
-  if (text.includes('test')) return 'Task completion';
-  return 'Vocabulary';
-}
-
-function skillImportance(name, score10) {
-  const text = String(name || '').toLowerCase();
-  if (text.includes('speaking') || text.includes('pronunciation')) return 3.5;
-  if (text.includes('reading') || text.includes('writing') || text.includes('listening')) return 3.2;
-  if (text.includes('grammar')) return 3.0;
-  if (text.includes('vocab')) return 2.8;
-  return score10 < 6 ? 3.1 : 2.7;
-}
-
-function buildSessionSeries(diagnoses, classSessions, storedProgress) {
-  const fromDx = buildDiagnosisSessions(diagnoses || []);
-  const fromClass = Array.isArray(classSessions) ? classSessions : [];
-  const fromStore = buildProgressStoreSessions(storedProgress);
-
-  // Priority by source: store (low) < class record (mid) < approved diagnosis (high)
-  const priority = { store: 1, class: 2, diagnosis: 3 };
-  const byDate = new Map();
-  [...fromStore, ...fromClass, ...fromDx].forEach((s) => {
-    const k = dateKey(s.rawDate);
-    const prev = byDate.get(k);
-    if (!prev || (priority[s.source] || 0) >= (priority[prev.source] || 0)) {
-      byDate.set(k, s);
-    }
-  });
-
-  return Array.from(byDate.values())
-    .sort((a, b) => a.rawDateTs - b.rawDateTs)
-    .map((s, idx) => ({ ...s, idx }));
-}
-
-function buildDiagnosisSessions(diagnoses) {
-  const ordered = [...diagnoses].reverse();
-  return ordered.map((dx) => {
-    const snapshot = Array.isArray(dx?.content?.section_snapshot) ? dx.content.section_snapshot : [];
-    const valid = snapshot.filter((s) => Number(s?.score_0_80) > 0);
-    const avg80 = valid.length ? valid.reduce((sum, s) => sum + Number(s.score_0_80), 0) / valid.length : null;
-    const derived10 = avg80 != null ? round1(avg80 / 8) : null;
-    const manual10 = numberOrNull(dx?.sessionScore10 ?? dx?.sections?.progressScale?.score10 ?? dx?.sections?.progress?.score10);
-    const score10 = clamp10(manual10 != null ? manual10 : derived10);
-    const skillScores = valid
-      .map((s) => ({ name: s.section, score10: clamp10(round1(Number(s.score_0_80) / 8)) }))
-      .filter((s) => s.score10 != null);
-    const rawDate = dx.createdAt || dx.date || new Date().toISOString();
-    return {
-      id: dx.id,
-      source: 'diagnosis',
-      score10,
-      skillScores,
-      rawDate,
-      rawDateTs: toDateTs(rawDate),
-      dateLabel: formatDate(rawDate),
-      note: dx.sections?.profileUpdateSuggestions?.content?.progressNote || '',
-    };
-  });
-}
-
-function buildClassEvidenceSessions(events, evidenceList) {
-  const out = [];
-  (events || []).forEach((ev, i) => {
-    const evidence = evidenceList?.[i];
-    if (!evidence) return;
-    const skillScores = skillScoresFromEvidence(evidence);
-    const avg = skillScores.length
-      ? round1(skillScores.reduce((sum, s) => sum + (s.score10 || 0), 0) / skillScores.length)
-      : null;
-    const manual10 = numberOrNull(
-      evidence.sessionScore10 ??
-      evidence.progressScore10 ??
-      evidence.score10 ??
-      evidence.overallScore10
-    );
-    const score10 = clamp10(manual10 != null ? manual10 : avg);
-    if (score10 == null && !skillScores.length) return;
-    const rawDate = ev?.date ? `${ev.date}T12:00:00` : ev?.createdAt || new Date().toISOString();
-    out.push({
-      id: evidence.id || ev.id,
-      source: 'class',
-      score10,
-      skillScores,
-      rawDate,
-      rawDateTs: toDateTs(rawDate),
-      dateLabel: formatDate(rawDate),
-      note: evidence.teacherNotes || evidence.studentPerformance || evidence.additionalNotes || 'Session evaluation recorded from class evidence.',
-    });
-  });
-  return out;
-}
-
-function skillScoresFromEvidence(evidence) {
-  if (!evidence) return [];
-  const defs = [
-    { name: 'Speaking', evalKey: 'evaluatedSpeaking', countKey: 'speakingEvidenceCount' },
-    { name: 'Writing', evalKey: 'evaluatedWriting', countKey: 'writingEvidenceCount' },
-    { name: 'Reading', evalKey: 'evaluatedReading', countKey: 'readingEvidenceCount' },
-    { name: 'Listening', evalKey: 'evaluatedListening', countKey: 'listeningEvidenceCount' },
-    { name: 'Grammar', evalKey: 'evaluatedGrammar', countKey: 'grammarEvidenceCount' },
-    { name: 'Vocabulary', evalKey: 'evaluatedVocabulary', countKey: 'vocabularyEvidenceCount' },
-    { name: 'Task completion', evalKey: 'evaluatedTestStrategy', countKey: 'testStrategyEvidenceCount' },
-  ];
-  return defs
-    .filter((d) => Boolean(evidence[d.evalKey]))
-    .map((d) => {
-      const count = Number(evidence[d.countKey] || 0);
-      const base = d.name === 'Task completion' ? 6.5 : 5.5;
-      return { name: d.name, score10: clamp10(round1(base + Math.min(4, count))) };
-    })
-    .filter((s) => s.score10 != null);
-}
-
-function buildProgressStoreSessions(progressObj) {
-  if (!progressObj || typeof progressObj !== 'object') return [];
-  const candidates = [
-    progressObj.sessionSeries,
-    progressObj.sessions,
-    progressObj.timeline,
-    progressObj.history,
-    progressObj.progress,
-    progressObj.speakingTrajectory,
-    progressObj.scores,
-  ];
-  const list = candidates.find((arr) => Array.isArray(arr) && arr.length) || [];
-  if (!list.length) return [];
-
-  return list
-    .map((item, idx) => {
-      const isNumber = typeof item === 'number' || typeof item === 'string';
-      const rawScore = isNumber
-        ? item
-        : (item.score10 ?? item.score ?? item.overall ?? item.overallScore ?? item.metScore ?? item.value);
-      const score10 = toScore10(rawScore);
-      if (score10 == null) return null;
-      const rawDate = isNumber
-        ? new Date(Date.now() - (list.length - idx - 1) * 86400000).toISOString()
-        : (item.date || item.createdAt || item.timestamp || new Date().toISOString());
-      return {
-        id: isNumber ? `store-${idx}` : (item.id || `store-${idx}`),
-        source: 'store',
-        score10,
-        skillScores: [],
-        rawDate,
-        rawDateTs: toDateTs(rawDate),
-        dateLabel: formatDate(rawDate),
-        note: isNumber ? 'Imported from saved progress history.' : (item.note || item.label || 'Imported from saved progress history.'),
-      };
-    })
-    .filter(Boolean);
-}
-
-function toScore10(rawScore) {
-  const n = numberOrNull(rawScore);
-  if (n == null) return null;
-  if (n <= 10) return clamp10(n);
-  if (n <= 80) return clamp10(round1(n / 8));
-  if (n <= 100) return clamp10(round1(n / 10));
-  return null;
-}
-
-function dateKey(rawDate) {
-  const d = new Date(rawDate);
-  if (Number.isNaN(d.getTime())) return String(rawDate || '');
-  return `${d.getUTCFullYear()}-${d.getUTCMonth() + 1}-${d.getUTCDate()}`;
-}
-
-function toDateTs(rawDate) {
-  const d = new Date(rawDate);
-  return Number.isNaN(d.getTime()) ? 0 : d.getTime();
-}
-
-function formatDate(rawDate) {
-  const d = new Date(rawDate);
-  if (Number.isNaN(d.getTime())) return 'Date not set';
-  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
-}
-
-function round1(n) {
-  return Math.round(n * 10) / 10;
-}
-
-function numberOrNull(v) {
-  const n = Number(v);
-  return Number.isFinite(n) ? n : null;
-}
-
-function clamp10(v) {
-  if (v == null) return null;
-  return round1(Math.max(0, Math.min(10, Number(v))));
-}
-
-function sessionBorderColor(score10) {
-  if (score10 == null) return '#9ca3af';
-  if (score10 >= 8) return '#1a7f5a';
-  if (score10 >= 6) return '#b05a00';
-  return '#1a5f9e';
 }

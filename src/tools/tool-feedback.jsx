@@ -384,7 +384,14 @@ Important rules:
 - Remove payment, security, platform, login, private business, and internal operational notes.
 - Keep only student-learning information: class content, performance, strengths, difficulties, corrections, homework, progress, and next steps.
 - Use warm constructive language: what to improve, what to change, next step.
-- Do not invent missing details.`;
+- Do not invent missing details.
+
+VOICE & AUTHENTICITY (write like a real teacher, not a chatbot):
+- Speak directly to ${form.studentName || "the student"} in a warm, human teacher voice — personal and specific, never generic or robotic.
+- Anchor every comment to a REAL moment from the class: paraphrase what the student actually said or did, the words they used, the question they answered. No vague "good participation" filler.
+- Avoid empty praise ("great job!", "well done!") and AI-template phrasing. If you praise something, name exactly what and why.
+- Vary your sentence openings and structure — two strengths/corrections should never read like the same template.
+- Sound like natural spoken-to-written English: encouraging but honest, concrete, and concise. Never mention AI or that this came from a transcript.`;
 
   const reportTypeModifier = REPORT_TYPE_MODIFIERS[form.reportType] || REPORT_TYPE_MODIFIERS["Full Class Progress Report"];
   const classFocusModifier = form.classFocus === "Auto-detect from transcript"
@@ -450,7 +457,7 @@ function mapCompatibility(report, form) {
   const overview = (report?.progress_summary?.progress_indicators || []).slice(0, 4).map((item) => ({
     s: item.skill || "Skill",
     r: Number(item.level) >= 70 ? "Achieving" : Number(item.level) >= 50 ? "Developing" : "Priority focus",
-    t: `${item.level || 0}/100`,
+    t: Number(item.level) >= 70 ? "Strong evidence" : Number(item.level) >= 50 ? "Developing evidence" : "Needs more samples",
   }));
   const priorities = (report?.next_steps || []).slice(0, 3).map((step, idx) => ({
     l: `${idx + 1} — ${idx === 0 ? "URGENT" : "HIGH"}`,
@@ -861,7 +868,8 @@ SECTION SELECTION (MUST FOLLOW):
         includeExercises,
       };
       const prompt = `${buildGeneratorPrompt(form)}\n\n${buildSectionDirective()}\n\nTeacher context:\n${buildContext()}`;
-      const data = await callAI(prompt, { max_tokens: 4096 });
+      // Warmer temperature → more natural, human teacher voice (less template-y).
+      const data = await callAI(prompt, { max_tokens: 4096, temperature: 0.7 });
       const raw = data.content?.map(b => b.text || "").join("") || "";
       const parsed = parseAiJson(raw);
       const compatibility = mapCompatibility(parsed, form);
@@ -2622,7 +2630,7 @@ function DiagnosisFeedbackWorkspace({
             </p>
           </Card>
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: '1.4fr .8fr', gap: 16 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1.4fr .8fr', gap: 20 }}>
             <Card>
               <SectionHeader title="Student-facing feedback" sub="Warm, clear, and editable before publishing" />
               <textarea
@@ -2657,8 +2665,8 @@ function DiagnosisFeedbackWorkspace({
 
               <Card>
                 <SectionHeader title="Feedback history" sub={`${published.length} published · ${drafts.length} draft(s)`} />
-                {studentItems.slice(0, 5).map(item => (
-                  <div key={item.id} style={{ borderTop: '1px solid var(--divider)', paddingTop: 9, marginTop: 9 }}>
+                {studentItems.slice(0, 5).map((item, i) => (
+                  <div key={item.id} style={{ borderTop: i > 0 ? '1px solid var(--divider)' : 'none', paddingTop: i > 0 ? 11 : 0, marginTop: i > 0 ? 11 : 0 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
                       <strong style={{ fontSize: 13 }}>{item.status === 'published' ? 'Published feedback' : 'Draft feedback'}</strong>
                       <Pill tone={item.status === 'published' ? 'success' : 'muted'}>{item.status || 'draft'}</Pill>
@@ -2669,7 +2677,7 @@ function DiagnosisFeedbackWorkspace({
                   </div>
                 ))}
                 {!studentItems.length && (
-                  <p style={{ fontSize: 13, color: 'var(--muted)', margin: 0 }}>No feedback saved for this student yet.</p>
+                  <p style={{ fontSize: 13, color: 'var(--muted)', marginTop: 6 }}>No feedback saved for this student yet.</p>
                 )}
               </Card>
             </div>

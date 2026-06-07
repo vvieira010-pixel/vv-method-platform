@@ -25,7 +25,7 @@ export function ExTypeBadge({ typeId, size = 'sm' }) {
   const fontSize = size === 'sm' ? 'var(--text-xs)' : 'var(--text-sm)';
   const padding = size === 'sm' ? '3px 8px' : '4px 10px';
   return (
-    <span style={{
+    <span className="ex-type-badge" style={{
       display: 'inline-flex', alignItems: 'center', gap: 5,
       background: meta.bg, color: meta.color,
       fontSize, padding, borderRadius: 999, fontWeight: 600,
@@ -38,25 +38,66 @@ export function ExTypeBadge({ typeId, size = 'sm' }) {
 
 /* ─── EXERCISE TYPE PICKER ──────────────────────────────────── */
 export function ExerciseTypePicker({ onSelect, onClose }) {
+  const [qty, setQty] = useState(1);
+  const [level, setLevel] = useState('B1'); // New state for level
+  const clamp = n => Math.max(1, Math.min(20, Number.isFinite(n) ? n : 1));
+  const stepBtn = {
+    width: 26, height: 26, display: 'grid', placeItems: 'center',
+    border: '1px solid var(--border)', background: 'var(--surface)',
+    borderRadius: 6, cursor: 'pointer', fontSize: 16, lineHeight: 1, color: 'var(--text)',
+  };
   return (
-    <Card style={{ padding: 20 }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+    <Card className="exercise-type-picker" style={{ padding: 20 }}>
+      <div className="exercise-type-picker-head" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6, gap: 12, flexWrap: 'wrap' }}>
         <span style={{ fontWeight: 700, fontSize: 'var(--text-sm)', color: 'var(--accent-deep)' }}>
           Choose exercise type
         </span>
-        {onClose && (
-          <Button variant="ghost" size="sm" onClick={onClose}>
-            <Icon.close size={12} /> Cancel
-          </Button>
-        )}
+        <div className="exercise-type-picker-controls" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          {/* Level selector */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Level</span>
+            <select
+              value={level}
+              onChange={e => setLevel(e.target.value)}
+              style={{ padding: '4px 6px', border: '1px solid var(--border)', borderRadius: 6, fontSize: 'var(--text-sm)' }}
+            >
+              {['A1', 'A2', 'B1', 'B2', 'C1'].map(l => <option key={l} value={l}>{l}</option>)}
+            </select>
+          </div>
+          {/* Quantity stepper */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+              How many
+            </span>
+            <button type="button" aria-label="Fewer" style={stepBtn} onClick={() => setQty(q => clamp(q - 1))}>−</button>
+            <input
+              type="number" min={1} max={20} value={qty}
+              onChange={e => setQty(clamp(parseInt(e.target.value, 10)))}
+              style={{
+                width: 48, textAlign: 'center', padding: '4px 6px',
+                border: '1px solid var(--border)', borderRadius: 6,
+                fontFamily: 'var(--font-ui)', fontSize: 'var(--text-sm)', color: 'var(--text)',
+              }}
+            />
+            <button type="button" aria-label="More" style={stepBtn} onClick={() => setQty(q => clamp(q + 1))}>+</button>
+          </div>
+          {onClose && (
+            <Button variant="ghost" size="sm" onClick={onClose}>
+              <Icon.close size={12} /> Cancel
+            </Button>
+          )}
+        </div>
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 8 }}>
+      <p style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', margin: '0 0 14px' }}>
+        Pick a type to add {qty > 1 ? <strong>{qty} of them</strong> : 'one'} at <strong>{level} level</strong>.
+      </p>
+      <div className="exercise-type-picker-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 8 }}>
         {EX_TYPES.map(t => {
           const IconComp = Icon[t.iconKey];
           return (
             <button
               key={t.id}
-              onClick={() => onSelect(t.id)}
+              onClick={() => onSelect(t.id, qty, level)} // Pass level here
               style={{
                 display: 'flex', alignItems: 'center', gap: 10,
                 padding: '12px 14px', borderRadius: 'var(--radius-md)',
@@ -97,13 +138,14 @@ export function ExerciseEditor({ exercise, onChange }) {
   const update = (patch) => onChange({ ...exercise, ...patch });
 
   switch (exercise.type) {
-    case 'mcq':   return <MCQEditor   ex={exercise} update={update} />;
-    case 'blank': return <BlankEditor ex={exercise} update={update} />;
-    case 'short': return <ShortEditor ex={exercise} update={update} />;
-    case 'speak': return <SpeakEditor ex={exercise} update={update} />;
-    case 'order': return <OrderEditor ex={exercise} update={update} />;
-    case 'fix':   return <FixEditor   ex={exercise} update={update} />;
-    case 'flash': return <FlashEditor ex={exercise} update={update} />;
+    case 'mcq':    return <MCQEditor    ex={exercise} update={update} />;
+    case 'blank':  return <BlankEditor  ex={exercise} update={update} />;
+    case 'short':  return <ShortEditor  ex={exercise} update={update} />;
+    case 'speak':  return <SpeakEditor  ex={exercise} update={update} />;
+    case 'order':  return <OrderEditor  ex={exercise} update={update} />;
+    case 'fix':    return <FixEditor    ex={exercise} update={update} />;
+    case 'flash':  return <FlashEditor  ex={exercise} update={update} />;
+    case 'listen': return <ListenEditor ex={exercise} update={update} />;
     default:
       return <p style={{ color: 'var(--muted)', fontSize: 'var(--text-sm)' }}>Unknown exercise type: {exercise.type}</p>;
   }
@@ -240,9 +282,6 @@ function ShortEditor({ ex, update }) {
           />
         </div>
       </div>
-      <div style={{ ...hintText, color: 'var(--info)' }}>
-        This exercise is AI pre-evaluated. You review before sending feedback.
-      </div>
     </div>
   );
 }
@@ -270,9 +309,6 @@ function SpeakEditor({ ex, update }) {
         <div style={hintText}>
           Student sees: "Target: {ex.targetSeconds || 60} seconds"
         </div>
-      </div>
-      <div style={{ ...hintText, color: 'var(--info)' }}>
-        Student records audio + optional transcript. AI pre-evaluated before your review.
       </div>
     </div>
   );
@@ -408,6 +444,96 @@ function FlashEditor({ ex, update }) {
         <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>
           {filledCount} card{filledCount !== 1 ? 's' : ''} ready
         </span>
+      </div>
+    </div>
+  );
+}
+
+/* ─── 8. LISTENING ───────────────────────────────────────────── */
+function ListenEditor({ ex, update }) {
+  return (
+    <div>
+      <div style={fieldWrap}>
+        <label style={fieldLabel}>Audio script (spoken to student)</label>
+        <textarea
+          className="input" rows={5} value={ex.audioText || ''}
+          onChange={e => update({ audioText: e.target.value })}
+          placeholder={'Girl: I was going to study for two hours, but I kept checking my phone.\nBoy: Maybe put your phone in another room next time.\nGirl: Yeah, that\'s probably the only way I\'ll focus.'}
+        />
+        <div style={hintText}>
+          This text is converted to speech by ElevenLabs (or browser TTS as fallback). Student does <em>not</em> see the script.
+        </div>
+      </div>
+
+      <div style={fieldWrap}>
+        <label style={fieldLabel}>Picture hint (optional — context clue shown before listening)</label>
+        <input
+          className="input" value={ex.pictureHint || ''}
+          onChange={e => update({ pictureHint: e.target.value })}
+          placeholder="A student sitting at a desk with books open, looking tired. A phone is next to the books."
+        />
+      </div>
+
+      <div style={fieldWrap}>
+        <label style={fieldLabel}>Question</label>
+        <textarea
+          className="input" rows={2} value={ex.question || ''}
+          onChange={e => update({ question: e.target.value })}
+          placeholder="What problem did the girl have?"
+        />
+      </div>
+
+      <label style={fieldLabel}>Options (click radio to mark correct)</label>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 8 }}>
+        {(ex.options || ['', '', '', '']).map((opt, i) => (
+          <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <input
+              type="radio" name={`listen-correct-${ex.id}`}
+              checked={ex.correct === i}
+              onChange={() => update({ correct: i })}
+              style={{ accentColor: 'var(--success)', width: 16, height: 16, cursor: 'pointer', flexShrink: 0 }}
+            />
+            <span style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)', width: 18 }}>
+              {String.fromCharCode(65 + i)}.
+            </span>
+            <input
+              className="input" value={opt}
+              onChange={e => {
+                const opts = [...(ex.options || ['', '', '', ''])];
+                opts[i] = e.target.value;
+                update({ options: opts });
+              }}
+              placeholder={`Option ${String.fromCharCode(65 + i)}…`}
+              style={{ flex: 1 }}
+            />
+          </div>
+        ))}
+      </div>
+      {ex.correct != null && (
+        <div style={{ fontSize: 'var(--text-xs)', color: 'var(--success)', fontWeight: 600, marginBottom: 8 }}>
+          Correct answer: {String.fromCharCode(65 + ex.correct)}
+        </div>
+      )}
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 12 }}>
+        <div style={fieldWrap}>
+          <label style={fieldLabel}>Explanation (shown after answering)</label>
+          <input
+            className="input" value={ex.explanation || ''}
+            onChange={e => update({ explanation: e.target.value })}
+            placeholder="She says she kept checking her phone and only finished one chapter."
+          />
+        </div>
+        <div style={fieldWrap}>
+          <label style={fieldLabel}>Max plays</label>
+          <input
+            className="input" type="number" min={0} max={10} step={1}
+            value={ex.plays ?? 2}
+            onChange={e => { const v = Number(e.target.value); update({ plays: isNaN(v) ? 2 : v }); }}
+            style={{ width: 70 }}
+          />
+          <div style={hintText}>0 = unlimited</div>
+        </div>
       </div>
     </div>
   );

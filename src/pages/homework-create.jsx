@@ -6,39 +6,100 @@ import { useState, useEffect } from 'react';
 import { Icon, Card, SectionHeader, Button, Pill } from '../components/shared.jsx';
 import { callAI } from '../components/shared.jsx';
 import { parseAiJson } from '../lib/ai-helpers.js';
-import { buildHomeworkGeneratorPrompt, buildExerciseListPrompt } from '../lib/prompts.js';
+import {
+  buildExerciseListPrompt,
+  buildFinalRefinementPrompt,
+  buildHomeworkBlueprintPrompt,
+  buildHomeworkGroupPrompt,
+  buildTaskGeneratorPrompt,
+  buildListeningGeneratorPrompt,
+} from '../lib/prompts.js';
 import { getDiagnoses, getStudent, saveHomework, updateClassEventStatus } from '../lib/workflow.js';
 import { EX_TYPES, createExercise, exercisePreview, getExType } from '../lib/exercise-types.js';
 import { ExerciseEditor, ExerciseTypePicker, ExTypeBadge } from '../components/exercise-editor.jsx';
 import { getExerciseModules, getModuleExercises, bankMeta } from '../lib/exercise-bank.js';
+import { getB2Modules, getB2ModuleExercises, b2BankMeta } from '../lib/met-b2-bank.js';
+import { getLifestyleModules, getLifestyleModuleExercises, lifestylePackMeta } from '../lib/lifestyle-pack.js';
+import { getLibraryExercises, saveExerciseToLibrary, deleteLibraryExercise, incrementUsage } from '../lib/exercise-library.js';
 import HomeworkSetWizard from '../components/homework-set-wizard.jsx';
 import { getUnitsByLevel, getSkillExercises, SUBJECT_OPTIONS } from '../lib/unit-bank.js';
 
-const SKILL_TYPES = ['writing', 'speaking', 'grammar', 'vocabulary', 'reading', 'listening', 'mixed'];
+const EMPTY_FORM = {
+  title: '', objective: '', description: '',
+  exercises: [],
+  selfCheck: [''],
+  skillType: 'grammar', dueDate: '', teacherNotes: '',
+};
 
-export default function HomeworkCreate({ diagnosisId, studentId, students, onNavigate }) {
+const SKILL_TYPES = ['writing', 'speaking', 'grammar', 'vocabulary', 'reading', 'listening', 'mixed'];
+const HOMEWORK_AI_BASE_OPTIONS = { preferredProvider: 'gemini' };
+const MET_BALANCED_TYPES = ['speak', 'short', 'listen', 'mcq', 'blank', 'flash', 'fix'];
+
+// Skill groups available for per-group generation
+const SKILL_GROUPS = [
+  { key: 'speaking',   label: 'Speaking',   icon: '🎙' },
+  { key: 'writing',    label: 'Writing',    icon: '✍️' },
+  { key: 'grammar',    label: 'Grammar',    icon: '📐' },
+  { key: 'vocabulary', label: 'Vocabulary', icon: '📚' },
+  { key: 'reading',    label: 'Reading',    icon: '📖' },
+  { key: 'listening',  label: 'Listening',  icon: '🎧' },
+];
+
+export default function HomeworkCreate({ diagnosisId, studentId, students, onNavigate, initialStep = 1 }) {
   const [diagnosis, setDiagnosis] = useState(null);
   const [student, setStudent] = useState(null);
+  const [selectedStudentId, setSelectedStudentId] = useState(studentId || '');
   const [form, setForm] = useState(EMPTY_FORM);
   const [preview, setPreview] = useState(false);
   const [saving, setSaving] = useState(false);
   const [generating, setGenerating] = useState(false);
+  const [generatingListening, setGeneratingListening] = useState(false);
   const [exerciseOptions, setExerciseOptions] = useState([]);
   const [loadingOptions, setLoadingOptions] = useState(false);
   const [showTypePicker, setShowTypePicker] = useState(false);
-  const [expandedEx, setExpandedEx] = useState(null);
-  const [showLibrary, setShowLibrary] = useState(false);
+  const [selectedLevel, setSelectedLevel] = useState('B1'); // New state for level
   const [wizardDone, setWizardDone] = useState(false);
-  const [selectedLevel, setSelectedLevel] = useState(null);
   const [selectedSkill, setSelectedSkill] = useState(null);
   const [showUnitBank, setShowUnitBank] = useState(false);
   const [unitBankExercises, setUnitBankExercises] = useState([]);
+  const [expandedEx, setExpandedEx] = useState(null);
+  const [showLibrary, setShowLibrary] = useState(false);
+  const [showB2Bank, setShowB2Bank] = useState(false);
+  const [showLifestylePack, setShowLifestylePack] = useState(false);
+  // Per-skill-group generation config: { speaking: 5, grammar: 4, ... }
+  const [groupGenConfig, setGroupGenConfig] = useState({});
+  const [showGroupGen, setShowGroupGen] = useState(false);
+  const [groupGenStatus, setGroupGenStatus] = useState('');
+  // Saved-exercise library (Supabase or localStorage). Reloaded when libVersion bumps.
+  const [libVersion, setLibVersion] = useState(0);
+  const [libraryExercises, setLibraryExercises] = useState([]);
+  const [currentStep, setCurrentStep] = useState(initialStep); // 1: Diagnosis, 2: Select, 3: Review, 4: Assign
+
+  useEffect(() => {
+    let cancelled = false;
+    getLibraryExercises().then(list => { if (!cancelled) setLibraryExercises(list); }).catch(() => {});
+    return () => { cancelled = true; };
+  }, [libVersion]);
 
   useEffect(() => { load(); }, [diagnosisId, studentId]);
 
+  useEffect(() => {
+    if (!selectedStudentId) {
+      if (!studentId) setStudent(null);
+      return;
+    }
+    const rosterStudent = students.find(s => s.id === selectedStudentId);
+    if (rosterStudent) {
+      setStudent(rosterStudent);
+      return;
+    }
+    getStudent(selectedStudentId).then(s => { if (s) setStudent(s); }).catch(() => {});
+  }, [selectedStudentId, studentId, students]);
+
   async function load() {
-    const sid = studentId;
+    let sid = studentId || '';
     if (sid) {
+      setSelectedStudentId(sid);
       const s = await getStudent(sid) || students.find(x => x.id === sid);
       setStudent(s);
     }
@@ -46,16 +107,22 @@ export default function HomeworkCreate({ diagnosisId, studentId, students, onNav
       const allDx = await getDiagnoses(sid);
       const dx = allDx.find(d => d.id === diagnosisId);
       setDiagnosis(dx);
+      if (dx && !sid && dx.studentId) sid = dx.studentId;
+      if (sid) {
+        setSelectedStudentId(sid);
+        const s = await getStudent(sid) || students.find(x => x.id === sid);
+        setStudent(s || null);
+      }
       if (dx) populateFromDiagnosis(dx, students.find(x => x.id === sid));
     }
   }
 
   function populateFromDiagnosis(dx, s) {
     const hwRec = dx.sections?.homeworkRecommendation?.content;
-    const priority = dx.sections?.priorityDiagnosis?.content?.[0];
+    const priority = getPriorityItems(dx)[0];
     const title = hwRec?.title || (priority ? `${s?.firstName || 'Student'} — ${priority.area}` : 'Homework from Diagnosis');
     const description = hwRec?.instructions || '';
-    const type = hwRec?.expectedSubmissionType?.split('|')[0] || inferSkillType(dx.sections?.priorityDiagnosis?.content);
+    const type = hwRec?.expectedSubmissionType?.split('|')[0] || inferSkillType(getPriorityItems(dx));
 
     // Convert legacy tasks to structured exercises where possible
     const legacyTasks = Array.isArray(hwRec?.tasks) ? hwRec.tasks : [];
@@ -78,20 +145,30 @@ export default function HomeworkCreate({ diagnosisId, studentId, students, onNav
     });
   }
 
-  function inferSkillType(priorities) {
-    const areas = (priorities || []).map(p => (p.area || '').toLowerCase());
-    if (areas.some(a => /speak/.test(a))) return 'speaking';
-    if (areas.some(a => /writ/.test(a))) return 'writing';
-    if (areas.some(a => /vocab/.test(a))) return 'vocabulary';
-    return 'grammar';
-  }
+function inferSkillType(priorities) {
+  const areas = (Array.isArray(priorities) ? priorities : []).map(p => (p.area || '').toLowerCase());
+  if (areas.some(a => /speak/.test(a))) return 'speaking';
+  if (areas.some(a => /writ/.test(a))) return 'writing';
+  if (areas.some(a => /vocab/.test(a))) return 'vocabulary';
+  return 'grammar';
+}
+
+function getPriorityItems(dx) {
+  return Array.isArray(dx?.priorityDiagnosis)
+    ? dx.priorityDiagnosis
+    : Array.isArray(dx?.sections?.priorityDiagnosis?.content)
+      ? dx.sections.priorityDiagnosis.content
+      : [];
+}
 
   /* ── Exercise management ── */
-  function addExercise(type) {
-    const ex = createExercise(type);
-    setForm(f => ({ ...f, exercises: [...f.exercises, ex] }));
-    setExpandedEx(ex.id);
+  function addExercise(type, count = 1, level = 'B1') {
+    const n = Math.max(1, Math.min(20, Number(count) || 1));
+    const created = Array.from({ length: n }, () => createExercise(type, level));
+    setForm(f => ({ ...f, exercises: [...f.exercises, ...created] }));
+    setExpandedEx(created[0].id); // expand the first of the batch for editing
     setShowTypePicker(false);
+    if (n > 1) window.toast?.(`Added ${n} ${level} ${type} exercises.`, 'ok');
   }
 
   function updateExercise(id, updated) {
@@ -124,115 +201,122 @@ export default function HomeworkCreate({ diagnosisId, studentId, students, onNav
   function updateCheck(i, v) { setForm(f => ({ ...f, selfCheck: f.selfCheck.map((t, idx) => idx === i ? v : t) })); }
   function removeCheck(i) { setForm(f => ({ ...f, selfCheck: f.selfCheck.filter((_, idx) => idx !== i) })); }
 
-  async function parseAiJsonWithRepair(raw, expectedShape) {
-    try {
-      return parseAiJson(raw);
-    } catch {
-      // Quick structural salvage before paying for a second AI call.
-      const text = String(raw || '').replace(/```json|```/gi, '').trim();
-      const arrStart = text.indexOf('[');
-      const arrEnd = text.lastIndexOf(']');
-      if (arrStart >= 0 && arrEnd > arrStart) {
-        try { return JSON.parse(text.slice(arrStart, arrEnd + 1)); } catch {}
-      }
-      const objStart = text.indexOf('{');
-      const objEnd = text.lastIndexOf('}');
-      if (objStart >= 0 && objEnd > objStart) {
-        try { return JSON.parse(text.slice(objStart, objEnd + 1)); } catch {}
-      }
-
-      // One repair pass: ask AI to output strict JSON only.
-      const repairPrompt = `You are a JSON repair tool.
-Return ONLY valid JSON. No markdown. No explanation.
-Expected shape: ${expectedShape}
-
-Original text:
-${text.slice(0, 14000)}`;
-
-      const repaired = await callAI(repairPrompt, { max_tokens: 4000, system: 'You repair malformed JSON into strict valid JSON.' });
-      const repairedRaw = repaired.content?.map(b => b.text || '').join('') || '';
-      return parseAiJson(repairedRaw);
+  /* ── Per-skill-group generation ── */
+  async function handleGenerateByGroups() {
+    const selectedGroups = Object.entries(groupGenConfig).filter(([, count]) => count > 0);
+    if (selectedGroups.length === 0) {
+      window.toast?.('Select at least one skill group.', 'warn');
+      return;
     }
+    setGenerating(true);
+    setGroupGenStatus('');
+    const allGenerated = [];
+    for (const [index, [group, count]] of selectedGroups.entries()) {
+      setGroupGenStatus(`Generating ${group} exercises (${index + 1}/${selectedGroups.length})...`);
+      try {
+        const prompt = buildHomeworkGroupPrompt({ student, diagnosis, group, count: Number(count) });
+        const data = await callAI(prompt, { ...HOMEWORK_AI_BASE_OPTIONS, max_tokens: 3500, temperature: 0.8 });
+        const raw = data?.content?.map(b => b.text || '').join('') || '';
+        const parsed = parseAiJson(raw);
+        const items = Array.isArray(parsed) ? parsed : (Array.isArray(parsed?.exercises) ? parsed.exercises : []);
+        const { exercises, skipped } = buildCompleteExercises(items, { defaultSkillGroup: group });
+        allGenerated.push(...exercises);
+        window.toast?.(`${group.charAt(0).toUpperCase() + group.slice(1)}: ${exercises.length} complete exercises generated${skipped ? `, ${skipped} skipped` : ''}.`, exercises.length ? 'ok' : 'warn');
+      } catch (e) {
+        window.toast?.(`${group} exercises failed: ${e.message}`, 'warn');
+      }
+    }
+    if (allGenerated.length > 0) {
+      setForm(f => ({ ...f, exercises: [...f.exercises, ...allGenerated] }));
+    }
+    setGroupGenStatus('');
+    setShowGroupGen(false);
+    setGenerating(false);
+    window.toast?.(`${allGenerated.length} complete exercises added across ${selectedGroups.length} skill groups.`, allGenerated.length ? 'ok' : 'warn');
   }
 
   /* ── AI generation ── */
-  async function handleAiGenerate() {
-    if (!diagnosis) { window.toast?.('No diagnosis linked — cannot generate.', 'warn'); return; }
-    setGenerating(true);
-    try {
-      const selectedTypes = form.exercises.map(ex => ex.type);
-
-      // If teacher already selected exercise types/cards, generate for those choices first.
-      if (selectedTypes.length > 0) {
-        const basePrompt = buildExerciseListPrompt({ student, diagnosis, level: selectedLevel, skill: selectedSkill });
-        const typeSummary = summarizeTypes(selectedTypes);
-        const flashRequired = selectedTypes.includes('flash');
-        const typedPrompt = `${basePrompt}
-
-IMPORTANT OVERRIDE:
-- The teacher already selected this exact structure: ${typeSummary}.
-- Return exactly ${selectedTypes.length} exercises.
-- Keep the same order as this selected structure: ${selectedTypes.join(', ')}.
-- Prioritize diagnosis priority #1 first, then #2.
-- Use the same JSON format as requested above.
-${flashRequired ? `- For every "flash" exercise, include a "pairs" array with at least 10 objects: {"term":"...", "def":"..."}.` : ''}`;
-
-        const data = await callAI(typedPrompt, { max_tokens: 4000 });
-        const raw = data.content?.map(b => b.text || '').join('') || '';
-        const parsed = await parseAiJsonWithRepair(raw, `Array of ${selectedTypes.length} exercise objects using keys like title, type, content, and type-specific fields.`);
-        const list = extractAiExerciseList(parsed);
-        if (list.length === 0) {
-          throw new Error('AI returned no exercises for the selected structure. Try again.');
-        }
-        const picked = pickExercisesBySelection(list, selectedTypes);
-        const generated = picked.map((item, i) => exerciseFromAiOption(item, selectedTypes[i]));
-        if (generated.length === 0) {
-          throw new Error('AI response could not be converted into exercises. Try again.');
-        }
-
-        setForm(f => {
-          // Fill the exact cards the teacher already added (same order, same count).
-          // Do not append extra cards, and keep each existing card id stable.
-          const nextExercises = f.exercises.map((ex, idx) => {
-            const gen = generated[idx];
-            if (!gen) return ex;
-            return { ...gen, id: ex.id, type: ex.type || gen.type };
-          });
-
-          return {
-            ...f,
-            exercises: nextExercises,
-            skillType: inferSkillType(diagnosis?.sections?.priorityDiagnosis?.content),
-          };
-        });
-        window.toast?.('AI filled the exercises you selected.', 'ok');
-      } else {
-        // Legacy fallback when nothing is selected yet.
-        const prompt = buildHomeworkGeneratorPrompt({ student, diagnosis });
-        const data = await callAI(prompt, { max_tokens: 3000 });
-        const raw = data.content?.map(b => b.text || '').join('') || '';
-        const parsed = await parseAiJsonWithRepair(raw, 'Object with tasks array for homework generation.');
-        const aiTasks = Array.isArray(parsed.tasks) ? parsed.tasks : [];
-        const exercises = aiTasks.map(t => {
-          const text = typeof t === 'string' ? t : t.description || '';
-          return { ...createExercise('short'), prompt: text };
-        });
-
-        setForm(f => ({
-          ...f,
-          title: parsed.title || f.title,
-          objective: parsed.objective || f.objective,
-          description: parsed.instructions || f.description,
-          exercises: exercises.length > 0 ? [...f.exercises, ...exercises] : f.exercises,
-          selfCheck: Array.isArray(parsed.selfCheck) ? parsed.selfCheck : f.selfCheck,
-          skillType: inferSkillType(diagnosis?.sections?.priorityDiagnosis?.content),
-          teacherNotes: parsed.teacherReviewNotes || f.teacherNotes,
-        }));
-        window.toast?.('AI generated exercises from diagnosis and kept your current list.', 'ok');
-      }
-    } catch (e) {
-      window.toast?.(`AI generation failed: ${e.message}`, 'warn');
+  async function handleGenerateListening() {
+    if (!diagnosis) {
+      window.toast?.('Link a diagnosis first.', 'warn');
+      return;
     }
+    
+    setGeneratingListening(true);
+    setGroupGenStatus('Creating listening script...');
+    
+    try {
+      const prompt = buildListeningGeneratorPrompt({ student, diagnosis });
+      const data = await callAI(prompt, { ...HOMEWORK_AI_BASE_OPTIONS, max_tokens: 2500, temperature: 0.8 });
+      const parsed = parseAiJson(data.content?.map(b => b.text || '').join('') || '');
+      
+      if (!parsed || parsed.type !== 'listen') throw new Error('AI returned invalid listening task.');
+      
+      const fresh = createExercise('listen');
+      const listeningEx = { 
+        ...fresh, 
+        ...parsed,
+        id: 'ex_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6)
+      };
+
+      setForm(f => ({ ...f, exercises: [...f.exercises, listeningEx] }));
+      setExpandedEx(listeningEx.id);
+      window.toast?.(`Listening task generated successfully!`, 'ok');
+    } catch (e) {
+      window.toast?.(`Listening generation failed: ${e.message}`, 'warn');
+    }
+    
+    setGroupGenStatus('');
+    setGeneratingListening(false);
+  }
+
+  async function handleAiGenerate() {
+    if (!diagnosis) {
+      window.toast?.('Link a diagnosis first.', 'warn');
+      return;
+    }
+    
+    setGenerating(true);
+    setGroupGenStatus('Creating blueprint...');
+    
+    try {
+      // 1. Generate Blueprint
+      const bpData = await callAI(buildHomeworkBlueprintPrompt({ student, diagnosis }), { ...HOMEWORK_AI_BASE_OPTIONS, max_tokens: 1200, temperature: 0.7 });
+      const blueprint = parseAiJson(bpData.content?.map(b => b.text || '').join('') || '');
+      const taskTypes = normalizeTaskTypes(blueprint?.taskTypes);
+      
+      setGroupGenStatus('Generating tasks...');
+      // 2. Generate Tasks
+      const tasks = [];
+      for (const taskType of taskTypes) {
+        const tData = await callAI(buildTaskGeneratorPrompt({ student, diagnosis, taskBlueprint: blueprint, taskType }), { ...HOMEWORK_AI_BASE_OPTIONS, max_tokens: 2500, temperature: 0.8 });
+        tasks.push(parseAiJson(tData.content?.map(b => b.text || '').join('') || ''));
+      }
+      const { exercises, skipped } = buildCompleteExercises(tasks);
+      if (!exercises.length) throw new Error('AI returned tasks, but none were complete enough to add.');
+      
+      setGroupGenStatus('Refining and finalising...');
+      // 3. Final Refinement
+      const refData = await callAI(buildFinalRefinementPrompt({ student, blueprint, tasks }), { ...HOMEWORK_AI_BASE_OPTIONS, max_tokens: 1800, temperature: 0.7 });
+      const refinement = parseAiJson(refData.content?.map(b => b.text || '').join('') || '');
+
+      setForm(f => ({
+        ...f,
+        title: blueprint?.title || 'MET Practice Homework',
+        objective: blueprint?.objective || f.objective || 'Build MET readiness through targeted practice.',
+        description: refinement?.instructions || 'Complete each exercise carefully. Bring questions to the next class.',
+        exercises,
+        selfCheck: Array.isArray(refinement?.selfCheck) && refinement.selfCheck.length ? refinement.selfCheck : ['I checked my answers before submitting.'],
+        teacherNotes: skipped ? `${refinement?.teacherNotes || ''}\n\n${skipped} incomplete AI exercise(s) were skipped.`.trim() : (refinement?.teacherNotes || ''),
+        skillType: inferSkillType(getPriorityItems(diagnosis)),
+      }));
+      
+      window.toast?.(`Homework generated successfully: ${exercises.length} complete exercises${skipped ? `, ${skipped} skipped` : ''}.`, 'ok');
+    } catch (e) {
+      window.toast?.(`Cascade generation failed: ${e.message}`, 'warn');
+    }
+    
+    setGroupGenStatus('');
     setGenerating(false);
   }
 
@@ -242,12 +326,14 @@ ${flashRequired ? `- For every "flash" exercise, include a "pairs" array with at
     setExerciseOptions([]);
     try {
       const prompt = buildExerciseListPrompt({ student, diagnosis, level: selectedLevel, skill: selectedSkill });
-      const data = await callAI(prompt, { max_tokens: 4000 });
+      const data = await callAI(prompt, { ...HOMEWORK_AI_BASE_OPTIONS, max_tokens: 5000, temperature: 0.8 });
       const raw = data.content?.map(b => b.text || '').join('') || '';
-      const parsed = await parseAiJsonWithRepair(raw, 'Array of exercise objects or object with exercises array.');
-      const list = extractAiExerciseList(parsed);
-      setExerciseOptions(list);
-      if (list.length === 0) window.toast?.('No exercises returned. Try again.', 'warn');
+      const parsed = parseAiJson(raw);
+      const list = Array.isArray(parsed) ? parsed : parsed.exercises || [];
+      const { exercises, skipped } = buildCompleteExercises(list);
+      setExerciseOptions(exercises);
+      if (exercises.length === 0) window.toast?.('No complete exercises returned. Try again.', 'warn');
+      else window.toast?.(`${exercises.length} complete suggestions ready${skipped ? `, ${skipped} skipped` : ''}.`, 'ok');
     } catch (e) {
       window.toast?.(`Exercise generation failed: ${e.message}`, 'warn');
     }
@@ -255,11 +341,14 @@ ${flashRequired ? `- For every "flash" exercise, include a "pairs" array with at
   }
 
   function addAiExerciseToList(ex) {
-    const newEx = exerciseFromAiOption(ex);
-
+    const newEx = createCompleteExercise(ex);
+    if (!newEx) {
+      window.toast?.('That suggestion is incomplete, so it was not added.', 'warn');
+      return;
+    }
     setForm(f => ({ ...f, exercises: [...f.exercises, newEx] }));
     setExpandedEx(newEx.id);
-    window.toast?.(`"${ex.title || 'Exercise'}" added.`, 'ok');
+    window.toast?.(`"${newEx.title || 'Exercise'}" added.`, 'ok');
   }
 
   function addModuleFromLibrary(mod) {
@@ -270,14 +359,73 @@ ${flashRequired ? `- For every "flash" exercise, include a "pairs" array with at
     setShowLibrary(false);
   }
 
+  function addModuleFromB2Bank(mod) {
+    const exercises = getB2ModuleExercises(mod.id);
+    if (!exercises.length) { window.toast?.('No exercises in this module.', 'warn'); return; }
+    setForm(f => ({ ...f, exercises: [...f.exercises, ...exercises] }));
+    window.toast?.(`Added ${exercises.length} MET B2 exercises from "${mod.label}".`, 'ok');
+    setShowB2Bank(false);
+  }
+
+  function addModuleFromLifestylePack(mod) {
+    const exercises = getLifestyleModuleExercises(mod.id);
+    if (!exercises.length) { window.toast?.('No exercises in this section.', 'warn'); return; }
+    setForm(f => ({ ...f, exercises: [...f.exercises, ...exercises] }));
+    window.toast?.(`Added ${exercises.length} lifestyle exercises from "${mod.label}".`, 'ok');
+    setShowLifestylePack(false);
+  }
+
+  async function copyLifestylePrintablePack() {
+    try {
+      await navigator.clipboard.writeText(lifestylePackMeta.printableMarkdown || '');
+      window.toast?.('Printable Markdown copied.', 'ok');
+    } catch {
+      window.toast?.('Could not copy printable Markdown from this browser.', 'warn');
+    }
+  }
+
+  /* ── Custom exercise library (teacher's saved bank) ── */
+  async function saveToLibrary(ex) {
+    try {
+      const rec = await saveExerciseToLibrary(ex);
+      setLibVersion(v => v + 1);
+      window.toast?.(rec ? `Saved "${rec.title}" to your library.` : 'Could not save exercise.', rec ? 'ok' : 'warn');
+    } catch (e) {
+      window.toast?.(`Save failed: ${e.message}`, 'warn');
+    }
+  }
+
+  async function addFromLibrary(libEx) {
+    // Drop the lib id so it becomes a fresh per-homework exercise.
+    const { id, title, tags, level, createdAt, usageCount, ...fields } = libEx;
+    const fresh = { ...fields, id: 'ex_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6) };
+    setForm(f => ({ ...f, exercises: [...f.exercises, fresh] }));
+    setShowLibrary(false);
+    window.toast?.(`"${title}" added.`, 'ok');
+    try { await incrementUsage(id); } catch { /* non-critical */ }
+  }
+
+  async function removeFromLibrary(libId) {
+    try {
+      await deleteLibraryExercise(libId);
+      setLibVersion(v => v + 1);
+      window.toast?.('Removed from your library.', 'info');
+    } catch (e) {
+      window.toast?.(`Remove failed: ${e.message}`, 'warn');
+    }
+  }
+
   /* ── Assign ── */
   async function handleAssign() {
     if (!form.title.trim()) { window.toast?.('Title is required.', 'warn'); return; }
     if (form.exercises.length === 0) { window.toast?.('Add at least one exercise.', 'warn'); return; }
+    const resolvedStudentId = studentId || selectedStudentId || student?.id || diagnosis?.studentId || '';
+    if (!resolvedStudentId) { window.toast?.('Select or link a student before assigning homework.', 'warn'); return; }
+    const resolvedStudent = student || students.find(s => s.id === resolvedStudentId);
     setSaving(true);
     await saveHomework({
-      studentId,
-      studentName: student?.name,
+      studentId: resolvedStudentId,
+      studentName: resolvedStudent?.name || '',
       diagnosisId,
       title: form.title,
       objective: form.objective,
@@ -298,11 +446,7 @@ ${flashRequired ? `- For every "flash" exercise, include a "pairs" array with at
     onNavigate('homework');
   }
 
-  function addUnitBankExercise(ex) {
-    setForm(f => ({ ...f, exercises: [...f.exercises, { ...ex }] }));
-    window.toast?.('Exercise added from Unit Bank.', 'ok');
-  }
-
+  function addUnitBankExercise(ex) { setForm(f => ({ ...f, exercises: [...f.exercises, { ...ex }] })); }
   function handleWizardComplete({ level, skill }) {
     setSelectedLevel(level);
     setSelectedSkill(skill);
@@ -310,392 +454,374 @@ ${flashRequired ? `- For every "flash" exercise, include a "pairs" array with at
     setUnitBankExercises(getSkillExercises(units, skill, 12));
     setWizardDone(true);
   }
-
-  if (!wizardDone) {
-    return (
-      <HomeworkSetWizard
-        onComplete={handleWizardComplete}
-        onSkip={() => setWizardDone(true)}
-      />
-    );
-  }
+  if (!wizardDone) return <HomeworkSetWizard onComplete={handleWizardComplete} onSkip={() => setWizardDone(true)} />;
+  const subjectLabel = SUBJECT_OPTIONS.find(s => s.id === selectedSkill)?.label;
 
   const exerciseCount = form.exercises.length;
   const typeCounts = {};
   form.exercises.forEach(e => { typeCounts[e.type] = (typeCounts[e.type] || 0) + 1; });
-  const subjectLabel = SUBJECT_OPTIONS.find(s => s.id === selectedSkill)?.label;
 
   return (
-    <div style={{ width: '100%', maxWidth: 'none', margin: 0, padding: '28px 24px' }}>
+    <div className="homework-create-page" style={{ maxWidth: 1120, width: '100%', margin: '0 auto', padding: '22px 24px 14px' }}>
       <button onClick={() => onNavigate('homework')} style={backStyle}>
         <Icon.arrowL size={13} /> Back
       </button>
 
+      {/* Wizard Header */}
       <h1 style={S.headline}>Create Homework</h1>
-      {student && (
-        <p style={S.sub}>
-          {student.name} · from diagnosis{' '}
-          {diagnosis ? new Date(diagnosis.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : ''}
-        </p>
-      )}
       {(selectedLevel || subjectLabel) && (
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 8, flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 12 }}>
           {selectedLevel && <Pill tone="info">{selectedLevel}</Pill>}
           {subjectLabel && <Pill tone="info">{subjectLabel}</Pill>}
-          <button
-            onClick={() => setWizardDone(false)}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', fontSize: 'var(--text-xs)', padding: 0 }}
-          >
-            Change
-          </button>
+          <button onClick={() => setWizardDone(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>Change</button>
         </div>
       )}
-
-      {/* Diagnosis summary */}
-      {diagnosis?.sections?.priorityDiagnosis?.content?.[0] && (
-        <div style={{ marginTop: 16, marginBottom: 20, padding: 14, background: 'var(--accent-subtle)', borderRadius: 'var(--radius-md)', border: '1px solid var(--accent-soft)' }}>
-          <div style={{ fontWeight: 600, fontSize: 'var(--text-sm)', color: 'var(--accent-deep)', marginBottom: 4 }}>
-            Diagnosis Priority:
+      <div className="homework-create-steps" style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
+        {['Diagnosis', 'Select Exercises', 'Review', 'Assign'].map((step, i) => (
+          <div key={step} style={{
+            fontSize: 'var(--text-xs)', fontWeight: 600,
+            color: currentStep === i + 1 ? 'var(--accent)' : 'var(--muted)',
+            paddingBottom: 4, borderBottom: currentStep === i + 1 ? '2px solid var(--accent)' : 'none'
+          }}>
+            {i + 1}. {step}
           </div>
-          <div style={{ fontSize: 'var(--text-sm)' }}>
-            {diagnosis.sections.priorityDiagnosis.content[0].area} — {diagnosis.sections.priorityDiagnosis.content[0].whatToImprove}
-          </div>
-        </div>
-      )}
-
-      {/* Mode tabs + actions */}
-      <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap', alignItems: 'center' }}>
-        <Button variant={!preview ? 'primary' : 'ghost'} size="sm" onClick={() => setPreview(false)}>
-          <Icon.edit size={12} /> Edit
-        </Button>
-        <Button variant={preview ? 'primary' : 'ghost'} size="sm" onClick={() => setPreview(true)}>
-          <Icon.eye size={12} /> Preview as Student
-        </Button>
-        <Button variant="ghost" size="sm" onClick={() => setShowLibrary(true)}>
-          <Icon.doc size={12} /> Add from Library
-        </Button>
-        {diagnosis && (
-          <>
-            <Button variant="ghost" size="sm" onClick={handleGenerateOptions} disabled={loadingOptions || generating}>
-              <Icon.refresh size={12} /> {loadingOptions ? 'Loading…' : 'Generate Exercise Options'}
-            </Button>
-            <Button variant="ghost" size="sm" onClick={handleAiGenerate} disabled={generating || loadingOptions} style={{ marginLeft: 'auto' }}>
-              <Icon.refresh size={12} /> {generating ? 'Generating…' : 'Generate for Selected Exercises'}
-            </Button>
-          </>
-        )}
+        ))}
       </div>
 
-      {/* ── Exercise Library Picker ── */}
-      {showLibrary && (
-        <div
-          onClick={() => setShowLibrary(false)}
-          style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.45)', zIndex: 60, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}
-        >
-          <div onClick={e => e.stopPropagation()} style={{ background: 'var(--surface)', borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-modal)', maxWidth: 680, width: '100%', maxHeight: '82vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-            <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--divider)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <div>
-                <div style={{ fontWeight: 700, fontSize: 'var(--text-md)' }}>{bankMeta.title}</div>
-                <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>{bankMeta.moduleCount} modules · {bankMeta.exerciseCount} exercise sets</div>
-              </div>
-              <button onClick={() => setShowLibrary(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)', fontSize: 20 }}>×</button>
-            </div>
-            <div style={{ padding: 16, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {getExerciseModules().map(mod => (
-                <div key={mod.id} style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', padding: 14, display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                      <span style={{ fontWeight: 700, fontSize: 'var(--text-sm)' }}>{mod.title}</span>
-                      {mod.levelRange && <Pill tone="muted">{mod.levelRange}</Pill>}
+      {/* Step Content */}
+      <div className="homework-create-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: 24, alignItems: 'start' }}>
+        <div>
+          {currentStep === 1 && (
+            <Card style={{ padding: 18 }}>
+              <SectionHeader title="Step 1: Homework Source" />
+              <div style={{ marginTop: 16 }}>
+                {studentId || diagnosis?.studentId ? (
+                  <p style={{ fontSize: 'var(--text-md)', marginBottom: 8 }}>Student: <strong>{student?.name || 'Loading...'}</strong></p>
+                ) : (
+                  <Field label="Student">
+                    <select
+                      className="input"
+                      value={selectedStudentId}
+                      onChange={e => setSelectedStudentId(e.target.value)}
+                    >
+                      <option value="">Choose student before assigning</option>
+                      {students.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                    </select>
+                  </Field>
+                )}
+                {diagnosis && (
+                  <div style={{ padding: 14, background: 'var(--accent-subtle)', borderRadius: 'var(--radius-md)', border: '1px solid var(--accent-soft)' }}>
+                    <div style={{ fontWeight: 600, fontSize: 'var(--text-sm)', color: 'var(--accent-deep)', marginBottom: 4 }}>
+                      Diagnostic Focus:
                     </div>
-                    {mod.targetVocabulary?.length > 0 && (
-                      <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-2)', lineHeight: 1.5 }}>
-                        {mod.targetVocabulary.slice(0, 8).join(' · ')}{mod.targetVocabulary.length > 8 ? ' …' : ''}
-                      </div>
-                    )}
-                    <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: 4 }}>{mod.exerciseCount} exercise sets</div>
-                  </div>
-                  <Button variant="primary" size="sm" onClick={() => addModuleFromLibrary(mod)} style={{ flexShrink: 0 }}>
-                    <Icon.plus size={12} /> Add
-                  </Button>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ── AI Exercise Options Panel ── */}
-      {(loadingOptions || exerciseOptions.length > 0) && (
-        <Card style={{ padding: 18, marginBottom: 16, border: '1px solid var(--accent-soft)', background: 'var(--accent-subtle)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-            <span style={{ fontWeight: 700, fontSize: 'var(--text-sm)', color: 'var(--accent-deep)' }}>
-              AI Exercise Options — click + to add
-            </span>
-            {exerciseOptions.length > 0 && (
-              <Button variant="ghost" size="sm" onClick={() => setExerciseOptions([])} style={{ color: 'var(--muted)' }}>Clear</Button>
-            )}
-          </div>
-          {loadingOptions ? (
-            <p style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)' }}>Generating exercises…</p>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {exerciseOptions.map((ex, i) => (
-                <div key={i} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: '10px 14px', display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                      <span style={{ fontWeight: 700, fontSize: 'var(--text-sm)' }}>{ex.title}</span>
-                      <ExTypeBadge typeId={mapAiType(ex.type)} />
-                      {ex.duration && <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>{ex.duration}</span>}
+                    <div style={{ fontSize: 'var(--text-sm)', marginBottom: 8 }}>
+                      {getPriorityItems(diagnosis)[0]?.area} — {getPriorityItems(diagnosis)[0]?.whatToImprove}
                     </div>
-                    <p style={{ fontSize: 'var(--text-xs)', color: 'var(--text-2)', lineHeight: 1.5, margin: 0, whiteSpace: 'pre-wrap' }}>
-                      {(ex.content || '').slice(0, 220)}{(ex.content || '').length > 220 ? '…' : ''}
-                    </p>
-                  </div>
-                  <Button variant="primary" size="sm" onClick={() => addAiExerciseToList(ex)} style={{ flexShrink: 0 }}>
-                    <Icon.plus size={12} /> Add
-                  </Button>
-                </div>
-              ))}
-            </div>
-          )}
-        </Card>
-      )}
-
-      {/* ── Unit Bank Panel ── */}
-      {unitBankExercises.length > 0 && (
-        <Card style={{ padding: 18, marginBottom: 16, border: '1px solid var(--border-strong, var(--border))' }}>
-          <button
-            onClick={() => setShowUnitBank(v => !v)}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', padding: 0 }}
-          >
-            <span style={{ fontWeight: 700, fontSize: 'var(--text-sm)', display: 'flex', alignItems: 'center', gap: 8 }}>
-              📚 Unit Bank
-              {selectedLevel && subjectLabel && (
-                <span style={{ fontWeight: 400, color: 'var(--text-muted)', fontSize: 'var(--text-xs)' }}>
-                  — {subjectLabel} exercises from {selectedLevel} units ({unitBankExercises.length})
-                </span>
-              )}
-            </span>
-            <span style={{ display: 'inline-flex', transform: showUnitBank ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s', color: 'var(--muted)' }}>
-              <Icon.chevronDown size={14} />
-            </span>
-          </button>
-
-          {showUnitBank && (
-            <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {unitBankExercises.map((ex, i) => {
-                const preview = ex.question || ex.prompt || (ex.pairs ? `${ex.pairs.length} flashcard pairs` : ex.errorText || '');
-                return (
-                  <div key={ex.id || i} style={{ background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: '10px 14px', display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                        <ExTypeBadge typeId={ex.type} />
-                        {ex._sourceLabel && <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>{ex._sourceLabel}</span>}
-                      </div>
-                      <p style={{ fontSize: 'var(--text-xs)', color: 'var(--text-2)', lineHeight: 1.5, margin: 0, whiteSpace: 'pre-wrap' }}>
-                        {String(preview).slice(0, 200)}{String(preview).length > 200 ? '…' : ''}
-                      </p>
-                    </div>
-                    <Button variant="primary" size="sm" onClick={() => addUnitBankExercise(ex)} style={{ flexShrink: 0 }}>
-                      <Icon.plus size={12} /> Add
-                    </Button>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </Card>
-      )}
-
-      {preview ? (
-        /* ── PREVIEW MODE ── */
-        <Card style={{ padding: 24 }}>
-          <div style={{ fontWeight: 700, fontSize: 'var(--text-xl)', marginBottom: 4 }}>{form.title || 'Untitled Homework'}</div>
-          {form.description && <p style={{ color: 'var(--text-2)', lineHeight: 1.7, marginBottom: 16 }}>{form.description}</p>}
-          {form.dueDate && (
-            <p style={{ color: 'var(--muted)', fontSize: 'var(--text-sm)', marginBottom: 16 }}>
-              Due: {new Date(form.dueDate).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}
-            </p>
-          )}
-
-          {/* Exercise preview cards */}
-          {form.exercises.map((ex, i) => {
-            const meta = getExType(ex.type);
-            return (
-              <div key={ex.id} style={{ borderTop: i > 0 ? '1px solid var(--divider)' : 'none', paddingTop: i > 0 ? 18 : 0, marginBottom: 18 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-                  <span style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 'var(--text-sm)', color: 'var(--accent)', width: 24 }}>
-                    {i + 1}.
-                  </span>
-                  <ExTypeBadge typeId={ex.type} />
-                </div>
-                <div style={{ padding: '14px 16px', background: 'var(--bg)', borderRadius: 'var(--radius-md)', fontSize: 'var(--text-sm)', lineHeight: 1.6 }}>
-                  <PreviewExercise exercise={ex} />
-                </div>
-              </div>
-            );
-          })}
-
-          {form.selfCheck.filter(Boolean).length > 0 && (
-            <div style={{ marginTop: 16, padding: 14, background: 'var(--bg)', borderRadius: 'var(--radius-sm)' }}>
-              <div style={{ fontWeight: 600, marginBottom: 8 }}>Self-check:</div>
-              {form.selfCheck.filter(Boolean).map((c, i) => (
-                <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: 6 }}>
-                  <input type="checkbox" disabled style={{ marginTop: 3 }} />
-                  <span style={{ fontSize: 'var(--text-sm)' }}>{c}</span>
-                </div>
-              ))}
-            </div>
-          )}
-        </Card>
-      ) : (
-        /* ── EDIT MODE ── */
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-
-          {/* Homework details card */}
-          <Card style={{ padding: 18 }}>
-            <SectionHeader title="Homework Details" />
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 14 }}>
-              <Field label="Title">
-                <input className="input" value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} />
-              </Field>
-              <Field label="Objective (internal — not shown to student)">
-                <input className="input" value={form.objective} onChange={e => setForm(f => ({ ...f, objective: e.target.value }))} placeholder="What this homework targets..." />
-              </Field>
-              <Field label="Instructions for student (optional)">
-                <textarea className="input" rows={3} value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} placeholder="Optional context or instructions before the exercises..." />
-              </Field>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                <Field label="Skill focus">
-                  <select className="input" value={form.skillType} onChange={e => setForm(f => ({ ...f, skillType: e.target.value }))}>
-                    {SKILL_TYPES.map(t => <option key={t} value={t}>{t.charAt(0).toUpperCase() + t.slice(1)}</option>)}
-                  </select>
-                </Field>
-                <Field label="Due date">
-                  <input className="input" type="date" value={form.dueDate} onChange={e => setForm(f => ({ ...f, dueDate: e.target.value }))} />
-                </Field>
-              </div>
-            </div>
-          </Card>
-
-          {/* Exercises card */}
-          <Card style={{ padding: 18 }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-              <div>
-                <div style={{ fontWeight: 700, fontSize: 'var(--text-lg)', color: 'var(--text)' }}>
-                  Exercises
-                  <span style={{ fontWeight: 500, fontSize: 'var(--text-sm)', color: 'var(--muted)', marginLeft: 8 }}>
-                    {exerciseCount} {exerciseCount === 1 ? 'exercise' : 'exercises'}
-                  </span>
-                </div>
-                {/* Type badges summary */}
-                {exerciseCount > 0 && (
-                  <div style={{ display: 'flex', gap: 6, marginTop: 6, flexWrap: 'wrap' }}>
-                    {Object.entries(typeCounts).map(([type, count]) => (
-                      <ExTypeBadge key={type} typeId={type} />
-                    ))}
+                    <Button variant="ghost" size="sm" onClick={() => onNavigate('diagnostics')}>View Full Diagnosis</Button>
                   </div>
                 )}
-              </div>
-              <Button variant="primary" size="sm" onClick={() => setShowTypePicker(!showTypePicker)}>
-                <Icon.plus size={12} /> Add Exercise
-              </Button>
-            </div>
-
-            {/* Type picker */}
-            {showTypePicker && (
-              <div style={{ marginBottom: 14 }}>
-                <ExerciseTypePicker onSelect={addExercise} onClose={() => setShowTypePicker(false)} />
-              </div>
-            )}
-
-            {/* Exercise list */}
-            {form.exercises.length === 0 && !showTypePicker && (
-              <div style={{ textAlign: 'center', padding: '28px 16px', border: '1.5px dashed var(--border)', borderRadius: 'var(--radius-md)', background: 'transparent' }}>
-                <p style={{ color: 'var(--muted)', fontSize: 'var(--text-sm)', margin: '0 0 10px' }}>
-                  No exercises yet — add your first one
-                </p>
-                <Button variant="ghost" size="sm" onClick={() => setShowTypePicker(true)}>
-                  <Icon.plus size={12} /> Choose exercise type
-                </Button>
-              </div>
-            )}
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {form.exercises.map((ex, i) => {
-                const isExpanded = expandedEx === ex.id;
-                return (
-                  <ExerciseCard
-                    key={ex.id}
-                    exercise={ex}
-                    index={i}
-                    total={form.exercises.length}
-                    isExpanded={isExpanded}
-                    onToggle={() => setExpandedEx(isExpanded ? null : ex.id)}
-                    onChange={(updated) => updateExercise(ex.id, updated)}
-                    onRemove={() => removeExercise(ex.id)}
-                    onMove={(dir) => moveExercise(i, dir)}
-                  />
-                );
-              })}
-            </div>
-          </Card>
-
-          {/* Self-check card */}
-          <Card style={{ padding: 18 }}>
-            <SectionHeader
-              title="Self-check Checklist"
-              action={
-                <Button variant="ghost" size="sm" onClick={addCheck}>
-                  <Icon.plus size={12} /> Add item
-                </Button>
-              }
-            />
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 12 }}>
-              {form.selfCheck.map((c, i) => (
-                <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                  <input
-                    className="input" value={c}
-                    onChange={e => updateCheck(i, e.target.value)}
-                    placeholder="e.g. I used past simple correctly"
-                    style={{ flex: 1 }}
-                  />
-                  {form.selfCheck.length > 1 && (
-                    <Button variant="ghost" size="sm" onClick={() => removeCheck(i)} style={{ color: 'var(--danger)' }}>
-                      <Icon.trash size={12} />
-                    </Button>
-                  )}
+                <Field label="Homework Goal" style={{ marginTop: 16 }}>
+                  <input className="input" value={form.objective} onChange={e => setForm(f => ({ ...f, objective: e.target.value }))} placeholder="What this homework targets..." />
+                </Field>
+                <div style={{ marginTop: 24 }}>
+                  <Button variant="primary" onClick={() => setCurrentStep(2)}>
+                    Select Exercises
+                  </Button>
                 </div>
-              ))}
-            </div>
-          </Card>
+              </div>
+            </Card>
+          )}
+          {currentStep === 2 && (
+            <Card style={{ padding: 18 }}>
+              <SectionHeader title="Step 2: Select Exercises" />
+              <div style={{ marginTop: 16 }}>
+                <div className="homework-create-actions" style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
+                    <Button variant="primary" size="sm" onClick={handleAiGenerate} disabled={!diagnosis || generating}>
+                      <Icon.spark size={12} /> {generating ? 'Generating...' : 'Generate MET Homework with AI'}
+                    </Button>
+                    <Button variant="primary" size="sm" onClick={handleGenerateListening} disabled={!diagnosis || generatingListening}>
+                      <Icon.headphones size={12} /> {generatingListening ? 'Generating...' : 'Generate Listening Task'}
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={handleGenerateOptions} disabled={!diagnosis || loadingOptions}>
+                      <Icon.refresh size={12} /> {loadingOptions ? 'Suggesting...' : 'Suggest Exercises from Diagnosis'}
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={() => setShowGroupGen(v => !v)} disabled={!diagnosis || generating}>
+                      <Icon.check size={12} /> Build by Skill
+                    </Button>
+                    <Button variant="primary" size="sm" onClick={() => setShowTypePicker(!showTypePicker)}>
+                      <Icon.plus size={12} /> Add Exercise
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={() => { setShowB2Bank(v => !v); setShowLifestylePack(false); setShowTypePicker(false); }}>
+                      <Icon.homework size={12} /> Browse MET B2 Pack
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={() => { setShowLifestylePack(v => !v); setShowB2Bank(false); setShowTypePicker(false); }}>
+                      <Icon.doc size={12} /> Browse Lifestyle Pack
+                    </Button>
+                </div>
 
-          {/* Teacher notes */}
-          <Field label="Teacher notes (not shown to student)">
-            <textarea className="input" rows={2} value={form.teacherNotes} onChange={e => setForm(f => ({ ...f, teacherNotes: e.target.value }))} placeholder="Internal notes…" />
-          </Field>
+                {groupGenStatus && (
+                  <div style={{ marginBottom: 12, padding: '8px 10px', border: '1px solid var(--accent-soft)', borderRadius: 'var(--radius-sm)', background: 'var(--accent-subtle)', color: 'var(--accent-deep)', fontSize: 'var(--text-sm)' }}>
+                    {groupGenStatus}
+                  </div>
+                )}
+
+                {showGroupGen && (
+                  <div style={{ marginBottom: 16, padding: 14, border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', background: 'var(--surface)' }}>
+                    <div style={{ fontWeight: 700, fontSize: 'var(--text-sm)', marginBottom: 4 }}>Generate by MET skill</div>
+                    <div style={{ color: 'var(--muted)', fontSize: 'var(--text-xs)', lineHeight: 1.5, marginBottom: 12 }}>
+                      Choose the skills this homework should cover. Each generated item is checked for complete student-ready fields before it is added.
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 8 }}>
+                      {SKILL_GROUPS.map(group => (
+                        <label key={group.key} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', background: 'var(--bg)' }}>
+                          <span aria-hidden="true">{group.icon}</span>
+                          <span style={{ flex: 1, fontSize: 'var(--text-sm)', fontWeight: 600 }}>{group.label}</span>
+                          <input
+                            type="number"
+                            min="0"
+                            max="6"
+                            value={groupGenConfig[group.key] || 0}
+                            onChange={e => setGroupGenConfig(cfg => ({ ...cfg, [group.key]: Math.max(0, Math.min(6, Number(e.target.value) || 0)) }))}
+                            style={{ width: 48, padding: '4px 6px', border: '1px solid var(--border)', borderRadius: 6, fontSize: 'var(--text-sm)' }}
+                          />
+                        </label>
+                      ))}
+                    </div>
+                    <div className="homework-create-actions" style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+                      <Button variant="primary" size="sm" onClick={handleGenerateByGroups} disabled={generating}>
+                        <Icon.spark size={12} /> Generate Selected Skills
+                      </Button>
+                      <Button variant="ghost" size="sm" onClick={() => setShowGroupGen(false)} disabled={generating}>
+                        Close
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                {showTypePicker && <ExerciseTypePicker onSelect={addExercise} onClose={() => setShowTypePicker(false)} />}
+
+                {showB2Bank && (
+                  <div style={{ marginBottom: 16, border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: 'var(--accent-subtle)', borderBottom: '1px solid var(--border)' }}>
+                      <span style={{ fontWeight: 600, fontSize: 'var(--text-sm)' }}>{b2BankMeta.title}</span>
+                      <button onClick={() => setShowB2Bank(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)', fontSize: 16 }}>✕</button>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 0, maxHeight: 340, overflowY: 'auto' }}>
+                      {getB2Modules().map(mod => (
+                        <div key={mod.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', borderBottom: '1px solid var(--divider)', gap: 10 }}>
+                          <div>
+                            <div style={{ fontWeight: 500, fontSize: 'var(--text-sm)' }}>{mod.label}</div>
+                            <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', textTransform: 'capitalize' }}>{mod.skill} · {mod.exercises.length} exercises</div>
+                          </div>
+                          <Button variant="ghost" size="sm" onClick={() => addModuleFromB2Bank(mod)}>Add</Button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {showLifestylePack && (
+                  <div style={{ marginBottom: 16, border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: 'var(--accent-subtle)', borderBottom: '1px solid var(--border)' }}>
+                      <div>
+                        <span style={{ fontWeight: 700, fontSize: 'var(--text-sm)' }}>{lifestylePackMeta.title}</span>
+                        <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: 2 }}>{lifestylePackMeta.level} · {lifestylePackMeta.subtitle}</div>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <Button variant="ghost" size="sm" onClick={copyLifestylePrintablePack}>Copy printable</Button>
+                        <button onClick={() => setShowLifestylePack(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)', fontSize: 16 }}>✕</button>
+                      </div>
+                    </div>
+                    <div style={{ padding: '10px 14px', borderBottom: '1px solid var(--divider)', background: 'var(--surface)', fontSize: 'var(--text-xs)', color: 'var(--muted)', lineHeight: 1.5 }}>
+                      Converted from the bundled JSON pack in <strong>src/components/exercises</strong>. Use the Markdown file as the printable teacher copy.
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 0, maxHeight: 360, overflowY: 'auto' }}>
+                      {getLifestyleModules().map(mod => (
+                        <div key={mod.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', borderBottom: '1px solid var(--divider)', gap: 10 }}>
+                          <div style={{ minWidth: 0 }}>
+                            <div style={{ fontWeight: 600, fontSize: 'var(--text-sm)' }}>{mod.label}</div>
+                            <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', textTransform: 'capitalize' }}>
+                              {mod.skill} · {mod.sourceCount} source tasks · {mod.exerciseCount} platform exercises
+                            </div>
+                            {mod.note && (
+                              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 560 }}>
+                                {mod.note}
+                              </div>
+                            )}
+                          </div>
+                          <Button variant="ghost" size="sm" onClick={() => addModuleFromLifestylePack(mod)}>Add</Button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {unitBankExercises.length > 0 && (
+                  <div style={{ marginBottom: 16, border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
+                    <button
+                      onClick={() => setShowUnitBank(v => !v)}
+                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', padding: '10px 14px', background: 'var(--accent-subtle)', border: 'none', cursor: 'pointer', borderBottom: showUnitBank ? '1px solid var(--border)' : 'none' }}
+                    >
+                      <span style={{ fontWeight: 600, fontSize: 'var(--text-sm)' }}>
+                        📚 Unit Bank — {subjectLabel || 'exercises'} from {selectedLevel} units ({unitBankExercises.length})
+                      </span>
+                      <Icon.chevronDown size={14} style={{ transform: showUnitBank ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s' }} />
+                    </button>
+                    {showUnitBank && (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 0, maxHeight: 360, overflowY: 'auto' }}>
+                        {unitBankExercises.map((ex, i) => (
+                          <div key={ex.id || i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderBottom: '1px solid var(--divider)' }}>
+                            <ExTypeBadge typeId={ex.type} />
+                            <div style={{ flex: 1, minWidth: 0, fontSize: 'var(--text-sm)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              {ex.question || ex.prompt || ex.errorText || (ex.pairs?.[0] ? `${ex.pairs[0].term} — ${ex.pairs[0].def}` : '')}
+                            </div>
+                            <Button variant="ghost" size="sm" onClick={() => addUnitBankExercise(ex)}>Add</Button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {exerciseOptions.length > 0 && (
+                  <div style={{ marginBottom: 16, padding: 14, border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', background: 'var(--surface)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 10 }}>
+                      <div>
+                        <div style={{ fontWeight: 700, fontSize: 'var(--text-sm)' }}>Complete AI suggestions</div>
+                        <div style={{ color: 'var(--muted)', fontSize: 'var(--text-xs)' }}>Reviewed for complete fields before adding.</div>
+                      </div>
+                      <Button variant="ghost" size="sm" onClick={() => setExerciseOptions([])}>Clear</Button>
+                    </div>
+                    <div style={{ display: 'grid', gap: 8 }}>
+                      {exerciseOptions.map((ex, i) => (
+                        <div key={ex.id || i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', border: '1px solid var(--divider)', borderRadius: 'var(--radius-sm)', background: 'var(--bg)' }}>
+                          <ExTypeBadge typeId={ex.type} />
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontSize: 'var(--text-sm)', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ex.title || exercisePreview(ex)}</div>
+                            <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{exercisePreview(ex)}</div>
+                          </div>
+                          <Button variant="ghost" size="sm" onClick={() => addAiExerciseToList(ex)}>Add</Button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                 
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {form.exercises.map((ex, i) => (
+                    <ExerciseCard
+                      key={ex.id}
+                      exercise={ex}
+                      index={i}
+                      total={form.exercises.length}
+                      isExpanded={expandedEx === ex.id}
+                      onToggle={() => setExpandedEx(expandedEx === ex.id ? null : ex.id)}
+                      onChange={(updated) => updateExercise(ex.id, updated)}
+                      onRemove={() => removeExercise(ex.id)}
+                      onMove={(dir) => moveExercise(i, dir)}
+                      onSaveToLibrary={() => saveToLibrary(ex)}
+                    />
+                  ))}
+                </div>
+
+                <div className="homework-create-actions" style={{ display: 'flex', gap: 10, marginTop: 24 }}>
+                  <Button variant="ghost" onClick={() => setCurrentStep(1)}>Back</Button>
+                  <Button variant="primary" onClick={() => setCurrentStep(3)}>Review Student View</Button>
+                </div>
+              </div>
+            </Card>
+          )}
+          {currentStep === 3 && (
+            <Card style={{ padding: 18 }}>
+              <SectionHeader title="Step 3: Review Student View" />
+              <div style={{ marginTop: 16 }}>
+                {(() => {
+                  const warn = getHomeworkCognitiveSufficiencyWarning(form.exercises, diagnosis);
+                  return warn ? (
+                    <div style={{ marginBottom: 14, padding: '8px 12px', background: 'var(--warning-bg)', border: '1px solid var(--warning)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-xs)', color: 'var(--warning)', display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+                      <Icon.spark size={13} style={{ flexShrink: 0, marginTop: 1 }} />
+                      <span><strong>Cognitive sufficiency note:</strong> {warn}</span>
+                    </div>
+                  ) : null;
+                })()}
+                <div style={{ padding: 24, background: 'var(--bg)', borderRadius: 'var(--radius-md)' }}>
+                  <div style={{ fontWeight: 700, fontSize: 'var(--text-xl)', marginBottom: 4 }}>{form.title || 'Untitled Homework'}</div>
+                  {form.description && <p style={{ color: 'var(--text-2)', lineHeight: 1.7, marginBottom: 16 }}>{form.description}</p>}
+                  
+                  {form.exercises.map((ex, i) => (
+                    <div key={ex.id} style={{ marginBottom: 18 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+                        <span style={{ fontWeight: 700, color: 'var(--accent)' }}>{i + 1}.</span>
+                        <ExTypeBadge typeId={ex.type} />
+                      </div>
+                      <PreviewExercise exercise={ex} />
+                    </div>
+                  ))}
+                </div>
+
+                <div className="homework-create-actions" style={{ display: 'flex', gap: 10, marginTop: 24 }}>
+                  <Button variant="ghost" onClick={() => setCurrentStep(2)}>Back</Button>
+                  <Button variant="primary" onClick={() => setCurrentStep(4)}>Proceed to Assign</Button>
+                </div>
+              </div>
+            </Card>
+          )}
+          {currentStep === 4 && (
+            <Card style={{ padding: 18 }}>
+              <SectionHeader title="Step 4: Assign Homework" />
+              <div style={{ marginTop: 16 }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  {studentId || diagnosis?.studentId ? null : (
+                    <Field label="Student">
+                      <select
+                        className="input"
+                        value={selectedStudentId}
+                        onChange={e => setSelectedStudentId(e.target.value)}
+                      >
+                        <option value="">Choose student</option>
+                        {students.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                      </select>
+                    </Field>
+                  )}
+                  <Field label="Homework Title">
+                      <input className="input" value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} />
+                  </Field>
+                  <Field label="Due Date">
+                      <input className="input" type="date" value={form.dueDate} onChange={e => setForm(f => ({ ...f, dueDate: e.target.value }))} />
+                  </Field>
+                </div>
+                
+                <div className="homework-create-actions" style={{ marginTop: 24, display: 'flex', gap: 10 }}>
+                  <Button variant="ghost" onClick={() => setCurrentStep(3)}>Back</Button>
+                  <Button variant="primary" onClick={handleAssign} disabled={saving}>
+                    {saving ? 'Assigning…' : 'Assign Homework'}
+                  </Button>
+                </div>
+              </div>
+            </Card>
+          )}
         </div>
-      )}
 
-      {/* Action buttons */}
-      <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
-        <Button variant="primary" onClick={handleAssign} disabled={saving}>
-          <Icon.send size={13} /> {saving ? 'Assigning…' : 'Approve & Assign to Student'}
-        </Button>
-        <Button variant="ghost" onClick={() => onNavigate('homework')}>Cancel</Button>
+        {/* Persistent Summary Side Panel */}
+        <Card className="homework-create-summary" style={{ padding: 18, position: 'sticky', top: 20 }}>
+          <SectionHeader title="Homework Summary" />
+          <div style={{ marginTop: 12, fontSize: 'var(--text-sm)' }}>
+            <p>Exercises: <strong>{exerciseCount} / 10</strong></p>
+            <p>Estimated Time: <strong>{/* Calculation needed */}</strong></p>
+          </div>
+        </Card>
       </div>
     </div>
   );
 }
 
 /* ─── EXERCISE CARD (collapsible) ───────────────────────────── */
-function ExerciseCard({ exercise, index, total, isExpanded, onToggle, onChange, onRemove, onMove }) {
+function ExerciseCard({ exercise, index, total, isExpanded, onToggle, onChange, onRemove, onMove, onSaveToLibrary }) {
   const meta = getExType(exercise.type);
   const previewText = exercisePreview(exercise);
 
   return (
-    <div style={{
+    <div className="homework-exercise-card" style={{
       border: isExpanded ? '1.5px solid var(--accent-soft)' : '1px solid var(--border)',
       borderRadius: 'var(--radius-md)',
       background: isExpanded ? 'var(--accent-subtle)' : 'var(--surface)',
@@ -704,6 +830,7 @@ function ExerciseCard({ exercise, index, total, isExpanded, onToggle, onChange, 
     }}>
       {/* Header — always visible */}
       <div
+        className="homework-exercise-card-header"
         onClick={onToggle}
         style={{
           display: 'flex', alignItems: 'center', gap: 10,
@@ -718,13 +845,23 @@ function ExerciseCard({ exercise, index, total, isExpanded, onToggle, onChange, 
           {index + 1}
         </span>
         <ExTypeBadge typeId={exercise.type} />
-        <span style={{
+        <span className="homework-exercise-card-title" style={{
           flex: 1, fontSize: 'var(--text-sm)', color: 'var(--text-2)',
           overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
         }}>
           {previewText}
         </span>
-        <div style={{ display: 'flex', gap: 4, alignItems: 'center', flexShrink: 0 }}>
+        <div className="homework-exercise-card-controls" style={{ display: 'flex', gap: 4, alignItems: 'center', flexShrink: 0 }}>
+          {/* Save to reusable library */}
+          {onSaveToLibrary && (
+            <button
+              onClick={e => { e.stopPropagation(); onSaveToLibrary(); }}
+              style={{ ...arrowBtnStyle(false), color: 'var(--accent)' }}
+              title="Save to my exercise library"
+            >
+              <Icon.star size={12} />
+            </button>
+          )}
           {/* Move arrows */}
           <button
             onClick={e => { e.stopPropagation(); onMove(-1); }}
@@ -757,7 +894,7 @@ function ExerciseCard({ exercise, index, total, isExpanded, onToggle, onChange, 
 
       {/* Body — expanded */}
       {isExpanded && (
-        <div style={{ padding: '0 14px 14px', borderTop: '1px solid var(--divider)' }}>
+        <div className="homework-exercise-card-body" style={{ padding: '0 14px 14px', borderTop: '1px solid var(--divider)' }}>
           <div style={{ paddingTop: 14 }}>
             <ExerciseEditor exercise={exercise} onChange={onChange} />
           </div>
@@ -815,7 +952,7 @@ function PreviewExercise({ exercise }) {
     case 'speak':
       return (
         <div>
-          <div style={{ background: 'var(--surface)', borderLeft: '3px solid var(--accent)', borderRadius: 8, padding: '12px 14px', marginBottom: 10 }}>
+          <div style={{ background: 'var(--surface)', borderRadius: 8, padding: '12px 14px', marginBottom: 10 }}>
             <p style={{ fontWeight: 500, margin: 0 }}>{exercise.prompt || 'Speaking prompt…'}</p>
             <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>Target: {exercise.targetSeconds || 60} seconds</span>
           </div>
@@ -875,6 +1012,36 @@ function PreviewExercise({ exercise }) {
       );
     }
 
+    case 'listen':
+      return (
+        <div>
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12,
+            padding: '10px 14px', borderRadius: 10,
+            background: 'rgba(14,95,107,.08)', border: '1px solid rgba(14,95,107,.25)',
+          }}>
+            <span style={{ fontSize: 20 }}>▶</span>
+            <div>
+              <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: '#0E5F6B', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                Listen ({exercise.plays ?? 2}× allowed)
+              </div>
+              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>{(exercise.audioText || '').slice(0, 60) || 'Audio text not set…'}</div>
+            </div>
+          </div>
+          <p style={{ fontWeight: 600, marginBottom: 10 }}>{exercise.question || 'Question…'}</p>
+          {(exercise.options || []).map((opt, i) => (
+            <div key={i} style={{
+              display: 'flex', alignItems: 'center', gap: 10,
+              padding: '8px 12px', marginBottom: 4,
+              borderRadius: 8, border: '1px solid var(--border)', background: 'var(--surface)',
+            }}>
+              <span style={{ width: 20, height: 20, borderRadius: '50%', border: '2px solid var(--border)', flexShrink: 0 }} />
+              <span>{opt || `Option ${String.fromCharCode(65 + i)}`}</span>
+            </div>
+          ))}
+        </div>
+      );
+
     default:
       return <p>{exercise.instruction || exercisePreview(exercise)}</p>;
   }
@@ -886,178 +1053,252 @@ function mapAiType(aiType) {
   const t = (aiType || '').toLowerCase();
   if (/multiple.?choice|mcq/.test(t)) return 'mcq';
   if (/fill|blank/.test(t)) return 'blank';
+  if (/writ|essay|paragraph|response/.test(t)) return 'short';
   if (/speak|audio|record/.test(t)) return 'speak';
   if (/order|sequen/.test(t)) return 'order';
   if (/error|correct|fix/.test(t)) return 'fix';
   if (/flash|card|vocab/.test(t)) return 'flash';
+  if (/listen/.test(t)) return 'listen';
+  if (/read|strategy|test/.test(t)) return 'mcq';
   return 'short'; // fallback
 }
 
-function extractAiExerciseList(parsed) {
-  if (!parsed) return [];
-  if (Array.isArray(parsed)) return parsed;
-  if (Array.isArray(parsed.exercises)) return parsed.exercises;
-  if (Array.isArray(parsed.tasks)) {
-    return parsed.tasks.map((t, idx) => {
-      if (typeof t === 'string') return { title: `Exercise ${idx + 1}`, type: 'short', content: t };
-      return {
-        title: t.title || t.description || `Exercise ${idx + 1}`,
-        type: t.type || 'short',
-        content: t.content || t.description || '',
-        ...t,
-      };
-    });
+function normalizeTaskTypes(taskTypes) {
+  const fromAi = Array.isArray(taskTypes) ? taskTypes.map(mapAiType) : [];
+  const merged = [...fromAi, ...MET_BALANCED_TYPES].filter((type, idx, arr) => arr.indexOf(type) === idx);
+  return merged.slice(0, 7);
+}
+
+function buildCompleteExercises(items, options = {}) {
+  const exercises = [];
+  let skipped = 0;
+  for (const item of Array.isArray(items) ? items : []) {
+    const exercise = createCompleteExercise(item, options);
+    if (exercise) exercises.push(exercise);
+    else skipped += 1;
   }
-  return [];
+  return { exercises, skipped };
 }
 
-function summarizeTypes(types) {
-  const counts = {};
-  (types || []).forEach(t => { counts[t] = (counts[t] || 0) + 1; });
-  return Object.entries(counts).map(([t, c]) => `${c}x ${t}`).join(', ');
+function createCompleteExercise(aiTask, { defaultSkillGroup } = {}) {
+  if (!aiTask || typeof aiTask !== 'object') return null;
+  const type = mapAiType(aiTask.type || defaultSkillGroup);
+  const ex = applyAiTaskToExercise(createExercise(type, aiTask.level || 'B1'), { ...aiTask, skillGroup: aiTask.skillGroup || defaultSkillGroup });
+  return isStructuredAiExerciseComplete(ex) ? ex : null;
 }
 
-function pickExercisesBySelection(list, selectedTypes) {
-  const pool = Array.isArray(list) ? list : [];
-  const used = new Set();
-  const picked = [];
-
-  selectedTypes.forEach((wantedType) => {
-    const idx = pool.findIndex((item, i) => !used.has(i) && mapAiType(item?.type) === wantedType);
-    if (idx >= 0) {
-      used.add(idx);
-      picked.push(pool[idx]);
-      return;
-    }
-    const fallbackIdx = pool.findIndex((_, i) => !used.has(i));
-    if (fallbackIdx >= 0) {
-      used.add(fallbackIdx);
-      picked.push(pool[fallbackIdx]);
-    }
-  });
-
-  return picked;
-}
-
-function exerciseFromAiOption(ex, forcedType = null) {
-  const targetType = forcedType || mapAiType(ex?.type);
-  const newEx = createExercise(targetType);
-
-  if (newEx.type === 'mcq') {
-    newEx.question = ex?.content || ex?.title || '';
-    newEx.options = Array.isArray(ex?.options) ? ex.options.slice(0, 4) : ['', '', '', ''];
-    while (newEx.options.length < 4) newEx.options.push('');
-    newEx.correct = typeof ex?.correct === 'number' ? ex.correct : null;
-  } else if (newEx.type === 'blank') {
-    newEx.template = ex?.content || '';
-    newEx.blanks = Array.isArray(ex?.blanks) ? ex.blanks : [];
-  } else if (newEx.type === 'order') {
-    newEx.sentences = Array.isArray(ex?.sentences) ? ex.sentences : (ex?.content || '').split('\n').filter(Boolean);
-    if (newEx.sentences.length === 0) newEx.sentences = [''];
-  } else if (newEx.type === 'fix') {
-    newEx.errorText = ex?.content || ex?.errorText || '';
-    newEx.correctedText = ex?.correctedText || '';
-    newEx.hint = ex?.hint || '';
-  } else if (newEx.type === 'flash') {
-    const parsedPairs = normalizeFlashPairs(ex);
-    newEx.pairs = ensureMinFlashPairs(parsedPairs, ex?.title || ex?.content || 'Flashcard');
-  } else if (newEx.type === 'speak') {
-    newEx.prompt = ex?.content || ex?.title || '';
-    newEx.targetSeconds = ex?.targetSeconds || 60;
-  } else {
-    newEx.prompt = ex?.content || ex?.title || '';
-    if (ex?.targetWords) newEx.targetWords = ex.targetWords;
-    if (ex?.rubric) newEx.rubric = ex.rubric;
+function isStructuredAiExerciseComplete(ex) {
+  if (!ex || !ex.type) return false;
+  if (ex.type === 'mcq') {
+    return Boolean(ex.question)
+      && (ex.options || []).filter(Boolean).length === 4
+      && ex.correct !== null
+      && ex.correct !== undefined
+      && Boolean(ex.explanation);
   }
-
-  return newEx;
+  if (ex.type === 'blank') {
+    const blankCount = (String(ex.template || '').match(/_{3,}/g) || []).length;
+    return Boolean(ex.template) && blankCount > 0 && (ex.blanks || []).filter(Boolean).length >= blankCount;
+  }
+  if (ex.type === 'short') return Boolean(ex.prompt) && Boolean(ex.rubric) && Number(ex.targetWords) > 0;
+  if (ex.type === 'speak') return Boolean(ex.prompt) && Number(ex.targetSeconds) > 0;
+  if (ex.type === 'order') return (ex.sentences || []).filter(Boolean).length >= 3;
+  if (ex.type === 'fix') return Boolean(ex.errorText) && Boolean(ex.correctedText) && Boolean(ex.hint);
+  if (ex.type === 'flash') return (ex.pairs || []).filter(p => p.term && p.def).length >= 10;
+  if (ex.type === 'listen') {
+    return Boolean(ex.audioText)
+      && Boolean(ex.question)
+      && (ex.options || []).filter(Boolean).length === 4
+      && ex.correct !== null
+      && ex.correct !== undefined
+      && Boolean(ex.explanation);
+  }
+  return false;
 }
 
-function normalizeFlashPairs(ex) {
-  const asPair = (item) => {
-    if (!item) return null;
-    if (typeof item === 'string') {
-      const p = splitFlashLine(item);
-      return p ? { term: p.term, def: p.def } : null;
-    }
-    const term = String(
-      item.term ?? item.front ?? item.word ?? item.question ?? item.prompt ?? item.key ?? ''
-    ).trim();
-    const def = String(
-      item.def ?? item.definition ?? item.back ?? item.meaning ?? item.answer ?? item.value ?? ''
-    ).trim();
-    if (!term && !def) return null;
-    return { term, def };
-  };
-
-  const arrays = [
-    ex?.pairs,
-    ex?.flashcards,
-    ex?.cards,
-    ex?.items,
-  ];
-
-  for (const arr of arrays) {
-    if (!Array.isArray(arr)) continue;
-    const parsed = arr.map(asPair).filter((p) => p && (p.term || p.def));
-    if (parsed.length > 0) return parsed;
-  }
-
-  // Fallback: parse content lines such as "term: definition".
-  const text = String(ex?.content || ex?.title || '').trim();
-  if (!text) return [];
-  const lines = text
-    .split(/\r?\n|;/)
-    .map((l) => l.replace(/^[\-\*\d\.\)\s]+/, '').trim())
-    .filter(Boolean);
-  const parsedFromLines = lines.map(splitFlashLine).filter(Boolean);
-  if (parsedFromLines.length > 0) return parsedFromLines;
-
-  // Last resort: convert one compact content into a single card.
-  if (ex?.title && ex?.content) {
-    return [{ term: String(ex.title).trim(), def: String(ex.content).trim() }];
-  }
-  return [];
-}
-
-function splitFlashLine(line) {
-  if (!line) return null;
-  const cleaned = String(line).trim();
-  const separators = [' - ', ' — ', ': ', ' = ', ' => ', ' -> ', '|'];
-  for (const sep of separators) {
-    const idx = cleaned.indexOf(sep);
-    if (idx <= 0) continue;
-    const left = cleaned.slice(0, idx).trim();
-    const right = cleaned.slice(idx + sep.length).trim();
-    if (left && right) return { term: left, def: right };
+// Returns a warning string if the homework set lacks production exercises when
+// the diagnosis priority is a production skill (speaking or writing).
+// Returns null when no concern is found.
+function getHomeworkCognitiveSufficiencyWarning(exercises, diagnosis) {
+  const priorities = Array.isArray(diagnosis?.priorityDiagnosis)
+    ? diagnosis.priorityDiagnosis
+    : Array.isArray(diagnosis?.sections?.priorityDiagnosis?.content)
+      ? diagnosis.sections.priorityDiagnosis.content
+      : [];
+  const topPriority = (priorities[0]?.area || '').toLowerCase();
+  const isProductionPriority = /speak|writ|produc/.test(topPriority);
+  if (!isProductionPriority) return null;
+  const hasProductionExercise = exercises.some(e => e.type === 'speak' || e.type === 'short');
+  if (!hasProductionExercise) {
+    return `Diagnosis priority is "${priorities[0]?.area}" but no speaking or writing exercise is included. Consider adding at least one.`;
   }
   return null;
 }
 
-function ensureMinFlashPairs(pairs, seedText) {
-  const clean = [];
-  const seen = new Set();
-  (Array.isArray(pairs) ? pairs : []).forEach((p) => {
-    const term = String(p?.term || '').trim();
-    const def = String(p?.def || '').trim();
-    if (!term && !def) return;
-    const k = `${term.toLowerCase()}|${def.toLowerCase()}`;
-    if (seen.has(k)) return;
-    seen.add(k);
-    clean.push({ term, def });
-  });
+function buildExercisesFromAiTasks(tasks, fallback) {
+  const built = (tasks || []).map(t => createExerciseFromAiTask(t)).filter(Boolean);
+  return built.length > 0 ? built : fallback;
+}
 
-  const topic = String(seedText || 'Flashcard').replace(/\s+/g, ' ').trim().slice(0, 40) || 'Flashcard';
-  let i = clean.length + 1;
-  while (clean.length < 10) {
-    clean.push({
-      term: `${topic} ${i}`,
-      def: `Definition ${i}`,
-    });
-    i += 1;
+function fillSelectedExercisesWithAi(exercises, tasks) {
+  if (!Array.isArray(exercises) || exercises.length === 0) return exercises;
+  const pool = Array.isArray(tasks) ? [...tasks] : [];
+  return exercises.map(ex => {
+    const aiTask = pullBestTaskForType(pool, ex.type);
+    if (!aiTask) return ex;
+    return applyAiTaskToExercise(ex, aiTask);
+  });
+}
+
+function pullBestTaskForType(pool, type) {
+  if (!Array.isArray(pool) || pool.length === 0) return null;
+  let idx = pool.findIndex(t => mapAiType(t?.type) === type);
+  if (idx < 0) idx = 0;
+  return idx >= 0 ? pool.splice(idx, 1)[0] : null;
+}
+
+function createExerciseFromAiTask(task) {
+  if (!task || typeof task !== 'object') return null;
+  const ex = createExercise(mapAiType(task.type));
+  return applyAiTaskToExercise(ex, task);
+}
+
+function applyAiTaskToExercise(exercise, aiTask) {
+  const ex = { ...exercise };
+  const content = aiTask?.content || aiTask?.description || aiTask?.question || aiTask?.prompt || aiTask?.title || '';
+  if (aiTask?.title) ex.title = aiTask.title;
+  if (aiTask?.skillGroup) ex.skillGroup = aiTask.skillGroup;
+  if (aiTask?.teacherNote) ex.teacherNote = aiTask.teacherNote;
+
+  if (ex.type === 'mcq') {
+    const options = normalizeMcqOptions(aiTask?.options);
+    ex.question = aiTask?.question || content;
+    ex.options = options;
+    ex.correct = normalizeCorrectIndex(aiTask?.correct, options.length);
+    ex.explanation = aiTask?.explanation || aiTask?.rationale || aiTask?.teacherNote || 'The correct answer best matches the MET skill focus in this item.';
+    return ex;
   }
 
-  return clean.slice(0, 20);
+  if (ex.type === 'blank') {
+    ex.template = aiTask?.template || content;
+    ex.blanks = normalizeBlankAnswers(aiTask?.blanks, ex.template);
+    return ex;
+  }
+
+  if (ex.type === 'order') {
+    ex.sentences = normalizeSentences(aiTask?.sentences, content);
+    return ex;
+  }
+
+  if (ex.type === 'fix') {
+    ex.errorText = aiTask?.errorText || content;
+    ex.correctedText = aiTask?.correctedText || aiTask?.example || ex.correctedText || '';
+    ex.hint = aiTask?.hint || aiTask?.teacherNote || '';
+    return ex;
+  }
+
+  if (ex.type === 'flash') {
+    ex.pairs = normalizeFlashPairs(aiTask?.pairs || aiTask?.cards || aiTask?.items || aiTask?.terms);
+    return ex;
+  }
+
+  if (ex.type === 'speak') {
+    ex.prompt = aiTask?.prompt || content;
+    ex.targetSeconds = normalizeTargetSeconds(aiTask?.targetSeconds, aiTask?.duration);
+    return ex;
+  }
+
+  if (ex.type === 'listen') {
+    const options = normalizeMcqOptions(aiTask?.options);
+    ex.audioText = aiTask?.audioText || aiTask?.script || content;
+    ex.question = aiTask?.question || 'What is the speaker mainly trying to do?';
+    ex.options = options;
+    ex.correct = normalizeCorrectIndex(aiTask?.correct, options.length);
+    ex.explanation = aiTask?.explanation || aiTask?.rationale || aiTask?.teacherNote || 'The correct answer follows from the speaker purpose and key details in the audio.';
+    ex.plays = Number.isFinite(Number(aiTask?.plays)) ? Number(aiTask.plays) : 2;
+    if (aiTask?.pictureHint) ex.pictureHint = aiTask.pictureHint;
+    return ex;
+  }
+
+  ex.prompt = aiTask?.prompt || content;
+  ex.rubric = aiTask?.rubric || aiTask?.teacherNote || 'Answer the question clearly, support your idea with one example, and check grammar before submitting.';
+  if (Number.isFinite(Number(aiTask?.targetWords))) ex.targetWords = Number(aiTask.targetWords);
+  return ex;
+}
+
+function normalizeMcqOptions(options) {
+  if (!Array.isArray(options) || options.length === 0) return ['', '', '', ''];
+  const clean = options
+    .map(opt => (typeof opt === 'string' ? opt : opt?.text || opt?.label || ''))
+    .filter(Boolean)
+    .slice(0, 4);
+  while (clean.length < 4) clean.push('');
+  return clean;
+}
+
+function normalizeCorrectIndex(correct, optionCount) {
+  if (typeof correct === 'string') {
+    const trimmed = correct.trim().toUpperCase();
+    if (/^[A-D]$/.test(trimmed)) return trimmed.charCodeAt(0) - 65;
+  }
+  const n = Number(correct);
+  if (Number.isInteger(n) && n >= 0 && n < optionCount) return n;
+  return null;
+}
+
+function normalizeBlankAnswers(blanks, template) {
+  if (Array.isArray(blanks) && blanks.length > 0) return blanks.map(v => String(v));
+  const count = (String(template || '').match(/_{3,}/g) || []).length;
+  return Array.from({ length: count }, () => '');
+}
+
+function normalizeSentences(sentences, content) {
+  if (Array.isArray(sentences) && sentences.length > 0) return sentences.map(s => String(s));
+  return String(content || '')
+    .split('\n')
+    .map(s => s.trim())
+    .filter(Boolean);
+}
+
+function normalizeFlashPairs(pairs) {
+  if (!Array.isArray(pairs) || pairs.length === 0) return [{ term: '', def: '' }];
+  const clean = pairs
+    .map(p => {
+      if (typeof p === 'string') {
+        const [term, ...rest] = p.split(/[:–-]/);
+        return { term: term?.trim() || '', def: rest.join('-').trim() };
+      }
+      return { term: p?.term || p?.word || p?.phrase || '', def: p?.def || p?.definition || p?.meaning || '' };
+    })
+    .filter(p => p.term || p.def);
+  const filled = clean.filter(p => p.term && p.def);
+  if (filled.length === 0) return [{ term: '', def: '' }];
+  const fallback = [
+    { term: 'main idea', def: 'the central point of a passage or conversation' },
+    { term: 'specific detail', def: 'a fact or piece of information stated in the text' },
+    { term: 'inference', def: 'a conclusion based on evidence, not directly stated' },
+    { term: 'speaker purpose', def: 'the reason a speaker says something' },
+    { term: 'supporting example', def: 'a detail that makes an answer stronger' },
+    { term: 'transition', def: 'a word or phrase that connects ideas clearly' },
+    { term: 'collocation', def: 'words that naturally go together' },
+    { term: 'distractor', def: 'an answer choice that sounds possible but is not correct' },
+    { term: 'task completion', def: 'answering all parts of the question' },
+    { term: 'clarify', def: 'to make something easier to understand' },
+  ];
+  const seen = new Set(filled.map(p => p.term.toLowerCase()));
+  for (const pair of fallback) {
+    if (filled.length >= 10) break;
+    if (!seen.has(pair.term.toLowerCase())) filled.push(pair);
+  }
+  return filled;
+}
+
+function normalizeTargetSeconds(targetSeconds, duration) {
+  const parsed = Number(targetSeconds);
+  if (Number.isFinite(parsed) && parsed > 0) return parsed;
+  const durMatch = String(duration || '').match(/\d+/);
+  if (durMatch) return Math.max(30, Number(durMatch[0]) * 60);
+  return 60;
 }
 
 function Field({ label, children }) {
@@ -1078,13 +1319,6 @@ function arrowBtnStyle(disabled) {
     alignItems: 'center', justifyContent: 'center',
   };
 }
-
-const EMPTY_FORM = {
-  title: '', objective: '', description: '',
-  exercises: [],
-  selfCheck: [''],
-  skillType: 'grammar', dueDate: '', teacherNotes: '',
-};
 
 const backStyle = {
   background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)',

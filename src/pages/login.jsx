@@ -1,317 +1,359 @@
 /**
- * login.jsx — V.V. Method Platform Login Screen
- * Simple Home/Login screen for the MET preparation platform.
- * Teacher: email + password · Student: email + password
+ * login.jsx — MET Proficiency Mastery Login Screen
+ *
+ * Email + password form with two modes:
+ *  - "signin"   — existing users (incl. the teacher) sign in.
+ *  - "register" — first-time students set their OWN password (self-register).
+ * Both use Supabase Auth; no shared secret, no passwords stored in the bundle.
  */
 
 import { useState, useEffect } from 'react';
 import { injectGlobalCSS } from '../components/shared.jsx';
-import { STUDENTS } from '../data/students.jsx';
-
-const TEACHER_EMAIL = String(import.meta.env.VITE_TEACHER_EMAIL || 'teacher@vvmethod.com').toLowerCase();
+import { signInWithPassword, signUpWithPassword, storeSupabaseSession, getSupabaseConfig } from '../lib/supabase-storage.js';
 
 const CSS = `
-  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap');
+  .lp-root {
+    min-height: 100vh; min-height: 100dvh;
+    display: grid; grid-template-columns: 420px 1fr;
+    font-family: var(--font-ui); background: #fff;
+    overflow-x: hidden;
+  }
 
-  .login-root {
-    min-height: 100dvh; display: grid; grid-template-columns: 1fr 1fr;
-    font-family: var(--font-ui); background: var(--bg);
+  /* ── Brand panel ── */
+  .lp-brand {
+    background: linear-gradient(180deg, #0F172A 0%, #1E293B 100%);
+    display: flex; flex-direction: column; justify-content: space-between;
+    padding: 48px 44px; min-height: 100dvh; position: sticky; top: 0;
+    overflow: hidden;
   }
-  @media (max-width: 860px) {
-    .login-root { grid-template-columns: 1fr; }
-    .login-brand-panel { display: none; }
-    .login-mobile-tagline { display: block; }
+  .lp-brand::before {
+    content: ''; position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 20% 80%, rgba(72,199,199,.18) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 10%, rgba(255,255,255,.06) 0%, transparent 50%);
+    pointer-events: none;
   }
-  .login-mobile-tagline {
-    display: none; font-size: 13px; color: var(--muted); line-height: 1.55;
-    margin: 0 0 20px; padding-bottom: 16px; border-bottom: 1px solid var(--border);
+  .lp-brand-logo { display: flex; align-items: center; gap: 12px; position: relative; }
+  .lp-brand-logo-badge {
+    width: 38px; height: 38px; border-radius: 10px;
+    background: rgba(255,255,255,.15); border: 1.5px solid rgba(255,255,255,.25);
+    display: grid; place-items: center;
+    font-size: 18px; font-weight: 900; color: #fff; letter-spacing: -.02em;
   }
-  .login-brand-panel {
-    background: linear-gradient(180deg, #0F172A 0%, #1E293B 100%); display: flex; align-items: center; justify-content: center;
-    padding: clamp(32px, 5vw, 56px) clamp(28px, 6vw, 64px);
-    position: relative; overflow: hidden;
+  .lp-brand-logo-name { font-size: 15px; font-weight: 800; color: #fff; letter-spacing: .01em; line-height: 1.2; }
+  .lp-brand-logo-sub  { font-size: 11px; color: rgba(241,250,238,.7); letter-spacing: .06em; text-transform: uppercase; }
+
+  .lp-brand-hero { position: relative; }
+  .lp-brand-tag {
+    display: inline-block; margin-bottom: 18px;
+    padding: 4px 10px; border-radius: 4px;
+    background: rgba(72,199,199,.22); border: 1px solid rgba(72,199,199,.4);
+    font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #a8dce0;
   }
-  .login-brand-inner {
-    width: 100%; max-width: 420px; display: flex; flex-direction: column; gap: 48px;
+  .lp-brand-headline {
+    font-size: clamp(26px, 3vw, 34px); font-weight: 800; color: #fff;
+    line-height: 1.2; margin: 0 0 16px; letter-spacing: -.02em;
   }
-  .login-brand-name   { font-size: 18px; font-weight: 800; color: var(--on-dark); letter-spacing: 0.01em; }
-  .login-brand-sub    { font-size: 11px; color: var(--on-dark-muted); opacity: 0.65; letter-spacing: 0.1em; text-transform: uppercase; margin-top: 3px; }
-  .login-brand-eyebrow {
+  .lp-brand-copy { font-size: 14px; color: rgba(241,250,238,.8); line-height: 1.75; margin: 0; }
+
+  .lp-brand-features { position: relative; display: flex; flex-direction: column; gap: 10px; }
+  .lp-brand-feature { display: flex; align-items: center; gap: 10px; font-size: 13px; color: rgba(241,250,238,.75); }
+  .lp-brand-feature-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; background: rgba(72,199,199,.7); }
+
+  /* ── Sign-in panel ── */
+  .lp-signin {
+    display: flex; align-items: center; justify-content: center;
+    min-height: 100dvh; padding: 56px clamp(24px, 6vw, 64px);
+    overflow-y: auto; overflow-x: hidden; background: #fff;
+    width: 100%; min-width: 0; box-sizing: border-box;
+  }
+  .lp-signin-inner { width: min(100%, 420px); max-width: calc(100vw - 48px); min-width: 0; }
+
+  .lp-mobile-brand {
+    display: none;
+    margin-bottom: 24px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid var(--border);
+  }
+  .lp-mobile-brand-name {
+    display: block;
+    font-size: 16px;
+    font-weight: 800;
+    color: var(--accent-deep);
+    line-height: 1.2;
+  }
+  .lp-mobile-brand-sub {
+    display: block;
+    margin-top: 4px;
     font-size: 11px;
     font-weight: 700;
-    color: #d7f3f3;
-    letter-spacing: 0.1em;
+    letter-spacing: .06em;
     text-transform: uppercase;
-    margin-bottom: 14px;
-    display: inline-block;
-    padding: 4px 8px;
-    border-radius: 3px;
-    background: rgba(61, 166, 166, 0.22);
-    border: 1px solid rgba(168, 218, 220, 0.45);
-  }
-  .login-brand-headline { font-size: clamp(28px, 3.2vw, 36px); font-weight: 800; color: var(--on-dark); line-height: 1.15; margin-bottom: 18px; }
-  .login-brand-copy { color: var(--on-dark-muted); font-size: 14px; line-height: 1.7; margin-bottom: 28px; }
-  .login-brand-flow   { display: flex; gap: 10px; align-items: center; font-size: 13.5px; font-weight: 500; color: var(--on-dark-muted); opacity: 0.85; flex-wrap: wrap; }
-  .login-brand-flow-step { color: var(--on-dark); opacity: 0.8; }
-  .login-brand-flow-step.active {
-    color: #ffffff;
-    font-weight: 700;
-    opacity: 1;
-    background: rgba(61, 166, 166, 0.25);
-    border: 1px solid rgba(168, 218, 220, 0.55);
-    border-radius: 3px;
-    padding: 2px 8px;
-  }
-  .login-brand-flow-sep { color: var(--on-dark-muted); opacity: 0.4; }
-
-  .login-form-panel {
-    display: flex; align-items: center; justify-content: center;
-    padding: clamp(32px, 5vw, 56px) clamp(28px, 6vw, 64px); background: #fff;
-  }
-  .login-form-inner { width: 100%; max-width: 420px; text-align: left; }
-
-  .login-form-title { font-size: 28px; font-weight: 800; color: var(--text); letter-spacing: -0.01em; margin: 0 0 8px; }
-  .login-form-sub   { font-size: 14.5px; color: var(--muted); margin: 0 0 28px; line-height: 1.55; }
-  .login-phase-note {
-    font-size: 12px; color: var(--text-2); background: var(--accent-subtle);
-    border: 1px solid var(--accent-soft); border-radius: 8px; padding: 10px 12px;
-    margin: -10px 0 18px;
+    color: var(--accent-text);
   }
 
-  .login-role-card {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 20px 22px; border: 2px solid var(--border); border-radius: 2px;
-    cursor: pointer; background: #fff; width: 100%; text-align: left;
-    transition: border-color 0.15s, box-shadow 0.15s; margin-bottom: 12px;
-    font-family: var(--font-ui);
+  .lp-greeting { margin-bottom: 36px; }
+  .lp-greeting h1 {
+    font-size: clamp(22px, 3vw, 28px); font-weight: 800;
+    color: var(--text); margin: 0 0 8px; letter-spacing: -.02em;
   }
-  .login-role-card:hover { border-color: var(--primary); box-shadow: 0 0 0 3px var(--accent-soft); }
-  .login-role-dot { width: 8px; height: 8px; border-radius: 50%; margin-right: 10px; flex-shrink: 0; }
-  .login-role-title { font-size: 15px; font-weight: 700; color: var(--text); display: flex; align-items: center; margin-bottom: 3px; }
-  .login-role-desc  { font-size: 12.5px; color: var(--muted); }
-  .login-role-arrow { color: #a8b8c0; transition: color 0.15s; }
-  .login-role-card:hover .login-role-arrow { color: var(--primary); }
+  .lp-greeting p { font-size: 14px; color: var(--muted); margin: 0; line-height: 1.55; }
 
-  .login-back-btn {
-    display: inline-flex; align-items: center; gap: 6px;
-    font-size: 13px; font-weight: 500; color: var(--muted);
-    background: none; border: none; cursor: pointer;
-    font-family: var(--font-ui); margin-bottom: 20px; padding: 0;
-    transition: color 0.12s;
+  /* Form fields */
+  .lp-field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+  .lp-label {
+    font-size: 12px; font-weight: 700; color: var(--text);
+    letter-spacing: .04em; text-transform: uppercase;
   }
-  .login-back-btn:hover { color: var(--text); }
-  .login-field-label {
-    display: block; font-size: 11px; font-weight: 700; letter-spacing: 0.08em;
-    text-transform: uppercase; color: var(--muted); margin-bottom: 8px;
-    text-align: left;
+  .lp-input {
+    width: 100%; padding: 12px 14px; box-sizing: border-box;
+    border: 1.5px solid #8aacac; border-radius: 8px;
+    font-size: 16px; font-family: var(--font-ui); color: var(--text);
+    background: #f3f9f9; outline: none;
+    transition: border-color .15s, box-shadow .15s;
   }
-  .login-input {
-    width: 100%; padding: 14px 16px; border: 1.5px solid var(--border);
-    border-radius: 2px; font-family: var(--font-ui); font-size: 16px;
-    color: var(--text); background: #fff; outline: none;
-    transition: border-color 0.15s, box-shadow 0.15s; margin-bottom: 6px;
-    text-align: left;
+  .lp-input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(29,140,150,.15);
+    background: #fff;
   }
-  .login-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--accent-soft); }
-  .login-input.mono { font-family: var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; }
-  .login-error { font-size: 13px; color: var(--danger); margin-bottom: 12px; min-height: 20px; }
-  .login-submit-btn {
-    width: 100%; padding: 14px; border-radius: 2px; border: none; cursor: pointer;
-    font-family: var(--font-ui); font-size: 15px; font-weight: 700;
+  .lp-input::placeholder { color: #6b8fa0; }
+
+  .lp-submit {
+    width: 100%; padding: 13px; margin-top: 8px;
+    background: var(--accent-deep); color: #fff;
+    border: none; border-radius: 8px; cursor: pointer;
+    font-size: 15px; font-weight: 700; font-family: var(--font-ui);
+    letter-spacing: .01em;
+    transition: opacity .15s, box-shadow .15s, transform .1s;
     display: flex; align-items: center; justify-content: center; gap: 8px;
-    margin-top: 20px; transition: background 0.15s, opacity 0.15s;
+    box-sizing: border-box; max-width: 100%;
   }
-  .login-submit-btn.teacher { background: var(--primary); color: #fff; }
-  .login-submit-btn.teacher:hover { background: var(--primary-ink); }
-  .login-submit-btn.student { background: var(--accent-deep); color: #fff; }
-  .login-submit-btn.student:hover { background: #131a28; }
-  .login-hint { font-size: 11.5px; color: var(--muted); text-align: center; margin-top: 12px; }
+  .lp-submit:hover:not(:disabled) {
+    box-shadow: 0 4px 16px rgba(29,80,86,.3);
+    transform: translateY(-1px);
+  }
+  .lp-submit:active:not(:disabled) { transform: translateY(0); }
+  .lp-submit:disabled { opacity: .6; cursor: default; }
+
+  /* Spinner */
+  @keyframes lp-spin { to { transform: rotate(360deg); } }
+  .lp-spinner {
+    width: 16px; height: 16px; border-radius: 50%; flex-shrink: 0;
+    border: 2px solid rgba(255,255,255,.35); border-top-color: #fff;
+    animation: lp-spin .7s linear infinite;
+  }
+
+  .lp-error {
+    margin-top: 16px; padding: 12px 16px; border-radius: 8px;
+    background: #fff5f5; border: 1px solid #fed7d7;
+    font-size: 13px; color: var(--danger); line-height: 1.5;
+  }
+
+  .lp-footer {
+    margin-top: 32px; padding-top: 20px; border-top: 1px solid var(--border);
+    font-size: 11.5px; color: var(--muted); text-align: center; line-height: 1.6;
+  }
+
+  .lp-toggle {
+    margin-top: 20px; text-align: center;
+    font-size: 13px; color: var(--muted);
+  }
+  .lp-toggle button {
+    background: none; border: none; padding: 0; margin-left: 6px;
+    font-size: 13px; font-weight: 700; color: var(--accent-deep);
+    cursor: pointer; font-family: var(--font-ui); text-decoration: underline;
+  }
+  .lp-toggle button:disabled { opacity: .5; cursor: default; }
+
+  @media (max-width: 860px) {
+    .lp-root { grid-template-columns: 1fr; }
+    .lp-brand { display: none; }
+    .lp-signin { align-items: flex-start; justify-content: flex-start; padding: 36px 24px; }
+    .lp-signin-inner { width: 100%; max-width: 100%; }
+    .lp-mobile-brand { display: block; }
+    .lp-greeting { margin-bottom: 28px; }
+  }
+  @media (max-width: 420px) {
+    .lp-signin { padding: 32px 20px; }
+  }
 `;
 
-let loginCssInjected = false;
-function injectLoginCSS() {
-  if (loginCssInjected || typeof document === 'undefined') return;
+let cssInjected = false;
+function injectCSS() {
+  if (cssInjected || typeof document === 'undefined') return;
   const s = document.createElement('style');
   s.textContent = CSS;
   document.head.appendChild(s);
-  loginCssInjected = true;
+  cssInjected = true;
 }
 
-export default function LoginScreen({ onSignIn, initialMode = 'choose' }) {
-  const [mode, setMode] = useState(initialMode);
-  const [teacherEmail, setTeacherEmail] = useState('');
+export default function LoginScreen() {
+  const [mode, setMode] = useState('signin'); // 'signin' | 'register'
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const supabaseReady = getSupabaseConfig().isConfigured;
+  const isRegister = mode === 'register';
 
   useEffect(() => {
     injectGlobalCSS();
-    injectLoginCSS();
+    injectCSS();
+    // If resolveAuth rejected an unauthorized account, show why on return to login.
+    try {
+      const notice = localStorage.getItem('vv:auth_notice');
+      if (notice) { setError(notice); localStorage.removeItem('vv:auth_notice'); }
+    } catch { /* storage unavailable */ }
   }, []);
 
-  const handleTeacher = () => {
-    const normalizedEmail = teacherEmail.trim().toLowerCase();
-    if (!normalizedEmail) {
-      setError('Please enter your teacher email.');
+  const switchMode = () => {
+    if (loading) return;
+    setError('');
+    setMode(m => (m === 'signin' ? 'register' : 'signin'));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (loading) return;
+    setError('');
+
+    if (!email.trim() || !password.trim()) {
+      setError('Please enter your email and password.');
       return;
     }
-    if (normalizedEmail === TEACHER_EMAIL) {
-      onSignIn({ role: 'teacher' });
-    } else {
-      setError("Teacher email doesn't match. Try again.");
+    if (!supabaseReady) {
+      setError('Sign-in is not configured. Contact your teacher.');
+      return;
+    }
+    if (isRegister && password.length < 6) {
+      setError('Choose a password with at least 6 characters.');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const session = isRegister
+        ? await signUpWithPassword(email.trim(), password)
+        : await signInWithPassword(email.trim(), password);
+      storeSupabaseSession(session);
+      window.location.reload();
+    } catch (err) {
+      setError(
+        isRegister
+          ? (err.message || 'Could not create your account. Try again or contact your teacher.')
+          : 'Incorrect email or password. Try again or contact your teacher.'
+      );
+      setLoading(false);
     }
   };
 
-  const handleStudentPick = (student) => {
-    onSignIn({ role: 'student', studentId: student.id });
-  };
-
-  const back = (m) => {
-    setMode(m);
-    setError('');
-    setTeacherEmail('');
-  };
-
-  const formHeading = mode === 'choose'
-    ? 'Sign in'
-    : mode === 'teacher'
-      ? 'Teacher sign in'
-      : 'Student sign in';
-  const formSubcopy = mode === 'choose'
-    ? 'Choose teacher or student to continue.'
-    : mode === 'teacher'
-      ? 'Enter your workspace credentials.'
-      : 'Open your dashboard with your account.';
-
   return (
-    <div className="login-root">
-      {/* ── Brand panel ── */}
-      <div className="login-brand-panel">
-        <div className="login-brand-inner">
-          <div>
-            <div className="login-brand-name">MET Proficiency Mastery</div>
-            <div className="login-brand-sub">Teacher Vinicius</div>
-          </div>
+    <div className="lp-root">
 
+      {/* ── Brand panel ── */}
+      <div className="lp-brand">
+        <div className="lp-brand-logo">
           <div>
-            <div className="login-brand-eyebrow">Your learning path</div>
-            <div className="login-brand-headline">Clear practice.<br />Better feedback.<br />Real progress.</div>
-            <p className="login-brand-copy">Log in to access your lessons, feedback, homework, and practice activities.</p>
-            <div className="login-brand-flow" aria-label="Teaching cycle">
-              <span className="login-brand-flow-step">Class</span>
-              <span className="login-brand-flow-sep" aria-hidden="true">→</span>
-              <span className="login-brand-flow-step active" aria-current="step">Diagnosis</span>
-              <span className="login-brand-flow-sep" aria-hidden="true">→</span>
-              <span className="login-brand-flow-step">Feedback + Homework</span>
-              <span className="login-brand-flow-sep" aria-hidden="true">→</span>
-              <span className="login-brand-flow-step">Review</span>
-            </div>
+            <div className="lp-brand-logo-name">MET Proficiency Mastery</div>
+            <div className="lp-brand-logo-sub">Teacher Vinicius</div>
           </div>
+        </div>
+
+        <div className="lp-brand-hero">
+          <div className="lp-brand-tag">Your learning path</div>
+          <h2 className="lp-brand-headline">Clear practice.<br />Better feedback.<br />Real progress.</h2>
+          <p className="lp-brand-copy">
+            Everything you need to reach B2 — lessons, feedback, homework, and your full progress history in one place.
+          </p>
+        </div>
+
+        <div className="lp-brand-features">
+          {['Personalized homework plans', 'Real-time progress tracking'].map(f => (
+            <div key={f} className="lp-brand-feature">
+              <span className="lp-brand-feature-dot" aria-hidden="true" />
+              {f}
+            </div>
+          ))}
         </div>
       </div>
 
-      {/* ── Form panel ── */}
-      <div className="login-form-panel">
-        <div className="login-form-inner">
+      {/* ── Sign-in panel ── */}
+      <div className="lp-signin">
+        <div className="lp-signin-inner">
+          <div className="lp-mobile-brand" aria-label="Platform">
+            <span className="lp-mobile-brand-name">MET Proficiency Mastery</span>
+            <span className="lp-mobile-brand-sub">Michigan English Test Preparation for Nurses</span>
+          </div>
 
-          <p className="login-mobile-tagline">
-            Clear practice. Better feedback. Real progress. Class → Diagnosis → Feedback + Homework → Review.
-          </p>
+          <div className="lp-greeting">
+            <h1>{isRegister ? 'Create your password' : 'Sign in'}</h1>
+            <p>
+              {isRegister
+                ? 'First time here? Enter your email and choose a password to create your account.'
+                : 'Enter the email and password you use for this platform.'}
+            </p>
+          </div>
 
-          {mode !== 'choose' && (
-            <button type="button" className="login-back-btn" onClick={() => back('choose')} aria-label="Back to role selection">
-              ← Back
-            </button>
-          )}
-
-          <h1 className="login-form-title">{formHeading}</h1>
-          <p className="login-form-sub">{formSubcopy}</p>
-          <p className="login-phase-note">First phase of the platform. Let me know if something unexpected happens.</p>
-
-          {mode === 'choose' && (
-            <>
-              <button type="button" className="login-role-card" onClick={() => back('teacher')}
-                aria-label="Sign in as teacher — diagnose, feedback, homework, reports">
-                <div>
-                  <div className="login-role-title">
-                    <span className="login-role-dot" style={{ background: 'var(--primary)' }} />
-                    Teacher
-                  </div>
-                  <div className="login-role-desc">Diagnose, feedback, homework, Practice Studio, reports</div>
-                </div>
-                <span className="login-role-arrow" aria-hidden="true">→</span>
-              </button>
-
-              <button type="button" className="login-role-card" onClick={() => back('student')}
-                aria-label="Sign in as student — lessons, feedback, homework, practice">
-                <div>
-                  <div className="login-role-title">
-                    <span className="login-role-dot" style={{ background: 'var(--accent)' }} />
-                    Student
-                  </div>
-                  <div className="login-role-desc">Lessons, feedback, homework, practice, progress</div>
-                </div>
-                <span className="login-role-arrow" aria-hidden="true">→</span>
-              </button>
-            </>
-          )}
-
-          {mode === 'teacher' && (
-            <>
-              <label className="login-field-label" htmlFor="login-teacher-email">Teacher Email</label>
+          <form onSubmit={handleSubmit} noValidate>
+            <div className="lp-field">
+              <label className="lp-label" htmlFor="lp-email">Email</label>
               <input
-                id="login-teacher-email"
-                className="login-input"
+                id="lp-email"
+                className="lp-input"
                 type="email"
                 autoComplete="email"
-                value={teacherEmail}
-                onChange={e => setTeacherEmail(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && handleTeacher()}
-                placeholder="teacher@vvmethod.com"
+                placeholder="your@email.com"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                disabled={loading}
                 autoFocus
               />
-<div className="login-error" role="alert" aria-live="polite">{error}</div>
-              <button type="button" className="login-submit-btn teacher" onClick={handleTeacher}>
-                Enter Workspace →
-              </button>
-            </>
+            </div>
+
+            <div className="lp-field">
+              <label className="lp-label" htmlFor="lp-password">Password</label>
+              <input
+                id="lp-password"
+                className="lp-input"
+                type="password"
+                autoComplete={isRegister ? 'new-password' : 'current-password'}
+                placeholder={isRegister ? 'Choose a password (min. 6 characters)' : '••••••••••••••'}
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                disabled={loading}
+              />
+            </div>
+
+            <button type="submit" className="lp-submit" disabled={loading}>
+              {loading
+                ? <><span className="lp-spinner" /> {isRegister ? 'Creating account…' : 'Signing in…'}</>
+                : (isRegister ? 'Create account' : 'Sign in')}
+            </button>
+          </form>
+
+          {error && (
+            <div className="lp-error" role="alert" aria-live="polite">{error}</div>
           )}
 
-          {mode === 'student' && (
-            <>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 10 }}>
-                {STUDENTS.map(s => (
-                  <button
-                    key={s.id}
-                    type="button"
-                    onClick={() => handleStudentPick(s)}
-                    style={{
-                      display: 'flex', alignItems: 'center', gap: 10,
-                      padding: '14px 16px', border: '2px solid var(--border)',
-                      borderRadius: 2, cursor: 'pointer', background: '#fff',
-                      fontFamily: 'var(--font-ui)', fontSize: 14, fontWeight: 600,
-                      color: 'var(--text)', textAlign: 'left', width: '100%',
-                      transition: 'border-color 0.15s, box-shadow 0.15s',
-                    }}
-                    onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--primary)'; e.currentTarget.style.boxShadow = '0 0 0 3px var(--accent-soft)'; }}
-                    onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.boxShadow = 'none'; }}
-                  >
-                    <span style={{
-                      width: 32, height: 32, borderRadius: '50%',
-                      background: 'var(--accent)', color: '#fff',
-                      display: 'grid', placeItems: 'center',
-                      fontSize: 13, fontWeight: 700, flexShrink: 0,
-                    }}>
-                      {s.firstName.slice(0, 1)}
-                    </span>
-                    {s.firstName}
-                  </button>
-                ))}
-              </div>
-              <div className="login-hint" style={{ marginTop: 16 }}>Tap your name to open your dashboard.</div>
-            </>
-          )}
+          <div className="lp-toggle">
+            {isRegister ? 'Already have an account?' : 'First time here?'}
+            <button type="button" onClick={switchMode} disabled={loading}>
+              {isRegister ? 'Sign in' : 'Create your password'}
+            </button>
+          </div>
+
+          <div className="lp-footer">
+            MET Proficiency Mastery · Private platform<br />
+            Access is by invitation only.<br /><br />
+            Having trouble signing in?{' '}
+            <a href="mailto:vvieira010x@gmail.com" style={{ color: 'var(--accent-text)', textDecoration: 'underline' }}>
+              Contact Teacher Vinicius
+            </a>
+          </div>
 
         </div>
       </div>
+
     </div>
   );
 }

@@ -1,0 +1,268 @@
+[
+  {
+    "_source": "MET-LIS-P1-HW01",
+    "_title": "Short Conversation — Flight Change",
+    "type": "listen",
+    "level": "B2",
+    "audioText": "Hi, I need to change my flight to Friday evening instead of Saturday morning. Let me check availability. We have one seat left on the seven-fifteen departure. There will be a change fee of forty dollars. That is fine. Can I pay by card? Yes, of course. I will process it now and send the new confirmation to your email.",
+    "audioScriptFull": "Woman: Hi, I need to change my flight to Friday evening instead of Saturday morning. Man: Let me check availability. We have one seat left on the seven-fifteen departure. There will be a change fee of forty dollars. Woman: That is fine. Can I pay by card? Man: Yes, of course. I will process it now and send the new confirmation to your email.",
+    "plays": 2,
+    "question": "What will the man do next?",
+    "options": [
+      "Cancel the woman's reservation.",
+      "Check if Friday flights are available.",
+      "Process the payment and send a confirmation.",
+      "Ask the woman to call back later."
+    ],
+    "correct": 2,
+    "explanation": "The man says he will process the payment now and send the new confirmation to her email.",
+    "pictureHint": ""
+  },
+  {
+    "_source": "MET-LIS-P2-HW01",
+    "_title": "Longer Conversation — University Group Project — Q1",
+    "type": "listen",
+    "level": "B2",
+    "audioText": "I'm worried about the group project. We only have ten days left and we haven't started the research section yet. I know. Marcus was supposed to handle that part, but he said he has been dealing with a family situation this week. That is unfortunate. Should we divide his section between us? Maybe. But I also think we should tell the professor. She might give us a short extension if we explain the situation. I am not sure. Last time she said she does not grant extensions unless there is a documented reason. Marcus could provide a letter from his doctor. That might be enough. Alright. Let us speak with him first and then decide whether to approach the professor.",
+    "audioScriptFull": "Student A: I'm worried about the group project. We only have ten days left and we haven't started the research section yet. Student B: I know. Marcus was supposed to handle that part, but he said he has been dealing with a family situation this week. Student A: That is unfortunate. Should we divide his section between us? Student B: Maybe. But I also think we should tell the professor. She might give us a short extension if we explain the situation. Student A: I am not sure. Last time she said she does not grant extensions unless there is a documented reason. Student B: Marcus could provide a letter from his doctor. That might be enough. Student A: Alright. Let us speak with him first and then decide whether to approach the professor.",
+    "plays": 2,
+    "question": "What is the main problem the students are discussing?",
+    "options": [
+      "They forgot the deadline for the project.",
+      "Part of their group project has not been started.",
+      "The professor changed the project requirements.",
+      "One student wants to leave the group."
+    ],
+    "correct": 1,
+    "explanation": "The students are concerned because Marcus has not started the research section, and the deadline is in ten days.",
+    "pictureHint": ""
+  },
+  {
+    "_source": "MET-LIS-P2-HW01",
+    "_title": "Longer Conversation — University Group Project — Q2",
+    "type": "listen",
+    "level": "B2",
+    "audioText": "I'm worried about the group project. We only have ten days left and we haven't started the research section yet. I know. Marcus was supposed to handle that part, but he said he has been dealing with a family situation this week. That is unfortunate. Should we divide his section between us? Maybe. But I also think we should tell the professor. She might give us a short extension if we explain the situation. I am not sure. Last time she said she does not grant extensions unless there is a documented reason. Marcus could provide a letter from his doctor. That might be enough. Alright. Let us speak with him first and then decide whether to approach the professor.",
+    "audioScriptFull": "Student A: I'm worried about the group project. We only have ten days left and we haven't started the research section yet. Student B: I know. Marcus was supposed to handle that part, but he said he has been dealing with a family situation this week. Student A: That is unfortunate. Should we divide his section between us? Student B: Maybe. But I also think we should tell the professor. She might give us a short extension if we explain the situation. Student A: I am not sure. Last time she said she does not grant extensions unless there is a documented reason. Student B: Marcus could provide a letter from his doctor. That might be enough. Student A: Alright. Let us speak with him first and then decide whether to approach the professor.",
+    "plays": 2,
+    "question": "Why has Marcus not completed his part?",
+    "options": [
+      "He does not understand the assignment.",
+      "He has been dealing with a family situation.",
+      "He chose to work on a different project.",
+      "He did not receive the project instructions."
+    ],
+    "correct": 1,
+    "explanation": "Student B explains that Marcus has been dealing with a family situation this week.",
+    "pictureHint": ""
+  },
+  {
+    "_source": "MET-LIS-P2-HW01",
+    "_title": "Longer Conversation — University Group Project — Q3",
+    "type": "listen",
+    "level": "B2",
+    "audioText": "I'm worried about the group project. We only have ten days left and we haven't started the research section yet. I know. Marcus was supposed to handle that part, but he said he has been dealing with a family situation this week. That is unfortunate. Should we divide his section between us? Maybe. But I also think we should tell the professor. She might give us a short extension if we explain the situation. I am not sure. Last time she said she does not grant extensions unless there is a documented reason. Marcus could provide a letter from his doctor. That might be enough. Alright. Let us speak with him first and then decide whether to approach the professor.",
+    "audioScriptFull": "Student A: I'm worried about the group project. We only have ten days left and we haven't started the research section yet. Student B: I know. Marcus was supposed to handle that part, but he said he has been dealing with a family situation this week. Student A: That is unfortunate. Should we divide his section between us? Student B: Maybe. But I also think we should tell the professor. She might give us a short extension if we explain the situation. Student A: I am not sure. Last time she said she does not grant extensions unless there is a documented reason. Student B: Marcus could provide a letter from his doctor. That might be enough. Student A: Alright. Let us speak with him first and then decide whether to approach the professor.",
+    "plays": 2,
+    "question": "What do the students decide to do at the end of the conversation?",
+    "options": [
+      "Submit the project without the research section.",
+      "Ask the professor for an extension immediately.",
+      "Talk to Marcus first before going to the professor.",
+      "Divide Marcus's section equally between them."
+    ],
+    "correct": 2,
+    "explanation": "Student A suggests they speak with Marcus first and then decide whether to approach the professor.",
+    "pictureHint": ""
+  },
+  {
+    "_source": "MET-LIS-P3-HW01",
+    "_title": "Short Talk — Community Recycling Program — Q1",
+    "type": "listen",
+    "level": "B2",
+    "audioText": "Good afternoon, residents. The city is launching a new recycling program starting the first of next month. Under this program, all households will receive two separate bins — one for plastic and glass, and one for paper and cardboard. Organic waste, such as food scraps, should continue to go into the brown composting bin. Collection days will change for some streets, so please check the updated schedule on the city website or the notice board at the community center. Residents who are unsure which materials go in which bin can attend a free information session this Saturday at ten in the morning at the town hall. We appreciate your cooperation in making our city cleaner.",
+    "audioScriptFull": "Good afternoon, residents. The city is launching a new recycling program starting the first of next month. Under this program, all households will receive two separate bins — one for plastic and glass, and one for paper and cardboard. Organic waste, such as food scraps, should continue to go into the brown composting bin. Collection days will change for some streets, so please check the updated schedule on the city website or the notice board at the community center. Residents who are unsure which materials go in which bin can attend a free information session this Saturday at ten in the morning at the town hall. We appreciate your cooperation in making our city cleaner.",
+    "plays": 2,
+    "question": "What is the main purpose of this announcement?",
+    "options": [
+      "To introduce a new composting program for businesses.",
+      "To explain a new household recycling system.",
+      "To announce changes to the city's waste collection fees.",
+      "To invite residents to apply for recycling bin delivery."
+    ],
+    "correct": 1,
+    "explanation": "The speaker explains that the city is launching a new recycling program and describes how households should separate their waste.",
+    "pictureHint": ""
+  },
+  {
+    "_source": "MET-LIS-P3-HW01",
+    "_title": "Short Talk — Community Recycling Program — Q2",
+    "type": "listen",
+    "level": "B2",
+    "audioText": "Good afternoon, residents. The city is launching a new recycling program starting the first of next month. Under this program, all households will receive two separate bins — one for plastic and glass, and one for paper and cardboard. Organic waste, such as food scraps, should continue to go into the brown composting bin. Collection days will change for some streets, so please check the updated schedule on the city website or the notice board at the community center. Residents who are unsure which materials go in which bin can attend a free information session this Saturday at ten in the morning at the town hall. We appreciate your cooperation in making our city cleaner.",
+    "audioScriptFull": "Good afternoon, residents. The city is launching a new recycling program starting the first of next month. Under this program, all households will receive two separate bins — one for plastic and glass, and one for paper and cardboard. Organic waste, such as food scraps, should continue to go into the brown composting bin. Collection days will change for some streets, so please check the updated schedule on the city website or the notice board at the community center. Residents who are unsure which materials go in which bin can attend a free information session this Saturday at ten in the morning at the town hall. We appreciate your cooperation in making our city cleaner.",
+    "plays": 2,
+    "question": "Where should residents check for changes to their collection day?",
+    "options": [
+      "At the local post office.",
+      "In a letter sent to each home.",
+      "On the city website or at the community center.",
+      "At the town hall information session."
+    ],
+    "correct": 2,
+    "explanation": "The speaker says residents can check the updated schedule on the city website or on the notice board at the community center.",
+    "pictureHint": ""
+  },
+  {
+    "_source": "MET-LIS-P3-HW01",
+    "_title": "Short Talk — Community Recycling Program — Q3",
+    "type": "listen",
+    "level": "B2",
+    "audioText": "Good afternoon, residents. The city is launching a new recycling program starting the first of next month. Under this program, all households will receive two separate bins — one for plastic and glass, and one for paper and cardboard. Organic waste, such as food scraps, should continue to go into the brown composting bin. Collection days will change for some streets, so please check the updated schedule on the city website or the notice board at the community center. Residents who are unsure which materials go in which bin can attend a free information session this Saturday at ten in the morning at the town hall. We appreciate your cooperation in making our city cleaner.",
+    "audioScriptFull": "Good afternoon, residents. The city is launching a new recycling program starting the first of next month. Under this program, all households will receive two separate bins — one for plastic and glass, and one for paper and cardboard. Organic waste, such as food scraps, should continue to go into the brown composting bin. Collection days will change for some streets, so please check the updated schedule on the city website or the notice board at the community center. Residents who are unsure which materials go in which bin can attend a free information session this Saturday at ten in the morning at the town hall. We appreciate your cooperation in making our city cleaner.",
+    "plays": 2,
+    "question": "What is the information session on Saturday for?",
+    "options": [
+      "To distribute the new recycling bins.",
+      "To help residents understand which materials go in which bin.",
+      "To announce future changes to the composting program.",
+      "To collect feedback about the city's waste management."
+    ],
+    "correct": 1,
+    "explanation": "The speaker says the session is for residents who are unsure which materials go in which bin.",
+    "pictureHint": ""
+  },
+  {
+    "_source": "MET-LIS-P1-HW02",
+    "_title": "Short Conversation — Returning a Purchase",
+    "type": "listen",
+    "level": "B2",
+    "audioText": "Hi, I bought this jacket last week but the zip broke after one use. I would like to return it. I am sorry to hear that. Do you have your receipt? Yes, here it is. Thank you. We can offer you a full refund or an exchange for the same item. Which would you prefer? I will take the refund, please. I do not want the same jacket again.",
+    "audioScriptFull": "Man: Hi, I bought this jacket last week but the zip broke after one use. I would like to return it. Woman: I am sorry to hear that. Do you have your receipt? Man: Yes, here it is. Woman: Thank you. We can offer you a full refund or an exchange for the same item. Which would you prefer? Man: I will take the refund, please. I do not want the same jacket again.",
+    "plays": 2,
+    "question": "What does the man decide to do?",
+    "options": [
+      "Keep the jacket and have it repaired.",
+      "Exchange the jacket for a different model.",
+      "Receive a full refund.",
+      "Ask to speak with a manager."
+    ],
+    "correct": 2,
+    "explanation": "The man says he does not want the same jacket and chooses the refund option.",
+    "pictureHint": ""
+  },
+  {
+    "_source": "MET-LIS-P2-HW02",
+    "_title": "Longer Conversation — Remote Work Policy — Q1",
+    "type": "listen",
+    "level": "B2",
+    "audioText": "I saw the memo about the new policy. So we are only allowed to work from home two days a week from next month? That is correct. The directors feel that team collaboration suffers when people are remote too often. I understand the concern, but many of us moved further away from the office because we thought remote work would continue. I know, and that was discussed. However, the decision was made based on productivity data from the last quarter. Is there any room for exceptions? For example, employees with long commutes or childcare responsibilities? Yes, those situations can be reviewed on a case-by-case basis. Please submit a formal request to HR if you believe your situation qualifies.",
+    "audioScriptFull": "Employee: I saw the memo about the new policy. So we are only allowed to work from home two days a week from next month? Manager: That is correct. The directors feel that team collaboration suffers when people are remote too often. Employee: I understand the concern, but many of us moved further away from the office because we thought remote work would continue. Manager: I know, and that was discussed. However, the decision was made based on productivity data from the last quarter. Employee: Is there any room for exceptions? For example, employees with long commutes or childcare responsibilities? Manager: Yes, those situations can be reviewed on a case-by-case basis. Please submit a formal request to HR if you believe your situation qualifies.",
+    "plays": 2,
+    "question": "What is the new remote work policy?",
+    "options": [
+      "Employees may work from home every day.",
+      "Remote work is no longer allowed.",
+      "Employees can work from home two days per week.",
+      "The policy has not been finalized yet."
+    ],
+    "correct": 2,
+    "explanation": "The manager confirms that employees will be allowed to work from home two days a week starting next month.",
+    "pictureHint": ""
+  },
+  {
+    "_source": "MET-LIS-P2-HW02",
+    "_title": "Longer Conversation — Remote Work Policy — Q2",
+    "type": "listen",
+    "level": "B2",
+    "audioText": "I saw the memo about the new policy. So we are only allowed to work from home two days a week from next month? That is correct. The directors feel that team collaboration suffers when people are remote too often. I understand the concern, but many of us moved further away from the office because we thought remote work would continue. I know, and that was discussed. However, the decision was made based on productivity data from the last quarter. Is there any room for exceptions? For example, employees with long commutes or childcare responsibilities? Yes, those situations can be reviewed on a case-by-case basis. Please submit a formal request to HR if you believe your situation qualifies.",
+    "audioScriptFull": "Employee: I saw the memo about the new policy. So we are only allowed to work from home two days a week from next month? Manager: That is correct. The directors feel that team collaboration suffers when people are remote too often. Employee: I understand the concern, but many of us moved further away from the office because we thought remote work would continue. Manager: I know, and that was discussed. However, the decision was made based on productivity data from the last quarter. Employee: Is there any room for exceptions? For example, employees with long commutes or childcare responsibilities? Manager: Yes, those situations can be reviewed on a case-by-case basis. Please submit a formal request to HR if you believe your situation qualifies.",
+    "plays": 2,
+    "question": "Why did the directors change the remote work policy?",
+    "options": [
+      "The office building needed more occupants.",
+      "Productivity data from the last quarter influenced the decision.",
+      "Most employees requested the change.",
+      "The cost of remote work tools was too high."
+    ],
+    "correct": 1,
+    "explanation": "The manager says the decision was based on productivity data from the last quarter.",
+    "pictureHint": ""
+  },
+  {
+    "_source": "MET-LIS-P2-HW02",
+    "_title": "Longer Conversation — Remote Work Policy — Q3",
+    "type": "listen",
+    "level": "B2",
+    "audioText": "I saw the memo about the new policy. So we are only allowed to work from home two days a week from next month? That is correct. The directors feel that team collaboration suffers when people are remote too often. I understand the concern, but many of us moved further away from the office because we thought remote work would continue. I know, and that was discussed. However, the decision was made based on productivity data from the last quarter. Is there any room for exceptions? For example, employees with long commutes or childcare responsibilities? Yes, those situations can be reviewed on a case-by-case basis. Please submit a formal request to HR if you believe your situation qualifies.",
+    "audioScriptFull": "Employee: I saw the memo about the new policy. So we are only allowed to work from home two days a week from next month? Manager: That is correct. The directors feel that team collaboration suffers when people are remote too often. Employee: I understand the concern, but many of us moved further away from the office because we thought remote work would continue. Manager: I know, and that was discussed. However, the decision was made based on productivity data from the last quarter. Employee: Is there any room for exceptions? For example, employees with long commutes or childcare responsibilities? Manager: Yes, those situations can be reviewed on a case-by-case basis. Please submit a formal request to HR if you believe your situation qualifies.",
+    "plays": 2,
+    "question": "What can employees do if they have special circumstances?",
+    "options": [
+      "Ignore the new policy and continue working remotely.",
+      "Ask their team leader to work from home on their behalf.",
+      "Submit a formal request to HR for a case-by-case review.",
+      "Wait until the policy is reviewed again next quarter."
+    ],
+    "correct": 2,
+    "explanation": "The manager says employees with special circumstances such as long commutes or childcare responsibilities can submit a formal request to HR.",
+    "pictureHint": ""
+  },
+  {
+    "_source": "MET-LIS-P3-HW02",
+    "_title": "Short Talk — Urban Gardening Initiative — Q1",
+    "type": "listen",
+    "level": "B2",
+    "audioText": "Welcome back to City Voices. Today we are looking at a growing trend in many cities around the world — urban gardening. More and more residents are converting rooftops, balconies, and vacant lots into productive garden spaces. Community gardens, in particular, have become popular in areas with limited green space. Studies show that access to these spaces reduces stress, encourages physical activity, and strengthens social connections among neighbours. However, urban gardening also faces challenges. Water usage, soil contamination in some urban areas, and the cost of setting up a garden can make it difficult for individuals to start on their own. Several cities have responded by offering small grants and free workshops for residents who want to begin. If you are interested in starting a community garden in your neighbourhood, visit our website for a list of local programmes and funding opportunities.",
+    "audioScriptFull": "Welcome back to City Voices. Today we are looking at a growing trend in many cities around the world — urban gardening. More and more residents are converting rooftops, balconies, and vacant lots into productive garden spaces. Community gardens, in particular, have become popular in areas with limited green space. Studies show that access to these spaces reduces stress, encourages physical activity, and strengthens social connections among neighbours. However, urban gardening also faces challenges. Water usage, soil contamination in some urban areas, and the cost of setting up a garden can make it difficult for individuals to start on their own. Several cities have responded by offering small grants and free workshops for residents who want to begin. If you are interested in starting a community garden in your neighbourhood, visit our website for a list of local programmes and funding opportunities.",
+    "plays": 2,
+    "question": "What is the main topic of this talk?",
+    "options": [
+      "How cities are dealing with food shortages.",
+      "The growth and challenges of urban gardening.",
+      "Why residents should move to rural areas.",
+      "New laws about water usage in cities."
+    ],
+    "correct": 1,
+    "explanation": "The talk discusses the growing trend of urban gardening, its benefits, and the challenges it faces.",
+    "pictureHint": ""
+  },
+  {
+    "_source": "MET-LIS-P3-HW02",
+    "_title": "Short Talk — Urban Gardening Initiative — Q2",
+    "type": "listen",
+    "level": "B2",
+    "audioText": "Welcome back to City Voices. Today we are looking at a growing trend in many cities around the world — urban gardening. More and more residents are converting rooftops, balconies, and vacant lots into productive garden spaces. Community gardens, in particular, have become popular in areas with limited green space. Studies show that access to these spaces reduces stress, encourages physical activity, and strengthens social connections among neighbours. However, urban gardening also faces challenges. Water usage, soil contamination in some urban areas, and the cost of setting up a garden can make it difficult for individuals to start on their own. Several cities have responded by offering small grants and free workshops for residents who want to begin. If you are interested in starting a community garden in your neighbourhood, visit our website for a list of local programmes and funding opportunities.",
+    "audioScriptFull": "Welcome back to City Voices. Today we are looking at a growing trend in many cities around the world — urban gardening. More and more residents are converting rooftops, balconies, and vacant lots into productive garden spaces. Community gardens, in particular, have become popular in areas with limited green space. Studies show that access to these spaces reduces stress, encourages physical activity, and strengthens social connections among neighbours. However, urban gardening also faces challenges. Water usage, soil contamination in some urban areas, and the cost of setting up a garden can make it difficult for individuals to start on their own. Several cities have responded by offering small grants and free workshops for residents who want to begin. If you are interested in starting a community garden in your neighbourhood, visit our website for a list of local programmes and funding opportunities.",
+    "plays": 2,
+    "question": "According to the talk, what are two benefits of community gardens?",
+    "options": [
+      "They reduce food costs and eliminate the need for supermarkets.",
+      "They reduce stress and strengthen connections among neighbours.",
+      "They provide employment and reduce traffic in cities.",
+      "They improve air quality and lower crime rates."
+    ],
+    "correct": 1,
+    "explanation": "The speaker mentions that community gardens reduce stress, encourage physical activity, and strengthen social connections among neighbours.",
+    "pictureHint": ""
+  },
+  {
+    "_source": "MET-LIS-P3-HW02",
+    "_title": "Short Talk — Urban Gardening Initiative — Q3",
+    "type": "listen",
+    "level": "B2",
+    "audioText": "Welcome back to City Voices. Today we are looking at a growing trend in many cities around the world — urban gardening. More and more residents are converting rooftops, balconies, and vacant lots into productive garden spaces. Community gardens, in particular, have become popular in areas with limited green space. Studies show that access to these spaces reduces stress, encourages physical activity, and strengthens social connections among neighbours. However, urban gardening also faces challenges. Water usage, soil contamination in some urban areas, and the cost of setting up a garden can make it difficult for individuals to start on their own. Several cities have responded by offering small grants and free workshops for residents who want to begin. If you are interested in starting a community garden in your neighbourhood, visit our website for a list of local programmes and funding opportunities.",
+    "audioScriptFull": "Welcome back to City Voices. Today we are looking at a growing trend in many cities around the world — urban gardening. More and more residents are converting rooftops, balconies, and vacant lots into productive garden spaces. Community gardens, in particular, have become popular in areas with limited green space. Studies show that access to these spaces reduces stress, encourages physical activity, and strengthens social connections among neighbours. However, urban gardening also faces challenges. Water usage, soil contamination in some urban areas, and the cost of setting up a garden can make it difficult for individuals to start on their own. Several cities have responded by offering small grants and free workshops for residents who want to begin. If you are interested in starting a community garden in your neighbourhood, visit our website for a list of local programmes and funding opportunities.",
+    "plays": 2,
+    "question": "How have some cities helped residents start urban gardens?",
+    "options": [
+      "By converting public parks into community gardens.",
+      "By providing free land and gardening tools.",
+      "By offering small grants and free workshops.",
+      "By reducing taxes for residents who garden."
+    ],
+    "correct": 2,
+    "explanation": "The speaker says several cities have offered small grants and free workshops for residents who want to start a garden.",
+    "pictureHint": ""
+  }
+]

@@ -1,0 +1,208 @@
+import { createHotContext as __vite__createHotContext } from "/@vite/client";import.meta.hot = __vite__createHotContext("/src/components/tweaks-panel.jsx");import __vite__cjsImport0_react_jsxDevRuntime from "/.vite-cache/deps/react_jsx-dev-runtime.js?v=e58f7181"; const Fragment = __vite__cjsImport0_react_jsxDevRuntime["Fragment"]; const jsxDEV = __vite__cjsImport0_react_jsxDevRuntime["jsxDEV"];
+var _s = $RefreshSig$();
+import __vite__cjsImport1_react from "/.vite-cache/deps/react.js?v=e58f7181"; const useState = __vite__cjsImport1_react["useState"];
+const CSS = `
+  .tweaks-toggle {
+    position: fixed; bottom: 20px; right: 20px; z-index: 50;
+    width: 40px; height: 40px; border-radius: 50%;
+    background: var(--accent-deep); color: #fff;
+    border: none; cursor: pointer; display: flex; align-items: center;
+    justify-content: center; box-shadow: 0 4px 14px rgba(0,0,0,0.25);
+    font-size: 18px; transition: transform 0.2s;
+  }
+  .tweaks-toggle:hover { transform: scale(1.08); }
+  .tweaks-panel {
+    position: fixed; bottom: 70px; right: 20px; z-index: 50;
+    width: 260px; background: var(--surface);
+    border: 1px solid var(--border); border-radius: 14px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.14);
+    padding: 18px; font-family: var(--font-ui);
+  }
+  .tweaks-title { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 16px; }
+  .tweak-section { margin-bottom: 16px; }
+  .tweak-label  { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px; }
+  .tweak-radio-group { display: flex; gap: 6px; flex-wrap: wrap; }
+  .tweak-radio-btn {
+    padding: 4px 11px; border-radius: 999px; font-size: 12px; font-weight: 500;
+    background: var(--divider); color: var(--text-2); border: none; cursor: pointer;
+    font-family: var(--font-ui); transition: background 0.12s, color 0.12s;
+  }
+  .tweak-radio-btn.active { background: var(--accent); color: #fff; font-weight: 600; }
+  .tweak-toggle-row { display: flex; align-items: center; justify-content: space-between; }
+  .tweak-toggle-track {
+    width: 36px; height: 20px; border-radius: 999px;
+    background: var(--border); position: relative; cursor: pointer;
+    transition: background 0.2s; border: none; padding: 0;
+  }
+  .tweak-toggle-track.on { background: var(--accent); }
+  .tweak-toggle-thumb {
+    position: absolute; top: 2px; left: 2px; width: 16px; height: 16px;
+    border-radius: 50%; background: #fff;
+    transition: left 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  }
+  .tweak-toggle-track.on .tweak-toggle-thumb { left: 18px; }
+  .tweak-colors { display: flex; gap: 7px; flex-wrap: wrap; }
+  .tweak-color-swatch {
+    width: 24px; height: 24px; border-radius: 50%; cursor: pointer;
+    border: 2px solid transparent; transition: transform 0.15s, border-color 0.15s;
+  }
+  .tweak-color-swatch.active { border-color: var(--text); transform: scale(1.15); }
+`;
+let injected = false;
+function injectCSS() {
+  if (injected || typeof document === "undefined") return;
+  const s = document.createElement("style");
+  s.textContent = CSS;
+  document.head.appendChild(s);
+  injected = true;
+}
+export function TweaksPanel({ title = "Tweaks", children }) {
+  _s();
+  injectCSS();
+  const [open, setOpen] = useState(false);
+  return /* @__PURE__ */ jsxDEV(Fragment, { children: [
+    /* @__PURE__ */ jsxDEV("button", { className: "tweaks-toggle", onClick: () => setOpen((o) => !o), title: "Tweaks", children: "⚙" }, void 0, false, {
+      fileName: "C:/Users/vviei/.claude/projects/Platform/src/components/tweaks-panel.jsx",
+      lineNumber: 66,
+      columnNumber: 7
+    }, this),
+    open && /* @__PURE__ */ jsxDEV("div", { className: "tweaks-panel", children: [
+      /* @__PURE__ */ jsxDEV("div", { className: "tweaks-title", children: title }, void 0, false, {
+        fileName: "C:/Users/vviei/.claude/projects/Platform/src/components/tweaks-panel.jsx",
+        lineNumber: 69,
+        columnNumber: 11
+      }, this),
+      children
+    ] }, void 0, true, {
+      fileName: "C:/Users/vviei/.claude/projects/Platform/src/components/tweaks-panel.jsx",
+      lineNumber: 68,
+      columnNumber: 7
+    }, this)
+  ] }, void 0, true, {
+    fileName: "C:/Users/vviei/.claude/projects/Platform/src/components/tweaks-panel.jsx",
+    lineNumber: 65,
+    columnNumber: 5
+  }, this);
+}
+_s(TweaksPanel, "xG1TONbKtDWtdOTrXaTAsNhPg/Q=");
+_c = TweaksPanel;
+export function TweakSection({ label, children }) {
+  return /* @__PURE__ */ jsxDEV("div", { className: "tweak-section", children: [
+    /* @__PURE__ */ jsxDEV("div", { className: "tweak-label", children: label }, void 0, false, {
+      fileName: "C:/Users/vviei/.claude/projects/Platform/src/components/tweaks-panel.jsx",
+      lineNumber: 80,
+      columnNumber: 7
+    }, this),
+    children
+  ] }, void 0, true, {
+    fileName: "C:/Users/vviei/.claude/projects/Platform/src/components/tweaks-panel.jsx",
+    lineNumber: 79,
+    columnNumber: 5
+  }, this);
+}
+_c2 = TweakSection;
+export function TweakRadio({ options, value, onChange }) {
+  return /* @__PURE__ */ jsxDEV("div", { className: "tweak-radio-group", children: options.map(
+    (o) => /* @__PURE__ */ jsxDEV(
+      "button",
+      {
+        className: `tweak-radio-btn ${value === o.value ? "active" : ""}`,
+        onClick: () => onChange(o.value),
+        children: o.label
+      },
+      o.value,
+      false,
+      {
+        fileName: "C:/Users/vviei/.claude/projects/Platform/src/components/tweaks-panel.jsx",
+        lineNumber: 90,
+        columnNumber: 7
+      },
+      this
+    )
+  ) }, void 0, false, {
+    fileName: "C:/Users/vviei/.claude/projects/Platform/src/components/tweaks-panel.jsx",
+    lineNumber: 88,
+    columnNumber: 5
+  }, this);
+}
+_c3 = TweakRadio;
+export function TweakToggle({ value, onChange, label }) {
+  return /* @__PURE__ */ jsxDEV("div", { className: "tweak-toggle-row", children: [
+    label && /* @__PURE__ */ jsxDEV("span", { style: { fontSize: 13, color: "var(--text-2)" }, children: label }, void 0, false, {
+      fileName: "C:/Users/vviei/.claude/projects/Platform/src/components/tweaks-panel.jsx",
+      lineNumber: 102,
+      columnNumber: 17
+    }, this),
+    /* @__PURE__ */ jsxDEV("button", { className: `tweak-toggle-track ${value ? "on" : ""}`, onClick: () => onChange(!value), children: /* @__PURE__ */ jsxDEV("div", { className: "tweak-toggle-thumb" }, void 0, false, {
+      fileName: "C:/Users/vviei/.claude/projects/Platform/src/components/tweaks-panel.jsx",
+      lineNumber: 104,
+      columnNumber: 9
+    }, this) }, void 0, false, {
+      fileName: "C:/Users/vviei/.claude/projects/Platform/src/components/tweaks-panel.jsx",
+      lineNumber: 103,
+      columnNumber: 7
+    }, this)
+  ] }, void 0, true, {
+    fileName: "C:/Users/vviei/.claude/projects/Platform/src/components/tweaks-panel.jsx",
+    lineNumber: 101,
+    columnNumber: 5
+  }, this);
+}
+_c4 = TweakToggle;
+export function TweakColor({ value, onChange, options = [] }) {
+  return /* @__PURE__ */ jsxDEV("div", { className: "tweak-colors", children: options.map(
+    (c) => /* @__PURE__ */ jsxDEV(
+      "div",
+      {
+        className: `tweak-color-swatch ${value === c ? "active" : ""}`,
+        style: { background: c },
+        onClick: () => onChange(c),
+        title: c
+      },
+      c,
+      false,
+      {
+        fileName: "C:/Users/vviei/.claude/projects/Platform/src/components/tweaks-panel.jsx",
+        lineNumber: 114,
+        columnNumber: 7
+      },
+      this
+    )
+  ) }, void 0, false, {
+    fileName: "C:/Users/vviei/.claude/projects/Platform/src/components/tweaks-panel.jsx",
+    lineNumber: 112,
+    columnNumber: 5
+  }, this);
+}
+_c5 = TweakColor;
+var _c, _c2, _c3, _c4, _c5;
+$RefreshReg$(_c, "TweaksPanel");
+$RefreshReg$(_c2, "TweakSection");
+$RefreshReg$(_c3, "TweakRadio");
+$RefreshReg$(_c4, "TweakToggle");
+$RefreshReg$(_c5, "TweakColor");
+import * as RefreshRuntime from "/@react-refresh";
+const inWebWorker = typeof WorkerGlobalScope !== "undefined" && self instanceof WorkerGlobalScope;
+if (import.meta.hot && !inWebWorker) {
+  if (!window.$RefreshReg$) {
+    throw new Error(
+      "@vitejs/plugin-react can't detect preamble. Something is wrong."
+    );
+  }
+  RefreshRuntime.__hmr_import(import.meta.url).then((currentExports) => {
+    RefreshRuntime.registerExportsForReactRefresh("C:/Users/vviei/.claude/projects/Platform/src/components/tweaks-panel.jsx", currentExports);
+    import.meta.hot.accept((nextExports) => {
+      if (!nextExports) return;
+      const invalidateMessage = RefreshRuntime.validateRefreshBoundaryAndEnqueueUpdate("C:/Users/vviei/.claude/projects/Platform/src/components/tweaks-panel.jsx", currentExports, nextExports);
+      if (invalidateMessage) import.meta.hot.invalidate(invalidateMessage);
+    });
+  });
+}
+function $RefreshReg$(type, id) {
+  return RefreshRuntime.register(type, "C:/Users/vviei/.claude/projects/Platform/src/components/tweaks-panel.jsx " + id);
+}
+function $RefreshSig$() {
+  return RefreshRuntime.createSignatureFunctionForTransform();
+}
+
+//# sourceMappingURL=data:application/json;base64,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bUMsS0FEckM7QUFBQTtBQUFBO0FBQUE7QUFBQSxXQUVBO0FBQUEsT0FKRjtBQUFBO0FBQUE7QUFBQTtBQUFBLFNBS0E7QUFFSjtBQUFDTyxNQVRlSDtBQVdULGdCQUFTSSxXQUFXLEVBQUVSLE9BQU9DLFVBQVVGLFVBQVUsR0FBRyxHQUFHO0FBQzVELFNBQ0UsdUJBQUMsU0FBSSxXQUFVLGdCQUNaQSxrQkFBUUc7QUFBQUEsSUFBSSxDQUFBTyxNQUNYO0FBQUEsTUFBQztBQUFBO0FBQUEsUUFBWSxXQUFXLHNCQUFzQlQsVUFBVVMsSUFBSSxXQUFXLEVBQUU7QUFBQSxRQUN2RSxPQUFPLEVBQUVDLFlBQVlELEVBQUU7QUFBQSxRQUFHLFNBQVMsTUFBTVIsU0FBU1EsQ0FBQztBQUFBLFFBQUcsT0FBT0E7QUFBQUE7QUFBQUEsTUFEckRBO0FBQUFBLE1BQVY7QUFBQTtBQUFBO0FBQUE7QUFBQTtBQUFBO0FBQUE7QUFBQSxJQUNpRTtBQUFBLEVBQ2xFLEtBSkg7QUFBQTtBQUFBO0FBQUE7QUFBQSxTQUtBO0FBRUo7QUFBQ0UsTUFUZUg7QUFBVSxJQUFBSSxJQUFBZixLQUFBTSxLQUFBSSxLQUFBSTtBQUFBLGFBQUFDLElBQUE7QUFBQSxhQUFBZixLQUFBO0FBQUEsYUFBQU0sS0FBQTtBQUFBLGFBQUFJLEtBQUE7QUFBQSxhQUFBSSxLQUFBIiwibmFtZXMiOlsidXNlU3RhdGUiLCJDU1MiLCJpbmplY3RlZCIsImluamVjdENTUyIsImRvY3VtZW50IiwicyIsImNyZWF0ZUVsZW1lbnQiLCJ0ZXh0Q29udGVudCIsImhlYWQiLCJhcHBlbmRDaGlsZCIsIlR3ZWFrc1BhbmVsIiwidGl0bGUiLCJjaGlsZHJlbiIsIl9zIiwib3BlbiIsInNldE9wZW4iLCJvIiwiVHdlYWtTZWN0aW9uIiwibGFiZWwiLCJfYzIiLCJUd2Vha1JhZGlvIiwib3B0aW9ucyIsInZhbHVlIiwib25DaGFuZ2UiLCJtYXAiLCJfYzMiLCJUd2Vha1RvZ2dsZSIsImZvbnRTaXplIiwiY29sb3IiLCJfYzQiLCJUd2Vha0NvbG9yIiwiYyIsImJhY2tncm91bmQiLCJfYzUiLCJfYyJdLCJpZ25vcmVMaXN0IjpbXSwic291cmNlcyI6WyJ0d2Vha3MtcGFuZWwuanN4Il0sInNvdXJjZXNDb250ZW50IjpbIi8qKlxuICogdHdlYWtzLXBhbmVsLmpzeCDigJQgRmxvYXRpbmcgdHdlYWtzIHNpZGViYXIgZm9yIHRlYWNoZXIgVUkgY3VzdG9taXphdGlvblxuICovXG5pbXBvcnQgeyB1c2VTdGF0ZSB9IGZyb20gJ3JlYWN0JztcblxuY29uc3QgQ1NTID0gYFxuICAudHdlYWtzLXRvZ2dsZSB7XG4gICAgcG9zaXRpb246IGZpeGVkOyBib3R0b206IDIwcHg7IHJpZ2h0OiAyMHB4OyB6LWluZGV4OiA1MDtcbiAgICB3aWR0aDogNDBweDsgaGVpZ2h0OiA0MHB4OyBib3JkZXItcmFkaXVzOiA1MCU7XG4gICAgYmFja2dyb3VuZDogdmFyKC0tYWNjZW50LWRlZXApOyBjb2xvcjogI2ZmZjtcbiAgICBib3JkZXI6IG5vbmU7IGN1cnNvcjogcG9pbnRlcjsgZGlzcGxheTogZmxleDsgYWxpZ24taXRlbXM6IGNlbnRlcjtcbiAgICBqdXN0aWZ5LWNvbnRlbnQ6IGNlbnRlcjsgYm94LXNoYWRvdzogMCA0cHggMTRweCByZ2JhKDAsMCwwLDAuMjUpO1xuICAgIGZvbnQtc2l6ZTogMThweDsgdHJhbnNpdGlvbjogdHJhbnNmb3JtIDAuMnM7XG4gIH1cbiAgLnR3ZWFrcy10b2dnbGU6aG92ZXIgeyB0cmFuc2Zvcm06IHNjYWxlKDEuMDgpOyB9XG4gIC50d2Vha3MtcGFuZWwge1xuICAgIHBvc2l0aW9uOiBmaXhlZDsgYm90dG9tOiA3MHB4OyByaWdodDogMjBweDsgei1pbmRleDogNTA7XG4gICAgd2lkdGg6IDI2MHB4OyBiYWNrZ3JvdW5kOiB2YXIoLS1zdXJmYWNlKTtcbiAgICBib3JkZXI6IDFweCBzb2xpZCB2YXIoLS1ib3JkZXIpOyBib3JkZXItcmFkaXVzOiAxNHB4O1xuICAgIGJveC1zaGFkb3c6IDAgOHB4IDMycHggcmdiYSgwLDAsMCwwLjE0KTtcbiAgICBwYWRkaW5nOiAxOHB4OyBmb250LWZhbWlseTogdmFyKC0tZm9udC11aSk7XG4gIH1cbiAgLnR3ZWFrcy10aXRsZSB7IGZvbnQtc2l6ZTogMTNweDsgZm9udC13ZWlnaHQ6IDcwMDsgY29sb3I6IHZhcigtLXRleHQpOyBtYXJnaW4tYm90dG9tOiAxNnB4OyB9XG4gIC50d2Vhay1zZWN0aW9uIHsgbWFyZ2luLWJvdHRvbTogMTZweDsgfVxuICAudHdlYWstbGFiZWwgIHsgZm9udC1zaXplOiAxMXB4OyBmb250LXdlaWdodDogNjAwOyBjb2xvcjogdmFyKC0tbXV0ZWQpOyB0ZXh0LXRyYW5zZm9ybTogdXBwZXJjYXNlOyBsZXR0ZXItc3BhY2luZzogMC4wNmVtOyBtYXJnaW4tYm90dG9tOiA4cHg7IH1cbiAgLnR3ZWFrLXJhZGlvLWdyb3VwIHsgZGlzcGxheTogZmxleDsgZ2FwOiA2cHg7IGZsZXgtd3JhcDogd3JhcDsgfVxuICAudHdlYWstcmFkaW8tYnRuIHtcbiAgICBwYWRkaW5nOiA0cHggMTFweDsgYm9yZGVyLXJhZGl1czogOTk5cHg7IGZvbnQtc2l6ZTogMTJweDsgZm9udC13ZWlnaHQ6IDUwMDtcbiAgICBiYWNrZ3JvdW5kOiB2YXIoLS1kaXZpZGVyKTsgY29sb3I6IHZhcigtLXRleHQtMik7IGJvcmRlcjogbm9uZTsgY3Vyc29yOiBwb2ludGVyO1xuICAgIGZvbnQtZmFtaWx5OiB2YXIoLS1mb250LXVpKTsgdHJhbnNpdGlvbjogYmFja2dyb3VuZCAwLjEycywgY29sb3IgMC4xMnM7XG4gIH1cbiAgLnR3ZWFrLXJhZGlvLWJ0bi5hY3RpdmUgeyBiYWNrZ3JvdW5kOiB2YXIoLS1hY2NlbnQpOyBjb2xvcjogI2ZmZjsgZm9udC13ZWlnaHQ6IDYwMDsgfVxuICAudHdlYWstdG9nZ2xlLXJvdyB7IGRpc3BsYXk6IGZsZXg7IGFsaWduLWl0ZW1zOiBjZW50ZXI7IGp1c3RpZnktY29udGVudDogc3BhY2UtYmV0d2VlbjsgfVxuICAudHdlYWstdG9nZ2xlLXRyYWNrIHtcbiAgICB3aWR0aDogMzZweDsgaGVpZ2h0OiAyMHB4OyBib3JkZXItcmFkaXVzOiA5OTlweDtcbiAgICBiYWNrZ3JvdW5kOiB2YXIoLS1ib3JkZXIpOyBwb3NpdGlvbjogcmVsYXRpdmU7IGN1cnNvcjogcG9pbnRlcjtcbiAgICB0cmFuc2l0aW9uOiBiYWNrZ3JvdW5kIDAuMnM7IGJvcmRlcjogbm9uZTsgcGFkZGluZzogMDtcbiAgfVxuICAudHdlYWstdG9nZ2xlLXRyYWNrLm9uIHsgYmFja2dyb3VuZDogdmFyKC0tYWNjZW50KTsgfVxuICAudHdlYWstdG9nZ2xlLXRodW1iIHtcbiAgICBwb3NpdGlvbjogYWJzb2x1dGU7IHRvcDogMnB4OyBsZWZ0OiAycHg7IHdpZHRoOiAxNnB4OyBoZWlnaHQ6IDE2cHg7XG4gICAgYm9yZGVyLXJhZGl1czogNTAlOyBiYWNrZ3JvdW5kOiAjZmZmO1xuICAgIHRyYW5zaXRpb246IGxlZnQgMC4yczsgYm94LXNoYWRvdzogMCAxcHggM3B4IHJnYmEoMCwwLDAsMC4yKTtcbiAgfVxuICAudHdlYWstdG9nZ2xlLXRyYWNrLm9uIC50d2Vhay10b2dnbGUtdGh1bWIgeyBsZWZ0OiAxOHB4OyB9XG4gIC50d2Vhay1jb2xvcnMgeyBkaXNwbGF5OiBmbGV4OyBnYXA6IDdweDsgZmxleC13cmFwOiB3cmFwOyB9XG4gIC50d2Vhay1jb2xvci1zd2F0Y2gge1xuICAgIHdpZHRoOiAyNHB4OyBoZWlnaHQ6IDI0cHg7IGJvcmRlci1yYWRpdXM6IDUwJTsgY3Vyc29yOiBwb2ludGVyO1xuICAgIGJvcmRlcjogMnB4IHNvbGlkIHRyYW5zcGFyZW50OyB0cmFuc2l0aW9uOiB0cmFuc2Zvcm0gMC4xNXMsIGJvcmRlci1jb2xvciAwLjE1cztcbiAgfVxuICAudHdlYWstY29sb3Itc3dhdGNoLmFjdGl2ZSB7IGJvcmRlci1jb2xvcjogdmFyKC0tdGV4dCk7IHRyYW5zZm9ybTogc2NhbGUoMS4xNSk7IH1cbmA7XG5cbmxldCBpbmplY3RlZCA9IGZhbHNlO1xuZnVuY3Rpb24gaW5qZWN0Q1NTKCkge1xuICBpZiAoaW5qZWN0ZWQgfHwgdHlwZW9mIGRvY3VtZW50ID09PSAndW5kZWZpbmVkJykgcmV0dXJuO1xuICBjb25zdCBzID0gZG9jdW1lbnQuY3JlYXRlRWxlbWVudCgnc3R5bGUnKTsgcy50ZXh0Q29udGVudCA9IENTUztcbiAgZG9jdW1lbnQuaGVhZC5hcHBlbmRDaGlsZChzKTsgaW5qZWN0ZWQgPSB0cnVlO1xufVxuXG5leHBvcnQgZnVuY3Rpb24gVHdlYWtzUGFuZWwoeyB0aXRsZSA9ICdUd2Vha3MnLCBjaGlsZHJlbiB9KSB7XG4gIGluamVjdENTUygpO1xuICBjb25zdCBbb3Blbiwgc2V0T3Blbl0gPSB1c2VTdGF0ZShmYWxzZSk7XG4gIHJldHVybiAoXG4gICAgPD5cbiAgICAgIDxidXR0b24gY2xhc3NOYW1lPVwidHdlYWtzLXRvZ2dsZVwiIG9uQ2xpY2s9eygpID0+IHNldE9wZW4obyA9PiAhbyl9IHRpdGxlPVwiVHdlYWtzXCI+4pqZPC9idXR0b24+XG4gICAgICB7b3BlbiAmJiAoXG4gICAgICAgIDxkaXYgY2xhc3NOYW1lPVwidHdlYWtzLXBhbmVsXCI+XG4gICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJ0d2Vha3MtdGl0bGVcIj57dGl0bGV9PC9kaXY+XG4gICAgICAgICAge2NoaWxkcmVufVxuICAgICAgICA8L2Rpdj5cbiAgICAgICl9XG4gICAgPC8+XG4gICk7XG59XG5cbmV4cG9ydCBmdW5jdGlvbiBUd2Vha1NlY3Rpb24oeyBsYWJlbCwgY2hpbGRyZW4gfSkge1xuICByZXR1cm4gKFxuICAgIDxkaXYgY2xhc3NOYW1lPVwidHdlYWstc2VjdGlvblwiPlxuICAgICAgPGRpdiBjbGFzc05hbWU9XCJ0d2Vhay1sYWJlbFwiPntsYWJlbH08L2Rpdj5cbiAgICAgIHtjaGlsZHJlbn1cbiAgICA8L2Rpdj5cbiAgKTtcbn1cblxuZXhwb3J0IGZ1bmN0aW9uIFR3ZWFrUmFkaW8oeyBvcHRpb25zLCB2YWx1ZSwgb25DaGFuZ2UgfSkge1xuICByZXR1cm4gKFxuICAgIDxkaXYgY2xhc3NOYW1lPVwidHdlYWstcmFkaW8tZ3JvdXBcIj5cbiAgICAgIHtvcHRpb25zLm1hcChvID0+IChcbiAgICAgICAgPGJ1dHRvbiBrZXk9e28udmFsdWV9IGNsYXNzTmFtZT17YHR3ZWFrLXJhZGlvLWJ0biAke3ZhbHVlID09PSBvLnZhbHVlID8gJ2FjdGl2ZScgOiAnJ31gfVxuICAgICAgICAgIG9uQ2xpY2s9eygpID0+IG9uQ2hhbmdlKG8udmFsdWUpfT5cbiAgICAgICAgICB7by5sYWJlbH1cbiAgICAgICAgPC9idXR0b24+XG4gICAgICApKX1cbiAgICA8L2Rpdj5cbiAgKTtcbn1cblxuZXhwb3J0IGZ1bmN0aW9uIFR3ZWFrVG9nZ2xlKHsgdmFsdWUsIG9uQ2hhbmdlLCBsYWJlbCB9KSB7XG4gIHJldHVybiAoXG4gICAgPGRpdiBjbGFzc05hbWU9XCJ0d2Vhay10b2dnbGUtcm93XCI+XG4gICAgICB7bGFiZWwgJiYgPHNwYW4gc3R5bGU9e3sgZm9udFNpemU6IDEzLCBjb2xvcjogJ3ZhcigtLXRleHQtMiknIH19PntsYWJlbH08L3NwYW4+fVxuICAgICAgPGJ1dHRvbiBjbGFzc05hbWU9e2B0d2Vhay10b2dnbGUtdHJhY2sgJHt2YWx1ZSA/ICdvbicgOiAnJ31gfSBvbkNsaWNrPXsoKSA9PiBvbkNoYW5nZSghdmFsdWUpfT5cbiAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJ0d2Vhay10b2dnbGUtdGh1bWJcIiAvPlxuICAgICAgPC9idXR0b24+XG4gICAgPC9kaXY+XG4gICk7XG59XG5cbmV4cG9ydCBmdW5jdGlvbiBUd2Vha0NvbG9yKHsgdmFsdWUsIG9uQ2hhbmdlLCBvcHRpb25zID0gW10gfSkge1xuICByZXR1cm4gKFxuICAgIDxkaXYgY2xhc3NOYW1lPVwidHdlYWstY29sb3JzXCI+XG4gICAgICB7b3B0aW9ucy5tYXAoYyA9PiAoXG4gICAgICAgIDxkaXYga2V5PXtjfSBjbGFzc05hbWU9e2B0d2Vhay1jb2xvci1zd2F0Y2ggJHt2YWx1ZSA9PT0gYyA/ICdhY3RpdmUnIDogJyd9YH1cbiAgICAgICAgICBzdHlsZT17eyBiYWNrZ3JvdW5kOiBjIH19IG9uQ2xpY2s9eygpID0+IG9uQ2hhbmdlKGMpfSB0aXRsZT17Y30gLz5cbiAgICAgICkpfVxuICAgIDwvZGl2PlxuICApO1xufVxuIl0sImZpbGUiOiJDOi9Vc2Vycy92dmllaS8uY2xhdWRlL3Byb2plY3RzL1BsYXRmb3JtL3NyYy9jb21wb25lbnRzL3R3ZWFrcy1wYW5lbC5qc3gifQ==

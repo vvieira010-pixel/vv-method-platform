@@ -12,7 +12,7 @@ const SKILLS = [
   { key: 'Listening',    evalKey: 'evaluatedListening',    countKey: 'listeningEvidenceCount' },
   { key: 'Grammar',      evalKey: 'evaluatedGrammar',      countKey: 'grammarEvidenceCount' },
   { key: 'Vocabulary',   evalKey: 'evaluatedVocabulary',   countKey: 'vocabularyEvidenceCount' },
-  { key: 'Test Strategy',evalKey: 'evaluatedTestStrategy', countKey: null },
+  { key: 'Test Strategy',evalKey: 'evaluatedTestStrategy', countKey: 'testStrategyEvidenceCount' },
 ];
 
 export default function ClassRecord({ classEventId, students, onNavigate }) {
@@ -51,6 +51,7 @@ export default function ClassRecord({ classEventId, students, onNavigate }) {
         listeningEvidenceCount: evid.listeningEvidenceCount || 0,
         grammarEvidenceCount: evid.grammarEvidenceCount || 0,
         vocabularyEvidenceCount: evid.vocabularyEvidenceCount || 0,
+        testStrategyEvidenceCount: evid.testStrategyEvidenceCount || 0,
         teacherNotes: evid.teacherNotes || '',
         studentPerformance: evid.studentPerformance || '',
         studentTranscript: evid.studentTranscript || '',
@@ -66,18 +67,19 @@ export default function ClassRecord({ classEventId, students, onNavigate }) {
     setForm(f => {
       const newVal = !f[evalKey];
       const update = { [evalKey]: newVal };
-      if (!newVal && countKey) update[countKey] = 0;
+      if (countKey) update[countKey] = newVal ? Math.max(1, Number(f[countKey] || 0)) : 0;
       return { ...f, ...update };
     });
   }
 
   async function handleSave(andDiagnose = false) {
     setSaving(true);
+    const normalizedForm = normalizeEvidenceCounts(form);
     const record = await saveClassEvidence({
       id: evidence?.id,
       classEventId,
       studentId: event?.studentId,
-      ...form,
+      ...normalizedForm,
     });
     setEvidence(record);
     // Mark class as completed if still scheduled
@@ -139,7 +141,7 @@ export default function ClassRecord({ classEventId, students, onNavigate }) {
                 {evaluated && countKey && (
                   <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 6 }} onClick={e => e.stopPropagation()}>
                     <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>Evidence turns:</span>
-                    <input type="number" min={0} max={30} value={form[countKey]} onChange={e => setForm(f => ({ ...f, [countKey]: Number(e.target.value) }))}
+                    <input type="number" min={1} max={30} value={form[countKey]} onChange={e => setForm(f => ({ ...f, [countKey]: Math.max(1, Number(e.target.value) || 1) }))}
                       style={{ width: 52, padding: '3px 6px', border: '1px solid var(--border)', borderRadius: 6, fontSize: 'var(--text-xs)', textAlign: 'center' }} />
                   </div>
                 )}
@@ -203,11 +205,21 @@ function Field({ label, children }) {
   );
 }
 
+function normalizeEvidenceCounts(form) {
+  const next = { ...form };
+  SKILLS.forEach(({ evalKey, countKey }) => {
+    if (!countKey) return;
+    if (next[evalKey]) next[countKey] = Math.max(1, Number(next[countKey] || 0));
+    else next[countKey] = 0;
+  });
+  return next;
+}
+
 const EMPTY_FORM = {
   evaluatedSpeaking: false, evaluatedWriting: false, evaluatedReading: false,
   evaluatedListening: false, evaluatedGrammar: false, evaluatedVocabulary: false, evaluatedTestStrategy: false,
   speakingEvidenceCount: 0, writingEvidenceCount: 0, readingEvidenceCount: 0,
-  listeningEvidenceCount: 0, grammarEvidenceCount: 0, vocabularyEvidenceCount: 0,
+  listeningEvidenceCount: 0, grammarEvidenceCount: 0, vocabularyEvidenceCount: 0, testStrategyEvidenceCount: 0,
   teacherNotes: '', studentPerformance: '', studentTranscript: '', studentAnswer: '',
   homeworkReviewed: '', studentMood: '', additionalNotes: '',
 };
