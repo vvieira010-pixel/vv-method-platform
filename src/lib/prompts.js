@@ -641,3 +641,54 @@ Return ONLY valid JSON — an array of 7 exercises mixing different types:
   }
 ]`;
 };
+
+/**
+ * Module 5: Listening Generator (The Audio Architect)
+ * Focus: High-fidelity listening tasks for MET.
+ */
+export const buildListeningGeneratorPrompt = ({ student, diagnosis, taskBlueprint }) => {
+  const priorities = pickArray(diagnosis?.priorityDiagnosis, diagnosis?.sections?.priorityDiagnosis?.content);
+  const errors = pickArray(diagnosis?.errorBank, diagnosis?.sections?.errorBankSuggestions?.content);
+  const vocab = pickArray(diagnosis?.vocabTargets?.vocabularyTargets, diagnosis?.sections?.vocabGrammarTargets?.content?.vocabularyTargets);
+
+  return `You are a MET English Instructional Designer specializing in Listening comprehension.
+Build one complete, student-ready listening exercise.
+
+━━━ STUDENT ━━━
+Name: ${student?.name || 'Student'}
+Level: ${student?.currentLevel || 'B1'} → Target: ${student?.targetLevel || 'B2'}
+Context: ${student?.professionalContext || 'general professional context'}
+
+━━━ DIAGNOSIS PRIORITIES ━━━
+${priorities.slice(0, 3).map(p => `- [${p.urgency}] ${p.area}: ${p.whatToImprove}`).join('\n') || 'none'}
+
+━━━ TARGET ERRORS & VOCAB ━━━
+Errors: ${errors.slice(0, 4).map(e => `"${e.error}" → "${e.correct}"`).join(', ') || 'none'}
+Vocab: ${vocab.slice(0, 4).map(v => v.wordOrPhrase).join(', ') || 'general MET vocabulary'}
+
+━━━ RULES ━━━
+1. COMPLETENESS: The output must be a single valid JSON object for the 'listen' type.
+2. AUDIO TEXT: The 'audioText' must be a realistic, 2–5 sentence dialogue or monologue. 
+   - It MUST use the student's professional context (${student?.professionalContext || 'general'}).
+   - It should target B1-B2 level complexity.
+3. MET FOCUS: The task must target one of these MET listening subskills: main_idea, detail, inference, speaker_purpose, or vocabulary_in_context.
+4. QUESTIONS: The 'question' must be clear. The 'options' must have exactly 4 choices.
+5. DISTRACTORS: At least one distractor must be a "plausible mistake" (e.g., a detail mentioned in the audio that is NOT the answer to the question).
+6. EXPLANATION: Provide a clear, supportive explanation of WHY the correct answer is right.
+7. FORMAT: Use the following structure.
+
+${EXERCISE_COMPLETENESS_RULES}
+
+RETURN ONLY VALID JSON:
+{
+  "type": "listen",
+  "title": "short title",
+  "audioText": "the script to be read aloud",
+  "question": "the question",
+  "options": ["opt1", "opt2", "opt3", "opt4"],
+  "correct": 0,
+  "explanation": "why it's correct",
+  "plays": 2,
+  "teacherNote": "what to look for in the student's response"
+}`;
+};
