@@ -271,22 +271,15 @@ Return ONLY VALID JSON:
  * Module 3: Homework & Error Bank (The Designer)
  * Focus: Practicality, Target-driven, Fully written exercises.
  */
+const arr = (v) => (Array.isArray(v) ? v : []);
+const pickArray = (...values) => values.map(arr).find(v => v.length) || [];
+
 export const buildHomeworkPrompt = (data) => {
   const { student, diagnosis } = data;
-  // Coerce to array — AI section content is sometimes an object, not an array.
-  const arr = (v) => (Array.isArray(v) ? v : []);
-  const priorities = arr(diagnosis?.priorityDiagnosis).length
-    ? arr(diagnosis?.priorityDiagnosis)
-    : arr(diagnosis?.sections?.priorityDiagnosis?.content);
-  const errors = arr(data?.errorBank).length
-    ? arr(data?.errorBank)
-    : arr(diagnosis?.sections?.errorBankSuggestions?.content);
-  const vocab = arr(data?.vocabTargets?.vocabularyTargets).length
-    ? arr(data?.vocabTargets?.vocabularyTargets)
-    : arr(diagnosis?.sections?.vocabGrammarTargets?.content?.vocabularyTargets);
-  const grammar = arr(data?.vocabTargets?.grammarTargets).length
-    ? arr(data?.vocabTargets?.grammarTargets)
-    : arr(diagnosis?.sections?.vocabGrammarTargets?.content?.grammarTargets);
+  const priorities = pickArray(diagnosis?.priorityDiagnosis, diagnosis?.sections?.priorityDiagnosis?.content);
+  const errors = pickArray(data?.errorBank, diagnosis?.errorBank, diagnosis?.sections?.errorBankSuggestions?.content);
+  const vocab = pickArray(data?.vocabTargets?.vocabularyTargets, diagnosis?.vocabTargets?.vocabularyTargets, diagnosis?.sections?.vocabGrammarTargets?.content?.vocabularyTargets);
+  const grammar = pickArray(data?.vocabTargets?.grammarTargets, diagnosis?.vocabTargets?.grammarTargets, diagnosis?.sections?.vocabGrammarTargets?.content?.grammarTargets);
 
   return `You are an expert MET Instructional Designer.
 Build 3 complete, student-ready, highly personalized homework tasks based on the diagnosis provided.
@@ -378,13 +371,10 @@ export function buildSectionRegenPrompt(key, data) {
    Restored: was dropped during the module-prompt refactor.
 ══════════════════════════════════════════════════════════════ */
 export const buildHomeworkGeneratorPrompt = ({ student, diagnosis }) => {
-  // AI section content shape varies (sometimes object, sometimes array) — coerce
-  // to an array before any .slice/.map so a non-array shape can't crash generation.
-  const arr = (v) => (Array.isArray(v) ? v : []);
-  const priorities = arr(diagnosis?.sections?.priorityDiagnosis?.content);
-  const errors = arr(diagnosis?.sections?.errorBankSuggestions?.content);
-  const vocab = arr(diagnosis?.sections?.vocabGrammarTargets?.content?.vocabularyTargets);
-  const grammar = arr(diagnosis?.sections?.vocabGrammarTargets?.content?.grammarTargets);
+  const priorities = pickArray(diagnosis?.priorityDiagnosis, diagnosis?.sections?.priorityDiagnosis?.content);
+  const errors = pickArray(diagnosis?.errorBank, diagnosis?.sections?.errorBankSuggestions?.content);
+  const vocab = pickArray(diagnosis?.vocabTargets?.vocabularyTargets, diagnosis?.sections?.vocabGrammarTargets?.content?.vocabularyTargets);
+  const grammar = pickArray(diagnosis?.vocabTargets?.grammarTargets, diagnosis?.sections?.vocabGrammarTargets?.content?.grammarTargets);
   const skillDx = diagnosis?.sections?.skillDiagnosis?.content || {};
   const classSummary = diagnosis?.sections?.classSummary?.content || '';
 
@@ -467,11 +457,10 @@ Return ONLY valid JSON:
    so each call is small and cascade-resilient.
 ══════════════════════════════════════════════════════════════ */
 export const buildHomeworkGroupPrompt = ({ student, diagnosis, group, count = 5 }) => {
-  const arr = (v) => (Array.isArray(v) ? v : []);
-  const priorities = arr(diagnosis?.sections?.priorityDiagnosis?.content);
-  const errors     = arr(diagnosis?.sections?.errorBankSuggestions?.content);
-  const vocab      = arr(diagnosis?.sections?.vocabGrammarTargets?.content?.vocabularyTargets);
-  const grammar    = arr(diagnosis?.sections?.vocabGrammarTargets?.content?.grammarTargets);
+  const priorities = pickArray(diagnosis?.priorityDiagnosis, diagnosis?.sections?.priorityDiagnosis?.content);
+  const errors     = pickArray(diagnosis?.errorBank, diagnosis?.sections?.errorBankSuggestions?.content);
+  const vocab      = pickArray(diagnosis?.vocabTargets?.vocabularyTargets, diagnosis?.sections?.vocabGrammarTargets?.content?.vocabularyTargets);
+  const grammar    = pickArray(diagnosis?.vocabTargets?.grammarTargets, diagnosis?.sections?.vocabGrammarTargets?.content?.grammarTargets);
   const skillDx    = diagnosis?.sections?.skillDiagnosis?.content || {};
 
   // Pull skill-specific weaknesses when available
@@ -542,12 +531,10 @@ Include only the fields relevant to the exercise type. The "content" field alway
    Restored: was dropped during the module-prompt refactor.
 ══════════════════════════════════════════════════════════════ */
 export const buildExerciseListPrompt = ({ student, diagnosis }) => {
-  // Coerce to array — AI section content is sometimes an object, not an array.
-  const arr = (v) => (Array.isArray(v) ? v : []);
-  const priorities = arr(diagnosis?.sections?.priorityDiagnosis?.content);
-  const errors = arr(diagnosis?.sections?.errorBankSuggestions?.content);
-  const vocab = arr(diagnosis?.sections?.vocabGrammarTargets?.content?.vocabularyTargets);
-  const grammar = arr(diagnosis?.sections?.vocabGrammarTargets?.content?.grammarTargets);
+  const priorities = pickArray(diagnosis?.priorityDiagnosis, diagnosis?.sections?.priorityDiagnosis?.content);
+  const errors = pickArray(diagnosis?.errorBank, diagnosis?.sections?.errorBankSuggestions?.content);
+  const vocab = pickArray(diagnosis?.vocabTargets?.vocabularyTargets, diagnosis?.sections?.vocabGrammarTargets?.content?.vocabularyTargets);
+  const grammar = pickArray(diagnosis?.vocabTargets?.grammarTargets, diagnosis?.sections?.vocabGrammarTargets?.content?.grammarTargets);
 
   return `You are a MET English exam preparation expert. Generate a menu of 6 distinct, ready-to-use exercises for the teacher to choose from.
 

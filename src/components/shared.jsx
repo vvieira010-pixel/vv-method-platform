@@ -351,6 +351,7 @@ export const Icon = {
   chevronDown:  (p) => <SvgIcon d="M6 9l6 6 6-6" {...p} />,
   search:   (p) => <SvgIcon {...p}><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></SvgIcon>,
   filter:   (p) => <SvgIcon d="M22 3H2l8 9.46V19l4 2v-8.54L22 3" {...p} />,
+  bolt:     (p) => <SvgIcon d="M13 2L3 14h7l-1 8 12-14h-8l2-6z" {...p} />,
   send:     (p) => <SvgIcon d="M22 2L11 13 M22 2L15 22l-4-9-9-4 22-7z" {...p} />,
   mic:      (p) => <SvgIcon {...p}><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></SvgIcon>,
   star:     (p) => <SvgIcon d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" {...p} />,

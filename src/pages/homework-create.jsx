@@ -75,10 +75,10 @@ export default function HomeworkCreate({ diagnosisId, studentId, students, onNav
 
   function populateFromDiagnosis(dx, s) {
     const hwRec = dx.sections?.homeworkRecommendation?.content;
-    const priority = dx.sections?.priorityDiagnosis?.content?.[0];
+    const priority = getPriorityItems(dx)[0];
     const title = hwRec?.title || (priority ? `${s?.firstName || 'Student'} — ${priority.area}` : 'Homework from Diagnosis');
     const description = hwRec?.instructions || '';
-    const type = hwRec?.expectedSubmissionType?.split('|')[0] || inferSkillType(dx.sections?.priorityDiagnosis?.content);
+    const type = hwRec?.expectedSubmissionType?.split('|')[0] || inferSkillType(getPriorityItems(dx));
 
     // Convert legacy tasks to structured exercises where possible
     const legacyTasks = Array.isArray(hwRec?.tasks) ? hwRec.tasks : [];
@@ -101,13 +101,21 @@ export default function HomeworkCreate({ diagnosisId, studentId, students, onNav
     });
   }
 
-  function inferSkillType(priorities) {
-    const areas = (Array.isArray(priorities) ? priorities : []).map(p => (p.area || '').toLowerCase());
-    if (areas.some(a => /speak/.test(a))) return 'speaking';
-    if (areas.some(a => /writ/.test(a))) return 'writing';
-    if (areas.some(a => /vocab/.test(a))) return 'vocabulary';
-    return 'grammar';
-  }
+function inferSkillType(priorities) {
+  const areas = (Array.isArray(priorities) ? priorities : []).map(p => (p.area || '').toLowerCase());
+  if (areas.some(a => /speak/.test(a))) return 'speaking';
+  if (areas.some(a => /writ/.test(a))) return 'writing';
+  if (areas.some(a => /vocab/.test(a))) return 'vocabulary';
+  return 'grammar';
+}
+
+function getPriorityItems(dx) {
+  return Array.isArray(dx?.priorityDiagnosis)
+    ? dx.priorityDiagnosis
+    : Array.isArray(dx?.sections?.priorityDiagnosis?.content)
+      ? dx.sections.priorityDiagnosis.content
+      : [];
+}
 
   /* ── Exercise management ── */
   function addExercise(type, count = 1, level = 'B1') {
@@ -248,7 +256,7 @@ export default function HomeworkCreate({ diagnosisId, studentId, students, onNav
           ? fillSelectedExercisesWithAi(f.exercises, aiTasks)
           : buildExercisesFromAiTasks(aiTasks, f.exercises),
         selfCheck: Array.isArray(parsed.selfCheck) ? parsed.selfCheck : f.selfCheck,
-        skillType: inferSkillType(diagnosis?.sections?.priorityDiagnosis?.content),
+        skillType: inferSkillType(getPriorityItems(diagnosis)),
         teacherNotes: parsed.teacherNotes || parsed.teacherReviewNotes || f.teacherNotes,
       }));
       window.toast?.(hasSelectedExercises ? 'Selected exercises filled with AI.' : 'Homework regenerated from diagnosis.', 'ok');
@@ -397,13 +405,13 @@ export default function HomeworkCreate({ diagnosisId, studentId, students, onNav
       )}
 
       {/* Diagnosis summary */}
-      {diagnosis?.sections?.priorityDiagnosis?.content?.[0] && (
+      {getPriorityItems(diagnosis)[0] && (
         <div style={{ marginTop: 16, marginBottom: 20, padding: 14, background: 'var(--accent-subtle)', borderRadius: 'var(--radius-md)', border: '1px solid var(--accent-soft)' }}>
           <div style={{ fontWeight: 600, fontSize: 'var(--text-sm)', color: 'var(--accent-deep)', marginBottom: 4 }}>
             Diagnosis Priority:
           </div>
           <div style={{ fontSize: 'var(--text-sm)' }}>
-            {diagnosis.sections.priorityDiagnosis.content[0].area} — {diagnosis.sections.priorityDiagnosis.content[0].whatToImprove}
+            {getPriorityItems(diagnosis)[0].area} — {getPriorityItems(diagnosis)[0].whatToImprove}
           </div>
         </div>
       )}
@@ -1155,12 +1163,22 @@ function normalizeTargetSeconds(targetSeconds, duration) {
 }
 
 function buildSelectedExerciseFillPrompt({ student, diagnosis, selectedExercises = [] }) {
-  // Coerce to array — AI section content is sometimes an object, not an array.
-  const arr = (v) => (Array.isArray(v) ? v : []);
-  const priorities = arr(diagnosis?.sections?.priorityDiagnosis?.content);
-  const errors = arr(diagnosis?.sections?.errorBankSuggestions?.content);
-  const vocab = arr(diagnosis?.sections?.vocabGrammarTargets?.content?.vocabularyTargets);
-  const grammar = arr(diagnosis?.sections?.vocabGrammarTargets?.content?.grammarTargets);
+  const priorities = getPriorityItems(diagnosis);
+  const errors = Array.isArray(diagnosis?.errorBank)
+    ? diagnosis.errorBank
+    : Array.isArray(diagnosis?.sections?.errorBankSuggestions?.content)
+      ? diagnosis.sections.errorBankSuggestions.content
+      : [];
+  const vocab = Array.isArray(diagnosis?.vocabTargets?.vocabularyTargets)
+    ? diagnosis.vocabTargets.vocabularyTargets
+    : Array.isArray(diagnosis?.sections?.vocabGrammarTargets?.content?.vocabularyTargets)
+      ? diagnosis.sections.vocabGrammarTargets.content.vocabularyTargets
+      : [];
+  const grammar = Array.isArray(diagnosis?.vocabTargets?.grammarTargets)
+    ? diagnosis.vocabTargets.grammarTargets
+    : Array.isArray(diagnosis?.sections?.vocabGrammarTargets?.content?.grammarTargets)
+      ? diagnosis.sections.vocabGrammarTargets.content.grammarTargets
+      : [];
 
   const selected = selectedExercises.map((ex, idx) => {
     const meta = getExType(ex.type);
