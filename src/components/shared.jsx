@@ -7,7 +7,7 @@ import { useState, useRef, useEffect } from 'react';
 
 /* ─── CSS CUSTOM PROPERTIES (injected once) ─────────────────── */
 const GLOBAL_CSS = `
-  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800;1,9..40,400&family=JetBrains+Mono:wght@500&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800;1,9..40,400&family=DM+Serif+Display:ital@0;1&family=JetBrains+Mono:wght@500&display=swap');
   :root {
     /* ── Ocean Depths theme ── */
     --accent:       #2d8b8b;
@@ -56,6 +56,7 @@ const GLOBAL_CSS = `
     --text-3xl:     28px;
     --font-ui:      'DM Sans', 'Segoe UI', sans-serif;
     --font-display: 'DM Sans', 'Segoe UI', sans-serif;
+    --font-display-serif: 'DM Serif Display', Georgia, serif;
     --font-mono:    'JetBrains Mono', 'Fira Mono', monospace;
     --ease:         cubic-bezier(0.16, 1, 0.3, 1);
     --shadow-card:  0 16px 35px -20px rgba(26, 35, 50, 0.2), 0 3px 8px rgba(26, 35, 50, 0.06);
@@ -100,8 +101,8 @@ const GLOBAL_CSS = `
   .btn:hover:not(:disabled) { filter: brightness(1.06); transform: translateY(-1px); }
   .btn:focus-visible { outline: 2px solid var(--primary); outline-offset: 3px; }
   .btn:disabled { opacity: 0.45; cursor: not-allowed; }
-  .btn-primary  { background: var(--primary); color: #fff; box-shadow: 0 8px 20px -12px rgba(45,139,139,0.6); }
-  .btn-primary:hover:not(:disabled) { background: #349a9a; }
+  .btn-primary  { background: linear-gradient(135deg, var(--primary) 0%, var(--primary-ink) 100%); color: #fff; box-shadow: 0 4px 14px -4px rgba(45,139,139,0.45); }
+  .btn-primary:hover:not(:disabled) { filter: none; background: linear-gradient(135deg, #45b3b3 0%, var(--primary) 100%); box-shadow: 0 8px 24px -6px rgba(45,139,139,0.65); transform: translateY(-1px); }
   .btn-accent   { background: var(--accent-deep); color: #fff; }
   .btn-accent:hover:not(:disabled) { background: #131a28; }
   .btn-ghost    { background: transparent; color: var(--text-2); border: 1px solid var(--border); }
@@ -168,10 +169,12 @@ const GLOBAL_CSS = `
   .shell-nav-btn:hover  { background: rgba(255,255,255,0.14); color: #fff; }
   .shell-nav-btn:focus-visible { outline: 2px solid rgba(168,218,220,0.9); outline-offset: 1px; }
   .shell-nav-btn.active {
-    background: rgba(61,166,166,0.22);
+    background: rgba(61,166,166,0.18);
     color: #fff;
     font-weight: 700;
-    border: 1px solid rgba(168,218,220,0.35);
+    border: 1px solid rgba(168,218,220,0.25);
+    border-left: 3px solid var(--primary);
+    padding-left: 7px;
   }
   .shell-user { padding: 12px 14px; border-top: 1px solid var(--dark-accent-border); display: flex; align-items: center; gap: 9px; }
   .shell-user-name { font-size: var(--text-xs); color: #fff; font-weight: 600; }

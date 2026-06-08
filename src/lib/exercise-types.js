@@ -12,7 +12,10 @@ export const EX_TYPES = [
   { id: 'order',  label: 'Order Sentences',  iconKey: 'bolt',     color: '#5A2C5C', bg: 'rgba(90,44,92,.12)',   hint: 'Sequence the steps',          grading: 'auto'  },
   { id: 'fix',    label: 'Error Correction', iconKey: 'search',   color: '#2E6A3F', bg: 'rgba(46,106,63,.12)',  hint: 'Find & fix in a passage',     grading: 'auto'  },
   { id: 'flash',  label: 'Flashcards',       iconKey: 'homework', color: '#1A1F1E', bg: 'rgba(26,31,30,.08)',   hint: 'Term/definition pairs',       grading: 'track' },
-  { id: 'listen', label: 'Listening',        iconKey: 'inbox',    color: '#0E5F6B', bg: 'rgba(14,95,107,.12)',  hint: 'Hear audio, answer question', grading: 'auto'  },
+  { id: 'listen',   label: 'Listening',          iconKey: 'inbox',    color: '#0E5F6B', bg: 'rgba(14,95,107,.12)',  hint: 'Hear audio, answer question',   grading: 'auto'  },
+  { id: 'dialogue', label: 'Dialogue Practice',  iconKey: 'mic',      color: '#0E5F6B', bg: 'rgba(14,95,107,.10)',  hint: 'Role-play conversation',        grading: 'track' },
+  { id: 'swap',     label: 'Synonym Swapper',    iconKey: 'spark',    color: '#5A2C5C', bg: 'rgba(90,44,92,.12)',   hint: 'Click to upgrade B1 words to B2', grading: 'auto' },
+  { id: 'levelup',  label: 'Sentence Level-Up',  iconKey: 'bolt',     color: '#1A5C2A', bg: 'rgba(26,92,42,.12)',   hint: 'B1 → B2 → C1 upgrade challenge', grading: 'auto' },
 ];
 
 /** Look up a type by id */
@@ -40,7 +43,10 @@ const FACTORIES = {
   order:  () => ({ id: exId(), type: 'order',  sentences: [''] }),
   fix:    () => ({ id: exId(), type: 'fix',    errorText: '', correctedText: '', hint: '' }),
   flash:  () => ({ id: exId(), type: 'flash',  pairs: [{ term: '', def: '' }] }),
-  listen: () => ({ id: exId(), type: 'listen', audioText: '', plays: 0, question: '', options: ['', '', '', ''], correct: null, explanation: '', pictureHint: '' }),
+  listen:   () => ({ id: exId(), type: 'listen',   audioText: '', plays: 0, question: '', options: ['', '', '', ''], correct: null, explanation: '', pictureHint: '' }),
+  dialogue: () => ({ id: exId(), type: 'dialogue', speakerA: 'Speaker A', speakerB: 'Speaker B', instruction: '', lines: [{ id: exId(), speaker: 'A', text: '' }, { id: exId(), speaker: 'B', text: '' }] }),
+  swap:     () => ({ id: exId(), type: 'swap',     instruction: '', sentence: '', swaps: [] }),
+  levelup:  () => ({ id: exId(), type: 'levelup',  b1: '', b2: '', c1: '', options: ['', '', ''], correct: 0, keywords: [], explanation: '' }),
 };
 
 /**
@@ -167,8 +173,11 @@ export function createEmptyResponse(type) {
     case 'order':  return { order: [] };
     case 'fix':    return { text: '' };
     case 'flash':  return { idx: 0, learned: 0 };
-    case 'listen': return { selected: null };
-    default:      return {};
+    case 'listen':   return { selected: null };
+    case 'dialogue': return { mode: 'read', linesRevealed: [] };
+    case 'swap':     return { swaps: {} };
+    case 'levelup':  return { selected: null, sandbox: '' };
+    default:         return {};
   }
 }
 
@@ -190,7 +199,13 @@ export function exercisePreview(exercise) {
       const count = (exercise.pairs || []).filter(p => p.term || p.def).length;
       return `${count} flashcard${count !== 1 ? 's' : ''}`;
     }
-    case 'listen': return exercise.question || 'Listening question…';
+    case 'listen':   return exercise.question || 'Listening question…';
+    case 'dialogue': {
+      const count = (exercise.lines || []).filter(l => l.text).length;
+      return `${count} line${count !== 1 ? 's' : ''} — ${exercise.speakerA || 'A'} & ${exercise.speakerB || 'B'}`;
+    }
+    case 'swap':    return exercise.sentence || 'Synonym swap sentence…';
+    case 'levelup': return exercise.b1 || 'B1 → B2 sentence upgrade…';
     default: return exercise.instruction || '';
   }
 }

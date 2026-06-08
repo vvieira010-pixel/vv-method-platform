@@ -692,17 +692,22 @@ function getPriorityItems(dx) {
                       </div>
                       <Button variant="ghost" size="sm" onClick={() => setExerciseOptions([])}>Clear</Button>
                     </div>
-                    <div style={{ display: 'grid', gap: 8 }}>
-                      {exerciseOptions.map((ex, i) => (
-                        <div key={ex.id || i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', border: '1px solid var(--divider)', borderRadius: 'var(--radius-sm)', background: 'var(--bg)' }}>
-                          <ExTypeBadge typeId={ex.type} />
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ fontSize: 'var(--text-sm)', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ex.title || exercisePreview(ex)}</div>
-                            <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{exercisePreview(ex)}</div>
+                    <div style={{ display: 'grid', gap: 6 }}>
+                      {exerciseOptions.map((ex, i) => {
+                        const preview = exercisePreview(ex);
+                        const title = ex.title || getExType(ex.type)?.label || ex.type;
+                        const subtitle = preview.length > 90 ? preview.slice(0, 87) + '…' : preview;
+                        return (
+                          <div key={ex.id || i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', border: '1px solid var(--divider)', borderRadius: 'var(--radius-sm)', background: 'var(--bg)', overflow: 'hidden' }}>
+                            <ExTypeBadge typeId={ex.type} />
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <div style={{ fontSize: 'var(--text-sm)', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{title}</div>
+                              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{subtitle}</div>
+                            </div>
+                            <Button variant="ghost" size="sm" onClick={() => addAiExerciseToList(ex)}>Add</Button>
                           </div>
-                          <Button variant="ghost" size="sm" onClick={() => addAiExerciseToList(ex)}>Add</Button>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
                 )}
@@ -1137,6 +1142,9 @@ function isStructuredAiExerciseComplete(ex) {
       && ex.correct !== undefined
       && Boolean(ex.explanation);
   }
+  if (ex.type === 'dialogue') return (ex.lines || []).filter(l => l.text?.trim()).length >= 2;
+  if (ex.type === 'swap') return ex.sentence?.includes('[') && (ex.swaps || []).length > 0 && ex.swaps.every(s => s.options?.filter(Boolean).length >= 2);
+  if (ex.type === 'levelup') return !!(ex.b1 && ex.b2 && (ex.options || []).filter(Boolean).length >= 2 && ex.correct !== null);
   return false;
 }
 

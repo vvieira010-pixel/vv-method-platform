@@ -6,6 +6,7 @@
 import { useState } from 'react';
 import { Icon, Card, Button } from './shared.jsx';
 import { EX_TYPES, getExType } from '../lib/exercise-types.js';
+import { DialogueEditor, SwapEditor, LevelUpEditor } from './exercise-editor-new-types.jsx';
 
 /* ─── SHARED STYLES ─────────────────────────────────────────── */
 const fieldLabel = {
@@ -144,8 +145,11 @@ export function ExerciseEditor({ exercise, onChange }) {
     case 'speak':  return <SpeakEditor  ex={exercise} update={update} />;
     case 'order':  return <OrderEditor  ex={exercise} update={update} />;
     case 'fix':    return <FixEditor    ex={exercise} update={update} />;
-    case 'flash':  return <FlashEditor  ex={exercise} update={update} />;
-    case 'listen': return <ListenEditor ex={exercise} update={update} />;
+    case 'flash':    return <FlashEditor    ex={exercise} update={update} />;
+    case 'listen':   return <ListenEditor   ex={exercise} update={update} />;
+    case 'dialogue': return <DialogueEditor ex={exercise} update={update} />;
+    case 'swap':     return <SwapEditor     ex={exercise} update={update} />;
+    case 'levelup':  return <LevelUpEditor  ex={exercise} update={update} />;
     default:
       return <p style={{ color: 'var(--muted)', fontSize: 'var(--text-sm)' }}>Unknown exercise type: {exercise.type}</p>;
   }

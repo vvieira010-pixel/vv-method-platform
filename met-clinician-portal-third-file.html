@@ -1,0 +1,693 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>MET Proficiency Mastery - Clinician Portal</title>
+  <style>
+    :root {
+      --navy: #101827;
+      --navy-2: #172234;
+      --teal: #168c8c;
+      --mint: #e7f4f4;
+      --bg: #f4f8f8;
+      --surface: #ffffff;
+      --line: #d6e3e3;
+      --line-2: #c5d7d7;
+      --text: #101827;
+      --muted: #5d7180;
+      --orange: #e56700;
+      --shadow: 0 16px 36px -28px rgba(16, 24, 39, 0.55);
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Segoe UI", Calibri, Arial, sans-serif;
+      color: var(--text);
+      background: var(--bg);
+    }
+    button { font: inherit; cursor: pointer; }
+
+    .portal {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      min-height: 90px;
+      display: grid;
+      grid-template-columns: 330px minmax(0, 1fr) 132px;
+      gap: 18px;
+      align-items: center;
+      padding: 10px 18px;
+      background: rgba(255, 255, 255, 0.94);
+      border-bottom: 1px solid var(--line);
+      box-shadow: 0 12px 32px -32px rgba(16, 24, 39, 0.65);
+      backdrop-filter: blur(10px);
+    }
+
+    .brand {
+      display: grid;
+      grid-template-columns: 40px minmax(0, 1fr);
+      gap: 10px;
+      align-items: center;
+    }
+    .mark {
+      width: 40px;
+      height: 40px;
+      display: grid;
+      place-items: center;
+      border-radius: 10px;
+      background: var(--navy);
+      color: #fff;
+      font-weight: 900;
+      box-shadow: 0 8px 20px -12px rgba(16, 24, 39, 0.8);
+    }
+    .brand strong {
+      display: block;
+      color: var(--navy);
+      font-size: 16px;
+      line-height: 1.02;
+      font-weight: 900;
+    }
+    .brand span {
+      display: block;
+      margin-top: 4px;
+      color: #7990a0;
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+    }
+
+    .nav-wrap {
+      min-width: 0;
+      display: grid;
+      grid-template-columns: 116px minmax(0, 1fr);
+      gap: 16px;
+      align-items: center;
+    }
+    .role-pill {
+      min-height: 26px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 999px;
+      border: 1px solid #cce2e2;
+      background: var(--mint);
+      color: var(--teal);
+      font-size: 10px;
+      font-weight: 900;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .nav {
+      min-width: 0;
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding: 5px;
+      border: 1px solid var(--line);
+      border-radius: 13px;
+      background: #f8fbfb;
+      scrollbar-width: thin;
+    }
+    .nav button {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      min-height: 34px;
+      padding: 8px 12px;
+      border: 0;
+      border-radius: 8px;
+      background: transparent;
+      color: #6d7d8b;
+      white-space: nowrap;
+      font-size: 12px;
+      font-weight: 850;
+    }
+    .nav button.active {
+      background: var(--navy);
+      color: #fff;
+    }
+
+    .export {
+      min-height: 58px;
+      border: 0;
+      border-radius: 10px;
+      background: var(--navy);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .page {
+      display: none;
+      padding: 0 18px 24px;
+    }
+    .page.active { display: block; }
+
+    .welcome-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.85fr) 390px;
+      gap: 24px;
+    }
+    .hero-card,
+    .panel,
+    .flow-card,
+    .unit-card,
+    .feedback-card,
+    .score-card,
+    .message-card {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--surface);
+      box-shadow: var(--shadow);
+    }
+    .hero-card {
+      padding: 34px 32px 32px;
+      border-top-left-radius: 0;
+    }
+    .kicker {
+      color: var(--teal);
+      font-size: 11px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+    }
+    h1 {
+      margin: 8px 0 18px;
+      max-width: 750px;
+      color: var(--navy);
+      font-size: clamp(34px, 4vw, 54px);
+      line-height: 0.98;
+      letter-spacing: -0.02em;
+    }
+    h2 {
+      margin: 0;
+      color: var(--navy);
+      font-size: 22px;
+      line-height: 1.2;
+    }
+    h3 {
+      margin: 0 0 8px;
+      color: var(--navy);
+      font-size: 16px;
+    }
+    p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+
+    .lead {
+      max-width: 760px;
+      font-size: 18px;
+      line-height: 1.5;
+    }
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 16px;
+      margin-top: 32px;
+    }
+    .metric {
+      min-height: 82px;
+      padding: 17px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #f7fbfb;
+    }
+    .metric strong {
+      display: block;
+      color: var(--navy);
+      font-size: 24px;
+      font-weight: 900;
+      letter-spacing: 0.02em;
+    }
+    .metric .teal { color: var(--teal); }
+    .metric .orange { color: var(--orange); }
+    .metric span {
+      display: block;
+      margin-top: 6px;
+      color: #406071;
+      font-size: 9px;
+      font-weight: 900;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+    }
+
+    .side-card {
+      min-height: 320px;
+      padding: 28px 24px;
+      border-radius: 0 0 14px 14px;
+      background: var(--navy-2);
+      color: #fff;
+      box-shadow: 0 18px 36px -24px rgba(16, 24, 39, 0.75);
+    }
+    .next-box {
+      padding: 18px;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.06);
+    }
+    .next-box h3,
+    .side-card h2 { color: #fff; }
+    .side-card p { color: rgba(255, 255, 255, 0.76); }
+    .side-metrics {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-top: 76px;
+      padding-top: 24px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .side-metric {
+      min-height: 62px;
+      display: grid;
+      place-items: center;
+      padding: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.06);
+      text-align: center;
+    }
+    .side-metric b {
+      display: block;
+      color: #fff;
+      font-size: 20px;
+      line-height: 1;
+    }
+    .side-metric span {
+      display: block;
+      margin-top: 6px;
+      color: rgba(255, 255, 255, 0.66);
+      font-size: 8px;
+      font-weight: 900;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .section-title {
+      margin: 28px 0 12px;
+    }
+    .section-title p {
+      margin-top: 4px;
+      font-size: 13px;
+    }
+    .flow-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+    }
+    .flow-card {
+      min-height: 166px;
+      padding: 20px;
+    }
+    .num {
+      width: 32px;
+      height: 32px;
+      display: grid;
+      place-items: center;
+      border-radius: 8px;
+      background: var(--navy);
+      color: #fff;
+      font-weight: 900;
+    }
+    .flow-card h3 { margin-top: 16px; }
+    .cta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-top: 16px;
+      padding: 20px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #fff;
+    }
+    .cta button,
+    .primary-btn {
+      min-height: 38px;
+      padding: 10px 18px;
+      border: 0;
+      border-radius: 9px;
+      background: var(--navy);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .unit-grid {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 12px;
+    }
+    .unit-card {
+      min-height: 158px;
+      padding: 16px;
+    }
+    .unit-card .unit {
+      width: 30px;
+      height: 30px;
+      display: grid;
+      place-items: center;
+      border-radius: 8px;
+      background: var(--navy);
+      color: #fff;
+      font-weight: 900;
+      font-size: 12px;
+    }
+    .unit-card h3 { margin-top: 10px; }
+    .tag-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 10px;
+    }
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      min-height: 23px;
+      padding: 3px 8px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #f7fbfb;
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 850;
+    }
+    .tag.teal {
+      background: var(--mint);
+      color: var(--teal);
+      border-color: #cce2e2;
+    }
+
+    .focus-grid,
+    .feedback-grid,
+    .score-grid,
+    .message-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+    .panel,
+    .feedback-card,
+    .score-card,
+    .message-card {
+      padding: 18px;
+    }
+    .feedback-grid {
+      grid-template-columns: minmax(0, 1.2fr) minmax(320px, 0.8fr);
+    }
+    .feedback-stack {
+      display: grid;
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .feedback-block {
+      padding: 13px;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      background: #f9fcfc;
+    }
+    .feedback-block h3 {
+      font-size: 14px;
+    }
+    .rubric {
+      display: grid;
+      gap: 12px;
+      margin-top: 12px;
+    }
+    .rubric-row {
+      display: grid;
+      grid-template-columns: 140px minmax(0, 1fr) 82px;
+      gap: 10px;
+      align-items: center;
+    }
+    .bar {
+      height: 8px;
+      overflow: hidden;
+      border-radius: 4px;
+      background: #eaf1f1;
+    }
+    .bar span {
+      display: block;
+      width: var(--value);
+      height: 100%;
+      background: linear-gradient(90deg, var(--teal), #78bcbc);
+    }
+    textarea {
+      width: 100%;
+      min-height: 136px;
+      resize: vertical;
+      border: 1px solid var(--line-2);
+      border-radius: 9px;
+      padding: 12px;
+      color: var(--text);
+    }
+
+    @media (max-width: 1080px) {
+      .topbar {
+        grid-template-columns: 1fr;
+      }
+      .nav-wrap {
+        grid-template-columns: 1fr;
+      }
+      .welcome-grid,
+      .feedback-grid {
+        grid-template-columns: 1fr;
+      }
+      .metrics,
+      .flow-grid,
+      .unit-grid,
+      .focus-grid,
+      .score-grid,
+      .message-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 680px) {
+      .page {
+        padding: 0 12px 20px;
+      }
+      .hero-card {
+        padding: 22px 18px;
+      }
+      .metrics,
+      .flow-grid,
+      .unit-grid,
+      .focus-grid,
+      .score-grid,
+      .message-grid,
+      .side-metrics {
+        grid-template-columns: 1fr;
+      }
+      .rubric-row {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="portal">
+    <header class="topbar">
+      <div class="brand">
+        <div class="mark">MET</div>
+        <div>
+          <strong>MET Proficiency<br />Mastery</strong>
+          <span>Interactive Michigan English Test Preparation</span>
+        </div>
+      </div>
+      <div class="nav-wrap">
+        <div class="role-pill">Clinician Portal</div>
+        <nav class="nav" aria-label="Portal navigation">
+          <button class="active" data-page="welcome">⌂ Welcome</button>
+          <button data-page="syllabus">□ 10-Unit Syllabus</button>
+          <button data-page="focus">♙ Focus Board</button>
+          <button data-page="feedback">▣ Clinical Feedback</button>
+          <button data-page="score">⌁ Proficiency Score</button>
+          <button data-page="messages">▱ Message Board</button>
+        </nav>
+      </div>
+      <button class="export">Export<br />Portfolio</button>
+    </header>
+
+    <main>
+      <section id="welcome" class="page active">
+        <div class="welcome-grid">
+          <article class="hero-card">
+            <h1>A serious preparation space for adult healthcare learners.</h1>
+            <p class="lead">
+              This diagnostic environment helps international nurses and clinicians prepare for the Michigan English Test (MET).
+              Acquire high-yield B2 clinical vocabulary, analyze multi-role transcripts, write structured rubrics, and record interactive audio drills.
+            </p>
+            <div class="metrics">
+              <div class="metric"><strong>0%</strong><span>MET syllabus progress</span></div>
+              <div class="metric"><strong class="teal">30%</strong><span>Healthcare focus</span></div>
+              <div class="metric"><strong>58 / 59</strong><span>Healthcare goal</span></div>
+              <div class="metric"><strong class="orange">2 Days</strong><span>Study goal streak</span></div>
+            </div>
+          </article>
+          <aside class="side-card">
+            <div class="next-box">
+              <h3>Speaking Q4: Organise Clinical Opinions</h3>
+              <p>Class starts Tuesday, 7:00 PM. Bring one medical, workplace, or patient communication scenario you can deliver in 40-60 seconds.</p>
+            </div>
+            <div class="side-metrics">
+              <div class="side-metric"><b>10</b><span>Units left</span></div>
+              <div class="side-metric"><b>Approved</b><span>Feedback</span></div>
+              <div class="side-metric"><b style="color:#ffc247;">0%</b><span>Goal state</span></div>
+            </div>
+          </aside>
+        </div>
+
+        <div class="section-title">
+          <h2>Evidence-Based Clinical Flow</h2>
+          <p>The platform maintains complete syllabus transparency. We do not inflate progress or simulate test answers.</p>
+        </div>
+        <div class="flow-grid">
+          <article class="flow-card">
+            <div class="num">1</div>
+            <h3>Target profiles</h3>
+            <p>Define goals before evaluation, such as clinical nurse standards or targeted speaking grades.</p>
+          </article>
+          <article class="flow-card">
+            <div class="num">2</div>
+            <h3>Evidence diagnostics</h3>
+            <p>Identify strengths on speaking, writing, and vocabulary with concrete evaluated samples.</p>
+          </article>
+          <article class="flow-card">
+            <div class="num">3</div>
+            <h3>Structured practice</h3>
+            <p>Tackle the 10-unit interactive syllabus covering specialized diagnostic quizzes and roleplay audios.</p>
+          </article>
+          <article class="flow-card">
+            <div class="num">4</div>
+            <h3>Instructor verification</h3>
+            <p>Approved clinician feedback propagates right into your active student dashboard live.</p>
+          </article>
+        </div>
+        <div class="cta">
+          <div>
+            <span class="kicker">Are you ready to practice?</span>
+            <p>Explore our intensive practice modules across 10 immersive lessons.</p>
+          </div>
+          <button data-page-jump="syllabus">Explore Interactive Units ›</button>
+        </div>
+      </section>
+
+      <section id="syllabus" class="page">
+        <div class="section-title">
+          <h2>10-Unit Syllabus</h2>
+          <p>Saved as structure only so the full curriculum can stay organized without overwhelming the main platform.</p>
+        </div>
+        <div class="unit-grid">
+          <article class="unit-card"><div class="unit">1</div><h3>Hotel Calm Check-In</h3><p>Accommodation & Arrival</p><div class="tag-row"><span class="tag">B1+ CEFR</span></div></article>
+          <article class="unit-card"><div class="unit">2</div><h3>Perfect Weekend Apartment</h3><p>Reviews & Recommendations</p><div class="tag-row"><span class="tag">B1+ CEFR</span></div></article>
+          <article class="unit-card"><div class="unit">3</div><h3>Mid-Mountain Health Retreat</h3><p>Retreats & Reservations</p><div class="tag-row"><span class="tag">B1+ CEFR</span></div></article>
+          <article class="unit-card"><div class="unit">4</div><h3>Airport Announcements</h3><p>Airport Wellness & Delays</p><div class="tag-row"><span class="tag">B1+ CEFR</span></div></article>
+          <article class="unit-card"><div class="unit">5</div><h3>Menus & Wellness Lifestyles</h3><p>Nutrition & Holiday Choices</p><div class="tag-row"><span class="tag">B1-B2 CEFR</span></div></article>
+          <article class="unit-card"><div class="unit">6</div><h3>City Lifestyles & Habits</h3><p>Urban Cycling & Routines</p><div class="tag-row"><span class="tag teal">B2- CEFR</span></div></article>
+          <article class="unit-card"><div class="unit">7</div><h3>Digital Detox Planning</h3><p>Technology Balance & Offlines</p><div class="tag-row"><span class="tag teal">B2- CEFR</span></div></article>
+          <article class="unit-card"><div class="unit">8</div><h3>Support Groups & Travel Solutions</h3><p>Community Walking & Transportation Problems</p><div class="tag-row"><span class="tag teal">B2- CEFR</span></div></article>
+          <article class="unit-card"><div class="unit">9</div><h3>Refill Shopping & Team Fitness</h3><p>Sustainability & Group Workouts</p><div class="tag-row"><span class="tag teal">B2 CEFR</span></div></article>
+          <article class="unit-card"><div class="unit">10</div><h3>Remote Work Variables</h3><p>Provincial Moves & Life Boundaries</p><div class="tag-row"><span class="tag teal">B2 CEFR</span></div></article>
+        </div>
+      </section>
+
+      <section id="focus" class="page">
+        <div class="section-title">
+          <h2>Focus Board</h2>
+          <p>A compact planning view for what to work on next without changing lesson content.</p>
+        </div>
+        <div class="focus-grid">
+          <article class="panel"><span class="kicker">Today</span><h3>Speaking organization</h3><p>Build a clear opinion, reason, and clinical example under time pressure.</p></article>
+          <article class="panel"><span class="kicker">Healthcare</span><h3>Patient communication</h3><p>Use calm, safe, respectful language for a patient or workplace scenario.</p></article>
+          <article class="panel"><span class="kicker">Before class</span><h3>One recorded sample</h3><p>Prepare a 40-60 second answer that can be reviewed against the diagnostic focus.</p></article>
+        </div>
+      </section>
+
+      <section id="feedback" class="page">
+        <div class="section-title">
+          <h2>Clinical Feedback</h2>
+          <p>Diagnostic feedback stays here as a primary tab. Teacher review remains required before student-facing feedback is used.</p>
+        </div>
+        <div class="feedback-grid">
+          <article class="feedback-card">
+            <span class="kicker">Diagnostic feedback</span>
+            <div class="feedback-stack">
+              <div class="feedback-block"><h3>Today's focus</h3><p>We worked on giving a fuller MET speaking answer with a clear opinion and one clinical example.</p></div>
+              <div class="feedback-block"><h3>What is becoming stronger</h3><p>Your answer was clearer when you used a real workplace example instead of staying general.</p></div>
+              <div class="feedback-block"><h3>Keep working on this</h3><p>Plan your reason before you start speaking. This will make your response easier to follow.</p></div>
+              <div class="feedback-block"><h3>Practice focus</h3><p>Before next class, record one 60-second answer using the structure: opinion, reason, example.</p></div>
+            </div>
+          </article>
+          <article class="feedback-card">
+            <span class="kicker">Instructor verification</span>
+            <h3>Approval state</h3>
+            <p>Feedback is approved only after instructor review. Private diagnostic notes remain teacher-side.</p>
+            <div class="tag-row">
+              <span class="tag teal">Approved feedback</span>
+              <span class="tag">Teacher controlled</span>
+            </div>
+            <textarea aria-label="Teacher diagnostic notes">Teacher-only note: student can answer familiar topics but needs a stronger opening sentence, clearer reason selection, and more controlled connectors under time pressure.</textarea>
+          </article>
+        </div>
+      </section>
+
+      <section id="score" class="page">
+        <div class="section-title">
+          <h2>Proficiency Score</h2>
+          <p>Score structure is visible, but incomplete skills stay marked as not enough evidence.</p>
+        </div>
+        <div class="score-grid">
+          <article class="score-card"><h3>Speaking organization</h3><div class="rubric"><div class="rubric-row"><span>Evidence</span><div class="bar" style="--value:68%"><span></span></div><b>Building</b></div></div></article>
+          <article class="score-card"><h3>Clinical vocabulary</h3><div class="rubric"><div class="rubric-row"><span>Evidence</span><div class="bar" style="--value:57%"><span></span></div><b>Building</b></div></div></article>
+          <article class="score-card"><h3>Reading</h3><div class="rubric"><div class="rubric-row"><span>Evidence</span><div class="bar" style="--value:0%"><span></span></div><b>Not evaluated</b></div></div></article>
+        </div>
+      </section>
+
+      <section id="messages" class="page">
+        <div class="section-title">
+          <h2>Message Board</h2>
+          <p>Short announcements and student messages stay visible, practical, and connected to study.</p>
+        </div>
+        <div class="message-grid">
+          <article class="message-card"><h3>Student message</h3><p>I recorded my speaking answer. Can we review my organization next class?</p></article>
+          <article class="message-card"><h3>Announcement</h3><p>New speaking practice is available this week. Focus on giving fuller answers with examples.</p></article>
+          <article class="message-card"><h3>Reminder</h3><p>Bring one healthcare situation you can describe clearly in English.</p></article>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const pages = ["welcome", "syllabus", "focus", "feedback", "score", "messages"];
+    function showPage(id) {
+      if (!pages.includes(id)) return;
+      document.querySelectorAll(".page").forEach((page) => page.classList.toggle("active", page.id === id));
+      document.querySelectorAll("[data-page]").forEach((button) => button.classList.toggle("active", button.dataset.page === id));
+      location.hash = id;
+      scrollTo({ top: 0, behavior: "smooth" });
+    }
+    document.querySelectorAll("[data-page]").forEach((button) => {
+      button.addEventListener("click", () => showPage(button.dataset.page));
+    });
+    document.querySelectorAll("[data-page-jump]").forEach((button) => {
+      button.addEventListener("click", () => showPage(button.dataset.pageJump));
+    });
+    const initial = location.hash.replace("#", "");
+    if (pages.includes(initial)) showPage(initial);
+  </script>
+</body>
+</html>

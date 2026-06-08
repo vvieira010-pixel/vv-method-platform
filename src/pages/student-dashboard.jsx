@@ -422,16 +422,8 @@ function HomeView({ student, onTab }) {
             className="student-memo-board"
             style={{ marginTop: '24px' }}
           >
-            <article className="student-panel" style={{ marginBottom: '16px' }}>
-              <span className="student-panel-kicker">General memo</span>
-              <h2>Memo Board</h2>
-              <p>{generalMemoText || 'No general memo posted yet.'}</p>
-            </article>
-            <article className="student-panel">
-              <span className="student-panel-kicker">Personal note</span>
-              <h2>{student.firstName}'s note</h2>
-              <p>{student.notes || student.goalNote || 'Your goal is MET preparation.'}</p>
-            </article>
+            <MemoCard kicker="General memo" title="Memo Board" text={generalMemoText || 'No general memo posted yet.'} />
+            <MemoCard kicker="Personal note" title={`${student.firstName}'s note`} text={student.notes || student.goalNote || 'Your goal is MET preparation.'} />
           </section>
         </aside>
       </section>
@@ -448,6 +440,43 @@ function MetricCard({ icon, label, value, sub, tone }) {
         <small>{sub}</small>
       </div>
       <div className="student-metric-icon">{icon}</div>
+    </article>
+  );
+}
+
+const MEMO_CLAMP = 4;
+
+function MemoCard({ kicker, title, text }) {
+  const [expanded, setExpanded] = useState(false);
+  const lines = text.split(/\n+/).filter(Boolean);
+  const needsClamp = lines.length > MEMO_CLAMP || text.length > 320;
+  return (
+    <article className="student-panel" style={{ marginBottom: '16px' }}>
+      <span className="student-panel-kicker">{kicker}</span>
+      <h2>{title}</h2>
+      <p style={{
+        margin: '8px 0 0',
+        fontSize: 'var(--text-sm)',
+        lineHeight: 1.6,
+        color: 'var(--sanctuary-text)',
+        overflow: 'hidden',
+        display: '-webkit-box',
+        WebkitLineClamp: expanded ? 'unset' : MEMO_CLAMP,
+        WebkitBoxOrient: 'vertical',
+      }}>
+        {text}
+      </p>
+      {needsClamp && (
+        <button
+          onClick={() => setExpanded(e => !e)}
+          style={{
+            background: 'none', border: 'none', padding: '6px 0 0',
+            cursor: 'pointer', fontSize: 'var(--text-xs)', fontWeight: 700,
+            color: 'var(--sanctuary-teal-deep)', letterSpacing: '0.03em',
+          }}>
+          {expanded ? 'Show less ↑' : 'Read more ↓'}
+        </button>
+      )}
     </article>
   );
 }
