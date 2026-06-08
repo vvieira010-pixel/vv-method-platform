@@ -32,7 +32,8 @@ function exerciseHtml(ex, n) {
       ${ex.targetWords ? `<p class="note">Target: ~${ex.targetWords} words.</p>` : ''}
       ${lines(7)}`;
   } else if (t === 'speak') {
-    body = `<p class="q">🎤 ${esc(ex.prompt)}</p>
+    body = `${ex.imageUrl ? `<img class="promptimg" src="${esc(ex.imageUrl)}" alt="${esc(ex.imageAlt || 'Speaking prompt image')}" />` : ''}
+      <p class="q">🎤 ${esc(ex.prompt)}</p>
       <p class="note">Speaking task — practise aloud (${ex.targetSeconds || 60}s). Notes / outline:</p>
       ${lines(4)}`;
   } else if (t === 'order') {
@@ -47,6 +48,13 @@ function exerciseHtml(ex, n) {
   } else if (t === 'flash') {
     body = `<p class="q">Study / match the terms:</p>
       <ul class="pairs">${(ex.pairs || []).map(p => `<li><strong>${esc(p.term)}</strong> — ${esc(p.def)}</li>`).join('')}</ul>`;
+  } else if (t === 'listen') {
+    const opts = (ex.options || []).filter(o => o !== undefined);
+    body = `<p class="q">Listening script:</p>
+      <p class="passage">${esc(ex.audioText || 'Audio script not set yet.')}</p>
+      <p class="q">${esc(ex.question || 'Question not set yet.')}</p>
+      <ol type="A" class="opts">${opts.map(o => `<li>${esc(o)}</li>`).join('')}</ol>
+      <p class="ans">Answer: ______</p>`;
   } else {
     body = `<p class="q">${esc(ex.prompt || ex.question || ex.instruction || '')}</p>${lines(4)}`;
   }
@@ -76,6 +84,7 @@ export function buildPrintableHomeworkHtml(homework, { studentName = '' } = {}) 
   .exbody { flex: 1; }
   .q { font-weight: 600; margin: 0 0 8px; }
   .passage { background: #fafafa; padding: 8px 10px; border-radius: 4px; }
+  .promptimg { display: block; width: 100%; max-height: 300px; object-fit: cover; border: 1px solid #ddd; border-radius: 4px; margin: 0 0 10px; }
   .opts { margin: 6px 0; } .opts li { margin: 3px 0; }
   .scramble, .pairs { margin: 6px 0; padding-left: 18px; } .scramble li, .pairs li { margin: 4px 0; }
   .ans { margin-top: 8px; font-size: 13px; color: #333; }

@@ -12,9 +12,20 @@ dist-build/
 
 # vite / editor caches
 .vite-cache/
+.vite-dev.log
+.vite-dev.err.log
 .tmp-vv-method/
 .claude/
 .cursor/
+.vs/
+
+# agent/tool outputs
+.codex-remote-attachments/
+.impeccable/
+graphify-out/
+.graphify_*
+.graphify_detect.json`
+product-audit/chrome-*/
 
 # netlify build cache/state only — keep netlify/functions source committed
 .netlify/

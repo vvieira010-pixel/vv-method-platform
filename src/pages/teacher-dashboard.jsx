@@ -13,7 +13,7 @@ function timeOfDay() {
   return h < 12 ? 'morning' : h < 17 ? 'afternoon' : 'evening';
 }
 
-export default function TeacherDashboard({ students, onNavigate }) {
+export default function TeacherDashboard({ students, onNavigate, teacherName = 'Vini' }) {
   const [data, setData] = useState({
     todayClasses: [], needsDiagnosis: [], pendingSubmissions: [],
     recentActivity: [], stats: { students: 0, classesToday: 0, pendingReview: 0, activeErrors: 0 },
@@ -57,7 +57,7 @@ export default function TeacherDashboard({ students, onNavigate }) {
     <div style={styles.shell}>
       {/* Header */}
       <div style={{ marginBottom: 16 }}>
-        <h1 style={styles.headline}>Good {timeOfDay()}, Vini.</h1>
+        <h1 style={styles.headline}>Good {timeOfDay()}, {teacherName}.</h1>
         <p style={styles.sub}>{today}</p>
       </div>
 

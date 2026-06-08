@@ -37,6 +37,20 @@ function convertExercise(ex) {
   const items = Array.isArray(ex.items) ? ex.items : null;
 
   switch (ex.type) {
+    case 'speak': {
+      out.push({
+        id: exId(),
+        type: 'speak',
+        title: ex.title || '',
+        prompt: ex.prompt || ex.instructions || '',
+        targetSeconds: ex.targetSeconds || 60,
+        scaffolding: ex.scaffolding || { vocabulary: [], structure: [] },
+        imageUrl: ex.imageUrl || '',
+        imageAlt: ex.imageAlt || '',
+      });
+      break;
+    }
+
     case 'multiple_choice_single':
     case 'multiple_choice_multiple': {
       (items || []).forEach(it => {

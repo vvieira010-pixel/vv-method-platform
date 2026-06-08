@@ -952,6 +952,15 @@ function PreviewExercise({ exercise }) {
     case 'speak':
       return (
         <div>
+          {exercise.imageUrl && (
+            <div style={{ marginBottom: 10, borderRadius: 8, overflow: 'hidden', border: '1px solid var(--border)', background: 'var(--bg)' }}>
+              <img
+                src={exercise.imageUrl}
+                alt={exercise.imageAlt || 'Speaking prompt image'}
+                style={{ width: '100%', maxHeight: 220, objectFit: 'cover', display: 'block' }}
+              />
+            </div>
+          )}
           <div style={{ background: 'var(--surface)', borderRadius: 8, padding: '12px 14px', marginBottom: 10 }}>
             <p style={{ fontWeight: 500, margin: 0 }}>{exercise.prompt || 'Speaking prompt…'}</p>
             <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>Target: {exercise.targetSeconds || 60} seconds</span>
@@ -1016,16 +1025,31 @@ function PreviewExercise({ exercise }) {
       return (
         <div>
           <div style={{
-            display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12,
+            display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 12,
             padding: '10px 14px', borderRadius: 10,
             background: 'rgba(14,95,107,.08)', border: '1px solid rgba(14,95,107,.25)',
           }}>
             <span style={{ fontSize: 20 }}>▶</span>
-            <div>
+            <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: '#0E5F6B', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                 Listen ({exercise.plays ?? 2}× allowed)
               </div>
-              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>{(exercise.audioText || '').slice(0, 60) || 'Audio text not set…'}</div>
+              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: 4, lineHeight: 1.5 }}>
+                Audio script
+              </div>
+              <div style={{
+                marginTop: 6,
+                padding: '8px 10px',
+                borderRadius: 8,
+                background: 'var(--surface)',
+                border: '1px solid rgba(14,95,107,.16)',
+                color: 'var(--text)',
+                fontSize: 'var(--text-sm)',
+                lineHeight: 1.55,
+                whiteSpace: 'pre-wrap',
+              }}>
+                {exercise.audioText || 'Audio script not set yet.'}
+              </div>
             </div>
           </div>
           <p style={{ fontWeight: 600, marginBottom: 10 }}>{exercise.question || 'Question…'}</p>
@@ -1205,6 +1229,8 @@ function applyAiTaskToExercise(exercise, aiTask) {
   if (ex.type === 'speak') {
     ex.prompt = aiTask?.prompt || content;
     ex.targetSeconds = normalizeTargetSeconds(aiTask?.targetSeconds, aiTask?.duration);
+    if (aiTask?.imageUrl) ex.imageUrl = aiTask.imageUrl;
+    if (aiTask?.imageAlt) ex.imageAlt = aiTask.imageAlt;
     return ex;
   }
 
