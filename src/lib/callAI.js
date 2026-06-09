@@ -52,12 +52,36 @@ function openRouterModels() {
 }
 
 const AI_WINNER_LS = 'vv:ai_last_winner';
+const AI_COOLDOWNS_LS = 'vv:ai_provider_cooldowns';
+const AI_COOLDOWN_MS = 3 * 60 * 1000;
 
 function multiKeys(envVal, lsKey) {
   const parse = s => String(s || '').split(/[,\n]/).map(x => x.trim()).filter(Boolean);
   let fromLs = [];
   try { fromLs = parse(localStorage.getItem(lsKey)); } catch { /* storage unavailable */ }
   return [...parse(envVal), ...fromLs].filter((k, i, a) => a.indexOf(k) === i);
+}
+
+function attemptProvider(id) {
+  if (id.startsWith('anthropic-direct')) return 'anthropic-direct';
+  return String(id || '').split(':')[0].split('#')[0];
+}
+
+function loadCooldowns(now = Date.now()) {
+  try {
+    const raw = JSON.parse(localStorage.getItem(AI_COOLDOWNS_LS) || '{}');
+    return Object.fromEntries(Object.entries(raw).filter(([, until]) => Number(until) > now));
+  } catch {
+    return {};
+  }
+}
+
+function saveCooldowns(cooldowns) {
+  try { localStorage.setItem(AI_COOLDOWNS_LS, JSON.stringify(cooldowns)); } catch { /* storage unavailable */ }
+}
+
+function shouldCooldownProvider(messages) {
+  return messages.some(msg => /quota|rate limit|tokens per day|limit reached|too many requests|timeout after/i.test(msg));
 }
 
 export async function callAI(prompt, { max_tokens = 2048, system, temperature = 0.3, preferredProvider = null } = {}) {
@@ -244,19 +268,23 @@ export async function callAI(prompt, { max_tokens = 2048, system, temperature = 
   anthropicKeys.forEach((key, ki) => baseAttempts.push({ id: `anthropic-direct#${ki}`, run: withTimeout(() => tryAnthropicDirect(key)) }));
   openaiKeys.forEach((key, ki) => baseAttempts.push({ id: `openai#${ki}`, run: withTimeout(() => tryOpenAI(key)) }));
 
+  const cooldowns = loadCooldowns();
+  const availableAttempts = baseAttempts.filter(a => !cooldowns[attemptProvider(a.id)]);
+  const attemptPool = availableAttempts.length ? availableAttempts : baseAttempts;
+
   const ROUND_ROBIN_LS = 'vv:ai_rr_index';
   let rrIdx = 0;
   try { rrIdx = parseInt(localStorage.getItem(ROUND_ROBIN_LS) || '0', 10) || 0; } catch { /* ignore */ }
 
   const pivotProviders = ['gemini', 'openrouter', 'groq', 'openai', 'anthropic-direct'];
-  const pivotAttempts = baseAttempts.filter(a => pivotProviders.some(p => a.id === p || a.id.startsWith(p + ':')));
+  const pivotAttempts = attemptPool.filter(a => pivotProviders.some(p => a.id === p || a.id.startsWith(p + ':')));
   const pivotCount = pivotAttempts.length;
 
-  let attempts = baseAttempts;
+  let attempts = attemptPool;
   if (pivotCount > 1) {
     const pivotId = pivotAttempts[rrIdx % pivotCount]?.id;
-    const pivotPos = baseAttempts.findIndex(a => a.id === pivotId);
-    if (pivotPos > 0) attempts = [...baseAttempts.slice(pivotPos), ...baseAttempts.slice(0, pivotPos)];
+    const pivotPos = attemptPool.findIndex(a => a.id === pivotId);
+    if (pivotPos > 0) attempts = [...attemptPool.slice(pivotPos), ...attemptPool.slice(0, pivotPos)];
     try { localStorage.setItem(ROUND_ROBIN_LS, String((rrIdx + 1) % pivotCount)); } catch { /* ignore */ }
   }
 
@@ -277,10 +305,18 @@ export async function callAI(prompt, { max_tokens = 2048, system, temperature = 
   }
 
   for (const attempt of attempts) {
+    const beforeErrorCount = errors.length;
     const result = await attempt.run();
     if (result) {
       try { localStorage.setItem(AI_WINNER_LS, attempt.id); } catch { /* storage unavailable */ }
       return result;
+    }
+    const newErrors = errors.slice(beforeErrorCount);
+    if (shouldCooldownProvider(newErrors)) {
+      const provider = attemptProvider(attempt.id);
+      const nextCooldowns = loadCooldowns();
+      nextCooldowns[provider] = Date.now() + AI_COOLDOWN_MS;
+      saveCooldowns(nextCooldowns);
     }
   }
 

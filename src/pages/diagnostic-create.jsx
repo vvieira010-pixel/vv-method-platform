@@ -220,6 +220,7 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
     setStep('generating');
     setGeneratingStatus('Analyzing class evidence...');
     setError('');
+    if (!diagnosisId) setSavedDiagnosis(null);
 
     try {
       const promptData = { student: selectedStudent, classEvent, classEvidence: normalizedEvidence, targetProfile };
@@ -277,7 +278,7 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
       // Auto-save draft immediately
       try {
         const draft = await saveDiagnosis({
-          id: savedDiagnosis?.id,
+          id: diagnosisId ? savedDiagnosis?.id : undefined,
           studentId: selectedStudentId || studentId,
           classEventId: selectedClassEventId || classEventId,
           targetProfileId: targetProfile?.id,
