@@ -14,6 +14,7 @@ import { callAI } from '../components/shared.jsx';
 import { parseAiJson } from '../lib/ai-helpers.js';
 import { 
   buildSkillDiagnosisPrompt, 
+  buildCompactSkillDiagnosisPrompt,
   buildStudentFeedbackPrompt, 
   buildHomeworkPrompt, 
   buildErrorBankPrompt, 
@@ -49,6 +50,15 @@ const SECTION_KEYS = [
 
 const REQUIRED_APPROVAL_KEYS = ['skillDiagnosis', 'studentFeedback', 'homeworkRecommendation', 'nextClassFocus'];
 const SECTION_LABELS = Object.fromEntries(SECTION_KEYS.map(section => [section.key, section.label]));
+const DIAGNOSIS_DERIVED_KEYS = new Set([
+  'skillDiagnosis',
+  'classSummary',
+  'targetScoreRelevance',
+  'estimatedOverallScore',
+  'priorityDiagnosis',
+  'nextClassFocus',
+  'profileUpdateSuggestions',
+]);
 
 // Review layout: two zones, with thin teacher sections merged into fuller cards.
 // A group with one key renders as its own card; multiple keys render together in
@@ -97,6 +107,144 @@ function friendlyAiError(error) {
     return 'Diagnosis failed because one provider could not be reached from the browser. Check the key/provider setup and try again.';
   }
   return `Diagnosis failed: ${msg}`;
+}
+
+function aiText(res) {
+  return res?.content?.map(b => b.text || '').join('') || '';
+}
+
+async function generateDiagnosisJson(promptData, setStatus = () => {}) {
+  let firstError = null;
+  try {
+    const raw = await callAI(buildSkillDiagnosisPrompt(promptData), { max_tokens: 6000, preferredProvider: 'gemini' });
+    const parsed = normalizeDiagnosisJson(parseAiJson(aiText(raw)), promptData.classEvidence);
+    if (hasUsefulDiagnosis(parsed)) return { raw, parsed };
+    firstError = new Error('Full diagnosis returned incomplete sections.');
+  } catch (e) {
+    firstError = e;
+  }
+
+  setStatus('Step 1/4 — Retrying with a smaller diagnosis prompt...');
+  try {
+    const raw = await callAI(buildCompactSkillDiagnosisPrompt(promptData), { max_tokens: 3200, preferredProvider: 'gemini' });
+    const parsed = normalizeDiagnosisJson(parseAiJson(aiText(raw)), promptData.classEvidence);
+    return { raw, parsed };
+  } catch (fallbackError) {
+    console.warn('Diagnosis generation failed; full prompt error:', firstError);
+    console.warn('Diagnosis compact fallback failed:', fallbackError);
+    return { raw: null, parsed: normalizeDiagnosisJson({}, promptData.classEvidence) };
+  }
+}
+
+function hasUsefulDiagnosis(parsed) {
+  return Boolean(
+    parsed?.skillDiagnosis && Object.keys(parsed.skillDiagnosis).length &&
+    parsed.classSummary &&
+    Array.isArray(parsed.priorityDiagnosis) &&
+    parsed.nextClassFocus && Object.keys(parsed.nextClassFocus).length
+  );
+}
+
+function normalizeDiagnosisJson(parsed, evidence = {}) {
+  const source = parsed?.diagnosis && typeof parsed.diagnosis === 'object' ? parsed.diagnosis : (parsed || {});
+  const skillDiagnosis = source.skillDiagnosis && typeof source.skillDiagnosis === 'object'
+    ? source.skillDiagnosis
+    : {};
+  const skillMeta = {
+    speaking: ['evaluatedSpeaking', 'speakingEvidenceCount'],
+    writing: ['evaluatedWriting', 'writingEvidenceCount'],
+    reading: ['evaluatedReading', 'readingEvidenceCount'],
+    listening: ['evaluatedListening', 'listeningEvidenceCount'],
+    grammar: ['evaluatedGrammar', 'grammarEvidenceCount'],
+    vocabulary: ['evaluatedVocabulary', 'vocabularyEvidenceCount'],
+    testStrategy: ['evaluatedTestStrategy', 'testStrategyEvidenceCount'],
+  };
+  const normalizedSkills = {};
+  Object.entries(skillMeta).forEach(([skill, [flagKey, countKey]]) => {
+    const existing = skillDiagnosis[skill] && typeof skillDiagnosis[skill] === 'object' ? skillDiagnosis[skill] : {};
+    const evaluated = Boolean(existing.evaluated ?? evidence?.[flagKey]);
+    const evidenceCount = Number(existing.evidenceCount ?? evidence?.[countKey] ?? 0) || 0;
+    normalizedSkills[skill] = {
+      evaluated,
+      evidenceCount,
+      score0to80: evaluated ? (existing.score0to80 ?? null) : null,
+      scoreConfidenceLevel: evaluated
+        ? (existing.scoreConfidenceLevel || 'Limited evidence')
+        : 'Not evaluated enough',
+      scoreProvisional: existing.scoreProvisional ?? evaluated,
+      transcriptOnly: existing.transcriptOnly ?? (skill === 'speaking'),
+      strengths: Array.isArray(existing.strengths) ? existing.strengths : [],
+      weaknesses: Array.isArray(existing.weaknesses) ? existing.weaknesses : (Array.isArray(existing.mainIssues) ? existing.mainIssues : []),
+      mainIssues: Array.isArray(existing.mainIssues) ? existing.mainIssues : [],
+      subskillsAssessed: Array.isArray(existing.subskillsAssessed) ? existing.subskillsAssessed : [],
+      readinessTowardTarget: existing.readinessTowardTarget || (evaluated ? 'Limited evidence gathered.' : 'Not evaluated yet.'),
+      whatToImproveNext: existing.whatToImproveNext || (evaluated ? 'Review the evidence and add a targeted practice step.' : 'Collect more evidence before assigning a focus.'),
+      ratingBreakdown: existing.ratingBreakdown,
+    };
+  });
+
+  const priorities = Array.isArray(source.priorityDiagnosis)
+    ? source.priorityDiagnosis
+    : Array.isArray(source.priorities)
+      ? source.priorities
+      : [];
+  const firstEvaluatedSkill = Object.entries(normalizedSkills).find(([, data]) => data.evaluated)?.[0] || 'MET skills';
+
+  return {
+    skillDiagnosis: normalizedSkills,
+    classSummary: source.classSummary || source.summary || `Limited diagnosis generated. The evaluated evidence is available, but the AI response did not produce a full class overview.`,
+    priorityDiagnosis: priorities.length ? priorities : [{
+      rank: 1,
+      urgency: 'Developing',
+      area: firstEvaluatedSkill,
+      evidence: evidence?.studentTranscript || evidence?.studentAnswer || 'limited evidence',
+      whatToImprove: 'Review the evaluated class evidence and choose one focused practice target.',
+      howToImprove: 'Use a short MET-style practice task and collect another sample before making a stronger estimate.',
+    }],
+    targetScoreRelevance: source.targetScoreRelevance && typeof source.targetScoreRelevance === 'object'
+      ? source.targetScoreRelevance
+      : { gapToTarget: 'Limited evidence.', prioritySkillForTarget: firstEvaluatedSkill, estimatedSessionsToTarget: 'Not enough evidence to estimate.', onTrack: 'Needs more samples.' },
+    estimatedOverallScore: source.estimatedOverallScore && typeof source.estimatedOverallScore === 'object'
+      ? source.estimatedOverallScore
+      : { estimate: 'Not evaluated enough', confidence: 'Limited evidence', note: 'The available response did not provide enough reliable scoring detail.' },
+    nextClassFocus: source.nextClassFocus && typeof source.nextClassFocus === 'object'
+      ? source.nextClassFocus
+      : { primaryFocus: `Collect stronger evidence for ${firstEvaluatedSkill}.`, suggestedActivities: ['Short MET-style production task', 'Error correction from today’s sample'], warmUp: 'Review one sentence or answer from the last class.', successCriteria: 'Student gives a clearer response with one specific example.' },
+    profileUpdateSuggestions: source.profileUpdateSuggestions && typeof source.profileUpdateSuggestions === 'object'
+      ? source.profileUpdateSuggestions
+      : { progressNote: 'More class evidence is needed before updating the profile.', suggestedLevelChange: 'No change yet.', recurringErrorsToTrack: [], masteredItems: [] },
+  };
+}
+
+function normalizeErrorTargets(parsed) {
+  const source = parsed && typeof parsed === 'object' ? parsed : {};
+  const targetSource = source.vocabGrammarTargets || source.targets || source.languageTargets || {};
+  const vocabularyTargets = pickFirstArray(
+    targetSource.vocabularyTargets,
+    targetSource.vocab,
+    targetSource.vocabulary,
+    source.vocabularyTargets,
+    source.vocab,
+    source.vocabulary,
+  );
+  const grammarTargets = pickFirstArray(
+    targetSource.grammarTargets,
+    targetSource.grammar,
+    targetSource.grammarPoints,
+    targetSource.structures,
+    source.grammarTargets,
+    source.grammar,
+    source.grammarPoints,
+    source.structures,
+  );
+  return {
+    errorBankSuggestions: pickFirstArray(source.errorBankSuggestions, source.errorBank, source.errors),
+    vocabGrammarTargets: { vocabularyTargets, grammarTargets },
+  };
+}
+
+function pickFirstArray(...values) {
+  return values.find(Array.isArray) || [];
 }
 
 export default function DiagnosticCreate({ studentId, classEventId, diagnosisId, students, onNavigate }) {
@@ -229,13 +377,14 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
 
       // Phase 1: Core skill diagnosis
       setGeneratingStatus('Step 1/4 — Generating skill diagnosis…');
-      const diagnosisRaw = await callAI(buildSkillDiagnosisPrompt(promptData), { max_tokens: 6000, preferredProvider: 'gemini' }).catch(() => null);
-      const parsedDiagnosis = diagnosisRaw ? parseAiJson(getContent(diagnosisRaw)) : {};
+      const diagnosisResult = await generateDiagnosisJson(promptData, (status) => setGeneratingStatus(status));
+      const diagnosisRaw = diagnosisResult.raw;
+      const parsedDiagnosis = diagnosisResult.parsed;
 
       // Phase 2: Error bank + vocab targets (informed by the diagnosis)
       setGeneratingStatus('Step 2/4 — Analysing errors and vocabulary targets…');
       const errorBankRaw = await callAI(buildErrorBankPrompt({ ...promptData, diagnosis: parsedDiagnosis }), { max_tokens: 2500, preferredProvider: 'gemini' }).catch(() => null);
-      const parsedErrorBank = errorBankRaw ? parseAiJson(getContent(errorBankRaw)) : {};
+      const parsedErrorBank = normalizeErrorTargets(errorBankRaw ? parseAiJson(getContent(errorBankRaw)) : {});
 
       // Phase 3: Student feedback (informed by the full diagnosis)
       setGeneratingStatus('Step 3/4 — Writing student feedback…');
@@ -260,8 +409,8 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
         skillDiagnosis:        diagnosisRaw  ? { content: parsedDiagnosis.skillDiagnosis ?? null,              approved: false, hidden: false, edited: false } : FAILED,
         studentFeedback:       feedbackRaw   ? { content: parsedFeedback,                                       approved: false, hidden: false, edited: false } : FAILED,
         homeworkRecommendation:homeworkRaw   ? { content: parsedHomework,                                       approved: false, hidden: false, edited: false } : FAILED,
-        errorBankSuggestions:  errorBankRaw  ? { content: parsedErrorBank.errorBankSuggestions ?? [],           approved: false, hidden: false, edited: false } : { content: [], approved: false, hidden: false, edited: false },
-        vocabGrammarTargets:   errorBankRaw  ? { content: parsedErrorBank.vocabGrammarTargets ?? null,          approved: false, hidden: false, edited: false } : { content: null, approved: false, hidden: false, edited: false },
+        errorBankSuggestions:  { content: parsedErrorBank.errorBankSuggestions ?? [], approved: false, hidden: false, edited: false },
+        vocabGrammarTargets:   { content: parsedErrorBank.vocabGrammarTargets ?? { vocabularyTargets: [], grammarTargets: [] }, approved: false, hidden: false, edited: false },
         readinessCheck: { content: { targetProfileSelected: !!targetProfile, evaluatedSkills: evaluatedSkills, notEvaluatedSkills: [], diagnosisAllowed: true }, approved: true, hidden: false, edited: false },
         classSummary: { content: parsedDiagnosis.classSummary || '', approved: false, hidden: false, edited: false },
         targetScoreRelevance: { content: parsedDiagnosis.targetScoreRelevance || {}, approved: false, hidden: false, edited: false },
@@ -367,7 +516,9 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
           prompt = buildErrorBankPrompt(promptData);
           break;
         default:
-          prompt = buildSectionRegenPrompt(key, promptData);
+          prompt = DIAGNOSIS_DERIVED_KEYS.has(key)
+            ? buildCompactSkillDiagnosisPrompt(promptData)
+            : buildSectionRegenPrompt(key, promptData);
       }
 
       // The skillDiagnosis prompt now also emits classSummary/priorityDiagnosis/nextClassFocus/
@@ -375,9 +526,11 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
       // prompt (default case → buildSectionRegenPrompt → buildSkillDiagnosisPrompt), so they
       // need the larger budget too.
       const SECTION_BUDGETS = { studentFeedback: 3000, homeworkRecommendation: 3000, skillDiagnosis: 6000, priorityDiagnosis: 6000, classSummary: 6000, targetScoreRelevance: 6000, nextClassFocus: 6000, profileUpdateSuggestions: 6000, errorBankSuggestions: 2200 };
-      const data = await callAI(prompt, { max_tokens: SECTION_BUDGETS[key] || 2000, preferredProvider: 'gemini' });
+      const data = await callAI(prompt, { max_tokens: DIAGNOSIS_DERIVED_KEYS.has(key) ? Math.min(SECTION_BUDGETS[key] || 2500, 3000) : SECTION_BUDGETS[key] || 2000, preferredProvider: 'gemini' });
       const raw = data.content?.map(b => b.text || '').join('') || '';
-      const parsed = parseAiJson(raw);
+      const parsed = DIAGNOSIS_DERIVED_KEYS.has(key)
+        ? normalizeDiagnosisJson(parseAiJson(raw), normalizedEvidence)
+        : parseAiJson(raw);
       const content = parsed[key] ?? parsed;
       setSections(s => ({ ...s, [key]: { ...s[key], content, approved: false } }));
       window.toast?.('Section regenerated.', 'ok');
