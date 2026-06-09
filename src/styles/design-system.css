@@ -2,49 +2,75 @@
    Navy + teal system for a calm, professional MET preparation platform. */
 
 :root {
-  /* Colors */
-  --primary: #1a2332;                        /* Navy — headers, primary buttons, active states */
-  --primary-hover: #131a28;                  /* Darker navy for hover */
-  --primary-light: #edf4f7;                  /* Light blue-gray for backgrounds */
+  /* Colors — UNIFIED source of truth for all platform CSS */
+  --primary: #1a2332;                        /* Navy */
+  --primary-hover: #131a28;
+  --primary-light: #edf4f7;
+  --accent: #2d8b8b;                         /* Teal */
+  --accent-hover: #247070;
+  --accent-light: #e4f2f2;
+  --accent-deep: #1a2332;
+  --accent-soft: #a8dadc;
+  --accent-subtle: #e4f2f2;
+  --accent-text: #0f5555;
+  --interaction: #3da6a6;
+  --interaction-hover: #2d8b8b;
+  --primary-ink: #247070;
 
-  --accent: #2d8b8b;                         /* Teal — evidence, charts, highlights */
-  --accent-hover: #247070;                   /* Darker teal for hover */
-  --accent-light: #e4f2f2;                   /* Soft mint for backgrounds */
+  --bg: oklch(98% 0.005 220);
+  --bg-deep: #dceeed;
+  --surface: oklch(100% 0 0);
+  --surface-hover: oklch(99% 0.002 220);
+  --border: oklch(92% 0.005 220);
+  --border-strong: oklch(85% 0.01 220);
+  --divider: #e2efef;
+  --faint: #edf4f4;
 
-  --interaction: #3da6a6;                    /* Bright teal — special actions */
-  --interaction-hover: #2d8b8b;              /* Darker teal for hover */
+  --text: oklch(20% 0.02 220);
+  --text-muted: oklch(54% 0.01 220);
+  --text-2: #2a3d4e;
+  --muted: #4d6672;
+  --on-dark: #f1faee;
+  --on-dark-muted: rgba(241,250,238,0.68);
 
-  --bg: oklch(98% 0.005 220);                /* Cool off-white background */
-  --surface: oklch(100% 0 0);                /* White cards and surfaces */
-  --surface-hover: oklch(99% 0.002 220);     /* Subtle hover state for surfaces */
-
-  --text: oklch(20% 0.02 220);               /* Dark charcoal text */
-  --text-muted: oklch(54% 0.01 220);         /* Gray muted text */
-  --border: oklch(92% 0.005 220);            /* Light gray borders */
-  --border-strong: oklch(85% 0.01 220);      /* Stronger borders for emphasis */
+  --orange: #F97316;
+  --orange-deep: #EA580C;
+  --warning-text: #B45309;
 
   /* Status colors */
   --success: oklch(55% 0.14 150);
   --success-light: oklch(95% 0.05 150);
+  --success-bg: #ECFDF5;
+  --success-soft: #D1FAE5;
   --warning: oklch(70% 0.15 80);
   --warning-light: oklch(96% 0.05 80);
+  --warning-bg: #FFFBEB;
+  --warning-soft: #FDE68A;
   --error: oklch(58% 0.18 25);
   --error-light: oklch(96% 0.05 25);
+  --danger: #B91C1C;
+  --danger-bg: #FEF2F2;
+  --danger-soft: #FECACA;
   --info: oklch(60% 0.12 240);
   --info-light: oklch(95% 0.04 240);
+  --info-bg: #e4f2f2;
 
   /* Typography */
   --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', sans-serif;
+  --font-ui: 'DM Sans', 'Segoe UI', sans-serif;
+  --font-display: 'DM Sans', 'Segoe UI', sans-serif;
+  --font-display-serif: 'DM Serif Display', Georgia, serif;
   --font-mono: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Droid Sans Mono', monospace;
 
   /* Font sizes */
-  --text-xs: 0.75rem;
-  --text-sm: 0.875rem;
-  --text-base: 1rem;
-  --text-lg: 1.125rem;
-  --text-xl: 1.25rem;
-  --text-2xl: 1.5rem;
-  --text-3xl: 1.875rem;
+  --text-xs: 0.75rem;    /* 12px */
+  --text-sm: 0.875rem;   /* 14px */
+  --text-base: 1rem;     /* 16px */
+  --text-md: 1rem;       /* alias for --text-base */
+  --text-lg: 1.125rem;   /* 18px */
+  --text-xl: 1.25rem;    /* 20px */
+  --text-2xl: 1.5rem;    /* 24px */
+  --text-3xl: 1.875rem;  /* 30px */
 
   /* Font weights */
   --weight-normal: 400;
@@ -52,15 +78,18 @@
   --weight-semibold: 600;
   --weight-bold: 700;
 
-  /* Spacing scale */
+  /* Spacing scale (rem-based, 4px base) */
   --space-1: 0.25rem;   /* 4px */
   --space-2: 0.5rem;    /* 8px */
   --space-3: 0.75rem;   /* 12px */
   --space-4: 1rem;      /* 16px */
   --space-5: 1.25rem;   /* 20px */
   --space-6: 1.5rem;    /* 24px */
+  --space-7: 1.75rem;   /* 28px */
   --space-8: 2rem;      /* 32px */
+  --space-9: 2.25rem;   /* 36px */
   --space-10: 2.5rem;   /* 40px */
+  --space-11: 2.75rem;  /* 44px */
   --space-12: 3rem;     /* 48px */
   --space-16: 4rem;     /* 64px */
   --space-20: 5rem;     /* 80px */
@@ -82,6 +111,17 @@
   --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
   --transition-base: 250ms cubic-bezier(0.4, 0, 0.2, 1);
   --transition-slow: 350ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Shadows */
+  --shadow-card: 0 16px 35px -20px rgba(26, 35, 50, 0.2), 0 3px 8px rgba(26, 35, 50, 0.06);
+  --shadow-modal: 0 24px 58px -24px rgba(26, 35, 50, 0.3), 0 8px 20px rgba(26, 35, 50, 0.1);
+  --shadow-toast: 0 4px 16px rgba(26, 35, 50, 0.18);
+
+  /* Motion */
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* Misc */
+  --dark-accent-border: rgba(168,218,220,0.15);
 
   /* Z-index scale */
   --z-base: 0;

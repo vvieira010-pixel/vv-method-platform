@@ -1,14 +1,12 @@
 :root {
-  --sanctuary-parchment: #F9F7F2;
-  --sanctuary-teal-deep: #0E5F6B;
-  --sanctuary-teal-mid: #1A8C9B;
-  --sanctuary-teal-soft: rgba(14, 95, 107, 0.08);
+  --sanctuary-parchment: #f7f5f0;
+  --sanctuary-teal-deep: var(--primary);
+  --sanctuary-teal-mid: var(--accent);
+  --sanctuary-teal-soft: rgba(45, 139, 139, 0.08);
   --sanctuary-gold: #C5A059;
-  --sanctuary-coral: #E07A5F;
-  --sanctuary-text: #2C3E50;
-  --sanctuary-muted: #6B7C85;
-  --sanctuary-border: rgba(14, 95, 107, 0.15);
-  --sanctuary-glass: rgba(255, 255, 255, 0.6);
+  --sanctuary-text: var(--text);
+  --sanctuary-muted: var(--muted);
+  --sanctuary-border: var(--border);
 }
 
 .dash {

@@ -54,19 +54,19 @@ export default function TeacherDashboard({ students, onNavigate, teacherName = '
   const priority = getTodayPriority(data);
 
   return (
-    <div style={styles.shell}>
+    <div className="td-shell">
       {/* Header */}
       <div style={{ marginBottom: 16 }}>
-        <h1 style={styles.headline}>Good {timeOfDay()}, {teacherName}.</h1>
-        <p style={styles.sub}>{today}</p>
+        <h1 className="td-headline">Good {timeOfDay()}, {teacherName}.</h1>
+        <p className="td-sub">{today}</p>
       </div>
 
-      <Card className="teacher-priority-card" style={{ ...styles.priorityCard, animation: 'fadeUp 0.3s var(--ease) both', animationDelay: '0ms' }}>
-        <div style={styles.priorityIcon}>{priority.icon}</div>
+      <Card className="td-priority-card" style={{ animation: 'fadeUp 0.3s var(--ease) both', animationDelay: '0ms' }}>
+        <div className="td-priority-icon">{priority.icon}</div>
         <div className="teacher-priority-copy">
-          <div style={styles.priorityKicker}>Today priority</div>
-          <h2 style={styles.priorityTitle}>{priority.title}</h2>
-          <p style={styles.priorityText}>{priority.text}</p>
+          <div className="td-priority-kicker">Today priority</div>
+          <h2 className="td-priority-title">{priority.title}</h2>
+          <p className="td-priority-text">{priority.text}</p>
         </div>
         <Button variant="primary" onClick={() => onNavigate(priority.target, priority.params || {})}>
           {priority.action} <Icon.arrowR size={14} />
@@ -74,7 +74,7 @@ export default function TeacherDashboard({ students, onNavigate, teacherName = '
       </Card>
 
       {/* KPIs */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(130px,1fr))', gap: 8, marginBottom: 14 }}>
+      <div className="td-kpi-grid">
         {[
           { label: 'Students', value: data.stats.students, icon: <Icon.student size={16} /> },
           { label: 'Classes today', value: data.stats.classesToday, icon: <Icon.calendar size={16} />, tone: data.stats.classesToday > 0 ? 'info' : '' },
@@ -92,17 +92,17 @@ export default function TeacherDashboard({ students, onNavigate, teacherName = '
         <Card style={{ padding: 14, animation: 'fadeUp 0.3s var(--ease) both', animationDelay: '80ms' }}>
           <SectionHeader title="Today's Classes" icon={<Icon.calendar size={15} />} action={<Button variant="ghost" size="sm" onClick={() => onNavigate('calendar')}>View calendar</Button>} />
           {data.todayClasses.length === 0 ? (
-            <p style={styles.empty}>No classes scheduled today.</p>
+            <p className="td-empty">No classes scheduled today.</p>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 8 }}>
               {data.todayClasses.map(ev => {
                 const student = students.find(s => s.id === ev.studentId);
                 return (
-                  <div key={ev.id} style={styles.listRow}>
+                  <div key={ev.id} className="td-list-row">
                     <Avatar name={student?.name || '?'} size={28} />
                     <div style={{ flex: 1 }}>
-                      <div style={styles.rowTitle}>{student?.firstName || 'Unknown'} — {ev.title}</div>
-                      <div style={styles.rowSub}>{ev.startTime || '—'} · {ev.classFocus || 'No focus set'}</div>
+                      <div className="td-row-title">{student?.firstName || 'Unknown'} — {ev.title}</div>
+                      <div className="td-row-sub">{ev.startTime || '—'} · {ev.classFocus || 'No focus set'}</div>
                     </div>
                     <Button variant="ghost" size="sm" onClick={() => onNavigate('calendar:class', { classEventId: ev.id })}>Open</Button>
                   </div>
@@ -116,17 +116,17 @@ export default function TeacherDashboard({ students, onNavigate, teacherName = '
         <Card style={{ padding: 14, animation: 'fadeUp 0.3s var(--ease) both', animationDelay: '160ms' }}>
           <SectionHeader title="Classes Needing Diagnosis" icon={<Icon.diagnose size={15} />} action={<Button variant="ghost" size="sm" onClick={() => onNavigate('diagnostics')}>All diagnostics</Button>} />
           {data.needsDiagnosis.length === 0 ? (
-            <p style={styles.empty}>All caught up! No classes awaiting diagnosis.</p>
+            <p className="td-empty">All caught up! No classes awaiting diagnosis.</p>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 8 }}>
               {data.needsDiagnosis.slice(0, 5).map(ev => {
                 const student = students.find(s => s.id === ev.studentId);
                 return (
-                  <div key={ev.id} style={styles.listRow}>
+                  <div key={ev.id} className="td-list-row">
                     <Avatar name={student?.name || '?'} size={28} />
                     <div style={{ flex: 1 }}>
-                      <div style={styles.rowTitle}>{student?.firstName || 'Unknown'}</div>
-                      <div style={styles.rowSub}>{new Date(ev.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })} · {ev.title}</div>
+                      <div className="td-row-title">{student?.firstName || 'Unknown'}</div>
+                      <div className="td-row-sub">{new Date(ev.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })} · {ev.title}</div>
                     </div>
                     <Button variant="primary" size="sm" onClick={() => onNavigate('diagnostics:create', { studentId: ev.studentId, classEventId: ev.id })}>
                       Diagnose
@@ -142,17 +142,17 @@ export default function TeacherDashboard({ students, onNavigate, teacherName = '
         <Card style={{ padding: 14, animation: 'fadeUp 0.3s var(--ease) both', animationDelay: '240ms' }}>
           <SectionHeader title="Submissions Awaiting Review" icon={<Icon.doc size={15} />} action={<Button variant="ghost" size="sm" onClick={() => onNavigate('submissions')}>All submissions</Button>} />
           {data.pendingSubmissions.length === 0 ? (
-            <p style={styles.empty}>No submissions waiting for review.</p>
+            <p className="td-empty">No submissions waiting for review.</p>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 8 }}>
               {data.pendingSubmissions.slice(0, 5).map(sub => {
                 const student = students.find(s => s.id === sub.studentId);
                 return (
-                  <div key={sub.id} style={styles.listRow}>
+                  <div key={sub.id} className="td-list-row">
                     <Avatar name={student?.name || '?'} size={28} />
                     <div style={{ flex: 1 }}>
-                      <div style={styles.rowTitle}>{student?.firstName || 'Unknown'}</div>
-                      <div style={styles.rowSub}>Submitted {new Date(sub.submittedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</div>
+                      <div className="td-row-title">{student?.firstName || 'Unknown'}</div>
+                      <div className="td-row-sub">Submitted {new Date(sub.submittedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</div>
                     </div>
                     <Button variant="primary" size="sm" onClick={() => onNavigate('submissions:review', { submissionId: sub.id })}>Review</Button>
                   </div>
@@ -222,58 +222,27 @@ function getTodayPriority(data) {
 }
 
 function KpiCard({ label, value, icon, tone, onClick }) {
-  const bg = tone === 'warning' ? 'var(--warning-bg)' : tone === 'danger' ? 'var(--danger-bg)' : tone === 'info' ? 'var(--info-bg)' : 'var(--surface)';
+  const cls = ['td-kpi-card', tone ? `td-kpi-card--${tone}` : ''].filter(Boolean).join(' ');
   const fg = tone === 'warning' ? 'var(--warning)' : tone === 'danger' ? 'var(--danger)' : tone === 'info' ? 'var(--info)' : 'var(--accent-deep)';
   return (
-    <Card style={{ padding: '12px 14px', background: bg, cursor: onClick ? 'pointer' : 'default' }} onClick={onClick}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+    <Card className={cls} onClick={onClick}>
+      <div className="td-kpi-card-inner">
         <span style={{ color: fg }}>{icon}</span>
-        <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', flex: 1 }}>{label}</span>
+        <span className="td-kpi-icon">{label}</span>
       </div>
-      <div style={{ fontSize: 'var(--text-xl)', fontWeight: 700, color: fg, marginTop: 2 }}>{value}</div>
+      <div className="td-kpi-value" style={{ color: fg }}>{value}</div>
     </Card>
   );
 }
 
 function QuickAction({ icon, label, onClick }) {
   return (
-    <button onClick={onClick} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)', background: 'var(--surface)', cursor: 'pointer', fontFamily: 'var(--font-ui)', fontSize: 'var(--text-sm)', fontWeight: 500, color: 'var(--text)', textAlign: 'left', transition: 'background 0.15s' }}
-      onMouseEnter={e => e.currentTarget.style.background = 'var(--bg)'}
-      onMouseLeave={e => e.currentTarget.style.background = 'var(--surface)'}
-      onFocus={e => e.currentTarget.style.background = 'var(--bg)'}
-      onBlur={e => e.currentTarget.style.background = 'var(--surface)'}>
-      <span style={{ color: 'var(--accent)' }}>{icon}</span>
+    <button onClick={onClick} className="td-quick-action">
+      <span className="td-quick-action-icon">{icon}</span>
       {label}
-      <Icon.arrowR size={13} style={{ marginLeft: 'auto', color: 'var(--muted)' }} />
+      <Icon.arrowR size={13} className="td-quick-action-arrow" />
     </button>
   );
 }
 
-const styles = {
-  shell: { maxWidth: 1000, margin: '0 auto', padding: '18px 16px' },
-  headline: { fontFamily: 'var(--font-display-serif)', fontSize: 'var(--text-2xl)', fontWeight: 400, color: 'var(--accent-deep)', margin: 0 },
-  sub: { fontSize: 'var(--text-sm)', color: 'var(--muted)', margin: '4px 0 0' },
-  priorityCard: {
-    marginBottom: 12,
-    padding: 14,
-    border: '1.5px solid rgba(45,139,139,0.32)',
-    background: 'linear-gradient(135deg, #ffffff 0%, #f0f8f8 100%)',
-  },
-  priorityIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 'var(--radius-sm)',
-    display: 'grid',
-    placeItems: 'center',
-    background: 'var(--accent-subtle)',
-    color: 'var(--accent-text)',
-    flexShrink: 0,
-  },
-  priorityKicker: { fontSize: 'var(--text-xs)', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--accent-text)' },
-  priorityTitle: { margin: '1px 0 2px', fontSize: 'var(--text-lg)', color: 'var(--accent-deep)', fontWeight: 800 },
-  priorityText: { margin: 0, fontSize: 'var(--text-sm)', color: 'var(--text-2)', lineHeight: 1.5 },
-  empty: { color: 'var(--muted)', fontSize: 'var(--text-sm)', marginTop: 8, fontStyle: 'italic' },
-  listRow: { display: 'flex', alignItems: 'center', gap: 8, padding: '6px 0', borderBottom: '1px solid var(--divider)' },
-  rowTitle: { fontWeight: 600, fontSize: 'var(--text-sm)' },
-  rowSub: { fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: 2 },
-};
+
