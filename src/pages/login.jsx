@@ -1,15 +1,19 @@
 /**
  * login.jsx — MET Proficiency Mastery Login Screen
  *
- * Email + password form with two modes:
- *  - "signin"   — existing users (incl. the teacher) sign in.
+ * Three modes:
+ *  - "signin"   — existing users (incl. the teacher) sign in with password.
  *  - "register" — first-time students set their OWN password (self-register).
- * Both use Supabase Auth; no shared secret, no passwords stored in the bundle.
+ *  - "reset"    — sends a password-reset link via Supabase Recovery API.
  */
 
 import { useState, useEffect } from 'react';
 import { injectGlobalCSS } from '../components/shared.jsx';
-import { signInWithPassword, signUpWithPassword, storeSupabaseSession, getSupabaseConfig } from '../lib/supabase-storage.js';
+import {
+  signInWithPassword, signUpWithPassword,
+  storeSupabaseSession, getSupabaseConfig,
+  resetPasswordForEmail,
+} from '../lib/supabase-storage.js';
 
 const CSS = `
   .lp-root {
@@ -33,12 +37,6 @@ const CSS = `
     pointer-events: none;
   }
   .lp-brand-logo { display: flex; align-items: center; gap: 12px; position: relative; }
-  .lp-brand-logo-badge {
-    width: 38px; height: 38px; border-radius: 10px;
-    background: rgba(255,255,255,.15); border: 1.5px solid rgba(255,255,255,.25);
-    display: grid; place-items: center;
-    font-size: 18px; font-weight: 900; color: #fff; letter-spacing: -.02em;
-  }
   .lp-brand-logo-name { font-size: 15px; font-weight: 800; color: #fff; letter-spacing: .01em; line-height: 1.2; }
   .lp-brand-logo-sub  { font-size: 11px; color: rgba(241,250,238,.7); letter-spacing: .06em; text-transform: uppercase; }
 
@@ -68,17 +66,19 @@ const CSS = `
   }
   .lp-signin-inner { width: min(100%, 420px); max-width: calc(100vw - 48px); min-width: 0; }
 
+  /* Mobile brand header — hidden on desktop, replaces the left panel on mobile */
   .lp-mobile-brand {
     display: none;
-    margin-bottom: 24px;
-    padding-bottom: 18px;
-    border-bottom: 1px solid var(--border);
+    margin-bottom: 28px;
+    padding: 16px 18px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
   }
   .lp-mobile-brand-name {
     display: block;
     font-size: 16px;
     font-weight: 800;
-    color: var(--accent-deep);
+    color: #fff;
     line-height: 1.2;
   }
   .lp-mobile-brand-sub {
@@ -88,7 +88,7 @@ const CSS = `
     font-weight: 700;
     letter-spacing: .06em;
     text-transform: uppercase;
-    color: var(--accent-text);
+    color: rgba(168,218,220,.85);
   }
 
   .lp-greeting { margin-bottom: 36px; }
@@ -116,11 +116,11 @@ const CSS = `
     box-shadow: 0 0 0 3px rgba(29,140,150,.15);
     background: #fff;
   }
-  .lp-input::placeholder { color: #6b8fa0; }
+  .lp-input::placeholder { color: #4d6672; }
 
   .lp-submit {
     width: 100%; padding: 13px; margin-top: 8px;
-    background: var(--accent-deep); color: #fff;
+    background: var(--primary); color: #fff;
     border: none; border-radius: 8px; cursor: pointer;
     font-size: 15px; font-weight: 700; font-family: var(--font-ui);
     letter-spacing: .01em;
@@ -129,7 +129,7 @@ const CSS = `
     box-sizing: border-box; max-width: 100%;
   }
   .lp-submit:hover:not(:disabled) {
-    box-shadow: 0 4px 16px rgba(29,80,86,.3);
+    box-shadow: 0 4px 16px rgba(61,166,166,.4);
     transform: translateY(-1px);
   }
   .lp-submit:active:not(:disabled) { transform: translateY(0); }
@@ -149,6 +149,12 @@ const CSS = `
     font-size: 13px; color: var(--danger); line-height: 1.5;
   }
 
+  .lp-success {
+    margin-top: 16px; padding: 14px 16px; border-radius: 8px;
+    background: var(--success-bg); border: 1px solid var(--success-soft);
+    font-size: 13px; color: var(--success); line-height: 1.6;
+  }
+
   .lp-footer {
     margin-top: 32px; padding-top: 20px; border-top: 1px solid var(--border);
     font-size: 11.5px; color: var(--muted); text-align: center; line-height: 1.6;
@@ -164,6 +170,17 @@ const CSS = `
     cursor: pointer; font-family: var(--font-ui); text-decoration: underline;
   }
   .lp-toggle button:disabled { opacity: .5; cursor: default; }
+
+  .lp-forgot {
+    margin-top: 12px; text-align: center;
+    font-size: 12px; color: var(--muted);
+  }
+  .lp-forgot button {
+    background: none; border: none; padding: 0;
+    font-size: 12px; color: var(--muted); text-decoration: underline;
+    cursor: pointer; font-family: var(--font-ui);
+  }
+  .lp-forgot button:hover { color: var(--accent-deep); }
 
   @media (max-width: 860px) {
     .lp-root { grid-template-columns: 1fr; }
@@ -188,34 +205,50 @@ function injectCSS() {
 }
 
 export default function LoginScreen() {
-  const [mode, setMode] = useState('signin'); // 'signin' | 'register'
+  const [mode, setMode] = useState('signin'); // 'signin' | 'register' | 'reset'
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [resetSent, setResetSent] = useState(false);
   const supabaseReady = getSupabaseConfig().isConfigured;
   const isRegister = mode === 'register';
+  const isReset = mode === 'reset';
 
   useEffect(() => {
     injectGlobalCSS();
     injectCSS();
-    // If resolveAuth rejected an unauthorized account, show why on return to login.
     try {
       const notice = localStorage.getItem('vv:auth_notice');
       if (notice) { setError(notice); localStorage.removeItem('vv:auth_notice'); }
     } catch { /* storage unavailable */ }
   }, []);
 
-  const switchMode = () => {
+  const switchMode = (next) => {
     if (loading) return;
     setError('');
-    setMode(m => (m === 'signin' ? 'register' : 'signin'));
+    setResetSent(false);
+    setMode(next);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (loading) return;
     setError('');
+
+    if (isReset) {
+      if (!email.trim()) { setError('Enter your email address.'); return; }
+      if (!supabaseReady) { setError('Sign-in is not configured. Contact your teacher.'); return; }
+      setLoading(true);
+      try {
+        await resetPasswordForEmail(email.trim(), window.location.origin + window.location.pathname);
+        setResetSent(true);
+      } catch (err) {
+        setError(err.message || 'Could not send reset link. Try again or contact your teacher.');
+      }
+      setLoading(false);
+      return;
+    }
 
     if (!email.trim() || !password.trim()) {
       setError('Please enter your email and password.');
@@ -282,64 +315,96 @@ export default function LoginScreen() {
         <div className="lp-signin-inner">
           <div className="lp-mobile-brand" aria-label="Platform">
             <span className="lp-mobile-brand-name">MET Proficiency Mastery</span>
-            <span className="lp-mobile-brand-sub">Michigan English Test Preparation for Nurses</span>
+            <span className="lp-mobile-brand-sub">Michigan English Test Preparation</span>
           </div>
 
           <div className="lp-greeting">
-            <h1>{isRegister ? 'Create your password' : 'Sign in'}</h1>
+            <h1>
+              {isReset ? 'Reset your password' : isRegister ? 'Create your password' : 'Sign in'}
+            </h1>
             <p>
-              {isRegister
+              {isReset
+                ? "Enter your email and we'll send you a sign-in link."
+                : isRegister
                 ? 'First time here? Enter your email and choose a password to create your account.'
                 : 'Enter the email and password you use for this platform.'}
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} noValidate>
-            <div className="lp-field">
-              <label className="lp-label" htmlFor="lp-email">Email</label>
-              <input
-                id="lp-email"
-                className="lp-input"
-                type="email"
-                autoComplete="email"
-                placeholder="your@email.com"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                disabled={loading}
-                autoFocus
-              />
+          {isReset && resetSent ? (
+            <div className="lp-success" role="status">
+              <strong>Check your inbox.</strong> We sent a sign-in link to <em>{email}</em>. Click it to access your account — the link expires in 1 hour.
             </div>
+          ) : (
+            <form onSubmit={handleSubmit} noValidate>
+              <div className="lp-field">
+                <label className="lp-label" htmlFor="lp-email">Email</label>
+                <input
+                  id="lp-email"
+                  className="lp-input"
+                  type="email"
+                  autoComplete="email"
+                  placeholder="your@email.com"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  disabled={loading}
+                  autoFocus
+                />
+              </div>
 
-            <div className="lp-field">
-              <label className="lp-label" htmlFor="lp-password">Password</label>
-              <input
-                id="lp-password"
-                className="lp-input"
-                type="password"
-                autoComplete={isRegister ? 'new-password' : 'current-password'}
-                placeholder={isRegister ? 'Choose a password (min. 6 characters)' : '••••••••••••••'}
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                disabled={loading}
-              />
-            </div>
+              {!isReset && (
+                <div className="lp-field">
+                  <label className="lp-label" htmlFor="lp-password">Password</label>
+                  <input
+                    id="lp-password"
+                    className="lp-input"
+                    type="password"
+                    autoComplete={isRegister ? 'new-password' : 'current-password'}
+                    placeholder={isRegister ? 'Choose a password (min. 6 characters)' : '••••••••••••••'}
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    disabled={loading}
+                  />
+                </div>
+              )}
 
-            <button type="submit" className="lp-submit" disabled={loading}>
-              {loading
-                ? <><span className="lp-spinner" /> {isRegister ? 'Creating account…' : 'Signing in…'}</>
-                : (isRegister ? 'Create account' : 'Sign in')}
-            </button>
-          </form>
+              <button type="submit" className="lp-submit" disabled={loading}>
+                {loading
+                  ? <><span className="lp-spinner" />{isReset ? 'Sending…' : isRegister ? 'Creating account…' : 'Signing in…'}</>
+                  : isReset ? 'Send link' : isRegister ? 'Create account' : 'Sign in'}
+              </button>
+            </form>
+          )}
 
           {error && (
             <div className="lp-error" role="alert" aria-live="polite">{error}</div>
           )}
 
+          {!isReset && !isRegister && (
+            <div className="lp-forgot">
+              <button type="button" onClick={() => switchMode('reset')} disabled={loading}>
+                Forgot password?
+              </button>
+            </div>
+          )}
+
           <div className="lp-toggle">
-            {isRegister ? 'Already have an account?' : 'First time here?'}
-            <button type="button" onClick={switchMode} disabled={loading}>
-              {isRegister ? 'Sign in' : 'Create your password'}
-            </button>
+            {isReset ? (
+              <>
+                Remember it?
+                <button type="button" onClick={() => switchMode('signin')} disabled={loading}>Sign in</button>
+              </>
+            ) : isRegister ? (
+              <>
+                Already have an account?
+                <button type="button" onClick={() => switchMode('signin')} disabled={loading}>Sign in</button>
+              </>
+            ) : (
+              <>
+                First time here?
+                <button type="button" onClick={() => switchMode('register')} disabled={loading}>Create your password</button>
+              </>
+            )}
           </div>
 
           <div className="lp-footer">

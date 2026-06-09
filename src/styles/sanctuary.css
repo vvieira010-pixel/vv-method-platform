@@ -79,15 +79,42 @@
 }
 
 .student-hero {
+  position: relative;
+  overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 24px 0;
-  border-bottom: 1px solid var(--sanctuary-border);
+  padding: 32px 28px;
+  border-radius: 16px;
+  margin-bottom: 20px;
+  background:
+    radial-gradient(ellipse at 80% -10%, rgba(197,160,89,0.12) 0%, transparent 55%),
+    radial-gradient(ellipse at -10% 120%, rgba(14,95,107,0.1) 0%, transparent 50%),
+    var(--sanctuary-parchment);
+}
+
+.student-hero::before {
+  content: '';
+  position: absolute;
+  top: -60px; right: -60px;
+  width: 220px; height: 220px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(197,160,89,0.18);
+  pointer-events: none;
+}
+
+.student-hero::after {
+  content: '';
+  position: absolute;
+  top: -20px; right: -20px;
+  width: 120px; height: 120px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(197,160,89,0.25);
+  pointer-events: none;
 }
 
 .student-hero h1 {
-  font-family: var(--font-display);
+  font-family: var(--font-display-serif);
   font-size: 2.45rem;
   color: var(--sanctuary-teal-deep);
   margin: 8px 0;
@@ -360,7 +387,8 @@
     align-items: flex-start;
     flex-direction: column;
     gap: 12px;
-    padding: 16px 0;
+    padding: 20px 16px;
+    margin-bottom: 14px;
   }
 
   .student-hero h1 {

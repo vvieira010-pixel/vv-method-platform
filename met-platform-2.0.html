@@ -1,0 +1,1290 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MET Proficiency Mastery 2.0</title>
+  <style>
+    :root {
+      --navy: #0f1b2d;
+      --navy-2: #172437;
+      --teal: #148891;
+      --teal-dark: #0f6b73;
+      --mint: #e7f6f3;
+      --mist: #f5f8fa;
+      --line: #d7e3e8;
+      --slate: #52687a;
+      --ink: #071527;
+      --white: #ffffff;
+      --amber: #c86607;
+      --shadow: 0 16px 36px rgba(15, 27, 45, 0.12);
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--mist);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      letter-spacing: 0;
+    }
+
+    button, select, textarea, input {
+      font: inherit;
+      letter-spacing: 0;
+    }
+
+    button {
+      border: 0;
+      cursor: pointer;
+    }
+
+    .shell { min-height: 100vh; }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      display: grid;
+      grid-template-columns: minmax(240px, 1.1fr) minmax(420px, 2fr) auto;
+      gap: 14px;
+      align-items: center;
+      padding: 12px 18px;
+      background: rgba(255, 255, 255, 0.95);
+      border-bottom: 1px solid var(--line);
+      backdrop-filter: blur(10px);
+    }
+
+    .brand {
+      display: grid;
+      grid-template-columns: 42px 1fr;
+      gap: 12px;
+      align-items: center;
+      min-width: 0;
+    }
+
+    .logo {
+      width: 42px;
+      height: 42px;
+      display: grid;
+      place-items: center;
+      border-radius: 8px;
+      background: var(--navy);
+      color: var(--white);
+      font-weight: 900;
+      box-shadow: 0 8px 18px rgba(15, 27, 45, 0.18);
+    }
+
+    .brand strong {
+      display: block;
+      font-size: 15px;
+      line-height: 1.08;
+      color: var(--navy);
+    }
+
+    .brand span {
+      display: block;
+      margin-top: 3px;
+      color: #7b8da0;
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: 1.8px;
+      text-transform: uppercase;
+    }
+
+    .nav-wrap {
+      min-width: 0;
+      overflow-x: auto;
+      padding-bottom: 2px;
+    }
+
+    .nav {
+      display: flex;
+      gap: 6px;
+      min-width: max-content;
+      align-items: center;
+      padding: 4px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #eef4f6;
+    }
+
+    .nav button {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      min-height: 34px;
+      padding: 8px 12px;
+      border-radius: 7px;
+      background: transparent;
+      color: #66798c;
+      font-size: 12px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .nav button.active {
+      background: var(--navy);
+      color: var(--white);
+      box-shadow: 0 6px 14px rgba(15, 27, 45, 0.18);
+    }
+
+    .right-tools {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      justify-content: flex-end;
+    }
+
+    .role-pill {
+      min-width: 142px;
+      padding: 7px 16px;
+      border: 1px solid #bfdde0;
+      border-radius: 999px;
+      background: var(--mint);
+      color: var(--teal-dark);
+      font-size: 10px;
+      font-weight: 900;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      text-align: center;
+    }
+
+    .export-btn {
+      min-height: 42px;
+      padding: 9px 18px;
+      border-radius: 9px;
+      background: var(--navy);
+      color: var(--white);
+      font-size: 11px;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+
+    .mobile-select {
+      display: none;
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--white);
+      color: var(--navy);
+      font-weight: 800;
+    }
+
+    main {
+      width: min(1280px, 100%);
+      margin: 0 auto;
+      padding: 18px;
+    }
+
+    .page {
+      display: grid;
+      gap: 18px;
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 2fr) minmax(320px, 0.95fr);
+      gap: 24px;
+      align-items: stretch;
+    }
+
+    .hero-panel {
+      min-height: 320px;
+      padding: 36px 32px 24px;
+      background: var(--white);
+      border: 1px solid var(--line);
+      border-radius: 0 0 14px 14px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .hero-panel h1 {
+      max-width: 780px;
+      margin: 0;
+      color: var(--ink);
+      font-size: clamp(34px, 4.4vw, 58px);
+      line-height: 1.03;
+      letter-spacing: 0;
+    }
+
+    .hero-panel p {
+      max-width: 760px;
+      margin: 22px 0 0;
+      color: var(--slate);
+      font-size: 17px;
+      line-height: 1.65;
+    }
+
+    .metric-row {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(130px, 1fr));
+      gap: 16px;
+      margin-top: 30px;
+    }
+
+    .metric {
+      min-height: 82px;
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #f7fbfb;
+    }
+
+    .metric strong {
+      display: block;
+      color: var(--navy);
+      font-size: 23px;
+      line-height: 1;
+    }
+
+    .metric span {
+      display: block;
+      margin-top: 9px;
+      color: #295d68;
+      font-size: 9px;
+      font-weight: 900;
+      letter-spacing: 1.4px;
+      text-transform: uppercase;
+    }
+
+    .dark-panel {
+      min-height: 320px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 26px;
+      border-radius: 0 0 14px 14px;
+      background: var(--navy-2);
+      color: var(--white);
+      box-shadow: var(--shadow);
+    }
+
+    .dark-panel h2, .dark-panel h3 {
+      margin: 0;
+      color: var(--white);
+      line-height: 1.18;
+    }
+
+    .dark-panel p {
+      color: #c9d7e2;
+      line-height: 1.58;
+    }
+
+    .dark-card {
+      padding: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    .dark-metrics {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      padding-top: 22px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .dark-metrics div {
+      min-height: 64px;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      padding: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.06);
+      font-size: 10px;
+      font-weight: 800;
+      color: #a9bed1;
+      text-transform: uppercase;
+    }
+
+    .dark-metrics strong {
+      display: block;
+      color: var(--white);
+      font-size: 20px;
+      line-height: 1.1;
+    }
+
+    .section-title {
+      margin: 4px 0 0;
+    }
+
+    .section-title h2 {
+      margin: 0;
+      color: var(--navy);
+      font-size: 20px;
+      line-height: 1.2;
+    }
+
+    .section-title p {
+      margin: 6px 0 0;
+      color: var(--slate);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .grid-4 {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .card, .panel {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--white);
+    }
+
+    .card {
+      padding: 18px;
+    }
+
+    .panel {
+      padding: 22px;
+    }
+
+    .card h3, .panel h3 {
+      margin: 0;
+      color: var(--navy);
+      font-size: 16px;
+      line-height: 1.25;
+    }
+
+    .card p, .panel p, .muted {
+      color: var(--slate);
+      line-height: 1.55;
+    }
+
+    .eyebrow {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--teal);
+      font-size: 10px;
+      font-weight: 900;
+      letter-spacing: 1.7px;
+      text-transform: uppercase;
+    }
+
+    .number-badge {
+      width: 32px;
+      height: 32px;
+      display: grid;
+      place-items: center;
+      margin-bottom: 24px;
+      border-radius: 7px;
+      background: var(--navy);
+      color: var(--white);
+      font-weight: 900;
+    }
+
+    .unit-grid {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .unit-card {
+      min-height: 152px;
+      text-align: left;
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--white);
+      color: var(--ink);
+      transition: transform 120ms ease, border-color 120ms ease, box-shadow 120ms ease;
+    }
+
+    .unit-card:hover,
+    .unit-card.active {
+      transform: translateY(-1px);
+      border-color: #85c7cb;
+      box-shadow: 0 12px 24px rgba(20, 136, 145, 0.12);
+    }
+
+    .unit-card strong {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--navy);
+      font-size: 14px;
+      line-height: 1.25;
+    }
+
+    .unit-card span {
+      display: block;
+      color: var(--slate);
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .pill-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      min-height: 26px;
+      padding: 5px 9px;
+      border: 1px solid #cde1e5;
+      border-radius: 999px;
+      background: #f6fbfb;
+      color: #315f68;
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    .pill.dark {
+      border-color: rgba(255, 255, 255, 0.18);
+      background: rgba(255, 255, 255, 0.08);
+      color: #dceef0;
+    }
+
+    .tabbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 8px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #eef4f6;
+    }
+
+    .tabbar button {
+      min-height: 36px;
+      padding: 8px 12px;
+      border-radius: 7px;
+      background: transparent;
+      color: #5f7385;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .tabbar button.active {
+      background: var(--navy);
+      color: var(--white);
+    }
+
+    .split {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(290px, 0.75fr);
+      gap: 16px;
+      align-items: start;
+    }
+
+    .reading-text {
+      white-space: pre-line;
+      color: #263f53;
+      line-height: 1.75;
+      font-size: 15px;
+    }
+
+    .dialogue {
+      display: grid;
+      gap: 10px;
+    }
+
+    .line {
+      display: grid;
+      grid-template-columns: 130px 1fr;
+      gap: 12px;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: #fbfdfe;
+    }
+
+    .line b {
+      color: var(--teal-dark);
+      font-size: 12px;
+      text-transform: uppercase;
+    }
+
+    .line p {
+      margin: 0;
+      color: #243b50;
+      line-height: 1.55;
+    }
+
+    .question-list {
+      display: grid;
+      gap: 12px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .question {
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fbfdfe;
+    }
+
+    .question h4 {
+      margin: 0 0 10px;
+      color: var(--navy);
+      font-size: 14px;
+      line-height: 1.35;
+    }
+
+    .options {
+      display: grid;
+      gap: 7px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .options li {
+      padding: 9px 10px;
+      border: 1px solid #dce8ec;
+      border-radius: 7px;
+      color: #31495d;
+      background: var(--white);
+      font-size: 13px;
+    }
+
+    .options li.correct {
+      border-color: #99d2c7;
+      background: var(--mint);
+      color: #0d5a5e;
+      font-weight: 800;
+    }
+
+    .explanation {
+      margin: 10px 0 0;
+      color: var(--slate);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .vocab-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .vocab-card {
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fbfdfe;
+    }
+
+    .vocab-card strong {
+      display: block;
+      color: var(--navy);
+      margin-bottom: 7px;
+    }
+
+    .vocab-card p {
+      margin: 0;
+      color: var(--slate);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .note {
+      padding: 14px;
+      border-left: 4px solid var(--teal);
+      background: #eff8f8;
+      color: #315d66;
+      line-height: 1.55;
+    }
+
+    .teacher-note {
+      border-left-color: var(--amber);
+      background: #fff7ed;
+      color: #6d3b0d;
+    }
+
+    .status-line {
+      display: grid;
+      gap: 10px;
+    }
+
+    .bar {
+      height: 10px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: #dde9ed;
+    }
+
+    .bar span {
+      display: block;
+      height: 100%;
+      background: linear-gradient(90deg, var(--teal), #6bbfb0);
+    }
+
+    .approval-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      margin-top: 14px;
+    }
+
+    .primary-btn, .ghost-btn {
+      min-height: 38px;
+      padding: 9px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .primary-btn {
+      background: var(--navy);
+      color: var(--white);
+    }
+
+    .ghost-btn {
+      border: 1px solid var(--line);
+      background: var(--white);
+      color: var(--navy);
+    }
+
+    .textarea {
+      width: 100%;
+      min-height: 112px;
+      resize: vertical;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      color: var(--navy);
+      background: #fbfdfe;
+    }
+
+    .inventory {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .inventory div {
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fbfdfe;
+    }
+
+    .inventory strong {
+      display: block;
+      color: var(--navy);
+      font-size: 20px;
+    }
+
+    .inventory span {
+      color: var(--slate);
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    footer {
+      width: min(1280px, 100%);
+      margin: 0 auto;
+      padding: 0 18px 24px;
+      color: #7f91a1;
+      font-size: 12px;
+    }
+
+    @media (max-width: 1100px) {
+      .topbar {
+        grid-template-columns: 1fr;
+      }
+
+      .right-tools {
+        justify-content: flex-start;
+      }
+
+      .hero-grid,
+      .split {
+        grid-template-columns: 1fr;
+      }
+
+      .unit-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .grid-4,
+      .grid-3 {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 720px) {
+      main {
+        padding: 12px;
+      }
+
+      .topbar {
+        padding: 10px 12px;
+      }
+
+      .nav-wrap {
+        display: none;
+      }
+
+      .mobile-select {
+        display: block;
+      }
+
+      .hero-panel {
+        min-height: auto;
+        padding: 24px 18px;
+      }
+
+      .hero-panel h1 {
+        font-size: 34px;
+      }
+
+      .metric-row,
+      .dark-metrics,
+      .grid-2,
+      .grid-3,
+      .grid-4,
+      .unit-grid,
+      .vocab-grid,
+      .inventory {
+        grid-template-columns: 1fr;
+      }
+
+      .line {
+        grid-template-columns: 1fr;
+      }
+
+      .right-tools {
+        display: grid;
+        grid-template-columns: 1fr;
+        align-items: stretch;
+      }
+
+      .role-pill,
+      .export-btn {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="logo">MET</div>
+        <div>
+          <strong>MET Proficiency<br>Mastery 2.0</strong>
+          <span>Interactive Michigan English Test Preparation</span>
+        </div>
+      </div>
+      <div class="nav-wrap">
+        <nav class="nav" id="nav"></nav>
+      </div>
+      <div class="right-tools">
+        <select class="mobile-select" id="mobileNav" aria-label="Choose page"></select>
+        <div class="role-pill">Clinician Portal</div>
+        <button class="export-btn" data-page="teacher">Teacher Review</button>
+      </div>
+    </header>
+
+    <main id="content"></main>
+    <footer>
+      File 2.0 keeps the original platform separate and packages the imported practice-course structure into one standalone HTML file.
+    </footer>
+  </div>
+
+  <script id="course-data" type="application/json">{"units":[{"id":1,"title":"Unit 1: Hotel Calm Check-In","theme":"Accommodation & Arrival","difficulty":"B1+ CEFR","reading":{"title":"A Calm Check-In","difficulty":"B1+","focus":"scanning, detailed comprehension, inference","text":"Maya arrived at the hotel just after 9 p.m. after a long day of travel. She had planned to go straight to bed, but the receptionist explained that the hotel café was still open for another thirty minutes. Maya asked for a quiet room because she had an online meeting early the next morning. The receptionist checked the system and moved her from a room near the elevator to one on the fourth floor, facing the garden. Before going upstairs, Maya bought a sandwich and a bottle of water from the café. She felt tired, but she was relieved that the first evening of her trip had become easier than expected.","questions":[{"id":1,"question":"Why did Maya ask for a quiet room?","options":["She disliked elevators.","She had an early online meeting.","She wanted to sleep late.","She was traveling with children."],"correctAnswer":1,"explanation":"The text says: 'Maya asked for a quiet room because she had an online meeting early the next morning.'"},{"id":2,"question":"The hotel café was already closed when Maya arrived.","options":["True","False"],"correctAnswer":1,"explanation":"The hotel café was open for another thirty minutes when she arrived."},{"id":3,"question":"What did the receptionist do to help Maya?","options":["Booked a taxi for her","Changed her room","Carried her luggage","Prepared dinner"],"correctAnswer":1,"explanation":"The receptionist moved her from a room near the elevator to one on the fourth floor, facing the garden."},{"id":4,"question":"How did Maya probably feel at the end of the passage?","options":["More relaxed","Angry with the hotel","Confused about her booking","Worried about money"],"correctAnswer":0,"explanation":"At the end, Maya felt 'relieved that the first evening of her trip had become easier than expected.'"},{"id":5,"question":"Where was Maya's new room facing?","options":["The street","The elevator","The garden","The café"],"correctAnswer":2,"explanation":"The receptionist moved her to a room 'facing the garden.'"}],"teachingNote":"Use this as a gentle first reading task. Ask students to underline time references and hotel-service vocabulary."},"listening":{"title":"Hotel Check-In with a Room Request","difficulty":"B1+","type":"Conversation","script":[{"id":1,"speaker":"Receptionist","text":"Good evening. Welcome to River View Hotel. How can I help you?"},{"id":2,"speaker":"Guest","text":"Hi, I have a reservation under Daniel Costa."},{"id":3,"speaker":"Receptionist","text":"Let me check. Yes, one single room for two nights."},{"id":4,"speaker":"Guest","text":"That's right. I also requested a quiet room because I have an online meeting tomorrow morning."},{"id":5,"speaker":"Receptionist","text":"I see the note here. We can give you a room on the fifth floor, away from the elevator."},{"id":6,"speaker":"Guest","text":"That would be perfect. Is breakfast included?"},{"id":7,"speaker":"Receptionist","text":"Yes, breakfast is served from seven to ten. The gym opens at six if you want to exercise before your meeting."},{"id":8,"speaker":"Guest","text":"Great. I'll probably use it tomorrow."},{"id":9,"speaker":"Receptionist","text":"Here is your key card. Enjoy your stay."}],"questions":[{"id":1,"question":"How long is Daniel Costa staying?","options":["One night","Two nights","Three nights","Four nights"],"correctAnswer":1,"explanation":"The receptionist confirms 'one single room for two nights.'"},{"id":2,"question":"Why does Daniel Costa want a quiet room?","options":["He needs to sleep in late.","He has an online meeting tomorrow morning.","He dislikes traffic noise.","He wants to study vocabulary."],"correctAnswer":1,"explanation":"Daniel mentions: 'I also requested a quiet room because I have an online meeting tomorrow morning.'"},{"id":3,"question":"What time does the gym open?","options":["5:00 a.m.","6:00 a.m.","7:00 a.m.","8:00 a.m."],"correctAnswer":1,"explanation":"The receptionist explicitly states: 'The gym opens at six.'"}],"preListening":"Ask: What do people usually request when checking in at a hotel?","postListening":"Role-play a hotel check-in and make one lifestyle-related request."},"vocabulary":{"title":"Accommodation Target","difficulty":"B1+","type":"matching","items":[{"phrase":"reception","definition":"the front desk area in a hotel","example":"Check in with the host at the reception."},{"phrase":"reservation","definition":"an arrangement to keep a room or table for you","example":"We have a dinner reservation under Daniel Costa."},{"phrase":"key card","definition":"a plastic card used to open a hotel room","example":"Put the key card near the door reader to unlock."},{"phrase":"elevator","definition":"a machine that carries people between floors","example":"The elevator takes you to the fifth floor."},{"phrase":"lobby","definition":"the entrance area of a hotel","example":"Let's meet in the lobby before going out."},{"phrase":"available","definition":"free or ready to be used","example":"Is the quiet room available tonight?"},{"phrase":"included","definition":"part of the price or service","example":"Is fresh breakfast included with the room?"},{"phrase":"quiet room","definition":"a room away from noise","example":"They checked into a quiet room facing the garden."}],"matchingGame":[{"phrase":"reception","definition":"the front desk area in a hotel"},{"phrase":"reservation","definition":"an arrangement to keep a room/table"},{"phrase":"key card","definition":"a plastic card used to open a room"},{"phrase":"elevator","definition":"a machine carrying people between floors"},{"phrase":"lobby","definition":"the entrance area of a hotel"},{"phrase":"available","definition":"free or ready to be used"},{"phrase":"included","definition":"part of the price or service"},{"phrase":"quiet room","definition":"a room situated away from noise"}],"teachingNote":"Focus on hotel-service vocabulary. Have pupils practice matching words with definitions."},"grammar":{"title":"Present Simple vs Present Continuous","difficulty":"B1+","focus":"Routines and temporary situations","examples":["I usually walk to work.","This week I am staying at a hotel."],"questions":[{"id":1,"sentence":"I usually ___ breakfast at home.","verb":"have","options":["have","am having","haves","had"],"correctAnswer":0,"explanation":"Present simple is used for habitual routines (indicated by 'usually')."},{"id":2,"sentence":"This week, she ___ in a rented apartment.","verb":"stay","options":["stays","is staying","stay","stayed"],"correctAnswer":1,"explanation":"Present continuous is used for temporary situations occurring around now (indicated by 'This week')."},{"id":3,"sentence":"They ___ yoga every Monday.","verb":"do","options":["do","are doing","does","done"],"correctAnswer":0,"explanation":"Present simple is used for recurrent routines (indicated by 'every Monday')."},{"id":4,"sentence":"We ___ for a quiet café right now.","verb":"look","options":["are looking","look","looks","is looking"],"correctAnswer":0,"explanation":"Present continuous is used for actions happening at the exact moment of speaking ('right now')."},{"id":5,"sentence":"He often ___ his phone before bed.","verb":"check","options":["checks","is checking","check","checking"],"correctAnswer":0,"explanation":"Present simple is correct for regular habits (indicated by 'often')."}]},"speaking":{"title":"Describe a Hotel Check-In Scene","difficulty":"B1+","mode":"individual","setup":"Show the hotel reception image from Reading Exercise 1","timing":"Preparation: 30 seconds. Speaking: 60 seconds.","instructions":"Describe the picture. Say where the people are, what they are doing, and how they probably feel.","followUp":["Have you ever had a difficult check-in experience?","What makes a hotel stay comfortable?"],"targetLanguage":["There is / There are...","...seems to be...","...might be...","probably","in the background..."],"teachingNote":"Push students beyond listing objects: action + inference + reason."},"writing":{"title":"Informal Email: A Short Trip","difficulty":"B1+","genre":"informal email","wordCount":"80-120 words","prompt":"Write an email to a friend about a short trip you recently took. Mention where you stayed, what you did, and one thing you would do differently next time.","criteria":["Use past tenses correctly","Organize ideas clearly","Include at least one feeling or opinion"],"teachingNote":"Good first writing task after Reading."}},{"id":2,"title":"Unit 2: Perfect Weekend Apartment","theme":"Reviews & Recommendations","difficulty":"B1+ CEFR","reading":{"title":"A Review of a Weekend Apartment","difficulty":"B1+","focus":"skimming, opinion recognition","text":"We stayed in a small apartment near the river for two nights. The location was excellent because we could walk to cafés, museums, and a weekend market. The apartment was clean and bright, although the kitchen was smaller than it looked in the photos. The host sent clear instructions before we arrived, so check-in was simple. At night, the street was a little noisy, especially on Saturday, but closing the windows helped. I would recommend this place to travelers who want to explore the city on foot and do not mind a lively neighborhood.","questions":[{"id":1,"question":"What is the main purpose of the text?","options":["To complain formally","To review accommodation","To advertise a museum","To explain transport rules"],"correctAnswer":1,"explanation":"The text reviews a stay at an apartment, highlighting location, setup, noise, and recommendations."},{"id":2,"question":"The reviewer says the kitchen was bigger than expected.","options":["True","False"],"correctAnswer":1,"explanation":"The reviewer explicitly mentions the kitchen was 'smaller than it looked in the photos.'"},{"id":3,"question":"Who would probably enjoy this apartment most?","options":["Travelers who want a quiet countryside stay","Travelers who like walking around the city","People who need a large kitchen","Families who need total silence"],"correctAnswer":1,"explanation":"The author recommends it 'to travelers who want to explore the city on foot.'"},{"id":4,"question":"The reviewer's overall opinion is...","options":["mostly positive","completely negative","unclear","angry"],"correctAnswer":0,"explanation":"The reviewer offers recommendation, lists mostly good benefits, and concludes positive."}],"teachingNote":"Good for distinguishing main idea from supporting details."},"listening":{"title":"Directions to a Healthy Café","difficulty":"B1+","type":"Conversation","script":[{"id":1,"speaker":"Tourist","text":"Excuse me, is there a healthy café near here?"},{"id":2,"speaker":"Local","text":"Yes, there's one called Green Corner. It's about ten minutes away on foot."},{"id":3,"speaker":"Tourist","text":"Great. How do I get there?"},{"id":4,"speaker":"Local","text":"Walk straight along this street until you see the public library. Turn left there, and keep walking for two blocks. The café is next to a bike shop."},{"id":5,"speaker":"Tourist","text":"Is it expensive?"},{"id":6,"speaker":"Local","text":"Not really. They have lunch bowls, smoothies, and soup. It's popular with students and office workers, so it can get crowded after twelve thirty."},{"id":7,"speaker":"Tourist","text":"Maybe I'll go now, then."},{"id":8,"speaker":"Local","text":"Good idea. If you arrive before noon, you'll probably find a table."}],"questions":[{"id":1,"question":"How far away is the café on foot?","options":["About five minutes","About ten minutes","About twenty minutes","About half an hour"],"correctAnswer":1,"explanation":"The local says 'It's about ten minutes away on foot.'"},{"id":2,"question":"What is the café next to?","options":["A public library","A park","A bike shop","A gym"],"correctAnswer":2,"explanation":"The local says: 'The café is next to a bike shop.'"},{"id":3,"question":"When does the café get crowded?","options":["Before noon","After twelve thirty / 12:30","Early morning","Only on Saturday"],"correctAnswer":1,"explanation":"The local warns: 'It can get crowded after twelve thirty.'"}],"preListening":"Students predict café vocabulary: smoothie, bowl, crowded, table.","postListening":"Students give directions from school/home to a healthy place nearby."},"vocabulary":{"title":"Healthy Food Options","difficulty":"B1+","type":"fill_in_the_blank","items":[{"phrase":"whole-grain","definition":"made with the complete grain of wheat or other cereals","example":"I prefer whole-grain bread."},{"phrase":"vegetarian","definition":"not containing meat or fish products","example":"The pasta dish is completely vegetarian."},{"phrase":"dairy-free","definition":"not containing any milk, butter, or cheese products","example":"This vegetable soup is dairy-free."},{"phrase":"smoothie","definition":"a thick drink made with fruit, vegetables, and yogurt or milk","example":"She ordered a strawberry and spinach smoothie."},{"phrase":"portion","definition":"an amount of food served to one person","example":"A healthy portion of vegetables is crucial."},{"phrase":"balanced meal","definition":"a meal containing different food groups in correct quantities","example":"A balanced meal contains proteins and fibers."},{"phrase":"fresh","definition":"recently made, gathered, or picked; not preserved","example":"These apples are fresh from the garden."},{"phrase":"ingredient","definition":"one of the substances that are combined to make a dish","example":"What is the primary ingredient in this sauce?"}],"matchingGame":[{"phrase":"whole-grain","definition":"made with the complete grain"},{"phrase":"vegetarian","definition":"not containing meat or fish"},{"phrase":"dairy-free","definition":"not containing any milk products"},{"phrase":"smoothie","definition":"a thick drink made with blended fruits"},{"phrase":"portion","definition":"an amount of food served to one person"},{"phrase":"balanced meal","definition":"a meal containing different food groups"},{"phrase":"fresh","definition":"recently made, gathered, or picked"},{"phrase":"ingredient","definition":"a substance used to make a dish"}],"teachingNote":"Review food adjectives. Excellent for meals planning."},"grammar":{"title":"Past Simple vs Past Continuous","difficulty":"B1+","focus":"Travel experiences and interrupting events","examples":["I was waiting at reception when my friend arrived.","We missed the bus yesterday."],"questions":[{"id":1,"sentence":"I ___ dinner when the hotel called.","verb":"have","options":["was having","had","am having","were having"],"correctAnswer":0,"explanation":"Continuous aspect describes an ongoing background action interrupted by a shorter simple past action."},{"id":2,"sentence":"She ___ her suitcase at the airport.","verb":"lose","options":["lost","was losing","loses","loosing"],"correctAnswer":0,"explanation":"Completed past simple is correct for a sudden singular event in the past."},{"id":3,"sentence":"We ___ to the market when it started raining.","verb":"walk","options":["were walking","walked","was walking","are walking"],"correctAnswer":0,"explanation":"Continuous format is crucial since walking was ongoing when the rain started."},{"id":4,"sentence":"They ___ a great café last weekend.","verb":"find","options":["found","were finding","finded","find"],"correctAnswer":0,"explanation":"Past simple indicates completed past event specified by time ('last weekend')."},{"id":5,"sentence":"He ___ when the announcement started.","verb":"sleep","options":["was sleeping","slept","is sleeping","sleeping"],"correctAnswer":0,"explanation":"Ongoing past action uses Past Continuous."}]},"speaking":{"title":"Recommend a Healthy Restaurant","difficulty":"B1+","mode":"pair work","setup":"Student A is a visitor; Student B is a local resident.","timing":"Preparation: 2 minutes. Role-play: 3 minutes.","instructions":"Recommend a café, park, gym, market, or walking route. Explain where it is, why it is good, and who would enjoy it.","followUp":["What places in a city support a healthy lifestyle?","Are healthy options usually expensive?"],"targetLanguage":["I'd recommend...","It's suitable for...","The best thing about it is...","You should try..."],"teachingNote":"Useful for real-world recommendation language."},"writing":{"title":"Restaurant Review","difficulty":"B1+","genre":"review","wordCount":"100-140 words","prompt":"Write a review of a café or restaurant that supports a healthy lifestyle. Describe the food, atmosphere, service, and whether you would recommend it.","criteria":["Use descriptive adjectives","Give clear reasons for your opinion","Mention at least one positive and one negative point"],"teachingNote":"Connect to food vocabulary and comparative language."}},{"id":3,"title":"Unit 3: Mid-Mountain Health Retreat","theme":"Retreats & Reservations","difficulty":"B1+ CEFR","reading":{"title":"A Health Retreat in the Mountains","difficulty":"B1+","focus":"detailed comprehension, vocabulary in context","text":"The three-day mountain retreat is designed for people who want a short break from busy routines. Each morning begins with light stretching and a guided walk through the forest. After breakfast, guests can join workshops on stress management, healthy cooking, or sleep habits. The program is flexible, so visitors may skip any activity and spend time reading or resting instead. Meals are included and are made with local vegetables, grains, and fresh fruit. The retreat is not a medical treatment, but many guests say they leave with more energy and a clearer plan for improving their daily lifestyle.","questions":[{"id":1,"question":"What is the retreat mainly for?","options":["Learning extreme sports","Taking a break from busy routines","Receiving medical treatment","Training to become a chef"],"correctAnswer":1,"explanation":"The retreat is 'designed for people who want a short break from busy routines.'"},{"id":2,"question":"Guests must attend every activity.","options":["True","False"],"correctAnswer":1,"explanation":"The text says: 'The program is flexible, so visitors may skip any activity.'"},{"id":3,"question":"Which activity is mentioned in the passage?","options":["Rock climbing","Stress management","Language lessons","Night skiing"],"correctAnswer":1,"explanation":"The text mentions workshops on 'stress management, healthy cooking, or sleep habits.'"},{"id":4,"question":"In the text, 'flexible' means...","options":["expensive","easy to change","very strict","physically difficult"],"correctAnswer":1,"explanation":"'Flexible' indicates that guests do not have rigid mandates (they can swap or skip, so it is easy to change)."}],"teachingNote":"Follow up with a speaking question: Would you join this retreat? Why?"},"listening":{"title":"Making a Dinner Reservation","difficulty":"B1+","type":"Conversation","script":[{"id":1,"speaker":"Host","text":"Good afternoon, Bella Vista Restaurant. How may I help you?"},{"id":2,"speaker":"Caller","text":"Hi, I'd like to book a table for Friday evening."},{"id":3,"speaker":"Host","text":"Of course. How many people?"},{"id":4,"speaker":"Caller","text":"Four. We're celebrating my sister's new job, so we'd like a quiet table if possible."},{"id":5,"speaker":"Host","text":"We have a table at seven or eight thirty."},{"id":6,"speaker":"Caller","text":"Seven is better. Do you have vegetarian options?"},{"id":7,"speaker":"Host","text":"Yes, we have several vegetarian dishes, and we can also prepare meals without dairy if you tell your server."},{"id":8,"speaker":"Caller","text":"That's helpful. One person in our group avoids dairy."},{"id":9,"speaker":"Host","text":"No problem. May I have your name and phone number?"}],"questions":[{"id":1,"question":"What day is the reservation for?","options":["Friday evening","Saturday evening","Sunday lunch","Thursday"],"correctAnswer":0,"explanation":"The caller says 'book a table for Friday evening.'"},{"id":2,"question":"How many people will come?","options":["Two","Four","Five","Six"],"correctAnswer":1,"explanation":"The caller requests a table for 'Four.'"},{"id":3,"question":"What specific dietary exclusion is mentioned by the caller?","options":["Gluten-free","Nut-free","Dairy-free / avoiding dairy","Low sodium"],"correctAnswer":2,"explanation":"The caller says: 'One person in our group avoids dairy.'"}],"preListening":"Ask students what information restaurants need for a reservation.","postListening":"Students create a reservation dialogue with one special request."},"vocabulary":{"title":"Transit & Movement Definitions","difficulty":"B1+","type":"collocation","items":[{"phrase":"commute","definition":"travel regularly between home and work","example":"My daily commute takes thirty minutes."},{"phrase":"delay","definition":"a situation when something happens later than planned","example":"There is a severe delay on the trains."},{"phrase":"route","definition":"the way from one place to another","example":"This is the fastest route to the harbor."},{"phrase":"gate","definition":"the area where passengers board a plane","example":"Please arrive at gate 18 thirty minutes before."},{"phrase":"connection","definition":"a second bus, train, or flight to continue a journey","example":"We nearly missed our train connection."},{"phrase":"traffic","definition":"vehicles moving on public roads","example":"Heavy morning traffic delayed the taxi."},{"phrase":"cancel","definition":"to decide that a planned event will not happen","example":"They had to cancel the outdoor tour due to rain."},{"phrase":"refund","definition":"money returned to a customer","example":"The agency provided a full refund for the ticket."}],"matchingGame":[{"phrase":"commute","definition":"travel regularly between home and work"},{"phrase":"delay","definition":"something happens later than planned"},{"phrase":"route","definition":"the path or way between places"},{"phrase":"gate","definition":"the boarding area for a plane"},{"phrase":"connection","definition":"second transit vehicle to continue"},{"phrase":"traffic","definition":"vehicles on roads"},{"phrase":"cancel","definition":"decide an event will not happen"},{"phrase":"refund","definition":"money returned to a customer"}],"teachingNote":"Focus on collocations related to transportation: 'heavy traffic', 'miss a connection'."},"grammar":{"title":"Present Perfect for Experiences","difficulty":"B1-B2","focus":"Life and travel experiences","examples":["I have stayed in many hostels.","She has never tried a digital detox."],"questions":[{"id":1,"sentence":"I ___ never ___ a wellness retreat.","verb":"try","options":["have / tried","has / tried","did / try","am / trying"],"correctAnswer":0,"explanation":"Present perfect utilizes 'subject + have/has + past participle' for life experiences."},{"id":2,"sentence":"She ___ already ___ the hotel rooms.","verb":"book","options":["has / booked","have / booked","did / book","is / booking"],"correctAnswer":0,"explanation":"'She' requires 'has', plus the past participle form."},{"id":3,"sentence":"We ___ visited this market before.","verb":"not","options":["have not","has not","did not","never"],"correctAnswer":0,"explanation":"'We' takes the helper verb 'have' negative: 'have not'."},{"id":4,"sentence":"Have you ever ___ a connecting flight?","verb":"miss","options":["missed","miss","missing","misses"],"correctAnswer":0,"explanation":"Use past participle 'missed' in the yes/no experience question."},{"id":5,"sentence":"They ___ just ___ from their long trip.","verb":"return","options":["have / returned","has / returned","re-turned","returned"],"correctAnswer":0,"explanation":"'They have just + past participle' is used to express recent events."}]},"speaking":{"title":"Develop a Balanced Weekend Plan","difficulty":"B1+","mode":"presentation","setup":"Students create a balanced weekend including rest, chores, social time, and exercise.","timing":"Preparation: 3 minutes. Speaking: 90 seconds.","instructions":"Present your weekend plan and explain why it is balanced.","followUp":["What would you remove if you became too busy?","Do you prefer planned or spontaneous weekends?"],"targetLanguage":["First, I'm going to...","This helps me because...","I would avoid...","A good balance includes..."],"teachingNote":"Connect to future forms and lifestyle vocabulary."},"writing":{"title":"Travel Itinerary Draft","difficulty":"B1+","genre":"itinerary","wordCount":"80-120 words","prompt":"Create a one-day itinerary for a visitor who wants a relaxing lifestyle experience in your city. Include morning, afternoon, and evening activities.","criteria":["Use appropriate time expressions","Use future forms cleanly","Include practical details (places, times)"],"teachingNote":"Useful for platform submissions with structured format."}},{"id":4,"title":"Unit 4: Airport Announcements","theme":"Airport Wellness & Delays","difficulty":"B1+ CEFR","reading":{"title":"Airport Wellness Announcement","difficulty":"B1+","focus":"scanning, specific information","text":"Attention passengers. During today's delays, the airport is offering free access to the Quiet Zone on Level 2, near Gate 18. This area includes comfortable seats, charging points, and low lighting. Passengers can also join a ten-minute stretching session at 3:00 p.m. and 5:00 p.m. near the information desk. Please remember that food is not allowed inside the Quiet Zone, but bottled water is permitted. Families with small children may prefer the play area opposite Gate 12.","questions":[{"id":1,"question":"Why is the airport offering the Quiet Zone?","options":["Because there are delays","Because flights are canceled forever","Because restaurants are closed","Because Gate 12 is full"],"correctAnswer":0,"explanation":"The text starts: 'During today's delays, the airport is offering free access...'"},{"id":2,"question":"Where is the Quiet Zone located?","options":["Level 1, Gate 12","Level 2, near Gate 18","Opposite the café","Near baggage claim"],"correctAnswer":1,"explanation":"The flyer notes: 'free access to the Quiet Zone on Level 2, near Gate 18.'"},{"id":3,"question":"Passengers can take bottled water into the Quiet Zone.","options":["True","False"],"correctAnswer":0,"explanation":"The text specifies: 'but bottled water is permitted.'"},{"id":4,"question":"What may families with small children prefer?","options":["The play area opposite Gate 12","The stretching session","The information desk","The charging points"],"correctAnswer":0,"explanation":"The final line notes: 'Families with small children may prefer the play area opposite Gate 12.'"}],"teachingNote":"Practice fast scanning: give students 60 seconds to find times and places."},"listening":{"title":"Airport Announcement about Delays","difficulty":"B1-B2","type":"Announcement","script":[{"id":1,"speaker":"Announcer","text":"Attention passengers traveling on Flight 482 to Lisbon. Due to strong winds, boarding will begin approximately forty minutes later than planned."},{"id":2,"speaker":"Announcer","text":"Please remain near Gate 16 and check the screens for updates."},{"id":3,"speaker":"Announcer","text":"Passengers who need assistance should speak to a member of staff at the service desk."},{"id":4,"speaker":"Announcer","text":"The airport lounge is currently full, but free water is available near the gate."},{"id":5,"speaker":"Announcer","text":"If you have a connecting flight, please do not leave the area."},{"id":6,"speaker":"Announcer","text":"Our team will provide updated information as soon as possible. We apologize for the delay and thank you for your patience."}],"questions":[{"id":1,"question":"What caused the delayed boarding?","options":["Heavy rain","Strong winds","Mechanical failure","Staff strike"],"correctAnswer":1,"explanation":"The announcement states: 'Due to strong winds, boarding will begin...'"},{"id":2,"question":"How long is the boarding delay?","options":["Directly canceled","Twenty minutes later","Forty minutes later","Two hours later"],"correctAnswer":2,"explanation":"The boarding will start 'approximately forty minutes later than planned.'"},{"id":3,"question":"What should passengers with connecting flights do?","options":["Leave the gate immediately","Speak to local security","Do not leave the area","Book a hotel room"],"correctAnswer":2,"explanation":"He advises: 'If you have a connecting flight, please do not leave the area.'"}],"preListening":"Students list common airport announcement words.","postListening":"Students write one short airport announcement."},"vocabulary":{"title":"Wellness Activities Vocabulary","difficulty":"B1-B2","type":"fill_in_the_blank","items":[{"phrase":"stretching","definition":"moving muscles gently to make them less tight","example":"Doing 10 minutes of stretching relieves soreness."},{"phrase":"guided walk","definition":"a walk led by someone who explains features of the place","example":"We joined a guided walk in the national park."},{"phrase":"retreat","definition":"a quiet place or event for rest, healing, or personal development","example":"They booked a yoga and diet retreat."},{"phrase":"stress management","definition":"techniques used to control personal stress levels","example":"The class focused on mindful breathing for stress management."},{"phrase":"sleep habits","definition":"behaviors related to sleeping patterns and preparing for bed","example":"Better sleep habits include putting screens away."},{"phrase":"energy","definition":"the strength and vigor required for physical or mental action","example":"Waking up early gives her high cognitive energy."},{"phrase":"routine","definition":"a sequence of actions regularly followed","example":"A morning routine gives you control."},{"phrase":"relaxation","definition":"the state of being free from tension or anxiety","example":"Reading a book brings pure relaxation."}],"matchingGame":[{"phrase":"stretching","definition":"moving muscles to make them less tight"},{"phrase":"guided walk","definition":"a walk led by an expert explaining context"},{"phrase":"retreat","definition":"a quiet place for rest or development"},{"phrase":"stress management","definition":"ways/techniques to control stress levels"},{"phrase":"sleep habits","definition":"behaviors related to sleep patterns"},{"phrase":"energy","definition":"strength required for physical action"},{"phrase":"routine","definition":"regularly followed sequence of actions"},{"phrase":"relaxation","definition":"the state of being free from tension"}],"teachingNote":"Encourage students to group words by 'mental' vs 'physical' wellness categories."},"grammar":{"title":"Future Forms","difficulty":"B1-B2","focus":"Plans, predictions, and arrangements","examples":["I'm going to visit the market. (plan)","I'll call the hotel now. (immediate decision)"],"questions":[{"id":1,"sentence":"We ___ stay near the beach next month.","verb":"plan","options":["are going to","will","stays","stayed"],"correctAnswer":0,"explanation":"Use 'be going to' to specify pre-planned future intentions."},{"id":2,"sentence":"I think the café ___ be crowded at lunch.","verb":"predict","options":["will","is going","being","is"],"correctAnswer":0,"explanation":"Use 'will' for predictions based on general thoughts or beliefs (indicated by 'I think')."},{"id":3,"sentence":"The train is late, so I ___ take a taxi instead.","verb":"decision","options":["will","am going to","taking","was"],"correctAnswer":0,"explanation":"Use 'will' for immediate spontaneous decision made at the moment of speaking."},{"id":4,"sentence":"She ___ meeting the tour guide at 9 a.m.","verb":"arrange","options":["is","will","going to","does"],"correctAnswer":0,"explanation":"Present continuous 'is meeting' denotes pre-arranged fixed appointments."},{"id":5,"sentence":"They ___ probably enjoy the relaxation seminar.","verb":"predict","options":["will","are","going to","not"],"correctAnswer":0,"explanation":"'Probably' is positioned after 'will' to state a likely future prediction."}]},"speaking":{"title":"Collaboratively Solve a Travel Problem","difficulty":"B1-B2","mode":"pair work","setup":"Students receive a problem card: canceled train, lost booking, noisy room, or closed restaurant.","timing":"Preparation: 2 minutes. Role-play: 4 minutes.","instructions":"Discuss the problem, suggest two solutions, choose the best one, and explain your decision.","followUp":["What is more important: saving time or saving money?","How can people stay calm when travel plans change?"],"targetLanguage":["We could...","Another option is...","The problem is that...","I think the best solution is..."],"teachingNote":"Great for modals, negotiation, and decision-making."},"writing":{"title":"Formal Email: Booking Problem","difficulty":"B1-B2","genre":"formal email","wordCount":"120-160 words","prompt":"You stayed at a hotel, but your room was noisy and the Wi-Fi did not work well. Write a formal email to the hotel manager explaining the problem and requesting a solution.","criteria":["Use polite formal language structures","Explain the problem clearly with consequences","Request a reasonable resolution"],"teachingNote":"Practice complaint structure: context → problem → impact → request."}},{"id":5,"title":"Unit 5: Menus & Wellness Lifestyles","theme":"Nutrition & Holiday Choices","difficulty":"B1-B2 CEFR","reading":{"title":"A Smart Lunch Menu","difficulty":"B1-B2","focus":"scanning, comparison","text":"Green Plate Café offers three lunch sets from Monday to Friday. The Energy Bowl includes brown rice, grilled chicken, avocado, and vegetables. The Garden Plate is vegetarian and comes with lentils, roasted carrots, salad, and yogurt sauce. The Quick Soup Set includes vegetable soup, whole-grain bread, and a small fruit cup. Customers who bring a reusable cup receive a discount on coffee or tea. The café is busiest between 12:30 and 1:15, so visitors who want a quieter lunch should arrive before noon or after 1:30.","questions":[{"id":1,"question":"Which lunch key option is fully vegetarian?","options":["Energy Bowl","Garden Plate","Quick Soup Set","Coffee discount"],"correctAnswer":1,"explanation":"The text notes: 'The Garden Plate is vegetarian and comes with lentils...'"},{"id":2,"question":"Customers can get a discount if they bring a reusable cup.","options":["True","False"],"correctAnswer":0,"explanation":"The menu specifies: 'Customers who bring a reusable cup receive a discount...'"},{"id":3,"question":"What block of time is quietest for lunch?","options":["12:45 p.m.","1:00 p.m.","Before noon or after 1:30","12:30 p.m."],"correctAnswer":2,"explanation":"The cafe is busiest 12:30-1:15. For quiet, arrive before noon or after 1:30."},{"id":4,"question":"What comes as part of the Quick Soup Set?","options":["Rice and chicken","Whole-grain bread and a small fruit cup","Avocado and salad","Carrots and tea"],"correctAnswer":1,"explanation":"The Quick Soup Set includes: 'vegetable soup, whole-grain bread, and a small fruit cup.'"}],"teachingNote":"Useful for food vocabulary and making lifestyle recommendations."},"listening":{"title":"Travel Agent and Wellness Holiday","difficulty":"B1-B2","type":"Conversation","script":[{"id":1,"speaker":"Agent","text":"So, what kind of holiday are you looking for?"},{"id":2,"speaker":"Customer","text":"I want to relax, but I don't want to just sit by a pool all day."},{"id":3,"speaker":"Agent","text":"In that case, a wellness holiday might suit you. There's a place by the lake with yoga classes, short hikes, and healthy cooking workshops."},{"id":4,"speaker":"Customer","text":"That sounds interesting. Is it suitable for beginners?"},{"id":5,"speaker":"Agent","text":"Definitely. The activities are gentle, and guests can choose what they want to join."},{"id":6,"speaker":"Customer","text":"I like that. I also need reliable internet because I may have to check work emails."},{"id":7,"speaker":"Agent","text":"The rooms have Wi-Fi, but the program encourages guests to limit screen time."}],"questions":[{"id":1,"question":"What type of holiday does the agent suggest?","options":["Cruise","A wellness holiday","Party weekend","Backpacking expedition"],"correctAnswer":1,"explanation":"The agent explicitly recommends a 'wellness holiday.'"},{"id":2,"question":"What activities are offered at the lakeside site?","options":["Yoga classes, short hikes, and healthy cooking workshops","Surfing, diving, kayaking","Historical museum walks and painting","Tennis camps and bar parties"],"correctAnswer":0,"explanation":"The agent lists: 'yoga classes, short hikes, and healthy cooking workshops.'"},{"id":3,"question":"Why does the customer require internet access?","options":["To stream music","To check work emails","To download books","To video call family"],"correctAnswer":1,"explanation":"The customer explains: 'I also need reliable internet because I may have to check work emails.'"}],"preListening":"Discuss: What makes a holiday relaxing but active?","postListening":"Students recommend a holiday for a busy professional."},"vocabulary":{"title":"Technology & Daily Habits","difficulty":"B1-B2","type":"word_family","items":[{"phrase":"notification","definition":"a message or alert from an app on your smartphone","example":"I disabled every social app notification."},{"phrase":"screen time","definition":"the amount of time spent looking at digital devices","example":"We recorded three hours of screen time."},{"phrase":"device","definition":"an electronic tool like a phone, tablet, or calculator","example":"Keep your digital device out of the bedroom."},{"phrase":"offline","definition":"not connected to the internet","example":"It is peaceful to spend Sunday offline."},{"phrase":"app","definition":"abbreviation for application software","example":"She downloaded a meditation app."},{"phrase":"digital detox","definition":"a set period where a person avoids electronic devices","example":"A weekend digital detox refreshed his focus."},{"phrase":"message","definition":"a written or oral communication sent digitally","example":"He sent a quick voice message."},{"phrase":"settings","definition":"the control adjustments on a phone or program","example":"Adjust active settings to do not disturb."}],"matchingGame":[{"phrase":"notification","definition":"a digital alert or message from an app"},{"phrase":"screen time","definition":"time spent looking at digital displays"},{"phrase":"device","definition":"an electronic tool e.g., smartphone"},{"phrase":"offline","definition":"not connected to the internet"},{"phrase":"app","definition":"mobile application software"},{"phrase":"digital detox","definition":"period spent using technology less"},{"phrase":"message","definition":"communication sent electronically"},{"phrase":"settings","definition":"options controlling a device setup"}],"teachingNote":"Have students discuss their personal screen time limits."},"grammar":{"title":"Modals for Advice and Suggestions","difficulty":"B1-B2","focus":"Lifestyle and habits recommendations","examples":["You should drink more water.","You could try walking after work."],"questions":[{"id":1,"sentence":"You ___ book early because the hotel is very popular.","verb":"advice","options":["should","could","mustn't","would"],"correctAnswer":0,"explanation":"Use 'should' for strong friendly advice or recommendations."},{"id":2,"sentence":"You ___ try a digital detox if notifications stress you.","verb":"suggestion","options":["could","mustn't","shouldn't","must"],"correctAnswer":0,"explanation":"Use 'could' to make gentle, non-authoritative suggestions."},{"id":3,"sentence":"You ___ eat in the Quiet Zone; it is not permitted.","verb":"obligation","options":["mustn't / can't","could","should","might"],"correctAnswer":0,"explanation":"'Mustn't' or 'can't' is correct for prohibition (actions not allowed)."},{"id":4,"sentence":"We ___ take the bus, but a taxi is much faster.","verb":"possibility","options":["could","shouldn't","must","haven't"],"correctAnswer":0,"explanation":"Use 'could' to list one possible option among alternatives."},{"id":5,"sentence":"You ___ talk to reception if your room is too noisy.","verb":"advice","options":["should","mustn't","couldn't","aren't"],"correctAnswer":0,"explanation":"'Should' is appropriate to state the best course of action."}]},"speaking":{"title":"Express Opinion: Weekly Digital Detox","difficulty":"B2-","mode":"individual","setup":"Students respond to an opinion prompt.","timing":"Preparation: 30 seconds. Speaking: 90 seconds.","instructions":"Do you think people should spend one day a week without social media? Give reasons and examples.","followUp":["Would this be realistic for students or workers?","What are the disadvantages of being offline?"],"targetLanguage":["In my opinion...","One reason is that...","On the other hand...","For example..."],"teachingNote":"Train Statement → Reason → Support."},"writing":{"title":"Blog Post: Digital Detox Experience","difficulty":"B2-","genre":"blog post","wordCount":"150-200 words","prompt":"Write a blog post about spending a weekend with limited phone use. Explain what you did, how you felt, and whether you would recommend it.","criteria":["Use engaging narrative language","Reflect clearly on feelings and thoughts","Conclude with a specific recommendation"],"teachingNote":"Encourage linking words: 'at first', 'later', 'by the end'."}},{"id":6,"title":"Unit 6: City Lifestyles & Habits","theme":"Urban Cycling & Routines","difficulty":"B2- CEFR","reading":{"title":"City Cycling Tour","difficulty":"B2-","focus":"detailed comprehension, inference","text":"The City Cycling Tour is a relaxed two-hour ride designed for visitors who want to see everyday life beyond the main tourist streets. The route passes through a public park, a university area, two quiet residential streets, and a small food market. Helmets and bikes are provided, and the guide stops several times for photos and short explanations. Participants should be comfortable riding in light traffic, but the tour avoids busy roads whenever possible. It is not recommended for people who have not ridden a bike recently. In case of heavy rain, the tour is moved to the next morning or fully refunded.","questions":[{"id":1,"question":"What makes the tour different from typical tourist routes?","options":["It focuses on everyday city life","It only visits historical museums","It is performed solely at night","It uses electric scooters"],"correctAnswer":0,"explanation":"The text says it is 'designed for visitors who want to see everyday life beyond the main tourist streets.'"},{"id":2,"question":"Participants need to bring their own helmets.","options":["True","False"],"correctAnswer":1,"explanation":"The text explicitly states: 'Helmets and bikes are provided.'"},{"id":3,"question":"Who should probably avoid this tour?","options":["People who enjoy organic food markets","People comfortable in light traffic","People who have not ridden a bike recently","People who like visiting university campuses"],"correctAnswer":2,"explanation":"The passage notes: 'It is not recommended for people who have not ridden a bike recently.'"},{"id":4,"question":"The tour organizers seem to care about...","options":["speed more than safety","safety and flexibility","luxury shopping opportunities","avoiding all residential zones"],"correctAnswer":1,"explanation":"Providing helmets, avoiding busy roads, and offering flexible rain rescheduling/refunds show care for safety and flexibility."}],"teachingNote":"Ask students to identify risk/safety language."},"listening":{"title":"Interview: Changing Morning Habits","difficulty":"B2-","type":"Interview","script":[{"id":1,"speaker":"Interviewer","text":"Welcome to the podcast. I'm your host, and today we're joined by our special guest. We'll be exploring how changing a morning routine can profoundly impact one's entire day."},{"id":2,"speaker":"Interviewer","text":"To start us off, you changed your morning routine last year. What was the biggest difference?"},{"id":3,"speaker":"Guest","text":"I stopped checking my phone as soon as I woke up. At first, it felt strange because I was used to reading messages in bed."},{"id":4,"speaker":"Interviewer","text":"What do you do instead?"},{"id":5,"speaker":"Guest","text":"I drink water, stretch for five minutes, and write down the three most important things I need to do. You can do this using a digital app, or simply write it in a physical notebook. Focusing on just three tasks is effective for productivity and focus because it prevents overwhelming you and forces you to prioritize what truly matters. It sounds simple, but it helps me start the day calmly."},{"id":6,"speaker":"Interviewer","text":"Did it improve your productivity?"},{"id":7,"speaker":"Guest","text":"Yes, but not magically. I still have busy days. The main benefit is that I feel more in control before other people's messages enter my mind."},{"id":8,"speaker":"Interviewer","text":"Thank you so much for being on the show. For everyone listening, the main benefit we discussed today is that taking charge of your morning helps you feel more in control of your entire day. I encourage you to reflect on your own routines tomorrow morning and see what you could change."}],"questions":[{"id":1,"question":"What habit did the guest abandon?","options":["Skipping early breakfast","Sleeping past eight","Checking the phone immediately after waking up","Stretching in bed"],"correctAnswer":2,"explanation":"The guest stated: 'I stopped checking my phone as soon as I woke up.'"},{"id":2,"question":"What three constructive things does the guest do now?","options":["Checks email, runs, prepares tea","Reads a novel, drinks coffee, exercises","Drinks water, stretches for five minutes, writes down three key tasks","Cleans the room, cooks oatmeal, plans agenda"],"correctAnswer":2,"explanation":"The guest recounts: 'I drink water, stretch for five minutes, and write down the three most important things...'"},{"id":3,"question":"What is described as the primary benefit?","options":["Higher salary","Less workload","Feeling more in control before external messages enter their mind","Zero stressful days"],"correctAnswer":2,"explanation":"The guest says: 'The main benefit is that I feel more in control before other people's messages enter my mind.'"}],"preListening":"Students rank morning habits from healthiest to least healthy.","postListening":"Students describe one habit they would like to change."},"vocabulary":{"title":"City & Community Target","difficulty":"B2-","type":"matching","items":[{"phrase":"neighborhood","definition":"an area of a town or city, and the people who live in it","example":"Our neighborhood organizes cleanups."},{"phrase":"resident","definition":"a person who lives in a particular place","example":"She is a local resident of the old town."},{"phrase":"community","definition":"people living or working together in an area","example":"The organic café serves the entire community."},{"phrase":"inclusive","definition":"open and suitable for many different kinds of people","example":"The walk was extremely inclusive."},{"phrase":"volunteer","definition":"a person who works or helps without being paid","example":"He is a volunteer at the public garden."},{"phrase":"public space","definition":"an area like a park or plaza that anyone can use","example":"Libraries are important public spaces."},{"phrase":"local","definition":"connected to the particular area you are discussing","example":"They buy fresh local ingredients."},{"phrase":"connection","definition":"a relationship or feeling of closeness with others","example":"Walking together fosters a deep social connection."}],"matchingGame":[{"phrase":"neighborhood","definition":"an area of a town or city"},{"phrase":"resident","definition":"a person who lives in a area"},{"phrase":"community","definition":"people living or working together"},{"phrase":"inclusive","definition":"open and suitable for everyone"},{"phrase":"volunteer","definition":"someone who helps without pay"},{"phrase":"public space","definition":"area that anyone can freely use"},{"phrase":"local","definition":"connected to a particular near area"},{"phrase":"connection","definition":"relationship or feeling of closeness"}],"teachingNote":"Ask students to find contrast words: however, still, especially."},"grammar":{"title":"Comparatives and Superlatives","difficulty":"B1-B2","focus":"Comparing lifestyle and routines","examples":["This room is quieter than the first one.","The earliest train is the most convenient."],"questions":[{"id":1,"sentence":"A smaller city is usually ___ than a capital.","verb":"quiet","options":["quieter","more quiet","quietest","the quietest"],"correctAnswer":0,"explanation":"Flat one-syllable adjectives form their comparative using '-er' (quieter)."},{"id":2,"sentence":"This local café is ___ than the one near the train station.","verb":"healthy","options":["healthier","more healthy","healthiest","healthier than"],"correctAnswer":0,"explanation":"Adjectives ending in '-y' change to 'i' and add '-er' (healthier)."},{"id":3,"sentence":"The gym is the ___ place in the hotel during peak hours.","verb":"busy","options":["busiest","busyest","more busy","busier"],"correctAnswer":0,"explanation":"The definite article 'the' triggers the superlative form (busiest)."},{"id":4,"sentence":"Walking to work is ___ expensive than hiring taxis daily.","verb":"little","options":["less","least","lesser","little"],"correctAnswer":0,"explanation":"'Less' is the correct comparative modifier for negative comparisons."},{"id":5,"sentence":"This is the ___ routine I have tried for productivity.","verb":"good","options":["best","better","goodest","most good"],"correctAnswer":0,"explanation":"'Best' is the irregular superlative of 'good'."}]},"speaking":{"title":"Compare Lifestyles: City vs Town","difficulty":"B2-","mode":"group work","setup":"Group compares city lifestyle and small-town lifestyle.","timing":"Preparation: 4 minutes. Group discussion: 6 minutes.","instructions":"Compare advantages and disadvantages of living in a big city and a smaller town. Decide which is better for a remote worker.","followUp":["Which lifestyle is healthier?","Which offers more opportunities?","Which is more stressful?"],"targetLanguage":["Compared with...","Whereas...","A major advantage is...","It depends on..."],"teachingNote":"Encourage balanced answers rather than one-sided opinions."},"writing":{"title":"Opinion Paragraph: Remote Work","difficulty":"B2-","genre":"opinion paragraph","wordCount":"120-160 words","prompt":"Some people say remote work improves lifestyle. Others say it makes work-life balance harder. What is your opinion? Use Statement → Reason → Support.","criteria":["State a clear, focused opinion","Give at least two logical reasons","Include one realistic supporting example"],"teachingNote":"Supports argumentative structuring."}},{"id":7,"title":"Unit 7: Digital Detox Planning","theme":"Technology Balance & Offlines","difficulty":"B2- CEFR","reading":{"title":"A Digital Detox Weekend","difficulty":"B2-","focus":"inference, main idea","text":"When Leo booked a digital detox weekend, he imagined it would be easy to turn off his phone. By Saturday morning, he realized how often he reached for it without thinking. The retreat organizers collected devices at reception and offered paper maps, board games, nature walks, and cooking classes instead. At first, Leo felt disconnected from everything, but after a few hours, he started noticing small things: the sound of rain on the windows, the taste of fresh bread, and the fact that conversations lasted longer when nobody checked messages. On Sunday, he got his phone back. He did not decide to delete every app, but he changed his notification settings before leaving.","questions":[{"id":1,"question":"What is the main idea of the passage?","options":["Leo learned that cooking healthy is difficult.","Leo discovered how phone habits affected him.","The wellness retreat had poor organization.","All phones should be banned in hotel lobbies."],"correctAnswer":1,"explanation":"The passage focus is on Leo's self-realization of device habits and how he adjusted settings afterward."},{"id":2,"question":"Leo immediately found the detox easy.","options":["True","False"],"correctAnswer":1,"explanation":"The text says: 'At first, Leo felt disconnected...'"},{"id":3,"question":"What concrete parameter did Leo change before leaving?","options":["His hotel room class","His traveler route map","His notification settings","His phone casing model"],"correctAnswer":2,"explanation":"The text mentions: 'he changed his notification settings before leaving.'"},{"id":4,"question":"What can we infer about Leo's attitude?","options":["He wants a balanced use of technology.","He hates outdoor sessions completely.","He permanently lost his physical phone.","He was forced by family to attend."],"correctAnswer":0,"explanation":"He didn't delete every app, but he changed notifications, reflecting a balanced, mindful approach."},{"id":5,"question":"In the text, 'without thinking' means...","options":["carefully","automatically","politely","secretly"],"correctAnswer":1,"explanation":"'Without thinking' refers to habitual, automated actions (automatically)."}],"teachingNote":"Good transition into lifestyle habits and technology discussion."},"listening":{"title":"Narration: A Weekend Without Plans","difficulty":"B2-","type":"Narration","script":[{"id":1,"speaker":"Narrator","text":"Last month, I decided not to plan my weekend. Usually, I fill every free hour with errands, social events, and exercise classes."},{"id":2,"speaker":"Narrator","text":"This time, I only made one rule: no work emails."},{"id":3,"speaker":"Narrator","text":"On Saturday morning, I walked to a bakery without checking the time. Later, I cleaned my apartment while listening to music and called a friend I had not spoken to in weeks."},{"id":4,"speaker":"Narrator","text":"By Sunday evening, I realized that an unplanned weekend was not lazy."},{"id":5,"speaker":"Narrator","text":"It gave me space to notice what I actually wanted to do. Now I try to leave at least one afternoon free every week."}],"questions":[{"id":1,"question":"What was the speaker's only rule for the weekend?","options":["No drinking coffee","No work emails","No speaking aloud","No leaving the house"],"correctAnswer":1,"explanation":"The narrator says: 'This time, I only made one rule: no work emails.'"},{"id":2,"question":"Who did the speaker call on Saturday?","options":["Their hotel host","A friend they had not spoken to in weeks","Their work manager","The library volunteer"],"correctAnswer":1,"explanation":"The narrator specifically 'called a friend I had not spoken to in weeks.'"},{"id":3,"question":"What lesson did the speaker realize by Sunday evening?","options":["An unplanned weekend is lazy.","An unplanned weekend provides space to notice what they actually want to do.","They should work overtime.","Social media is necessary."],"correctAnswer":1,"explanation":"The speaker found 'unplanned weekend was not lazy' and 'gave me space to notice what I actually wanted to do.'"}],"preListening":"Students discuss planned vs unplanned weekends.","postListening":"Students plan a balanced weekend with free time."},"vocabulary":{"title":"Work-Life Boundaries","difficulty":"B2-","type":"fill_in_the_blank","items":[{"phrase":"boundary","definition":"a limit or rule that defines acceptable behavior or separates lifestyle areas","example":"It's vital to set a strict boundary between office and home."},{"phrase":"flexible hours","definition":"working hours that can be changed to suit worker needs","example":"My job has flexible hours so I start late."},{"phrase":"productivity","definition":"the efficiency of your output","example":"Calm mornings boost your productivity."},{"phrase":"burnout","definition":"exhaustion caused by chronic workplace stress","example":"Working every weekend leads directly to burnout."},{"phrase":"commuting","definition":"the journey between home and work","example":"Commuting by bike is a healthy habit."},{"phrase":"remote work","definition":"tasks performed away from the standard corporate office","example":"Remote work allows her to live near the beach."},{"phrase":"schedule","definition":"a plan of items and target times","example":"Her schedule has a block for daily exercises."},{"phrase":"priority","definition":"something that is regarded as more critical than other items","example":"Maintaining well-being is my main priority."}],"matchingGame":[{"phrase":"boundary","definition":"limit separating lifestyle areas"},{"phrase":"flexible hours","definition":"changeable working hours"},{"phrase":"productivity","definition":"the efficiency of of productive output"},{"phrase":"burnout","definition":"exhaustion caused by chronic stress"},{"phrase":"commuting","definition":"journey between home and workplace"},{"phrase":"remote work","definition":"work performed away from standard offices"},{"phrase":"schedule","definition":"list of events and target times"},{"phrase":"priority","definition":"most critical parameter of focus"}],"teachingNote":"Ideal transition into lifestyle habits and wellness discussion grids."},"grammar":{"title":"First Conditional","difficulty":"B1-B2","focus":"Real future possibilities and outcomes","examples":["If the train is late, we will take the bus.","If you arrive early, you will find a table."],"questions":[{"id":1,"sentence":"If the local café ___ crowded, we ___ take-out instead.","verb":"be / buy","options":["is / will get","will be / get","be / will got","are / would get"],"correctAnswer":0,"explanation":"Present simple in the if-clause ('is') combines with 'will + verb' in the main clause ('will get')."},{"id":2,"sentence":"If you ___ before noon, you ___ a quiet table.","verb":"arrive / find","options":["arrive / will find","arrives / will find","will arrive / find","arrived / would find"],"correctAnswer":0,"explanation":"Real future conditionals utilize present tense in the condition, future in result."},{"id":3,"sentence":"If it ___ heavily, the outdoor cycling tour ___ canceled.","verb":"rain / be","options":["rains / will be","rain / is","will rain / will be","rained / would be"],"correctAnswer":0,"explanation":"Third-person singular 'rains' goes into conditional condition; 'will be' is future passive."},{"id":4,"sentence":"If she ___ off her notifications, she ___ calmer.","verb":"turn / feel","options":["turns / will feel","turn / feel","will turn / feels","turned / felt"],"correctAnswer":0,"explanation":"Singular present 'turns' in conditional condition + 'will feel' for likely outcome."},{"id":5,"sentence":"If we ___ late, we ___ the instructor immediately.","verb":"be / message","options":["are / will message","will be / message","are / message","were / would message"],"correctAnswer":0,"explanation":"'We are' in present conditional + 'will message' as the certain future plan."}]},"speaking":{"title":"Plan a Community Fitness Day","difficulty":"B2-","mode":"group work","setup":"Groups design a simple event for different ages.","timing":"Preparation: 5 minutes. Presentation: 2 minutes per group.","instructions":"Plan three activities, choose a location, decide what equipment is needed, and explain how you will make the event inclusive.","followUp":["How can communities encourage healthier habits?","Should local governments pay for free health events?"],"targetLanguage":["Our first activity will be...","This would encourage...","We need to consider...","It should be accessible for..."],"teachingNote":"Links community topic with planning language."},"writing":{"title":"Advice Email: Healthy Lifestyle Advice","difficulty":"B2-","genre":"advice email","wordCount":"120-170 words","prompt":"A friend says they feel tired and disorganized because of their routine. Write an email giving practical advice about sleep, food, exercise, or screen time.","criteria":["Use modal auxiliary verbs for advice (should, could, might want to)","Sound supportive and non-judgmental","Offer specific, realistic suggestions"],"teachingNote":"Good for advice structures."}},{"id":8,"title":"Unit 8: Support Groups & Travel Solutions","theme":"Community Walking & Transportation Problems","difficulty":"B2- CEFR","reading":{"title":"The Wednesday Walking Group","difficulty":"B2-","focus":"inference, purpose","text":"Every Wednesday evening, a group of neighbors meets outside the library for a forty-minute walk. The idea began when a local nurse noticed that many older residents wanted to exercise but felt uncomfortable joining a gym. Now the group includes people of different ages, including students who want a break from screens and parents pushing strollers. The pace is gentle, and nobody is expected to be athletic. After the walk, some members stay for tea at a nearby café. The organizer says the goal is not only fitness, but also connection. For some participants, it is the only regular social event of the week.","questions":[{"id":1,"question":"Why did the walking group begin?","options":["A nurse saw a community need.","The library catalog wanted more visitors.","A franchise gym closed suddenly.","Local students organized a running race."],"correctAnswer":0,"explanation":"The walk 'began when a local nurse noticed that many older residents wanted to exercise...'"},{"id":2,"question":"Only older residents can join the walking group.","options":["True","False"],"correctAnswer":1,"explanation":"The text specifies: 'Now the group includes people of different ages, including students... and parents.'"},{"id":3,"question":"What is one purpose of the group besides exercise?","options":["Competition","Connection","Shopping discounts","Studying library catalogs"],"correctAnswer":1,"explanation":"The organizer explicitly states: 'the goal is not only fitness, but also connection.'"},{"id":4,"question":"The walking group is probably successful because it is...","options":["expensive and exclusive","simple and welcoming","fast and physically difficult","solely online check-in"],"correctAnswer":1,"explanation":"The pace is 'gentle', 'nobody is expected to be athletic', and includes all ages, meaning it is simple & welcoming."}],"teachingNote":"Use to discuss community lifestyle and social well-being."},"listening":{"title":"Conversation: Solving a Travel Problem","difficulty":"B2-","type":"Conversation","script":[{"id":1,"speaker":"Speaker A","text":"I just checked the train app. Our train has been canceled."},{"id":2,"speaker":"Speaker B","text":"Seriously? The cooking class starts in an hour."},{"id":3,"speaker":"Speaker A","text":"I know. There's a bus, but it takes forty-five minutes and leaves in ten."},{"id":4,"speaker":"Speaker B","text":"That might work if we walk fast. What about a taxi?"},{"id":5,"speaker":"Speaker A","text":"It's expensive, and traffic looks bad. The bus lane may actually be quicker."},{"id":6,"speaker":"Speaker B","text":"Okay, let's take the bus. Can you message the instructor and say we might arrive a few minutes late?"},{"id":7,"speaker":"Speaker A","text":"Sure. I'll explain the train was canceled."},{"id":8,"speaker":"Speaker B","text":"Thanks. At least we planned to leave early, or this would be much worse."}],"questions":[{"id":1,"question":"What happened to the train?","options":["It is delayed by an hour","It was canceled","It was full","It went to a different city"],"correctAnswer":1,"explanation":"Speaker A starts: 'Our train has been canceled.'"},{"id":2,"question":"Why is the bus potentially quicker than a taxi?","options":["The taxi driver is slow.","The bus lane avoids the bad automobile traffic.","The bus route is shorter.","The taxi is currently broken."],"correctAnswer":1,"explanation":"Speaker A notes: 'traffic looks bad. The bus lane may actually be quicker.'"},{"id":3,"question":"Who will receive a warning message?","options":["Their hotel host","The cooking class instructor","The train operator","The taxi service agent"],"correctAnswer":1,"explanation":"Speaker B asks to 'message the instructor' because they might arrive late."}],"preListening":"Students predict transport problems during a trip.","postListening":"Students role-play solving a late-arrival problem."},"vocabulary":{"title":"Sustainable Lifestyles","difficulty":"B2-","type":"collocation","items":[{"phrase":"reusable","definition":"able to be used more than once","example":"Always bring a reusable water bottle."},{"phrase":"container","definition":"an object like a box or jar for holding items","example":"Bring an empty glass container for rice."},{"phrase":"packaging","definition":"materials used to wrap or protect goods","example":"Avoid cereal boxes with heavy plastic packaging."},{"phrase":"waste","definition":"unwanted materials that are thrown away","example":"Refill shopping reduces home plastic waste."},{"phrase":"refill","definition":"to fill a container again with a substance","example":"I need to refill our soap bottles."},{"phrase":"by weight","definition":"paying based on the heavy mass unit of the item","example":"All beans at the store are sold by weight."},{"phrase":"habit","definition":"something you do regularly and automatically","example":"Waking early is a fantastic habit."},{"phrase":"convenient","definition":"easy to use, near, or fitting your plans","example":"The nearby market is so convenient."}],"matchingGame":[{"phrase":"reusable","definition":"able to be used multiple times"},{"phrase":"container","definition":"box or jar holding food/liquid"},{"phrase":"packaging","definition":"wrapping material around products"},{"phrase":"waste","definition":"unwanted material thrown away"},{"phrase":"refill","definition":"to fill a container again"},{"phrase":"by weight","definition":"pricing based on product mass"},{"phrase":"habit","definition":"automated regular behavior pattern"},{"phrase":"convenient","definition":"easy, nearby, or practical to do"}],"teachingNote":"Encourage students to discuss local recycling habits."},"grammar":{"title":"Second Conditional","difficulty":"B2-","focus":"Hypothetical lifestyle choices and unreal conditions","examples":["If I lived near the beach, I would walk every morning.","If I had more time, I would cook healthy dinners."],"questions":[{"id":1,"sentence":"If I ___ remotely, I ___ to a smaller coastal town.","verb":"work / move","options":["worked / would move","work / would move","worked / will move","work / will move"],"correctAnswer":0,"explanation":"Unreal conditions use past simple in the if-clause ('worked') and 'would + verb' in the result clause ('would move')."},{"id":2,"sentence":"If she ___ more free time, she ___ a local walking group.","verb":"have / join","options":["had / would join","has / will join","have / joined","had / will join"],"correctAnswer":0,"explanation":"Irregular past tense 'had' is used plus 'would join' for hypothetical outcomes."},{"id":3,"sentence":"If we ___ near an organic market, we ___ healthier ingredients.","verb":"live / buy","options":["lived / would buy","live / will buy","lived / will buy","lives / buy"],"correctAnswer":0,"explanation":"Hypothetical condition 'lived' goes with main clause 'would buy' for unreal setups."},{"id":4,"sentence":"If he ___ fewer smartphone notifications, he ___ less overwhelmed.","verb":"receive / feel","options":["received / would feel","receives / will feel","received / will feel","receives / would feel"],"correctAnswer":0,"explanation":"Past simple 'received' specifies unreal present condition; 'would feel' represents hypothetical state."},{"id":5,"sentence":"If they ___ a digital device, they ___ more board games.","verb":"not have / play","options":["didn't have / would play","don't have / would play","didn't have / will play","hadn't / would played"],"correctAnswer":0,"explanation":"Negative past unreal condition 'didn't have' matches result 'would play'."}]},"speaking":{"title":"Roleplay: Special Dietary Requests","difficulty":"B2-","mode":"pair work","setup":"Student A is a customer with a dietary need; Student B is a restaurant host.","timing":"Preparation: 2 minutes. Role-play: 4 minutes.","instructions":"Make a reservation and ask about vegetarian, dairy-free, or low-salt options. The host must offer solutions politely.","followUp":["How should restaurants deal with special requests?","Is healthy food more popular now than before?"],"targetLanguage":["Would it be possible to...?","Do you offer...?","We can prepare...","Let me check that for you."],"teachingNote":"Politeness and functional language practice."},"writing":{"title":"For-and-Against Essay: Rural Relocations","difficulty":"B2","genre":"for-and-against essay","wordCount":"180-230 words","prompt":"Discuss the advantages and disadvantages of moving from a large city to a smaller city for a better lifestyle.","criteria":["Present arguments for both sides clearly","Use appropriate comparative language structures","Conclude with a balanced personal opinion"],"teachingNote":"Supports B2 contrast and argument structure."}},{"id":9,"title":"Unit 9: Refill Shopping & Team Fitness","theme":"Sustainability & Group Workouts","difficulty":"B2 CEFR","reading":{"title":"Shopping with Less Waste","difficulty":"B2","focus":"main idea, vocabulary, detailed comprehension","text":"Refill stores are becoming more common in some neighborhoods. Instead of buying rice, soap, or cereal in new packages each time, customers bring their own containers and pay by weight. Supporters say this reduces plastic waste and encourages people to buy only what they need. However, refill shopping also requires planning. Customers must remember clean containers, check prices carefully, and sometimes visit more than one store to find everything. For people with busy schedules, convenience can be a barrier. Still, some families say the habit becomes easier after a few weeks, especially when they keep a shopping kit near the door.","questions":[{"id":1,"question":"What is the main topic of the passage?","options":["Opening organic chain restaurants","A way to shop with less packaging","Analyzing the rates of home deliveries","How to open a large supermarket"],"correctAnswer":1,"explanation":"The passage introduces 'refill stores' as a way to buy products in existing packages."},{"id":2,"question":"Refill shopping may require more planning than regular shopping.","options":["True","False"],"correctAnswer":0,"explanation":"The writer says: 'refill shopping also requires planning. Customers must remember clean containers...'"},{"id":3,"question":"In the text, 'barrier' means...","options":["an advantage","an obstacle","a container","a discount"],"correctAnswer":1,"explanation":"A 'barrier' represents an impediment or difficulty (an obstacle)."},{"id":4,"question":"What practical suggestion is mentioned to secure the habit?","options":["Keep a shopping kit near the door","Buy separate plastic bags","Avoid comparing prices","Shop only once a year"],"correctAnswer":0,"explanation":"The author suggests keeping a 'shopping kit near the door' to make the habit easier."},{"id":5,"question":"The writer presents refill shopping as...","options":["perfect for everyone","useful but sometimes inconvenient","illegal in most countries","only for very wealthy people"],"correctAnswer":1,"explanation":"The author notes positive benefits (reduces waste) but highlights constraints (requires planning, multiple store visits)."}],"teachingNote":"Ask students to find contrast words: however, still, especially."},"listening":{"title":"Announcement: Community Fitness Day","difficulty":"B2","type":"Announcement","script":[{"id":1,"speaker":"Organizer","text":"Good morning, everyone. Welcome to Community Fitness Day. Activities will begin at nine thirty with a gentle warm-up in the main square."},{"id":2,"speaker":"Organizer","text":"At ten, you can choose between a beginner cycling session, a family walk through the park, or a short workshop on healthy meal planning."},{"id":3,"speaker":"Organizer","text":"Please sign your name at each activity table before joining, as spaces are limited."},{"id":4,"speaker":"Organizer","text":"Water stations are located beside the library and near the playground."},{"id":5,"speaker":"Organizer","text":"If you feel unwell at any time, speak to one of the volunteers wearing blue shirts. Remember, today is not a competition. The goal is to try something new and meet people."}],"questions":[{"id":1,"question":"What time does the gentle warm-up begin?","options":["9:00 a.m.","9:30 a.m.","10:00 a.m.","10:30 a.m."],"correctAnswer":1,"explanation":"The organizer announces: 'Activities will begin at nine thirty...'"},{"id":2,"question":"Why are participants asked to sign their names at tables?","options":["To win organic foods","Because spaces are limited","To qualify for a marathon","To collect custom key cards"],"correctAnswer":1,"explanation":"The text says: 'Please sign your name... as spaces are limited.'"},{"id":3,"question":"What is stated as the main goal of the day?","options":["To break speed records","To try something new and meet neighbors","To raise money for the library","To test cycling equipment"],"correctAnswer":1,"explanation":"The organizer confirms: 'The goal is to try something new and meet people.'"}],"preListening":"Students match activity names to pictures or definitions.","postListening":"Students design a community lifestyle event."},"vocabulary":{"title":"Feelings and Reactions","difficulty":"B2","type":"choose_the_best_word","items":[{"phrase":"relieved","definition":"happy because a difficult problem is gone or avoided","example":"She was relieved that her travel went smoothly."},{"phrase":"overwhelmed","definition":"feeling unable to deal with too much stimulus or work","example":"Too many notifications left him overwhelmed."},{"phrase":"motivated","definition":"wanting to do something due to interest or drive","example":"She felt motivated to try yoga."},{"phrase":"frustrated","definition":"annoyed or impatient because something is hard or blocked","example":"He got frustrated when the train was delayed."},{"phrase":"disconnected","definition":"not feeling emotionally or digitally linked to people/surroundings","example":"Without his phone, he felt disconnected at first."},{"phrase":"calm","definition":"peaceful, quiet, and free from worry","example":"A quiet room facing the garden made her feel calm."},{"phrase":"aware","definition":"knowing or noticing that something exists","example":"Be aware of your screens habits. "},{"phrase":"satisfied","definition":"pleased because you got what you wanted or did well","example":"She felt satisfied with her test score."}],"matchingGame":[{"phrase":"relieved","definition":"happy because a problem is solved"},{"phrase":"overwhelmed","definition":"feeling unable to handle too much"},{"phrase":"motivated","definition":"driven and eager to do something"},{"phrase":"frustrated","definition":"annoyed because progress is blocked"},{"phrase":"disconnected","definition":"isolated, not linked to devices/others"},{"phrase":"calm","definition":"peaceful, quiet, and free from worry"},{"phrase":"aware","definition":"knowing or noticing something exists"},{"phrase":"satisfied","definition":"pleased with results or actions"}],"teachingNote":"Great vocabulary for discussing emotional states during change."},"grammar":{"title":"Relative Clauses","difficulty":"B2-","focus":"Defining relative clauses to describe places, things, and people","examples":["The café that opened near my office is excellent.","The guide, who was very friendly, explained the route."],"questions":[{"id":1,"sentence":"The hotel ___ we stayed was near the beautiful river.","verb":"place","options":["where","which","who","when"],"correctAnswer":0,"explanation":"Use relative adverb 'where' to describe locations."},{"id":2,"sentence":"The friendly receptionist ___ changed my room was helpful.","verb":"person","options":["who","which","where","whose"],"correctAnswer":0,"explanation":"Use 'who' or 'that' as the relative pronoun for people."},{"id":3,"sentence":"The smartphone app ___ tracks my routines sends daily alerts.","verb":"thing","options":["that / which","who","where","whom"],"correctAnswer":0,"explanation":"'That' or 'which' is standard relative pronoun to define things or ideas."},{"id":4,"sentence":"The local food market ___ opens on Sundays sells organic grains.","verb":"thing","options":["which","who","where","whose"],"correctAnswer":0,"explanation":"'Which' introduces defining details on an inanimate noun."},{"id":5,"sentence":"The active neighbors ___ meet outside the library are friendly.","verb":"people","options":["who","which","where","whose"],"correctAnswer":0,"explanation":"Use 'who' for plural active human subjects."}]},"speaking":{"title":"Mini Lesson: A Mindful Routine Shift","difficulty":"B2","mode":"individual presentation","setup":"Students choose one habit: sleep routine, walking, meal planning, budgeting, reading, or reducing screen time.","timing":"Preparation: 5 minutes. Speaking: 2 minutes.","instructions":"Explain the habit, why you started it, what was difficult, and what changed.","followUp":["Would you recommend this habit to everyone?","What makes habits difficult to maintain?"],"targetLanguage":["I started because...","At first...","Gradually...","The biggest change was..."],"teachingNote":"Excellent for past tenses, sequencing, and reflection."},"writing":{"title":"Proposal: Neighborhood Wellness Event","difficulty":"B2","genre":"proposal","wordCount":"180-230 words","prompt":"Your school or workplace wants to organize a community wellness event. Write a proposal suggesting activities, explaining benefits, and mentioning possible challenges.","criteria":["Use appropriate headings to organize sections","Explain benefits clearly with action vocabulary","Address specific, practical challenges"],"teachingNote":"Useful for workplace/community English."}},{"id":10,"title":"Unit 10: Remote Work Variables","theme":"Provincial Moves & Life Boundaries","difficulty":"B2 CEFR","reading":{"title":"Working Remotely from a Smaller City","difficulty":"B2","focus":"inference, argument structure, detailed comprehension","text":"After two years of remote work, Ana moved from a capital city to a smaller coastal town. She expected lower rent and quieter mornings, and she found both. However, the change also affected her routine in unexpected ways. There were fewer professional events, and the internet was less reliable during storms. On the other hand, she spent less time commuting and more time cooking, exercising, and meeting neighbors. Ana says the move did not solve every problem, but it made her more aware of how location influences lifestyle. She now visits the capital once a month for meetings and cultural events, while keeping her daily life slower and less expensive.","questions":[{"id":1,"question":"Why did Ana relocate to a smaller town?","options":["She wanted a different lifestyle.","She lost her remote job.","She disliked coastal environments.","She needed a massive office room."],"correctAnswer":0,"explanation":"She expected lower rent, quieter mornings, and more time for wellness (a different lifestyle)."},{"id":2,"question":"The internet was always reliable in the coastal town.","options":["True","False"],"correctAnswer":1,"explanation":"The text says: 'the internet was less reliable during storms.'"},{"id":3,"question":"Which of these benefits is explicitly mentioned?","options":["More professional events","More time for cooking and exercise","An increase in commuting hours","Lower food costs"],"correctAnswer":1,"explanation":"The text notes: 'she spent less time commuting and more time cooking, exercising, and meeting neighbors.'"},{"id":4,"question":"Ana's holistic perspective on the move is best described as...","options":["balanced","completely negative","regretful only","uninterested"],"correctAnswer":0,"explanation":"She states the move didn't solve everything, but it made her aware of lifestyle variables, showing a balanced view."},{"id":5,"question":"Why does Ana visit the capital monthly?","options":["For client meetings and cultural events","To find a brand new apartment","To repair her home internet connection","For medical treatments"],"correctAnswer":0,"explanation":"The text says: 'She now visits the capital once a month for meetings and cultural events...'"}],"teachingNote":"Useful for B2 comparison and balanced opinion practice."},"listening":{"title":"Interview: Remote Work and Lifestyle Boundaries","difficulty":"B2","type":"Interview","script":[{"id":1,"speaker":"Interviewer","text":"You moved to a smaller city while keeping your remote job. Was it difficult?"},{"id":2,"speaker":"Guest","text":"In some ways, yes. I had to create clearer boundaries because my home became my office. At first, I worked longer hours because there was no commute to mark the end of the day."},{"id":3,"speaker":"Interviewer","text":"How did you solve that?"},{"id":4,"speaker":"Guest","text":"I started leaving the house for a short walk at six, even if I was not going anywhere special. It became a signal that work was over."},{"id":5,"speaker":"Interviewer","text":"Do you miss the capital?"},{"id":6,"speaker":"Guest","text":"Sometimes. I miss cultural events, but I don't miss the noise or the rent."}],"questions":[{"id":1,"question":"What problem did the guest encounter first after moving?","options":["Poor cellular signal","Working longer hours due to blurred boundaries","Noisy apartments","Difficulty communicating with their manager"],"correctAnswer":1,"explanation":"The guest mentions working longer hours because 'home became my office' and they had 'no commute to mark the end of the day.'"},{"id":2,"question":"What daily act does the guest perform at six o'clock?","options":["Cooks a healthy dinner","Goes for a short walk","Checks new messages","Does stretching exercises"],"correctAnswer":1,"explanation":"The guest started 'leaving the house for a short walk at six' to signal that work was over."},{"id":3,"question":"What aspects of the capital city does the guest miss?","options":["High rent costs","Noisy streets","Cultural events","Long commute hours"],"correctAnswer":2,"explanation":"The guest says: 'Sometimes. I miss cultural events...'"}],"preListening":"Students discuss advantages and disadvantages of remote work.","postListening":"Students give advice to a remote worker."},"vocabulary":{"title":"Essential B2 Lifestyle Collocations","difficulty":"B2","type":"sentence_completion","items":[{"phrase":"make a reservation","definition":"to arrange to keep a table, hotel room, or seat custom-booked","example":"We need to make a reservation for dinner."},{"phrase":"set boundaries","definition":"to set rules dividing work and personal life","example":"Remote workers must set boundaries."},{"phrase":"keep a routine","definition":"to maintain a regular set of daily habits","example":"It is helpful to keep a routine even on vacation."},{"phrase":"reduce stress","definition":"to lower feelings of continuous tension","example":"Stretching for five minutes helps reduce stress."},{"phrase":"miss a connection","definition":"to arrive late and fail to board a second vehicle","example":"If the train is delayed, we might miss a connection."},{"phrase":"save time","definition":"to accomplish tasks in less time","example":"Taking a taxi was expensive but it saved time."},{"phrase":"improve well-being","definition":"to make health and happiness better","example":"Eating vegetables helps improve well-being."},{"phrase":"face a challenge","definition":"to confront and deal with a difficult situation","example":"She expects to face a challenge during screen-free days."}],"matchingGame":[{"phrase":"make a reservation","definition":"to book a table, room, or ticket in advance"},{"phrase":"set boundaries","definition":"to declare limits dividing life aspects"},{"phrase":"keep a routine","definition":"to follow a regular morning habit set"},{"phrase":"reduce stress","definition":"to ease cognitive or physical tension"},{"phrase":"miss a connection","definition":"to arrive late for a continuing transit"},{"phrase":"save time","definition":"to use fewer minutes to finish something"},{"phrase":"improve well-being","definition":"to enhance general health and happiness"},{"phrase":"face a challenge","definition":"to confront a difficult circumstance"}],"teachingNote":"Useful for B2 comparison and balanced opinion practice."},"grammar":{"title":"Linking Words for B2 Answers","difficulty":"B2","focus":"Contrast, result, reason, and addition transitions","examples":["The city is expensive; however, it offers many opportunities.","I turned off notifications because they distracted me."],"questions":[{"id":1,"sentence":"The apartment was small; ___, it was very clean.","verb":"contrast","options":["however","because","therefore","although"],"correctAnswer":0,"explanation":"Use semicolon + 'however' + comma for showing contrast between two independent clauses."},{"id":2,"sentence":"I booked early ___ prices increase quickly.","verb":"reason","options":["because","however","therefore","in addition"],"correctAnswer":0,"explanation":"Use 'because' to introduce the physical cause or reason."},{"id":3,"sentence":"The train was canceled; ___, we took the bus to the wellness center.","verb":"result","options":["therefore","because","although","however"],"correctAnswer":0,"explanation":"Use 'therefore' to connect an event to its direct logical outcome or result."},{"id":4,"sentence":"___ the café was extremely crowded, the service was fast.","verb":"contrast","options":["Although","Because","Therefore","In addition"],"correctAnswer":0,"explanation":"Use 'Although' to introduce a subordinate concession clause."},{"id":5,"sentence":"The hotel has a luxury gym; ___, it offers healthy fresh food.","verb":"addition","options":["in addition","because","although","therefore"],"correctAnswer":0,"explanation":"Use 'in addition' (or 'moreover') to introduce supplementary points of information."}]},"speaking":{"title":"Persuade a Manager regarding Balance","difficulty":"B2","mode":"individual or pair role-play","setup":"Student speaks to a manager and proposes one lifestyle-friendly workplace change.","timing":"Preparation: 3 minutes. Speaking: 90 seconds.","instructions":"Persuade a manager to introduce one change: flexible hours, walking meetings, healthier cafeteria options, or no-meeting Friday afternoons. Give reasons and address one possible concern.","followUp":["What concern might the manager have?","How can you make your idea practical?"],"targetLanguage":["I'd like to suggest...","This would benefit...","I understand the concern, but...","A practical solution would be..."],"teachingNote":"This is close to MET persuasive speaking: position + reasons + audience awareness."},"writing":{"title":"Argumentative Essay: Lifestyle & Tech","difficulty":"B2","genre":"argumentative essay","wordCount":"200-250 words","prompt":"Technology has made modern life more convenient, but not necessarily healthier. To what extent do you agree? Include a counterargument and examples.","criteria":["Develop a clear, consistent argument throughout","Include and answer a solid counterargument","Use realistic illustrative examples from daily routines"],"teachingNote":"Final writing task; assess coherence, paragraphing, and range."}}],"levelUp":[{"id":1,"unitId":1,"b1Sentence":"I want a quiet room because I have an important meeting tomorrow morning.","b2Goal":"Upgrade with formal request constructs, precise adjectives, and causal transitions.","b1Critique":"Uses basic demand phrasing ('I want'), generic adjectives ('important', 'quiet'), and standard conjunction ('because').","targetKeywords":[{"word":"highly appreciate","equivalent":"want","reason":"Softens the direct demand into a professional guest request."},{"word":"tranquil","equivalent":"quiet","reason":"A more sophisticated adjective indicating peaceful quietness."},{"word":"given that","equivalent":"because","reason":"An advanced subordinate conjunction to introduce a known premise."}],"options":[{"text":"I want a quiet room since I have a very important meeting tomorrow morning.","level":"B1","explanation":"Too informal. Swapping 'because' for 'since' is a minor lift, but 'I want' and 'important' remain basic."},{"text":"I would highly appreciate a tranquil room, given that I have an indispensable meeting scheduled for tomorrow morning.","level":"B2 (Correct)","explanation":"Excellent! 'Highly appreciate' is polite, 'tranquil' elevates 'quiet', and 'given that' is an elegant causal transition."},{"text":"I need a silent room tomorrow morning because my meeting is very important.","level":"B2 (Incorrect)","explanation":"Awkward expression. 'I need' is still demanding and 'very important' is repetitive."}],"correctOptionIndex":1,"c1AdvancedAlternative":"Should it be feasible, I would highly appreciate being assigned a tranquil room, given that I am hosting an indispensable online summit early tomorrow morning.","sentenceInversionHint":"Try beginning with: 'Given that...' or 'Should it be feasible, I would highly appreciate...'"},{"id":2,"unitId":1,"b1Sentence":"The hotel is nice, but it is too far from the city center.","b2Goal":"Use concessive structures ('although', 'albeit') and descriptive distance terms.","b1Critique":"Relies on the weak adjective 'nice', basic contrastive coordinating conjunction 'but', and simple adverb 'too far'.","targetKeywords":[{"word":"pleasant","equivalent":"nice","reason":"Adds refinement and avoids the overused, generic adjective 'nice'."},{"word":"albeit","equivalent":"but","reason":"A high-level B2/C1 conjunction meaning 'though' or 'even though'."},{"word":"somewhat inconvenient","equivalent":"too far","reason":"Expresses dissatisfaction with professional restraint."}],"options":[{"text":"The hotel is pleasant, albeit its distance from the city center is somewhat inconvenient.","level":"B2 (Correct)","explanation":"Superb! Uses 'pleasant' to replace 'nice', the elegant conjunction 'albeit' for contrast, and a nuanced description of the distance."},{"text":"The hotel is fine but it is located very far away from the town center.","level":"B1","explanation":"Too elementary. 'Fine' and 'very far away' lack CEFR B2 textuur."},{"text":"The hotel is nice but indeed far from the center where everything is.","level":"B2 (Incorrect)","explanation":"A bit conversational and circular. Doesn't reach professional written or spoken standard."}],"correctOptionIndex":0,"c1AdvancedAlternative":"Although the establishment is undoubtedly pleasant, its geographic isolation from the metropolitan core is somewhat inconvenient for my schedule.","sentenceInversionHint":"Try beginning with: 'Although the establishment is...'"},{"id":3,"unitId":2,"b1Sentence":"Give me a coffee with oat milk and without sugar because I am on a diet.","b2Goal":"Use polite hedging triggers, professional verbs, and healthier lifestyle phrasing.","b1Critique":"The imperative 'Give me' is excessively blunt. 'On a diet' is colloquial; 'monitor intake' is more analytical.","targetKeywords":[{"word":"Could I please request","equivalent":"Give me","reason":"Standard hospitable request framing."},{"word":"exclude","equivalent":"without","reason":"Active professional verb instead of a simple preposition."},{"word":"monitoring my sugar intake","equivalent":"on a diet","reason":"A polished, modern way to refer to dietary restrictions."}],"options":[{"text":"Please give me oat milk coffee with no sugar because I am doing a diet.","level":"B1","explanation":"Uses incorrect collocation ('doing a diet') and keeps the direct command 'Please give me'."},{"text":"I'd like a coffee with oat milk and please exclude the sugar, as I am currently monitoring my sugar intake.","level":"B2 (Correct)","explanation":"Terrific! Polite modal request combined with 'exclude' and 'monitoring sugar intake' sounds very professional."},{"text":"Give me oat-milk coffee, no sugar because I must follow strict diet rules.","level":"B2 (Incorrect)","explanation":"Too aggressive and jerky in pace. Lacks smooth English cohesion."}],"correctOptionIndex":1,"c1AdvancedAlternative":"Could I please request an oat-milk coffee with sugar completely excluded, as I am currently monitoring my glycemic intake?","sentenceInversionHint":"Try: 'As I am currently monitoring my intake, I would like to request...'"},{"id":4,"unitId":2,"b1Sentence":"This café is always busy, so we should find another place to talk.","b2Goal":"Integrate continuous adverbs, replace 'place' with 'venue', and elevate 'talk'.","b1Critique":"Overuses basic 'always', simple 'busy' adjective, and highly repetitious nouns like 'place'.","targetKeywords":[{"word":"consistently crowded","equivalent":"always busy","reason":"More precise description of patron frequency."},{"word":"alternative venue","equivalent":"another place","reason":"Using formal business nouns instead of high-frequency words."},{"word":"conduct our conversation","equivalent":"talk","reason":"Formally frames a discussion as a polite action."}],"options":[{"text":"Because this cafe is very busy, we need to go to another spot to speak.","level":"B1","explanation":"Simply swaps words for basic synonyms without improving sentence structure."},{"text":"This cafe is consistently crowded, so it would be wiser to seek an alternative venue to conduct our conversation.","level":"B2 (Correct)","explanation":"Excellent! 'Consistently crowded', 'alternative venue', and 'conduct our conversation' are premium lexical choices."},{"text":"This coffee shop is full, hence we should find an outdoor location to talk together.","level":"B2 (Incorrect)","explanation":"Though 'hence' is formal, the ending remains casual with 'find a location to talk together'."}],"correctOptionIndex":1,"c1AdvancedAlternative":"Given that this establishment is consistently crowded, it would be highly advisable to seek an alternative venue to conduct our discussion in peace.","sentenceInversionHint":"Begin with a participial or causal clause: 'Given that this establishment is consistently crowded...'"},{"id":5,"unitId":3,"b1Sentence":"If you miss the fast train, you will arrive very late for the conference.","b2Goal":"Utilize conditional inversions without 'if' ('should you'), and advanced adverbs.","b1Critique":"The first conditional with 'if' is standard B1. We can elevate formatting by making it a formal warning.","targetKeywords":[{"word":"Should you miss","equivalent":"If you miss","reason":"An inversion that replaces 'if' with auxiliary auxiliary 'should' for high-level conditional stance."},{"word":"express train","equivalent":"fast train","reason":"The correct transportation terminology."},{"word":"risk arriving significantly late","equivalent":"will arrive very late","reason":"Softens certainty to a professional threat risk, while upgrading 'very late'."}],"options":[{"text":"If you do not catch the speed train, you're going to be extremely late for the meeting.","level":"B1","explanation":"Informal. Swaps with basic contraction ('you're') and wrong terminology ('speed train')."},{"text":"Should you miss the express train, you risk arriving significantly late for the conference.","level":"B2 (Correct)","explanation":"Masterful! Using inverted conditional ('Should you miss') is a signature of C1/Advanced fluency, paired with 'significantly'."},{"text":"Missing the fast train means you are surely arriving late for the scientific conference.","level":"B2 (Incorrect)","explanation":"Gerund start is better, but 'surely arriving late' lacks the academic tone of 'significantly late'."}],"correctOptionIndex":1,"c1AdvancedAlternative":"Should you fail to board the express train, you run the distinct risk of arriving significantly late for the conference opening.","sentenceInversionHint":"Ditch 'if' completely and search for 'Should you...'"},{"id":6,"unitId":3,"b1Sentence":"I got lost in the subway because there are not many signs.","b2Goal":"Use passive verbs, replace 'lost' with 'disoriented', and nominalize 'there are not many signs'.","b1Critique":"Colloquial 'got lost' and basic cause transition 'because there are not many...'.","targetKeywords":[{"word":"became disoriented","equivalent":"got lost","reason":"Scientific, precise alternative explaining disorientation."},{"word":"due to a lack of","equivalent":"because there are not many","reason":"Prepositional nominalizer indicating systemic absence."},{"word":"clear signage","equivalent":"signs","reason":"Professional structural collective noun for signs."}],"options":[{"text":"I became disoriented in the subway terminal due to a lack of clear signage.","level":"B2 (Correct)","explanation":"Fantastic! 'Became disoriented', 'due to a lack of' and 'signage' fit B2/C1 specifications."},{"text":"I got lost inside the underground station because the signs are small and few.","level":"B1","explanation":"Weak and repetitive. Still relies on basic 'got lost' and basic adjectives."},{"text":"Having no indicators, I lost my way in the huge subway transport system.","level":"B2 (Incorrect)","explanation":"Slightly poetic but less natural for an professional traveler overview."}],"correctOptionIndex":0,"c1AdvancedAlternative":"I became thoroughly disoriented within the subterranean hub, which I attribute primarily to an absolute dearth of legible signage.","sentenceInversionHint":"Try starting with: 'I attribute my disorientation in the subway to...'"},{"id":7,"unitId":4,"b1Sentence":"We need to talk about this problem before we start the project.","b2Goal":"Inject subjunctive structures ('it is crucial that we...'), and verbs like 'address' and 'initiate'.","b1Critique":"Uses high-frequency 'need to talk', basic collision noun 'problem', and basic start verbs.","targetKeywords":[{"word":"crucial that we address","equivalent":"need to talk about","reason":"Subjunctive mandate for urgent focus."},{"word":"issue","equivalent":"problem","reason":"A professional business alternative that sounds constructive."},{"word":"prior to initiating","equivalent":"before we start","reason":"Formal replacement for basic chronological prepositions."}],"options":[{"text":"We must speak of this bad thing before launching the project action.","level":"B1","explanation":"Uses basic structures and awkward wording like 'bad thing' and 'project action'."},{"text":"It is crucial that we address this issue prior to initiating the project.","level":"B2 (Correct)","explanation":"Incredible! 'Crucial that we address' uses the subjunctive correctly. 'Prior to initiating' is flawless."},{"text":"It is very important that we talk about this obstacle before writing the project plan.","level":"B2 (Incorrect)","explanation":"'Very important' and 'talk about' are still quite intermediate."}],"correctOptionIndex":1,"c1AdvancedAlternative":"It is imperative that we thoroughly address this underlying issue prior to the official initiation of the project.","sentenceInversionHint":"Start with an assertive subjective adjective phrase: 'It is imperative that we...'"},{"id":8,"unitId":5,"b1Sentence":"I clean my room every Saturday so that it looks good.","b2Goal":"Nominalize goals, swap 'clean' for 'tidy', and introduce 'aesthetic' or 'organized'.","b1Critique":"Elementary coordinate 'so that it looks good' and basic transitive verb 'clean'.","targetKeywords":[{"word":"tidy","equivalent":"clean","reason":"Refers specifically to organization and tidiness."},{"word":"maintain","equivalent":"so that it looks","reason":"Action verb representing ongoing state custody."},{"word":"organized living space","equivalent":"looks good","reason":"Polished and descriptive compound noun."}],"options":[{"text":"I tidy my room every Saturday to maintain a clean and organized living space.","level":"B2 (Correct)","explanation":"Spot on! Relplaces 'clean... so that' with an elegant infinitive of purpose 'to maintain a clean and organized living space'."},{"text":"I clean up my bedroom each Saturday so that my style is nice.","level":"B1","explanation":"Still very juvenile. 'Nice style' doesn't match B2 parameters."},{"text":"Every Saturday, I sweep my domestic room for having an eye-friendly apartment.","level":"B2 (Incorrect)","explanation":"Awkward or over-embellished language ('domestic room', 'eye-friendly') that sounds unnatural."}],"correctOptionIndex":0,"c1AdvancedAlternative":"I dedicate Saturday mornings to tidying my quarters, a ritual aimed at maintaining an aesthetically pleasing and highly organized living space.","sentenceInversionHint":"Try ending your rewrite with: '...to maintain an organized living space.'"},{"id":9,"unitId":6,"b1Sentence":"I like cycling in the park because it helps me relax after work.","b2Goal":"Elevate preference indicators ('thoroughly enjoy'), and replace 'help me relax' with an outlet concept.","b1Critique":"Repeated basic preference verb 'like' and high-frequency 'helps me relax'.","targetKeywords":[{"word":"thoroughly enjoy","equivalent":"like","reason":"Adds intensity and emotional nuance to verbs."},{"word":"serves as an excellent outlet","equivalent":"helps me","reason":"A sophisticated idiom describing functional relief."},{"word":"relieving post-work stress","equivalent":"relax after work","reason":"Professional psychological noun phrasing."}],"options":[{"text":"I like riding bikes in the green park as it works for relaxing my brain after labor.","level":"B1","explanation":"Awkward vocabulary choices ('relaxing my brain', 'after labor') and basic grammar are stored."},{"text":"I thoroughly enjoy cycling in the park, as it serves as an excellent outlet for relieving post-work stress.","level":"B2 (Correct)","explanation":"Brilliant! This structure is cohesive, uses advanced prepositions ('as it serves as'), and upgraded lexical items."},{"text":"Riding a bike in the park is good for me because I can forget work problems.","level":"B2 (Incorrect)","explanation":"Very colloquial. 'Forget work problems' lacks academic or professional polish."}],"correctOptionIndex":1,"c1AdvancedAlternative":"I thoroughly enjoy traversing the local park by bicycle, as this activity serves as a vital outlet for releasing accumulated post-work tension.","sentenceInversionHint":"Try incorporating: '...serves as an invaluable outlet for...'"},{"id":10,"unitId":7,"b1Sentence":"This dish tastes nice because it has fresh herbs in it.","b2Goal":"Use sensory nouns ('flavor profile'), and explain cause using 'largely owing to'.","b1Critique":"Basic active verb 'tastes nice', generic pronoun 'it has', and lazy causal link 'because'.","targetKeywords":[{"word":"exceptional flavor profile","equivalent":"tastes nice","reason":"Advanced gastronomic vocabulary characterizing food quality."},{"word":"largely owing to","equivalent":"because it has","reason":"High-level prepositional synonym for 'due to' or 'because of'."},{"word":"incorporation of","equivalent":"in it","reason":"Refined noun form of 'including' or 'having'."}],"options":[{"text":"This dish has an exceptional flavor profile, largely owing to the incorporation of fresh herbs.","level":"B2 (Correct)","explanation":"Correct! 'Exceptional flavor profile' is culinary, and 'largely owing to the incorporation...' shows mastery of complex structures."},{"text":"This dish is tasting great because of the many fresh greens placed inside it.","level":"B1","explanation":"Using continuous tense ('is tasting great') is structurally weak in this context, and 'greens inside it' is basic."},{"text":"The meal has a delicious nature, thanks to the green plants mixed in.","level":"B2 (Incorrect)","explanation":"'Delicious nature' and 'green plants mixed in' are clumsy conversions."}],"correctOptionIndex":0,"c1AdvancedAlternative":"This culinary creation boasts an exceptional flavor profile, attributable in large part to the deliberate incorporation of freshly harvested herbs.","sentenceInversionHint":"Try beginning with: 'The exceptional flavor profile of this dish is...'"},{"id":11,"unitId":8,"b1Sentence":"My computer is slow, and I don't know what to do.","b2Goal":"Upgrade tech performance terms, and use indirect questions with 'unsure how to resolve'.","b1Critique":"Vague adjective 'slow', coordination 'and', and raw distress 'I don't know what to do'.","targetKeywords":[{"word":"significantly degraded","equivalent":"slow","reason":"Technical descriptor regarding system speed bottlenecks."},{"word":"unsure how to resolve","equivalent":"don't know what to do","reason":"Professional, solution-oriented statement."},{"word":"underlying issue","equivalent":"what is wrong","reason":"Diagnostic language for tech troubleshooting."}],"options":[{"text":"My PC is working very badly and I cannot fix the error myself.","level":"B1","explanation":"Informal, diagnostic-deficient and lacking professional nuance."},{"text":"My computer's performance is significantly degraded, and I am unsure how to resolve the underlying issue.","level":"B2 (Correct)","explanation":"Splendid! Uses possessive nominalization ('performance'), precise adjective ('significantly degraded'), and a polite indirect clause."},{"text":"The operating speed is down, and I am lost about doing a repair.","level":"B2 (Incorrect)","explanation":"Grammatically awkward. Tech support contexts expect 'performance' and 'resolve'."}],"correctOptionIndex":1,"c1AdvancedAlternative":"My workstation’s processing performance has witnessed a significant degradation, leaving me thoroughly perplexed as to how to remedy the technical bottleneck.","sentenceInversionHint":"Try: 'With my workstation's performance significantly degraded, I am...'"},{"id":12,"unitId":9,"b1Sentence":"We must protect these plants so they don't die.","b2Goal":"Deploy passive modal duties ('it is vital to'), and swap 'plants don't die' for 'prevent extinction'.","b1Critique":"The mandate 'We must' is repetitive. 'Save plants so they don't die' is flat; 'conserve species' is ecological.","targetKeywords":[{"word":"vital to conserve","equivalent":"must protect","reason":"Academic obligation adjective to emphasize preservation."},{"word":"endangered species","equivalent":"plants","reason":"Crucial scientific biology jargon."},{"word":"prevent their extinction","equivalent":"so they don't die","reason":"Refined biological conclusion clause."}],"options":[{"text":"It is vital to conserve these endangered species to prevent their extinction.","level":"B2 (Correct)","explanation":"Brilliant! Directly substitutes ecological concepts ('conserve', 'endangered species', 'extinction') to create an scientific thesis sentence."},{"text":"We need to keep these green flora alive so that we avoid their deaths.","level":"B1","explanation":"'Keep flora alive' and 'avoid their deaths' sound amateurish and unscientific."},{"text":"Safeguarding these botanical items is necessary so they don't cease to exist.","level":"B2 (Incorrect)","explanation":"Better, but the phrasing 'botanical items' and 'don't cease to exist' is slightly robotic."}],"correctOptionIndex":0,"c1AdvancedAlternative":"It is of paramount importance that we actively conserve these fragile floral species to mitigate the immediate risk of extinction.","sentenceInversionHint":"Start with high urgency: 'It is of paramount importance that we...'"},{"id":13,"unitId":10,"b1Sentence":"I think this painting is beautiful and makes me feel happy.","b2Goal":"Abolish 'I think', swap 'beautiful' for 'exquisite', and use emotive transit verbs like 'evoking'.","b1Critique":"Overuses high-frequency filter 'I think', simple adjective 'beautiful', and basic 'makes me feel happy'.","targetKeywords":[{"word":"truly exquisite","equivalent":"beautiful","reason":"Strong artistic adjective denoting flawless aesthetic craftsmanship."},{"word":"evoking a profound sense","equivalent":"makes me feel","reason":"Action verb representing emotional invocation."},{"word":"uplifted","equivalent":"happy","reason":"Specific positive emotional adjective."}],"options":[{"text":"This artwork is truly exquisite, evoking a profound sense of joy and leaving me feeling utterly uplifted.","level":"B2 (Correct)","explanation":"Masterpiece! Excludes 'I think', transforms 'beautiful' into 'exquisite', uses 'evoking a profound sense' and high-level mood descriptors."},{"text":"To my view, this painting is extremely pretty, giving me a happy energy.","level":"B1","explanation":"Lacks critical vocabulary. 'Happy energy' and 'extremely pretty' are grammatically elementary."},{"text":"I find that this visual canvas is gorgeous, which causes me to be happy.","level":"B2 (Incorrect)","explanation":"The ending clause 'causes me to be happy' is clinical and unpolished."}],"correctOptionIndex":0,"c1AdvancedAlternative":"This striking canvas is demonstrably exquisite, evoking a profound sense of tranquility while engendering an uplifted state of mind.","sentenceInversionHint":"Refuse the urge to state 'I outline' or 'I believe'; start directly with the subject."}],"vocabularySwapper":[{"id":1,"unitId":1,"sentence":"We made a [booking] at the hotel, so we waited in the [front lobby] and asked if a [silent room] was [ready/free].","targets":[{"simpleWord":"booking","correctWord":"reservation","options":["reservation","reception","key card","lobby"],"explanation":"A 'reservation' is the professional noun for a confirmed booking of accommodation."},{"simpleWord":"front lobby","correctWord":"reception","options":["reception","elevator","key card","lobby"],"explanation":"The 'reception' (or front desk) is the specific desk area where staff manage arrivals."},{"simpleWord":"silent room","correctWord":"quiet room","options":["quiet room","lobby","available","included"],"explanation":"'Quiet room' is the targeted hospitality term representing calm, soundproof space."},{"simpleWord":"ready/free","correctWord":"available","options":["available","included","lobby","key card"],"explanation":"'Available' means free and vacant for immediate occupancy."}]},{"id":2,"unitId":2,"sentence":"Our [landlord] sent clear instructions, and she highly [suggests] checking out the [surrounding area].","targets":[{"simpleWord":"landlord","correctWord":"host","options":["host","critic","review","balcony"],"explanation":"In short-stay apartment rentals, the landlord is referred to as the 'host' or operator."},{"simpleWord":"suggests","correctWord":"recommends","options":["recommends","noisy","windows","condition"],"explanation":"'Recommends' is a more professional and active alternative to 'suggests'."},{"simpleWord":"surrounding area","correctWord":"neighborhood","options":["neighborhood","balcony","condition","location"],"explanation":"'Neighborhood' is the noun identifying the local community and nearby surrounding streets."}]},{"id":3,"unitId":3,"sentence":"I had to buy a [ticket] at the [station] because I was worried about [missing] the fast train.","targets":[{"simpleWord":"ticket","correctWord":"fare","options":["fare","platform","delay","passenger"],"explanation":"'Fare' specifically designates the ticket price or cost paid to travel on transit."},{"simpleWord":"station","correctWord":"terminal","options":["terminal","platform","luggage","announcement"],"explanation":"A high-speed train or transport hub is referred to as a transit 'terminal'."},{"simpleWord":"missing","correctWord":"delaying","options":["delaying","boarding","departure","canceling"],"explanation":"'Delaying' or missing is related to schedule setbacks."}]},{"id":4,"unitId":4,"sentence":"During the [meeting], we discussed the [work plan] and reviewed our [duties].","targets":[{"simpleWord":"meeting","correctWord":"briefing","options":["briefing","agenda","colleague","deadline"],"explanation":"A focused corporate meeting to outline tasks is specifically labeled a 'briefing'."},{"simpleWord":"work plan","correctWord":"agenda","options":["agenda","feedback","workplace","presentation"],"explanation":"The official program or list of meeting items to be addressed is the 'agenda'."},{"simpleWord":"duties","correctWord":"responsibilities","options":["responsibilities","colleagues","feedbacks","deadlines"],"explanation":"'Responsibilities' sounds much more analytical and professional in reviews than simple 'duties'."}]},{"id":5,"unitId":5,"sentence":"I always [do] my bed and try to [keep] my room clean to establish a good [habit].","targets":[{"simpleWord":"do","correctWord":"make","options":["make","dust","sweep","tidy"],"explanation":"The correct verb collocation for organizing bedding is 'to make your bed'."},{"simpleWord":"keep","correctWord":"maintain","options":["maintain","sweep","dust","fold"],"explanation":"'Maintain' is an elevated verb meaning to keep a state or house in proper condition."},{"simpleWord":"habit","correctWord":"routine","options":["routine","chore","alarm","laundry"],"explanation":"A structured daily workflow is professionally called a 'routine'."}]},{"id":6,"unitId":6,"sentence":"The tour has a [quiet] route, but participants must wear safety [gear] and follow cycling [habits].","targets":[{"simpleWord":"quiet","correctWord":"relaxed","options":["relaxed","residential","refunded","dangerous"],"explanation":"'Relaxed' replaces boring 'quiet' to convey low-stakes, simple, leisurely pacing."},{"simpleWord":"gear","correctWord":"helmets","options":["helmets","guides","routes","benefits"],"explanation":"The specific protective gear provided for heads is 'helmets'."},{"simpleWord":"habits","correctWord":"routines","options":["routines","benefits","stretches","parks"],"explanation":"'Routines' is the higher-level word representing habitual exercises and daily flows."}]},{"id":7,"unitId":7,"sentence":"This dish has [healthy] parts, and the restaurant [makes sure] to use [local] ingredients.","targets":[{"simpleWord":"healthy","correctWord":"nutritious","options":["nutritious","fresh","delicious","traditional"],"explanation":"'Nutritious' is an excellent academic upgrade for generic 'healthy' food descriptors."},{"simpleWord":"makes sure","correctWord":"guarantees","options":["guarantees","prepares","includes","serves"],"explanation":"'Guarantees' is an active business verb offering pledge or absolute assurance."},{"simpleWord":"local","correctWord":"locally sourced","options":["locally sourced","traditional","homemade","organic"],"explanation":"'Locally sourced' is the advanced food sector vocabulary for goods procured near the shop."}]},{"id":8,"unitId":8,"sentence":"To resolve the computer [problem], I had to [follow] the guide step-by-step and [restart] the system.","targets":[{"simpleWord":"problem","correctWord":"issue","options":["issue","software","hardware","screen"],"explanation":"In tech support, generic problems are formally called 'issues' or 'anomalies'."},{"simpleWord":"follow","correctWord":"execute","options":["execute","reinstall","connect","install"],"explanation":"'Execute' is a premium verb for running or carrying out a set of standard instructions."},{"simpleWord":"restart","correctWord":"reboot","options":["reboot","reinstall","connect","install"],"explanation":"'Reboot' is the specific hardware-level terminology for restarting computer components."}]},{"id":9,"unitId":9,"sentence":"The nature reserve is [famous] for protecting [animal] species that live in this beautiful [place].","targets":[{"simpleWord":"famous","correctWord":"renowned","options":["renowned","protected","local","threatened"],"explanation":"'Renowned' is a high-level CEFR adjective representing being widely known and celebrated."},{"simpleWord":"animal","correctWord":"wildlife","options":["wildlife","botanical","ecosystem","nature"],"explanation":"'Wildlife' covers all non-domesticated flora and fauna living in natural habitat ranges."},{"simpleWord":"place","correctWord":"habitat","options":["habitat","conservation","reserve","ecosystem"],"explanation":"'Habitat' is the precise ecological definition for the environmental home of a species."}]},{"id":10,"unitId":10,"sentence":"The art [show] displayed [amazing] modern works that express the artist's [ideas].","targets":[{"simpleWord":"show","correctWord":"exhibition","options":["exhibition","vernissage","sculpture","painting"],"explanation":"An official curated presentation of artistic works is called an 'exhibition'."},{"simpleWord":"amazing","correctWord":"provocative","options":["provocative","exquisite","contemporary","striking"],"explanation":"'Provocative' means causing thought, discussion, or strong responses — highly useful for art descriptors."},{"simpleWord":"ideas","correctWord":"perspective","options":["perspective","technique","vernissage","tradition"],"explanation":"The intellectual framing, outlook, or worldview of an artist is their 'perspective'."}]}],"grammarDoctor":[{"id":1,"unitId":1,"focus":"Present Simple vs Present Continuous","symptom":"I am usually having breakfast at my hotel, but this week I eat in local cafés.","highlightedBug":"am usually having ... eat","errorType":"Aspect Confusion (Habitual vs. Temporary)","diagnosticExplanation":"Habitual routines ('usually') require the Present Simple, while temporary situations running around now ('this week') require the Present Continuous.","remedyOptions":[{"text":"I usually have breakfast at my hotel, but this week I am eating in local cafés.","isCorrect":true,"explanation":"Perfect! 'I usually have' correctly denotes habit, and 'I am eating' describes a temporary event."},{"text":"I am usually having breakfast at my hotel, but this week I am eating in local cafés.","isCorrect":false,"explanation":"Incorrect. The first verb still uses the progressive aspect for a habitual routine."},{"text":"I usually have breakfast at my hotel, but this week I eat in local cafés.","isCorrect":false,"explanation":"Incorrect. The second verb uses the Present Simple for a temporary event indicating 'this week'."}],"linguisticRule":"Do not confuse state/habits with temporary actions. Adverbs of frequency (usually, often, always) trigger Present Simple. Limited duration markers (this week, currently, today) trigger Present Continuous."},{"id":2,"unitId":2,"focus":"Past Simple vs Past Continuous","symptom":"While I walked down the street yesterday, it was starting to rain heavily.","highlightedBug":"walked ... was starting","errorType":"Tense Aspect Swap","diagnosticExplanation":"Long continuous background actions ('walking') require the Past Continuous, while sudden, short completed actions that interrupt them require the Past Simple.","remedyOptions":[{"text":"While I was walking down the street yesterday, it was starting to rain heavily.","isCorrect":false,"explanation":"Incorrect. Both tenses are now continuous, which makes the sudden rain sound like a background state rather than an interruptive event."},{"text":"While I walked down the street yesterday, it started to rain heavily.","isCorrect":false,"explanation":"Incorrect. Using simple past for both lacks relative depth, failing to contextualize the continuous backdrop of your walk."},{"text":"While I was walking down the street yesterday, it started to rain heavily.","isCorrect":true,"explanation":"Excellent! 'Was walking' establishes the active background scene, and 'started' registers the sudden past interruption."}],"linguisticRule":"Use Past Continuous (was/were + -ing) for background activities that were in progress. Use Past Simple for the sudden events that broke into or interrupted that backdrop."},{"id":3,"unitId":3,"focus":"Irregular and Double Comparatives","symptom":"Taking the train is much more faster than flying, but it is also more expensiver.","highlightedBug":"more faster ... more expensiver","errorType":"Double Comparative Suffixing","diagnosticExplanation":"Short adjective comparatives (fast ➔ faster) should never be preceded by 'more'. Long adjectives (expensive) should use 'more' but never receive the '-er' suffix.","remedyOptions":[{"text":"Taking the train is much faster than flying, but it is also more expensive.","isCorrect":true,"explanation":"Flawless! 'Faster' is a single-syllable comparative adjective, and 'more expensive' is correct for a three-syllable adjective."},{"text":"Taking the train is much more fast than flying, but it is also expensiver.","isCorrect":false,"explanation":"Incorrect. 'More fast' is structurally weak and 'expensiver' is grammatically non-existent."},{"text":"Taking the train is much faster than flying, but it is also expensivist.","isCorrect":false,"explanation":"Incorrect. 'Expensivist' is a made-up superlative form rather than a comparative term."}],"linguisticRule":"1-syllable adjectives take '-er' (smaller, faster). 3+ syllable adjectives take 'more' (more comfortable, more expensive). Never combine both on a single word."},{"id":4,"unitId":4,"focus":"Modals of Prohibitions and Obligations","symptom":"You don't have to park here; there is a strict 'No Parking' sign and you will get a fine.","highlightedBug":"don't have to","errorType":"Incorrect Modal Selection","diagnosticExplanation":"'Don't have to' means there is no obligation (it is optional), whereas 'must not' is mandatory prohibition (forbidden by law or strict rules).","remedyOptions":[{"text":"You shouldn't have to park here; there is a strict 'No Parking' sign.","isCorrect":false,"explanation":"Incorrect. 'Shouldn't have to' is advice regarding personal obligation rather than an absolute ban."},{"text":"You must not park here; there is a strict 'No Parking' sign and you will get a fine.","isCorrect":true,"explanation":"Exactly! 'Must not' expresses strong, legally enforced prohibition. To park here is forbidden."},{"text":"You needn't park here; there is a strict 'No Parking' sign and you will get a fine.","isCorrect":false,"explanation":"Incorrect. 'Needn't' means lack of necessity, which means you are still technically allowed to if you wish."}],"linguisticRule":"Use 'must not / mustn't' to signal strict rules, laws, and things that are completely forbidden. Use 'don't have to / needn't' when an action is optional or unnecessary."},{"id":5,"unitId":5,"focus":"Present Perfect vs Past Simple","symptom":"I have lived in this apartment since three years, and I key-unlocked the door yesterday.","highlightedBug":"since three years","errorType":"Prepositional Timeline Drift","diagnosticExplanation":"'Since' denotes a specific starting point in the past (e.g., since 2023), whereas 'for' is used to measure a duration or length of time (e.g., for three years).","remedyOptions":[{"text":"I have lived in this apartment since yesterday, and I have key-unlocked the door.","isCorrect":false,"explanation":"Incorrect. While grammatically correct in isolation, this changes the timeline of 'yesterday' into a present-result aspect."},{"text":"I live in this apartment for three years, and I key-unlocked the door yesterday.","isCorrect":false,"explanation":"Incorrect. Simple present 'live' cannot capture an ongoing action spanning three years to the present."},{"text":"I have lived in this apartment for three years, and I unlocked the door yesterday.","isCorrect":true,"explanation":"Superb! Use 'for' for duration (three years) with Present Perfect, and past simple for the simple action ('unlocked') yesterday."}],"linguisticRule":"Specify duration using 'for' + length of time (for 5 days, for 3 years). Specify starting boundaries with 'since' + point in time (since Monday, since 2018)."},{"id":6,"unitId":6,"focus":"Second Conditionals","symptom":"If I have more leisure time, I would cycle around the national park every single day.","highlightedBug":"have ... would cycle","errorType":"Mixed Conditional Chaos","diagnosticExplanation":"A hypothetical, imaginary present situation (indicated by 'would cycle') requires the Second Conditional structure: 'If' + Past Simple, followed by 'would' + Verb Infinitive.","remedyOptions":[{"text":"If I will have more leisure time, I would cycle around the national park.","isCorrect":false,"explanation":"Incorrect. In English, you never place 'will' directly in the conditional 'if' clause."},{"text":"If I had more leisure time, I would cycle around the national park every single day.","isCorrect":true,"explanation":"Outstanding! Second conditional uses simple past 'had' inside the 'if' clause to express a speculative present premise."},{"text":"If I had more leisure time, I will cycle around the national park.","isCorrect":false,"explanation":"Incorrect. Blends past conditional premise ('had') with futuristic certain result ('will')."}],"linguisticRule":"Form the Second Conditional with: If + Past Simple ➔ would + Base Verb. This frames current hypothetical or counterfactual setups in standard CEFR."},{"id":7,"unitId":7,"focus":"Passive Voice Structure","symptom":"The traditional Italian dish was prepare beautifully by the chef during the vernissage.","highlightedBug":"was prepare","errorType":"Missing Past Participle","diagnosticExplanation":"Passive sentences are formed using 'be' + Past Participle. 'Prepare' must be conjugated to its participial form 'prepared'.","remedyOptions":[{"text":"The traditional Italian dish went prepared beautifully by the chef.","isCorrect":false,"explanation":"Incorrect. Avoid replacing 'be' with auxiliary 'go' in standard, formal academic translations."},{"text":"The traditional Italian dish was preparing beautifully by the chef.","isCorrect":false,"explanation":"Incorrect. The progressive participle 'preparing' implies the dish was actively doing the preparation itself."},{"text":"The traditional Italian dish was prepared beautifully by the chef during the vernissage.","isCorrect":true,"explanation":"Excellent! 'Was' (past tense of be) + 'prepared' (past participle) represents passive voice correctly."}],"linguisticRule":"Form passive voice via: Object + [Conjugated Be] + Past Participle (V3). Ensure the participle agrees, e.g. was taken, were built, is known."},{"id":8,"unitId":8,"focus":"Gerunds vs Infinitives","symptom":"She decided planning an upgrade, but she completely forgot calling the reception.","highlightedBug":"planning ... calling","errorType":"Verb Complement Mismatch","diagnosticExplanation":"The verb 'decide' is only followed by an infinitive (to plan). The verb 'forget' can take a gerund for memory, but for a task omission, it must be the infinitive (to call).","remedyOptions":[{"text":"She decided to plan an upgrade, but she completely forgot calling the reception.","isCorrect":false,"explanation":"Incorrect. 'Forgot calling' means she does not remember doing the call in her memory, which isn't the intended task omission."},{"text":"She decided to plan an upgrade, but she completely forgot to call the reception.","isCorrect":true,"explanation":"Outstanding choice! 'Decided to plan' and 'forgot to call' are grammatically precise for decisions and forgotten obligations."},{"text":"She decided planning an upgrade, but she forgot to call the reception.","isCorrect":false,"explanation":"Incorrect. The first verb complement 'decided planning' is still ungrammatical."}],"linguisticRule":"Certain verbs require an infinitive complement (decide, refuse, manage, promise). Others require a gerund (enjoy, avoid, practice, suggest)."},{"id":9,"unitId":9,"focus":"Relative Clauses","symptom":"I met a tour guide which explained us the historical significance of the flora.","highlightedBug":"which ... explained us","errorType":"Relative Pronoun Discord","diagnosticExplanation":"For human subjects (tour guide), you must use relative pronouns 'who' or 'that'. 'Which' is strictly restricted to inanimate objects or non-human animals.","remedyOptions":[{"text":"I met a tour guide who explained the historical significance of the flora to us.","isCorrect":true,"explanation":"Perfect! 'Who' refers to the human guide, and 'explained... to us' is the correct dative object prepositional setup."},{"text":"I met a tour guide which explained the historical significance of the flora to us.","isCorrect":false,"explanation":"Incorrect. 'Which' is still used for the human guide."},{"text":"I met a tour guide whose explained the historical significance of the flora.","isCorrect":false,"explanation":"Incorrect. 'Whose' is a possessive relative pronoun (e.g., 'whose camera was lost'), which doesn't fit before the action verb here."}],"linguisticRule":"Use relative pronoun 'who' (or 'that') for people. Use 'which' (or 'that') for things and contexts. Use 'whose' for possessive links."},{"id":10,"unitId":10,"focus":"Indirect Questions & Word Order","symptom":"Could you tell me where is the local modern art gallery located?","highlightedBug":"where is the local modern art gallery located","errorType":"Embedded Question Order","diagnosticExplanation":"When a question is embedded inside an introductory phrase like 'Could you tell me...', it must follow standard statement word order [Subject + Verb] rather than question word order [Verb + Subject].","remedyOptions":[{"text":"Could you tell me where the local modern art gallery is located?","isCorrect":true,"explanation":"Sublime! Subject ('the local modern art gallery') correctly precedes verb ('is') in this embedded statement layout."},{"text":"Could you tell me where is located the local modern art gallery?","isCorrect":false,"explanation":"Incorrect. This maintains verb-subject inversion ('is' before the gallery)."},{"text":"Could you tell me where does locate the local modern art gallery?","isCorrect":false,"explanation":"Incorrect. Relies on auxiliary 'does' which is forbidden in indirect question alignments."}],"linguisticRule":"Direct questions invert subject & verb (Where is it?). Embedded or indirect questions do not invert (Could you tell me where it is?). Never double-interrogate."}],"source":"C:/Users/vviei/Downloads/remix_-dialogue-practice"}</script>
+  <script>
+    (function () {
+      var data = JSON.parse(document.getElementById("course-data").textContent);
+      var pages = [
+        { id: "welcome", label: "Welcome", group: "Shared" },
+        { id: "syllabus", label: "10-Unit Syllabus", group: "Shared" },
+        { id: "practice", label: "Practice Studio", group: "Student" },
+        { id: "student", label: "Student Portal", group: "Student" },
+        { id: "teacher", label: "Teacher Workspace", group: "Your side" },
+        { id: "progress", label: "Progress", group: "Shared" },
+        { id: "messages", label: "Messages", group: "Shared" }
+      ];
+
+      var skills = [
+        { id: "reading", label: "Reading" },
+        { id: "listening", label: "Listening" },
+        { id: "vocabulary", label: "Vocabulary" },
+        { id: "grammar", label: "Grammar" },
+        { id: "speaking", label: "Speaking" },
+        { id: "writing", label: "Writing" },
+        { id: "levelup", label: "Level Up" },
+        { id: "challenge", label: "Challenge" }
+      ];
+
+      var state = {
+        page: normalizePage(location.hash.replace("#", "")) || "welcome",
+        unitId: 1,
+        skill: "reading"
+      };
+
+      function normalizePage(page) {
+        return pages.some(function (item) { return item.id === page; }) ? page : "";
+      }
+
+      function currentUnit() {
+        return data.units.find(function (unit) { return unit.id === state.unitId; }) || data.units[0];
+      }
+
+      function h(value) {
+        return String(value == null ? "" : value)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#039;");
+      }
+
+      function pageTitle(title, body) {
+        return '<div class="section-title"><h2>' + h(title) + '</h2><p>' + h(body) + '</p></div>';
+      }
+
+      function pills(items, dark) {
+        return '<div class="pill-row">' + items.map(function (item) {
+          return '<span class="pill' + (dark ? " dark" : "") + '">' + h(item) + '</span>';
+        }).join("") + '</div>';
+      }
+
+      function list(items) {
+        return '<ul class="options">' + (items || []).map(function (item) {
+          return '<li>' + h(item) + '</li>';
+        }).join("") + '</ul>';
+      }
+
+      function renderNav() {
+        var nav = document.getElementById("nav");
+        nav.innerHTML = pages.map(function (page) {
+          return '<button type="button" class="' + (page.id === state.page ? "active" : "") + '" data-page="' + page.id + '">' + h(page.label) + '</button>';
+        }).join("");
+
+        var mobileNav = document.getElementById("mobileNav");
+        mobileNav.innerHTML = pages.map(function (page) {
+          return '<option value="' + page.id + '"' + (page.id === state.page ? " selected" : "") + '>' + h(page.group + " - " + page.label) + '</option>';
+        }).join("");
+      }
+
+      function renderUnitGrid() {
+        return '<div class="unit-grid">' + data.units.map(function (unit) {
+          var isActive = unit.id === state.unitId ? " active" : "";
+          return '<button type="button" class="unit-card' + isActive + '" data-unit="' + unit.id + '">' +
+            '<strong>' + h(unit.title) + '</strong>' +
+            '<span>' + h(unit.theme) + '</span>' +
+            '<div class="pill-row"><span class="pill">' + h(unit.difficulty) + '</span><span class="pill">8 skills</span></div>' +
+          '</button>';
+        }).join("") + '</div>';
+      }
+
+      function renderInventory() {
+        var totalQuestions = data.units.reduce(function (sum, unit) {
+          return sum + unit.reading.questions.length + unit.listening.questions.length + unit.grammar.questions.length;
+        }, 0);
+        var vocabItems = data.units.reduce(function (sum, unit) {
+          return sum + unit.vocabulary.items.length;
+        }, 0);
+        return '<div class="inventory">' +
+          '<div><strong>' + data.units.length + '</strong><span>Units imported</span></div>' +
+          '<div><strong>' + totalQuestions + '</strong><span>Question items</span></div>' +
+          '<div><strong>' + vocabItems + '</strong><span>Vocabulary items</span></div>' +
+          '<div><strong>' + (data.levelUp.length + data.vocabularySwapper.length + data.grammarDoctor.length) + '</strong><span>Challenge sets</span></div>' +
+        '</div>';
+      }
+
+      function renderWelcome() {
+        return '<section class="page">' +
+          '<div class="hero-grid">' +
+            '<div class="hero-panel">' +
+              '<span class="eyebrow">MET Proficiency Mastery 2.0</span>' +
+              '<h1>A serious preparation space for adult healthcare learners.</h1>' +
+              '<p>This file keeps the clean platform direction and brings the downloaded 10-unit practice course into one organized place. Practice Studio is a complement; teacher diagnosis and approved feedback stay controlled on your side.</p>' +
+              '<div class="metric-row">' +
+                '<div class="metric"><strong>10</strong><span>MET units</span></div>' +
+                '<div class="metric"><strong>70%</strong><span>MET preparation</span></div>' +
+                '<div class="metric"><strong>30%</strong><span>Healthcare focus</span></div>' +
+                '<div class="metric"><strong>58 / 59</strong><span>Working goal</span></div>' +
+              '</div>' +
+            '</div>' +
+            '<aside class="dark-panel">' +
+              '<div>' +
+                '<span class="eyebrow">Next class target</span>' +
+                '<div class="dark-card">' +
+                  '<h3>Speaking Q4: Organise Clinical Opinions</h3>' +
+                  '<p>Class starts Tuesday, 7:00 PM. Bring one medical, workplace, or patient communication scenario you can deliver in 40-60 seconds.</p>' +
+                  pills(["Approved feedback", "Teacher diagnosis", "Practice complement"], true) +
+                '</div>' +
+              '</div>' +
+              '<div class="dark-metrics"><div><strong>10</strong>Units left</div><div><strong>Approved</strong>Feedback</div><div><strong>0%</strong>Goal state</div></div>' +
+            '</aside>' +
+          '</div>' +
+          pageTitle("Evidence-Based Clinical Flow", "The platform keeps teacher diagnosis, student practice, feedback approval, and visible progress separated.") +
+          '<div class="grid-4">' +
+            workflowCard("1", "Target profiles", "Define goals before evaluation, such as clinical nurse standards or targeted speaking grades.") +
+            workflowCard("2", "Evidence diagnostics", "Identify strengths in speaking, writing, and vocabulary with concrete evaluated samples.") +
+            workflowCard("3", "Structured practice", "Use the 10-unit syllabus as a complement for targeted drills, roleplay, and review.") +
+            workflowCard("4", "Instructor verification", "Approved clinician feedback appears in the student portal only after your review.") +
+          '</div>' +
+          '<div class="panel">' +
+            '<span class="eyebrow">Imported course inventory</span>' +
+            renderInventory() +
+          '</div>' +
+        '</section>';
+      }
+
+      function workflowCard(number, title, body) {
+        return '<div class="card"><div class="number-badge">' + h(number) + '</div><h3>' + h(title) + '</h3><p>' + h(body) + '</p></div>';
+      }
+
+      function renderSyllabus() {
+        var unit = currentUnit();
+        return '<section class="page">' +
+          pageTitle("Shared Syllabus Map", "A structure-first map of the 10-unit course. It separates shared course organization from your teacher workspace and the student portal.") +
+          renderUnitGrid() +
+          '<div class="split">' +
+            '<div class="panel">' +
+              '<span class="eyebrow">Selected unit</span>' +
+              '<h3>' + h(unit.title) + '</h3>' +
+              '<p>' + h(unit.theme) + '</p>' +
+              pills(["Listening", "Reading", "Vocabulary", "Grammar", "Speaking", "Writing", "Level Up", "Challenge"], false) +
+              '<div class="grid-2" style="margin-top:16px">' +
+                compactSkill("Reading", unit.reading.title, unit.reading.focus) +
+                compactSkill("Listening", unit.listening.title, unit.listening.type) +
+                compactSkill("Vocabulary", unit.vocabulary.title, unit.vocabulary.type) +
+                compactSkill("Grammar", unit.grammar.title, unit.grammar.focus) +
+                compactSkill("Speaking", unit.speaking.title, unit.speaking.timing) +
+                compactSkill("Writing", unit.writing.title, unit.writing.genre + " / " + unit.writing.wordCount) +
+              '</div>' +
+            '</div>' +
+            '<aside class="panel">' +
+              '<span class="eyebrow">How this is divided</span>' +
+              '<h3>Your side</h3>' +
+              '<p>Teacher workspace, diagnostics, homework decisions, reports, approvals, and teacher-only notes.</p>' +
+              '<h3>Student side</h3>' +
+              '<p>Dashboard, assigned practice, approved feedback, progress, messages, and Practice Studio access.</p>' +
+              '<h3>Shared</h3>' +
+              '<p>Welcome overview, syllabus map, and the visible learning path.</p>' +
+            '</aside>' +
+          '</div>' +
+        '</section>';
+      }
+
+      function compactSkill(label, title, body) {
+        return '<div class="card"><span class="eyebrow">' + h(label) + '</span><h3>' + h(title) + '</h3><p>' + h(body) + '</p></div>';
+      }
+
+      function renderPractice() {
+        var unit = currentUnit();
+        return '<section class="page">' +
+          pageTitle("Practice Studio", "Student-facing complement for the 10-unit course. It supports practice without replacing teacher diagnosis or approved feedback.") +
+          renderUnitGrid() +
+          '<div class="tabbar">' + skills.map(function (skill) {
+            return '<button type="button" class="' + (skill.id === state.skill ? "active" : "") + '" data-skill="' + skill.id + '">' + h(skill.label) + '</button>';
+          }).join("") + '</div>' +
+          '<div class="panel">' +
+            '<span class="eyebrow">' + h(unit.title) + '</span>' +
+            renderSkillContent(unit, state.skill) +
+          '</div>' +
+        '</section>';
+      }
+
+      function renderSkillContent(unit, skill) {
+        if (skill === "reading") return renderReading(unit);
+        if (skill === "listening") return renderListening(unit);
+        if (skill === "vocabulary") return renderVocabulary(unit);
+        if (skill === "grammar") return renderGrammar(unit);
+        if (skill === "speaking") return renderSpeaking(unit);
+        if (skill === "writing") return renderWriting(unit);
+        if (skill === "levelup") return renderLevelUp(unit);
+        return renderChallenge(unit);
+      }
+
+      function renderReading(unit) {
+        return '<h3>' + h(unit.reading.title) + '</h3>' +
+          '<p class="muted">' + h(unit.reading.focus) + '</p>' +
+          '<div class="split">' +
+            '<div><div class="reading-text">' + h(unit.reading.text) + '</div></div>' +
+            '<aside>' + renderQuestions(unit.reading.questions) + '</aside>' +
+          '</div>' +
+          '<div class="note teacher-note"><strong>Teacher note:</strong> ' + h(unit.reading.teachingNote) + '</div>';
+      }
+
+      function renderListening(unit) {
+        return '<h3>' + h(unit.listening.title) + '</h3>' +
+          '<p class="muted">' + h(unit.listening.type) + '</p>' +
+          '<div class="note"><strong>Before listening:</strong> ' + h(unit.listening.preListening) + '</div>' +
+          '<div class="split" style="margin-top:14px">' +
+            '<div>' + renderDialogue(unit.listening.script) + '</div>' +
+            '<aside>' + renderQuestions(unit.listening.questions) + '<div class="note"><strong>After listening:</strong> ' + h(unit.listening.postListening) + '</div></aside>' +
+          '</div>';
+      }
+
+      function renderDialogue(lines) {
+        return '<div class="dialogue">' + (lines || []).map(function (line) {
+          var highlights = (line.highlightWords || []).map(function (item) {
+            return '<span class="pill">' + h(item.word) + ': ' + h(item.definition) + '</span>';
+          }).join("");
+          return '<div class="line"><b>' + h(line.speaker) + '</b><div><p>' + h(line.text) + '</p>' + (highlights ? '<div class="pill-row">' + highlights + '</div>' : '') + '</div></div>';
+        }).join("") + '</div>';
+      }
+
+      function renderVocabulary(unit) {
+        return '<h3>' + h(unit.vocabulary.title) + '</h3>' +
+          '<p class="muted">' + h(unit.vocabulary.type) + '</p>' +
+          '<div class="vocab-grid">' + unit.vocabulary.items.map(function (item) {
+            return '<div class="vocab-card"><strong>' + h(item.phrase) + '</strong><p>' + h(item.definition) + '</p><p><em>' + h(item.example) + '</em></p></div>';
+          }).join("") + '</div>' +
+          '<div class="panel" style="margin-top:14px"><span class="eyebrow">Matching practice</span>' +
+          '<div class="vocab-grid">' + unit.vocabulary.matchingGame.map(function (item) {
+            return '<div class="vocab-card"><strong>' + h(item.phrase) + '</strong><p>' + h(item.definition) + '</p></div>';
+          }).join("") + '</div></div>' +
+          '<div class="note teacher-note"><strong>Teacher note:</strong> ' + h(unit.vocabulary.teachingNote) + '</div>';
+      }
+
+      function renderGrammar(unit) {
+        return '<h3>' + h(unit.grammar.title) + '</h3>' +
+          '<p class="muted">' + h(unit.grammar.focus) + '</p>' +
+          '<div class="grid-2">' +
+            '<div class="card"><span class="eyebrow">Examples</span>' + list(unit.grammar.examples) + '</div>' +
+            '<div class="card"><span class="eyebrow">Practice questions</span>' + renderGrammarQuestions(unit.grammar.questions) + '</div>' +
+          '</div>';
+      }
+
+      function renderGrammarQuestions(questions) {
+        return '<ol class="question-list">' + questions.map(function (q) {
+          return '<li class="question"><h4>' + h(q.sentence) + '</h4>' +
+            '<p class="muted">Target verb: ' + h(q.verb) + '</p>' +
+            '<ul class="options">' + q.options.map(function (option, index) {
+              return '<li class="' + (index === q.correctAnswer ? "correct" : "") + '">' + h(option) + '</li>';
+            }).join("") + '</ul>' +
+            '<p class="explanation">' + h(q.explanation) + '</p></li>';
+        }).join("") + '</ol>';
+      }
+
+      function renderSpeaking(unit) {
+        return '<h3>' + h(unit.speaking.title) + '</h3>' +
+          '<div class="grid-2">' +
+            '<div class="card"><span class="eyebrow">Setup</span><p>' + h(unit.speaking.setup) + '</p><p><strong>Timing:</strong> ' + h(unit.speaking.timing) + '</p><p>' + h(unit.speaking.instructions) + '</p></div>' +
+            '<div class="card"><span class="eyebrow">Target language</span>' + list(unit.speaking.targetLanguage) + '</div>' +
+            '<div class="card"><span class="eyebrow">Follow-up</span>' + list(unit.speaking.followUp) + '</div>' +
+            '<div class="note teacher-note"><strong>Teacher note:</strong> ' + h(unit.speaking.teachingNote) + '</div>' +
+          '</div>';
+      }
+
+      function renderWriting(unit) {
+        return '<h3>' + h(unit.writing.title) + '</h3>' +
+          '<div class="grid-2">' +
+            '<div class="card"><span class="eyebrow">' + h(unit.writing.genre) + '</span><p><strong>Word count:</strong> ' + h(unit.writing.wordCount) + '</p><p>' + h(unit.writing.prompt) + '</p></div>' +
+            '<div class="card"><span class="eyebrow">Criteria</span>' + list(unit.writing.criteria) + '</div>' +
+          '</div>' +
+          '<div class="note teacher-note"><strong>Teacher note:</strong> ' + h(unit.writing.teachingNote) + '</div>';
+      }
+
+      function renderLevelUp(unit) {
+        var items = data.levelUp.filter(function (item) { return item.unitId === unit.id; });
+        if (!items.length) {
+          return '<h3>Level Up</h3><p class="muted">No Level Up item is attached to this unit yet.</p>';
+        }
+        return '<h3>Level Up Sentence Work</h3>' + items.map(function (item) {
+          return '<div class="card" style="margin-top:12px">' +
+            '<span class="eyebrow">B1 to B2 upgrade</span>' +
+            '<p><strong>B1:</strong> ' + h(item.b1Sentence) + '</p>' +
+            '<p><strong>B2 goal:</strong> ' + h(item.b2Goal) + '</p>' +
+            '<p class="muted">' + h(item.b1Critique) + '</p>' +
+            '<div class="grid-2">' +
+              '<div>' + item.targetKeywords.map(function (kw) {
+                return '<div class="vocab-card"><strong>' + h(kw.word) + '</strong><p>Replaces: ' + h(kw.equivalent) + '</p><p>' + h(kw.reason) + '</p></div>';
+              }).join("") + '</div>' +
+              '<div>' + renderLevelOptions(item) + '</div>' +
+            '</div>' +
+            '<div class="note"><strong>C1 alternative:</strong> ' + h(item.c1AdvancedAlternative) + '</div>' +
+            '<p class="muted"><strong>Inversion hint:</strong> ' + h(item.sentenceInversionHint) + '</p>' +
+          '</div>';
+        }).join("");
+      }
+
+      function renderLevelOptions(item) {
+        return '<ol class="question-list">' + item.options.map(function (option, index) {
+          return '<li class="question"><h4>' + h(option.level) + (index === item.correctOptionIndex ? " - target answer" : "") + '</h4><p>' + h(option.text) + '</p><p class="explanation">' + h(option.explanation) + '</p></li>';
+        }).join("") + '</ol>';
+      }
+
+      function renderChallenge(unit) {
+        var swapper = data.vocabularySwapper.find(function (item) { return item.unitId === unit.id; });
+        var doctor = data.grammarDoctor.find(function (item) { return item.unitId === unit.id; });
+        return '<h3>Challenge Set</h3>' +
+          '<div class="grid-2">' +
+            '<div class="card"><span class="eyebrow">Vocabulary swapper</span>' + renderSwapper(swapper) + '</div>' +
+            '<div class="card"><span class="eyebrow">Grammar doctor</span>' + renderDoctor(doctor) + '</div>' +
+          '</div>' +
+          '<div class="panel" style="margin-top:14px"><span class="eyebrow">Mixed MET check</span>' +
+          renderQuestions(unit.reading.questions.slice(0, 2).concat(unit.listening.questions.slice(0, 2))) +
+          '</div>';
+      }
+
+      function renderSwapper(item) {
+        if (!item) return '<p class="muted">No vocabulary challenge attached yet.</p>';
+        return '<p>' + h(item.sentence) + '</p>' + item.targets.map(function (target) {
+          return '<div class="vocab-card"><strong>' + h(target.simpleWord) + ' -> ' + h(target.correctWord) + '</strong>' + list(target.options) + '<p>' + h(target.explanation) + '</p></div>';
+        }).join("");
+      }
+
+      function renderDoctor(item) {
+        if (!item) return '<p class="muted">No grammar doctor challenge attached yet.</p>';
+        return '<h3>' + h(item.focus) + '</h3><p><strong>Symptom:</strong> ' + h(item.symptom) + '</p><p><strong>Error type:</strong> ' + h(item.errorType) + '</p><p>' + h(item.diagnosticExplanation) + '</p>' +
+          '<ol class="question-list">' + item.remedyOptions.map(function (option) {
+            return '<li class="question"><h4>' + (option.isCorrect ? "Correct repair" : "Needs revision") + '</h4><p>' + h(option.text) + '</p><p class="explanation">' + h(option.explanation) + '</p></li>';
+          }).join("") + '</ol>' +
+          '<div class="note"><strong>Rule:</strong> ' + h(item.linguisticRule) + '</div>';
+      }
+
+      function renderQuestions(questions) {
+        return '<ol class="question-list">' + (questions || []).map(function (q) {
+          return '<li class="question"><h4>' + h(q.question) + '</h4>' +
+            '<ul class="options">' + q.options.map(function (option, index) {
+              return '<li class="' + (index === q.correctAnswer ? "correct" : "") + '">' + h(String.fromCharCode(65 + index) + ". " + option) + '</li>';
+            }).join("") + '</ul>' +
+            '<p class="explanation">' + h(q.explanation) + '</p></li>';
+        }).join("") + '</ol>';
+      }
+
+      function renderStudent() {
+        return '<section class="page">' +
+          pageTitle("Student Side", "Simple student-facing areas: dashboard, assigned homework, approved feedback, progress, messages, and practice access.") +
+          '<div class="grid-3">' +
+            '<div class="card"><span class="eyebrow">Today\'s focus</span><h3>Fuller MET speaking answers</h3><p>Give a clear opinion, choose one reason, and add a concrete example from work or daily life.</p></div>' +
+            '<div class="card"><span class="eyebrow">Before our next class</span><h3>Assigned practice</h3><p>Record one 60-second answer and complete the selected unit reading questions before class.</p><button class="primary-btn" data-page="practice">Open Practice Studio</button></div>' +
+            '<div class="card"><span class="eyebrow">Upcoming class</span><h3>Tuesday, 7:00 PM</h3><p>Bring one healthcare or workplace situation that you can explain clearly in English.</p></div>' +
+          '</div>' +
+          '<div class="grid-2">' +
+            '<div class="panel"><span class="eyebrow">Approved feedback</span><h3>What is becoming stronger</h3><p>Your answer was clearer when you used a real workplace example instead of staying general.</p><h3>Your next step</h3><p>Plan your reason before you start speaking. This will make your response easier to follow.</p></div>' +
+            '<div class="panel"><span class="eyebrow">Messages</span><h3>Teacher note available</h3><p>New speaking practice is available this week. Focus on giving fuller answers with examples.</p><button class="ghost-btn" data-page="messages">Open Messages</button></div>' +
+          '</div>' +
+        '</section>';
+      }
+
+      function renderTeacher() {
+        var unit = currentUnit();
+        return '<section class="page">' +
+          pageTitle("Your Side", "Teacher workspace for diagnostic notes, homework decisions, reports, feedback approval, and course organization.") +
+          '<div class="grid-2">' +
+            '<div class="panel"><span class="eyebrow">Teacher-only diagnosis</span><h3>Diagnostic feedback stays here first</h3><p>Student can answer familiar topics but needs a stronger opening sentence, clearer reason selection, and more controlled connectors under time pressure.</p><div class="note teacher-note">This diagnostic detail is not automatically shown to the student.</div></div>' +
+            '<div class="panel"><span class="eyebrow">Approval controls</span><h3>Student feedback draft</h3><textarea class="textarea">Today\'s focus: We worked on giving a fuller MET speaking answer with a clear opinion and one example.\\n\\nWhat is becoming stronger: Your answer was clearer when you used a real workplace example instead of staying general.\\n\\nYour next step: Plan your reason before you start speaking.</textarea><div class="approval-row"><button class="primary-btn">Approve for student</button><button class="ghost-btn">Keep as draft</button></div></div>' +
+          '</div>' +
+          '<div class="panel">' +
+            '<span class="eyebrow">Selected unit for homework builder</span><h3>' + h(unit.title) + '</h3><p>' + h(unit.theme) + '</p>' +
+            pills(["Reading homework", "Speaking recording", "Vocabulary review", "Grammar repair", "Writing prompt"], false) +
+          '</div>' +
+          '<div class="grid-3">' +
+            '<div class="card"><span class="eyebrow">Reports</span><h3>Evidence first</h3><p>Do not assign scores where there are not enough samples. Show what has and has not been evaluated.</p></div>' +
+            '<div class="card"><span class="eyebrow">Homework builder</span><h3>Type-first practice</h3><p>Choose exercise type first, then fill it with the most relevant unit content.</p></div>' +
+            '<div class="card"><span class="eyebrow">Feedback history</span><h3>Approve before publishing</h3><p>Draft, edit, and approve student-friendly feedback before it appears on the student side.</p></div>' +
+          '</div>' +
+        '</section>';
+      }
+
+      function renderProgress() {
+        return '<section class="page">' +
+          pageTitle("Progress", "Shared progress should stay honest. Skills that have not been practiced enough stay marked as not evaluated yet.") +
+          '<div class="grid-2">' +
+            progressCard("Speaking", 24, "Evidence collected: opening structure and examples. Needs more timed samples.") +
+            progressCard("Writing", 12, "One short response reviewed. Not enough evidence for a full score.") +
+            progressCard("Listening", 0, "Not evaluated yet. Complete listening practice before review.") +
+            progressCard("Reading", 0, "Not evaluated yet. Complete reading questions before review.") +
+          '</div>' +
+          '<div class="panel"><span class="eyebrow">Unit pathway</span>' + renderUnitGrid() + '</div>' +
+        '</section>';
+      }
+
+      function progressCard(label, width, body) {
+        return '<div class="card status-line"><h3>' + h(label) + '</h3><div class="bar"><span style="width:' + width + '%"></span></div><p>' + h(body) + '</p></div>';
+      }
+
+      function renderMessages() {
+        return '<section class="page">' +
+          pageTitle("Messages", "Clear reminders and teacher communication without mixing sensitive diagnosis into the student feed.") +
+          '<div class="grid-2">' +
+            '<div class="panel"><span class="eyebrow">Announcement board</span><h3>New speaking practice is available this week.</h3><p>Focus on giving fuller answers with examples. Try recording your response before class so we can review it together.</p><h3>MET vocabulary focus</h3><p>Work and career vocabulary is ready for review in the unit practice area.</p></div>' +
+            '<div class="panel"><span class="eyebrow">Message teacher</span><h3>Question for next class</h3><textarea class="textarea">I want to practice giving a clearer reason before I speak.</textarea><div class="approval-row"><button class="primary-btn">Save message</button><button class="ghost-btn">Clear</button></div></div>' +
+          '</div>' +
+        '</section>';
+      }
+
+      function render() {
+        renderNav();
+        var content = document.getElementById("content");
+        if (state.page === "welcome") content.innerHTML = renderWelcome();
+        if (state.page === "syllabus") content.innerHTML = renderSyllabus();
+        if (state.page === "practice") content.innerHTML = renderPractice();
+        if (state.page === "student") content.innerHTML = renderStudent();
+        if (state.page === "teacher") content.innerHTML = renderTeacher();
+        if (state.page === "progress") content.innerHTML = renderProgress();
+        if (state.page === "messages") content.innerHTML = renderMessages();
+      }
+
+      document.addEventListener("click", function (event) {
+        var pageButton = event.target.closest("[data-page]");
+        if (pageButton) {
+          state.page = pageButton.getAttribute("data-page");
+          location.hash = state.page;
+          render();
+          return;
+        }
+
+        var unitButton = event.target.closest("[data-unit]");
+        if (unitButton) {
+          state.unitId = Number(unitButton.getAttribute("data-unit"));
+          render();
+          return;
+        }
+
+        var skillButton = event.target.closest("[data-skill]");
+        if (skillButton) {
+          state.skill = skillButton.getAttribute("data-skill");
+          render();
+        }
+      });
+
+      document.getElementById("mobileNav").addEventListener("change", function (event) {
+        state.page = event.target.value;
+        location.hash = state.page;
+        render();
+      });
+
+      window.addEventListener("hashchange", function () {
+        var next = normalizePage(location.hash.replace("#", ""));
+        if (next && next !== state.page) {
+          state.page = next;
+          render();
+        }
+      });
+
+      render();
+    })();
+  </script>
+</body>
+</html>

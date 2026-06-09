@@ -190,6 +190,13 @@ export default function App() {
     setViewParams(params);
   };
 
+  // Move focus to main content area on SPA navigation so screen readers
+  // announce the new page without the user having to manually explore.
+  useEffect(() => {
+    const main = document.querySelector('.shell-main');
+    if (main) { main.setAttribute('tabindex', '-1'); main.focus({ preventScroll: true }); }
+  }, [view]);
+
   const setTweak = (key, value) => {
     const next = { ...tweaks, [key]: value };
     setTweaksState(next);
@@ -247,7 +254,7 @@ export default function App() {
       <Shell tabs={teacherTabs} active={view} onTab={(id) => navigate(id)} rightSlot={rightSlot}>
         <ErrorBoundary label="Page unavailable">
           <Suspense fallback={<PageLoader />}>
-            {renderTeacherPage(view, viewParams, { students, navigate })}
+            {renderTeacherPage(view, viewParams, { students, navigate, teacherName: auth.displayName?.split(' ')[0] || 'Vini' })}
           </Suspense>
         </ErrorBoundary>
       </Shell>
@@ -258,11 +265,11 @@ export default function App() {
 }
 
 function renderTeacherPage(view, params, ctx) {
-  const { students, navigate } = ctx;
+  const { students, navigate, teacherName } = ctx;
 
   switch (view) {
     case 'dashboard':
-      return <TeacherDashboard students={students} onNavigate={navigate} />;
+      return <TeacherDashboard students={students} onNavigate={navigate} teacherName={teacherName} />;
 
     case 'students':
       return <StudentsPage students={students} onNavigate={navigate} />;
@@ -329,7 +336,7 @@ function renderTeacherPage(view, params, ctx) {
       />;
 
     default:
-      return <TeacherDashboard students={students} onNavigate={navigate} />;
+      return <TeacherDashboard students={students} onNavigate={navigate} teacherName={teacherName} />;
   }
 }
 

@@ -199,6 +199,35 @@ export async function signUpWithPassword(email, password) {
 }
 
 /**
+ * Send a password-reset email via Supabase Recovery API (PKCE flow).
+ * On click, Supabase redirects back to the app where App.jsx's PKCE handler
+ * signs the user in; they can then update their password in Settings.
+ */
+export async function resetPasswordForEmail(email, redirectTo) {
+  const { url, anonKey, isConfigured } = getSupabaseConfig();
+  if (!isConfigured) throw new Error('Supabase is not configured.');
+  const verifier = generateVerifier();
+  const challenge = await challengeFromVerifier(verifier);
+  localStorage.setItem(PKCE_VERIFIER_KEY, verifier);
+  const res = await fetch(`${url}/auth/v1/recover`, {
+    method: 'POST',
+    headers: { apikey: anonKey, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      email: String(email).trim(),
+      redirect_to: redirectTo,
+      code_challenge: challenge,
+      code_challenge_method: 's256',
+    }),
+  });
+  if (!res.ok) {
+    let msg = `Reset request failed (${res.status})`;
+    try { const j = await res.json(); msg = j.msg || j.error_description || j.error || msg; } catch {}
+    throw new Error(msg);
+  }
+  return { ok: true };
+}
+
+/**
  * Send a passwordless magic-link / OTP email using PKCE flow.
  * On click, Supabase redirects to `redirectTo?code=xxx` (PKCE) or
  * `redirectTo#access_token=xxx` (implicit, legacy) — App.jsx handles both.

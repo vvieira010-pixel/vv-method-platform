@@ -8,6 +8,7 @@ import { getExType, parseBlankTemplate, shuffleArray, autoGrade } from '../lib/e
 import { ExTypeBadge } from './exercise-editor.jsx';
 import Listening from './exercises/Listening.jsx';
 import { getDbContext, uploadSubmissionAudio, createSignedAudioUrl } from '../lib/supabase-db.js';
+import { DialoguePlayer, SwapPlayer, LevelUpPlayer } from './exercise-player-new-types.jsx';
 
 /**
  * ExercisePlayer — switches on exercise.type, renders the right interactive UI.
@@ -32,8 +33,11 @@ export function ExercisePlayer({ exercise, response, onResponse, readOnly = fals
     case 'speak': return <SpeakPlayer ex={exercise} res={response} update={update} readOnly={readOnly} />;
     case 'order': return <OrderPlayer ex={exercise} res={response} update={update} readOnly={readOnly} />;
     case 'fix':   return <FixPlayer   ex={exercise} res={response} update={update} readOnly={readOnly} />;
-    case 'flash': return <FlashPlayer ex={exercise} res={response} update={update} readOnly={readOnly} />;
-    case 'listen': return <Listening exercise={exercise} onComplete={(result) => update({ selected: result?.correct ? exercise.correct : -1 })} />;
+    case 'flash':    return <FlashPlayer    ex={exercise} res={response} update={update} readOnly={readOnly} />;
+    case 'listen':   return <Listening exercise={exercise} onComplete={(result) => update({ selected: result?.correct ? exercise.correct : -1 })} />;
+    case 'dialogue': return <DialoguePlayer ex={exercise} res={response} update={update} readOnly={readOnly} />;
+    case 'swap':     return <SwapPlayer     ex={exercise} res={response} update={update} readOnly={readOnly} />;
+    case 'levelup':  return <LevelUpPlayer  ex={exercise} res={response} update={update} readOnly={readOnly} />;
     default:
       return (
         <div style={{ padding: 14, fontSize: 'var(--text-sm)', color: 'var(--text-2)', lineHeight: 1.6 }}>
@@ -739,9 +743,15 @@ function FixPlayer({ ex, res, update, readOnly }) {
 /* ─── 7. FLASHCARDS ─────────────────────────────────────────── */
 function FlashPlayer({ ex, res, update, readOnly }) {
   const pairs = (ex.pairs || []).filter(p => p.term || p.def);
+  const [mode, setMode] = useState('cards');
   const [idx, setIdx] = useState(res?.idx || 0);
   const [flipped, setFlipped] = useState(false);
   const [learned, setLearned] = useState(res?.learned || 0);
+  // Match game state
+  const [matchPairs, setMatchPairs] = useState(null);
+  const [selectedTerm, setSelectedTerm] = useState(null);
+  const [matched, setMatched] = useState(new Set());
+  const [wrongFlash, setWrongFlash] = useState(null);
 
   if (pairs.length === 0) return <p style={{ color: 'var(--muted)' }}>No flashcards defined.</p>;
 
@@ -756,65 +766,147 @@ function FlashPlayer({ ex, res, update, readOnly }) {
     next();
   };
 
+  const startMatch = () => {
+    const shuffledDefs = shuffleArray(pairs.map((p, i) => ({ ...p, origIdx: i })), ex.id);
+    setMatchPairs(shuffledDefs);
+    setSelectedTerm(null);
+    setMatched(new Set());
+    setWrongFlash(null);
+    setMode('match');
+  };
+
+  const handleMatchDef = (defOrigIdx) => {
+    if (selectedTerm === null) return;
+    if (selectedTerm === defOrigIdx) {
+      const next = new Set(matched);
+      next.add(defOrigIdx);
+      setMatched(next);
+      setSelectedTerm(null);
+    } else {
+      setWrongFlash(defOrigIdx);
+      setTimeout(() => { setWrongFlash(null); setSelectedTerm(null); }, 600);
+    }
+  };
+
+  const allMatched = matched.size === pairs.length;
+
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-        <span style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)' }}>{idx + 1} of {pairs.length}</span>
-        <span style={{ fontSize: 'var(--text-sm)', color: 'var(--success)' }}>✓ {learned} learned</span>
+      {/* Mode toggle */}
+      <div style={{ display: 'flex', gap: 6, marginBottom: 14 }}>
+        {[{ id: 'cards', label: 'Flashcards' }, { id: 'match', label: 'Match Game' }].map(m => (
+          <button key={m.id} onClick={m.id === 'match' ? startMatch : () => setMode('cards')}
+            style={{
+              padding: '5px 14px', borderRadius: 99, border: '1.5px solid',
+              fontSize: 'var(--text-xs)', fontWeight: 700, cursor: 'pointer',
+              borderColor: mode === m.id ? 'var(--primary)' : 'var(--border)',
+              background: mode === m.id ? 'var(--accent-subtle)' : 'var(--surface)',
+              color: mode === m.id ? 'var(--accent-deep)' : 'var(--text-2)',
+            }}>
+            {m.label}
+          </button>
+        ))}
       </div>
 
-      {/* Card */}
-      <div
-        onClick={() => setFlipped(f => !f)}
-        style={{
-          background: flipped ? 'var(--accent-deep)' : 'var(--surface)',
-          color: flipped ? '#F0F6FC' : 'var(--text)',
-          border: `2px solid ${flipped ? 'var(--accent-deep)' : 'var(--border)'}`,
-          borderRadius: 14, padding: '40px 28px', textAlign: 'center',
-          minHeight: 160, cursor: 'pointer',
-          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-          transition: 'all .3s var(--ease)',
-        }}
-      >
-        <div style={{
-          fontSize: 'var(--text-xs)', textTransform: 'uppercase', letterSpacing: '0.1em',
-          color: flipped ? 'rgba(240,246,252,.55)' : 'var(--faint)',
-          marginBottom: 14,
-        }}>
-          {flipped ? 'Definition' : 'Term'}
-        </div>
-        <div style={{
-          fontFamily: 'var(--font-display)', fontWeight: 600,
-          fontSize: flipped ? 'var(--text-lg)' : 'var(--text-2xl)',
-          lineHeight: 1.3, maxWidth: 480,
-        }}>
-          {flipped ? card.def : card.term}
-        </div>
-        <div style={{
-          marginTop: 16, fontSize: 'var(--text-xs)',
-          color: flipped ? 'rgba(240,246,252,.4)' : 'var(--faint)',
-          letterSpacing: '.1em', textTransform: 'uppercase',
-        }}>
-          Click to flip
-        </div>
-      </div>
-
-      {/* Controls */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 14, gap: 8 }}>
-        <Button variant="ghost" size="sm" onClick={prev} disabled={idx === 0}>
-          <Icon.arrowL size={12} /> Previous
-        </Button>
-        <div style={{ display: 'flex', gap: 8 }}>
-          {flipped && !readOnly && (
-            <Button variant="primary" size="sm" onClick={mark}>
-              <Icon.check size={12} /> Learned
+      {mode === 'match' && matchPairs ? (
+        allMatched ? (
+          <div style={{ textAlign: 'center', padding: '32px 20px', background: 'rgba(34,139,34,.08)', borderRadius: 14, border: '1.5px solid #3CB371' }}>
+            <div style={{ fontSize: 32, marginBottom: 8 }}>🎉</div>
+            <div style={{ fontWeight: 700, color: '#1A6B1A', fontSize: 'var(--text-lg)' }}>All matched!</div>
+            <Button variant="ghost" size="sm" onClick={startMatch} style={{ marginTop: 12 }}>Play again</Button>
+          </div>
+        ) : (
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 2 }}>Terms</div>
+              {pairs.map((p, origIdx) => {
+                if (matched.has(origIdx)) {
+                  return <div key={origIdx} style={{ padding: '10px 14px', borderRadius: 8, background: 'rgba(34,139,34,.1)', border: '1.5px solid #3CB371', color: '#1A6B1A', fontWeight: 600, fontSize: 'var(--text-sm)' }}>{p.term}</div>;
+                }
+                const isSelected = selectedTerm === origIdx;
+                return (
+                  <button key={origIdx} onClick={() => !readOnly && setSelectedTerm(isSelected ? null : origIdx)}
+                    style={{
+                      padding: '10px 14px', borderRadius: 8, border: '1.5px solid',
+                      borderColor: isSelected ? 'var(--primary)' : 'var(--border)',
+                      background: isSelected ? 'var(--accent-subtle)' : 'var(--surface)',
+                      cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600,
+                      fontSize: 'var(--text-sm)', color: isSelected ? 'var(--accent-deep)' : 'var(--text)',
+                      textAlign: 'left', transition: 'all .15s',
+                    }}>
+                    {p.term}
+                  </button>
+                );
+              })}
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 2 }}>Definitions</div>
+              {matchPairs.map((p) => {
+                const origIdx = p.origIdx;
+                if (matched.has(origIdx)) {
+                  return <div key={origIdx} style={{ padding: '10px 14px', borderRadius: 8, background: 'rgba(34,139,34,.1)', border: '1.5px solid #3CB371', color: '#1A6B1A', fontSize: 'var(--text-sm)' }}>{p.def}</div>;
+                }
+                const isWrong = wrongFlash === origIdx;
+                return (
+                  <button key={origIdx} onClick={() => !readOnly && handleMatchDef(origIdx)}
+                    style={{
+                      padding: '10px 14px', borderRadius: 8, border: '1.5px solid',
+                      borderColor: isWrong ? '#C03030' : selectedTerm !== null ? 'var(--primary)' : 'var(--border)',
+                      background: isWrong ? 'rgba(200,50,50,.08)' : selectedTerm !== null ? 'rgba(61,166,166,.06)' : 'var(--surface)',
+                      cursor: selectedTerm !== null ? 'pointer' : 'default',
+                      fontFamily: 'inherit', fontSize: 'var(--text-sm)', color: 'var(--text)',
+                      textAlign: 'left', transition: 'all .15s',
+                    }}>
+                    {p.def}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )
+      ) : (
+        <>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+            <span style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)' }}>{idx + 1} of {pairs.length}</span>
+            <span style={{ fontSize: 'var(--text-sm)', color: 'var(--success)' }}>✓ {learned} learned</span>
+          </div>
+          <div onClick={() => setFlipped(f => !f)}
+            style={{
+              background: flipped ? 'var(--accent-deep)' : 'var(--surface)',
+              color: flipped ? '#F0F6FC' : 'var(--text)',
+              border: `2px solid ${flipped ? 'var(--accent-deep)' : 'var(--border)'}`,
+              borderRadius: 14, padding: '40px 28px', textAlign: 'center',
+              minHeight: 160, cursor: 'pointer',
+              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+              transition: 'all .3s var(--ease)',
+            }}>
+            <div style={{ fontSize: 'var(--text-xs)', textTransform: 'uppercase', letterSpacing: '0.1em', color: flipped ? 'rgba(240,246,252,.55)' : 'var(--faint)', marginBottom: 14 }}>
+              {flipped ? 'Definition' : 'Term'}
+            </div>
+            <div style={{ fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: flipped ? 'var(--text-lg)' : 'var(--text-2xl)', lineHeight: 1.3, maxWidth: 480 }}>
+              {flipped ? card.def : card.term}
+            </div>
+            <div style={{ marginTop: 16, fontSize: 'var(--text-xs)', color: flipped ? 'rgba(240,246,252,.4)' : 'var(--faint)', letterSpacing: '.1em', textTransform: 'uppercase' }}>
+              Click to flip
+            </div>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 14, gap: 8 }}>
+            <Button variant="ghost" size="sm" onClick={prev} disabled={idx === 0}>
+              <Icon.arrowL size={12} /> Previous
             </Button>
-          )}
-          <Button variant="ghost" size="sm" onClick={next} disabled={idx === pairs.length - 1}>
-            Next <Icon.arrowR size={12} />
-          </Button>
-        </div>
-      </div>
+            <div style={{ display: 'flex', gap: 8 }}>
+              {flipped && !readOnly && (
+                <Button variant="primary" size="sm" onClick={mark}>
+                  <Icon.check size={12} /> Learned
+                </Button>
+              )}
+              <Button variant="ghost" size="sm" onClick={next} disabled={idx === pairs.length - 1}>
+                Next <Icon.arrowR size={12} />
+              </Button>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }

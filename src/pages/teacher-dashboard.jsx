@@ -13,7 +13,7 @@ function timeOfDay() {
   return h < 12 ? 'morning' : h < 17 ? 'afternoon' : 'evening';
 }
 
-export default function TeacherDashboard({ students, onNavigate }) {
+export default function TeacherDashboard({ students, onNavigate, teacherName = 'Vini' }) {
   const [data, setData] = useState({
     todayClasses: [], needsDiagnosis: [], pendingSubmissions: [],
     recentActivity: [], stats: { students: 0, classesToday: 0, pendingReview: 0, activeErrors: 0 },
@@ -57,11 +57,11 @@ export default function TeacherDashboard({ students, onNavigate }) {
     <div style={styles.shell}>
       {/* Header */}
       <div style={{ marginBottom: 16 }}>
-        <h1 style={styles.headline}>Good {timeOfDay()}, Vini.</h1>
+        <h1 style={styles.headline}>Good {timeOfDay()}, {teacherName}.</h1>
         <p style={styles.sub}>{today}</p>
       </div>
 
-      <Card className="teacher-priority-card" style={styles.priorityCard}>
+      <Card className="teacher-priority-card" style={{ ...styles.priorityCard, animation: 'fadeUp 0.3s var(--ease) both', animationDelay: '0ms' }}>
         <div style={styles.priorityIcon}>{priority.icon}</div>
         <div className="teacher-priority-copy">
           <div style={styles.priorityKicker}>Today priority</div>
@@ -75,15 +75,21 @@ export default function TeacherDashboard({ students, onNavigate }) {
 
       {/* KPIs */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(130px,1fr))', gap: 8, marginBottom: 14 }}>
-        <KpiCard label="Students" value={data.stats.students} icon={<Icon.student size={16} />} />
-        <KpiCard label="Classes today" value={data.stats.classesToday} icon={<Icon.calendar size={16} />} tone={data.stats.classesToday > 0 ? 'info' : ''} />
-        <KpiCard label="Need diagnosis" value={data.stats.needsDiagnosis} icon={<Icon.diagnose size={16} />} tone={data.stats.needsDiagnosis > 0 ? 'warning' : ''} onClick={() => onNavigate('diagnostics')} />
-        <KpiCard label="Pending review" value={data.stats.pendingReview} icon={<Icon.doc size={16} />} tone={data.stats.pendingReview > 0 ? 'danger' : ''} onClick={() => onNavigate('submissions')} />
+        {[
+          { label: 'Students', value: data.stats.students, icon: <Icon.student size={16} /> },
+          { label: 'Classes today', value: data.stats.classesToday, icon: <Icon.calendar size={16} />, tone: data.stats.classesToday > 0 ? 'info' : '' },
+          { label: 'Need diagnosis', value: data.stats.needsDiagnosis, icon: <Icon.diagnose size={16} />, tone: data.stats.needsDiagnosis > 0 ? 'warning' : '', onClick: () => onNavigate('diagnostics') },
+          { label: 'Pending review', value: data.stats.pendingReview, icon: <Icon.doc size={16} />, tone: data.stats.pendingReview > 0 ? 'danger' : '', onClick: () => onNavigate('submissions') },
+        ].map((kpi, i) => (
+          <div key={kpi.label} style={{ animation: 'fadeUp 0.3s var(--ease) both', animationDelay: `${i * 60}ms` }}>
+            <KpiCard {...kpi} />
+          </div>
+        ))}
       </div>
 
       <div className="teacher-dashboard-stack">
         {/* Today's classes */}
-        <Card style={{ padding: 14 }}>
+        <Card style={{ padding: 14, animation: 'fadeUp 0.3s var(--ease) both', animationDelay: '80ms' }}>
           <SectionHeader title="Today's Classes" icon={<Icon.calendar size={15} />} action={<Button variant="ghost" size="sm" onClick={() => onNavigate('calendar')}>View calendar</Button>} />
           {data.todayClasses.length === 0 ? (
             <p style={styles.empty}>No classes scheduled today.</p>
@@ -107,7 +113,7 @@ export default function TeacherDashboard({ students, onNavigate }) {
         </Card>
 
         {/* Needs diagnosis */}
-        <Card style={{ padding: 14 }}>
+        <Card style={{ padding: 14, animation: 'fadeUp 0.3s var(--ease) both', animationDelay: '160ms' }}>
           <SectionHeader title="Classes Needing Diagnosis" icon={<Icon.diagnose size={15} />} action={<Button variant="ghost" size="sm" onClick={() => onNavigate('diagnostics')}>All diagnostics</Button>} />
           {data.needsDiagnosis.length === 0 ? (
             <p style={styles.empty}>All caught up! No classes awaiting diagnosis.</p>
@@ -133,7 +139,7 @@ export default function TeacherDashboard({ students, onNavigate }) {
         </Card>
 
         {/* Pending submissions */}
-        <Card style={{ padding: 14 }}>
+        <Card style={{ padding: 14, animation: 'fadeUp 0.3s var(--ease) both', animationDelay: '240ms' }}>
           <SectionHeader title="Submissions Awaiting Review" icon={<Icon.doc size={15} />} action={<Button variant="ghost" size="sm" onClick={() => onNavigate('submissions')}>All submissions</Button>} />
           {data.pendingSubmissions.length === 0 ? (
             <p style={styles.empty}>No submissions waiting for review.</p>
@@ -245,7 +251,7 @@ function QuickAction({ icon, label, onClick }) {
 
 const styles = {
   shell: { maxWidth: 1000, margin: '0 auto', padding: '18px 16px' },
-  headline: { fontFamily: 'var(--font-display)', fontSize: 'var(--text-2xl)', fontWeight: 700, color: 'var(--accent-deep)', margin: 0 },
+  headline: { fontFamily: 'var(--font-display-serif)', fontSize: 'var(--text-2xl)', fontWeight: 400, color: 'var(--accent-deep)', margin: 0 },
   sub: { fontSize: 'var(--text-sm)', color: 'var(--muted)', margin: '4px 0 0' },
   priorityCard: {
     marginBottom: 12,
