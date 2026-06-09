@@ -8,7 +8,7 @@ import { parseAiJson } from '../lib/ai-helpers.js';
 import {
   getAllSubmissions, getHomework, getReviews, saveReview, deleteReview,
   getDiagnoses, getErrorBank, promoteErrorToLongTerm, markErrorSolved, saveProgressNote,
-  getStudent, sendMessage,
+  getStudent, getInbox, sendMessage,
 } from '../lib/workflow.js';
 import { createSignedAudioUrl } from '../lib/supabase-db.js';
 
@@ -24,6 +24,9 @@ export default function SubmissionReview({ submissionId, students, onNavigate })
   const [aiComparison, setAiComparison] = useState(null);
   const [saving, setSaving] = useState(false);
   const [audioUrls, setAudioUrls] = useState({}); // exId → playable URL (signed for Storage paths)
+  const [feedbackReplies, setFeedbackReplies] = useState([]);
+  const [feedbackUnderstood, setFeedbackUnderstood] = useState(false);
+  const [replyToStudent, setReplyToStudent] = useState('');
 
   useEffect(() => { load(); }, [submissionId]);
 
@@ -69,6 +72,17 @@ export default function SubmissionReview({ submissionId, students, onNavigate })
       const dx = await getDiagnoses(sub.studentId);
       const d = (dx || []).find(d => d.id === hwItem.diagnosisId);
       setDiagnosis(d);
+      // Load student feedback replies linked to this diagnosis
+      if (d) {
+        const inbox = await getInbox({ role: 'teacher' });
+        const replies = (inbox || []).filter(
+          m => m.diagnosisId === d.id && m.type === 'feedback-reply' && m.fromStudentId === sub.studentId
+        ).sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+        setFeedbackReplies(replies);
+        setFeedbackUnderstood(!!(inbox || []).find(
+          m => m.diagnosisId === d.id && m.type === 'feedback-understood' && m.fromStudentId === sub.studentId
+        ));
+      }
     }
 
     const s = await getStudent(sub.studentId) || students.find(x => x.id === sub.studentId);
@@ -442,6 +456,59 @@ Return JSON:
               </label>
             </div>
           </Card>
+
+          {/* Student feedback replies */}
+          {(feedbackReplies.length > 0 || feedbackUnderstood) && (
+            <Card style={{ padding: 18, borderLeft: '3px solid var(--accent)' }}>
+              <SectionHeader title={feedbackUnderstood ? 'Student feedback status' : 'Student replies'} />
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 8 }}>
+                {feedbackUnderstood && (
+                  <div style={{
+                    padding: '8px 12px', borderRadius: 'var(--radius-sm)',
+                    background: 'rgba(46,106,63,.08)', border: '1px solid var(--success)',
+                    fontSize: 'var(--text-sm)', color: 'var(--success)', fontWeight: 600,
+                    display: 'flex', alignItems: 'center', gap: 8,
+                  }}>
+                    <span>✓</span> Student marked this feedback as understood.
+                  </div>
+                )}
+                {feedbackReplies.map(msg => (
+                  <div key={msg.id} style={{
+                    padding: '10px 12px', borderRadius: 'var(--radius-sm)',
+                    background: 'var(--accent-subtle)', border: '1px solid var(--accent-soft)',
+                    fontSize: 'var(--text-sm)', lineHeight: 1.5,
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                      <span style={{ fontWeight: 600, color: 'var(--accent-deep)' }}>{msg.fromName || 'Student'}</span>
+                      <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>
+                        {new Date(msg.createdAt).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    </div>
+                    <div style={{ color: 'var(--text-2)' }}>{msg.body}</div>
+                  </div>
+                ))}
+              </div>
+              <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+                <input className="input" style={{ flex: 1 }} value={replyToStudent}
+                  onChange={e => setReplyToStudent(e.target.value)}
+                  placeholder="Reply to student…" />
+                <Button variant="primary" size="sm" disabled={!replyToStudent.trim()}
+                  onClick={async () => {
+                    const body = replyToStudent.trim();
+                    if (!body || !submission || !diagnosis) return;
+                    await sendMessage({
+                      fromRole: 'teacher', toStudentId: submission.studentId,
+                      diagnosisId: diagnosis.id, type: 'feedback-reply',
+                      body, toRole: 'student',
+                    });
+                    setReplyToStudent('');
+                    window.toast?.('Reply sent to student.', 'ok');
+                  }}>
+                  Send
+                </Button>
+              </div>
+            </Card>
+          )}
 
           <Button variant="primary" onClick={handleSave} disabled={saving} style={{ alignSelf: 'flex-start' }}>
             {saving ? 'Saving…' : 'Save Review' + (form.sendFeedback ? ' & Send Feedback' : '')}

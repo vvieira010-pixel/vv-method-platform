@@ -8,6 +8,7 @@
  */
 
 import { getDbContext, dbHasEntity, dbList, dbGet, dbUpsert, dbRemove } from './supabase-db.js';
+import { initSchedule } from './spaced-repetition.js';
 
 const K = {
   sessions:    'vv:sessions',
@@ -287,10 +288,11 @@ export async function deletePracticeAssignment(id) {
 export async function getSubmissions(studentId) {
   return listVia('submissions', K.submissions, studentId ? (s => s.studentId === studentId) : null);
 }
-export async function submitHomework(homeworkId, studentId, content, responses) {
+export async function submitHomework(homeworkId, studentId, content, responses, confidence) {
   const sub = {
     id: uid(), homeworkId, studentId, content,
     responses: responses || null,
+    confidence: confidence != null ? confidence : null,
     submittedAt: new Date().toISOString(), status: 'submitted',
   };
   if (dbReady('submissions')) {
@@ -558,18 +560,22 @@ export async function markErrorPracticed(studentId, errorId) {
     try {
       const entry = (await dbList('errorBank') || []).find(e => e.id === errorId);
       if (!entry) return null;
+      const wasFirst = (entry.practiceCount || 0) === 0;
       const practiceCount = (entry.practiceCount || 0) + 1;
-      return await dbUpsert('errorBank', {
+      const saved = await dbUpsert('errorBank', {
         ...entry, practiceCount,
         status: practiceCount >= 3 ? 'solved' : 'practicing',
         lastPracticed: new Date().toISOString(),
       });
+      if (wasFirst) initSchedule(studentId, { ...entry, id: errorId });
+      return saved;
     } catch (e) { console.warn('[workflow] markErrorPracticed via Supabase failed, using localStorage:', e.message); }
   }
   const obj = loadObj(K.errorBankGlobal);
   const list = obj[studentId] || [];
   const idx = list.findIndex(e => e.id === errorId);
   if (idx < 0) return null;
+  const wasFirst = (list[idx].practiceCount || 0) === 0;
   list[idx] = {
     ...list[idx],
     practiceCount: (list[idx].practiceCount || 0) + 1,
@@ -578,6 +584,7 @@ export async function markErrorPracticed(studentId, errorId) {
   };
   obj[studentId] = list;
   save(K.errorBankGlobal, obj);
+  if (wasFirst) initSchedule(studentId, { ...list[idx], id: errorId });
   return list[idx];
 }
 export async function markErrorSolved(studentId, errorId) {

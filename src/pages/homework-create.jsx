@@ -16,6 +16,7 @@ import {
 } from '../lib/prompts.js';
 import { getDiagnoses, getStudent, saveHomework, updateClassEventStatus } from '../lib/workflow.js';
 import { EX_TYPES, createExercise, exercisePreview, getExType } from '../lib/exercise-types.js';
+import { getDueItems, getDueCount, toMCQ, getAllEntries } from '../lib/spaced-repetition.js';
 import { ExerciseEditor, ExerciseTypePicker, ExTypeBadge } from '../components/exercise-editor.jsx';
 import { getExerciseModules, getModuleExercises, bankMeta } from '../lib/exercise-bank.js';
 import { getB2Modules, getB2ModuleExercises, b2BankMeta } from '../lib/met-b2-bank.js';
@@ -74,6 +75,9 @@ export default function HomeworkCreate({ diagnosisId, studentId, students, onNav
   const [libVersion, setLibVersion] = useState(0);
   const [libraryExercises, setLibraryExercises] = useState([]);
   const [currentStep, setCurrentStep] = useState(initialStep); // 1: Diagnosis, 2: Select, 3: Review, 4: Assign
+  // Spaced repetition review items
+  const [reviewDueCount, setReviewDueCount] = useState(0);
+  const [includeReview, setIncludeReview] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -95,6 +99,16 @@ export default function HomeworkCreate({ diagnosisId, studentId, students, onNav
     }
     getStudent(selectedStudentId).then(s => { if (s) setStudent(s); }).catch(() => {});
   }, [selectedStudentId, studentId, students]);
+
+  // Load spaced repetition due count when a student is known
+  useEffect(() => {
+    const sid = studentId || selectedStudentId || student?.id || diagnosis?.studentId;
+    if (sid) {
+      setReviewDueCount(getDueCount(sid));
+    } else {
+      setReviewDueCount(0);
+    }
+  }, [studentId, selectedStudentId, student?.id, diagnosis?.studentId]);
 
   async function load() {
     let sid = studentId || '';
@@ -711,7 +725,58 @@ function getPriorityItems(dx) {
                     </div>
                   </div>
                 )}
-                 
+
+                {/* ── SPACED REPETITION REVIEW ITEMS ── */}
+                {reviewDueCount > 0 && (
+                  <div style={{
+                    marginBottom: 16, padding: '12px 14px',
+                    border: `1px solid ${includeReview ? 'var(--accent)' : 'var(--border)'}`,
+                    borderRadius: 'var(--radius-md)',
+                    background: includeReview ? 'var(--accent-subtle)' : 'var(--surface)',
+                    transition: 'border-color .15s, background .15s',
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+                      <div>
+                        <div style={{ fontWeight: 700, fontSize: 'var(--text-sm)', display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <span>Review ({reviewDueCount} item{reviewDueCount !== 1 ? 's' : ''} due)</span>
+                          <span style={{
+                            display: 'inline-flex', alignItems: 'center', gap: 4,
+                            padding: '1px 8px', borderRadius: 999,
+                            background: 'var(--warning-bg)', color: 'var(--warning)',
+                            fontSize: 'var(--text-xs)', fontWeight: 600,
+                          }}>
+                            Spaced repetition
+                          </span>
+                        </div>
+                        <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-2)', lineHeight: 1.5, marginTop: 2 }}>
+                          Past errors due for review. Each item becomes an <strong>MCQ</strong> exercise.
+                        </div>
+                      </div>
+                      <label style={{
+                        display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer',
+                        fontSize: 'var(--text-sm)', fontWeight: 600, userSelect: 'none',
+                      }}>
+                        <input type="checkbox" checked={includeReview}
+                          onChange={e => {
+                            setIncludeReview(e.target.checked);
+                            if (e.target.checked) {
+                              const sid = studentId || selectedStudentId || student?.id || diagnosis?.studentId;
+                              if (!sid) return;
+                              const due = getDueItems(sid);
+                              const all = getAllEntries(sid);
+                              const reviewExercises = due.map(item => toMCQ(item, all));
+                              setForm(f => ({ ...f, exercises: [...f.exercises, ...reviewExercises] }));
+                            } else {
+                              setForm(f => ({ ...f, exercises: f.exercises.filter(ex => !ex.isReviewItem) }));
+                            }
+                          }}
+                          style={{ accentColor: 'var(--accent)', width: 18, height: 18 }} />
+                        {includeReview ? 'Added' : `Add ${reviewDueCount} review item${reviewDueCount !== 1 ? 's' : ''}`}
+                      </label>
+                    </div>
+                  </div>
+                )}
+                  
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   {form.exercises.map((ex, i) => (
                     <ExerciseCard
@@ -1071,6 +1136,44 @@ function PreviewExercise({ exercise }) {
         </div>
       );
 
+    case 'read': {
+      const qCount = (exercise.questions || []).length;
+      return (
+        <div>
+          <div style={{
+            background: 'var(--surface)', border: '1px solid var(--border)',
+            borderRadius: 8, padding: '12px 14px', marginBottom: 10,
+            maxHeight: 160, overflowY: 'auto', lineHeight: 1.7,
+            fontSize: 'var(--text-sm)', fontFamily: 'Georgia, "Times New Roman", serif',
+          }}>
+            {(exercise.passage || 'No passage provided.').slice(0, 300)}
+            {(exercise.passage || '').length > 300 ? '…' : ''}
+          </div>
+          {exercise.source && (
+            <p style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontStyle: 'italic', margin: '0 0 8px' }}>
+              — {exercise.source}
+            </p>
+          )}
+          <p style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginBottom: 8 }}>
+            {qCount} comprehension question{qCount !== 1 ? 's' : ''}
+          </p>
+          {(exercise.questions || []).map((q, qi) => (
+            <div key={q.id} style={{ marginBottom: 6 }}>
+              <p style={{ fontSize: 'var(--text-sm)', fontWeight: 600, margin: '0 0 4px' }}>{qi + 1}. {q.question}</p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                {(q.options || []).map((opt, oi) => (
+                  <div key={oi} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 8px', borderRadius: 6, border: '1px solid var(--border)', background: 'var(--surface)', fontSize: 'var(--text-xs)' }}>
+                    <span style={{ width: 16, height: 16, borderRadius: '50%', border: '2px solid var(--border)', flexShrink: 0 }} />
+                    <span>{opt || `Option ${String.fromCharCode(65 + oi)}`}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      );
+    }
+
     default:
       return <p>{exercise.instruction || exercisePreview(exercise)}</p>;
   }
@@ -1088,7 +1191,7 @@ function mapAiType(aiType) {
   if (/error|correct|fix/.test(t)) return 'fix';
   if (/flash|card|vocab/.test(t)) return 'flash';
   if (/listen/.test(t)) return 'listen';
-  if (/read|strategy|test/.test(t)) return 'mcq';
+  if (/read|strategy|test/.test(t)) return 'read';
   return 'short'; // fallback
 }
 

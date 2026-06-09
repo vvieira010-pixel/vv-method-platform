@@ -6,7 +6,7 @@
 import { useState } from 'react';
 import { Icon, Card, Button } from './shared.jsx';
 import { EX_TYPES, getExType } from '../lib/exercise-types.js';
-import { DialogueEditor, SwapEditor, LevelUpEditor } from './exercise-editor-new-types.jsx';
+import { DialogueEditor, SwapEditor, LevelUpEditor, ReadEditor } from './exercise-editor-new-types.jsx';
 
 /* ─── SHARED STYLES ─────────────────────────────────────────── */
 const fieldLabel = {
@@ -150,6 +150,7 @@ export function ExerciseEditor({ exercise, onChange }) {
     case 'dialogue': return <DialogueEditor ex={exercise} update={update} />;
     case 'swap':     return <SwapEditor     ex={exercise} update={update} />;
     case 'levelup':  return <LevelUpEditor  ex={exercise} update={update} />;
+    case 'read':     return <ReadEditor     ex={exercise} update={update} />;
     default:
       return <p style={{ color: 'var(--muted)', fontSize: 'var(--text-sm)' }}>Unknown exercise type: {exercise.type}</p>;
   }

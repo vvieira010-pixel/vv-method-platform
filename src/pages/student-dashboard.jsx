@@ -7,10 +7,11 @@
  * - Scores/diagnosis only from approved diagnoses
  */
 import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 import { Icon, Avatar, Button, StudentFeedbackView } from '../components/shared.jsx';
-import { getHomework, submitHomework, getDiagnoses, getProgressNotes, getReviews, getClassEvents, getDraft, saveDraft } from '../lib/workflow.js';
-import { isStructuredExercise } from '../lib/exercise-types.js';
+import { getHomework, submitHomework, getDiagnoses, getProgressNotes, getReviews, getClassEvents, getSubmissions, getDraft, saveDraft, getInbox, sendMessage } from '../lib/workflow.js';
+import { isStructuredExercise, autoGrade } from '../lib/exercise-types.js';
+import { recordPractice } from '../lib/spaced-repetition.js';
 import { ExercisePlayer, HomeworkStepThrough } from '../components/exercise-player.jsx';
 import { ExTypeBadge } from '../components/exercise-editor.jsx';
 import { MessageTeacherDock, StudentInbox } from '../components/message-center.jsx';
@@ -510,10 +511,20 @@ function SkillRow({ skill, trend }) {
 function FeedbackView({ student, onTab }) {
   const [feedbackItems, setFeedbackItems] = useState([]);
   const [selfAssessment, setSelfAssessment] = useState(null);
+  const [confidenceScore, setConfidenceScore] = useState(null);
+  const [feedbackReplies, setFeedbackReplies] = useState({});
+  const [replyText, setReplyText] = useState({});
+  const [showReply, setShowReply] = useState({});
+  const [understood, setUnderstood] = useState({});
 
   useEffect(() => {
     (async () => {
-      const diagnoses = await getDiagnoses(student.id);
+      const [diagnoses, submissions, reviews, inbox] = await Promise.all([
+        getDiagnoses(student.id),
+        getSubmissions(student.id),
+        getReviews(student.id),
+        getInbox({ role: 'student', studentId: student.id }),
+      ]);
       const approved = (diagnoses || [])
         .filter(hasVisibleApprovedStudentFeedback)
         .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
@@ -528,8 +539,69 @@ function FeedbackView({ student, onTab }) {
         const stored = localStorage.getItem(`vv:feedback_selfassess:${approved[0].id}`);
         if (stored) setSelfAssessment(stored);
       }
+      // Find latest reviewed submission with confidence data
+      const reviewedSub = (submissions || [])
+        .filter(s => s.confidence != null)
+        .sort((a, b) => new Date(b.submittedAt || 0) - new Date(a.submittedAt || 0))[0];
+      if (reviewedSub) {
+        const review = (reviews || []).find(r => r.homeworkId === reviewedSub.homeworkId);
+        setConfidenceScore({
+          confidence: reviewedSub.confidence,
+          score: review?.score ?? null,
+        });
+      }
+      // Load feedback replies from inbox
+      const replies = {};
+      const und = {};
+      (inbox || []).forEach(msg => {
+        if (msg.diagnosisId) {
+          if (msg.type === 'feedback-reply' && msg.fromStudentId === student.id) {
+            replies[msg.diagnosisId] = replies[msg.diagnosisId] || [];
+            replies[msg.diagnosisId].push(msg);
+          }
+          if (msg.type === 'feedback-understood' && msg.fromStudentId === student.id) {
+            und[msg.diagnosisId] = true;
+          }
+        }
+      });
+      setFeedbackReplies(replies);
+      setUnderstood(und);
     })();
   }, [student.id]);
+
+  async function handleFeedbackReply(diagnosisId) {
+    const body = (replyText[diagnosisId] || '').trim();
+    if (!body) return;
+    await sendMessage({
+      fromStudentId: student.id,
+      fromName: student.firstName || student.name || 'Student',
+      fromRole: 'student',
+      toRole: 'teacher',
+      diagnosisId,
+      type: 'feedback-reply',
+      body,
+    });
+    setReplyText(prev => ({ ...prev, [diagnosisId]: '' }));
+    setFeedbackReplies(prev => ({
+      ...prev,
+      [diagnosisId]: [...(prev[diagnosisId] || []), { id: Date.now(), body, diagnosisId, type: 'feedback-reply', createdAt: new Date().toISOString() }],
+    }));
+    window.toast?.('Question sent to your teacher.', 'ok');
+  }
+
+  async function handleMarkUnderstood(diagnosisId) {
+    await sendMessage({
+      fromStudentId: student.id,
+      fromName: student.firstName || student.name || 'Student',
+      fromRole: 'student',
+      toRole: 'teacher',
+      diagnosisId,
+      type: 'feedback-understood',
+      body: 'Student marked this feedback as understood.',
+    });
+    setUnderstood(prev => ({ ...prev, [diagnosisId]: true }));
+    window.toast?.('Marked as understood.', 'ok');
+  }
 
   function handleSelfAssessment(value, diagnosisId) {
     setSelfAssessment(value);
@@ -591,6 +663,34 @@ function FeedbackView({ student, onTab }) {
               <h2>{focusArea?.area || primarySkill?.section || 'Next MET skill'}</h2>
               <p className="student-readable-copy">{focusArea?.explanation || focusArea?.howToImprove || focusArea?.metImportance || nextStep}</p>
             </article>
+
+            {confidenceScore && (
+              <article className="student-panel">
+                <span className="student-panel-kicker">Your confidence vs result</span>
+                <h2>How your confidence matched your score</h2>
+                <div style={{ display: 'flex', gap: 16, marginTop: 8 }}>
+                  {[
+                    { label: 'Your confidence', value: confidenceScore.confidence != null ? `${confidenceScore.confidence + 1}/4` : '—', color: 'var(--accent)' },
+                    { label: 'Teacher score', value: confidenceScore.score != null ? `${confidenceScore.score}/100` : 'Pending', color: confidenceScore.score != null ? 'var(--success)' : 'var(--text-2)' },
+                  ].map(m => (
+                    <div key={m.label} style={{ flex: 1, padding: '12px 16px', borderRadius: 'var(--radius-sm)', background: 'var(--surface)', border: '1px solid var(--border)' }}>
+                      <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-2)', marginBottom: 4 }}>{m.label}</div>
+                      <div style={{ fontSize: 'var(--text-lg)', fontWeight: 700, color: m.color }}>{m.value}</div>
+                    </div>
+                  ))}
+                </div>
+                {confidenceScore.confidence != null && confidenceScore.score != null && (
+                  <div style={{ marginTop: 8, fontSize: 'var(--text-sm)', color: 'var(--text-2)', lineHeight: 1.6 }}>
+                    {(() => {
+                      const diff = confidenceScore.score / 25 - (confidenceScore.confidence + 1);
+                      if (Math.abs(diff) <= 0.5) return 'Your confidence matched your result — great self-assessment!';
+                      if (diff > 0.5) return 'You did better than expected — keep believing in yourself!';
+                      return 'You were more confident than your score — review the feedback and try again.';
+                    })()}
+                  </div>
+                )}
+              </article>
+            )}
 
             {(() => {
               const allFeedbackText = [
@@ -672,6 +772,64 @@ function FeedbackView({ student, onTab }) {
                   ))}
                 </div>
               )}
+            </article>
+
+            {/* ── FEEDBACK REPLY: ask a question or mark understood ── */}
+            <article className="student-panel">
+              <span className="student-panel-kicker">Discuss this feedback</span>
+              <h2>Ask your teacher or confirm you understand</h2>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 4 }}>
+                {understood[latest?.id] ? (
+                  <div style={{ fontSize: 'var(--text-sm)', color: 'var(--success)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span>✓</span> Marked as understood
+                  </div>
+                ) : (
+                  <Button variant="ghost" size="sm" onClick={() => handleMarkUnderstood(latest?.id)} disabled={!latest?.id}>
+                    <Icon.check size={12} /> Mark as understood
+                  </Button>
+                )}
+                <div>
+                  {(feedbackReplies[latest?.id] || []).length > 0 && (
+                    <div style={{ marginBottom: 8, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                      {(feedbackReplies[latest?.id] || []).map(msg => (
+                        <div key={msg.id} style={{
+                          padding: '8px 12px', borderRadius: 'var(--radius-sm)',
+                          background: 'var(--accent-subtle)', border: '1px solid var(--accent-soft)',
+                          fontSize: 'var(--text-sm)', lineHeight: 1.5,
+                        }}>
+                          <div style={{ color: 'var(--text-2)', marginBottom: 2 }}>{msg.body}</div>
+                          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>
+                            {new Date(msg.createdAt).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {showReply[latest?.id] ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                      <textarea
+                        className="input"
+                        rows={3}
+                        value={replyText[latest?.id] || ''}
+                        onChange={e => setReplyText(prev => ({ ...prev, [latest?.id]: e.target.value }))}
+                        placeholder="Type your question about this feedback…"
+                      />
+                      <div style={{ display: 'flex', gap: 8 }}>
+                        <Button variant="primary" size="sm" onClick={() => handleFeedbackReply(latest?.id)} disabled={!replyText[latest?.id]?.trim()}>
+                          Send question
+                        </Button>
+                        <Button variant="ghost" size="sm" onClick={() => { setShowReply(prev => ({ ...prev, [latest?.id]: false })); setReplyText(prev => ({ ...prev, [latest?.id]: '' })); }}>
+                          Cancel
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <Button variant="ghost" size="sm" onClick={() => setShowReply(prev => ({ ...prev, [latest?.id]: true }))}>
+                      <Icon.feedback size={12} /> Ask a question
+                    </Button>
+                  )}
+                </div>
+              </div>
             </article>
           </section>
 
@@ -764,7 +922,7 @@ function HomeworkView({ student }) {
   }
 
   // Handle structured exercise submission
-  async function handleStructuredSubmit(hwId) {
+  async function handleStructuredSubmit(hwId, confidence) {
     setSubmitting(true);
     // Build a summary text from structured responses for backward compatibility
     const hw = homework.find(h => h.id === hwId);
@@ -785,7 +943,15 @@ function HomeworkView({ student }) {
     });
     const content = summaryParts.join('\n\n---\n\n');
     const exerciseResponses = Object.fromEntries(exercises.map(ex => [ex.id, responses[ex.id] || {}]));
-    await submitHomework(hwId, student.id, content, exerciseResponses);
+    await submitHomework(hwId, student.id, content, exerciseResponses, confidence);
+    // Record spaced repetition practice for review items
+    const reviewItems = exercises.filter(ex => ex.isReviewItem && ex.reviewItemId);
+    reviewItems.forEach(ex => {
+      const grade = autoGrade(ex, exerciseResponses[ex.id]);
+      if (grade) {
+        recordPractice(student.id, ex.reviewItemId, grade.correct);
+      }
+    });
     await saveDraft(homeworkDraftKey(hwId), null);
     const hwList = await getHomework(student.id);
     setHomework(hwList || []);
@@ -972,7 +1138,7 @@ function HomeworkView({ student }) {
                     responses={responses}
                     onResponse={updateResponse}
                     onSave={(exerciseId) => saveStructuredProgress(h.id, exerciseId)}
-                    onSubmit={() => handleStructuredSubmit(h.id)}
+                    onSubmit={(confidence) => handleStructuredSubmit(h.id, confidence)}
                     initialExerciseId={draftMeta[h.id]?.currentExerciseId}
                     readOnly={false}
                   />
@@ -1081,6 +1247,49 @@ function HomeworkView({ student }) {
   );
 }
 
+/* ─── SUBSKILL RADAR ────────────────────────────────────────── */
+function SubskillRadar({ sectionData, targetScore = 65 }) {
+  const [RechartsComponents, setRechartsComponents] = useState(null);
+  useEffect(() => {
+    import('recharts').then(mod => setRechartsComponents(mod));
+  }, []);
+  if (!RechartsComponents) return null;
+  const { ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, Legend, Tooltip } = RechartsComponents;
+
+  return (
+    <div style={{ width: '100%', height: 380, marginBottom: 24 }}>
+      <ResponsiveContainer width="100%" height="100%">
+        <RadarChart data={sectionData} cx="50%" cy="50%" outerRadius="70%">
+          <PolarGrid stroke="var(--divider)" />
+          <PolarAngleAxis dataKey="skill" tick={{ fill: 'var(--text-2)', fontSize: 11, fontFamily: 'var(--font-ui)' }} />
+          <PolarRadiusAxis domain={[0, 80]} tick={{ fill: 'var(--muted)', fontSize: 10 }} tickCount={5} />
+          {sectionData.some(d => d.previous != null) && (
+            <Radar name="Previous" dataKey="previous" stroke="var(--muted)" strokeWidth={1} strokeDasharray="5 5" fill="var(--muted)" fillOpacity={0.15} isAnimationActive={true} animationDuration={900} />
+          )}
+          <Radar name="Current" dataKey="current" stroke="var(--accent)" strokeWidth={2} fill="var(--accent)" fillOpacity={0.25} isAnimationActive={true} animationDuration={1200} />
+          <Radar name="Target" dataKey="target" stroke="var(--primary)" strokeWidth={1.5} strokeDasharray="4 4" fill="none" isAnimationActive={true} animationDuration={1000} />
+          <Legend wrapperStyle={{ fontSize: 12, fontFamily: 'var(--font-ui)', color: 'var(--text-2)' }} />
+          <Tooltip contentStyle={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 8, fontSize: 12, fontFamily: 'var(--font-ui)' }} />
+        </RadarChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
+
+function sectionToLabel(section) {
+  if (!section) return '';
+  return section
+    .replace(/_/g, ' ')
+    .replace(/\b\w/g, c => c.toUpperCase())
+    .replace(/Speaking/g, 'Sp.')
+    .replace(/Writing/g, 'Wr.')
+    .replace(/Grammar/g, 'Gr.')
+    .replace(/Vocabulary/g, 'Voc.')
+    .replace(/Listening/g, 'Lis.')
+    .replace(/Reading/g, 'Read.')
+    .slice(0, 18);
+}
+
 /* ─── PROGRESS ─── */
 function ProgressView({ student }) {
   const [diagnoses, setDiagnoses] = useState([]);
@@ -1124,6 +1333,22 @@ function ProgressView({ student }) {
         </section>
       ) : (
         <>
+          {/* Radar chart */}
+          {skills.length > 1 && (() => {
+            const previousDx = diagnoses[1];
+            const prevSnapshot = asArray(previousDx?.content?.section_snapshot);
+            const radarData = skills.map(skill => {
+              const prevSkill = prevSnapshot.find(s => s.section === skill.section);
+              return {
+                skill: sectionToLabel(skill.section),
+                current: Number(skill.score_0_80) || 0,
+                previous: prevSkill ? (Number(prevSkill.score_0_80) || 0) : null,
+                target: 65,
+              };
+            });
+            return <SubskillRadar sectionData={radarData} targetScore={65} />;
+          })()}
+
           {skills.length > 0 ? (
             <section className="student-readiness-grid">
               {skills.map(skill => (

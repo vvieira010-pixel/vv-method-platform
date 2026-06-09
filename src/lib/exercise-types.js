@@ -16,6 +16,7 @@ export const EX_TYPES = [
   { id: 'dialogue', label: 'Dialogue Practice',  iconKey: 'mic',      color: '#0E5F6B', bg: 'rgba(14,95,107,.10)',  hint: 'Role-play conversation',        grading: 'track' },
   { id: 'swap',     label: 'Synonym Swapper',    iconKey: 'spark',    color: '#5A2C5C', bg: 'rgba(90,44,92,.12)',   hint: 'Click to upgrade B1 words to B2', grading: 'auto' },
   { id: 'levelup',  label: 'Sentence Level-Up',  iconKey: 'bolt',     color: '#1A5C2A', bg: 'rgba(26,92,42,.12)',   hint: 'B1 → B2 → C1 upgrade challenge', grading: 'auto' },
+  { id: 'read', label: 'Reading', iconKey: 'doc', color: '#1A6B5A', bg: 'rgba(26,107,90,.12)', hint: 'Read a passage and answer questions', grading: 'auto' },
 ];
 
 /** Look up a type by id */
@@ -47,11 +48,12 @@ const FACTORIES = {
   dialogue: () => ({ id: exId(), type: 'dialogue', speakerA: 'Speaker A', speakerB: 'Speaker B', instruction: '', lines: [{ id: exId(), speaker: 'A', text: '' }, { id: exId(), speaker: 'B', text: '' }] }),
   swap:     () => ({ id: exId(), type: 'swap',     instruction: '', sentence: '', swaps: [] }),
   levelup:  () => ({ id: exId(), type: 'levelup',  b1: '', b2: '', c1: '', options: ['', '', ''], correct: 0, keywords: [], explanation: '' }),
+  read: () => ({ id: exId(), type: 'read', passage: '', source: '', questions: [{ id: exId(), question: '', options: ['', '', '', ''], correct: null }] }),
 };
 
 /**
  * Create a new empty exercise of the given type.
- * @param {'mcq'|'blank'|'short'|'speak'|'order'|'fix'|'flash'|'listen'} type
+ * @param {'mcq'|'blank'|'short'|'speak'|'order'|'fix'|'flash'|'listen'|'read'} type
  * @param {string} [level='B1'] Proficiency level (e.g., 'A2', 'B1', 'B2')
  * @returns {object} exercise object with default fields
  */
@@ -65,7 +67,7 @@ export function createExercise(type, level = 'B1') {
 
 /**
  * Auto-grade a student response against the exercise answer key.
- * Only works for auto-gradable types (mcq, blank, order, fix).
+ * Only works for auto-gradable types (mcq, blank, order, fix, read, listen).
  * @param {object} exercise — the exercise definition
  * @param {object} response — the student's response
  * @returns {{ correct: boolean, score: number, feedback: string } | null}
@@ -153,6 +155,23 @@ export function autoGrade(exercise, response) {
       };
     }
 
+    case 'read': {
+      const answers = response.answers || {};
+      const questions = exercise.questions || [];
+      let hits = 0;
+      questions.forEach(q => {
+        if (answers[q.id] === q.correct) hits++;
+      });
+      const total = questions.length || 1;
+      return {
+        correct: hits === total,
+        score: hits / total,
+        feedback: hits === total
+          ? 'All questions correct!'
+          : `${hits}/${total} questions correct.`,
+      };
+    }
+
     default:
       return null; // Teacher-reviewed or tracked types
   }
@@ -177,6 +196,7 @@ export function createEmptyResponse(type) {
     case 'dialogue': return { mode: 'read', linesRevealed: [] };
     case 'swap':     return { swaps: {} };
     case 'levelup':  return { selected: null, sandbox: '' };
+    case 'read':     return { answers: {} };
     default:         return {};
   }
 }
@@ -206,6 +226,10 @@ export function exercisePreview(exercise) {
     }
     case 'swap':    return exercise.sentence || 'Synonym swap sentence…';
     case 'levelup': return exercise.b1 || 'B1 → B2 sentence upgrade…';
+    case 'read': {
+      const qCount = (exercise.questions || []).filter(q => q.question).length;
+      return (exercise.passage || '').slice(0, 50) + '…' + (qCount ? ` (${qCount} questions)` : '');
+    }
     default: return exercise.instruction || '';
   }
 }

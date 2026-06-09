@@ -38,6 +38,7 @@ export function ExercisePlayer({ exercise, response, onResponse, readOnly = fals
     case 'dialogue': return <DialoguePlayer ex={exercise} res={response} update={update} readOnly={readOnly} />;
     case 'swap':     return <SwapPlayer     ex={exercise} res={response} update={update} readOnly={readOnly} />;
     case 'levelup':  return <LevelUpPlayer  ex={exercise} res={response} update={update} readOnly={readOnly} />;
+    case 'read':     return <ReadPlayer     ex={exercise} res={response} update={update} readOnly={readOnly} />;
     default:
       return (
         <div style={{ padding: 14, fontSize: 'var(--text-sm)', color: 'var(--text-2)', lineHeight: 1.6 }}>
@@ -917,8 +918,133 @@ function FlashPlayer({ ex, res, update, readOnly }) {
  * HomeworkStepThrough — renders exercises one at a time with progress bar + navigation.
  * Used in the student dashboard to walk through a homework set.
  */
+/* ─── 12. READING ───────────────────────────────────────── */
+
+function ReadPlayer({ ex, res, update, readOnly }) {
+  const answers = res?.answers || {};
+  const questions = ex.questions || [];
+  const [checked, setChecked] = useState(false);
+  const [results, setResults] = useState(null);
+
+  function handleSelect(qId, optionIdx) {
+    if (readOnly || checked) return;
+    update({ answers: { ...answers, [qId]: optionIdx } });
+  }
+
+  function handleCheck() {
+    if (readOnly) return;
+    let hits = 0;
+    const perQ = questions.map(q => {
+      const correct = answers[q.id] === q.correct;
+      if (correct) hits++;
+      return { correct, selected: answers[q.id], expected: q.correct };
+    });
+    const total = questions.length || 1;
+    setResults({ hits, total, perQ });
+    setChecked(true);
+  }
+
+  return (
+    <div>
+      {/* Passage */}
+      <div style={{
+        background: 'var(--surface)', border: '1px solid var(--border)',
+        borderRadius: 'var(--radius-sm)', padding: '14px 16px', marginBottom: 14,
+        maxHeight: 260, overflowY: 'auto', lineHeight: 1.8,
+        fontSize: 'var(--text-sm)', fontFamily: 'Georgia, "Times New Roman", serif',
+        color: 'var(--text)',
+      }}>
+        <p style={{ margin: 0, whiteSpace: 'pre-wrap' }}>{ex.passage || 'No passage provided.'}</p>
+        {ex.source && (
+          <p style={{ margin: '8px 0 0', fontSize: 'var(--text-xs)', color: 'var(--muted)', fontStyle: 'italic', fontFamily: 'var(--font-ui)' }}>
+            — {ex.source}
+          </p>
+        )}
+      </div>
+
+      {/* Questions */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        {questions.map((q, qi) => (
+          <div key={q.id} style={{
+            border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)',
+            padding: 12, background: 'var(--bg)',
+          }}>
+            <div style={{ fontWeight: 600, fontSize: 'var(--text-sm)', marginBottom: 8, color: 'var(--text)' }}>
+              {qi + 1}. {q.question}
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              {(q.options || []).map((opt, oi) => {
+                const isSelected = answers[q.id] === oi;
+                const isCorrect = results && oi === q.correct;
+                const isWrong = results && isSelected && oi !== q.correct;
+                let bg = 'var(--surface)';
+                let borderColor = 'var(--border)';
+                if (results && isCorrect) { bg = 'rgba(46,106,63,.08)'; borderColor = 'var(--success)'; }
+                if (results && isWrong) { bg = 'rgba(138,43,38,.08)'; borderColor = 'var(--danger)'; }
+                if (!results && isSelected) { bg = 'var(--accent-subtle)'; borderColor = 'var(--accent)'; }
+                return (
+                  <button
+                    key={oi}
+                    type="button"
+                    onClick={() => handleSelect(q.id, oi)}
+                    disabled={readOnly || checked}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: 10, cursor: (readOnly || checked) ? 'default' : 'pointer',
+                      padding: '8px 12px', borderRadius: 'var(--radius-sm)', border: `1px solid ${borderColor}`,
+                      background: bg, color: 'var(--text)', fontFamily: 'var(--font-ui)',
+                      fontSize: 'var(--text-sm)', textAlign: 'left', transition: 'border-color .15s, background .15s',
+                    }}
+                  >
+                    <span style={{
+                      width: 22, height: 22, borderRadius: '50%', display: 'flex', alignItems: 'center',
+                      justifyContent: 'center', fontWeight: 700, fontSize: 'var(--text-xs)', flexShrink: 0,
+                      background: results && isCorrect ? 'var(--success)' : (results && isWrong ? 'var(--danger)' : (isSelected ? 'var(--accent)' : 'var(--faint)')),
+                      color: 'white',
+                    }}>{String.fromCharCode(65 + oi)}</span>
+                    <span>{opt}</span>
+                    {results && isCorrect && <span style={{ marginLeft: 'auto', color: 'var(--success)', fontSize: 'var(--text-xs)', fontWeight: 600 }}>✓</span>}
+                    {results && isWrong && <span style={{ marginLeft: 'auto', color: 'var(--danger)', fontSize: 'var(--text-xs)', fontWeight: 600 }}>✕</span>}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Check / Results */}
+      {!checked ? (
+        <div style={{ marginTop: 12, display: 'flex', justifyContent: 'flex-end' }}>
+          <Button variant="primary" size="sm" onClick={handleCheck} disabled={Object.keys(answers).length === 0}>
+            <Icon.check size={13} /> Check answers
+          </Button>
+        </div>
+      ) : (
+        <div style={{
+          marginTop: 12, padding: '10px 14px', borderRadius: 'var(--radius-sm)',
+          background: results && results.hits === results.total ? 'rgba(46,106,63,.1)' : 'rgba(184,118,26,.1)',
+          border: `1px solid ${results && results.hits === results.total ? 'var(--success)' : 'var(--warning)'}`,
+          fontSize: 'var(--text-sm)', fontWeight: 600, color: results && results.hits === results.total ? 'var(--success)' : 'var(--warning-text)',
+        }}>
+          {results.hits} / {results.total} correct
+          {results.hits === results.total ? ' — Great work!' : ''}
+        </div>
+      )}
+    </div>
+  );
+}
+
+const CONFIDENCE_LEVELS = [
+  { value: 0, label: 'Guess', desc: 'I was mostly guessing' },
+  { value: 1, label: 'Not sure', desc: 'I am unsure about my answers' },
+  { value: 2, label: 'Pretty sure', desc: 'I feel fairly confident' },
+  { value: 3, label: 'Very sure', desc: 'I am confident I did well' },
+];
+
 export function HomeworkStepThrough({ exercises, responses, onResponse, onSubmit, onSave, initialExerciseId, readOnly = false }) {
   const [currentIdx, setCurrentIdx] = useState(0);
+  const [confidence, setConfidence] = useState(null);
+  const [showConfidence, setShowConfidence] = useState(false);
 
   useEffect(() => {
     if (!initialExerciseId || !Array.isArray(exercises)) return;
@@ -936,6 +1062,73 @@ export function HomeworkStepThrough({ exercises, responses, onResponse, onSubmit
   const goPrev = () => setCurrentIdx(i => Math.max(i - 1, 0));
   const goNext = () => setCurrentIdx(i => Math.min(i + 1, total - 1));
   const isLast = currentIdx === total - 1;
+
+  function handleSubmitClick() {
+    if (isLast && !showConfidence) {
+      setShowConfidence(true);
+      return;
+    }
+    onSubmit?.(confidence);
+  }
+
+  if (showConfidence) {
+    return (
+      <div className="student-step-through">
+        <div className="student-step-progress">
+          <span style={{ fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--text-2)' }}>
+            Almost done! How confident are you?
+          </span>
+          <div style={{ flex: 1, height: 5, background: 'var(--divider)', borderRadius: 999, overflow: 'hidden' }}>
+            <div style={{ width: '100%', height: '100%', background: 'linear-gradient(90deg, var(--primary), var(--accent))', borderRadius: 999 }} />
+          </div>
+        </div>
+
+        <Card small className="student-exercise-mini-card" style={{ marginBottom: 10 }}>
+          <div style={{ padding: '8px 0' }}>
+            <h3 style={{ margin: '0 0 16px 0', fontSize: 'var(--text-md)', color: 'var(--text)' }}>How sure are you about your answers?</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {CONFIDENCE_LEVELS.map(level => (
+                <button
+                  key={level.value}
+                  type="button"
+                  onClick={() => setConfidence(level.value)}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer',
+                    padding: '12px 16px', borderRadius: 'var(--radius-sm)',
+                    border: `2px solid ${confidence === level.value ? 'var(--accent)' : 'var(--border)'}`,
+                    background: confidence === level.value ? 'var(--accent-subtle)' : 'var(--surface)',
+                    color: 'var(--text)', fontFamily: 'var(--font-ui)',
+                    fontSize: 'var(--text-sm)', textAlign: 'left', transition: 'border-color .15s, background .15s',
+                  }}
+                >
+                  <span style={{
+                    width: 32, height: 32, borderRadius: '50%', display: 'flex',
+                    alignItems: 'center', justifyContent: 'center', fontWeight: 700,
+                    fontSize: 'var(--text-xs)', flexShrink: 0,
+                    background: confidence === level.value ? 'var(--accent)' : 'var(--faint)',
+                    color: confidence === level.value ? 'white' : 'var(--text-2)',
+                  }}>{level.value + 1}</span>
+                  <div>
+                    <div style={{ fontWeight: 600 }}>{level.label}</div>
+                    <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-2)', marginTop: 2 }}>{level.desc}</div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        </Card>
+
+        <div className="student-step-actions">
+          <Button variant="ghost" size="sm" onClick={() => { setShowConfidence(false); setConfidence(null); }}>
+            <Icon.arrowL size={12} /> Back
+          </Button>
+          <Button variant="primary" onClick={handleSubmitClick} disabled={confidence === null}>
+            <Icon.check size={13} /> Submit Homework
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="student-step-through">
@@ -972,7 +1165,7 @@ export function HomeworkStepThrough({ exercises, responses, onResponse, onSubmit
             <Icon.check size={12} /> Save progress
           </Button>
           {isLast ? (
-            <Button variant="primary" onClick={onSubmit} disabled={readOnly}>
+            <Button variant="primary" onClick={handleSubmitClick} disabled={readOnly}>
               <Icon.check size={13} /> Submit Homework
             </Button>
           ) : (
