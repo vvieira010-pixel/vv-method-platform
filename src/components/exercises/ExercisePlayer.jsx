@@ -32,7 +32,7 @@ const TYPE_LABELS = {
 
 function InvalidExercise({ reason }) {
   return (
-    <div style={{ padding: '14px 16px', background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 10, color: '#991B1B', fontSize: 13.5, lineHeight: 1.6 }}>
+    <div style={{ padding: '14px 16px', background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 0, color: '#991B1B', fontSize: 13.5, lineHeight: 1.6 }}>
       <strong>This exercise could not be loaded</strong> — {reason}
     </div>
   );
@@ -53,7 +53,8 @@ function ExerciseCard({ exercise, index, total, result, onComplete, onNext }) {
       case 'fill_blank':
       case 'blank':      return <FillBlank {...props} />;
       case 'short_answer':
-      case 'short':      return <ShortAnswer {...props} />;
+      case 'short':
+      case 'speak':      return <ShortAnswer {...props} />;
       case 'order_sentences':
       case 'ordering_sequencing':
       case 'order':      return <OrderSentences {...props} />;
@@ -72,7 +73,7 @@ function ExerciseCard({ exercise, index, total, result, onComplete, onNext }) {
 
   return (
     <div style={{
-      background: '#fff', borderRadius: 16, overflow: 'hidden',
+      background: '#fff', borderRadius: 0, overflow: 'hidden',
       border: '1px solid rgba(153,176,255,0.35)',
       boxShadow: '0 4px 20px -8px rgba(14,31,92,0.18), 0 1px 4px rgba(18,40,121,0.06)',
     }}>
@@ -84,7 +85,7 @@ function ExerciseCard({ exercise, index, total, result, onComplete, onNext }) {
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <span style={{
-            padding: '3px 10px', borderRadius: 99,
+            padding: '3px 10px', borderRadius: 0,
             background: TEAL, color: '#fff',
             fontSize: 11, fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase',
           }}>
@@ -92,7 +93,7 @@ function ExerciseCard({ exercise, index, total, result, onComplete, onNext }) {
           </span>
           {skill && (
             <span style={{
-              padding: '3px 10px', borderRadius: 99,
+              padding: '3px 10px', borderRadius: 0,
               background: 'var(--accent-soft)', color: NAVY,
               fontSize: 11, fontWeight: 600,
             }}>
@@ -116,7 +117,7 @@ function ExerciseCard({ exercise, index, total, result, onComplete, onNext }) {
           <button
             onClick={onNext}
             style={{
-              padding: '10px 24px', borderRadius: 10, border: 'none', cursor: 'pointer',
+              padding: '10px 24px', borderRadius: 0, border: 'none', cursor: 'pointer',
               background: `linear-gradient(120deg, ${TEAL} 0%, ${NAVY} 100%)`,
               color: '#fff', fontWeight: 600, fontSize: 14, fontFamily: 'var(--font-ui)',
             }}
@@ -137,9 +138,9 @@ function ProgressBar({ current, total }) {
         <span>Progress</span>
         <span>{current} of {total} completed</span>
       </div>
-      <div style={{ height: 6, borderRadius: 99, background: 'var(--border)', overflow: 'hidden' }}>
+      <div style={{ height: 6, borderRadius: 0, background: 'var(--border)', overflow: 'hidden' }}>
         <div style={{
-          height: '100%', borderRadius: 99, background: `linear-gradient(90deg, ${TEAL}, ${NAVY})`,
+          height: '100%', borderRadius: 0, background: `linear-gradient(90deg, ${TEAL}, ${NAVY})`,
           width: '100%',
           transform: `scaleX(${pct / 100})`,
           transformOrigin: 'left',
@@ -158,7 +159,7 @@ function ScoreSummary({ results, total }) {
 
   return (
     <div style={{
-      padding: '24px', borderRadius: 16, background: '#F0FDFA',
+      padding: '24px', borderRadius: 0, background: '#F0FDFA',
       border: `2px solid ${TEAL}`, textAlign: 'center',
     }}>
       <div style={{ fontSize: 13, fontWeight: 700, color: TEAL, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 12 }}>
@@ -222,7 +223,7 @@ export default function ExercisePlayer({ exercises: raw, title, onSessionComplet
   if (errors.length > 0 && exercises.length === 0) {
     return (
       <div style={{ maxWidth: 640, margin: '0 auto', padding: '20px 16px' }}>
-        {title && <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-xl)', fontWeight: 700, color: NAVY, marginBottom: 16 }}>{title}</h2>}
+        {title && <h2 style={{ fontFamily: 'var(--font-ui)', fontSize: 'var(--text-xl)', fontWeight: 700, color: NAVY, marginBottom: 16 }}>{title}</h2>}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {errors.map((e, i) => <InvalidExercise key={i} reason={e} />)}
         </div>
@@ -235,14 +236,14 @@ export default function ExercisePlayer({ exercises: raw, title, onSessionComplet
   return (
     <div style={{ maxWidth: 640, margin: '0 auto', padding: '20px 16px' }}>
       {title && (
-        <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-xl)', fontWeight: 700, color: NAVY, marginBottom: 6 }}>{title}</h2>
+        <h2 style={{ fontFamily: 'var(--font-ui)', fontSize: 'var(--text-xl)', fontWeight: 700, color: NAVY, marginBottom: 6 }}>{title}</h2>
       )}
 
       {/* Load errors (partial — some valid exercises exist) */}
       {errors.length > 0 && (
         <div style={{ marginBottom: 16, display: 'flex', flexDirection: 'column', gap: 6 }}>
           {errors.map((e, i) => (
-            <div key={i} style={{ padding: '8px 12px', background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: 8, fontSize: 13, color: '#92400E' }}>
+            <div key={i} style={{ padding: '8px 12px', background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: 0, fontSize: 13, color: '#92400E' }}>
               ⚠ {e}
             </div>
           ))}
@@ -267,7 +268,7 @@ export default function ExercisePlayer({ exercises: raw, title, onSessionComplet
           <button
             onClick={() => { setCurrent(0); setResults([]); setDone(false); }}
             style={{
-              marginTop: 16, padding: '10px 24px', borderRadius: 10,
+              marginTop: 16, padding: '10px 24px', borderRadius: 0,
               border: '1.5px solid var(--border)', background: 'var(--surface)',
               color: 'var(--text-2)', fontWeight: 600, fontSize: 14, cursor: 'pointer',
               fontFamily: 'var(--font-ui)',
@@ -280,3 +281,4 @@ export default function ExercisePlayer({ exercises: raw, title, onSessionComplet
     </div>
   );
 }
+

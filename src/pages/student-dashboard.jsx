@@ -13,6 +13,7 @@ import { getHomework, submitHomework, getDiagnoses, getProgressNotes, getReviews
 import { isStructuredExercise, autoGrade } from '../lib/exercise-types.js';
 import { recordPractice } from '../lib/spaced-repetition.js';
 import { ExercisePlayer, HomeworkStepThrough } from '../components/exercise-player.jsx';
+import PracticeSession from '../components/PracticeSession.jsx';
 import { ExTypeBadge } from '../components/exercise-editor.jsx';
 import { MessageTeacherDock, StudentInbox } from '../components/message-center.jsx';
 import { printHomework } from '../lib/print-homework.js';
@@ -239,6 +240,7 @@ function HomeView({ student, onTab }) {
   const [pendingHw, setPendingHw] = useState([]);
   const [latestReview, setLatestReview] = useState(null);
   const [snapshot, setSnapshot] = useState([]);
+  const [practiceMode, setPracticeMode] = useState(null);
   const [approvedHistory, setApprovedHistory] = useState([]);
   const [nextClass, setNextClass] = useState(null);
   const [upcomingClasses, setUpcomingClasses] = useState([]);
@@ -353,21 +355,24 @@ function HomeView({ student, onTab }) {
             <h2>The Practice Studio</h2>
             <p>Your mind is ready. While your teacher prepares your next assignment, sharpen your skills with a self-paced session.</p>
             <div className="studio-orbs">
-              <button className="studio-orb" onClick={() => onTab('homework')} aria-label="Listening Sprint">
-                <span className="studio-orb-icon" aria-hidden="true">🎧</span>
-                <span className="studio-orb-label">Listening Sprint</span>
+              <button className="studio-orb" onClick={() => setPracticeMode('grammar')} aria-label="Grammar Sprint">
+                <span className="studio-orb-icon" aria-hidden="true">✏️</span>
+                <span className="studio-orb-label">Grammar Sprint</span>
               </button>
-              <button className="studio-orb" onClick={() => onTab('progress')} aria-label="Vocab Deep-Dive">
+              <button className="studio-orb" onClick={() => setPracticeMode('vocab')} aria-label="Vocab Deep-Dive">
                 <span className="studio-orb-icon" aria-hidden="true">📚</span>
                 <span className="studio-orb-label">Vocab Deep-Dive</span>
               </button>
-              <button className="studio-orb" onClick={() => onTab('feedback')} aria-label="Speaking Mirror">
+              <button className="studio-orb" onClick={() => setPracticeMode('speaking')} aria-label="Speaking Mirror">
                 <span className="studio-orb-icon" aria-hidden="true">🎙</span>
                 <span className="studio-orb-label">Speaking Mirror</span>
               </button>
             </div>
           </div>
         </div>
+      )}
+      {practiceMode && (
+        <PracticeSession mode={practiceMode} onClose={() => setPracticeMode(null)} />
       )}
 
       <section className="student-grid">
@@ -1140,7 +1145,7 @@ function HomeworkView({ student }) {
                     <div style={{ fontWeight: 700, color: 'var(--success)', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 10 }}>
                       <span>Teacher Review</span>
                       {review.redoRequired && (
-                        <span style={{ fontSize: 'var(--text-xs)', fontWeight: 700, padding: '2px 8px', borderRadius: 99, background: 'var(--warning-bg)', color: 'var(--warning)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Redo requested</span>
+                        <span style={{ fontSize: 'var(--text-xs)', fontWeight: 700, padding: '2px 8px', borderRadius: 0, background: 'var(--warning-bg)', color: 'var(--warning)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Redo requested</span>
                       )}
                     </div>
                     {review.whatImproved && (
@@ -1319,7 +1324,7 @@ function SubskillRadar({ sectionData, targetScore = 65 }) {
           <Radar name="Current" dataKey="current" stroke="var(--accent)" strokeWidth={2} fill="var(--accent)" fillOpacity={0.25} isAnimationActive={true} animationDuration={1200} />
           <Radar name="Target" dataKey="target" stroke="var(--primary)" strokeWidth={1.5} strokeDasharray="4 4" fill="none" isAnimationActive={true} animationDuration={1000} />
           <Legend wrapperStyle={{ fontSize: 12, fontFamily: 'var(--font-ui)', color: 'var(--text-2)' }} />
-          <Tooltip contentStyle={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 8, fontSize: 12, fontFamily: 'var(--font-ui)' }} />
+          <Tooltip contentStyle={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 0, fontSize: 12, fontFamily: 'var(--font-ui)' }} />
         </RadarChart>
       </ResponsiveContainer>
     </div>
@@ -1534,3 +1539,4 @@ function ProgressProfileCard({ skill, trend }) {
     </article>
   );
 }
+
