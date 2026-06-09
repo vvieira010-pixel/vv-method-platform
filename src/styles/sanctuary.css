@@ -323,6 +323,112 @@
   font-size: 0.9rem;
 }
 
+/* --- Metric Card Tone Variants --- */
+.student-metric--blue   .student-metric-icon { background: #EFF6FF; color: #1D4ED8; }
+.student-metric--blue   .student-metric-copy strong { color: #1D4ED8; }
+.student-metric--teal   .student-metric-icon { background: var(--sanctuary-teal-soft); color: var(--sanctuary-teal-deep); }
+.student-metric--teal   .student-metric-copy strong { color: var(--sanctuary-teal-deep); }
+.student-metric--navy   .student-metric-icon { background: #EEF2FF; color: #1a2332; }
+.student-metric--navy   .student-metric-copy strong { color: #1a2332; }
+.student-metric--orange .student-metric-icon { background: #FFF7ED; color: #EA580C; }
+.student-metric--orange .student-metric-copy strong { color: #EA580C; }
+.student-metric--exam   .student-metric-icon { background: #F0FDF4; color: #15803D; }
+.student-metric--exam   .student-metric-copy strong { color: #15803D; }
+.student-metric--exam-urgent .student-metric-icon { background: #FEF9C3; color: #B45309; }
+.student-metric--exam-urgent .student-metric-copy strong { color: #B45309; }
+
+/* --- Homework Filter Buttons --- */
+.student-homework-filters {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+.hw-filter-btn {
+  padding: 6px 14px;
+  border-radius: 99px;
+  border: 1.5px solid var(--sanctuary-border);
+  background: white;
+  color: var(--sanctuary-muted);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: var(--font-ui);
+  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+.hw-filter-btn:hover { border-color: var(--sanctuary-teal-mid); color: var(--sanctuary-teal-deep); }
+.hw-filter-btn.active {
+  background: var(--sanctuary-teal-deep);
+  border-color: var(--sanctuary-teal-deep);
+  color: white;
+}
+
+/* --- Progress Stage Legend --- */
+.student-stage-legend {
+  margin-bottom: 16px;
+  border: 1px solid var(--sanctuary-border);
+  border-radius: 12px;
+  overflow: hidden;
+  background: white;
+}
+.student-stage-legend-toggle {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--sanctuary-teal-deep);
+  font-family: var(--font-ui);
+  text-align: left;
+  transition: background 0.15s ease;
+}
+.student-stage-legend-toggle:hover { background: var(--sanctuary-teal-soft); }
+.student-stage-legend-body {
+  border-top: 1px solid var(--sanctuary-border);
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.student-stage-legend-row {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+.student-stage-legend-name {
+  font-weight: 700;
+  color: var(--sanctuary-teal-deep);
+  min-width: 170px;
+  flex-shrink: 0;
+}
+.student-stage-legend-desc { color: var(--sanctuary-muted); }
+.student-stage-legend-row--goal .student-stage-legend-name { color: var(--sanctuary-gold); }
+
+/* --- Upcoming Classes List --- */
+.student-upcoming-row {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--sanctuary-border);
+  font-size: 0.85rem;
+}
+.student-upcoming-row:last-child { border-bottom: none; }
+.student-upcoming-date {
+  font-weight: 700;
+  color: var(--sanctuary-teal-deep);
+  min-width: 100px;
+  flex-shrink: 0;
+}
+.student-upcoming-focus { color: var(--sanctuary-muted); }
+
 @media (max-width: 860px) {
   .dash {
     min-height: 100dvh;
@@ -458,6 +564,9 @@
     justify-content: flex-start;
     padding: 12px;
   }
+
+  .student-stage-legend-name { min-width: 110px; }
+  .student-upcoming-date { min-width: 80px; }
 }
 
 @media (max-width: 420px) {

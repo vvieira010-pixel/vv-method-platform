@@ -20,6 +20,7 @@ import { claimStudentByEmail, ensureProfile, setSessionRole } from './lib/supaba
 
 // Lazy-loaded teacher pages
 const TeacherDashboard  = lazy(() => import('./pages/teacher-dashboard.jsx'));
+const EducatorView      = lazy(() => import('./pages/teacher-home.jsx'));
 const StudentsPage      = lazy(() => import('./pages/students.jsx'));
 const StudentProfile    = lazy(() => import('./pages/student-profile.jsx'));
 const CalendarPage      = lazy(() => import('./pages/calendar.jsx'));
@@ -229,6 +230,7 @@ export default function App() {
   // ── Teacher shell ──
   const teacherTabs = [
     { id: 'dashboard',    label: 'Dashboard',    icon: <Icon.home size={16} /> },
+    { id: 'educator',     label: 'Class Prep',   icon: <Icon.teacher size={16} /> },
     { id: 'students',     label: 'Students',     icon: <Icon.student size={16} /> },
     { id: 'calendar',     label: 'Calendar',     icon: <Icon.calendar size={16} /> },
     { id: 'diagnostics',  label: 'Diagnostics',  icon: <Icon.diagnose size={16} /> },
@@ -270,6 +272,9 @@ function renderTeacherPage(view, params, ctx) {
   switch (view) {
     case 'dashboard':
       return <TeacherDashboard students={students} onNavigate={navigate} teacherName={teacherName} />;
+
+    case 'educator':
+      return <EducatorView students={students} onNavigate={navigate} />;
 
     case 'students':
       return <StudentsPage students={students} onNavigate={navigate} />;

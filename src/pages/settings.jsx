@@ -55,6 +55,7 @@ export default function SettingsPage({ onNavigate }) {
   const [deepgramKey, setDeepgramKey] = useState(() => localStorage.getItem('vv:deepgram_api_key') || '');
   const [piperUrl, setPiperUrl] = useState(() => localStorage.getItem('vv:piper_server_url') || '');
   const [generalMemo, setGeneralMemo] = useState(() => localStorage.getItem('vv:student_general_memo') || '');
+  const [examDate, setExamDate] = useState(() => localStorage.getItem('vv:met_exam_date') || '');
   const [saved, setSaved] = useState('');
   const [syncing, setSyncing] = useState(false);
   const [syncResult, setSyncResult] = useState('');
@@ -102,6 +103,12 @@ export default function SettingsPage({ onNavigate }) {
     setSaved('Keys saved!');
     setTimeout(() => setSaved(''), 2000);
     window.toast?.('API keys saved.', 'ok');
+  }
+
+  function saveExamDate() {
+    if (examDate) localStorage.setItem('vv:met_exam_date', examDate);
+    else localStorage.removeItem('vv:met_exam_date');
+    window.toast?.('Exam date saved — students will see the countdown on their dashboard.', 'ok');
   }
 
   function saveGeneralMemo() {
@@ -307,6 +314,35 @@ export default function SettingsPage({ onNavigate }) {
         </Field>
         <div style={{ marginTop: 12 }}>
           <Button variant="primary" onClick={saveGeneralMemo}>Save General Memo</Button>
+        </div>
+      </Card>
+
+      {/* Class & Exam Settings */}
+      <Card style={{ padding: 20, marginTop: 14 }}>
+        <SectionHeader title="Class & Exam Date" icon={<Icon.calendar size={15} />} />
+        <p style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', margin: '8px 0 14px', lineHeight: 1.6 }}>
+          Set the MET exam date for your students. It appears as a live countdown on their Home dashboard.
+          Leave blank to hide the countdown.
+        </p>
+        <Field label="MET exam date">
+          <input
+            className="input"
+            type="date"
+            value={examDate}
+            onChange={e => setExamDate(e.target.value)}
+            style={{ maxWidth: 220 }}
+          />
+        </Field>
+        {examDate && (
+          <p style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: 6 }}>
+            {(() => {
+              const d = Math.ceil((new Date(examDate) - new Date().setHours(0,0,0,0)) / 86400000);
+              return d > 0 ? `${d} day${d !== 1 ? 's' : ''} from today` : d === 0 ? 'Today!' : 'This date has passed.';
+            })()}
+          </p>
+        )}
+        <div style={{ marginTop: 12 }}>
+          <Button variant="primary" onClick={saveExamDate}>Save exam date</Button>
         </div>
       </Card>
 

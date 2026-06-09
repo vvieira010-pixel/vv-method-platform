@@ -34,8 +34,8 @@ const GLOBAL_CSS = `
   .btn:hover:not(:disabled) { filter: brightness(1.06); transform: translateY(-1px); }
   .btn:focus-visible { outline: 2px solid var(--primary); outline-offset: 3px; }
   .btn:disabled { opacity: 0.45; cursor: not-allowed; }
-  .btn-primary  { background: linear-gradient(135deg, var(--primary) 0%, var(--primary-ink) 100%); color: #fff; box-shadow: 0 4px 14px -4px rgba(45,139,139,0.45); }
-  .btn-primary:hover:not(:disabled) { filter: none; background: linear-gradient(135deg, #45b3b3 0%, var(--primary) 100%); box-shadow: 0 8px 24px -6px rgba(45,139,139,0.65); transform: translateY(-1px); }
+  .btn-primary  { background: var(--accent); color: #fff; box-shadow: 0 4px 14px -4px rgba(45,139,139,0.45); }
+  .btn-primary:hover:not(:disabled) { filter: none; background: var(--accent-hover, #247070); box-shadow: 0 8px 24px -6px rgba(45,139,139,0.65); transform: translateY(-1px); }
   .btn-accent   { background: var(--accent-deep); color: #fff; }
   .btn-accent:hover:not(:disabled) { background: #131a28; }
   .btn-ghost    { background: transparent; color: var(--text-2); border: 1px solid var(--border); }
@@ -106,7 +106,7 @@ const GLOBAL_CSS = `
     color: #fff;
     font-weight: 700;
     border: 1px solid rgba(168,218,220,0.25);
-    border-left: 3px solid var(--primary);
+    border-left: 3px solid var(--accent);
     padding-left: 7px;
   }
   .shell-user { padding: 12px 14px; border-top: 1px solid var(--dark-accent-border); display: flex; align-items: center; gap: 9px; }
@@ -249,7 +249,9 @@ const GLOBAL_CSS = `
   .td-priority-kicker { font-size: var(--text-xs); font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent-text); }
   .td-priority-title { margin: 1px 0 2px; font-size: var(--text-lg); color: var(--accent-deep); font-weight: 800; }
   .td-priority-text { margin: 0; font-size: var(--text-sm); color: var(--text-2); line-height: 1.5; }
-  .td-empty { color: var(--muted); font-size: var(--text-sm); margin-top: 8px; font-style: italic; }
+  .td-empty { color: var(--muted); font-size: var(--text-sm); margin: 8px 0 4px; font-style: italic; }
+  .td-empty-state { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
+  button.card { text-align: left; font-family: var(--font-ui); width: 100%; cursor: pointer; }
   .td-list-row { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--divider); }
   .td-row-title { font-weight: 600; font-size: var(--text-sm); }
   .td-row-sub { font-size: var(--text-xs); color: var(--muted); margin-top: 2px; }
@@ -527,8 +529,16 @@ export function Button({
 }
 
 /* ─── CARD ───────────────────────────────────────────────────── */
-export function Card({ children, style, className = '', small }) {
-  return <div className={`card ${small ? 'card-sm' : ''} ${className}`} style={style}>{children}</div>;
+export function Card({ children, style, className = '', small, onClick }) {
+  const cls = `card ${small ? 'card-sm' : ''} ${className}`;
+  if (onClick) {
+    return (
+      <button type="button" className={cls} style={style} onClick={onClick}>
+        {children}
+      </button>
+    );
+  }
+  return <div className={cls} style={style}>{children}</div>;
 }
 
 /* ─── PILL ───────────────────────────────────────────────────── */
@@ -858,7 +868,7 @@ const LEGACY_NAV_SECTIONS = [
 // New section map for Phase 1 IDs
 const NEW_NAV_SECTIONS = [
   { label: 'Today',    ids: ['dashboard'] },
-  { label: 'Workflow', ids: ['students', 'calendar', 'diagnostics', 'homework', 'submissions'] },
+  { label: 'Workflow', ids: ['students', 'calendar', 'educator', 'diagnostics', 'homework', 'submissions'] },
   { label: 'Support',  ids: ['inbox', 'error-bank', 'reports', 'exercises'] },
   { label: 'Admin',    ids: ['settings'] },
 ];
@@ -920,7 +930,7 @@ export function Shell({ tabs = [], active, onTab, children, rightSlot, workflowA
         <main className="shell-main">{children}</main>
       </div>
       <nav className="shell-mobile-nav" aria-label="Mobile navigation">
-        {tabs.map(tab => (
+        {tabs.filter(t => t.mobile !== false && ['dashboard','students','diagnostics','homework','submissions'].includes(t.id)).map(tab => (
           <button key={tab.id}
             className={`shell-mobile-nav-btn${active === tab.id ? ' active' : ''}`}
             aria-current={active === tab.id ? 'page' : undefined}

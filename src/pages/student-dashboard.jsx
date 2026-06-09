@@ -59,6 +59,14 @@ const PROGRESS_STAGES = [
   { label: 'Ready for Mock Practice', order: 5, min: 65 },
 ];
 
+const STAGE_DESCRIPTIONS = {
+  'Starting':   'You are building familiarity with the MET task types. Focus on understanding what each section asks.',
+  'Building':   'You can attempt tasks with guidance. Your answers show basic structure and relevant content.',
+  'Developing': 'You complete tasks more consistently. Your control over grammar and vocabulary is growing.',
+  'Improving':  'You perform well in most conditions. You are close to B2 level in this skill area.',
+  'Ready for Mock Practice': 'You handle this skill under timed conditions — you are at B2 level and ready to practise the full MET format.',
+};
+
 function getProgressStage(score) {
   const value = Number(score) || 0;
   if (value <= 0) return { label: 'Not evaluated enough', order: 0, min: 0 };
@@ -216,6 +224,16 @@ export default function StudentDashboard({ student, onSignOut }) {
 }
 
 /* ─── HOME ─── */
+function daysUntilExam() {
+  try {
+    const ds = localStorage.getItem('vv:met_exam_date');
+    if (!ds) return null;
+    const exam = new Date(ds + 'T00:00:00');
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    return Math.ceil((exam - today) / 86400000);
+  } catch { return null; }
+}
+
 function HomeView({ student, onTab }) {
   const [latestFeedback, setLatestFeedback] = useState(null);
   const [pendingHw, setPendingHw] = useState([]);
@@ -223,6 +241,7 @@ function HomeView({ student, onTab }) {
   const [snapshot, setSnapshot] = useState([]);
   const [approvedHistory, setApprovedHistory] = useState([]);
   const [nextClass, setNextClass] = useState(null);
+  const [upcomingClasses, setUpcomingClasses] = useState([]);
   const [generalMemoText, setGeneralMemoText] = useState(() => localStorage.getItem('vv:student_general_memo') || '');
 
   useEffect(() => {
@@ -251,6 +270,7 @@ function HomeView({ student, onTab }) {
         .filter(e => e.startAt >= today)
         .sort((a, b) => a.startAt - b.startAt);
       setNextClass(upcoming[0] || null);
+      setUpcomingClasses(upcoming.slice(0, 4));
 
       const approvedDx = (diagnoses || [])
         .filter(hasVisibleApprovedStudentFeedback)
@@ -303,12 +323,29 @@ function HomeView({ student, onTab }) {
         </button>
       </section>
 
-      <section className="student-metrics" aria-label="Student summary">
-        <MetricCard icon={<Icon.calendar size={19} />} label="Next class" value={nextDate} sub={nextTime} tone="blue" />
-        <MetricCard icon={<Icon.homework size={19} />} label="Homework" value={pendingHw.length} sub={pendingHw.length === 1 ? 'task pending' : 'tasks pending'} tone="teal" />
-        <MetricCard icon={<Icon.progress size={19} />} label="Current focus" value={focusSkill} sub={focusTrend.dir !== 'none' ? `Progress: ${focusTrend.label}` : 'next useful practice'} tone="navy" />
-        <MetricCard icon={<Icon.inbox size={19} />} label="Feedback" value={latestFeedback ? 'Ready' : 'Waiting'} sub={latestFeedback ? 'teacher approved' : 'after diagnosis'} tone="orange" />
-      </section>
+      {(() => {
+        const daysLeft = daysUntilExam();
+        const examDateStr = (() => { try { return localStorage.getItem('vv:met_exam_date') || ''; } catch { return ''; } })();
+        return (
+          <section className="student-metrics" aria-label="Student summary">
+            <MetricCard icon={<Icon.calendar size={19} />} label="Next class" value={nextDate} sub={nextTime} tone="blue" />
+            <MetricCard icon={<Icon.homework size={19} />} label="Homework" value={pendingHw.length} sub={pendingHw.length === 1 ? 'task pending' : 'tasks pending'} tone="teal" />
+            <MetricCard icon={<Icon.progress size={19} />} label="Current focus" value={focusSkill} sub={focusTrend.dir !== 'none' ? `Progress: ${focusTrend.label}` : 'next useful practice'} tone="navy" />
+            <MetricCard icon={<Icon.inbox size={19} />} label="Feedback" value={latestFeedback ? 'Ready' : 'Waiting'} sub={latestFeedback ? 'teacher approved' : 'after diagnosis'} tone="orange" />
+            {daysLeft !== null && (
+              <MetricCard
+                icon={<Icon.calendar size={19} />}
+                label="MET exam"
+                value={daysLeft > 0 ? `${daysLeft}d` : daysLeft === 0 ? 'Today!' : 'Done'}
+                sub={daysLeft > 0
+                  ? new Date(examDateStr + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+                  : daysLeft === 0 ? 'Good luck!' : 'Exam has passed'}
+                tone={daysLeft <= 30 ? 'exam-urgent' : 'exam'}
+              />
+            )}
+          </section>
+        );
+      })()}
 
       {pendingHw.length === 0 && (
         <div className="student-practice-studio">
@@ -357,6 +394,19 @@ function HomeView({ student, onTab }) {
                 <button type="button" onClick={() => onTab('homework')}>Enter Study Area</button>
               </div>
             </div>
+            {upcomingClasses.length > 1 && (
+              <div style={{ marginTop: 14, borderTop: '1px solid var(--border)', paddingTop: 12 }}>
+                <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>Upcoming schedule</div>
+                {upcomingClasses.map((cls, i) => (
+                  <div key={cls.id || i} className="student-upcoming-row">
+                    <span className="student-upcoming-date">
+                      {cls.startAt.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}
+                    </span>
+                    <span className="student-upcoming-focus">{cls.classFocus || cls.metSkillFocus || cls.title || 'Class'}</span>
+                  </div>
+                ))}
+              </div>
+            )}
           </article>
 
           <div
@@ -1019,7 +1069,7 @@ function HomeworkView({ student }) {
             ['reviewed', `Reviewed (${reviewedCount})`],
             ['all', 'All'],
           ].map(([id, label]) => (
-            <button key={id} type="button" className={homeworkFilter === id ? 'active' : ''} onClick={() => setHomeworkFilter(id)}>
+            <button key={id} type="button" className={`hw-filter-btn${homeworkFilter === id ? ' active' : ''}`} onClick={() => setHomeworkFilter(id)}>
               {label}
             </button>
           ))}
@@ -1294,6 +1344,7 @@ function sectionToLabel(section) {
 function ProgressView({ student }) {
   const [diagnoses, setDiagnoses] = useState([]);
   const [notes, setNotes] = useState([]);
+  const [legendOpen, setLegendOpen] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -1315,6 +1366,27 @@ function ProgressView({ student }) {
           <p>Progress stages show direction without turning your learning into a grade.</p>
         </div>
       </section>
+
+      <div className="student-stage-legend">
+        <button className="student-stage-legend-toggle" onClick={() => setLegendOpen(v => !v)} aria-expanded={legendOpen}>
+          <span>What do the stages mean?</span>
+          <span aria-hidden="true" style={{ fontSize: 10 }}>{legendOpen ? '▲' : '▼'}</span>
+        </button>
+        {legendOpen && (
+          <div className="student-stage-legend-body">
+            {PROGRESS_STAGES.map(s => (
+              <div key={s.label} className="student-stage-legend-row">
+                <span className="student-stage-legend-name">{s.label}</span>
+                <span className="student-stage-legend-desc">{STAGE_DESCRIPTIONS[s.label]}</span>
+              </div>
+            ))}
+            <div className="student-stage-legend-row student-stage-legend-row--goal">
+              <span className="student-stage-legend-name">Your goal</span>
+              <span className="student-stage-legend-desc">Stage 5 = Ready for Mock Practice = B2 performance on the MET. The actual exam requires 65/80 or higher across all sections.</span>
+            </div>
+          </div>
+        )}
+      </div>
 
       {diagnoses.length === 0 ? (
         <section className="student-panel student-panel--readiness">

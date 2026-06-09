@@ -92,7 +92,10 @@ export default function TeacherDashboard({ students, onNavigate, teacherName = '
         <Card style={{ padding: 14, animation: 'fadeUp 0.3s var(--ease) both', animationDelay: '80ms' }}>
           <SectionHeader title="Today's Classes" icon={<Icon.calendar size={15} />} action={<Button variant="ghost" size="sm" onClick={() => onNavigate('calendar')}>View calendar</Button>} />
           {data.todayClasses.length === 0 ? (
-            <p className="td-empty">No classes scheduled today.</p>
+            <div className="td-empty-state">
+              <p className="td-empty">No classes scheduled today.</p>
+              <Button variant="ghost" size="sm" onClick={() => onNavigate('calendar')}>Schedule a class →</Button>
+            </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 8 }}>
               {data.todayClasses.map(ev => {
@@ -142,7 +145,10 @@ export default function TeacherDashboard({ students, onNavigate, teacherName = '
         <Card style={{ padding: 14, animation: 'fadeUp 0.3s var(--ease) both', animationDelay: '240ms' }}>
           <SectionHeader title="Submissions Awaiting Review" icon={<Icon.doc size={15} />} action={<Button variant="ghost" size="sm" onClick={() => onNavigate('submissions')}>All submissions</Button>} />
           {data.pendingSubmissions.length === 0 ? (
-            <p className="td-empty">No submissions waiting for review.</p>
+            <div className="td-empty-state">
+              <p className="td-empty">No submissions waiting — you're all caught up.</p>
+              <Button variant="ghost" size="sm" onClick={() => onNavigate('homework')}>View homework →</Button>
+            </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 8 }}>
               {data.pendingSubmissions.slice(0, 5).map(sub => {

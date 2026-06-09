@@ -3,7 +3,6 @@
 /* ── Dashboard shell ── */
 .dash {
   min-height: 100dvh;
-  background: var(--bg);
   display: flex;
   flex-direction: column;
   font-family: var(--font-ui);

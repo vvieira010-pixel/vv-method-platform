@@ -47,6 +47,39 @@ const CSS = `
     background: rgba(72,199,199,.22); border: 1px solid rgba(72,199,199,.4);
     font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #a8dce0;
   }
+  .lp-brand-b2-badge {
+    display: inline-block; margin-left: 8px; vertical-align: middle;
+    padding: 3px 8px; border-radius: 4px;
+    background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.25);
+    font-size: 10px; font-weight: 800; letter-spacing: .08em; color: #fff;
+  }
+  .lp-invite-notice {
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 22px; padding: 9px 12px;
+    border-radius: var(--radius-sm);
+    background: var(--accent-subtle); border: 1px solid var(--accent-soft);
+    font-size: 12px; color: var(--accent-deep); line-height: 1.4;
+  }
+  .lp-mode-switch {
+    display: flex; gap: 4px; margin-bottom: 28px;
+    padding: 4px; background: var(--bg); border: 1.5px solid var(--border);
+    border-radius: var(--radius-md);
+  }
+  .lp-mode-switch button {
+    flex: 1; padding: 9px 12px;
+    border: none; border-radius: 6px;
+    font-size: var(--text-sm); font-weight: 600; font-family: var(--font-ui);
+    cursor: pointer; color: var(--muted);
+    background: transparent; transition: all .15s;
+  }
+  .lp-mode-switch button.active {
+    background: var(--accent); color: #fff;
+    box-shadow: 0 1px 4px rgba(45,139,139,.3);
+  }
+  .lp-mode-switch button:hover:not(.active):not(:disabled) {
+    color: var(--accent-deep); background: var(--accent-subtle);
+  }
+  .lp-mode-switch button:disabled { opacity: .5; cursor: default; }
   .lp-brand-headline {
     font-size: clamp(26px, 3vw, 34px); font-weight: 800; color: #fff;
     line-height: 1.2; margin: 0 0 16px; letter-spacing: -.02em;
@@ -120,7 +153,7 @@ const CSS = `
 
   .lp-submit {
     width: 100%; padding: 13px; margin-top: 8px;
-    background: var(--primary); color: #fff;
+    background: var(--accent); color: #fff;
     border: none; border-radius: var(--radius-md); cursor: pointer;
     font-size: var(--text-lg); font-weight: 700; font-family: var(--font-ui);
     letter-spacing: .01em;
@@ -161,13 +194,15 @@ const CSS = `
   }
 
   .lp-toggle {
-    margin-top: 20px; text-align: center;
-    font-size: 13px; color: var(--muted);
+    margin-top: 18px; padding: 12px 16px;
+    border-radius: var(--radius-md); border: 1px solid var(--border);
+    background: var(--bg);
+    font-size: 13px; color: var(--muted); text-align: center;
   }
   .lp-toggle button {
-    background: none; border: none; padding: 0; margin-left: var(--space-1);
-    font-size: var(--text-sm); font-weight: 700; color: var(--accent-deep);
-    cursor: pointer; font-family: var(--font-ui); text-decoration: underline;
+    background: none; border: none; padding: 0 4px; margin-left: var(--space-1);
+    font-size: 13px; font-weight: 700; color: var(--accent);
+    cursor: pointer; font-family: var(--font-ui);
   }
   .lp-toggle button:disabled { opacity: .5; cursor: default; }
 
@@ -293,7 +328,10 @@ export default function LoginScreen() {
         </div>
 
         <div className="lp-brand-hero">
-          <div className="lp-brand-tag">Your learning path</div>
+          <div>
+            <span className="lp-brand-tag">Your learning path</span>
+            <span className="lp-brand-b2-badge">B2 Target</span>
+          </div>
           <h2 className="lp-brand-headline">Clear practice.<br />Better feedback.<br />Real progress.</h2>
           <p className="lp-brand-copy">
             Everything you need to reach B2 — lessons, feedback, homework, and your full progress history in one place.
@@ -301,7 +339,7 @@ export default function LoginScreen() {
         </div>
 
         <div className="lp-brand-features">
-          {['Personalized homework plans', 'Real-time progress tracking'].map(f => (
+          {['Personalized homework plans', 'Real-time progress tracking', 'Focused MET skill coaching from your teacher'].map(f => (
             <div key={f} className="lp-brand-feature">
               <span className="lp-brand-feature-dot" aria-hidden="true" />
               {f}
@@ -318,16 +356,30 @@ export default function LoginScreen() {
             <span className="lp-mobile-brand-sub">Michigan English Test Preparation</span>
           </div>
 
+          {!isReset && (
+            <div className="lp-mode-switch" role="tablist" aria-label="Account mode">
+              <button type="button" role="tab" aria-selected={!isRegister} className={!isRegister ? 'active' : ''} onClick={() => switchMode('signin')} disabled={loading}>Sign in</button>
+              <button type="button" role="tab" aria-selected={isRegister} className={isRegister ? 'active' : ''} onClick={() => switchMode('register')} disabled={loading}>New student</button>
+            </div>
+          )}
+
+          {!isRegister && !isReset && (
+            <div className="lp-invite-notice" role="note">
+              <span aria-hidden="true">🔒</span>
+              Private platform · Contact Teacher Vinicius to get access
+            </div>
+          )}
+
           <div className="lp-greeting">
             <h1>
-              {isReset ? 'Reset your password' : isRegister ? 'Create your password' : 'Sign in'}
+              {isReset ? 'Reset your password' : isRegister ? 'Create your account' : 'Welcome back'}
             </h1>
             <p>
               {isReset
                 ? "Enter your email and we'll send you a sign-in link."
                 : isRegister
-                ? 'First time here? Enter your email and choose a password to create your account.'
-                : 'Enter the email and password you use for this platform.'}
+                ? 'Enter your email and choose a password to set up your account.'
+                : 'Enter your email and password below.'}
             </p>
           </div>
 
@@ -388,24 +440,12 @@ export default function LoginScreen() {
             </div>
           )}
 
-          <div className="lp-toggle">
-            {isReset ? (
-              <>
-                Remember it?
-                <button type="button" onClick={() => switchMode('signin')} disabled={loading}>Sign in</button>
-              </>
-            ) : isRegister ? (
-              <>
-                Already have an account?
-                <button type="button" onClick={() => switchMode('signin')} disabled={loading}>Sign in</button>
-              </>
-            ) : (
-              <>
-                First time here?
-                <button type="button" onClick={() => switchMode('register')} disabled={loading}>Create your password</button>
-              </>
-            )}
-          </div>
+          {isReset && (
+            <div className="lp-toggle">
+              Remember it?
+              <button type="button" onClick={() => switchMode('signin')} disabled={loading}>Back to sign in</button>
+            </div>
+          )}
 
           <div className="lp-footer">
             MET Proficiency Mastery · Private platform<br />
