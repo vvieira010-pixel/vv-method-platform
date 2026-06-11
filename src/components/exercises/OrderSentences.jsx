@@ -3,6 +3,35 @@ import { useState } from 'react';
 const TEAL = '#0D9488';
 const NAVY = '#0B1F3A';
 
+// MET section hints for ordering exercises — from met_test_basics_task_breakdown.md
+const MET_ORDER_CONFIG = {
+  writing_t2: {
+    label: 'Writing Task 2 — Essay Structure',
+    structure: 'Introduction → Body Paragraph 1 → Body Paragraph 2 → Conclusion',
+    tip: 'Introduction: paraphrase + main idea. Body: reason → explanation → example. Conclusion: restate + final comment.',
+  },
+  writing_t1: {
+    label: 'Writing Task 1 — Response Structure',
+    structure: 'Answer → Reason → Support/Example',
+    tip: 'Answer the question directly first, then give a reason, then add a specific example or consequence.',
+  },
+  speaking_q2: {
+    label: 'Speaking Q2 — Personal Experience',
+    structure: 'When/where → What happened → Result/feeling',
+    tip: 'Tell a specific story with a setup, an event, and an outcome. Use past tense connectors: at first, after that, in the end.',
+  },
+  speaking_q4: {
+    label: 'Speaking Q4 — Advantages & Disadvantages',
+    structure: 'Introduction → Advantages → Disadvantages → Balanced conclusion',
+    tip: 'Both sides must be covered in roughly equal time. Use a clear transition pivot: "However, there are also disadvantages…"',
+  },
+  speaking_q5: {
+    label: 'Speaking Q5 — Persuasive Argument',
+    structure: 'Recommendation → Reasons → Benefits → Respectful closing',
+    tip: 'State your position first, then support it. Formal register throughout. End with a polite call to action.',
+  },
+};
+
 function shuffle(arr) {
   const a = [...arr];
   for (let i = a.length - 1; i > 0; i--) {
@@ -13,7 +42,7 @@ function shuffle(arr) {
 }
 
 export default function OrderSentences({ exercise, onComplete }) {
-  const { sentences, context, instruction } = exercise;
+  const { sentences, context, instruction, metSection } = exercise;
   const [order, setOrder] = useState(() => shuffle(sentences.map((_, i) => i)));
   const [submitted, setSubmitted] = useState(false);
 
@@ -40,7 +69,7 @@ export default function OrderSentences({ exercise, onComplete }) {
     if (!submitted) {
       return {
         display: 'flex', alignItems: 'center', gap: 12,
-        padding: '12px 14px', borderRadius: 10,
+        padding: '12px 14px', borderRadius: 0,
         border: '1.5px solid var(--border)', background: 'var(--surface)',
         cursor: 'grab', transition: 'all 0.15s',
       };
@@ -48,7 +77,7 @@ export default function OrderSentences({ exercise, onComplete }) {
     const correct = origIdx === pos;
     return {
       display: 'flex', alignItems: 'center', gap: 12,
-      padding: '12px 14px', borderRadius: 10,
+      padding: '12px 14px', borderRadius: 0,
       border: `1.5px solid ${correct ? '#A7F3D0' : '#FECACA'}`,
       background: correct ? '#ECFDF5' : '#FEF2F2',
       transition: 'all 0.15s',
@@ -56,12 +85,24 @@ export default function OrderSentences({ exercise, onComplete }) {
   }
 
   const allCorrect = submitted && order.every((origIdx, pos) => origIdx === pos);
+  const sectionConfig = metSection ? MET_ORDER_CONFIG[metSection] : null;
 
   return (
     <div>
+      {/* MET section banner */}
+      {sectionConfig && (
+        <div style={{ padding: '10px 14px', background: '#EFF6FF', border: '1px solid #BFDBFE', borderRadius: 0, marginBottom: 14 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: '#1D4ED8', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>
+            {sectionConfig.label}
+          </div>
+          <div style={{ fontSize: 13, fontWeight: 600, color: '#1E3A5F', marginBottom: 4 }}>{sectionConfig.structure}</div>
+          <div style={{ fontSize: 13, color: '#1E3A5F', lineHeight: 1.55 }}>{sectionConfig.tip}</div>
+        </div>
+      )}
+
       {instruction && <p style={{ fontSize: 13.5, color: 'var(--muted)', marginBottom: 8, lineHeight: 1.6 }}>{instruction}</p>}
       {context && (
-        <div style={{ padding: '10px 14px', background: 'var(--bg)', borderRadius: 8, marginBottom: 14, fontSize: 14, lineHeight: 1.7, color: 'var(--text-2)' }}>
+        <div style={{ padding: '10px 14px', background: 'var(--bg)', borderRadius: 0, marginBottom: 14, fontSize: 14, lineHeight: 1.7, color: 'var(--text-2)' }}>
           {context}
         </div>
       )}
@@ -134,7 +175,7 @@ export default function OrderSentences({ exercise, onComplete }) {
         <button
           onClick={handleSubmit}
           style={{
-            padding: '10px 24px', borderRadius: 10, border: 'none', cursor: 'pointer',
+            padding: '10px 24px', borderRadius: 0, border: 'none', cursor: 'pointer',
             background: `linear-gradient(120deg, ${TEAL} 0%, ${NAVY} 100%)`,
             color: '#fff', fontWeight: 600, fontSize: 14, fontFamily: 'var(--font-ui)',
           }}
@@ -144,7 +185,7 @@ export default function OrderSentences({ exercise, onComplete }) {
       ) : (
         <div>
           <div style={{
-            padding: '12px 16px', borderRadius: 10, fontSize: 14, fontWeight: 500, marginBottom: 12,
+            padding: '12px 16px', borderRadius: 0, fontSize: 14, fontWeight: 500, marginBottom: 12,
             background: allCorrect ? '#ECFDF5' : '#FFFBEB',
             border: `1px solid ${allCorrect ? '#A7F3D0' : '#FDE68A'}`,
             color: allCorrect ? '#065F46' : '#92400E',
@@ -157,7 +198,7 @@ export default function OrderSentences({ exercise, onComplete }) {
             <button
               onClick={handleReset}
               style={{
-                padding: '9px 20px', borderRadius: 10, border: '1.5px solid var(--border)', cursor: 'pointer',
+                padding: '9px 20px', borderRadius: 0, border: '1.5px solid var(--border)', cursor: 'pointer',
                 background: 'var(--surface)', color: 'var(--text-2)', fontWeight: 600, fontSize: 13.5,
                 fontFamily: 'var(--font-ui)',
               }}
@@ -170,3 +211,4 @@ export default function OrderSentences({ exercise, onComplete }) {
     </div>
   );
 }
+

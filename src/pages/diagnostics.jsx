@@ -127,7 +127,7 @@ function getEvidenceSummary(dx) {
 }
 
 const S = {
-  headline: { fontFamily: 'var(--font-display)', fontSize: 'var(--text-2xl)', fontWeight: 700, color: 'var(--accent-deep)', margin: 0 },
+  headline: { fontFamily: 'var(--font-ui)', fontSize: 'var(--text-2xl)', fontWeight: 700, color: 'var(--accent-deep)', margin: 0 },
   sub: { fontSize: 'var(--text-sm)', color: 'var(--muted)', margin: '4px 0 0' },
   evidenceRow: { display: 'flex', flexWrap: 'wrap', gap: 5, marginTop: 7 },
   evidenceChip: {
@@ -142,3 +142,4 @@ const S = {
     background: 'var(--bg)',
   },
 };
+

@@ -328,7 +328,7 @@ export default function ToolHomework({ student, students = [], onSelectStudent, 
                               </span>
                               {grade && (
                                 <Pill tone={grade.correct ? 'success' : 'warning'}>
-                                  {grade.correct ? '✓ Correct' : grade.feedback}
+                                  {grade.correct ? <><Icon.check size={12} /> Correct</> : grade.feedback}
                                 </Pill>
                               )}
                             </div>
@@ -401,7 +401,7 @@ export default function ToolHomework({ student, students = [], onSelectStudent, 
                             <ExTypeBadge typeId={ex.type} />
                             {grade && (
                               <Pill tone={grade.correct ? 'success' : 'warning'}>
-                                {grade.correct ? '✓' : `${Math.round(grade.score * 100)}%`}
+                                {grade.correct ? <Icon.check size={12} /> : `${Math.round(grade.score * 100)}%`}
                               </Pill>
                             )}
                           </div>

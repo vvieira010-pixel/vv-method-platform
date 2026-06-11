@@ -78,7 +78,7 @@ export default function StudentProfile({ studentId, students, onNavigate }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
           <Avatar name={student.name} size={52} />
           <div style={{ flex: 1 }}>
-            <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-xl)', fontWeight: 700, margin: 0, color: 'var(--accent-deep)' }}>{student.name}</h2>
+            <h2 style={{ fontSize: 'var(--text-xl)', fontWeight: 700, margin: 0, color: 'var(--accent-deep)' }}>{student.name}</h2>
             <p style={{ margin: '4px 0 0', fontSize: 'var(--text-sm)', color: 'var(--muted)' }}>
               {student.currentLevel} → {student.targetLevel} · {student.examGoal}
               {student.professionalContext ? ` · ${student.professionalContext}` : ''}

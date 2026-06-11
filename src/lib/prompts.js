@@ -524,18 +524,23 @@ export const buildHomeworkGroupPrompt = ({ student, diagnosis, group, count = 5 
   const skillData  = skillDx[group] || {};
   const weaknesses = arr(skillData.weaknesses).slice(0, 4);
 
-  // Map group key to recommended exercise types
+  // Map group key to required exercise types. listening/reading are LOCKED to their structured type.
   const TYPE_HINTS = {
     speaking:    'speak, short',
     writing:     'short, fix',
     grammar:     'fix, blank, mcq',
     vocabulary:  'flash, blank, mcq',
-    reading:     'read, mcq',
-    listening:   'listen, mcq',
+    reading:     'read',
+    listening:   'listen',
     mixed:       'mcq, blank, short, fix',
   };
   const typeHint = TYPE_HINTS[group] || 'mcq, blank, short';
   const groupLabel = group.charAt(0).toUpperCase() + group.slice(1);
+  const typeRule = group === 'listening'
+    ? `- MANDATORY: Every exercise MUST be type "listen". Include audioText (2–4 sentence spoken script), question, 4 options, correct index, and explanation. No other types allowed.`
+    : group === 'reading'
+    ? `- MANDATORY: Every exercise MUST be type "read". Include passage (150–250 words), questions array with at least 3 items (each with question, 4 options, correct index, explanation). No other types allowed.`
+    : `- Use types: ${typeHint}. Mix them for variety. Use the structured types: mcq, blank, short, speak, order, fix, flash, listen, read.`;
 
   return `You are a MET English exam preparation expert. Generate exactly ${count} structured exercises targeting ${groupLabel}.
 
@@ -560,7 +565,7 @@ ${group === 'grammar' || group === 'mixed' ? grammar.slice(0, 3).map(g => `- ${g
 
 ━━━ RULES ━━━
 - Generate exactly ${count} exercises. Every exercise is FULLY WRITTEN — student opens and starts immediately.
-- Recommended types: ${typeHint}. Mix them for variety. Use the 8 structured types: mcq, blank, short, speak, order, fix, flash, listen.
+${typeRule}
 - Use general MET topics by default. ${GENERAL_MET_TOPIC_RULES}
 - B1–B2 level. Each exercise should take 3–5 minutes.
 - Keep every item connected to MET skills: speaking organization, writing support, reading/listening evidence, grammar control, vocabulary range, or test strategy.

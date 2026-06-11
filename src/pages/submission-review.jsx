@@ -382,7 +382,7 @@ Return JSON:
               <div style={{ marginTop: 10, padding: 12, background: 'var(--accent-subtle)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-sm)', lineHeight: 1.6 }}>
                 <strong>AI Assessment:</strong> {aiComparison.didStudentImprove}
                 {aiComparison.correctedErrors?.length > 0 && (
-                  <div style={{ marginTop: 6, color: 'var(--success)' }}>✓ Corrected: {aiComparison.correctedErrors.join(', ')}</div>
+                  <div style={{ marginTop: 6, color: 'var(--success)', display: 'flex', alignItems: 'center', gap: 4 }}><Icon.check size={12} /> Corrected: {aiComparison.correctedErrors.join(', ')}</div>
                 )}
               </div>
             )}
@@ -469,7 +469,7 @@ Return JSON:
                     fontSize: 'var(--text-sm)', color: 'var(--success)', fontWeight: 600,
                     display: 'flex', alignItems: 'center', gap: 8,
                   }}>
-                    <span>✓</span> Student marked this feedback as understood.
+                    <Icon.check size={14} /> Student marked this feedback as understood.
                   </div>
                 )}
                 {feedbackReplies.map(msg => (
@@ -515,7 +515,7 @@ Return JSON:
           </Button>
           {existingReview && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-              <Pill tone="success">✓ Review saved</Pill>
+              <Pill tone="success"><Icon.check size={12} /> Review saved</Pill>
               <Button variant="ghost" size="sm" style={{ color: 'var(--danger)' }} onClick={async () => { if (confirm('Delete this teacher review?')) { await deleteReview(existingReview.id); window.toast?.('Review deleted.', 'info'); onNavigate('submissions'); } }}>
                 <Icon.trash size={12} /> Delete review
               </Button>
@@ -589,4 +589,5 @@ function cleanText(value) {
 const EMPTY_FORM = { whatImproved: '', activeErrors: '', newErrors: '', corrections: [{ id: Math.random().toString(36).slice(2, 9), original: '', improved: '', note: '' }], overallNote: '', score: '', redoRequired: false, sendFeedback: true };
 const backStyle = { background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)', fontSize: 'var(--text-sm)', display: 'flex', alignItems: 'center', gap: 4, marginBottom: 16, padding: 0, fontFamily: 'var(--font-ui)' };
 const fieldLabel = { fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em' };
-const S = { headline: { fontFamily: 'var(--font-display)', fontSize: 'var(--text-2xl)', fontWeight: 700, color: 'var(--accent-deep)', margin: '0 0 4px' }, sub: { fontSize: 'var(--text-sm)', color: 'var(--muted)' } };
+const S = { headline: { fontFamily: 'var(--font-ui)', fontSize: 'var(--text-2xl)', fontWeight: 700, color: 'var(--accent-deep)', margin: '0 0 4px' }, sub: { fontSize: 'var(--text-sm)', color: 'var(--muted)' } };
+

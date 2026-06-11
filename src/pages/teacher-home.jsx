@@ -100,7 +100,7 @@ export default function EducatorView({ students, onNavigate }) {
 
         {/* Header */}
         <div style={{ marginBottom: 24 }}>
-          <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-2xl)', fontWeight: 700, color: 'var(--accent-deep)', margin: 0 }}>
+          <h1 style={{ fontFamily: 'var(--font-ui)', fontSize: 'var(--text-2xl)', fontWeight: 700, color: 'var(--accent-deep)', margin: 0 }}>
             Good {timeOfDay()}.
           </h1>
           <p style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', margin: '4px 0 0' }}>
@@ -262,7 +262,7 @@ function StudentRow({ student: s, onNavigate, onAction }) {
 }
 
 function StatCard({ label, value, icon, tone }) {
-  const bg = tone === 'warning' ? 'rgba(245,158,11,0.08)' : tone === 'danger' ? 'rgba(239,68,68,0.08)' : tone === 'info' ? 'rgba(45,139,139,0.08)' : 'var(--surface)';
+  const bg = tone === 'warning' ? 'rgba(245,158,11,0.08)' : tone === 'danger' ? 'rgba(239,68,68,0.08)' : tone === 'info' ? 'rgba(37,99,235,0.08)' : 'var(--surface)';
   const fg = tone === 'warning' ? 'var(--warning)' : tone === 'danger' ? 'var(--danger)' : tone === 'info' ? 'var(--accent)' : 'var(--accent-deep)';
   return (
     <Card style={{ padding: '14px 16px', background: bg }}>
@@ -284,7 +284,7 @@ function FilterChip({ label, count, active, onClick }) {
         display: 'inline-flex', alignItems: 'center', gap: 4,
         padding: '4px 10px', borderRadius: 'var(--radius-pill)',
         border: active ? '1.5px solid var(--accent)' : '1px solid var(--border)',
-        background: active ? 'var(--accent-soft, rgba(45,139,139,0.1))' : 'var(--surface)',
+        background: active ? 'var(--accent-soft, rgba(37,99,235,0.1))' : 'var(--surface)',
         color: active ? 'var(--accent)' : 'var(--muted)',
         fontSize: 'var(--text-xs)', fontWeight: 600, cursor: 'pointer',
         fontFamily: 'var(--font-ui)',
@@ -295,3 +295,4 @@ function FilterChip({ label, count, active, onClick }) {
     </button>
   );
 }
+

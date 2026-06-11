@@ -2,6 +2,7 @@
  * tweaks-panel.jsx — Floating tweaks sidebar for teacher UI customization
  */
 import { useState } from 'react';
+import { Icon } from './shared.jsx';
 
 const CSS = `
   .tweaks-toggle {
@@ -63,7 +64,7 @@ export function TweaksPanel({ title = 'Tweaks', children }) {
   const [open, setOpen] = useState(false);
   return (
     <>
-      <button className="tweaks-toggle" onClick={() => setOpen(o => !o)} title="Tweaks">⚙</button>
+      <button className="tweaks-toggle" onClick={() => setOpen(o => !o)} title="Tweaks"><Icon.settings size={16} /></button>
       {open && (
         <div className="tweaks-panel">
           <div className="tweaks-title">{title}</div>

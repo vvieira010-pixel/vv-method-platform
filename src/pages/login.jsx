@@ -8,12 +8,12 @@
  */
 
 import { useState, useEffect } from 'react';
-import { injectGlobalCSS } from '../components/shared.jsx';
 import {
   signInWithPassword, signUpWithPassword,
   storeSupabaseSession, getSupabaseConfig,
   resetPasswordForEmail,
 } from '../lib/supabase-storage.js';
+import { Icon } from '../components/shared.jsx';
 
 const CSS = `
   .lp-root {
@@ -25,7 +25,7 @@ const CSS = `
 
   /* ── Brand panel ── */
   .lp-brand {
-    background: linear-gradient(180deg, #0F172A 0%, #1E293B 100%);
+    background: linear-gradient(180deg, #0f1b2d 0%, #172437 100%);
     display: flex; flex-direction: column; justify-content: space-between;
     padding: 48px 44px; min-height: 100dvh; position: sticky; top: 0;
     overflow: hidden;
@@ -74,7 +74,7 @@ const CSS = `
   }
   .lp-mode-switch button.active {
     background: var(--accent); color: #fff;
-    box-shadow: 0 1px 4px rgba(45,139,139,.3);
+    box-shadow: 0 1px 4px rgba(20,136,145,.3);
   }
   .lp-mode-switch button:hover:not(.active):not(:disabled) {
     color: var(--accent-deep); background: var(--accent-subtle);
@@ -105,7 +105,7 @@ const CSS = `
     margin-bottom: 28px;
     padding: 16px 18px;
     border-radius: 10px;
-    background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+    background: linear-gradient(135deg, #0f1b2d 0%, #172437 100%);
   }
   .lp-mobile-brand-name {
     display: block;
@@ -146,7 +146,7 @@ const CSS = `
   }
   .lp-input:focus {
     border-color: var(--accent);
-    box-shadow: 0 0 0 3px var(--accent-soft);
+    box-shadow: 0 0 0 4px rgba(72,199,199,0.22);
     background: var(--surface);
   }
   .lp-input::placeholder { color: var(--muted); }
@@ -162,7 +162,7 @@ const CSS = `
     box-sizing: border-box; max-width: 100%;
   }
   .lp-submit:hover:not(:disabled) {
-    box-shadow: 0 4px 16px rgba(45,139,139,.4);
+    box-shadow: 0 4px 16px rgba(20,136,145,.4);
     transform: translateY(-1px);
   }
   .lp-submit:active:not(:disabled) { transform: translateY(0); }
@@ -251,7 +251,6 @@ export default function LoginScreen() {
   const isReset = mode === 'reset';
 
   useEffect(() => {
-    injectGlobalCSS();
     injectCSS();
     try {
       const notice = localStorage.getItem('vv:auth_notice');
@@ -365,7 +364,7 @@ export default function LoginScreen() {
 
           {!isRegister && !isReset && (
             <div className="lp-invite-notice" role="note">
-              <span aria-hidden="true">🔒</span>
+              <Icon.lock size={14} />
               Private platform · Contact Teacher Vinicius to get access
             </div>
           )}

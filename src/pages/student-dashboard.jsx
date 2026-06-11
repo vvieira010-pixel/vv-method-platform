@@ -17,7 +17,7 @@ import PracticeSession from '../components/PracticeSession.jsx';
 import { ExTypeBadge } from '../components/exercise-editor.jsx';
 import { MessageTeacherDock, StudentInbox } from '../components/message-center.jsx';
 import { printHomework } from '../lib/print-homework.js';
-import '../styles/sanctuary.css';
+import '../styles/system.css';
 
 const TABS = [
   { id: 'home',     label: 'Home',     icon: <Icon.home size={16} /> },
@@ -330,10 +330,10 @@ function HomeView({ student, onTab }) {
         const examDateStr = (() => { try { return localStorage.getItem('vv:met_exam_date') || ''; } catch { return ''; } })();
         return (
           <section className="student-metrics" aria-label="Student summary">
-            <MetricCard icon={<Icon.calendar size={19} />} label="Next class" value={nextDate} sub={nextTime} tone="blue" />
+            <MetricCard icon={<Icon.calendar size={19} />} label="Next class" value={nextDate} sub={nextTime} tone="teal" />
             <MetricCard icon={<Icon.homework size={19} />} label="Homework" value={pendingHw.length} sub={pendingHw.length === 1 ? 'task pending' : 'tasks pending'} tone="teal" />
             <MetricCard icon={<Icon.progress size={19} />} label="Current focus" value={focusSkill} sub={focusTrend.dir !== 'none' ? `Progress: ${focusTrend.label}` : 'next useful practice'} tone="navy" />
-            <MetricCard icon={<Icon.inbox size={19} />} label="Feedback" value={latestFeedback ? 'Ready' : 'Waiting'} sub={latestFeedback ? 'teacher approved' : 'after diagnosis'} tone="orange" />
+            <MetricCard icon={<Icon.inbox size={19} />} label="Feedback" value={latestFeedback ? 'Ready' : 'Waiting'} sub={latestFeedback ? 'teacher approved' : 'after diagnosis'} tone="amber" />
             {daysLeft !== null && (
               <MetricCard
                 icon={<Icon.calendar size={19} />}
@@ -342,7 +342,7 @@ function HomeView({ student, onTab }) {
                 sub={daysLeft > 0
                   ? new Date(examDateStr + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
                   : daysLeft === 0 ? 'Good luck!' : 'Exam has passed'}
-                tone={daysLeft <= 30 ? 'exam-urgent' : 'exam'}
+                tone={daysLeft <= 30 ? 'urgent' : 'exam'}
               />
             )}
           </section>
@@ -356,15 +356,15 @@ function HomeView({ student, onTab }) {
             <p>Your mind is ready. While your teacher prepares your next assignment, sharpen your skills with a self-paced session.</p>
             <div className="studio-orbs">
               <button className="studio-orb" onClick={() => setPracticeMode('grammar')} aria-label="Grammar Sprint">
-                <span className="studio-orb-icon" aria-hidden="true">✏️</span>
+                <span className="studio-orb-icon" aria-hidden="true"><Icon.edit size={24} /></span>
                 <span className="studio-orb-label">Grammar Sprint</span>
               </button>
               <button className="studio-orb" onClick={() => setPracticeMode('vocab')} aria-label="Vocab Deep-Dive">
-                <span className="studio-orb-icon" aria-hidden="true">📚</span>
+                <span className="studio-orb-icon" aria-hidden="true"><Icon.star size={24} /></span>
                 <span className="studio-orb-label">Vocab Deep-Dive</span>
               </button>
               <button className="studio-orb" onClick={() => setPracticeMode('speaking')} aria-label="Speaking Mirror">
-                <span className="studio-orb-icon" aria-hidden="true">🎙</span>
+                <span className="studio-orb-icon" aria-hidden="true"><Icon.mic size={24} /></span>
                 <span className="studio-orb-label">Speaking Mirror</span>
               </button>
             </div>
@@ -540,7 +540,7 @@ function MemoCard({ kicker, title, text }) {
 function TodoRow({ done, label, meta }) {
   return (
     <div className={'student-todo-row' + (done ? ' done' : '')}>
-      <span className="student-todo-check">{done ? '✓' : ''}</span>
+      <span className="student-todo-check">{done ? <Icon.check size={16} /> : ''}</span>
       <span>
         <strong>{label}</strong>
         <small>{meta}</small>
@@ -805,7 +805,7 @@ function FeedbackView({ student, onTab }) {
               </p>
               {selfAssessment ? (
                 <div style={{ fontSize: 'var(--text-sm)', color: 'var(--success)', display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <span>✓</span>
+                  <Icon.check size={14} />
                   <span>You said: <strong>{selfAssessment}</strong> — your teacher will see this.</span>
                 </div>
               ) : (
@@ -836,7 +836,7 @@ function FeedbackView({ student, onTab }) {
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 4 }}>
                 {understood[latest?.id] ? (
                   <div style={{ fontSize: 'var(--text-sm)', color: 'var(--success)', display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <span>✓</span> Marked as understood
+                    <Icon.check size={14} /> Marked as understood
                   </div>
                 ) : (
                   <Button variant="ghost" size="sm" onClick={() => handleMarkUnderstood(latest?.id)} disabled={!latest?.id}>
@@ -1267,7 +1267,7 @@ function HomeworkView({ student }) {
                 {/* Submitted status */}
                 {submitted && !review && (
                   <div className="student-homework-waiting">
-                    Submitted ✓ — Waiting for your teacher to review.
+                    Submitted — Waiting for your teacher to review.
                   </div>
                 )}
 

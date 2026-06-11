@@ -1,3 +1,4 @@
+import { shadeColor, softColor } from './lib/color-utils.js';
 import { useState, useEffect, lazy, Suspense } from 'react';
 import LoginScreen from './pages/login.jsx';
 import StudentDashboard from './pages/student-dashboard.jsx';
@@ -34,7 +35,7 @@ const SubmissionReview  = lazy(() => import('./pages/submission-review.jsx'));
 const ErrorBankPage     = lazy(() => import('./pages/error-bank.jsx'));
 const ReportsPage       = lazy(() => import('./pages/reports.jsx'));
 const SettingsPage      = lazy(() => import('./pages/settings.jsx'));
-const ExerciseDemo      = lazy(() => import('./pages/exercise-demo.jsx'));
+
 const InboxPage         = lazy(() => import('./tools/tool-inbox.jsx'));
 
 export default function App() {
@@ -44,7 +45,7 @@ export default function App() {
   const [viewParams, setViewParams] = useState({});
   const [tweaks, setTweaksState] = useState(() => ({
     cardStyle: 'bordered',
-    accent: '#2d8b8b',
+    accent: '#148891',
     ...window.TWEAK_DEFAULTS,
   }));
   const [students, setStudents] = useState([]);
@@ -97,6 +98,7 @@ export default function App() {
       history.replaceState(null, '', window.location.pathname);
       try {
         const session = await exchangePKCECode(url, anonKey, code);
+        if (!session?.access_token) { clearStoredSupabaseSession(); return true; }
         const sbUser = session.user || await fetchSupabaseUser(url, anonKey, session.access_token);
         storeSupabaseSession({
           access_token: session.access_token,
@@ -126,7 +128,7 @@ export default function App() {
         storeSupabaseSession({
           access_token: fragment.access_token,
           refresh_token: fragment.refresh_token,
-          expires_at: fragment.expires_at || Math.floor(Date.now() / 1000) + fragment.expires_in,
+          expires_at: fragment.expires_at || Math.floor(Date.now() / 1000) + (fragment.expires_in || 3600),
           user: sbUser,
         });
         const payload = await resolveAuth(fragment.access_token, sbUser);
@@ -153,7 +155,7 @@ export default function App() {
 
     handlePKCE().then(wasPKCE => {
       if (!wasPKCE) handleHash().then(wasHash => { if (!wasHash) restoreSession(); });
-    });
+    }).catch(() => { clearStoredSupabaseSession(); });
   }, []);
 
   // Seed students from hardcoded list on first run, then load live roster
@@ -350,17 +352,16 @@ function getSafeOrigin() {
   try { if (document.referrer) return new URL(document.referrer).origin; } catch {}
   return window.location.origin;
 }
-function shadeColor(hex, percent) {
-  const f = parseInt(hex.slice(1), 16), t = percent < 0 ? 0 : 255, p = Math.abs(percent) / 100;
-  const R = f >> 16, G = (f >> 8) & 0x00ff, B = f & 0x0000ff;
-  return '#' + ((1 << 24) + (Math.round((t - R) * p) + R << 16) + (Math.round((t - G) * p) + G << 8) + Math.round((t - B) * p) + B).toString(16).slice(1);
-}
-function softColor(hex) { return shadeColor(hex, 65); }
+
+
 
 function PageLoader() {
   return (
-    <div style={{ padding: 40, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <span style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)' }}>Loading…</span>
+    <div style={{ padding: 40, display: 'flex', flexDirection: 'column', gap: 16 }}>
+      <div className="skeleton skeleton-card" />
+      <div className="skeleton skeleton-text" style={{ width: '80%' }} />
+      <div className="skeleton skeleton-text" />
+      <div className="skeleton skeleton-text-short" />
     </div>
   );
 }
@@ -378,7 +379,7 @@ function ToastHost() {
     return () => { window.removeEventListener('vv-toast', onToast); delete window.toast; };
   }, []);
   const TONES = {
-    ok:   { bg: 'var(--primary-ink)', fg: '#fff', g: '✓' },
+    ok:   { bg: 'var(--primary-ink)', fg: '#fff', g: '+' },
     info: { bg: 'var(--primary)',     fg: '#fff', g: 'i' },
     warn: { bg: 'var(--warning)',     fg: '#fff', g: '!' },
     go:   { bg: 'var(--accent)',      fg: '#fff', g: '→' },
@@ -405,8 +406,9 @@ function TweaksUI({ tweaks, setTweak }) {
         <TweakRadio options={[{ label: 'Flat', value: 'flat' }, { label: 'Bordered', value: 'bordered' }, { label: 'Shadowed', value: 'shadowed' }]} value={tweaks.cardStyle} onChange={v => setTweak('cardStyle', v)} />
       </TweakSection>
       <TweakSection label="Accent color">
-        <TweakColor value={tweaks.accent} onChange={v => setTweak('accent', v)} options={['#0B1F3A','#1E4E8C','#2563EB','#F97316','#FDBA74']} />
+        <TweakColor value={tweaks.accent} onChange={v => setTweak('accent', v)} options={['#0f1b2d','#0f6b73','#148891','#c86607','#5bbcb8']} />
       </TweakSection>
     </TweaksPanel>
   );
 }
+

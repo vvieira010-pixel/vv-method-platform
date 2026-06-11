@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Icon } from './shared.jsx';
 import ExercisePlayer from './exercises/ExercisePlayer.jsx';
 import {
   getGrammarExercises,
@@ -77,7 +78,7 @@ export default function PracticeSession({ mode, onClose }) {
           justifyContent: 'space-between',
           padding: '18px 22px 14px',
           borderBottom: '1px solid var(--border, #e5e7eb)',
-          background: 'var(--primary, #1a2332)',
+          background: 'var(--primary, #0F172A)',
           color: 'white',
         }}>
           <div>
@@ -109,7 +110,7 @@ export default function PracticeSession({ mode, onClose }) {
             onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.25)'}
             onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.15)'}
           >
-            ✕
+            <Icon.close size={14} />
           </button>
         </div>
 
@@ -130,8 +131,8 @@ export default function PracticeSession({ mode, onClose }) {
                     onClick={handleTryAnother}
                     style={{
                       background: 'none',
-                      border: '1.5px solid var(--accent, #2d8b8b)',
-                      color: 'var(--accent, #2d8b8b)',
+                    border: '1.5px solid var(--accent, #148891)',
+                    color: 'var(--accent, #148891)',
                       borderRadius: 99,
                       padding: '8px 20px',
                       fontSize: '0.875rem',
@@ -139,8 +140,8 @@ export default function PracticeSession({ mode, onClose }) {
                       cursor: 'pointer',
                       transition: 'all 0.15s ease',
                     }}
-                    onMouseEnter={e => { e.currentTarget.style.background = 'var(--accent, #2d8b8b)'; e.currentTarget.style.color = 'white'; }}
-                    onMouseLeave={e => { e.currentTarget.style.background = 'none'; e.currentTarget.style.color = 'var(--accent, #2d8b8b)'; }}
+                  onMouseEnter={e => { e.currentTarget.style.background = 'var(--accent, #148891)'; e.currentTarget.style.color = 'white'; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = 'none'; e.currentTarget.style.color = 'var(--accent, #148891)'; }}
                   >
                     ← Try another topic
                   </button>
@@ -188,19 +189,19 @@ function TopicPicker({ topics, mode, onSelect }) {
               cursor: 'pointer',
               fontSize: '0.875rem',
               fontWeight: 600,
-              color: 'var(--text, #1a2332)',
+              color: 'var(--text, #0F172A)',
               lineHeight: 1.4,
               transition: 'all 0.18s ease',
             }}
             onMouseEnter={e => {
-              e.currentTarget.style.borderColor = 'var(--accent, #2d8b8b)';
-              e.currentTarget.style.background = 'rgba(45,139,139,0.05)';
-              e.currentTarget.style.color = 'var(--accent, #2d8b8b)';
+              e.currentTarget.style.borderColor = 'var(--accent, #148891)';
+              e.currentTarget.style.background = 'rgba(20,136,145,0.05)';
+              e.currentTarget.style.color = 'var(--accent, #148891)';
             }}
             onMouseLeave={e => {
               e.currentTarget.style.borderColor = 'var(--border, #e5e7eb)';
               e.currentTarget.style.background = 'var(--bg, #fff)';
-              e.currentTarget.style.color = 'var(--text, #1a2332)';
+              e.currentTarget.style.color = 'var(--text, #0F172A)';
             }}
           >
             {t.title}

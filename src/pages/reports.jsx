@@ -118,7 +118,7 @@ export default function ReportsPage({ students, onNavigate, workspaceQuery = '' 
             <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
               <Avatar name={report.student?.name || '?'} size={48} />
               <div style={{ minWidth: 220 }}>
-                <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-xl)', margin: 0 }}>{report.student?.name || 'Unknown student'}</h2>
+                <h2 style={{ fontFamily: 'var(--font-ui)', fontSize: 'var(--text-xl)', margin: 0 }}>{report.student?.name || 'Unknown student'}</h2>
                 <p style={{ color: 'var(--muted)', margin: '4px 0 0', fontSize: 'var(--text-sm)' }}>
                   {report.student?.currentLevel || '--'} to {report.student?.targetLevel || '--'} · {report.student?.examGoal || 'MET goal not set'}
                 </p>
@@ -306,14 +306,14 @@ const S = {
     flexWrap: 'wrap',
     marginBottom: 18,
     padding: '22px 24px',
-    borderRadius: 8,
+    borderRadius: 0,
     border: '1px solid rgba(168, 218, 220, 0.18)',
     background: 'linear-gradient(135deg, #101a28 0%, #172537 50%, #1f4e58 100%)',
     boxShadow: '0 18px 44px -30px rgba(16, 26, 40, 0.8)',
     color: '#fff',
   },
   heroTag: { fontSize: 'var(--text-xs)', letterSpacing: '0.1em', textTransform: 'uppercase', color: '#9fd6d6', fontWeight: 700, marginBottom: 6 },
-  headline: { fontFamily: 'var(--font-display)', fontSize: 'var(--text-2xl)', fontWeight: 700, color: '#fff', margin: 0 },
+  headline: { fontFamily: 'var(--font-ui)', fontSize: 'var(--text-2xl)', fontWeight: 700, color: '#fff', margin: 0 },
   sub: { fontSize: 'var(--text-sm)', color: 'rgba(255,255,255,.78)', margin: '4px 0 0', maxWidth: 620 },
   filterGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 10 },
   field: { display: 'flex', flexDirection: 'column', gap: 4 },
@@ -329,28 +329,28 @@ const S = {
     alignItems: 'center',
     gap: 10,
     border: '1px solid var(--divider)',
-    borderRadius: 6,
+    borderRadius: 0,
     padding: '11px 12px',
     background: 'linear-gradient(180deg, #ffffff 0%, #f9fcfc 100%)',
   },
   statusBars: { display: 'grid', gap: 5, minWidth: 0 },
   statusLine: { display: 'grid', gridTemplateColumns: '62px minmax(60px, 1fr) 34px', alignItems: 'center', gap: 7, fontSize: 'var(--text-xs)', color: 'var(--muted)' },
-  progressTrack: { height: 8, borderRadius: 999, background: 'var(--bg-deep)', overflow: 'hidden', boxShadow: 'inset 0 0 0 1px rgba(26,35,50,0.04)' },
-  progressFillSubmitted: { height: '100%', borderRadius: 999, background: 'var(--accent-soft)' },
-  progressFillReviewed: { height: '100%', borderRadius: 999, background: 'var(--accent)' },
+  progressTrack: { height: 8, borderRadius: 0, background: 'var(--bg-deep)', overflow: 'hidden', boxShadow: 'inset 0 0 0 1px rgba(26,35,50,0.04)' },
+  progressFillSubmitted: { height: '100%', borderRadius: 0, background: 'var(--accent-soft)' },
+  progressFillReviewed: { height: '100%', borderRadius: 0, background: 'var(--accent)' },
   timelineRow: {
     display: 'grid',
     gridTemplateColumns: '28px minmax(0, 1fr)',
     gap: 10,
     border: '1px solid var(--divider)',
-    borderRadius: 6,
+    borderRadius: 0,
     padding: '10px 12px',
     background: 'linear-gradient(180deg, #ffffff 0%, #f9fcfc 100%)',
   },
   timelineIdx: {
     width: 24,
     height: 24,
-    borderRadius: 999,
+    borderRadius: 0,
     background: 'var(--accent-subtle)',
     color: 'var(--accent-deep)',
     display: 'grid',
@@ -358,7 +358,8 @@ const S = {
     fontSize: 'var(--text-xs)',
     fontWeight: 700,
   },
-  noteRow: { display: 'grid', gridTemplateColumns: '72px minmax(0, 1fr)', gap: 8, alignItems: 'start', padding: '9px 11px', borderRadius: 6, background: 'var(--bg)' },
+  noteRow: { display: 'grid', gridTemplateColumns: '72px minmax(0, 1fr)', gap: 8, alignItems: 'start', padding: '9px 11px', borderRadius: 0, background: 'var(--bg)' },
   noteDate: { color: 'var(--muted)', fontSize: 'var(--text-xs)' },
   empty: { fontSize: 'var(--text-sm)', color: 'var(--muted)', margin: '8px 0 0' },
 };
+

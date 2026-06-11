@@ -33,3 +33,9 @@ product-audit/chrome-*/
 # OS
 Thumbs.db
 .DS_Store
+.vercel
+.env*
+
+# Windows backup/system folders accidentally placed in project root
+SupportAssist_Backups/
+MicrosoftWindows.Client.CBS_cw5n1h2txyewy!InputApp/

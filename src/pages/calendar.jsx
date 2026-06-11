@@ -247,6 +247,7 @@ function Field({ label, children }) {
 
 const EMPTY_FORM = { studentId: '', date: '', startTime: '', endTime: '', title: 'English Class', classFocus: '', metSkillFocus: '', status: 'scheduled', diagnosticStatus: 'not-started', homeworkStatus: 'not-generated' };
 const S = {
-  headline: { fontFamily: 'var(--font-display)', fontSize: 'var(--text-2xl)', fontWeight: 700, color: 'var(--accent-deep)', margin: 0 },
+  headline: { fontFamily: 'var(--font-ui)', fontSize: 'var(--text-2xl)', fontWeight: 700, color: 'var(--accent-deep)', margin: 0 },
   sub: { fontSize: 'var(--text-sm)', color: 'var(--muted)', margin: '4px 0 0' },
 };
+

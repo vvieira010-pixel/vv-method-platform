@@ -262,14 +262,14 @@ export default function SettingsPage({ onNavigate }) {
             <a href="https://console.deepgram.com/" target="_blank" rel="noopener noreferrer" style={{ fontSize: 'var(--text-xs)', color: 'var(--accent)', marginTop: 3 }}>Get your Deepgram key →</a>
           </Field>
           <div style={{
-            padding: '10px 14px', borderRadius: 8, fontSize: 'var(--text-xs)',
+            padding: '10px 14px', borderRadius: 0, fontSize: 'var(--text-xs)',
             background: 'var(--accent-subtle)', color: 'var(--muted)', lineHeight: 1.6,
             border: '1px solid var(--accent-soft)',
           }}>
             <strong>Voice note</strong> — use one woman voice and one man voice for listening variety. The default server setup uses an ElevenLabs woman voice first, Deepgram's Aura fallback, then OpenAI <em>nova</em>. You can change voices with <code>ELEVENLABS_VOICE_ID</code>, <code>DEEPGRAM_TTS_MODEL</code>, or <code>OPENAI_TTS_VOICE</code> in the server environment.
           </div>
           <div style={{
-            padding: '10px 14px', borderRadius: 8, fontSize: 'var(--text-xs)',
+            padding: '10px 14px', borderRadius: 0, fontSize: 'var(--text-xs)',
             background: 'var(--accent-subtle)', color: 'var(--muted)', lineHeight: 1.6,
             border: '1px solid var(--accent-soft)',
           }}>
@@ -401,5 +401,6 @@ function Field({ label, children }) {
 }
 
 const S = {
-  headline: { fontFamily: 'var(--font-display)', fontSize: 'var(--text-2xl)', fontWeight: 700, color: 'var(--accent-deep)', margin: 0 },
+  headline: { fontFamily: 'var(--font-ui)', fontSize: 'var(--text-2xl)', fontWeight: 700, color: 'var(--accent-deep)', margin: 0 },
 };
+

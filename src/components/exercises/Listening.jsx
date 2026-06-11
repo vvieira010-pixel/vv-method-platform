@@ -14,6 +14,7 @@
  *   Student selects an option → submits → instant feedback + explanation
  */
 import { useState, useRef, useCallback } from 'react';
+import { Icon } from '../shared.jsx';
 
 const TEAL = '#0D9488';
 const NAVY = '#0B1F3A';
@@ -152,6 +153,25 @@ function speakBrowser(text) {
   });
 }
 
+// MET Listening part banners — from met_test_basics_task_breakdown.md
+const MET_LISTENING_CONFIG = {
+  P1: {
+    label: 'Listening Part 1 — Short Conversation',
+    tip: 'Listen for: main point · speaker intention · detail · implied meaning · function of a phrase · what will happen next.',
+    trap: 'Choosing an answer based on one word instead of the whole meaning.',
+  },
+  P2: {
+    label: 'Listening Part 2 — Longer Conversation',
+    tip: 'Listen for: main topic · sequence · problem and solution · speaker opinions · what a speaker will probably do next.',
+    trap: 'Forgetting earlier information by the time the questions appear.',
+  },
+  P3: {
+    label: 'Listening Part 3 — Short Talk',
+    tip: 'Listen for: purpose of the talk · main idea · key detail · reason · speaker attitude · inference · next step.',
+    trap: 'Missing the purpose and focusing only on isolated details.',
+  },
+};
+
 /* ── Component ────────────────────────────────────────────────── */
 export default function Listening({ exercise, onComplete }) {
   const {
@@ -163,6 +183,7 @@ export default function Listening({ exercise, onComplete }) {
     explanation = '',
     plays = 0,
     pictureHint = '',
+    metPart = '',    // 'P1' | 'P2' | 'P3' — optional MET context
   } = exercise;
 
   const [playCount, setPlayCount] = useState(0);
@@ -240,7 +261,7 @@ export default function Listening({ exercise, onComplete }) {
   function optionStyle(i) {
     const base = {
       display: 'flex', alignItems: 'center', gap: 12,
-      padding: '12px 16px', borderRadius: 10,
+      padding: '12px 16px', borderRadius: 0,
       border: '1.5px solid', cursor: submitted ? 'default' : 'pointer',
       transition: 'all 0.15s', fontSize: 14.5, lineHeight: 1.5,
       fontFamily: 'var(--font-ui)', textAlign: 'left', width: '100%',
@@ -263,24 +284,38 @@ export default function Listening({ exercise, onComplete }) {
   }
 
   const playsLeft = maxPlays === Infinity ? null : maxPlays - playCount;
+  const partConfig = metPart ? MET_LISTENING_CONFIG[metPart] : null;
 
   return (
     <div style={{ padding: '16px 20px' }}>
 
+      {/* MET part banner */}
+      {partConfig && (
+        <div style={{ padding: '10px 14px', background: '#F0F9FF', border: '1px solid #BAE6FD', borderRadius: 0, marginBottom: 14 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: '#0369A1', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>
+            {partConfig.label}
+          </div>
+          <div style={{ fontSize: 13, color: '#0C4A6E', lineHeight: 1.55 }}>{partConfig.tip}</div>
+          <div style={{ marginTop: 5, fontSize: 12, color: '#92400E' }}>
+            <strong>Watch out:</strong> {partConfig.trap}
+          </div>
+        </div>
+      )}
+
       {/* Picture hint (context clue before listening) */}
       {pictureHint && (
         <div style={{
-          padding: '8px 12px', marginBottom: 16, borderRadius: 8,
+          padding: '8px 12px', marginBottom: 16, borderRadius: 0,
           background: 'var(--accent-subtle)', color: 'var(--muted)',
           fontSize: 13, fontStyle: 'italic', lineHeight: 1.5, border: '1px solid var(--accent-soft)',
         }}>
-          🖼 {pictureHint}
+          <Icon.image size={14} /> {pictureHint}
         </div>
       )}
 
       {/* Audio player */}
       <div style={{
-        padding: '20px 16px', borderRadius: 14, marginBottom: 20,
+        padding: '20px 16px', borderRadius: 0, marginBottom: 20,
         background: 'linear-gradient(135deg, #F0FDFA 0%, #EEF2FF 100%)',
         border: '1.5px solid rgba(13,148,136,.22)',
         display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14,
@@ -289,7 +324,7 @@ export default function Listening({ exercise, onComplete }) {
           fontSize: 11, fontWeight: 700, letterSpacing: '0.08em',
           color: '#0E5F6B', textTransform: 'uppercase',
         }}>
-          🎧 Listening Exercise
+          <Icon.headphones size={14} /> Listening Exercise
         </div>
 
         {/* Play / Stop button */}
@@ -308,7 +343,7 @@ export default function Listening({ exercise, onComplete }) {
             opacity: (loading || (!canPlay && !playing)) ? 0.45 : 1,
           }}
         >
-          {loading ? '⏳' : playing ? '⏹' : '▶'}
+          {loading ? '...' : playing ? <Icon.stop size={20} /> : <Icon.play size={20} />}
         </button>
 
         {/* Play status */}
@@ -316,17 +351,17 @@ export default function Listening({ exercise, onComplete }) {
           {loading
             ? (audioSrc ? 'Loading audio…' : 'Generating audio…')
             : playing
-              ? 'Playing — press ⏹ to stop'
+              ? 'Playing — press Stop to stop'
               : playCount === 0
-                ? `Press ▶ to listen${playsLeft != null ? ` — ${playsLeft} play${playsLeft > 1 ? 's' : ''} allowed` : ''}`
+                ? `Press Play to listen${playsLeft != null ? ` — ${playsLeft} play${playsLeft > 1 ? 's' : ''} allowed` : ''}`
                 : playsLeft === 0
                   ? 'Maximum plays reached'
-                  : `${playsLeft} play${playsLeft > 1 ? 's' : ''} remaining — press ▶ to replay`}
+                  : `${playsLeft} play${playsLeft > 1 ? 's' : ''} remaining — press Play to replay`}
         </div>
 
         {error && (
           <div style={{ fontSize: 12.5, color: 'var(--danger)', textAlign: 'center' }}>
-            ⚠ {error} You can read the transcript below to answer.
+            <Icon.warning size={12} /> {error} You can read the transcript below to answer.
           </div>
         )}
       </div>
@@ -335,7 +370,7 @@ export default function Listening({ exercise, onComplete }) {
           (accessibility fallback). Hidden during the normal listening challenge. */}
       {audioText && (submitted || error) && (
         <div style={{
-          padding: '12px 14px', marginBottom: 16, borderRadius: 8,
+          padding: '12px 14px', marginBottom: 16, borderRadius: 0,
           background: 'var(--bg)', border: '1px solid var(--border)',
         }}>
           <div style={{
@@ -390,7 +425,7 @@ export default function Listening({ exercise, onComplete }) {
               onClick={handleSubmit}
               disabled={selected == null}
               style={{
-                padding: '10px 24px', borderRadius: 10, border: 'none',
+                padding: '10px 24px', borderRadius: 0, border: 'none',
                 cursor: selected == null ? 'not-allowed' : 'pointer',
                 background: selected == null
                   ? 'var(--border)'
@@ -404,7 +439,7 @@ export default function Listening({ exercise, onComplete }) {
             </button>
           ) : (
             <div style={{
-              padding: '12px 16px', borderRadius: 10,
+              padding: '12px 16px', borderRadius: 0,
               background: isCorrect ? '#ECFDF5' : '#FEF2F2',
               border: `1px solid ${isCorrect ? '#A7F3D0' : '#FECACA'}`,
               fontSize: 14,
@@ -437,3 +472,4 @@ export default function Listening({ exercise, onComplete }) {
     </div>
   );
 }
+

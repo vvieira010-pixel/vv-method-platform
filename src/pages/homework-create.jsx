@@ -21,6 +21,7 @@ import { ExerciseEditor, ExerciseTypePicker, ExTypeBadge } from '../components/e
 import { getExerciseModules, getModuleExercises, bankMeta } from '../lib/exercise-bank.js';
 import { getB2Modules, getB2ModuleExercises, b2BankMeta } from '../lib/met-b2-bank.js';
 import { getLifestyleModules, getLifestyleModuleExercises, lifestylePackMeta } from '../lib/lifestyle-pack.js';
+import { getDeepResearchModules, getDeepResearchModuleExercises, deepResearchMeta } from '../lib/met-b2-exercises.js';
 import { getLibraryExercises, saveExerciseToLibrary, deleteLibraryExercise, incrementUsage } from '../lib/exercise-library.js';
 import HomeworkSetWizard from '../components/homework-set-wizard.jsx';
 import { getUnitsByLevel, getSkillExercises, SUBJECT_OPTIONS } from '../lib/unit-bank.js';
@@ -67,6 +68,7 @@ export default function HomeworkCreate({ diagnosisId, studentId, students, onNav
   const [showLibrary, setShowLibrary] = useState(false);
   const [showB2Bank, setShowB2Bank] = useState(false);
   const [showLifestylePack, setShowLifestylePack] = useState(false);
+  const [showDeepResearch, setShowDeepResearch] = useState(false);
   // Per-skill-group generation config: { speaking: 5, grammar: 4, ... }
   const [groupGenConfig, setGroupGenConfig] = useState({});
   const [showGroupGen, setShowGroupGen] = useState(false);
@@ -389,6 +391,14 @@ function getPriorityItems(dx) {
     setShowLifestylePack(false);
   }
 
+  function addModuleFromDeepResearch(mod) {
+    const exercises = getDeepResearchModuleExercises(mod.id);
+    if (!exercises.length) { window.toast?.('No exercises in this module.', 'warn'); return; }
+    setForm(f => ({ ...f, exercises: [...f.exercises, ...exercises] }));
+    window.toast?.(`Added ${exercises.length} exercises from "${mod.label}".`, 'ok');
+    setShowDeepResearch(false);
+  }
+
   async function copyLifestylePrintablePack() {
     try {
       await navigator.clipboard.writeText(lifestylePackMeta.printableMarkdown || '');
@@ -571,6 +581,9 @@ function getPriorityItems(dx) {
                     <Button variant="ghost" size="sm" onClick={() => { setShowLifestylePack(v => !v); setShowB2Bank(false); setShowTypePicker(false); }}>
                       <Icon.doc size={12} /> Browse Lifestyle Pack
                     </Button>
+                    <Button variant="ghost" size="sm" onClick={() => { setShowDeepResearch(v => !v); setShowB2Bank(false); setShowLifestylePack(false); setShowTypePicker(false); }}>
+                      <Icon.search size={12} /> Browse Deep Research Pack
+                    </Button>
                 </div>
 
                 {groupGenStatus && (
@@ -664,6 +677,32 @@ function getPriorityItems(dx) {
                             )}
                           </div>
                           <Button variant="ghost" size="sm" onClick={() => addModuleFromLifestylePack(mod)}>Add</Button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {showDeepResearch && (
+                  <div style={{ marginBottom: 16, border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: 'var(--accent-subtle)', borderBottom: '1px solid var(--border)' }}>
+                      <div>
+                        <span style={{ fontWeight: 700, fontSize: 'var(--text-sm)' }}>{deepResearchMeta.title}</span>
+                        <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: 2 }}>{deepResearchMeta.level} · {deepResearchMeta.exerciseCount} exercises across {deepResearchMeta.moduleCount} skills</div>
+                      </div>
+                      <button onClick={() => setShowDeepResearch(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)' }}><Icon.close size={16} /></button>
+                    </div>
+                    <div style={{ padding: '10px 14px', borderBottom: '1px solid var(--divider)', background: 'var(--surface)', fontSize: 'var(--text-xs)', color: 'var(--muted)', lineHeight: 1.5 }}>
+                      Sourced from the Deep Research Report spec. Covers all 5 MET skills with auto-graded and open-response formats.
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 0, maxHeight: 360, overflowY: 'auto' }}>
+                      {getDeepResearchModules().map(mod => (
+                        <div key={mod.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', borderBottom: '1px solid var(--divider)', gap: 10 }}>
+                          <div>
+                            <div style={{ fontWeight: 600, fontSize: 'var(--text-sm)' }}>{mod.label}</div>
+                            <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', textTransform: 'capitalize' }}>{mod.skill} · {mod.exercises.length} exercises</div>
+                          </div>
+                          <Button variant="ghost" size="sm" onClick={() => addModuleFromDeepResearch(mod)}>Add</Button>
                         </div>
                       ))}
                     </div>
@@ -1214,7 +1253,10 @@ function buildCompleteExercises(items, options = {}) {
 
 function createCompleteExercise(aiTask, { defaultSkillGroup } = {}) {
   if (!aiTask || typeof aiTask !== 'object') return null;
-  const type = mapAiType(aiTask.type || defaultSkillGroup);
+  let type = mapAiType(aiTask.type || defaultSkillGroup);
+  // Listening and reading groups must produce their structured type, not a plain MCQ
+  if (defaultSkillGroup === 'listening' && type !== 'listen') type = 'listen';
+  if (defaultSkillGroup === 'reading' && type !== 'read') type = 'read';
   const ex = applyAiTaskToExercise(createExercise(type, aiTask.level || 'B1'), { ...aiTask, skillGroup: aiTask.skillGroup || defaultSkillGroup });
   return isStructuredAiExerciseComplete(ex) ? ex : null;
 }

@@ -1,7 +1,7 @@
 /**
  * exercise-editor-new-types.jsx — Editors for dialogue, swap, and levelup types.
  */
-import { Button } from './shared.jsx';
+import { Button, Icon } from './shared.jsx';
 
 const fieldLabel = {
   display: 'block', fontSize: 'var(--text-xs)', fontWeight: 700,
@@ -76,7 +76,7 @@ export function DialogueEditor({ ex, update }) {
               <button type="button" onClick={() => moveLine(idx, 1)} disabled={idx === lines.length - 1}
                 style={{ background: 'none', border: 'none', cursor: idx === lines.length - 1 ? 'not-allowed' : 'pointer', color: 'var(--muted)', padding: '4px' }}>↓</button>
               <button type="button" onClick={() => removeLine(line.id)}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--danger)', padding: '4px', fontSize: 16 }}>✕</button>
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--danger)', padding: '4px' }}><Icon.close size={16} /></button>
             </div>
           ))}
         </div>
@@ -128,7 +128,7 @@ export function SwapEditor({ ex, update }) {
         {ex.sentence && (
           <div style={{ marginTop: 8, padding: '8px 12px', background: 'var(--bg)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-sm)', lineHeight: 2 }}>
             {segments.map((seg, i) => /^\[.*\]$/.test(seg)
-              ? <span key={i} style={{ background: 'rgba(90,44,92,.15)', color: '#5A2C5C', padding: '2px 8px', borderRadius: 4, fontWeight: 600, margin: '0 2px' }}>{seg.slice(1,-1)}</span>
+              ? <span key={i} style={{ background: 'rgba(90,44,92,.15)', color: '#5A2C5C', padding: '2px 8px', borderRadius: 0, fontWeight: 600, margin: '0 2px' }}>{seg.slice(1,-1)}</span>
               : <span key={i}>{seg}</span>
             )}
           </div>
@@ -257,8 +257,8 @@ export function ReadEditor({ ex, update }) {
                   onChange={e => updateQuestion(q.id, { question: e.target.value })}
                   placeholder={`Question ${qi + 1}`} />
                 <button type="button" onClick={() => removeQuestion(q.id)}
-                  style={{ background: 'none', border: 'none', color: 'var(--danger)', cursor: 'pointer', fontSize: 'var(--text-sm)' }}>
-                  ✕
+                  style={{ background: 'none', border: 'none', color: 'var(--danger)', cursor: 'pointer' }}>
+                  <Icon.close size={14} />
                 </button>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
@@ -275,7 +275,7 @@ export function ReadEditor({ ex, update }) {
                       }}
                       placeholder={`Option ${String.fromCharCode(65 + i)}`}
                       style={{ flex: 1 }} />
-                    {q.correct === i && <span style={{ fontSize: 'var(--text-xs)', color: 'var(--success)', fontWeight: 600 }}>✓ correct</span>}
+                    {q.correct === i && <span style={{ fontSize: 'var(--text-xs)', color: 'var(--success)', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 3 }}><Icon.check size={12} /> correct</span>}
                   </div>
                 ))}
               </div>
@@ -286,3 +286,4 @@ export function ReadEditor({ ex, update }) {
     </div>
   );
 }
+

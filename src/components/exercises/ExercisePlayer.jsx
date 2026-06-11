@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { Icon } from '../shared.jsx';
 import { loadExercises } from './validateExercise.js';
 import MultipleChoice from './MultipleChoice.jsx';
 import FillBlank from './FillBlank.jsx';
@@ -6,6 +7,7 @@ import ShortAnswer from './ShortAnswer.jsx';
 import OrderSentences from './OrderSentences.jsx';
 import ErrorCorrection from './ErrorCorrection.jsx';
 import Listening from './Listening.jsx';
+import ReadExercise from './ReadExercise.jsx';
 
 const TEAL = '#0D9488';
 const NAVY = '#0B1F3A';
@@ -28,6 +30,7 @@ const TYPE_LABELS = {
   order: 'Ordering',
   fix: 'Error Correction',
   listen: 'Listening',
+  read: 'Reading',
 };
 
 function InvalidExercise({ reason }) {
@@ -61,6 +64,7 @@ function ExerciseCard({ exercise, index, total, result, onComplete, onNext }) {
       case 'error_correction':
       case 'fix':        return <ErrorCorrection {...props} />;
       case 'listen':     return <Listening {...props} />;
+      case 'read':       return <ReadExercise {...props} />;
       // New types (stubs for now)
       case 'drag_and_drop_matching':
       case 'true_false_with_explanation':
@@ -244,7 +248,7 @@ export default function ExercisePlayer({ exercises: raw, title, onSessionComplet
         <div style={{ marginBottom: 16, display: 'flex', flexDirection: 'column', gap: 6 }}>
           {errors.map((e, i) => (
             <div key={i} style={{ padding: '8px 12px', background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: 0, fontSize: 13, color: '#92400E' }}>
-              ⚠ {e}
+              <Icon.warning size={12} /> {e}
             </div>
           ))}
         </div>

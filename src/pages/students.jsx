@@ -217,6 +217,7 @@ const EMPTY_FORM = { name: '', email: '', currentLevel: 'B1', targetLevel: 'B2',
 const S = {
   shell: { maxWidth: 960, margin: '0 auto', padding: '28px 20px' },
   pageHeader: { display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 24 },
-  headline: { fontFamily: 'var(--font-display)', fontSize: 'var(--text-2xl)', fontWeight: 700, color: 'var(--accent-deep)', margin: 0 },
+  headline: { fontFamily: 'var(--font-ui)', fontSize: 'var(--text-2xl)', fontWeight: 700, color: 'var(--accent-deep)', margin: 0 },
   sub: { fontSize: 'var(--text-sm)', color: 'var(--muted)', margin: '4px 0 0' },
 };
+
