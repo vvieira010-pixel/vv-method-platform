@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Icon } from './shared.jsx';
-import ExercisePlayer from './exercises/ExercisePlayer.jsx';
+import ExercisePlayer from './exercises/ExercisePlayer';
 import {
   getGrammarExercises,
   getTopicList,
