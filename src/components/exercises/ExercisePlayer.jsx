@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback } from 'react'; // ExercisePlayer
 import { Icon } from '../shared.jsx';
 import { loadExercises } from './validateExercise.js';
 import MultipleChoice from './MultipleChoice.jsx';
