@@ -29,7 +29,7 @@ export function ExTypeBadge({ typeId, size = 'sm' }) {
     <span className="ex-type-badge" style={{
       display: 'inline-flex', alignItems: 'center', gap: 5,
       background: meta.bg, color: meta.color,
-      fontSize, padding, borderRadius: 999, fontWeight: 600,
+      fontSize, padding, borderRadius: 0, fontWeight: 600,
     }}>
       {IconComp && <span style={{ display: 'inline-flex' }}><IconComp size={iconSize} /></span>}
       {meta.label}
@@ -45,7 +45,7 @@ export function ExerciseTypePicker({ onSelect, onClose }) {
   const stepBtn = {
     width: 26, height: 26, display: 'grid', placeItems: 'center',
     border: '1px solid var(--border)', background: 'var(--surface)',
-    borderRadius: 6, cursor: 'pointer', fontSize: 16, lineHeight: 1, color: 'var(--text)',
+    borderRadius: 0, cursor: 'pointer', fontSize: 16, lineHeight: 1, color: 'var(--text)',
   };
   return (
     <Card className="exercise-type-picker" style={{ padding: 20 }}>
@@ -60,7 +60,7 @@ export function ExerciseTypePicker({ onSelect, onClose }) {
             <select
               value={level}
               onChange={e => setLevel(e.target.value)}
-              style={{ padding: '4px 6px', border: '1px solid var(--border)', borderRadius: 6, fontSize: 'var(--text-sm)' }}
+              style={{ padding: '4px 6px', border: '1px solid var(--border)', borderRadius: 0, fontSize: 'var(--text-sm)' }}
             >
               {['A1', 'A2', 'B1', 'B2', 'C1'].map(l => <option key={l} value={l}>{l}</option>)}
             </select>
@@ -76,7 +76,7 @@ export function ExerciseTypePicker({ onSelect, onClose }) {
               onChange={e => setQty(clamp(parseInt(e.target.value, 10)))}
               style={{
                 width: 48, textAlign: 'center', padding: '4px 6px',
-                border: '1px solid var(--border)', borderRadius: 6,
+                border: '1px solid var(--border)', borderRadius: 0,
                 fontFamily: 'var(--font-ui)', fontSize: 'var(--text-sm)', color: 'var(--text)',
               }}
             />
@@ -110,7 +110,7 @@ export function ExerciseTypePicker({ onSelect, onClose }) {
               onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.background = 'var(--surface)'; }}
             >
               <span style={{
-                width: 32, height: 32, borderRadius: 8,
+                width: 32, height: 32, borderRadius: 0,
                 background: t.bg, color: t.color,
                 display: 'grid', placeItems: 'center', flexShrink: 0,
               }}>
@@ -304,14 +304,22 @@ function SpeakEditor({ ex, update }) {
         />
       </div>
       <div style={fieldWrap}>
-        <label style={fieldLabel}>Picture URL (optional — shown to student during speaking task)</label>
+        <label style={fieldLabel}>Picture description (shown to student as a scene to describe or react to)</label>
+        <textarea
+          className="input" rows={2} value={ex.imageDescription || ''}
+          onChange={e => update({ imageDescription: e.target.value })}
+          placeholder="A busy city street at rush hour. People are rushing past shops and cafés. A woman is checking her phone while holding a coffee cup."
+        />
+      </div>
+      <div style={fieldWrap}>
+        <label style={fieldLabel}>Picture URL (optional — replaces description with an actual image)</label>
         <input
           className="input" value={ex.imageUrl || ''}
           onChange={e => update({ imageUrl: e.target.value })}
           placeholder="https://…/images/speaking/speaking_picture_01_ski_resort.png"
         />
         {ex.imageUrl && (
-          <img src={ex.imageUrl} alt="preview" style={{ marginTop: 8, maxWidth: '100%', maxHeight: 160, borderRadius: 8, border: '1px solid var(--border)' }} />
+          <img src={ex.imageUrl} alt="preview" style={{ marginTop: 8, maxWidth: '100%', maxHeight: 160, borderRadius: 0, border: '1px solid var(--border)' }} />
         )}
       </div>
       <div style={fieldWrap}>
@@ -564,3 +572,4 @@ function ListenEditor({ ex, update }) {
     </div>
   );
 }
+

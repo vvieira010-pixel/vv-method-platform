@@ -434,11 +434,12 @@ const EXERCISE_COMPLETENESS_RULES = `Complete exercise JSON requirements:
 - mcq: type, title, question, options with exactly 4 choices, correct as 0-3, explanation.
 - blank: type, title, template with ___ markers, blanks array matching every blank.
 - short: type, title, prompt, rubric, targetWords.
-- speak: type, title, prompt, targetSeconds.
+- speak: type, title, prompt, targetSeconds, imageDescription (1–2 sentence description of a scene or picture the student will describe or react to — required for picture-based speaking tasks, optional for opinion tasks).
 - order: type, title, sentences array in correct order with at least 3 sentences.
 - fix: type, title, errorText, correctedText, hint.
 - flash: type, title, pairs array with at least 10 { "term", "def" } items.
 - listen: type, title, audioText, question, options with exactly 4 choices, correct as 0-3, explanation, plays.
+- read: type, title, passage (full reading text, 150–250 words, authentic MET-style), questions array of at least 3 items each with {question, options[4], correct as 0-3, explanation}.
 Do not return placeholder text. Do not omit answer keys.`;
 
 export const buildHomeworkBlueprintPrompt = ({ student, diagnosis }) => {
@@ -529,7 +530,7 @@ export const buildHomeworkGroupPrompt = ({ student, diagnosis, group, count = 5 
     writing:     'short, fix',
     grammar:     'fix, blank, mcq',
     vocabulary:  'flash, blank, mcq',
-    reading:     'mcq, order, short',
+    reading:     'read, mcq',
     listening:   'listen, mcq',
     mixed:       'mcq, blank, short, fix',
   };
@@ -548,7 +549,10 @@ ${weaknesses.length ? weaknesses.map(w => `- ${w}`).join('\n') : `Target: B1→B
 ${priorities.slice(0, 2).map(p => `- [${p.urgency}] ${p.area}: ${p.whatToImprove}`).join('\n') || 'None recorded.'}
 
 ━━━ ERRORS TO TARGET ━━━
-${errors.filter(e => (e.category || '').toLowerCase().includes(group) || group === 'mixed').slice(0, 4).map(e => `- "${e.error}" → "${e.correct}" (${e.category})`).join('\n') || errors.slice(0, 3).map(e => `- "${e.error}" → "${e.correct}" (${e.category})`).join('\n') || 'None recorded.'}
+${(errors.filter(e => (e.category || '').toLowerCase().includes(group)).slice(0, 4).length
+  ? errors.filter(e => (e.category || '').toLowerCase().includes(group)).slice(0, 4)
+  : errors.slice(0, 4)
+).map(e => `- "${e.error}" → "${e.correct}" (${e.category})`).join('\n') || 'None recorded.'}
 
 ━━━ VOCABULARY / GRAMMAR TARGETS ━━━
 ${group === 'vocabulary' || group === 'mixed' ? vocab.slice(0, 4).map(v => `- ${v.wordOrPhrase}: ${v.meaning || ''}`).join('\n') || 'None.' : ''}
@@ -566,7 +570,7 @@ ${EXERCISE_COMPLETENESS_RULES}
 Return ONLY valid JSON — an array of ${count} exercise objects:
 [
   {
-    "type": "mcq|blank|short|speak|order|fix|flash|listen",
+    "type": "mcq|blank|short|speak|order|fix|flash|listen|read",
     "skillGroup": "${group}",
     "title": "specific MET exercise title",
     "content": "FULLY WRITTEN exercise content — the actual sentences, questions, or scenario",
@@ -581,7 +585,10 @@ Return ONLY valid JSON — an array of ${count} exercise objects:
     "pairs": [{"term": "word", "def": "meaning"}],
     "audioText": "text to read aloud (for listen type)",
     "question": "the question",
-    "explanation": "why this answer is correct"
+    "explanation": "why this answer is correct",
+    "imageDescription": "for speak type: 1–2 sentence description of the scene/picture shown to the student",
+    "passage": "for read type: full 150–250 word reading text",
+    "questions": [{"question": "...", "options": ["A","B","C","D"], "correct": 0, "explanation": "..."}]
   }
 ]
 Include only the fields relevant to the exercise type. The "content" field always contains the main exercise text.`;

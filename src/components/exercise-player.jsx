@@ -101,7 +101,7 @@ function MCQPlayer({ ex, res, update, readOnly }) {
               onClick={() => { if (!optionDisabled) update({ selected: i }); }}
               style={{
                 display: 'flex', alignItems: 'center', gap: 12,
-                padding: '14px 16px', borderRadius: 10, width: '100%', textAlign: 'left',
+                padding: '14px 16px', borderRadius: 0, width: '100%', textAlign: 'left',
                 border: `1.5px solid ${borderColor}`, background: bg,
                 cursor: optionDisabled ? 'default' : 'pointer',
                 opacity: isWrongTried && !showCorrect ? 0.7 : 1,
@@ -118,7 +118,7 @@ function MCQPlayer({ ex, res, update, readOnly }) {
               </div>
               <span style={{ fontSize: 'var(--text-sm)', color: 'var(--text)', flex: 1 }}>{opt}</span>
               {showCorrect && isRight && <><Icon.check size={16} color="var(--success)" /><span className="sr-only">Correct answer</span></>}
-              {isWrongTried && !showCorrect && <><span aria-hidden="true" style={{ color: 'var(--danger)', fontWeight: 700, fontSize: 'var(--text-sm)' }}>✗</span><span className="sr-only">Incorrect</span></>}
+              {isWrongTried && !showCorrect && <><Icon.close size={14} color="var(--danger)" /><span className="sr-only">Incorrect</span></>}
             </button>
           );
         })}
@@ -131,17 +131,17 @@ function MCQPlayer({ ex, res, update, readOnly }) {
       )}
 
       {solved && (
-        <div style={{ marginTop: 14, padding: '10px 14px', borderRadius: 10, background: 'var(--success-bg)', color: 'var(--success)', fontSize: 'var(--text-sm)' }}>
-          ✓ Correct!
+        <div style={{ marginTop: 14, padding: '10px 14px', borderRadius: 0, background: 'var(--success-bg)', color: 'var(--success)', fontSize: 'var(--text-sm)' }}>
+          <Icon.check size={14} /> Correct!
         </div>
       )}
       {!solved && revealed && (
-        <div style={{ marginTop: 14, padding: '10px 14px', borderRadius: 10, background: 'var(--success-bg)', color: 'var(--success)', fontSize: 'var(--text-sm)' }}>
+        <div style={{ marginTop: 14, padding: '10px 14px', borderRadius: 0, background: 'var(--success-bg)', color: 'var(--success)', fontSize: 'var(--text-sm)' }}>
           Answer shown after {wrongLimit} {wrongLimit === 1 ? 'try' : 'tries'} — the correct option is highlighted above.
         </div>
       )}
       {!done && wrongPicks.length > 0 && (
-        <div style={{ marginTop: 14, padding: '10px 14px', borderRadius: 10, background: 'var(--warning-bg)', color: 'var(--warning)', fontSize: 'var(--text-sm)' }}>
+        <div style={{ marginTop: 14, padding: '10px 14px', borderRadius: 0, background: 'var(--warning-bg)', color: 'var(--warning)', fontSize: 'var(--text-sm)' }}>
           Not quite — try another option. ({wrongPicks.length}/{wrongLimit})
         </div>
       )}
@@ -225,7 +225,7 @@ function BlankPlayer({ ex, res, update, readOnly }) {
                   color, background: 'transparent',
                 }}
               />
-              {status === 'ok' && <span title="correct" style={{ color: 'var(--success)', fontWeight: 700, marginLeft: 3, fontSize: 'var(--text-sm)' }}>✓</span>}
+              {status === 'ok' && <Icon.check size={14} color="var(--success)" style={{ marginLeft: 3 }} />}
               {status === 'warn' && !revealed && (
                 <span title="check this" style={{ color: 'var(--warning)', fontWeight: 700, marginLeft: 3, fontSize: 'var(--text-xs)' }}>
                   !{used > 0 ? ` ${used}/${BLANK_MAX_TRIES}` : ''}
@@ -278,7 +278,7 @@ function ShortPlayer({ ex, res, update, readOnly }) {
             <div style={{ marginBottom: 6 }}>
               <span style={{ fontWeight: 700, color: 'var(--accent-deep)', marginRight: 6 }}>Vocabulary:</span>
               {ex.scaffolding.vocabulary.map((word, i) => (
-                <span key={i} style={{ display: 'inline-block', background: 'var(--white)', padding: '2px 6px', borderRadius: 4, marginRight: 4, border: '1px solid var(--accent-soft)' }}>{word}</span>
+                <span key={i} style={{ display: 'inline-block', background: 'var(--white)', padding: '2px 6px', borderRadius: 0, marginRight: 4, border: '1px solid var(--accent-soft)' }}>{word}</span>
               ))}
             </div>
           )}
@@ -308,14 +308,14 @@ function ShortPlayer({ ex, res, update, readOnly }) {
             onClick={() => setChecklistOpen(v => !v)}
             style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--accent-deep)', fontFamily: 'var(--font-ui)' }}
           >
-            <span style={{ display: 'inline-flex', transform: checklistOpen ? 'rotate(90deg)' : 'none', transition: 'transform .15s', fontSize: 10 }}>▶</span>
+            <span style={{ display: 'inline-flex', transform: checklistOpen ? 'rotate(90deg)' : 'none', transition: 'transform .15s' }}><Icon.chevronRight size={10} /></span>
             Quality checklist — what good MET writing requires
           </button>
           {checklistOpen && (
             <div style={{ marginTop: 8, padding: '8px 12px', background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)' }}>
               {WRITING_QUALITY_CHECKS.map((c, i) => (
                 <div key={i} style={{ display: 'flex', gap: 8, marginBottom: i < WRITING_QUALITY_CHECKS.length - 1 ? 6 : 0 }}>
-                  <span style={{ fontWeight: 700, color: 'var(--accent)', flexShrink: 0, fontSize: 'var(--text-xs)', marginTop: 1 }}>✓</span>
+                  <Icon.check size={12} color="var(--accent)" style={{ marginTop: 2, flexShrink: 0 }} />
                   <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-2)', lineHeight: 1.55 }}>
                     <strong style={{ color: 'var(--text)' }}>{c.label}:</strong> {c.hint}
                   </span>
@@ -435,17 +435,25 @@ function SpeakPlayer({ ex, res, update, readOnly }) {
 
   return (
     <div>
-      {ex.imageUrl && (
-        <div style={{ marginBottom: 14, borderRadius: 10, overflow: 'hidden', border: '1px solid var(--border)', background: 'var(--bg)' }}>
+      {ex.imageUrl ? (
+        <div style={{ marginBottom: 14, borderRadius: 0, overflow: 'hidden', border: '1px solid var(--border)', background: 'var(--bg)' }}>
           <img
             src={ex.imageUrl}
-            alt={ex.imageAlt || 'Speaking prompt image'}
+            alt={ex.imageAlt || ex.imageDescription || 'Speaking prompt image'}
             style={{ width: '100%', maxHeight: 340, objectFit: 'cover', display: 'block' }}
           />
+          {ex.imageDescription && (
+            <p style={{ margin: 0, padding: '8px 12px', fontSize: 'var(--text-xs)', color: 'var(--muted)', fontStyle: 'italic' }}>{ex.imageDescription}</p>
+          )}
         </div>
-      )}
+      ) : ex.imageDescription ? (
+        <div style={{ marginBottom: 14, padding: '14px 16px', background: 'var(--accent-subtle)', borderRadius: 0, border: '1px solid var(--accent-border, var(--border))' }}>
+          <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>Picture to describe</div>
+          <p style={{ margin: 0, fontSize: 'var(--text-sm)', color: 'var(--text)', lineHeight: 1.6 }}>{ex.imageDescription}</p>
+        </div>
+      ) : null}
 
-      <div style={{ background: 'var(--bg)', borderRadius: 10, padding: '14px 16px', marginBottom: 14 }}>
+      <div style={{ background: 'var(--bg)', borderRadius: 0, padding: '14px 16px', marginBottom: 14 }}>
         <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>Speaking prompt</div>
         <p style={{ margin: 0, fontSize: 'var(--text-md)', color: 'var(--text)', lineHeight: 1.55, fontWeight: 500 }}>
           {ex.prompt}
@@ -460,7 +468,7 @@ function SpeakPlayer({ ex, res, update, readOnly }) {
             <div style={{ marginBottom: 6 }}>
               <span style={{ fontWeight: 700, color: 'var(--accent-deep)', marginRight: 6 }}>Vocabulary:</span>
               {ex.scaffolding.vocabulary.map((word, i) => (
-                <span key={i} style={{ display: 'inline-block', background: 'var(--white)', padding: '2px 6px', borderRadius: 4, marginRight: 4, border: '1px solid var(--accent-soft)' }}>{word}</span>
+                <span key={i} style={{ display: 'inline-block', background: 'var(--white)', padding: '2px 6px', borderRadius: 0, marginRight: 4, border: '1px solid var(--accent-soft)' }}>{word}</span>
               ))}
             </div>
           )}
@@ -483,7 +491,7 @@ function SpeakPlayer({ ex, res, update, readOnly }) {
             onClick={() => setStrategyOpen(v => !v)}
             style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--accent-deep)', fontFamily: 'var(--font-ui)' }}
           >
-            <span style={{ display: 'inline-flex', transform: strategyOpen ? 'rotate(90deg)' : 'none', transition: 'transform .15s', fontSize: 10 }}>▶</span>
+            <span style={{ display: 'inline-flex', transform: strategyOpen ? 'rotate(90deg)' : 'none', transition: 'transform .15s' }}><Icon.chevronRight size={10} /></span>
             Strategy reminder — what good MET speaking requires
           </button>
           {strategyOpen && (
@@ -536,7 +544,7 @@ function SpeakPlayer({ ex, res, update, readOnly }) {
           </Button>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 'var(--text-sm)', color: 'var(--danger)' }}>
             <span style={{
-              width: 8, height: 8, borderRadius: 999, background: 'var(--danger)',
+              width: 8, height: 8, borderRadius: 0, background: 'var(--danger)',
               animation: 'vv-pulse 1s ease-in-out infinite',
             }} />
             Recording
@@ -547,7 +555,7 @@ function SpeakPlayer({ ex, res, update, readOnly }) {
             {Array.from({ length: 24 }).map((_, i) => (
               <span key={i} style={{
                 width: 2, height: 22,
-                background: 'var(--primary)', borderRadius: 999,
+                background: 'var(--primary)', borderRadius: 0,
                 transform: `scaleY(${(4 + Math.abs(Math.sin(seconds * 0.7 + i * 0.4)) * 18) / 22})`,
                 transformOrigin: 'bottom', transition: 'transform .2s',
               }} />
@@ -622,11 +630,11 @@ function OrderPlayer({ ex, res, update, readOnly }) {
         {order.map((idx, i) => (
           <div key={idx} style={{
             display: 'grid', gridTemplateColumns: 'auto 1fr auto', gap: 12, alignItems: 'center',
-            padding: '12px 14px', borderRadius: 10,
+            padding: '12px 14px', borderRadius: 0,
             background: 'var(--surface)', border: '1px solid var(--border)',
           }}>
             <span style={{
-              fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 'var(--text-lg)',
+              fontFamily: 'var(--font-ui)', fontWeight: 700, fontSize: 'var(--text-lg)',
               color: 'var(--accent)', width: 24, textAlign: 'center',
             }}>{i + 1}</span>
             <span style={{ fontSize: 'var(--text-sm)', color: 'var(--text)', lineHeight: 1.5 }}>{sentences[idx]}</span>
@@ -641,10 +649,10 @@ function OrderPlayer({ ex, res, update, readOnly }) {
       </div>
       {isCorrect && (
         <div style={{
-          marginTop: 12, padding: '10px 14px', borderRadius: 10,
+          marginTop: 12, padding: '10px 14px', borderRadius: 0,
           background: 'var(--success-bg)', color: 'var(--success)', fontSize: 'var(--text-sm)',
         }}>
-          ✓ Correct order!
+          <Icon.check size={14} /> Correct order!
         </div>
       )}
     </div>
@@ -654,7 +662,7 @@ function OrderPlayer({ ex, res, update, readOnly }) {
 function orderArrowStyle(disabled) {
   return {
     width: 24, height: 22, padding: 0, fontFamily: 'var(--font-ui)',
-    fontSize: 12, border: '1px solid var(--border)', borderRadius: 6,
+    fontSize: 12, border: '1px solid var(--border)', borderRadius: 0,
     background: 'var(--surface)', color: disabled ? 'var(--faint)' : 'var(--text)',
     cursor: disabled ? 'not-allowed' : 'pointer',
   };
@@ -691,7 +699,7 @@ function FixPlayer({ ex, res, update, readOnly }) {
         <div style={{
           display: 'inline-flex', alignItems: 'center', gap: 6,
           padding: '4px 10px', background: 'var(--warning-bg)',
-          color: 'var(--warning)', borderRadius: 999,
+          color: 'var(--warning)', borderRadius: 0,
           fontSize: 'var(--text-xs)', marginBottom: 12,
         }}>
           <Icon.spark size={11} /> {ex.hint}
@@ -715,7 +723,7 @@ function FixPlayer({ ex, res, update, readOnly }) {
         </span>
         {hasChanged && (
           <Pill tone={isFixed ? 'success' : 'warning'}>
-            {isFixed ? '✓ All errors fixed' : 'Keep going'}
+            {isFixed ? <><Icon.check size={12} /> All errors fixed</> : 'Keep going'}
           </Pill>
         )}
       </div>
@@ -798,7 +806,7 @@ function FlashPlayer({ ex, res, update, readOnly }) {
         {[{ id: 'cards', label: 'Flashcards' }, { id: 'match', label: 'Match Game' }].map(m => (
           <button key={m.id} onClick={m.id === 'match' ? startMatch : () => setMode('cards')}
             style={{
-              padding: '5px 14px', borderRadius: 99, border: '1.5px solid',
+              padding: '5px 14px', borderRadius: 0, border: '1.5px solid',
               fontSize: 'var(--text-xs)', fontWeight: 700, cursor: 'pointer',
               borderColor: mode === m.id ? 'var(--primary)' : 'var(--border)',
               background: mode === m.id ? 'var(--accent-subtle)' : 'var(--surface)',
@@ -811,8 +819,8 @@ function FlashPlayer({ ex, res, update, readOnly }) {
 
       {mode === 'match' && matchPairs ? (
         allMatched ? (
-          <div style={{ textAlign: 'center', padding: '32px 20px', background: 'rgba(34,139,34,.08)', borderRadius: 14, border: '1.5px solid #3CB371' }}>
-            <div style={{ fontSize: 32, marginBottom: 8 }}>🎉</div>
+          <div style={{ textAlign: 'center', padding: '32px 20px', background: 'rgba(34,139,34,.08)', borderRadius: 0, border: '1.5px solid #3CB371' }}>
+            <Icon.party size={32} style={{ marginBottom: 8 }} />
             <div style={{ fontWeight: 700, color: '#1A6B1A', fontSize: 'var(--text-lg)' }}>All matched!</div>
             <Button variant="ghost" size="sm" onClick={startMatch} style={{ marginTop: 12 }}>Play again</Button>
           </div>
@@ -822,13 +830,13 @@ function FlashPlayer({ ex, res, update, readOnly }) {
               <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 2 }}>Terms</div>
               {pairs.map((p, origIdx) => {
                 if (matched.has(origIdx)) {
-                  return <div key={origIdx} style={{ padding: '10px 14px', borderRadius: 8, background: 'rgba(34,139,34,.1)', border: '1.5px solid #3CB371', color: '#1A6B1A', fontWeight: 600, fontSize: 'var(--text-sm)' }}>{p.term}</div>;
+                  return <div key={origIdx} style={{ padding: '10px 14px', borderRadius: 0, background: 'rgba(34,139,34,.1)', border: '1.5px solid #3CB371', color: '#1A6B1A', fontWeight: 600, fontSize: 'var(--text-sm)' }}>{p.term}</div>;
                 }
                 const isSelected = selectedTerm === origIdx;
                 return (
                   <button key={origIdx} onClick={() => !readOnly && setSelectedTerm(isSelected ? null : origIdx)}
                     style={{
-                      padding: '10px 14px', borderRadius: 8, border: '1.5px solid',
+                      padding: '10px 14px', borderRadius: 0, border: '1.5px solid',
                       borderColor: isSelected ? 'var(--primary)' : 'var(--border)',
                       background: isSelected ? 'var(--accent-subtle)' : 'var(--surface)',
                       cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600,
@@ -845,13 +853,13 @@ function FlashPlayer({ ex, res, update, readOnly }) {
               {matchPairs.map((p) => {
                 const origIdx = p.origIdx;
                 if (matched.has(origIdx)) {
-                  return <div key={origIdx} style={{ padding: '10px 14px', borderRadius: 8, background: 'rgba(34,139,34,.1)', border: '1.5px solid #3CB371', color: '#1A6B1A', fontSize: 'var(--text-sm)' }}>{p.def}</div>;
+                  return <div key={origIdx} style={{ padding: '10px 14px', borderRadius: 0, background: 'rgba(34,139,34,.1)', border: '1.5px solid #3CB371', color: '#1A6B1A', fontSize: 'var(--text-sm)' }}>{p.def}</div>;
                 }
                 const isWrong = wrongFlash === origIdx;
                 return (
                   <button key={origIdx} onClick={() => !readOnly && handleMatchDef(origIdx)}
                     style={{
-                      padding: '10px 14px', borderRadius: 8, border: '1.5px solid',
+                      padding: '10px 14px', borderRadius: 0, border: '1.5px solid',
                       borderColor: isWrong ? '#C03030' : selectedTerm !== null ? 'var(--primary)' : 'var(--border)',
                       background: isWrong ? 'rgba(200,50,50,.08)' : selectedTerm !== null ? 'rgba(61,166,166,.06)' : 'var(--surface)',
                       cursor: selectedTerm !== null ? 'pointer' : 'default',
@@ -869,14 +877,14 @@ function FlashPlayer({ ex, res, update, readOnly }) {
         <>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
             <span style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)' }}>{idx + 1} of {pairs.length}</span>
-            <span style={{ fontSize: 'var(--text-sm)', color: 'var(--success)' }}>✓ {learned} learned</span>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 'var(--text-sm)', color: 'var(--success)' }}><Icon.check size={12} /> {learned} learned</span>
           </div>
           <div onClick={() => setFlipped(f => !f)}
             style={{
               background: flipped ? 'var(--accent-deep)' : 'var(--surface)',
               color: flipped ? '#F0F6FC' : 'var(--text)',
               border: `2px solid ${flipped ? 'var(--accent-deep)' : 'var(--border)'}`,
-              borderRadius: 14, padding: '40px 28px', textAlign: 'center',
+              borderRadius: 0, padding: '40px 28px', textAlign: 'center',
               minHeight: 160, cursor: 'pointer',
               display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
               transition: 'all .3s var(--ease)',
@@ -884,7 +892,7 @@ function FlashPlayer({ ex, res, update, readOnly }) {
             <div style={{ fontSize: 'var(--text-xs)', textTransform: 'uppercase', letterSpacing: '0.1em', color: flipped ? 'rgba(240,246,252,.55)' : 'var(--faint)', marginBottom: 14 }}>
               {flipped ? 'Definition' : 'Term'}
             </div>
-            <div style={{ fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: flipped ? 'var(--text-lg)' : 'var(--text-2xl)', lineHeight: 1.3, maxWidth: 480 }}>
+            <div style={{ fontFamily: 'var(--font-ui)', fontWeight: 600, fontSize: flipped ? 'var(--text-lg)' : 'var(--text-2xl)', lineHeight: 1.3, maxWidth: 480 }}>
               {flipped ? card.def : card.term}
             </div>
             <div style={{ marginTop: 16, fontSize: 'var(--text-xs)', color: flipped ? 'rgba(240,246,252,.4)' : 'var(--faint)', letterSpacing: '.1em', textTransform: 'uppercase' }}>
@@ -951,7 +959,7 @@ function ReadPlayer({ ex, res, update, readOnly }) {
         background: 'var(--surface)', border: '1px solid var(--border)',
         borderRadius: 'var(--radius-sm)', padding: '14px 16px', marginBottom: 14,
         maxHeight: 260, overflowY: 'auto', lineHeight: 1.8,
-        fontSize: 'var(--text-sm)', fontFamily: 'Georgia, "Times New Roman", serif',
+        fontSize: 'var(--text-sm)', fontFamily: 'var(--font-ui)',
         color: 'var(--text)',
       }}>
         <p style={{ margin: 0, whiteSpace: 'pre-wrap' }}>{ex.passage || 'No passage provided.'}</p>
@@ -1002,8 +1010,8 @@ function ReadPlayer({ ex, res, update, readOnly }) {
                       color: 'white',
                     }}>{String.fromCharCode(65 + oi)}</span>
                     <span>{opt}</span>
-                    {results && isCorrect && <span style={{ marginLeft: 'auto', color: 'var(--success)', fontSize: 'var(--text-xs)', fontWeight: 600 }}>✓</span>}
-                    {results && isWrong && <span style={{ marginLeft: 'auto', color: 'var(--danger)', fontSize: 'var(--text-xs)', fontWeight: 600 }}>✕</span>}
+                    {results && isCorrect && <span style={{ marginLeft: 'auto', color: 'var(--success)' }}><Icon.check size={14} color="var(--success)" /></span>}
+                    {results && isWrong && <span style={{ marginLeft: 'auto', color: 'var(--danger)' }}><Icon.close size={14} color="var(--danger)" /></span>}
                   </button>
                 );
               })}
@@ -1078,7 +1086,7 @@ export function HomeworkStepThrough({ exercises, responses, onResponse, onSubmit
           <span style={{ fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--text-2)' }}>
             Almost done! How confident are you?
           </span>
-          <div style={{ flex: 1, height: 5, background: 'var(--divider)', borderRadius: 999, overflow: 'hidden' }}>
+          <div style={{ flex: 1, height: 5, background: 'var(--divider)', borderRadius: 0, overflow: 'hidden' }}>
             <div style={{ width: '100%', height: '100%', background: 'linear-gradient(90deg, var(--primary), var(--accent))', borderRadius: 999 }} />
           </div>
         </div>
@@ -1137,8 +1145,8 @@ export function HomeworkStepThrough({ exercises, responses, onResponse, onSubmit
         <span style={{ fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--text-2)', whiteSpace: 'nowrap' }}>
           Exercise {currentIdx + 1} / {total}
         </span>
-        <div style={{ flex: 1, height: 5, background: 'var(--divider)', borderRadius: 999, overflow: 'hidden' }}>
-          <div style={{ width: '100%', height: '100%', background: 'linear-gradient(90deg, var(--primary), var(--accent))', borderRadius: 999, transform: `scaleX(${progress / 100})`, transformOrigin: 'left', transition: 'transform 0.3s var(--ease)' }} />
+        <div style={{ flex: 1, height: 5, background: 'var(--divider)', borderRadius: 0, overflow: 'hidden' }}>
+          <div style={{ width: '100%', height: '100%', background: 'linear-gradient(90deg, var(--primary), var(--accent))', borderRadius: 0, transform: `scaleX(${progress / 100})`, transformOrigin: 'left', transition: 'transform 0.3s var(--ease)' }} />
         </div>
       </div>
 
@@ -1178,3 +1186,4 @@ export function HomeworkStepThrough({ exercises, responses, onResponse, onSubmit
     </div>
   );
 }
+

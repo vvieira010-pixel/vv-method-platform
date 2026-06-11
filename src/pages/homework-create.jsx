@@ -38,12 +38,12 @@ const MET_BALANCED_TYPES = ['speak', 'short', 'listen', 'mcq', 'blank', 'flash',
 
 // Skill groups available for per-group generation
 const SKILL_GROUPS = [
-  { key: 'speaking',   label: 'Speaking',   icon: '🎙' },
-  { key: 'writing',    label: 'Writing',    icon: '✍️' },
-  { key: 'grammar',    label: 'Grammar',    icon: '📐' },
-  { key: 'vocabulary', label: 'Vocabulary', icon: '📚' },
-  { key: 'reading',    label: 'Reading',    icon: '📖' },
-  { key: 'listening',  label: 'Listening',  icon: '🎧' },
+  { key: 'speaking',   label: 'Speaking',   icon: <Icon.mic size={16} /> },
+  { key: 'writing',    label: 'Writing',    icon: <Icon.edit size={16} /> },
+  { key: 'grammar',    label: 'Grammar',    icon: <Icon.diagnose size={16} /> },
+  { key: 'vocabulary', label: 'Vocabulary', icon: <Icon.book size={16} /> },
+  { key: 'reading',    label: 'Reading',    icon: <Icon.eye size={16} /> },
+  { key: 'listening',  label: 'Listening',  icon: <Icon.headphones size={16} /> },
 ];
 
 export default function HomeworkCreate({ diagnosisId, studentId, students, onNavigate, initialStep = 1 }) {
@@ -596,7 +596,7 @@ function getPriorityItems(dx) {
                             max="6"
                             value={groupGenConfig[group.key] || 0}
                             onChange={e => setGroupGenConfig(cfg => ({ ...cfg, [group.key]: Math.max(0, Math.min(6, Number(e.target.value) || 0)) }))}
-                            style={{ width: 48, padding: '4px 6px', border: '1px solid var(--border)', borderRadius: 6, fontSize: 'var(--text-sm)' }}
+                            style={{ width: 48, padding: '4px 6px', border: '1px solid var(--border)', borderRadius: 0, fontSize: 'var(--text-sm)' }}
                           />
                         </label>
                       ))}
@@ -618,7 +618,7 @@ function getPriorityItems(dx) {
                   <div style={{ marginBottom: 16, border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: 'var(--accent-subtle)', borderBottom: '1px solid var(--border)' }}>
                       <span style={{ fontWeight: 600, fontSize: 'var(--text-sm)' }}>{b2BankMeta.title}</span>
-                      <button onClick={() => setShowB2Bank(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)', fontSize: 16 }}>✕</button>
+                      <button onClick={() => setShowB2Bank(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)' }}><Icon.close size={16} /></button>
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 0, maxHeight: 340, overflowY: 'auto' }}>
                       {getB2Modules().map(mod => (
@@ -643,7 +643,7 @@ function getPriorityItems(dx) {
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                         <Button variant="ghost" size="sm" onClick={copyLifestylePrintablePack}>Copy printable</Button>
-                        <button onClick={() => setShowLifestylePack(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)', fontSize: 16 }}>✕</button>
+                        <button onClick={() => setShowLifestylePack(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)' }}><Icon.close size={16} /></button>
                       </div>
                     </div>
                     <div style={{ padding: '10px 14px', borderBottom: '1px solid var(--divider)', background: 'var(--surface)', fontSize: 'var(--text-xs)', color: 'var(--muted)', lineHeight: 1.5 }}>
@@ -677,7 +677,7 @@ function getPriorityItems(dx) {
                       style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', padding: '10px 14px', background: 'var(--accent-subtle)', border: 'none', cursor: 'pointer', borderBottom: showUnitBank ? '1px solid var(--border)' : 'none' }}
                     >
                       <span style={{ fontWeight: 600, fontSize: 'var(--text-sm)' }}>
-                        📚 Unit Bank — {subjectLabel || 'exercises'} from {selectedLevel} units ({unitBankExercises.length})
+                        <Icon.book size={14} /> Unit Bank — {subjectLabel || 'exercises'} from {selectedLevel} units ({unitBankExercises.length})
                       </span>
                       <Icon.chevronDown size={14} style={{ transform: showUnitBank ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s' }} />
                     </button>
@@ -741,7 +741,7 @@ function getPriorityItems(dx) {
                           <span>Review ({reviewDueCount} item{reviewDueCount !== 1 ? 's' : ''} due)</span>
                           <span style={{
                             display: 'inline-flex', alignItems: 'center', gap: 4,
-                            padding: '1px 8px', borderRadius: 999,
+                            padding: '1px 8px', borderRadius: 0,
                             background: 'var(--warning-bg)', color: 'var(--warning)',
                             fontSize: 'var(--text-xs)', fontWeight: 600,
                           }}>
@@ -908,7 +908,7 @@ function ExerciseCard({ exercise, index, total, isExpanded, onToggle, onChange, 
         }}
       >
         <span style={{
-          fontFamily: 'var(--font-display)', fontWeight: 700,
+          fontFamily: 'var(--font-ui)', fontWeight: 700,
           fontSize: 'var(--text-sm)', color: 'var(--accent)',
           width: 22, textAlign: 'center', flexShrink: 0,
         }}>
@@ -986,7 +986,7 @@ function PreviewExercise({ exercise }) {
             <div key={i} style={{
               display: 'flex', alignItems: 'center', gap: 10,
               padding: '8px 12px', marginBottom: 4,
-              borderRadius: 8, border: '1px solid var(--border)', background: 'var(--surface)',
+              borderRadius: 0, border: '1px solid var(--border)', background: 'var(--surface)',
             }}>
               <span style={{ width: 20, height: 20, borderRadius: '50%', border: '2px solid var(--border)', flexShrink: 0 }} />
               <span>{opt || `Option ${String.fromCharCode(65 + i)}`}</span>
@@ -1013,7 +1013,7 @@ function PreviewExercise({ exercise }) {
         <div>
           <p style={{ fontWeight: 600, marginBottom: 6 }}>{exercise.prompt || 'Prompt…'}</p>
           {exercise.rubric && <p style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginBottom: 8 }}>{exercise.rubric}</p>}
-          <div style={{ border: '1px solid var(--border)', borderRadius: 8, padding: 10, background: 'var(--surface)', minHeight: 60, color: 'var(--faint)', fontSize: 'var(--text-sm)' }}>
+          <div style={{ border: '1px solid var(--border)', borderRadius: 0, padding: 10, background: 'var(--surface)', minHeight: 60, color: 'var(--faint)', fontSize: 'var(--text-sm)' }}>
             Student writes here… (target: {exercise.targetWords || 120} words)
           </div>
         </div>
@@ -1023,7 +1023,7 @@ function PreviewExercise({ exercise }) {
       return (
         <div>
           {exercise.imageUrl && (
-            <div style={{ marginBottom: 10, borderRadius: 8, overflow: 'hidden', border: '1px solid var(--border)', background: 'var(--bg)' }}>
+            <div style={{ marginBottom: 10, borderRadius: 0, overflow: 'hidden', border: '1px solid var(--border)', background: 'var(--bg)' }}>
               <img
                 src={exercise.imageUrl}
                 alt={exercise.imageAlt || 'Speaking prompt image'}
@@ -1031,7 +1031,7 @@ function PreviewExercise({ exercise }) {
               />
             </div>
           )}
-          <div style={{ background: 'var(--surface)', borderRadius: 8, padding: '12px 14px', marginBottom: 10 }}>
+          <div style={{ background: 'var(--surface)', borderRadius: 0, padding: '12px 14px', marginBottom: 10 }}>
             <p style={{ fontWeight: 500, margin: 0 }}>{exercise.prompt || 'Speaking prompt…'}</p>
             <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>Target: {exercise.targetSeconds || 60} seconds</span>
           </div>
@@ -1047,7 +1047,7 @@ function PreviewExercise({ exercise }) {
             <div key={i} style={{
               display: 'flex', alignItems: 'center', gap: 10,
               padding: '10px 12px', marginBottom: 4,
-              borderRadius: 8, border: '1px solid var(--border)', background: 'var(--surface)',
+              borderRadius: 0, border: '1px solid var(--border)', background: 'var(--surface)',
             }}>
               <span style={{ fontWeight: 700, color: 'var(--accent)', width: 20, textAlign: 'center' }}>{i + 1}</span>
               <span style={{ flex: 1 }}>{s}</span>
@@ -1062,11 +1062,11 @@ function PreviewExercise({ exercise }) {
         <div>
           <p style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginBottom: 6 }}>Find and correct the errors:</p>
           {exercise.hint && (
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '3px 10px', background: 'var(--warning-bg)', color: 'var(--warning)', borderRadius: 999, fontSize: 'var(--text-xs)', marginBottom: 8 }}>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '3px 10px', background: 'var(--warning-bg)', color: 'var(--warning)', borderRadius: 0, fontSize: 'var(--text-xs)', marginBottom: 8 }}>
               <Icon.spark size={11} /> {exercise.hint}
             </div>
           )}
-          <div style={{ border: '1px solid var(--border)', borderRadius: 8, padding: 10, background: 'var(--surface)', lineHeight: 1.7 }}>
+          <div style={{ border: '1px solid var(--border)', borderRadius: 0, padding: 10, background: 'var(--surface)', lineHeight: 1.7 }}>
             {exercise.errorText || 'Text with errors…'}
           </div>
         </div>
@@ -1079,10 +1079,10 @@ function PreviewExercise({ exercise }) {
           <p style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginBottom: 8 }}>{filledPairs.length} flashcards · click to flip</p>
           <div style={{
             background: 'var(--surface)', border: '2px solid var(--border)',
-            borderRadius: 12, padding: '24px 20px', textAlign: 'center',
+            borderRadius: 0, padding: '24px 20px', textAlign: 'center',
           }}>
             <div style={{ fontSize: 'var(--text-xs)', color: 'var(--faint)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Term</div>
-            <div style={{ fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 'var(--text-xl)' }}>
+            <div style={{ fontFamily: 'var(--font-ui)', fontWeight: 600, fontSize: 'var(--text-xl)' }}>
               {filledPairs[0]?.term || 'Term'}
             </div>
             <div style={{ fontSize: 'var(--text-xs)', color: 'var(--faint)', marginTop: 10 }}>Click to flip</div>
@@ -1096,12 +1096,12 @@ function PreviewExercise({ exercise }) {
         <div>
           <div style={{
             display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 12,
-            padding: '10px 14px', borderRadius: 10,
-            background: 'rgba(14,95,107,.08)', border: '1px solid rgba(14,95,107,.25)',
+            padding: '10px 14px', borderRadius: 0,
+            background: 'rgba(37,99,235,.06)', border: '1px solid rgba(37,99,235,.18)',
           }}>
-            <span style={{ fontSize: 20 }}>▶</span>
+            <Icon.play size={20} />
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: '#0E5F6B', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+              <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--accent-text)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                 Listen ({exercise.plays ?? 2}× allowed)
               </div>
               <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: 4, lineHeight: 1.5 }}>
@@ -1110,9 +1110,9 @@ function PreviewExercise({ exercise }) {
               <div style={{
                 marginTop: 6,
                 padding: '8px 10px',
-                borderRadius: 8,
+                borderRadius: 0,
                 background: 'var(--surface)',
-                border: '1px solid rgba(14,95,107,.16)',
+                border: '1px solid rgba(37,99,235,.12)',
                 color: 'var(--text)',
                 fontSize: 'var(--text-sm)',
                 lineHeight: 1.55,
@@ -1127,7 +1127,7 @@ function PreviewExercise({ exercise }) {
             <div key={i} style={{
               display: 'flex', alignItems: 'center', gap: 10,
               padding: '8px 12px', marginBottom: 4,
-              borderRadius: 8, border: '1px solid var(--border)', background: 'var(--surface)',
+              borderRadius: 0, border: '1px solid var(--border)', background: 'var(--surface)',
             }}>
               <span style={{ width: 20, height: 20, borderRadius: '50%', border: '2px solid var(--border)', flexShrink: 0 }} />
               <span>{opt || `Option ${String.fromCharCode(65 + i)}`}</span>
@@ -1142,9 +1142,9 @@ function PreviewExercise({ exercise }) {
         <div>
           <div style={{
             background: 'var(--surface)', border: '1px solid var(--border)',
-            borderRadius: 8, padding: '12px 14px', marginBottom: 10,
+            borderRadius: 0, padding: '12px 14px', marginBottom: 10,
             maxHeight: 160, overflowY: 'auto', lineHeight: 1.7,
-            fontSize: 'var(--text-sm)', fontFamily: 'Georgia, "Times New Roman", serif',
+            fontSize: 'var(--text-sm)', fontFamily: 'var(--font-ui)',
           }}>
             {(exercise.passage || 'No passage provided.').slice(0, 300)}
             {(exercise.passage || '').length > 300 ? '…' : ''}
@@ -1162,7 +1162,7 @@ function PreviewExercise({ exercise }) {
               <p style={{ fontSize: 'var(--text-sm)', fontWeight: 600, margin: '0 0 4px' }}>{qi + 1}. {q.question}</p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                 {(q.options || []).map((opt, oi) => (
-                  <div key={oi} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 8px', borderRadius: 6, border: '1px solid var(--border)', background: 'var(--surface)', fontSize: 'var(--text-xs)' }}>
+                  <div key={oi} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 8px', borderRadius: 0, border: '1px solid var(--border)', background: 'var(--surface)', fontSize: 'var(--text-xs)' }}>
                     <span style={{ width: 16, height: 16, borderRadius: '50%', border: '2px solid var(--border)', flexShrink: 0 }} />
                     <span>{opt || `Option ${String.fromCharCode(65 + oi)}`}</span>
                   </div>
@@ -1244,6 +1244,10 @@ function isStructuredAiExerciseComplete(ex) {
       && ex.correct !== null
       && ex.correct !== undefined
       && Boolean(ex.explanation);
+  }
+  if (ex.type === 'read') {
+    return Boolean(ex.passage)
+      && (ex.questions || []).filter(q => q.question && (q.options || []).filter(Boolean).length === 4 && q.correct !== null).length >= 1;
   }
   if (ex.type === 'dialogue') return (ex.lines || []).filter(l => l.text?.trim()).length >= 2;
   if (ex.type === 'swap') return ex.sentence?.includes('[') && (ex.swaps || []).length > 0 && ex.swaps.every(s => s.options?.filter(Boolean).length >= 2);
@@ -1342,6 +1346,23 @@ function applyAiTaskToExercise(exercise, aiTask) {
     ex.targetSeconds = normalizeTargetSeconds(aiTask?.targetSeconds, aiTask?.duration);
     if (aiTask?.imageUrl) ex.imageUrl = aiTask.imageUrl;
     if (aiTask?.imageAlt) ex.imageAlt = aiTask.imageAlt;
+    if (aiTask?.imageDescription) ex.imageDescription = aiTask.imageDescription;
+    return ex;
+  }
+
+  if (ex.type === 'read') {
+    ex.passage = aiTask?.passage || aiTask?.text || content;
+    ex.source = aiTask?.source || '';
+    const aiQs = Array.isArray(aiTask?.questions) ? aiTask.questions : [];
+    ex.questions = aiQs.length
+      ? aiQs.map(q => ({
+          id: exId(),
+          question: q.question || '',
+          options: normalizeMcqOptions(q.options),
+          correct: normalizeCorrectIndex(q.correct, 4),
+          explanation: q.explanation || '',
+        }))
+      : ex.questions;
     return ex;
   }
 
@@ -1450,7 +1471,7 @@ function Field({ label, children }) {
 function arrowBtnStyle(disabled) {
   return {
     width: 24, height: 24, padding: 0, fontFamily: 'var(--font-ui)',
-    fontSize: 12, border: '1px solid var(--border)', borderRadius: 6,
+    fontSize: 12, border: '1px solid var(--border)', borderRadius: 0,
     background: 'var(--surface)', color: disabled ? 'var(--faint)' : 'var(--text)',
     cursor: disabled ? 'not-allowed' : 'pointer', display: 'inline-flex',
     alignItems: 'center', justifyContent: 'center',
@@ -1464,6 +1485,7 @@ const backStyle = {
 };
 
 const S = {
-  headline: { fontFamily: 'var(--font-display)', fontSize: 'var(--text-2xl)', fontWeight: 700, color: 'var(--accent-deep)', margin: '0 0 4px' },
+  headline: { fontFamily: 'var(--font-ui)', fontSize: 'var(--text-2xl)', fontWeight: 700, color: 'var(--accent-deep)', margin: '0 0 4px' },
   sub: { fontSize: 'var(--text-sm)', color: 'var(--muted)' },
 };
+
