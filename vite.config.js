@@ -6,7 +6,7 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [react(), anthropicDevApi(env), ttsDevApi(env)],
-    cacheDir: '.vite-cache',
+    cacheDir: '.vite-cache-v2',
     build: {
       outDir: 'dist-build',
       emptyOutDir: true,

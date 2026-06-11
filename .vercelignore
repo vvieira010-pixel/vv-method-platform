@@ -2,6 +2,7 @@ node_modules
 .pnpm-store
 npm-cache
 .vite-cache
+.vite-cache-v2
 dist-build
 supabase/.branches
 supabase/.temp
