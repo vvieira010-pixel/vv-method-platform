@@ -13,6 +13,8 @@ import {
   buildHomeworkGroupPrompt,
   buildTaskGeneratorPrompt,
   buildListeningGeneratorPrompt,
+  buildRetrievalPracticePrompt,
+  buildLanguageDemandPrompt,
 } from '../lib/prompts.js';
 import { getDiagnoses, getStudent, saveHomework, updateClassEventStatus } from '../lib/workflow.js';
 import { EX_TYPES, createExercise, exercisePreview, getExType } from '../lib/exercise-types.js';
@@ -80,6 +82,9 @@ export default function HomeworkCreate({ diagnosisId, studentId, students, onNav
   // Spaced repetition review items
   const [reviewDueCount, setReviewDueCount] = useState(0);
   const [includeReview, setIncludeReview] = useState(false);
+  const [generatingRetrieval, setGeneratingRetrieval] = useState(false);
+  const [languageDemand, setLanguageDemand] = useState(null);
+  const [generatingLangDemand, setGeneratingLangDemand] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -356,6 +361,66 @@ function getPriorityItems(dx) {
     setLoadingOptions(false);
   }
 
+  async function handleGenerateRetrieval() {
+    const topic = form.objective || getPriorityItems(diagnosis)[0]?.whatToImprove || '';
+    if (!topic) {
+      window.toast?.('Add an objective or link a diagnosis first.', 'warn');
+      return;
+    }
+    setGeneratingRetrieval(true);
+    const level = selectedLevel || student?.currentLevel || 'B1';
+    const prompt = buildRetrievalPracticePrompt({ topic, studentLevel: level, questionCount: 5 });
+    try {
+      const data = await callAI(prompt, { ...HOMEWORK_AI_BASE_OPTIONS, max_tokens: 2000 });
+      const raw = data.content?.map(b => b.text || '').join('') || '';
+      const parsed = parseAiJson(raw);
+      if (!parsed?.questions?.length) throw new Error('No questions returned');
+
+      const exercises = parsed.questions.map(q => {
+        const base = { id: Math.random().toString(36).slice(2, 9), focus: q.focus || 'retrieval' };
+        if (q.type === 'mcq') {
+          return { ...base, type: 'mcq', question: q.question || '', options: (q.options || []).slice(0, 4), correct: typeof q.correct === 'number' ? q.correct : 0, explanation: q.explanation || '' };
+        }
+        if (q.type === 'blank') {
+          return { ...base, type: 'blank', template: q.template || '', blanks: Array.isArray(q.blanks) ? q.blanks : [] };
+        }
+        return { ...base, type: 'short', prompt: q.prompt || '', rubric: q.rubric || 'Recall the key points accurately.', targetWords: q.targetWords || 40 };
+      }).filter(ex => isStructuredAiExerciseComplete(ex));
+
+      const spacingNote = parsed.spacing_recommendation ? `\nRetrieval spacing: ${parsed.spacing_recommendation}` : '';
+      setForm(f => ({
+        ...f,
+        exercises: [...f.exercises, ...exercises],
+        teacherNotes: (f.teacherNotes || '') + spacingNote,
+      }));
+      window.toast?.(`Added ${exercises.length} retrieval practice question${exercises.length !== 1 ? 's' : ''}.`, 'ok');
+    } catch (e) {
+      window.toast?.(`Retrieval generation failed: ${e.message}`, 'warn');
+    }
+    setGeneratingRetrieval(false);
+  }
+
+  async function handleAnalyzeLanguageDemand() {
+    if (!form.exercises.length) {
+      window.toast?.('Add some exercises first.', 'warn');
+      return;
+    }
+    setGeneratingLangDemand(true);
+    const level = selectedLevel || student?.currentLevel || 'B1';
+    const prompt = buildLanguageDemandPrompt({ exercises: form.exercises, studentLevel: level, objective: form.objective });
+    try {
+      const data = await callAI(prompt, { ...HOMEWORK_AI_BASE_OPTIONS, max_tokens: 1200 });
+      const raw = data.content?.map(b => b.text || '').join('') || '';
+      const parsed = parseAiJson(raw);
+      if (!parsed?.priority_actions) throw new Error('Invalid response');
+      setLanguageDemand(parsed);
+      window.toast?.('Language demand analysis complete.', 'ok');
+    } catch (e) {
+      window.toast?.(`Language demand analysis failed: ${e.message}`, 'warn');
+    }
+    setGeneratingLangDemand(false);
+  }
+
   function addAiExerciseToList(ex) {
     const newEx = createCompleteExercise(ex);
     if (!newEx) {
@@ -562,6 +627,9 @@ function getPriorityItems(dx) {
                 <div className="homework-create-actions" style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
                     <Button variant="primary" size="sm" onClick={handleAiGenerate} disabled={!diagnosis || generating}>
                       <Icon.spark size={12} /> {generating ? 'Generating...' : 'Generate MET Homework with AI'}
+                    </Button>
+                    <Button variant="primary" size="sm" onClick={handleGenerateRetrieval} disabled={generatingRetrieval || generating} title="Generate retrieval practice questions (recall → blank → MCQ) based on the homework objective">
+                      <Icon.spark size={12} /> {generatingRetrieval ? 'Generating...' : 'Retrieval Practice'}
                     </Button>
                     <Button variant="primary" size="sm" onClick={handleGenerateListening} disabled={!diagnosis || generatingListening}>
                       <Icon.headphones size={12} /> {generatingListening ? 'Generating...' : 'Generate Listening Task'}
@@ -868,10 +936,55 @@ function getPriorityItems(dx) {
                   ))}
                 </div>
 
-                <div className="homework-create-actions" style={{ display: 'flex', gap: 10, marginTop: 24 }}>
+                <div className="homework-create-actions" style={{ display: 'flex', gap: 10, marginTop: 24, flexWrap: 'wrap', alignItems: 'center' }}>
                   <Button variant="ghost" onClick={() => setCurrentStep(2)}>Back</Button>
                   <Button variant="primary" onClick={() => setCurrentStep(4)}>Proceed to Assign</Button>
+                  <Button variant="ghost" size="sm" onClick={handleAnalyzeLanguageDemand} disabled={generatingLangDemand || !form.exercises.length} title="Analyse language demands (Cummins BICS/CALP) and get pre-teaching recommendations">
+                    <Icon.search size={12} /> {generatingLangDemand ? 'Analysing...' : 'Check Language Demands'}
+                  </Button>
                 </div>
+
+                {languageDemand && (
+                  <div style={{ marginTop: 16, padding: 14, border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', background: 'var(--surface)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+                      <span style={{ fontWeight: 700, fontSize: 'var(--text-sm)' }}>Language Demand Analysis</span>
+                      <span style={{
+                        padding: '2px 8px', borderRadius: 0, fontSize: 11, fontWeight: 700, textTransform: 'uppercase',
+                        background: languageDemand.overall_demand === 'high' ? '#FEF2F2' : languageDemand.overall_demand === 'medium' ? '#FFFBEB' : '#F0FDFA',
+                        color: languageDemand.overall_demand === 'high' ? '#991B1B' : languageDemand.overall_demand === 'medium' ? '#92400E' : '#065F46',
+                      }}>{languageDemand.overall_demand} demand</span>
+                      <button onClick={() => setLanguageDemand(null)} style={{ marginLeft: 'auto', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)', fontSize: 16 }}>×</button>
+                    </div>
+                    {languageDemand.teacher_note && (
+                      <p style={{ fontSize: 'var(--text-xs)', color: 'var(--text-2)', lineHeight: 1.5, marginBottom: 10 }}>{languageDemand.teacher_note}</p>
+                    )}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                      {(languageDemand.priority_actions || []).map((action, i) => (
+                        <div key={i} style={{ padding: '8px 10px', background: 'var(--bg)', borderRadius: 'var(--radius-sm)', borderLeft: '3px solid var(--accent)' }}>
+                          <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--accent)', textTransform: 'uppercase', marginBottom: 2 }}>{action.demand_type}</div>
+                          <div style={{ fontSize: 'var(--text-sm)', lineHeight: 1.5 }}>{action.description}</div>
+                          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-2)', marginTop: 4 }}>Recommend: {action.recommendation}</div>
+                        </div>
+                      ))}
+                    </div>
+                    {(languageDemand.tier2_vocabulary?.length > 0 || languageDemand.tier3_vocabulary?.length > 0) && (
+                      <div style={{ marginTop: 10, display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+                        {languageDemand.tier2_vocabulary?.length > 0 && (
+                          <div>
+                            <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', marginBottom: 4 }}>Tier 2 to pre-teach</div>
+                            <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-2)' }}>{languageDemand.tier2_vocabulary.join(' · ')}</div>
+                          </div>
+                        )}
+                        {languageDemand.tier3_vocabulary?.length > 0 && (
+                          <div>
+                            <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', marginBottom: 4 }}>Tier 3 to pre-teach</div>
+                            <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-2)' }}>{languageDemand.tier3_vocabulary.join(' · ')}</div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </Card>
           )}

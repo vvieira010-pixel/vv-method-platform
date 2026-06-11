@@ -41,10 +41,61 @@ function InvalidExercise({ reason }) {
   );
 }
 
-function ExerciseCard({ exercise, index, total, result, onComplete, onNext }) {
+function deriveHints(exercise) {
+  if (exercise.hints?.length > 0) return exercise.hints;
+  const type = exercise.type;
+  if (type === 'mcq' || type === 'multiple_choice' || type === 'multiple_choice_single' || type === 'multiple_choice_multiple') {
+    return [
+      'What key concept or rule does this question test?',
+      'Try eliminating options that are clearly wrong. What makes each remaining option plausible or not?',
+      'The correct answer addresses the main point — not just a familiar-sounding word.',
+    ];
+  }
+  if (type === 'blank' || type === 'fill_blank') {
+    const firstAnswer = exercise.blanks?.[0]?.answer || '';
+    return [
+      'What type of word fits here — verb, noun, adjective, or connector?',
+      'Think about the grammar structure around the blank. What form is needed?',
+      firstAnswer ? `The first missing word begins with: "${firstAnswer[0].toUpperCase()}…"` : 'Re-read the full sentence for context clues.',
+    ];
+  }
+  if (type === 'short' || type === 'short_answer' || type === 'speak') {
+    return [
+      'Start with one clear main point, then support it with a reason or example.',
+      'Use vocabulary that is specific and relevant to the topic.',
+      exercise.rubric ? `Key criteria: ${String(exercise.rubric).slice(0, 100)}` : 'Aim for 2–3 complete sentences with clear reasoning.',
+    ];
+  }
+  if (type === 'fix' || type === 'error_correction') {
+    return [
+      'Read each sentence aloud. Does anything sound unnatural?',
+      'Common error types: verb tense, missing or wrong article (a/an/the), wrong preposition.',
+      'Check subject–verb agreement and word form (noun vs. adjective vs. verb).',
+    ];
+  }
+  if (type === 'order' || type === 'order_sentences' || type === 'ordering_sequencing') {
+    return [
+      'Think about logical flow: introduction → main points → conclusion.',
+      'Look for connecting words (first, then, however, therefore) that signal position.',
+      'Which sentence introduces the overall topic? Start there.',
+    ];
+  }
+  return [
+    'What key concept or vocabulary does this exercise test?',
+    'Look for context clues in the question itself.',
+    'Think about grammar rules or vocabulary you have practised recently.',
+  ];
+}
+
+function ExerciseCard({ exercise, index, total, result, onComplete, onNext, recallMode }) {
   const label = TYPE_LABELS[exercise.type] || exercise.type;
   const skill = exercise.skill || exercise.focus || null;
   const done = result != null;
+
+  const [recallText, setRecallText] = useState('');
+  const [recallDone, setRecallDone] = useState(!recallMode);
+  const [hintLevel, setHintLevel] = useState(0);
+  const hints = deriveHints(exercise);
 
   function renderExercise() {
     const props = { exercise, onComplete };
@@ -110,10 +161,58 @@ function ExerciseCard({ exercise, index, total, result, onComplete, onNext }) {
         </span>
       </div>
 
+      {/* Recall gate — shown before exercise when recallMode is on */}
+      {!recallDone && (
+        <div style={{ padding: '20px 20px 24px', borderBottom: '1px solid var(--divider)' }}>
+          <div style={{ fontSize: 'var(--text-sm)', fontWeight: 600, color: NAVY, marginBottom: 6 }}>
+            Before you begin — what do you already know?
+          </div>
+          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginBottom: 10, lineHeight: 1.5 }}>
+            Try to recall what you know about this topic before seeing the question. Even partial ideas are useful.
+          </div>
+          <textarea
+            value={recallText}
+            onChange={e => setRecallText(e.target.value)}
+            placeholder="Write anything you remember — words, rules, examples…"
+            rows={3}
+            style={{ width: '100%', padding: '8px 10px', border: '1px solid var(--border)', borderRadius: 0, fontSize: 'var(--text-sm)', lineHeight: 1.6, resize: 'vertical', fontFamily: 'var(--font-ui)', boxSizing: 'border-box' }}
+          />
+          <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+            <button
+              onClick={() => setRecallDone(true)}
+              style={{ padding: '8px 18px', borderRadius: 0, border: 'none', cursor: 'pointer', background: `linear-gradient(120deg, ${TEAL} 0%, ${NAVY} 100%)`, color: '#fff', fontWeight: 600, fontSize: 13, fontFamily: 'var(--font-ui)' }}
+            >
+              {recallText.trim() ? "I'm ready — show the exercise" : 'Skip recall — show the exercise'}
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Exercise body */}
-      <div style={{ padding: '20px 20px 24px' }}>
-        {renderExercise()}
-      </div>
+      {recallDone && (
+        <div style={{ padding: '20px 20px 24px' }}>
+          {renderExercise()}
+        </div>
+      )}
+
+      {/* Progressive hint ladder */}
+      {recallDone && !done && (
+        <div style={{ padding: '0 20px 16px' }}>
+          {hintLevel > 0 && (
+            <div style={{ marginBottom: 8, padding: '8px 12px', background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: 0, fontSize: 'var(--text-xs)', color: '#92400E', lineHeight: 1.5 }}>
+              <strong>Hint {hintLevel}:</strong> {hints[hintLevel - 1]}
+            </div>
+          )}
+          {hintLevel < hints.length && (
+            <button
+              onClick={() => setHintLevel(l => l + 1)}
+              style={{ padding: '5px 14px', borderRadius: 0, border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text-2)', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-ui)' }}
+            >
+              {hintLevel === 0 ? 'Need a hint?' : 'Next hint →'}
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Next / Finish button */}
       {done && (
@@ -194,7 +293,7 @@ function ScoreSummary({ results, total }) {
  *   title — optional session title
  *   onSessionComplete — called with { results, score } when all done
  */
-export default function ExercisePlayer({ exercises: raw, title, onSessionComplete }) {
+export default function ExercisePlayer({ exercises: raw, title, onSessionComplete, recallMode = false }) {
   const { exercises, errors } = loadExercises(Array.isArray(raw) ? raw : (raw || []));
 
   const [current, setCurrent] = useState(0);
@@ -265,6 +364,7 @@ export default function ExercisePlayer({ exercises: raw, title, onSessionComplet
           result={results[current]}
           onComplete={handleComplete}
           onNext={handleNext}
+          recallMode={recallMode}
         />
       ) : (
         <>

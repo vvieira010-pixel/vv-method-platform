@@ -457,6 +457,35 @@ Return JSON:
             </div>
           </Card>
 
+          {/* Next Teaching Action — formative-assessment-technique-selector */}
+          {(() => {
+            const score = form.score !== '' ? Number(form.score) : null;
+            const rec = getFormativeRecommendation(score);
+            if (!rec) return null;
+            const toneColors = {
+              strong: { bg: '#F0FDFA', border: '#6EE7B7', label: '#065F46' },
+              partial: { bg: '#FFFBEB', border: '#FDE68A', label: '#92400E' },
+              weak:    { bg: '#FEF2F2', border: '#FECACA', label: '#991B1B' },
+            };
+            const c = toneColors[rec.band];
+            return (
+              <Card style={{ padding: 18, borderLeft: `3px solid ${c.border}` }}>
+                <SectionHeader title="Next Teaching Action" icon={<Icon.diagnose size={15} />} />
+                <div style={{ marginTop: 10 }}>
+                  <span style={{ display: 'inline-block', padding: '2px 8px', borderRadius: 0, fontSize: 11, fontWeight: 700, textTransform: 'uppercase', background: c.bg, color: c.label, border: `1px solid ${c.border}`, marginBottom: 8 }}>
+                    {rec.label}
+                  </span>
+                  <p style={{ fontSize: 'var(--text-sm)', lineHeight: 1.6, color: 'var(--text-2)', marginBottom: 8 }}>{rec.action}</p>
+                  <ul style={{ margin: 0, paddingLeft: 16, display: 'flex', flexDirection: 'column', gap: 4 }}>
+                    {rec.techniques.map((t, i) => (
+                      <li key={i} style={{ fontSize: 'var(--text-xs)', color: 'var(--text-2)', lineHeight: 1.5 }}>{t}</li>
+                    ))}
+                  </ul>
+                </div>
+              </Card>
+            );
+          })()}
+
           {/* Student feedback replies */}
           {(feedbackReplies.length > 0 || feedbackUnderstood) && (
             <Card style={{ padding: 18, borderLeft: '3px solid var(--accent)' }}>
@@ -525,6 +554,46 @@ Return JSON:
       </div>
     </div>
   );
+}
+
+function getFormativeRecommendation(score) {
+  if (score === null || score === undefined || isNaN(score)) return null;
+  // score is on a 0–10 scale (teacher-entered)
+  const pct = score * 10;
+  if (pct >= 80) {
+    return {
+      band: 'strong',
+      label: 'Strong mastery (8+/10)',
+      action: 'Student is ready to move to the next topic or an extension challenge.',
+      techniques: [
+        'Introduce a related, slightly harder concept or skill in the next session.',
+        'Ask the student to self-explain what they did well — metacognitive reflection consolidates learning.',
+        'Schedule a spaced retrieval check in 1 week to confirm long-term retention.',
+      ],
+    };
+  }
+  if (pct >= 50) {
+    return {
+      band: 'partial',
+      label: 'Partial mastery (5–7.9/10)',
+      action: 'A brief review is recommended before introducing new content.',
+      techniques: [
+        'Assign 2–3 targeted exercises focusing specifically on the areas that were incorrect.',
+        'Show a worked example of a correct response, then ask the student to attempt again.',
+        'Go through each error together in the next session — error analysis is high-leverage.',
+      ],
+    };
+  }
+  return {
+    band: 'weak',
+    label: 'Significant gap (below 5/10)',
+    action: 'Re-teaching is needed before moving on — this topic needs more foundation work.',
+    techniques: [
+      'Return to the core concept with a new, simpler worked example.',
+      'Break the skill into smaller sub-steps and practise each one before combining.',
+      'Increase practice frequency: shorter daily sessions are more effective than one long session.',
+    ],
+  };
 }
 
 function Field({ label, children }) {

@@ -217,6 +217,74 @@ RETURN ONLY VALID JSON:
 }`;
 };
 
+/**
+ * Retrieval Practice Generator (retrieval-practice-generator skill)
+ * Returns exercises in the platform's native format (mcq / blank / short).
+ * Free Recall → short, Cued Recall → blank, Recognition → mcq.
+ */
+export const buildRetrievalPracticePrompt = ({ topic, studentLevel, questionCount = 5 }) => `You are a retrieval practice designer for a MET English exam preparation course.
+Create a mix of retrieval practice questions for a student at level ${studentLevel}.
+
+Topic / learning objective: ${topic}
+Total questions: ${questionCount}
+
+${GENERAL_MET_TOPIC_RULES}
+
+Return a balanced mix: some Free Recall (open response), some Cued Recall (fill-in-the-blank), some Recognition (multiple choice).
+
+Return ONLY valid JSON. Each question MUST match exactly one of these three formats:
+
+Free Recall (becomes a written practice task):
+{ "retrieval_type": "Free Recall", "type": "short", "prompt": "...", "rubric": "Key points expected: ...", "targetWords": 40, "focus": "skill name" }
+
+Cued Recall (fill-in-the-blank — use ___ for each blank):
+{ "retrieval_type": "Cued Recall", "type": "blank", "template": "sentence with ___ marking each blank", "blanks": [{"answer": "word"}], "focus": "skill name" }
+
+Recognition (multiple choice — exactly 4 options, correct is the 0-based index):
+{ "retrieval_type": "Recognition", "type": "mcq", "question": "...", "options": ["opt A", "opt B", "opt C", "opt D"], "correct": 0, "explanation": "...", "focus": "skill name" }
+
+{
+  "questions": [ ... ],
+  "spacing_recommendation": "e.g. Review again in 1 day, then 3 days, then 1 week",
+  "teacher_script": "one sentence on how to use these questions in the next session"
+}`;
+
+/**
+ * Language Demand Analyser (language-demand-analyser skill, EAL/Cummins BICS/CALP)
+ * Returns only the highest-priority actions to avoid overwhelming teachers.
+ */
+export const buildLanguageDemandPrompt = ({ exercises, studentLevel, objective = '' }) => {
+  const exerciseList = (exercises || [])
+    .slice(0, 12)
+    .map((ex, i) => `${i + 1}. [${ex.type}] ${ex.prompt || ex.question || ex.template || ex.sentence || ex.errorText || ex.title || '(no text)'}`)
+    .join('\n');
+  return `You are a language demand analyst for an EFL/MET English exam preparation platform.
+Apply Cummins' BICS/CALP framework to identify the highest-priority language scaffolding needs.
+
+Student level: ${studentLevel}
+${objective ? `Learning objective: ${objective}` : ''}
+
+Exercises to analyse:
+${exerciseList || 'No exercise content provided.'}
+
+Focus on what the student needs BEFORE attempting these tasks. Keep recommendations specific and actionable.
+
+Return ONLY valid JSON:
+{
+  "priority_actions": [
+    {
+      "demand_type": "vocabulary | grammar | discourse | genre",
+      "description": "specific language challenge in these exercises",
+      "recommendation": "one concrete thing the teacher should add or pre-teach"
+    }
+  ],
+  "tier2_vocabulary": ["academic or instructional words the student may not know"],
+  "tier3_vocabulary": ["MET exam-specific or topic-specific terms to pre-teach"],
+  "overall_demand": "low | medium | high",
+  "teacher_note": "one-sentence summary"
+}`;
+};
+
 export const buildCompactSkillDiagnosisPrompt = (data) => {
   const { student, classEvidence, targetProfile } = data;
   const ev = classEvidence || {};
