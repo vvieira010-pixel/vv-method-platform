@@ -1,6 +1,6 @@
 {
   "installCommand": "npm ci",
-  "buildCommand": "vite build",
+  "buildCommand": "ls -la src/components/exercises/ && find src/components -name 'ExercisePlayer*' -type f && echo '---BUILD---' && npx vite build",
   "outputDirectory": "dist-build",
   "rewrites": [{ "source": "/((?!api/).*)", "destination": "/index.html" }],
   "headers": [
