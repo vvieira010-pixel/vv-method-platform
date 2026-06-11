@@ -26,11 +26,11 @@ Exercises
 V.V. Method*
 Vocational English Series
 
-# Standalone HTML/image files
-*.html
+# Standalone HTML/image files (not index.html)
 mpv7s5*.png
 audit-*.html
 met-*.html
+"V.V. Method*"
 
 # Misc
 AGENTS.md
