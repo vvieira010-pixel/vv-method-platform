@@ -1,6 +1,5 @@
 {
-  "installCommand": "npm ci",
-  "buildCommand": "vite build",
+  "buildCommand": "npx -y vite build",
   "outputDirectory": "dist-build",
   "rewrites": [{ "source": "/((?!api/).*)", "destination": "/index.html" }],
   "headers": [
