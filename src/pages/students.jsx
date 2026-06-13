@@ -4,7 +4,8 @@
 import { useState, useEffect } from 'react';
 import { Icon, Card, SectionHeader, Pill, Button, Avatar } from '../components/shared.jsx';
 import { getStudents, saveStudent, deleteStudent, getDiagnoses, getHomework, getAllSubmissions, getClassEvents } from '../lib/workflow.js';
-import { sendMagicLink, signUpWithPassword } from '../lib/supabase-storage.js';
+import { sendMagicLink } from '../lib/supabase-storage.js';
+import { getDbContext } from '../lib/supabase-db.js';
 
 export default function StudentsPage({ students: propStudents, onNavigate }) {
   const [students, setStudents] = useState([]);
@@ -85,12 +86,24 @@ export default function StudentsPage({ students: propStudents, onNavigate }) {
   }
 
   async function handleCreateAccount(student) {
-    if (!setup || setup.pwd.length < 6) return;
+    if (!setup) return;
     setSetup(s => ({ ...s, busy: true, result: null }));
     try {
-      await signUpWithPassword(student.email.trim(), setup.pwd);
-      setSetup(s => ({ ...s, busy: false, result: { ok: true, email: student.email, password: s.pwd } }));
-      window.toast?.(`Account created for ${student.name}`, 'ok');
+      const ctx = getDbContext();
+      if (!ctx) throw new Error('Sign in as teacher first.');
+      const res = await fetch(`${ctx.url}/functions/v1/invite-student`, {
+        method: 'POST',
+        headers: {
+          apikey: ctx.anonKey,
+          Authorization: `Bearer ${ctx.token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email: student.email.trim(), name: student.name, firstName: student.firstName }),
+      });
+      const data = await res.json();
+      if (!res.ok || data.error) throw new Error(data.error || `Error ${res.status}`);
+      setSetup(s => ({ ...s, busy: false, result: { ok: true, email: student.email, password: data.password, emailSent: data.emailSent } }));
+      window.toast?.(`Account created for ${student.name}${data.emailSent ? ' — email sent!' : ''}`, 'ok');
     } catch (err) {
       setSetup(s => ({ ...s, busy: false, result: { ok: false, error: err.message } }));
     }
@@ -258,6 +271,7 @@ function StudentRow({ student, nextAction, inviteStatus, setupState, onProfile, 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               <p style={{ fontSize: 'var(--text-sm)', fontWeight: 700, color: 'var(--success)', margin: 0 }}>
                 ✓ Account created for {student.name}
+                {result.emailSent && ' — login email sent to their inbox!'}
               </p>
               <div style={{ background: 'var(--bg)', border: '1.5px solid var(--border)', borderRadius: 8, padding: '12px 16px', fontFamily: 'monospace', fontSize: 'var(--text-sm)', lineHeight: 2 }}>
                 <div><strong>Login (email):</strong> {result.email}</div>
