@@ -29,6 +29,18 @@ export default function StudentHomework({ student }) {
   const [draftMeta, setDraftMeta] = useState({});
   const [homeworkFilter, setHomeworkFilter] = useState('todo');
   const [submitting, setSubmitting] = useState(false);
+  const [selfChecks, setSelfChecks] = useState({});
+
+  function selfCheckKey(hwId) { return `vv:hw_selfcheck:${student.id}:${hwId}`; }
+  function getSelfChecks(hwId) {
+    if (selfChecks[hwId]) return selfChecks[hwId];
+    try { return JSON.parse(localStorage.getItem(selfCheckKey(hwId)) || '{}'); } catch { return {}; }
+  }
+  function toggleSelfCheck(hwId, idx) {
+    const next = { ...getSelfChecks(hwId), [idx]: !getSelfChecks(hwId)[idx] };
+    setSelfChecks(prev => ({ ...prev, [hwId]: next }));
+    try { localStorage.setItem(selfCheckKey(hwId), JSON.stringify(next)); } catch { /* storage unavailable */ }
+  }
 
   useEffect(() => {
     (async () => {
@@ -291,7 +303,8 @@ export default function StudentHomework({ student }) {
                     {h.selfCheck.filter(Boolean).map((c, i) => (
                       <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: 6 }}>
                         <label style={{ display: 'flex', alignItems: 'flex-start', gap: 8, cursor: 'pointer' }}>
-                          <input type="checkbox" style={{ marginTop: 3, flexShrink: 0 }} aria-label={c} />
+                          <input type="checkbox" style={{ marginTop: 3, flexShrink: 0 }} aria-label={c}
+                            checked={!!getSelfChecks(h.id)[i]} onChange={() => toggleSelfCheck(h.id, i)} />
                           <span style={{ fontSize: 'var(--text-sm)' }}>{c}</span>
                         </label>
                       </div>

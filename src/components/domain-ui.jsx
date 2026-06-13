@@ -48,7 +48,7 @@ export function StudentFeedbackView({ feedback }) {
       )}
       {wins.length > 0 && (
         <div style={card}>
-          <div style={{ ...cardTitle, color: 'var(--success)' }}><Icon.check size={13} /> What is getting stronger</div>
+          <div style={{ ...cardTitle, color: 'var(--success)' }}><Icon.check size={13} /> What's working</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             {wins.map((w, i) => (
               <div key={i} style={{ padding: 12, background: 'var(--success-bg)', borderRadius: 'var(--radius-sm)' }}>
@@ -62,7 +62,7 @@ export function StudentFeedbackView({ feedback }) {
       )}
       {fixes.length > 0 && (
         <div style={card}>
-          <div style={{ ...cardTitle, color: 'var(--warning-text)' }}>Try this next</div>
+          <div style={{ ...cardTitle, color: 'var(--warning-text)' }}>Your next focus</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             {fixes.map((f, i) => (
               <div key={i} style={{ padding: 12, background: 'var(--warning-bg)', borderRadius: 'var(--radius-sm)' }}>

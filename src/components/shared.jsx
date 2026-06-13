@@ -196,7 +196,7 @@ const LEGACY_NAV_SECTIONS = [
 // New section map for Phase 1 IDs
 const NEW_NAV_SECTIONS = [
   { label: 'Today',    ids: ['dashboard'] },
-  { label: 'Workflow', ids: ['students', 'calendar', 'educator', 'diagnostics', 'homework', 'submissions'] },
+  { label: 'Workflow', ids: ['students', 'calendar', 'diagnostics', 'homework', 'submissions'] },
   { label: 'Support',  ids: ['inbox', 'error-bank', 'reports', 'exercises'] },
   { label: 'Admin',    ids: ['settings'] },
 ];
