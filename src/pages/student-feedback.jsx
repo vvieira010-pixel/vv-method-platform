@@ -100,16 +100,15 @@ export default function StudentFeedback({ student, onTab }) {
           </section>
 
           <section className="student-feedback-grid">
-            <article className="student-panel">
-              <span className="student-panel-kicker">What improved</span>
-              <h2>{firstWin?.strength || 'You made progress'}</h2>
-              <p className="student-readable-copy">{firstWin?.explanation || feedback.finalNote || 'Your teacher noticed improvement in your latest class.'}</p>
-            </article>
-
-            <article className="student-panel">
-              <span className="student-panel-kicker">Current focus</span>
-              <h2>{focusArea?.area || primarySkill?.section || 'Next MET skill'}</h2>
-              <p className="student-readable-copy">{focusArea?.explanation || focusArea?.howToImprove || focusArea?.metImportance || nextStep}</p>
+            <article className="student-panel student-panel--primary">
+              <div className="student-panel-head">
+                <div>
+                  <span className="student-panel-kicker">Your feedback</span>
+                  <h2>Teacher-approved feedback</h2>
+                </div>
+                {latest.createdAt && <span className="student-muted-pill">{new Date(latest.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</span>}
+              </div>
+              <StudentFeedbackView feedback={feedback} />
             </article>
 
             {confidenceScore && (
@@ -154,26 +153,13 @@ export default function StudentFeedback({ student, onTab }) {
               );
             })()}
 
-            <article className="student-panel student-panel--primary">
-              <div className="student-panel-head">
-                <div>
-                  <span className="student-panel-kicker">Full feedback</span>
-                  <h2>Teacher-approved feedback</h2>
-                </div>
-                {latest.createdAt && <span className="student-muted-pill">{new Date(latest.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</span>}
-              </div>
-              <StudentFeedbackView feedback={feedback} />
-            </article>
-
             <article className="student-panel">
-              <span className="student-panel-kicker">Confidence check</span>
-              <h2>Before the next class</h2>
-              <div className="student-confidence-list">
-                <div className="student-todo-row"><span className="student-todo-check" /><span><strong>I understand my teacher's main feedback</strong><small>Review the full note above</small></span></div>
-                <div className="student-todo-row"><span className="student-todo-check" /><span><strong>I can name one thing I did better</strong><small>{firstWin?.strength || 'Use your feedback note'}</small></span></div>
-                <div className="student-todo-row"><span className="student-todo-check" /><span><strong>I can practice the next focus</strong><small>{feedback?.nextStep || focusArea?.area || 'Complete the homework task'}</small></span></div>
-                <div className="student-todo-row"><span className="student-todo-check" /><span><strong>I can bring one question to class</strong><small>Ask your teacher for help where needed</small></span></div>
-              </div>
+              <span className="student-panel-kicker">Before next class</span>
+              <h2>Can you name your focus and one win?</h2>
+              <p className="student-readable-copy">
+                Your focus: <strong>{focusArea?.area || feedback?.nextStep || primarySkill?.section || 'your next MET skill'}</strong>.
+                {' '}One win: <strong>{firstWin?.strength || 'something you did better this class'}</strong>.
+              </p>
             </article>
 
             <article className="student-panel">

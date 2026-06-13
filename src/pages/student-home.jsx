@@ -17,9 +17,9 @@ function daysUntilExam() {
   } catch { return null; }
 }
 
-function MetricCard({ icon, label, value, sub, tone }) {
+function MetricCard({ icon, label, value, sub, tone, textValue }) {
   return (
-    <article className={`student-metric student-metric--${tone}`}>
+    <article className={`student-metric student-metric--${tone}${textValue ? ' student-metric--text' : ''}`}>
       <div className="student-metric-copy">
         <span>{label}</span>
         <strong>{value}</strong>
@@ -83,12 +83,17 @@ function SkillRow({ skill, trend }) {
   const score = Number(skill.score_0_80) || 0;
   if (score <= 0) return null;
   const stage = getProgressStage(score);
+  const pct = Math.max(4, Math.min(100, Math.round((score / 80) * 100)));
   return (
     <div className="student-skill-row">
       <div className="student-skill-top">
         <strong>{skill.section}</strong>
-        <span className="student-skill-stage">Last assessed: {stage.label}</span>
+        <span className="student-skill-stage">{stage.label}</span>
       </div>
+      <div className="student-skill-bar" role="img" aria-label={`${skill.section}: ${stage.label}, ${score} of 80`}>
+        <span className="student-skill-bar-fill" style={{ width: `${pct}%` }} />
+      </div>
+      <TrendChip trend={trend} />
     </div>
   );
 }
@@ -246,7 +251,7 @@ export default function StudentHome({ student, onTab }) {
                 </div>
               </button>
             )}
-            <MetricCard icon={<Icon.progress size={19} />} label="Current focus" value={focusSkill} sub={focusTrend.dir !== 'none' ? `Progress: ${focusTrend.label}` : 'next useful practice'} tone="navy" />
+            <MetricCard icon={<Icon.progress size={19} />} label="Current focus" value={focusSkill} sub={focusTrend.dir !== 'none' ? `Progress: ${focusTrend.label}` : 'next useful practice'} tone="navy" textValue />
             <MetricCard icon={<Icon.inbox size={19} />} label="Feedback" value={latestFeedback ? 'Ready' : 'Waiting'} sub={latestFeedback ? 'teacher approved' : 'after diagnosis'} tone="amber" />
             {daysLeft !== null && (
               <MetricCard
@@ -320,9 +325,8 @@ export default function StudentHome({ student, onTab }) {
                 </div>
               </div>
               <div className="student-prep-box">
-                <strong>What's Next</strong>
-                <p>{latestReview ? latestReview.homeworkTitle : pendingHw[0]?.title || 'Prepare your MET speaking samples'}</p>
-                <button type="button" onClick={() => onTab('homework')}>Enter Study Area</button>
+                <strong>Bring to your next class</strong>
+                <p>{nextClass?.metSkillFocus || focusSkill || 'One question about your latest feedback.'}</p>
               </div>
             </div>
             {upcomingClasses.length > 1 && (
@@ -344,8 +348,8 @@ export default function StudentHome({ student, onTab }) {
             <article className="student-panel student-panel--todo">
               <div className="student-panel-head">
                 <div>
-                  <span className="student-panel-kicker">Daily Agenda</span>
-                  <h2>What to do now</h2>
+                  <span className="student-panel-kicker">Up next</span>
+                  <h2>Your next steps</h2>
                 </div>
               </div>
               <div className="student-todo-list">
@@ -403,6 +407,20 @@ export default function StudentHome({ student, onTab }) {
           </section>
         </aside>
       </section>
+
+      {pendingHw.length > 0 && (
+        <div className="student-practice-compact fade-up" style={{ '--delay': '0.4s' }}>
+          <div className="student-practice-compact-copy">
+            <strong>Practice Studio</strong>
+            <small>Optional self-paced practice — no timer, no pressure.</small>
+          </div>
+          <div className="student-practice-compact-orbs">
+            <button className="student-practice-compact-orb" onClick={() => setPracticeMode('grammar')}><Icon.edit size={14} /> Grammar</button>
+            <button className="student-practice-compact-orb" onClick={() => setPracticeMode('vocab')}><Icon.star size={14} /> Vocab</button>
+            <button className="student-practice-compact-orb" onClick={() => setPracticeMode('speaking')}><Icon.mic size={14} /> Speaking</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

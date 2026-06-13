@@ -21,7 +21,6 @@ import { claimStudentByEmail, ensureProfile, setSessionRole } from './lib/supaba
 // Lazy-loaded pages
 const StudentDashboard  = lazy(() => import('./pages/student-dashboard.jsx'));
 const TeacherDashboard  = lazy(() => import('./pages/teacher-dashboard.jsx'));
-const EducatorView      = lazy(() => import('./pages/teacher-home.jsx'));
 const StudentsPage      = lazy(() => import('./pages/students.jsx'));
 const StudentProfile    = lazy(() => import('./pages/student-profile.jsx'));
 const CalendarPage      = lazy(() => import('./pages/calendar.jsx'));
@@ -237,8 +236,7 @@ export default function App() {
 
   // ── Teacher shell ──
   const teacherTabs = [
-    { id: 'dashboard',    label: 'Dashboard',    icon: <Icon.home size={16} /> },
-    { id: 'educator',     label: 'Class Prep',   icon: <Icon.teacher size={16} /> },
+    { id: 'dashboard',    label: 'Today',        icon: <Icon.home size={16} /> },
     { id: 'students',     label: 'Students',     icon: <Icon.student size={16} /> },
     { id: 'calendar',     label: 'Calendar',     icon: <Icon.calendar size={16} /> },
     { id: 'diagnostics',  label: 'Diagnostics',  icon: <Icon.diagnose size={16} /> },
@@ -248,13 +246,28 @@ export default function App() {
     { id: 'error-bank',   label: 'Error Bank',   icon: <Icon.warning size={16} /> },
     { id: 'reports',      label: 'Reports',      icon: <Icon.progress size={16} /> },
     { id: 'exercises',    label: 'Exercises',    icon: <Icon.doc size={16} /> },
-    { id: 'settings',     label: 'Settings',     icon: <Icon.settings size={16} /> },
   ];
 
   const rightSlot = (
     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-<span style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)' }}>Teacher</span>
+      <span style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)' }}>Teacher</span>
       <Avatar name="Vini V" size={32} tone="ink" />
+      <button
+        type="button"
+        onClick={() => navigate('settings')}
+        aria-label="Settings"
+        title="Settings"
+        aria-current={view === 'settings' ? 'page' : undefined}
+        style={{
+          display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+          width: 32, height: 32, borderRadius: 'var(--radius-sm)',
+          border: '1px solid var(--border)', cursor: 'pointer',
+          background: view === 'settings' ? 'var(--accent-soft)' : 'var(--surface)',
+          color: view === 'settings' ? 'var(--accent)' : 'var(--muted)',
+        }}
+      >
+        <Icon.settings size={16} />
+      </button>
       <Button variant="quiet" size="sm" onClick={handleSignOut}>Sign out</Button>
     </div>
   );
@@ -281,9 +294,6 @@ function renderTeacherPage(view, params, ctx) {
   switch (view) {
     case 'dashboard':
       return <TeacherDashboard students={students} onNavigate={navigate} teacherName={teacherName} />;
-
-    case 'educator':
-      return <EducatorView students={students} onNavigate={navigate} />;
 
     case 'students':
       return <StudentsPage students={students} onNavigate={navigate} />;
