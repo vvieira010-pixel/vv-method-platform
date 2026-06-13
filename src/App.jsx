@@ -35,6 +35,7 @@ const ReportsPage       = lazy(() => import('./pages/reports.jsx'));
 const SettingsPage      = lazy(() => import('./pages/settings.jsx'));
 const ExerciseDemo      = lazy(() => import('./pages/exercise-demo.jsx'));
 const InboxPage         = lazy(() => import('./tools/tool-inbox.jsx'));
+const PerspectiveDesigner = lazy(() => import('./tools/tool-perspective-designer.jsx'));
 
 export default function App() {
   const [auth, setAuth] = useState(null);
@@ -238,6 +239,7 @@ export default function App() {
     { id: 'error-bank',   label: 'Error Bank',   icon: <Icon.warning size={16} /> },
     { id: 'reports',      label: 'Reports',      icon: <Icon.progress size={16} /> },
     { id: 'exercises',    label: 'Exercises',    icon: <Icon.doc size={16} /> },
+    { id: 'perspective',  label: 'Perspectives', icon: <Icon.eye size={16} /> },
     { id: 'settings',     label: 'Settings',     icon: <Icon.settings size={16} /> },
   ];
 
@@ -334,6 +336,9 @@ function renderTeacherPage(view, params, ctx) {
         onNavigate={navigate}
         initialStep={2}
       />;
+
+    case 'perspective':
+      return <PerspectiveDesigner students={students} onNavigate={navigate} />;
 
     default:
       return <TeacherDashboard students={students} onNavigate={navigate} teacherName={teacherName} />;
