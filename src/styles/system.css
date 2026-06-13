@@ -4,6 +4,7 @@
 
 /* ── Google Font ──────────────────────────────────────────────── */
 @import url("https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800;1,9..40,400&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&display=swap");
 
 /* ══════════════════════════════════════════════════════════════════
    1. DESIGN TOKENS
@@ -72,7 +73,7 @@
   /* ── Typography ──────────────────────────────────────────────── */
   --font-sans: 'DM Sans', -apple-system, system-ui, sans-serif;
   --font-ui: 'DM Sans', -apple-system, system-ui, sans-serif;
-  --font-display: 'DM Sans', -apple-system, system-ui, sans-serif;
+  --font-display: 'Sora', 'DM Sans', -apple-system, system-ui, sans-serif;
   --font-mono: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Droid Sans Mono', monospace;
 
   /* Font sizes — extended scale */
@@ -206,9 +207,9 @@ h1, h2, h3, h4, h5, h6 {
   color: var(--text);
 }
 
-h1 { font-size: var(--text-4xl);  font-weight: var(--weight-bold); }
-h2 { font-size: var(--text-3xl);  font-weight: var(--weight-bold); }
-h3 { font-size: var(--text-2xl);  font-weight: var(--weight-semibold); }
+h1 { font-family: var(--font-display); font-size: var(--text-4xl);  font-weight: var(--weight-bold); letter-spacing: -0.02em; }
+h2 { font-family: var(--font-display); font-size: var(--text-3xl);  font-weight: var(--weight-bold); letter-spacing: -0.01em; }
+h3 { font-family: var(--font-display); font-size: var(--text-2xl);  font-weight: var(--weight-semibold); }
 h4 { font-size: var(--text-xl);   font-weight: var(--weight-semibold); }
 h5 { font-size: var(--text-lg);   font-weight: var(--weight-semibold); }
 h6 { font-size: var(--text-base); font-weight: var(--weight-semibold); }
@@ -1251,32 +1252,33 @@ p {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 32px 28px;
+  padding: 40px 32px;
   border-radius: var(--radius-sm);
-  margin-bottom: 20px;
+  margin-bottom: -16px;
+  z-index: 2;
   background:
-    radial-gradient(ellipse at 80% -10%, rgba(59,130,246,0.08) 0%, transparent 55%),
-    radial-gradient(ellipse at -10% 120%, rgba(20,136,145,0.06) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% -10%, rgba(20,136,145,0.1) 0%, transparent 55%),
+    radial-gradient(ellipse at -10% 120%, rgba(200,102,7,0.05) 0%, transparent 50%),
     var(--student-bg);
 }
 
 .student-hero::before {
   content: '';
   position: absolute;
-  top: -60px; right: -60px;
+  top: -60px; right: -40px;
   width: 220px; height: 220px;
   border-radius: 50%;
-  border: 1.5px solid rgba(59,130,246,0.15);
+  border: 1.5px solid rgba(20,136,145,0.12);
   pointer-events: none;
 }
 
 .student-hero::after {
   content: '';
   position: absolute;
-  top: -20px; right: -20px;
+  top: -10px; right: 0;
   width: 120px; height: 120px;
   border-radius: 50%;
-  border: 1.5px solid rgba(59,130,246,0.2);
+  border: 1.5px solid rgba(20,136,145,0.18);
   pointer-events: none;
 }
 
@@ -1321,8 +1323,11 @@ p {
 
 .student-metrics {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 12px;
+  position: relative;
+  z-index: 1;
+  padding-top: 8px;
 }
 
 .student-metric {
@@ -1478,8 +1483,43 @@ p {
 /* ── Student Grid ──────────────────────────────────────────────── */
 .student-grid {
   display: grid;
-  grid-template-columns: 1fr 340px;
-  gap: 18px;
+  grid-template-columns: 1fr 330px;
+  gap: 20px;
+  align-items: start;
+}
+.student-home-columns {
+  display: grid;
+  gap: 24px;
+  margin-top: 32px;
+}
+.student-upcoming-header {
+  font-size: var(--text-xs);
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 8px;
+}
+.student-upcoming-section {
+  margin-top: 14px;
+  border-top: 1px solid var(--border);
+  padding-top: 12px;
+}
+.student-metric-btn {
+  cursor: pointer;
+  text-align: left;
+  border: none;
+  width: 100%;
+  font-family: inherit;
+}
+.student-metric-icon-bg {
+  background: var(--warning-bg);
+}
+.student-wide-action-mb {
+  margin-bottom: 16px;
+}
+.student-panel-mb {
+  margin-bottom: 16px;
 }
 
 .student-panel {
@@ -1488,7 +1528,11 @@ p {
   padding: 20px;
   border: 1px solid var(--border);
   box-shadow: 0 2px 8px rgba(0,0,0,0.02);
-  transition: all 0.3s ease;
+  transition: box-shadow 0.3s ease, border-color 0.3s ease;
+}
+.student-panel:hover {
+  border-color: var(--accent-soft);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.04);
 }
 
 .student-panel--primary {
@@ -2356,6 +2400,58 @@ p {
 }
 .modal-card-enter {
   animation: scaleIn 0.3s ease-out both;
+}
+
+/* ── Skeleton Loading ─────────────────────────────────────────── */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.skeleton {
+  background: linear-gradient(90deg, var(--border) 25%, var(--surface-hover) 50%, var(--border) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: var(--radius-sm);
+  color: transparent !important;
+  user-select: none;
+  pointer-events: none;
+}
+.skeleton-text {
+  height: 0.9em;
+  margin-bottom: 8px;
+  width: 100%;
+}
+.skeleton-text--short { width: 45%; }
+.skeleton-text--med { width: 65%; }
+
+/* ── Stage Track Animation ─────────────────────────────────────── */
+.student-stage-track--animate span {
+  animation: stageFill 0.4s ease-out both;
+}
+.student-stage-track--animate span:nth-child(1) { animation-delay: 0s; }
+.student-stage-track--animate span:nth-child(2) { animation-delay: 0.06s; }
+.student-stage-track--animate span:nth-child(3) { animation-delay: 0.12s; }
+.student-stage-track--animate span:nth-child(4) { animation-delay: 0.18s; }
+.student-stage-track--animate span:nth-child(5) { animation-delay: 0.24s; }
+@keyframes stageFill {
+  from { transform: scaleX(0); opacity: 0; }
+  to { transform: scaleX(1); opacity: 1; }
+}
+
+/* ── Grain / Noise Texture ────────────────────────────────────── */
+.bg-grain {
+  position: relative;
+}
+.bg-grain::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 180px 180px;
 }
 
 /* ── Accessibility: reduced motion ─────────────────────────────── */

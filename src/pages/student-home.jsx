@@ -37,7 +37,7 @@ function MemoCard({ kicker, title, text }) {
   const lines = text.split(/\n+/).filter(Boolean);
   const needsClamp = lines.length > MEMO_CLAMP || text.length > 320;
   return (
-    <article className="student-panel" style={{ marginBottom: '16px' }}>
+    <article className="student-panel student-panel-mb">
       <span className="student-panel-kicker">{kicker}</span>
       <h2>{title}</h2>
       <p style={{
@@ -215,7 +215,7 @@ export default function StudentHome({ student, onTab }) {
 
   return (
     <div className="student-home">
-      <section className="student-hero fade-up" style={{ '--delay': '0s' }}>
+      <section className="student-hero bg-grain fade-up" style={{ '--delay': '0s' }}>
         <div>
           <p className="student-hero-kicker">MET preparation dashboard</p>
           <h1>Good {timeOfDay()}, {student.firstName}.</h1>
@@ -235,13 +235,13 @@ export default function StudentHome({ student, onTab }) {
             <MetricCard icon={<Icon.calendar size={19} />} label="Next class" value={nextDate} sub={nextTime} tone="teal" />
             <MetricCard icon={<Icon.homework size={19} />} label="Homework" value={pendingHw.length} sub={pendingHw.length === 1 ? 'task pending' : 'tasks pending'} tone="teal" />
             {reviewCount > 0 && (
-              <button className="student-metric student-metric--urgent" onClick={handleOpenReview} aria-label="Review due items" style={{ cursor: 'pointer', textAlign: 'left', border: 'none', width: '100%', fontFamily: 'inherit' }}>
+              <button className="student-metric student-metric--urgent student-metric-btn" onClick={handleOpenReview} aria-label="Review due items">
                 <div className="student-metric-copy">
                   <span>Review Due</span>
                   <strong>{reviewCount} item{reviewCount !== 1 ? 's' : ''}</strong>
                   <small>Spaced repetition ready</small>
                 </div>
-                <div className="student-metric-icon" style={{ background: 'var(--warning-bg)' }}>
+                <div className="student-metric-icon student-metric-icon-bg">
                   <Icon.refresh size={19} />
                 </div>
               </button>
@@ -269,7 +269,7 @@ export default function StudentHome({ student, onTab }) {
             <h2>The Practice Studio</h2>
             <p>Build your skills with self-paced practice — not an exam simulation. Work without time pressure and improve at your own pace.</p>
             {reviewCount > 0 && (
-              <button className="student-wide-action" onClick={handleOpenReview} style={{ marginBottom: 16 }} aria-label={`Review ${reviewCount} spaced repetition item${reviewCount !== 1 ? 's' : ''}`}>
+              <button className="student-wide-action student-wide-action-mb" onClick={handleOpenReview} aria-label={`Review ${reviewCount} spaced repetition item${reviewCount !== 1 ? 's' : ''}`}>
                 <Icon.refresh size={14} /> Review {reviewCount} item{reviewCount !== 1 ? 's' : ''} due
               </button>
             )}
@@ -326,8 +326,8 @@ export default function StudentHome({ student, onTab }) {
               </div>
             </div>
             {upcomingClasses.length > 1 && (
-              <div style={{ marginTop: 14, borderTop: '1px solid var(--border)', paddingTop: 12 }}>
-                <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>Upcoming schedule</div>
+              <div className="student-upcoming-section">
+                <div className="student-upcoming-header">Upcoming schedule</div>
                 {upcomingClasses.map((cls, i) => (
                   <div key={cls.id || i} className="student-upcoming-row">
                     <span className="student-upcoming-date">
@@ -340,7 +340,7 @@ export default function StudentHome({ student, onTab }) {
             )}
           </article>
 
-          <div className="student-home-columns" style={{ display: 'grid', gap: '24px', marginTop: '32px' }}>
+          <div className="student-home-columns">
             <article className="student-panel student-panel--todo">
               <div className="student-panel-head">
                 <div>
@@ -397,7 +397,7 @@ export default function StudentHome({ student, onTab }) {
             )}
           </article>
 
-          <section className="student-memo-board" style={{ marginTop: '24px' }}>
+          <section className="student-memo-board">
             <MemoCard kicker="General memo" title="Memo Board" text={generalMemoText || 'No general memo posted yet.'} />
             <MemoCard kicker="Personal note" title={`${student.firstName}'s note`} text={student.notes || student.goalNote || 'Your goal is MET preparation.'} />
           </section>

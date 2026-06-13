@@ -275,6 +275,70 @@ export function Shell({ tabs = [], active, onTab, children, rightSlot, workflowA
 }
 
 
+/* ─── Modal ──────────────────────────────────────────────────── */
+export function Modal({ open, onClose, kicker, title, subtitle, maxWidth = 680, children }) {
+  if (!open) return null;
+  function handleBackdrop(e) {
+    if (e.target === e.currentTarget) onClose();
+  }
+  return (
+    <div
+      className="modal-overlay-enter"
+      onClick={handleBackdrop}
+      style={{
+        position: 'fixed', inset: 0, zIndex: 200,
+        background: 'rgba(11,31,58,0.82)',
+        display: 'flex', alignItems: 'flex-start',
+        justifyContent: 'center', overflowY: 'auto',
+        padding: '24px 16px 48px',
+      }}
+    >
+      <div
+        className="modal-card-enter"
+        style={{
+          width: '100%', maxWidth, borderRadius: 20, overflow: 'hidden',
+          background: 'var(--surface)', boxShadow: '0 24px 64px rgba(0,0,0,0.35)',
+          marginTop: 48,
+        }}
+      >
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '18px 22px 14px', borderBottom: '1px solid var(--border)',
+          background: 'var(--primary)', color: 'white',
+        }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            {kicker && (
+              <div style={{
+                fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.08em',
+                textTransform: 'uppercase', opacity: 0.7, marginBottom: 2,
+              }}>{kicker}</div>
+            )}
+            <div style={{ fontWeight: 700, fontSize: '1.1rem' }}>{title}</div>
+            {subtitle && (
+              <div style={{ fontSize: '0.8rem', opacity: 0.7, marginTop: 2 }}>{subtitle}</div>
+            )}
+          </div>
+          <button
+            onClick={onClose}
+            aria-label="Close"
+            style={{
+              background: 'rgba(255,255,255,0.15)', border: 'none', borderRadius: 10,
+              color: 'white', cursor: 'pointer', padding: '8px 12px',
+              fontSize: '1rem', lineHeight: 1, transition: 'background 0.15s ease',
+              flexShrink: 0, marginLeft: 12,
+            }}
+            onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.25)'}
+            onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.15)'}
+          >
+            <Icon.close size={14} />
+          </button>
+        </div>
+        <div style={{ padding: 22 }}>{children}</div>
+      </div>
+    </div>
+  );
+}
+
 /* ─── callAI (see src/lib/callAI.js) ────────────────────────── */
 export { callAI, summarizeTranscript } from '../lib/callAI.js';
 
