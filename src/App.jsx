@@ -1,7 +1,6 @@
 import { shadeColor, softColor } from './lib/color-utils.js';
 import { useState, useEffect, lazy, Suspense } from 'react';
 import LoginScreen from './pages/login.jsx';
-import StudentDashboard from './pages/student-dashboard.jsx';
 import ErrorBoundary from './components/error-boundary.jsx';
 import { TweaksPanel, TweakSection, TweakRadio, TweakColor } from './components/tweaks-panel.jsx';
 import { Icon, Avatar, Button, Shell } from './components/shared.jsx';
@@ -19,7 +18,8 @@ import {
 } from './lib/supabase-storage.js';
 import { claimStudentByEmail, ensureProfile, setSessionRole } from './lib/supabase-db.js';
 
-// Lazy-loaded teacher pages
+// Lazy-loaded pages
+const StudentDashboard  = lazy(() => import('./pages/student-dashboard.jsx'));
 const TeacherDashboard  = lazy(() => import('./pages/teacher-dashboard.jsx'));
 const EducatorView      = lazy(() => import('./pages/teacher-home.jsx'));
 const StudentsPage      = lazy(() => import('./pages/students.jsx'));
@@ -223,9 +223,14 @@ export default function App() {
     const student = students.find(s => s.id === auth.studentId);
     if (!student) return <PageLoader />;
     return (
-      <ErrorBoundary label="Dashboard unavailable">
-        <StudentDashboard student={student} onSignOut={handleSignOut} />
-      </ErrorBoundary>
+      <>
+        <a href="#student-main" className="skip-nav">Skip to content</a>
+        <ErrorBoundary label="Dashboard unavailable">
+          <Suspense fallback={<PageLoader />}>
+            <StudentDashboard student={student} onSignOut={handleSignOut} />
+          </Suspense>
+        </ErrorBoundary>
+      </>
     );
   }
 
@@ -255,6 +260,7 @@ export default function App() {
 
   return (
     <>
+      <a href="#teacher-main" className="skip-nav">Skip to content</a>
       <Shell tabs={teacherTabs} active={view} onTab={(id) => navigate(id)} rightSlot={rightSlot}>
         <ErrorBoundary label="Page unavailable">
           <Suspense fallback={<PageLoader />}>

@@ -1,9 +1,8 @@
 import { useState } from 'react';
 
-const TEAL = '#0D9488';
-const NAVY = '#0B1F3A';
+const TEAL = '#148891';
+const NAVY = '#0f1b2d';
 
-// MET section hint banners — drawn from met_test_basics_task_breakdown.md
 const MET_SECTION_CONFIG = {
   grammar: {
     label: 'Reading Part 1 — Grammar',
@@ -72,9 +71,9 @@ export default function MultipleChoice({ exercise, onComplete }) {
   function getOptionStyle(i) {
     const base = {
       display: 'flex', alignItems: 'center', gap: 12,
-      padding: '12px 16px', borderRadius: 0,
+      padding: '12px 16px', borderRadius: 'var(--radius-sm, 6px)',
       border: '1.5px solid', cursor: submitted ? 'default' : 'pointer',
-      transition: 'all 0.15s', fontSize: 14.5, lineHeight: 1.5,
+      transition: 'all 0.15s', fontSize: 'var(--text-sm)', lineHeight: 1.5,
       fontFamily: 'var(--font-ui)',
     };
     if (!submitted) {
@@ -95,58 +94,60 @@ export default function MultipleChoice({ exercise, onComplete }) {
 
   return (
     <div>
-      {/* MET section banner */}
       {sectionConfig && (
-        <div style={{ padding: '10px 14px', background: sectionConfig.bg, border: `1px solid ${sectionConfig.border}`, borderRadius: 0, marginBottom: 14 }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: sectionConfig.color, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 5 }}>
+        <div style={{ padding: '10px 14px', background: sectionConfig.bg, border: `1px solid ${sectionConfig.border}`, borderRadius: 'var(--radius-sm, 6px)', marginBottom: 14 }}>
+          <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: sectionConfig.color, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 5 }}>
             {sectionConfig.label}
           </div>
-          <div style={{ fontSize: 13, color: sectionConfig.color === '#7C3AED' ? '#4C1D95' : sectionConfig.color === '#0369A1' ? '#0C4A6E' : '#064E3B', lineHeight: 1.55 }}>
+          <div style={{ fontSize: 'var(--text-sm)', color: sectionConfig.color === '#7C3AED' ? '#4C1D95' : sectionConfig.color === '#0369A1' ? '#0C4A6E' : '#064E3B', lineHeight: 1.55 }}>
             {sectionConfig.tip}
           </div>
           {sectionConfig.trap && (
-            <div style={{ marginTop: 6, fontSize: 12, color: '#92400E' }}>
+            <div style={{ marginTop: 6, fontSize: 'var(--text-xs)', color: '#92400E' }}>
               <strong>Watch out:</strong> {sectionConfig.trap}
             </div>
           )}
         </div>
       )}
 
-      {/* Skill chip */}
       {skill && !sectionConfig && (
-        <div style={{ display: 'inline-block', marginBottom: 10, padding: '2px 8px', background: '#EFF6FF', border: '1px solid #BFDBFE', borderRadius: 0, fontSize: 12, fontWeight: 600, color: '#1D4ED8', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+        <div style={{ display: 'inline-block', marginBottom: 10, padding: '2px 8px', background: '#EFF6FF', border: '1px solid #BFDBFE', borderRadius: 'var(--radius-sm, 6px)', fontSize: 'var(--text-xs)', fontWeight: 600, color: '#1D4ED8', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
           {skill}
         </div>
       )}
       {skill && sectionConfig && (
-        <div style={{ display: 'inline-block', marginBottom: 10, padding: '2px 8px', background: sectionConfig.bg, border: `1px solid ${sectionConfig.border}`, borderRadius: 0, fontSize: 12, fontWeight: 600, color: sectionConfig.color, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+        <div style={{ display: 'inline-block', marginBottom: 10, padding: '2px 8px', background: sectionConfig.bg, border: `1px solid ${sectionConfig.border}`, borderRadius: 'var(--radius-sm, 6px)', fontSize: 'var(--text-xs)', fontWeight: 600, color: sectionConfig.color, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
           {skill}
         </div>
       )}
 
       {context && (
-        <p style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 10, lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{context}</p>
+        <p style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', marginBottom: 10, lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{context}</p>
       )}
 
       {imageUrl && (
-        <div style={{ marginBottom: 16, border: '1px solid var(--border)', borderRadius: 0, overflow: 'hidden', background: '#F8FAFC', textAlign: 'center' }}>
+        <div style={{ marginBottom: 16, border: '1px solid var(--border)', borderRadius: 'var(--radius-sm, 6px)', overflow: 'hidden', background: '#F8FAFC', textAlign: 'center' }}>
           <img src={imageUrl} alt={imageAlt || 'Image for this question'} style={{ maxWidth: '100%', maxHeight: 320, display: 'block', margin: '0 auto' }} />
         </div>
       )}
 
-      <p style={{ fontSize: 15.5, fontWeight: 600, color: NAVY, marginBottom: 16, lineHeight: 1.6 }}>{question}</p>
+      <p style={{ fontSize: 'var(--text-base)', fontWeight: 600, color: NAVY, marginBottom: 16, lineHeight: 1.6 }}>{question}</p>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 20 }}>
         {options.map((opt, i) => (
           <button
             key={i}
             onClick={() => !submitted && setSelected(i)}
-            style={getOptionStyle(i)}
+            style={{
+              ...getOptionStyle(i),
+              animation: submitted ? undefined : 'fadeUp 0.18s ease-out both',
+              animationDelay: submitted ? undefined : `${i * 55}ms`,
+            }}
             aria-pressed={selected === i}
           >
             <span style={{
               width: 24, height: 24, borderRadius: '50%', display: 'grid', placeItems: 'center',
-              fontSize: 13, fontWeight: 700, flexShrink: 0,
+              fontSize: 'var(--text-sm)', fontWeight: 700, flexShrink: 0,
               background: submitted && i === correct ? '#059669' : submitted && i === selected && !isCorrect ? 'var(--danger)' : 'transparent',
               color: submitted && (i === correct || (i === selected && !isCorrect)) ? '#fff' : 'inherit',
             }}>
@@ -162,9 +163,10 @@ export default function MultipleChoice({ exercise, onComplete }) {
           onClick={handleSubmit}
           disabled={selected == null}
           style={{
-            padding: '10px 24px', borderRadius: 0, border: 'none', cursor: selected == null ? 'not-allowed' : 'pointer',
+            padding: '10px 24px', borderRadius: 'var(--radius-sm, 6px)', border: 'none',
+            cursor: selected == null ? 'not-allowed' : 'pointer',
             background: selected == null ? 'var(--border)' : `linear-gradient(120deg, ${TEAL} 0%, ${NAVY} 100%)`,
-            color: '#fff', fontWeight: 600, fontSize: 14, fontFamily: 'var(--font-ui)',
+            color: '#fff', fontWeight: 600, fontSize: 'var(--text-sm)', fontFamily: 'var(--font-ui)',
             opacity: selected == null ? 0.5 : 1, transition: 'all 0.15s',
           }}
         >
@@ -173,16 +175,39 @@ export default function MultipleChoice({ exercise, onComplete }) {
       ) : (
         <>
           <div style={{
-            padding: '12px 16px', borderRadius: 0,
-            background: isCorrect ? '#ECFDF5' : '#FEF2F2',
+            borderRadius: 'var(--radius-sm, 6px)', overflow: 'hidden',
             border: `1px solid ${isCorrect ? '#A7F3D0' : '#FECACA'}`,
-            color: isCorrect ? '#065F46' : '#991B1B',
-            fontSize: 14, fontWeight: 500,
+            animation: 'fadeUp 0.22s ease-out both',
           }}>
-            {isCorrect ? 'Correct — well done.' : 'Not quite. Review the correct answer above.'}
+            <div style={{
+              padding: '10px 14px',
+              background: isCorrect ? '#ECFDF5' : '#FEF2F2',
+              fontSize: 'var(--text-sm)', fontWeight: 600,
+              color: isCorrect ? '#065F46' : '#991B1B',
+              borderBottom: `1px solid ${isCorrect ? '#A7F3D0' : '#FECACA'}`,
+            }}>
+              {isCorrect ? '✓ Correct' : '✗ Not quite'}
+            </div>
+            <div style={{ padding: '10px 14px', background: '#fff', fontSize: 'var(--text-sm)', lineHeight: 1.7 }}>
+              {!isCorrect && (
+                <div style={{ marginBottom: 6 }}>
+                  <span style={{ fontWeight: 600, color: '#991B1B' }}>Your answer: </span>
+                  <span style={{ color: '#374151' }}>{options[selected]}</span>
+                </div>
+              )}
+              <div>
+                <span style={{ fontWeight: 600, color: '#065F46' }}>Correct answer: </span>
+                <span style={{ color: '#374151' }}>{options[correct]}</span>
+              </div>
+            </div>
           </div>
           {exercise.explanation && (
-            <div style={{ marginTop: 8, fontSize: 13.5, color: '#374151', lineHeight: 1.65, padding: '10px 14px', background: '#F8FAFC', borderRadius: 0, border: '1px solid #E2E8F0' }}>
+            <div style={{
+              marginTop: 10, fontSize: 'var(--text-sm)', color: '#374151', lineHeight: 1.65,
+              padding: '11px 14px', background: '#F8FAFC', borderRadius: 'var(--radius-sm, 6px)',
+              border: '1px solid #E2E8F0',
+            }}>
+              <span style={{ fontWeight: 700, color: NAVY }}>Why: </span>
               {exercise.explanation}
             </div>
           )}

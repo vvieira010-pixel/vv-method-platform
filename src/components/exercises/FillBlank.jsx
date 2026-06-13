@@ -1,7 +1,7 @@
 import { useState } from 'react';
 
-const TEAL = '#0D9488';
-const NAVY = '#0B1F3A';
+const TEAL = '#148891';
+const NAVY = '#0f1b2d';
 
 function normalize(str) {
   return (str || '').toLowerCase().trim();
@@ -51,7 +51,7 @@ export default function FillBlank({ exercise, onComplete }) {
     const base = {
       display: 'inline-block', minWidth: 90, maxWidth: 160,
       padding: '3px 8px', margin: '0 3px',
-      borderRadius: 0, border: '2px solid', fontSize: 14.5,
+      borderRadius: 'var(--radius-sm, 6px)', border: '2px solid', fontSize: 'var(--text-sm)',
       fontFamily: 'var(--font-ui)', outline: 'none',
       verticalAlign: 'middle', background: '#fff',
       transition: 'border-color 0.15s',
@@ -83,10 +83,12 @@ export default function FillBlank({ exercise, onComplete }) {
                 onClick={() => setValue(i, choice)}
                 disabled={submitted}
                 style={{
-                  padding: '2px 10px', borderRadius: 0, border: `2px solid ${selected || (isResult && isCorrectChoice) ? border : 'var(--border)'}`,
+                  padding: '2px 10px',
+                  borderRadius: 'var(--radius-sm, 6px)',
+                  border: `2px solid ${selected || (isResult && isCorrectChoice) ? border : 'var(--border)'}`,
                   background: selected || (isResult && isCorrectChoice) ? bg : '#fff',
                   color: selected || (isResult && isCorrectChoice) ? color : 'var(--text)',
-                  fontWeight: selected ? 600 : 400, fontSize: 14, fontFamily: 'var(--font-ui)',
+                  fontWeight: selected ? 600 : 400, fontSize: 'var(--text-sm)', fontFamily: 'var(--font-ui)',
                   cursor: submitted ? 'default' : 'pointer', transition: 'all 0.12s',
                 }}
               >
@@ -113,16 +115,15 @@ export default function FillBlank({ exercise, onComplete }) {
   return (
     <div>
       {instruction && (
-        <p style={{ fontSize: 13.5, color: 'var(--muted)', marginBottom: 8, lineHeight: 1.6 }}>{instruction}</p>
+        <p style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', marginBottom: 8, lineHeight: 1.6 }}>{instruction}</p>
       )}
       {context && (
-        <div style={{ padding: '10px 14px', background: 'var(--bg)', borderRadius: 0, marginBottom: 14, fontSize: 14, lineHeight: 1.7, color: 'var(--text-2)' }}>
+        <div style={{ padding: '10px 14px', background: 'var(--bg)', borderRadius: 'var(--radius-sm, 6px)', marginBottom: 14, fontSize: 'var(--text-sm)', lineHeight: 1.7, color: 'var(--text-2)' }}>
           {context}
         </div>
       )}
 
-      {/* Sentence with inline inputs or choice buttons */}
-      <div style={{ fontSize: 15.5, lineHeight: 2.4, color: NAVY, fontWeight: 500, marginBottom: 20 }}>
+      <div style={{ fontSize: 'var(--text-base)', lineHeight: 2.4, color: NAVY, fontWeight: 500, marginBottom: 20 }}>
         {parts.map((part, i) => (
           <span key={i}>
             {part}
@@ -136,58 +137,65 @@ export default function FillBlank({ exercise, onComplete }) {
           onClick={handleSubmit}
           disabled={!allFilled}
           style={{
-            padding: '10px 24px', borderRadius: 0, border: 'none',
+            padding: '10px 24px', borderRadius: 'var(--radius-sm, 6px)', border: 'none',
             cursor: allFilled ? 'pointer' : 'not-allowed',
             background: allFilled ? `linear-gradient(120deg, ${TEAL} 0%, ${NAVY} 100%)` : 'var(--border)',
-            color: '#fff', fontWeight: 600, fontSize: 14, fontFamily: 'var(--font-ui)',
+            color: '#fff', fontWeight: 600, fontSize: 'var(--text-sm)', fontFamily: 'var(--font-ui)',
             opacity: allFilled ? 1 : 0.5, transition: 'all 0.15s',
           }}
         >
           Check answers
         </button>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, animation: 'fadeUp 0.22s ease-out both' }}>
           {results.map((r, i) => (
-            <div key={i} style={{ borderRadius: 0 }}>
+            <div key={i} style={{ borderRadius: 'var(--radius-sm, 6px)', overflow: 'hidden' }}>
               <div style={{
                 display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px',
                 background: r.correct ? '#ECFDF5' : '#FEF2F2',
                 border: `1px solid ${r.correct ? '#A7F3D0' : '#FECACA'}`,
-                fontSize: 14,
+                fontSize: 'var(--text-sm)',
               }}>
                 <span style={{ fontWeight: 700, color: r.correct ? '#059669' : 'var(--danger)', flexShrink: 0 }}>
-                  {r.correct ? 'OK' : 'NO'}
+                  {r.correct ? '✓' : '✗'}
                 </span>
                 <span style={{ color: 'var(--muted)' }}>Blank {i + 1}:</span>
                 {!r.correct && (
                   <>
-                    <span style={{ color: 'var(--danger)', textDecoration: 'line-through' }}>{r.given || '(empty)'}</span>
+                    <span style={{ color: '#991B1B' }}>{r.given || '(empty)'}</span>
                     <span style={{ color: 'var(--muted)' }}>→</span>
                     <span style={{ fontWeight: 600, color: '#065F46' }}>{r.expected}</span>
                   </>
                 )}
                 {r.correct && <span style={{ fontWeight: 600, color: '#065F46' }}>{r.expected}</span>}
               </div>
-              {/* Register/choice explanation shown when wrong */}
-              {!r.correct && r.isChoice && r.choiceExplanation && (
-                <div style={{ padding: '9px 14px', background: '#FFFBEB', border: '1px solid #FDE68A', borderTop: 'none', fontSize: 13, color: '#92400E', lineHeight: 1.6 }}>
-                  <strong>Why:</strong> {r.choiceExplanation}
+              {!r.correct && (
+                <div style={{ padding: '9px 14px', background: '#FFFBEB', border: '1px solid #FDE68A', borderTop: 'none', fontSize: 'var(--text-xs)', color: '#92400E', lineHeight: 1.6 }}>
+                  <strong>Your answer:</strong> "{r.given}" &nbsp;→&nbsp; <strong>Correct:</strong> "{r.expected}"
+                  {r.isChoice && r.choiceExplanation && (
+                    <div style={{ marginTop: 4 }}><strong>Why:</strong> {r.choiceExplanation}</div>
+                  )}
                 </div>
               )}
             </div>
           ))}
           <div style={{
-            marginTop: 4, padding: '10px 14px', borderRadius: 0, fontSize: 14, fontWeight: 500,
+            marginTop: 4, padding: '10px 14px', borderRadius: 'var(--radius-sm, 6px)', fontSize: 'var(--text-sm)', fontWeight: 500,
             background: results.every(r => r.correct) ? '#ECFDF5' : '#FFFBEB',
             color: results.every(r => r.correct) ? '#065F46' : '#92400E',
             border: `1px solid ${results.every(r => r.correct) ? '#A7F3D0' : '#FDE68A'}`,
           }}>
             {results.every(r => r.correct)
-              ? 'Correct — well done.'
-              : `${results.filter(r => r.correct).length} of ${results.length} correct. Review the answers above.`}
+              ? '✓ All correct — well done.'
+              : `${results.filter(r => r.correct).length} of ${results.length} correct. Review below.`}
           </div>
           {exercise.explanation && (
-            <div style={{ fontSize: 13.5, color: '#374151', lineHeight: 1.65, padding: '10px 14px', background: '#F8FAFC', borderRadius: 0, border: '1px solid #E2E8F0' }}>
+            <div style={{
+              fontSize: 'var(--text-sm)', color: '#374151', lineHeight: 1.65,
+              padding: '11px 14px', background: '#F8FAFC', borderRadius: 'var(--radius-sm, 6px)',
+              border: '1px solid #E2E8F0',
+            }}>
+              <span style={{ fontWeight: 700, color: NAVY }}>Why: </span>
               {exercise.explanation}
             </div>
           )}

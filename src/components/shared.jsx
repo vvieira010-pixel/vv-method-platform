@@ -230,7 +230,7 @@ export function Shell({ tabs = [], active, onTab, children, rightSlot, workflowA
                     className={`shell-nav-btn ${active === tab.id ? 'active' : ''}`}
                     aria-current={active === tab.id ? 'page' : undefined}
                     onClick={() => onTab(tab.id)}>
-                    <span style={{ opacity:0.85, flexShrink:0 }}>{tab.icon}</span>
+                    <span style={{ opacity:0.85, flexShrink:0, borderLeft: active === tab.id ? '3px solid var(--accent)' : 'none' }}>{tab.icon}</span>
                     {tab.label}
                     {tab.badge > 0 && (
                       <span style={{

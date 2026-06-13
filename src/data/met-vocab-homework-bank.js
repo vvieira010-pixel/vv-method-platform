@@ -13,6 +13,7 @@ export const grammarMCQs = [
     question: 'Maria said the new system __________ tasks, but it still causes some difficulties.',
     options: ['has streamlined', 'streamlines', 'had streamlined', 'will have streamlined'],
     correct: 1,
+    explanation: "Use the present simple 'streamlines' for a general fact or routine feature of the new system. 'Has streamlined' (present perfect) would imply a recent change that may no longer be true.",
   },
   {
     id: 'gram_02',
@@ -22,6 +23,7 @@ export const grammarMCQs = [
     question: 'The training was rushed, __________ many employees still feel unsure about the advanced features.',
     options: ['despite', 'as a result', 'even though', 'whereas'],
     correct: 1,
+    explanation: "'As a result' introduces a consequence — the rushed training caused employees to feel unsure. 'Despite' and 'even though' would show contrast, not cause and effect.",
   },
   {
     id: 'gram_03',
@@ -31,6 +33,7 @@ export const grammarMCQs = [
     question: 'If the company had provided more detailed training, employees __________ the system more confidently now.',
     options: ['would use', 'would have used', 'would be using', 'will be using'],
     correct: 2,
+    explanation: "Mixed conditional: 'If + past perfect' (had provided) + 'would be using' expresses a present result of a past unreal condition. They aren't using it confidently now because training wasn't provided.",
   },
   {
     id: 'gram_04',
@@ -40,6 +43,7 @@ export const grammarMCQs = [
     question: 'Maria admitted that she was still __________ with some of the system\'s more complex functions.',
     options: ['getting used', 'fumbling around', 'used to work', 'supposed to using'],
     correct: 1,
+    explanation: "'To fumble around' means to handle something clumsily or with difficulty. The other options are grammatically incorrect in this context.",
   },
   {
     id: 'gram_05',
@@ -49,6 +53,7 @@ export const grammarMCQs = [
     question: 'The automated reports, __________ save time and reduce errors, are one of the system\'s strongest features.',
     options: ['which', 'that', 'what', 'whose'],
     correct: 0,
+    explanation: "In non-defining relative clauses (set off by commas), use 'which' for things. 'That' cannot replace 'which' in non-defining relative clauses.",
   },
   {
     id: 'gram_06',
@@ -58,6 +63,7 @@ export const grammarMCQs = [
     question: 'No sooner had the employees become familiar with one version __________ another update was released.',
     options: ['when', 'than', 'then', 'while'],
     correct: 1,
+    explanation: "'No sooner…than' is a fixed structure meaning 'as soon as'. The inversion ('had the employees become') is required after 'no sooner' at the start of a sentence.",
   },
   {
     id: 'gram_07',
@@ -67,6 +73,7 @@ export const grammarMCQs = [
     question: 'Maria wishes the system updates __________ less frequent, especially during busy periods.',
     options: ['are', 'were', 'had been', 'would have been'],
     correct: 1,
+    explanation: "After 'wish', use past simple ('were') for a desire about a present situation to be different. This is a present wish, not a past one (which would use 'had been').",
   },
   {
     id: 'gram_08',
@@ -76,6 +83,7 @@ export const grammarMCQs = [
     question: 'The system is efficient in theory. In practice, however, employees __________ enough support to use it properly.',
     options: ['are not given', 'have not been giving', 'were not giving', 'had not given'],
     correct: 0,
+    explanation: "Present simple passive 'are not given' describes a general current situation — employees don't receive enough support as a regular state. The active forms don't fit the passive meaning needed here.",
   },
   {
     id: 'gram_09',
@@ -85,6 +93,7 @@ export const grammarMCQs = [
     question: 'The company should provide follow-up training __________ employees can apply the system to real workplace problems.',
     options: ['so that', 'unless', 'although', 'in spite of'],
     correct: 0,
+    explanation: "'So that' introduces a purpose clause — the training is done with the aim that employees can apply the system. 'Unless', 'although', and 'in spite of' do not express purpose.",
   },
   {
     id: 'gram_10',
@@ -94,6 +103,7 @@ export const grammarMCQs = [
     question: 'Maria said she didn\'t think the problem was only hers because several colleagues __________ the same concerns.',
     options: ['have raised', 'had raised', 'would raise', 'are raising'],
     correct: 1,
+    explanation: "Past perfect 'had raised' shows that the colleagues' action happened before Maria's statement (past in the past). This is the correct backshift in reported speech.",
   },
 ];
 

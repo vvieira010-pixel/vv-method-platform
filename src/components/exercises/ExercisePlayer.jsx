@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react'; // ExercisePlayer
+import { motion } from 'motion/react';
 import { Icon } from '../shared.jsx';
 import { loadExercises } from './validateExercise.js';
 import MultipleChoice from './MultipleChoice.jsx';
@@ -9,8 +10,8 @@ import ErrorCorrection from './ErrorCorrection.jsx';
 import Listening from './Listening.jsx';
 import ReadExercise from './ReadExercise.jsx';
 
-const TEAL = '#0D9488';
-const NAVY = '#0B1F3A';
+const TEAL = '#148891';
+const NAVY = '#0f1b2d';
 
 const TYPE_LABELS = {
   multiple_choice: 'Multiple Choice',
@@ -35,7 +36,7 @@ const TYPE_LABELS = {
 
 function InvalidExercise({ reason }) {
   return (
-    <div style={{ padding: '14px 16px', background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 0, color: '#991B1B', fontSize: 13.5, lineHeight: 1.6 }}>
+    <div style={{ padding: '14px 16px', background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 'var(--radius-sm, 6px)', color: '#991B1B', fontSize: 13.5, lineHeight: 1.6 }}>
       <strong>This exercise could not be loaded</strong> — {reason}
     </div>
   );
@@ -87,7 +88,7 @@ function deriveHints(exercise) {
   ];
 }
 
-function ExerciseCard({ exercise, index, total, result, onComplete, onNext, recallMode }) {
+function ExerciseCard({ exercise, index, total, result, onComplete, onNext, onBack, onSkip, recallMode }) {
   const label = TYPE_LABELS[exercise.type] || exercise.type;
   const skill = exercise.skill || exercise.focus || null;
   const done = result != null;
@@ -128,19 +129,19 @@ function ExerciseCard({ exercise, index, total, result, onComplete, onNext, reca
 
   return (
     <div style={{
-      background: '#fff', borderRadius: 0, overflow: 'hidden',
-      border: '1px solid rgba(153,176,255,0.35)',
+      background: '#fff', borderRadius: 'var(--radius-md, 8px)', overflow: 'hidden',
+      border: '1px solid var(--border, #e5e7eb)',
       boxShadow: '0 4px 20px -8px rgba(14,31,92,0.18), 0 1px 4px rgba(18,40,121,0.06)',
     }}>
       {/* Card header */}
       <div style={{
         padding: '14px 20px', borderBottom: '1px solid var(--divider)',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
-        background: 'linear-gradient(135deg, #F0FDFA 0%, #F8FAFF 100%)',
+        background: 'var(--accent-subtle, #e3f5f4)',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <span style={{
-            padding: '3px 10px', borderRadius: 0,
+            padding: '3px 10px', borderRadius: 'var(--radius-sm, 6px)',
             background: TEAL, color: '#fff',
             fontSize: 11, fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase',
           }}>
@@ -148,7 +149,7 @@ function ExerciseCard({ exercise, index, total, result, onComplete, onNext, reca
           </span>
           {skill && (
             <span style={{
-              padding: '3px 10px', borderRadius: 0,
+              padding: '3px 10px', borderRadius: 'var(--radius-sm, 6px)',
               background: 'var(--accent-soft)', color: NAVY,
               fontSize: 11, fontWeight: 600,
             }}>
@@ -175,12 +176,12 @@ function ExerciseCard({ exercise, index, total, result, onComplete, onNext, reca
             onChange={e => setRecallText(e.target.value)}
             placeholder="Write anything you remember — words, rules, examples…"
             rows={3}
-            style={{ width: '100%', padding: '8px 10px', border: '1px solid var(--border)', borderRadius: 0, fontSize: 'var(--text-sm)', lineHeight: 1.6, resize: 'vertical', fontFamily: 'var(--font-ui)', boxSizing: 'border-box' }}
+            style={{ width: '100%', padding: '8px 10px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm, 6px)', fontSize: 'var(--text-sm)', lineHeight: 1.6, resize: 'vertical', fontFamily: 'var(--font-ui)', boxSizing: 'border-box' }}
           />
           <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
             <button
               onClick={() => setRecallDone(true)}
-              style={{ padding: '8px 18px', borderRadius: 0, border: 'none', cursor: 'pointer', background: `linear-gradient(120deg, ${TEAL} 0%, ${NAVY} 100%)`, color: '#fff', fontWeight: 600, fontSize: 13, fontFamily: 'var(--font-ui)' }}
+              style={{ padding: '8px 18px', borderRadius: 'var(--radius-sm, 6px)', border: 'none', cursor: 'pointer', background: `linear-gradient(120deg, ${TEAL} 0%, ${NAVY} 100%)`, color: '#fff', fontWeight: 600, fontSize: 13, fontFamily: 'var(--font-ui)' }}
             >
               {recallText.trim() ? "I'm ready — show the exercise" : 'Skip recall — show the exercise'}
             </button>
@@ -199,14 +200,14 @@ function ExerciseCard({ exercise, index, total, result, onComplete, onNext, reca
       {recallDone && !done && (
         <div style={{ padding: '0 20px 16px' }}>
           {hintLevel > 0 && (
-            <div style={{ marginBottom: 8, padding: '8px 12px', background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: 0, fontSize: 'var(--text-xs)', color: '#92400E', lineHeight: 1.5 }}>
+            <div style={{ marginBottom: 8, padding: '8px 12px', background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: 'var(--radius-sm, 6px)', fontSize: 'var(--text-xs)', color: '#92400E', lineHeight: 1.5 }}>
               <strong>Hint {hintLevel}:</strong> {hints[hintLevel - 1]}
             </div>
           )}
           {hintLevel < hints.length && (
             <button
               onClick={() => setHintLevel(l => l + 1)}
-              style={{ padding: '5px 14px', borderRadius: 0, border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text-2)', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-ui)' }}
+              style={{ padding: '5px 14px', borderRadius: 'var(--radius-sm, 6px)', border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text-2)', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-ui)' }}
             >
               {hintLevel === 0 ? 'Need a hint?' : 'Next hint →'}
             </button>
@@ -214,21 +215,49 @@ function ExerciseCard({ exercise, index, total, result, onComplete, onNext, reca
         </div>
       )}
 
-      {/* Next / Finish button */}
-      {done && (
-        <div style={{ padding: '0 20px 20px' }}>
-          <button
-            onClick={onNext}
-            style={{
-              padding: '10px 24px', borderRadius: 0, border: 'none', cursor: 'pointer',
-              background: `linear-gradient(120deg, ${TEAL} 0%, ${NAVY} 100%)`,
-              color: '#fff', fontWeight: 600, fontSize: 14, fontFamily: 'var(--font-ui)',
-            }}
-          >
-            {index < total - 1 ? 'Next exercise →' : 'Finish session →'}
-          </button>
+      {/* Navigation footer */}
+      <div style={{ padding: '0 20px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+        <button
+          onClick={onBack}
+          disabled={index === 0}
+          style={{
+            padding: '8px 16px', borderRadius: 'var(--radius-sm, 6px)',
+            border: '1px solid var(--border, #e5e7eb)', background: 'none',
+            color: 'var(--text-2, #374151)', fontSize: 13, fontWeight: 600,
+            cursor: index === 0 ? 'default' : 'pointer', fontFamily: 'var(--font-ui)',
+            opacity: index === 0 ? 0.5 : 1,
+          }}
+        >
+          ← Back
+        </button>
+        <div style={{ display: 'flex', gap: 8 }}>
+          {!done && (
+            <button
+              onClick={onSkip}
+              style={{
+                padding: '8px 16px', borderRadius: 'var(--radius-sm, 6px)',
+                border: '1px solid var(--border, #e5e7eb)', background: 'none',
+                color: 'var(--muted, #9ca3af)', fontSize: 13, fontWeight: 500,
+                cursor: 'pointer', fontFamily: 'var(--font-ui)',
+              }}
+            >
+              Skip →
+            </button>
+          )}
+          {done && (
+            <button
+              onClick={onNext}
+              style={{
+                padding: '8px 22px', borderRadius: 'var(--radius-sm, 6px)', border: 'none',
+                cursor: 'pointer', background: `linear-gradient(120deg, ${TEAL} 0%, ${NAVY} 100%)`,
+                color: '#fff', fontWeight: 600, fontSize: 13, fontFamily: 'var(--font-ui)',
+              }}
+            >
+              {index < total - 1 ? 'Next exercise →' : 'Finish session →'}
+            </button>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 }
@@ -237,13 +266,13 @@ function ProgressBar({ current, total }) {
   const pct = total > 0 ? Math.round((current / total) * 100) : 0;
   return (
     <div style={{ marginBottom: 20 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6, fontSize: 12.5, color: 'var(--muted)', fontWeight: 500 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6, fontSize: 'var(--text-xs)', color: 'var(--muted)', fontWeight: 500 }}>
         <span>Progress</span>
         <span>{current} of {total} completed</span>
       </div>
-      <div style={{ height: 6, borderRadius: 0, background: 'var(--border)', overflow: 'hidden' }}>
+      <div style={{ height: 6, borderRadius: 99, background: 'var(--border)', overflow: 'hidden' }}>
         <div style={{
-          height: '100%', borderRadius: 0, background: `linear-gradient(90deg, ${TEAL}, ${NAVY})`,
+          height: '100%', borderRadius: 99, background: `linear-gradient(90deg, ${TEAL}, ${NAVY})`,
           width: '100%',
           transform: `scaleX(${pct / 100})`,
           transformOrigin: 'left',
@@ -262,7 +291,7 @@ function ScoreSummary({ results, total }) {
 
   return (
     <div style={{
-      padding: '24px', borderRadius: 0, background: '#F0FDFA',
+      padding: '24px', borderRadius: 'var(--radius-md, 8px)', background: '#F0FDFA',
       border: `2px solid ${TEAL}`, textAlign: 'center',
     }}>
       <div style={{ fontSize: 13, fontWeight: 700, color: TEAL, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 12 }}>
@@ -322,6 +351,19 @@ export default function ExercisePlayer({ exercises: raw, title, onSessionComplet
     }
   }, [current, exercises.length, results, onSessionComplete]);
 
+  const handleBack = useCallback(() => {
+    if (current > 0) setCurrent(c => c - 1);
+  }, [current]);
+
+  const handleSkip = useCallback(() => {
+    const nextIdx = current + 1;
+    if (nextIdx >= exercises.length) {
+      setDone(true);
+    } else {
+      setCurrent(nextIdx);
+    }
+  }, [current, exercises.length]);
+
   // Errors only (nothing valid loaded)
   if (errors.length > 0 && exercises.length === 0) {
     return (
@@ -346,7 +388,7 @@ export default function ExercisePlayer({ exercises: raw, title, onSessionComplet
       {errors.length > 0 && (
         <div style={{ marginBottom: 16, display: 'flex', flexDirection: 'column', gap: 6 }}>
           {errors.map((e, i) => (
-            <div key={i} style={{ padding: '8px 12px', background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: 0, fontSize: 13, color: '#92400E' }}>
+            <div key={i} style={{ padding: '8px 12px', background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: 'var(--radius-sm, 6px)', fontSize: 13, color: '#92400E' }}>
               <Icon.warning size={12} /> {e}
             </div>
           ))}
@@ -356,31 +398,43 @@ export default function ExercisePlayer({ exercises: raw, title, onSessionComplet
       <ProgressBar current={completedCount} total={exercises.length} />
 
       {!done ? (
-        <ExerciseCard
+        <motion.div
           key={current}
-          exercise={exercises[current]}
-          index={current}
-          total={exercises.length}
-          result={results[current]}
-          onComplete={handleComplete}
-          onNext={handleNext}
-          recallMode={recallMode}
-        />
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+        >
+          <ExerciseCard
+            exercise={exercises[current]}
+            index={current}
+            total={exercises.length}
+            result={results[current]}
+            onComplete={handleComplete}
+            onNext={handleNext}
+            onBack={handleBack}
+            onSkip={handleSkip}
+            recallMode={recallMode}
+          />
+        </motion.div>
       ) : (
-        <>
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
+        >
           <ScoreSummary results={results.filter(Boolean)} total={exercises.length} />
           <button
             onClick={() => { setCurrent(0); setResults([]); setDone(false); }}
             style={{
-              marginTop: 16, padding: '10px 24px', borderRadius: 0,
+              marginTop: 16, padding: '10px 24px', borderRadius: 'var(--radius-sm, 6px)',
               border: '1.5px solid var(--border)', background: 'var(--surface)',
-              color: 'var(--text-2)', fontWeight: 600, fontSize: 14, cursor: 'pointer',
+              color: 'var(--text-2)', fontWeight: 600, fontSize: 'var(--text-sm)', cursor: 'pointer',
               fontFamily: 'var(--font-ui)',
             }}
           >
             Restart exercises
           </button>
-        </>
+        </motion.div>
       )}
     </div>
   );

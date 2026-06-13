@@ -2,6 +2,15 @@
 
 const REVIEW_INTERVALS = [1, 3, 7, 14, 30];
 
+// Optional Supabase sync — enabled when dbUpsert is provided.
+// Import and pass a function to enableSync() to persist SR data beyond localStorage.
+let _syncFn = null;
+export function enableSync(fn) { _syncFn = fn; }
+
+async function maybeSync(studentId, list) {
+  if (_syncFn) try { await _syncFn(studentId, list); } catch { /* silent fallback to localStorage */ }
+}
+
 function storageKey(studentId) {
   return `vv:reviewSchedule:${studentId}`;
 }
@@ -43,6 +52,7 @@ export function initSchedule(studentId, errorEntry) {
   };
   list.push(entry);
   save(studentId, list);
+  maybeSync(studentId, list);
   return entry;
 }
 
@@ -70,6 +80,7 @@ export function recordPractice(studentId, scheduleId, correct) {
   entry.practiceCount = (entry.practiceCount || 0) + 1;
   list[idx] = entry;
   save(studentId, list);
+  maybeSync(studentId, list);
   return entry;
 }
 

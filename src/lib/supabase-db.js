@@ -465,6 +465,57 @@ export async function createSignedAudioUrl(path, expiresIn = 3600) {
   }
 }
 
+/* ─── teacher settings ───────────────────────────────────────── */
+
+/**
+ * Read one teacher setting by key. Works for both teacher and student sessions
+ * (students can read their teacher's settings via RLS). Returns the stored string
+ * value, or null if not found / DB unavailable.
+ */
+export async function getTeacherSetting(key) {
+  const ctx = getDbContext();
+  if (!ctx) return null;
+  try {
+    const teacherId = await resolveTeacherId(ctx);
+    if (!teacherId) return null;
+    const rows = await sbSelect(
+      ctx,
+      'teacher_settings',
+      `teacher_id=eq.${teacherId}&key=eq.${encodeURIComponent(key)}&select=value&limit=1`,
+    );
+    return rows[0]?.value ?? null;
+  } catch (e) {
+    console.warn('[supabase-db] getTeacherSetting failed:', e.message);
+    return null;
+  }
+}
+
+/**
+ * Upsert one teacher setting. Only callable by a teacher session.
+ * Pass value=null to delete the setting.
+ */
+export async function setTeacherSetting(key, value) {
+  const baseCtx = getDbContext();
+  if (!baseCtx) return false;
+  try {
+    const ctx = { ...baseCtx, teacherId: await resolveTeacherId(baseCtx) };
+    if (!ctx.teacherId) return false;
+    if (value === null || value === undefined) {
+      await sbDelete(ctx, 'teacher_settings', `teacher_id=eq.${ctx.teacherId}&key=eq.${encodeURIComponent(key)}`);
+    } else {
+      await sbFetch(ctx, 'teacher_settings', {
+        method: 'POST',
+        headers: { Prefer: 'resolution=merge-duplicates,return=minimal' },
+        body: JSON.stringify({ teacher_id: ctx.teacherId, key, value: String(value) }),
+      });
+    }
+    return true;
+  } catch (e) {
+    console.warn('[supabase-db] setTeacherSetting failed:', e.message);
+    return false;
+  }
+}
+
 /* ─── auth / profile linking (called at sign-in) ─────────────── */
 
 /** Upsert the caller's own profile row (id = auth uid). Best-effort. */

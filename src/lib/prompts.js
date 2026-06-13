@@ -188,12 +188,7 @@ ${SHARED_MET_DATA}
 8. priorityDiagnosis: 3–5 ranked items. urgency "Critical" = blocks the target; "Developing" = active growth area; "Strength" = cite one genuine strength. Every "evidence" MUST be a real quote from the evidence above — never invent. Base priorities only on evaluated skills.
 9. classSummary, nextClassFocus, targetScoreRelevance, profileUpdateSuggestions: base ONLY on what was actually evaluated — never fabricate progress for an unevaluated skill. If almost nothing was evaluated, say so plainly.
 10. profileUpdateSuggestions.progressNote is shown directly to the STUDENT — keep it plain, specific, and honest (no empty praise, no jargon).
-11. REQUIRED OUTPUT — You MUST always return substantive content for every one of these fields, even when evidence is limited (write "limited evidence — [your best estimate]" rather than leaving blank):
-    - classSummary: at least 1 sentence. Never return "".
-    - nextClassFocus: all four keys (primaryFocus, suggestedActivities, warmUp, successCriteria). Never return {}.
-    - targetScoreRelevance: all four keys (gapToTarget, prioritySkillForTarget, estimatedSessionsToTarget, onTrack). Never return {}.
-    - profileUpdateSuggestions: all four keys (progressNote, suggestedLevelChange, recurringErrorsToTrack, masteredItems). Never return {}.
-    - estimatedOverallScore: all three keys (estimate, confidence, note). Never return {}.
+11. HONEST OUTPUT — If you have enough evidence to evaluate a skill, provide substantive content. If you lack evidence, return null or "Not enough evidence" rather than fabricating or guessing. Never invent scores, progress, or observations for unevaluated skills.
 
 RETURN ONLY VALID JSON:
 {
@@ -897,5 +892,58 @@ RETURN ONLY VALID JSON:
   "explanation": "why it's correct",
   "plays": 2,
   "teacherNote": "what to look for in the student's response"
+}`;
+};
+
+/**
+ * Module 6: Reading Generator (The Passage Architect)
+ * Focus: High-fidelity reading comprehension tasks for MET.
+ */
+export const buildReadingGeneratorPrompt = ({ student, diagnosis, questionCount = 3 }) => {
+  const priorities = pickArray(diagnosis?.priorityDiagnosis, diagnosis?.sections?.priorityDiagnosis?.content);
+  const vocab = pickArray(diagnosis?.vocabTargets?.vocabularyTargets, diagnosis?.sections?.vocabGrammarTargets?.content?.vocabularyTargets);
+  const level = student?.currentLevel || 'B1';
+  const targetLevel = student?.targetLevel || 'B2';
+
+  return `You are a MET English Instructional Designer specializing in Reading comprehension.
+Build one complete, student-ready reading exercise with a passage and ${questionCount} comprehension questions.
+
+━━━ STUDENT ━━━
+Name: ${student?.name || 'Student'}
+Level: ${level} → Target: ${targetLevel}
+
+━━━ DIAGNOSIS PRIORITIES ━━━
+${priorities.slice(0, 3).map(p => `- [${p.urgency}] ${p.area}: ${p.whatToImprove}`).join('\n') || 'none'}
+
+━━━ TARGET VOCAB ━━━
+${vocab.slice(0, 6).map(v => v.wordOrPhrase).join(', ') || 'general MET academic vocabulary'}
+
+━━━ RULES ━━━
+1. PASSAGE: Write a realistic 120–200 word passage at ${level}–${targetLevel} level.
+   - Use an informational or opinion text on a general interest topic.
+   - ${GENERAL_MET_TOPIC_RULES}
+   - Weave 2–3 of the target vocab words in naturally.
+2. QUESTIONS: Write exactly ${questionCount} MCQ comprehension questions.
+   - Cover different subskills: main_idea, specific_detail, inference, vocabulary_in_context.
+   - Each question must have exactly 4 options. One must be unambiguously correct.
+   - Distractors should be plausible — paraphrased details or reasonable inferences from the passage.
+3. CORRECT: Use integer index (0–3) to mark the correct option.
+4. COMPLETENESS: Every question must have all 4 options filled. No empty strings.
+
+RETURN ONLY VALID JSON:
+{
+  "type": "read",
+  "title": "short title",
+  "passage": "the full reading passage here",
+  "source": "Adapted from [source] (optional, or empty string)",
+  "questions": [
+    {
+      "question": "Q1 text",
+      "options": ["A", "B", "C", "D"],
+      "correct": 0,
+      "explanation": "why A is correct"
+    }
+  ],
+  "teacherNote": "reading skill focus and what to discuss"
 }`;
 };

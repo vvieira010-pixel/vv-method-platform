@@ -1,7 +1,7 @@
 import { useState } from 'react';
 
-const TEAL = '#0D9488';
-const NAVY = '#0B1F3A';
+const TEAL = '#148891';
+const NAVY = '#0f1b2d';
 
 const SCORE_DESCRIPTORS = [
   { score: 4, label: 'Fully relevant — extensive supporting detail' },
@@ -12,7 +12,6 @@ const SCORE_DESCRIPTORS = [
 ];
 
 const MET_TASK_CONFIG = {
-  // ── Speaking tasks ───────────────────────────────────────────────
   Q1: {
     label: 'Speaking Q1 — Describe a Picture (60s)',
     structure: 'General scene → people/actions → details → possible inference',
@@ -73,8 +72,6 @@ const MET_TASK_CONFIG = {
     ],
     trap: 'Sounding informal, not committing to a position, or presenting both sides — this is a persuasion task, not a discussion.',
   },
-
-  // ── Writing tasks ────────────────────────────────────────────────
   W1Q1: {
     label: 'Writing Task 1 — Question 1',
     structure: 'Direct answer → detail → small explanation',
@@ -158,45 +155,41 @@ export default function ShortAnswer({ exercise, onComplete }) {
   return (
     <div>
       {context && (
-        <div style={{ padding: '10px 14px', background: 'var(--bg)', borderRadius: 0, marginBottom: 14, fontSize: 14, lineHeight: 1.7, color: 'var(--text-2)' }}>
+        <div style={{ padding: '10px 14px', background: 'var(--bg)', borderRadius: 'var(--radius-sm, 6px)', marginBottom: 14, fontSize: 'var(--text-sm)', lineHeight: 1.7, color: 'var(--text-2)' }}>
           {context}
         </div>
       )}
 
       {imageUrl && (
-        <div style={{ marginBottom: 16, border: '1px solid var(--border)', borderRadius: 0, overflow: 'hidden', background: '#F8FAFC', textAlign: 'center' }}>
+        <div style={{ marginBottom: 16, border: '1px solid var(--border)', borderRadius: 'var(--radius-sm, 6px)', overflow: 'hidden', background: '#F8FAFC', textAlign: 'center' }}>
           <img src={imageUrl} alt={imageAlt || 'Picture for this task'} style={{ maxWidth: '100%', maxHeight: 360, display: 'block', margin: '0 auto' }} />
         </div>
       )}
 
-      {/* MET Task panel — shown before writing */}
       {taskConfig && !submitted && (
-        <div style={{ border: '1px solid #BFDBFE', borderRadius: 0, marginBottom: 16, overflow: 'hidden' }}>
-          {/* Header */}
-          <div style={{ padding: '10px 16px', background: '#1D4ED8' }}>
-            <span style={{ fontSize: 12, fontWeight: 700, color: '#fff', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+        <div style={{ border: '1px solid #BFDBFE', borderRadius: 'var(--radius-sm, 6px)', marginBottom: 16, overflow: 'hidden' }}>
+          <div style={{ padding: '10px 16px', background: '#1D4ED8', borderRadius: 'var(--radius-sm, 6px) var(--radius-sm, 6px) 0 0' }}>
+            <span style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: '#fff', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
               {taskConfig.label}
             </span>
           </div>
 
           <div style={{ background: '#EFF6FF', padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {/* Best structure */}
             <div>
-              <div style={{ fontSize: 11, fontWeight: 700, color: '#1D4ED8', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4 }}>
+              <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: '#1D4ED8', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4 }}>
                 Best structure
               </div>
-              <div style={{ fontSize: 13.5, color: '#1E3A5F', fontWeight: 600 }}>{taskConfig.structure}</div>
+              <div style={{ fontSize: 'var(--text-sm)', color: '#1E3A5F', fontWeight: 600 }}>{taskConfig.structure}</div>
             </div>
 
-            {/* Sentence frames */}
             {taskConfig.frames && taskConfig.frames.length > 0 && (
               <div>
-                <div style={{ fontSize: 11, fontWeight: 700, color: '#1D4ED8', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>
+                <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: '#1D4ED8', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>
                   Useful phrases
                 </div>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                   {taskConfig.frames.map((f, i) => (
-                    <span key={i} style={{ fontSize: 12.5, padding: '2px 8px', background: '#DBEAFE', color: '#1E3A5F', borderRadius: 0, fontStyle: 'italic' }}>
+                    <span key={i} style={{ fontSize: 'var(--text-xs)', padding: '2px 8px', background: '#DBEAFE', color: '#1E3A5F', borderRadius: 'var(--radius-sm, 6px)', fontStyle: 'italic' }}>
                       {f}
                     </span>
                   ))}
@@ -204,22 +197,20 @@ export default function ShortAnswer({ exercise, onComplete }) {
               </div>
             )}
 
-            {/* Common trap */}
             {taskConfig.trap && (
-              <div style={{ padding: '8px 12px', background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 0 }}>
-                <span style={{ fontSize: 11, fontWeight: 700, color: '#DC2626', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Common mistake: </span>
-                <span style={{ fontSize: 13, color: '#7F1D1D' }}>{taskConfig.trap}</span>
+              <div style={{ padding: '8px 12px', background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 'var(--radius-sm, 6px)' }}>
+                <span style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: '#DC2626', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Common mistake: </span>
+                <span style={{ fontSize: 'var(--text-sm)', color: '#7F1D1D' }}>{taskConfig.trap}</span>
               </div>
             )}
 
-            {/* Task Completion scale */}
             <div>
-              <div style={{ fontSize: 11, fontWeight: 700, color: '#1D4ED8', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>
+              <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: '#1D4ED8', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>
                 Task Completion score (0–4)
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
                 {SCORE_DESCRIPTORS.map(({ score, label }) => (
-                  <div key={score} style={{ display: 'flex', gap: 10, alignItems: 'baseline', fontSize: 12.5 }}>
+                  <div key={score} style={{ display: 'flex', gap: 10, alignItems: 'baseline', fontSize: 'var(--text-xs)' }}>
                     <span style={{ fontWeight: 700, color: '#1D4ED8', minWidth: 14, flexShrink: 0 }}>{score}</span>
                     <span style={{ color: '#1E3A5F', lineHeight: 1.5 }}>{label}</span>
                   </div>
@@ -231,19 +222,19 @@ export default function ShortAnswer({ exercise, onComplete }) {
       )}
 
       {rubricItems.length > 0 && (
-        <div style={{ padding: '12px 16px', background: '#F0FDFA', border: '1px solid #99F6E4', borderRadius: 0, marginBottom: 16 }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: TEAL, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>
+        <div style={{ padding: '12px 16px', background: '#F0FDFA', border: '1px solid #99F6E4', borderRadius: 'var(--radius-sm, 6px)', marginBottom: 16 }}>
+          <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: TEAL, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>
             What a strong answer includes:
           </div>
           <ul style={{ margin: 0, padding: '0 0 0 16px', display: 'flex', flexDirection: 'column', gap: 4 }}>
             {rubricItems.map((item, i) => (
-              <li key={i} style={{ fontSize: 13.5, color: '#065F46', lineHeight: 1.6 }}>{item}</li>
+              <li key={i} style={{ fontSize: 'var(--text-sm)', color: '#065F46', lineHeight: 1.6 }}>{item}</li>
             ))}
           </ul>
         </div>
       )}
 
-      <p style={{ fontSize: 15.5, fontWeight: 600, color: NAVY, marginBottom: 14, lineHeight: 1.6 }}>{prompt}</p>
+      <p style={{ fontSize: 'var(--text-base)', fontWeight: 600, color: NAVY, marginBottom: 14, lineHeight: 1.6 }}>{prompt}</p>
 
       <textarea
         value={text}
@@ -253,9 +244,9 @@ export default function ShortAnswer({ exercise, onComplete }) {
         placeholder="Write your answer here…"
         aria-label="Your answer"
         style={{
-          width: '100%', padding: '12px 14px', borderRadius: 0,
+          width: '100%', padding: '12px 14px', borderRadius: 'var(--radius-sm, 6px)',
           border: `1.5px solid ${submitted ? 'var(--border)' : text.trim() ? TEAL : 'var(--border)'}`,
-          fontSize: 14.5, fontFamily: 'var(--font-ui)', lineHeight: 1.7,
+          fontSize: 'var(--text-sm)', fontFamily: 'var(--font-ui)', lineHeight: 1.7,
           resize: 'vertical', outline: 'none', color: 'var(--text)',
           background: submitted ? 'var(--bg)' : '#fff',
           transition: 'border-color 0.15s',
@@ -267,22 +258,70 @@ export default function ShortAnswer({ exercise, onComplete }) {
           onClick={handleSubmit}
           disabled={!text.trim()}
           style={{
-            marginTop: 10, padding: '10px 24px', borderRadius: 0, border: 'none',
+            marginTop: 10, padding: '10px 24px', borderRadius: 'var(--radius-sm, 6px)', border: 'none',
             cursor: text.trim() ? 'pointer' : 'not-allowed',
             background: text.trim() ? `linear-gradient(120deg, ${TEAL} 0%, ${NAVY} 100%)` : 'var(--border)',
-            color: '#fff', fontWeight: 600, fontSize: 14, fontFamily: 'var(--font-ui)',
+            color: '#fff', fontWeight: 600, fontSize: 'var(--text-sm)', fontFamily: 'var(--font-ui)',
             opacity: text.trim() ? 1 : 0.5, transition: 'all 0.15s',
           }}
         >
           Submit response
         </button>
       ) : (
-        <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 12 }}>
-          {/* Self-score step (MET tasks only) */}
+        <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 12, animation: 'fadeUp 0.22s ease-out both' }}>
+          <div style={{
+            borderRadius: 'var(--radius-sm, 6px)', overflow: 'hidden',
+            border: '1px solid var(--border)',
+          }}>
+            <div style={{
+              padding: '9px 14px', background: NAVY, color: '#fff',
+              fontSize: 'var(--text-xs)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em',
+            }}>
+              Your answer
+            </div>
+            <div style={{
+              padding: '12px 14px', fontSize: 'var(--text-sm)', lineHeight: 1.7, color: '#374151',
+              background: '#F8FAFC', whiteSpace: 'pre-wrap',
+            }}>
+              {text || '(no response)'}
+            </div>
+          </div>
+
+          {rubricItems.length > 0 && (
+            <div style={{
+              borderRadius: 'var(--radius-sm, 6px)', overflow: 'hidden',
+              border: '1px solid #99F6E4',
+            }}>
+              <div style={{
+                padding: '9px 14px', background: TEAL, color: '#fff',
+                fontSize: 'var(--text-xs)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em',
+              }}>
+                What a strong answer includes
+              </div>
+              <div style={{ padding: '12px 14px', background: '#F0FDFA', fontSize: 'var(--text-sm)', lineHeight: 1.7 }}>
+                <ul style={{ margin: 0, padding: '0 0 0 16px', display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  {rubricItems.map((item, i) => (
+                    <li key={i} style={{ color: '#065F46', lineHeight: 1.6 }}>{item}</li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          )}
+
+          {exercise.explanation && (
+            <div style={{
+              padding: '11px 14px', background: '#FFFBEB', borderRadius: 'var(--radius-sm, 6px)',
+              border: '1px solid #FDE68A', fontSize: 'var(--text-sm)', color: '#92400E', lineHeight: 1.6,
+            }}>
+              <strong>Why this matters: </strong>
+              {exercise.explanation}
+            </div>
+          )}
+
           {taskConfig && (
-            <div style={{ padding: '14px 16px', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 0 }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: NAVY, marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                Before seeing feedback — score your Task Completion (0–4):
+            <div style={{ padding: '14px 16px', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm, 6px)' }}>
+              <div style={{ fontSize: 'var(--text-sm)', fontWeight: 700, color: NAVY, marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                Score your Task Completion (0–4):
               </div>
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                 {[0, 1, 2, 3, 4].map(n => (
@@ -290,10 +329,11 @@ export default function ShortAnswer({ exercise, onComplete }) {
                     key={n}
                     onClick={() => setSelfScore(n)}
                     style={{
-                      width: 44, height: 44, borderRadius: 0, border: `2px solid ${selfScore === n ? TEAL : 'var(--border)'}`,
+                      width: 44, height: 44, borderRadius: 'var(--radius-sm, 6px)',
+                      border: `2px solid ${selfScore === n ? TEAL : 'var(--border)'}`,
                       background: selfScore === n ? TEAL : '#fff',
                       color: selfScore === n ? '#fff' : NAVY,
-                      fontWeight: 700, fontSize: 16, cursor: 'pointer',
+                      fontWeight: 700, fontSize: 'var(--text-base)', cursor: 'pointer',
                       transition: 'all 0.15s',
                     }}
                   >
@@ -302,7 +342,7 @@ export default function ShortAnswer({ exercise, onComplete }) {
                 ))}
               </div>
               {selfScore !== null && (
-                <div style={{ marginTop: 10, fontSize: 13, color: '#374151', lineHeight: 1.5 }}>
+                <div style={{ marginTop: 10, fontSize: 'var(--text-sm)', color: '#374151', lineHeight: 1.5 }}>
                   <span style={{ fontWeight: 600 }}>{selfScore}: </span>
                   {SCORE_DESCRIPTORS.find(d => d.score === selfScore)?.label}
                   {' — '}
@@ -312,15 +352,8 @@ export default function ShortAnswer({ exercise, onComplete }) {
             </div>
           )}
 
-          {!taskConfig && (
-            <div style={{ padding: '12px 16px', borderRadius: 0, background: '#ECFDF5', border: '1px solid #A7F3D0', fontSize: 14, fontWeight: 500, color: '#065F46' }}>
-              Good response submitted. Now check your structure below.
-            </div>
-          )}
-
-          {/* Reflection checklist */}
-          <div style={{ padding: '14px 16px', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 0 }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: NAVY, marginBottom: 12, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+          <div style={{ padding: '14px 16px', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm, 6px)' }}>
+            <div style={{ fontSize: 'var(--text-sm)', fontWeight: 700, color: NAVY, marginBottom: 12, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
               Self-check your answer:
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -332,15 +365,15 @@ export default function ShortAnswer({ exercise, onComplete }) {
                     onChange={() => toggleCheck(i)}
                     style={{ width: 17, height: 17, marginTop: 2, accentColor: TEAL, flexShrink: 0 }}
                   />
-                  <span style={{ fontSize: 14, color: checks[i] ? '#065F46' : 'var(--text)', lineHeight: 1.5, fontWeight: checks[i] ? 600 : 400 }}>
+                  <span style={{ fontSize: 'var(--text-sm)', color: checks[i] ? '#065F46' : 'var(--text)', lineHeight: 1.5, fontWeight: checks[i] ? 600 : 400 }}>
                     {label}
                   </span>
                 </label>
               ))}
             </div>
             {checks.every(Boolean) && (
-              <div style={{ marginTop: 12, padding: '8px 12px', background: '#ECFDF5', borderRadius: 0, fontSize: 13, color: '#065F46', fontWeight: 600 }}>
-                {taskConfig ? 'All task requirements checked — your teacher will review your response.' : 'Great structure — your teacher will review your response.'}
+              <div style={{ marginTop: 12, padding: '8px 12px', background: '#ECFDF5', borderRadius: 'var(--radius-sm, 6px)', fontSize: 'var(--text-sm)', color: '#065F46', fontWeight: 600 }}>
+                {taskConfig ? 'All task requirements checked — your teacher will review your response.' : 'All criteria met — your teacher will review your response.'}
               </div>
             )}
           </div>

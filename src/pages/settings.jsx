@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import { Icon, Card, SectionHeader, Button } from '../components/shared.jsx';
 import { clearWorkflowData, syncLocalToCloud } from '../lib/workflow.js';
-import { getDbContext } from '../lib/supabase-db.js';
+import { getDbContext, setTeacherSetting } from '../lib/supabase-db.js';
 import { getSupabaseConfig, readStoredSupabaseSession, updateUserPassword } from '../lib/supabase-storage.js';
 
 const SENSITIVE_LOCAL_KEYS = new Set([
@@ -134,9 +134,11 @@ export default function SettingsPage({ onNavigate }) {
     window.toast?.('Exam date saved — students will see the countdown on their dashboard.', 'ok');
   }
 
-  function saveGeneralMemo() {
-    if (generalMemo.trim()) localStorage.setItem('vv:student_general_memo', generalMemo.trim());
+  async function saveGeneralMemo() {
+    const text = generalMemo.trim();
+    if (text) localStorage.setItem('vv:student_general_memo', text);
     else localStorage.removeItem('vv:student_general_memo');
+    await setTeacherSetting('general_memo', text || null);
     window.dispatchEvent(new CustomEvent('vv:student-memo-changed'));
     window.toast?.('General memo saved.', 'ok');
   }
@@ -151,6 +153,7 @@ export default function SettingsPage({ onNavigate }) {
     localStorage.removeItem('vv:vocabularyBank');
     localStorage.removeItem('vv:progressNotes');
     localStorage.removeItem('vv:student_general_memo');
+    await setTeacherSetting('general_memo', null);
     window.toast?.('All data cleared.', 'info');
     window.location.reload();
   }
