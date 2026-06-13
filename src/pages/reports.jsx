@@ -84,7 +84,7 @@ export default function ReportsPage({ students, onNavigate, workspaceQuery = '' 
         </div>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           <Button variant="primary" onClick={() => selectedStudent && generateReport(selectedStudent)} disabled={!selectedStudent || loading}>
-            <Icon.progress size={14} /> {loading ? 'Refreshing...' : 'Refresh Report'}
+            <Icon.progress size={14} /> {loading ? 'Refreshing…' : 'Refresh Report'}
           </Button>
           {report && <Button variant="ghost" onClick={() => window.print()}>Print</Button>}
         </div>
@@ -110,7 +110,7 @@ export default function ReportsPage({ students, onNavigate, workspaceQuery = '' 
 
       {!report ? (
         <Card style={{ padding: 30, textAlign: 'center' }}>
-          <p style={{ color: 'var(--muted)', margin: 0 }}>{loading ? 'Generating report...' : 'Select a student to generate report data.'}</p>
+          <p style={{ color: 'var(--muted)', margin: 0 }}>{loading ? 'Generating report…' : 'Select a student to generate report data.'}</p>
         </Card>
       ) : (
         <>

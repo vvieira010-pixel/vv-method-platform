@@ -47,7 +47,7 @@ export default function DiagnosticsPage({ students, onNavigate }) {
 
       {filtered.length === 0 ? (
         <Card style={{ padding: 32, textAlign: 'center' }}>
-          <p style={{ color: 'var(--muted)' }}>No diagnoses yet. Run your first diagnosis after a class.</p>
+          <p style={{ color: 'var(--muted)' }}>No diagnoses yet. Diagnoses appear here after you run one following a class.</p>
         </Card>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -81,14 +81,14 @@ export default function DiagnosticsPage({ students, onNavigate }) {
                   </Button>
                   {dx.status === 'approved' && (
                     <Button variant="primary" size="sm" onClick={() => onNavigate('homework:create', { diagnosisId: dx.id, studentId: dx.studentId })}>
-                      Generate HW
+                      Generate homework
                     </Button>
                   )}
                   <Button
                     variant="ghost" size="sm" style={{ color: 'var(--danger)' }}
                     aria-label="Delete diagnosis"
                     onClick={async () => {
-                      if (!confirm(`Delete this diagnosis for ${student?.name || 'this student'}? This cannot be undone.`)) return;
+                      if (!confirm(`Delete ${student?.name || 'this student'}'s diagnosis? This removes their session record and cannot be undone.`)) return;
                       await deleteDiagnosis(dx.id);
                       load();
                     }}

@@ -72,7 +72,7 @@ export default function ErrorBankPage({ students, workspaceQuery = '' }) {
 
       <Card style={{ padding: 14, marginBottom: 16 }}>
         <div style={S.filterGrid}>
-          <input className="input" value={localSearch} onChange={(e) => setLocalSearch(e.target.value)} placeholder="Search student, error, correction..." />
+          <input className="input" value={localSearch} onChange={(e) => setLocalSearch(e.target.value)} placeholder="Search student, error, correction…" />
           <select className="input" value={filterStudent} onChange={(e) => setFilterStudent(e.target.value)}>
             <option value="">All students</option>
             {students.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
@@ -92,7 +92,7 @@ export default function ErrorBankPage({ students, workspaceQuery = '' }) {
 
       {loading ? (
         <Card style={{ padding: 28, textAlign: 'center' }}>
-          <p style={{ color: 'var(--muted)', margin: 0 }}>Loading error bank...</p>
+          <p style={{ color: 'var(--muted)', margin: 0 }}>Loading error bank…</p>
         </Card>
       ) : filtered.length === 0 ? (
         <Card style={{ padding: 28, textAlign: 'center' }}>

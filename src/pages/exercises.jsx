@@ -66,7 +66,7 @@ export default function ExercisesPage({ onNavigate }) {
         <Card style={{ padding: 16 }}>
           {library.length === 0 ? (
             <p style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', textAlign: 'center', padding: '32px 0' }}>
-              No saved exercises yet. Save exercises from the homework builder using the star button.
+              No saved exercises. In the homework builder, tap ☆ on any exercise to save it here.
             </p>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>

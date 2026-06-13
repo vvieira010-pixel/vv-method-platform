@@ -24,9 +24,8 @@ import { ExerciseEditor, ExerciseTypePicker, ExTypeBadge } from '../components/e
 import ExerciseCard from '../components/exercises/ExerciseCard.jsx';
 import PreviewExercise from '../components/exercises/PreviewExercise.jsx';
 import {
-  mapAiType, normalizeTaskTypes, buildCompleteExercises, createCompleteExercise,
-  isStructuredAiExerciseComplete, getHomeworkCognitiveSufficiencyWarning, applyAiTaskToExercise,
-  buildExercisesFromAiTasks, fillSelectedExercisesWithAi,
+  normalizeTaskTypes, buildCompleteExercises, createCompleteExercise,
+  isStructuredAiExerciseComplete, getHomeworkCognitiveSufficiencyWarning,
 } from '../lib/exercise-ai-helpers.js';
 import { getExerciseModules, getModuleExercises, bankMeta } from '../lib/exercise-bank.js';
 import { getB2Modules, getB2ModuleExercises, b2BankMeta } from '../lib/met-b2-bank.js';
@@ -246,7 +245,7 @@ function getPriorityItems(dx) {
     setGroupGenStatus('');
     const allGenerated = [];
     for (const [index, [group, count]] of selectedGroups.entries()) {
-      setGroupGenStatus(`Generating ${group} exercises (${index + 1}/${selectedGroups.length})...`);
+      setGroupGenStatus(`Generating ${group} exercises (${index + 1}/${selectedGroups.length})…`);
       try {
         const prompt = buildHomeworkGroupPrompt({ student, diagnosis, group, count: Number(count) });
         const data = await callAI(prompt, { ...HOMEWORK_AI_BASE_OPTIONS, max_tokens: 3500, temperature: 0.8 });
@@ -279,7 +278,7 @@ function getPriorityItems(dx) {
     }
     
     setGeneratingListening(true);
-    setGroupGenStatus('Creating listening script...');
+    setGroupGenStatus('Creating listening script…');
     
     try {
       const prompt = buildListeningGeneratorPrompt({ student, diagnosis });
@@ -346,7 +345,7 @@ function getPriorityItems(dx) {
     }
     
     setGenerating(true);
-    setGroupGenStatus('Creating blueprint...');
+    setGroupGenStatus('Creating blueprint…');
     
     try {
       // 1. Generate Blueprint
@@ -354,7 +353,7 @@ function getPriorityItems(dx) {
       const blueprint = parseAiJson(bpData.content?.map(b => b.text || '').join('') || '');
       const taskTypes = normalizeTaskTypes(blueprint?.taskTypes);
       
-      setGroupGenStatus('Generating tasks...');
+      setGroupGenStatus('Generating tasks…');
       // 2. Generate Tasks
       const tasks = [];
       for (const taskType of taskTypes) {
@@ -364,7 +363,7 @@ function getPriorityItems(dx) {
       const { exercises, skipped } = buildCompleteExercises(tasks);
       if (!exercises.length) throw new Error('AI returned tasks, but none were complete enough to add.');
       
-      setGroupGenStatus('Refining and finalising...');
+      setGroupGenStatus('Refining and finalising…');
       // 3. Final Refinement
       const refData = await callAI(buildFinalRefinementPrompt({ student, blueprint, tasks }), { ...HOMEWORK_AI_BASE_OPTIONS, max_tokens: 1800, temperature: 0.7 });
       const refinement = parseAiJson(refData.content?.map(b => b.text || '').join('') || '');
@@ -645,7 +644,7 @@ function getPriorityItems(dx) {
               <SectionHeader title="Step 1: Homework Source" />
               <div style={{ marginTop: 16 }}>
                 {studentId || diagnosis?.studentId ? (
-                  <p style={{ fontSize: 'var(--text-md)', marginBottom: 8 }}>Student: <strong>{student?.name || 'Loading...'}</strong></p>
+                  <p style={{ fontSize: 'var(--text-md)', marginBottom: 8 }}>Student: <strong>{student?.name || 'Loading…'}</strong></p>
                 ) : (
                   <Field label="Student">
                     <select
@@ -713,19 +712,19 @@ function getPriorityItems(dx) {
                   {/* Row 1: AI generation */}
                   <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                     <Button variant="primary" size="sm" onClick={handleAiGenerate} disabled={!diagnosis || generating}>
-                      <Icon.spark size={12} /> {generating ? 'Generating...' : 'Generate MET Homework'}
+                      <Icon.spark size={12} /> {generating ? 'Generating…' : 'Generate MET Homework'}
                     </Button>
                     <Button variant="primary" size="sm" onClick={handleGenerateRetrieval} disabled={generatingRetrieval || generating} title="Generate retrieval practice questions (recall → blank → MCQ) based on the homework objective">
-                      <Icon.spark size={12} /> {generatingRetrieval ? 'Generating...' : 'Retrieval Practice'}
+                      <Icon.spark size={12} /> {generatingRetrieval ? 'Generating…' : 'Retrieval Practice'}
                     </Button>
                     <Button variant="primary" size="sm" onClick={handleGenerateListening} disabled={!diagnosis || generatingListening}>
-                      <Icon.headphones size={12} /> {generatingListening ? 'Generating...' : 'Listening Task'}
+                      <Icon.headphones size={12} /> {generatingListening ? 'Generating…' : 'Listening Task'}
                     </Button>
                     <Button variant="primary" size="sm" onClick={handleGenerateReading} disabled={generatingReading}>
-                      <Icon.doc size={12} /> {generatingReading ? 'Generating...' : 'Reading Task'}
+                      <Icon.doc size={12} /> {generatingReading ? 'Generating…' : 'Reading Task'}
                     </Button>
                     <Button variant="ghost" size="sm" onClick={handleGenerateOptions} disabled={!diagnosis || loadingOptions}>
-                      <Icon.refresh size={12} /> {loadingOptions ? 'Suggesting...' : 'Suggest from Diagnosis'}
+                      <Icon.refresh size={12} /> {loadingOptions ? 'Suggesting…' : 'Suggest from Diagnosis'}
                     </Button>
                     <Button variant="ghost" size="sm" onClick={() => togglePanel('group-gen')} disabled={!diagnosis || generating}
                       style={activePanel === 'group-gen' ? { borderColor: 'var(--accent)', color: 'var(--accent)' } : {}}>
@@ -891,12 +890,14 @@ function getPriorityItems(dx) {
                     {showUnitBank && (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 0, maxHeight: 360, overflowY: 'auto' }}>
                         {unitBankExercises.map((ex, i) => (
-                          <div key={ex.id || i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderBottom: '1px solid var(--divider)' }}>
-                            <ExTypeBadge typeId={ex.type} />
-                            <div style={{ flex: 1, minWidth: 0, fontSize: 'var(--text-sm)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                              {ex.question || ex.prompt || ex.errorText || (ex.pairs?.[0] ? `${ex.pairs[0].term} — ${ex.pairs[0].def}` : '')}
+                          <div key={ex.id || i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '10px 14px', borderBottom: '1px solid var(--divider)' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0, flex: 1 }}>
+                              <ExTypeBadge typeId={ex.type} />
+                              <span style={{ fontSize: 'var(--text-sm)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>
+                                {ex.question || ex.prompt || ex.errorText || (ex.pairs?.[0] ? `${ex.pairs[0].term} — ${ex.pairs[0].def}` : '')}
+                              </span>
                             </div>
-                            <Button variant="ghost" size="sm" onClick={() => addUnitBankExercise(ex)}>Add</Button>
+                            <Button variant="ghost" size="sm" style={{ flexShrink: 0 }} onClick={() => addUnitBankExercise(ex)}>Add</Button>
                           </div>
                         ))}
                       </div>
@@ -1039,8 +1040,8 @@ function getPriorityItems(dx) {
                 <div className="homework-create-actions" style={{ display: 'flex', gap: 10, marginTop: 24, flexWrap: 'wrap', alignItems: 'center' }}>
                   <Button variant="ghost" onClick={() => setCurrentStep(2)}>Back</Button>
                   <Button variant="primary" onClick={() => setCurrentStep(4)}>Proceed to Assign</Button>
-                  <Button variant="ghost" size="sm" onClick={handleAnalyzeLanguageDemand} disabled={generatingLangDemand || !form.exercises.length} title="Analyse language demands (Cummins BICS/CALP) and get pre-teaching recommendations">
-                    <Icon.search size={12} /> {generatingLangDemand ? 'Analysing...' : 'Check Language Demands'}
+                  <Button variant="ghost" size="sm" onClick={handleAnalyzeLanguageDemand} disabled={generatingLangDemand || !form.exercises.length} title="Check vocabulary load and get pre-teaching suggestions">
+                    <Icon.search size={12} /> {generatingLangDemand ? 'Analysing…' : 'Check Language Demands'}
                   </Button>
                 </div>
 

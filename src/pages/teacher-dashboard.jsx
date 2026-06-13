@@ -191,7 +191,7 @@ function getTodayPriority(data) {
       icon: <Icon.doc size={20} />,
       title: 'Review the newest submission',
       text: 'Give the student clear feedback while the homework attempt is still fresh.',
-      action: 'Open review',
+      action: 'Review submission',
       target: 'submissions:review',
       params: { submissionId: firstSubmission.id },
     };
@@ -202,7 +202,7 @@ function getTodayPriority(data) {
       icon: <Icon.diagnose size={20} />,
       title: 'Finish the next diagnosis',
       text: 'Turn the completed class evidence into teacher notes, student feedback, and homework.',
-      action: 'Diagnose class',
+      action: 'Run diagnosis',
       target: 'diagnostics:create',
       params: { studentId: firstDiagnosis.studentId, classEventId: firstDiagnosis.id },
     };

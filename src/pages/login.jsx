@@ -272,7 +272,7 @@ export default function LoginScreen() {
 
     if (isReset) {
       if (!email.trim()) { setError('Enter your email address.'); return; }
-      if (!supabaseReady) { setError('Sign-in is not configured. Contact your teacher.'); return; }
+      if (!supabaseReady) { setError("Access isn't set up yet. Contact your teacher to get started."); return; }
       setLoading(true);
       try {
         await resetPasswordForEmail(email.trim(), window.location.origin + window.location.pathname);
@@ -289,7 +289,7 @@ export default function LoginScreen() {
       return;
     }
     if (!supabaseReady) {
-      setError('Sign-in is not configured. Contact your teacher.');
+      setError('Access isn't set up yet. Contact your teacher to get started.');
       return;
     }
     if (isRegister && password.length < 6) {
@@ -384,7 +384,7 @@ export default function LoginScreen() {
 
           {isReset && resetSent ? (
             <div className="lp-success" role="status">
-              <strong>Check your inbox.</strong> We sent a sign-in link to <em>{email}</em>. Click it to access your account — the link expires in 1 hour.
+              <strong>Check your inbox.</strong> We sent a sign-in link to <em>{email}</em>. Open it to access your account. The link expires in 1 hour.
             </div>
           ) : (
             <form onSubmit={handleSubmit} noValidate>

@@ -36,13 +36,13 @@ export default function HomeworkPage({ students, onNavigate }) {
         </select>
         <select className="input" style={{ maxWidth: 180 }} value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
           <option value="">All statuses</option>
-          {['not-started', 'in-progress', 'submitted', 'reviewed'].map(s => <option key={s}>{s}</option>)}
+          {[['not-started','Not started'],['in-progress','In progress'],['submitted','Submitted'],['reviewed','Reviewed']].map(([val,label]) => <option key={val} value={val}>{label}</option>)}
         </select>
       </div>
 
       {filtered.length === 0 ? (
         <Card style={{ padding: 32, textAlign: 'center' }}>
-          <p style={{ color: 'var(--muted)' }}>No homework yet. Generate homework from an approved diagnosis.</p>
+          <p style={{ color: 'var(--muted)' }}>No homework assigned yet. Start from a student's approved diagnosis.</p>
         </Card>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>

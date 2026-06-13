@@ -267,7 +267,7 @@ export default function StudentHome({ student, onTab }) {
         <div className="student-practice-studio fade-up" style={{ '--delay': '0.2s' }}>
           <div>
             <h2>The Practice Studio</h2>
-            <p>Build your skills with self-paced practice — not an exam simulation. Work without time pressure and improve at your own pace.</p>
+            <p>Self-paced practice at your own level. No timer, no pressure.</p>
             {reviewCount > 0 && (
               <button className="student-wide-action student-wide-action-mb" onClick={handleOpenReview} aria-label={`Review ${reviewCount} spaced repetition item${reviewCount !== 1 ? 's' : ''}`}>
                 <Icon.refresh size={14} /> Review {reviewCount} item{reviewCount !== 1 ? 's' : ''} due

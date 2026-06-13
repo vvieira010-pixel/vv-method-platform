@@ -14,12 +14,12 @@ function timeOfDay() {
 }
 
 const STAGE_CONFIG = {
-  'needs-diagnosis':   { label: 'Needs Diagnosis', tone: 'danger',  action: 'Run Diagnosis',     getNav: (s) => ['diagnostics:create', { studentId: s.id }] },
-  'diagnosed':         { label: 'Diagnosed',        tone: 'info',    action: 'Send Feedback',     getNav: (s) => ['diagnostics:create', { diagnosisId: s.cycle.latestDiagnosis?.id, studentId: s.id }] },
-  'feedback-sent':     { label: 'Feedback Sent',    tone: 'info',    action: 'Assign Homework',   getNav: (s) => ['homework:create', { studentId: s.id, diagnosisId: s.cycle.latestDiagnosis?.id }] },
-  'homework-assigned': { label: 'HW Assigned',      tone: 'warning', action: 'View Homework',     getNav: ()  => ['homework', {}] },
-  'submitted':         { label: 'Submitted',        tone: 'success', action: 'Review Submission', getNav: (s) => ['submissions:review', { submissionId: s.cycle.pendingSubmissions[0]?.id }] },
-  'reviewed':          { label: 'Reviewed',         tone: 'success', action: 'New Diagnosis',     getNav: (s) => ['diagnostics:create', { studentId: s.id }] },
+  'needs-diagnosis':   { label: 'Needs diagnosis',   tone: 'danger',  action: 'Run diagnosis',      getNav: (s) => ['diagnostics:create', { studentId: s.id }] },
+  'diagnosed':         { label: 'Diagnosed',         tone: 'info',    action: 'Send feedback',      getNav: (s) => ['diagnostics:create', { diagnosisId: s.cycle.latestDiagnosis?.id, studentId: s.id }] },
+  'feedback-sent':     { label: 'Feedback sent',     tone: 'info',    action: 'Assign homework',    getNav: (s) => ['homework:create', { studentId: s.id, diagnosisId: s.cycle.latestDiagnosis?.id }] },
+  'homework-assigned': { label: 'Homework assigned', tone: 'warning', action: 'View homework',      getNav: ()  => ['homework', {}] },
+  'submitted':         { label: 'Submitted',         tone: 'success', action: 'Review submission',  getNav: (s) => ['submissions:review', { submissionId: s.cycle.pendingSubmissions[0]?.id }] },
+  'reviewed':          { label: 'Reviewed',          tone: 'success', action: 'New diagnosis',      getNav: (s) => ['diagnostics:create', { studentId: s.id }] },
 };
 
 const URGENCY_ORDER = ['submitted', 'needs-diagnosis', 'diagnosed', 'feedback-sent', 'homework-assigned', 'reviewed'];
@@ -126,7 +126,7 @@ export default function EducatorView({ students, onNavigate }) {
               {needsAttention.slice(0, 5).map((s, i) => {
                 const config = STAGE_CONFIG[s.cycle.cycleStage] || STAGE_CONFIG['needs-diagnosis'];
                 const staleNote = s.cycle.daysSinceLastDiagnosis > 14
-                  ? ` — ${s.cycle.daysSinceLastDiagnosis}d since last dx`
+                  ? ` — ${s.cycle.daysSinceLastDiagnosis}d since last diagnosis`
                   : '';
                 return (
                   <div key={s.id} style={{
@@ -182,7 +182,7 @@ export default function EducatorView({ students, onNavigate }) {
           </summary>
           <div style={{ marginTop: 10 }}>
             <Button variant="danger" size="sm" onClick={async () => {
-              if (confirm('Clear ALL workflow data? This cannot be undone.')) {
+              if (confirm('This will erase all students, diagnoses, homework, and submissions. There is no way to recover this data. Continue?')) {
                 await clearWorkflowData();
                 window.location.reload();
               }
@@ -227,7 +227,7 @@ function StudentRow({ student: s, onNavigate, onAction }) {
           <div>
             <div style={{ fontWeight: 600, fontSize: 'var(--text-md)', color: 'var(--text-1)' }}>{s.name}</div>
             <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: 2 }}>
-              {currentBand} → {targetBand} · Session {s.session}/{s.totalSessions} · Last dx: {diagDate}
+              {currentBand} → {targetBand} · Session {s.session}/{s.totalSessions} · Last diagnosis: {diagDate}
             </div>
             {focusArea && (
               <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-2)', marginTop: 2, fontStyle: 'italic' }}>
@@ -244,7 +244,7 @@ function StudentRow({ student: s, onNavigate, onAction }) {
         {/* Pending counts */}
         {s.cycle.pendingHomework.length > 0 && (
           <span style={{ fontSize: 'var(--text-xs)', color: 'var(--warning)', fontWeight: 600 }}>
-            {s.cycle.pendingHomework.length} HW pending
+            {s.cycle.pendingHomework.length} homework pending
           </span>
         )}
         {s.cycle.pendingSubmissions.length > 0 && (

@@ -58,7 +58,7 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
   const [savedDiagnosis, setSavedDiagnosis] = useState(null);
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
-  const [generatingStatus, setGeneratingStatus] = useState('Initializing...');
+  const [generatingStatus, setGeneratingStatus] = useState('Initializing…');
 
   // Student selector (if no studentId passed)
   const [selectedStudentId, setSelectedStudentId] = useState(studentId || '');
@@ -172,7 +172,7 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
   async function handleGenerate() {
     if (!prereqOk) return;
     setStep('generating');
-    setGeneratingStatus('Analyzing class evidence...');
+    setGeneratingStatus('Analyzing class evidence…');
     setError('');
     if (!diagnosisId) setSavedDiagnosis(null);
 
