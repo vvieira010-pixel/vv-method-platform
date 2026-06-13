@@ -9,7 +9,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Icon, Avatar, Button, StudentFeedbackView } from '../components/shared.jsx';
-import { getHomework, submitHomework, getDiagnoses, getProgressNotes, getReviews, getClassEvents, getDraft, saveDraft } from '../lib/workflow.js';
+import { getHomework, submitHomework, getDiagnoses, getProgressNotes, getReviews, getClassEvents, getDraft, saveDraft, getActiveMemo } from '../lib/workflow.js';
 import { isStructuredExercise } from '../lib/exercise-types.js';
 import { ExercisePlayer, HomeworkStepThrough } from '../components/exercise-player.jsx';
 import { ExTypeBadge } from '../components/exercise-editor.jsx';
@@ -114,7 +114,7 @@ function exerciseSearchText(ex) {
 // One teacher correction shown inline (original → improved (note)).
 function CorrectionNote({ c }) {
   return (
-    <div style={{ fontSize: 'var(--text-sm)', padding: 8, marginTop: 8, background: 'var(--success-bg)', borderRadius: 'var(--radius-sm)', borderLeft: '3px solid var(--success)' }}>
+    <div style={{ fontSize: 'var(--text-sm)', padding: 8, marginTop: 8, background: 'var(--success-bg)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--success)' }}>
       {c.original && <span style={{ color: 'var(--danger)', textDecoration: 'line-through' }}>{c.original}</span>}
       {c.original && c.improved && ' → '}
       {c.improved && <span style={{ color: 'var(--success)', fontWeight: 600 }}>{c.improved}</span>}
@@ -222,16 +222,18 @@ function HomeView({ student, onTab }) {
   const [snapshot, setSnapshot] = useState([]);
   const [approvedHistory, setApprovedHistory] = useState([]);
   const [nextClass, setNextClass] = useState(null);
-  const [generalMemoText, setGeneralMemoText] = useState(() => localStorage.getItem('vv:student_general_memo') || '');
+  const [activeMemo, setActiveMemo] = useState(null);
 
   useEffect(() => {
     (async () => {
-      const [hw, diagnoses, classEvents, reviews] = await Promise.all([
+      const [hw, diagnoses, classEvents, reviews, memo] = await Promise.all([
         getHomework(student.id),
         getDiagnoses(student.id),
         getClassEvents(student.id),
         getReviews(student.id),
+        getActiveMemo(),
       ]);
+      setActiveMemo(memo);
       const doneStatuses = new Set(['submitted', 'reviewed', 'completed', 'corrected']);
       setPendingHw((hw || []).filter(h => !doneStatuses.has(h.status)));
 
@@ -302,7 +304,7 @@ function HomeView({ student, onTab }) {
         </button>
       </section>
 
-      <section className="student-metrics" aria-label="Student summary">
+      <section className="student-metrics anim-fade-up stagger-1" aria-label="Student summary">
         <MetricCard icon={<Icon.calendar size={19} />} label="Next class" value={nextDate} sub={nextTime} tone="blue" />
         <MetricCard icon={<Icon.homework size={19} />} label="Homework" value={pendingHw.length} sub={pendingHw.length === 1 ? 'task pending' : 'tasks pending'} tone="teal" />
         <MetricCard icon={<Icon.progress size={19} />} label="Current focus" value={focusSkill} sub={focusTrend.dir !== 'none' ? `Progress: ${focusTrend.label}` : 'next useful practice'} tone="navy" />
@@ -310,7 +312,7 @@ function HomeView({ student, onTab }) {
       </section>
 
       {pendingHw.length === 0 && (
-        <div className="student-practice-studio">
+        <div className="student-practice-studio anim-fade-up stagger-2">
           <div>
             <h2>The Practice Studio</h2>
             <p>Your mind is ready. While your teacher prepares your next assignment, sharpen your skills with a self-paced session.</p>
@@ -332,14 +334,13 @@ function HomeView({ student, onTab }) {
         </div>
       )}
 
-      <section className="student-grid">
+      <section className="student-grid anim-fade-up stagger-3">
         <div className="student-home-main">
           <article className="student-panel student-panel--primary">
             <div className="student-panel-head">
-              <div>
-                <span className="student-panel-kicker">Upcoming</span>
-                <h2>{nextClass?.title || 'Your next MET class'}</h2>
-              </div>
+                <div>
+                  <h2>{nextClass?.title || 'Your next MET class'}</h2>
+                </div>
               <span className="student-pill">{nextDate}</span>
             </div>
             <div className="student-next-layout">
@@ -358,14 +359,10 @@ function HomeView({ student, onTab }) {
             </div>
           </article>
 
-          <div
-            className="student-home-columns"
-            style={{ display: 'grid', gap: '24px', marginTop: '32px' }}
-          >
+          <div className="student-home-columns">
             <article className="student-panel student-panel--todo">
               <div className="student-panel-head">
                 <div>
-                  <span className="student-panel-kicker">Daily Agenda</span>
                   <h2>What to do now</h2>
                 </div>
               </div>
@@ -380,7 +377,6 @@ function HomeView({ student, onTab }) {
             <article className="student-panel">
               <div className="student-panel-head">
                 <div>
-                  <span className="student-panel-kicker">Teacher Insights</span>
                   <h2>Latest approved note</h2>
                 </div>
                 <button className="student-text-action" onClick={() => onTab('feedback')}>Open feedback</button>
@@ -402,15 +398,19 @@ function HomeView({ student, onTab }) {
         <aside className="student-home-side">
           <article className="student-panel">
             <div className="student-panel-head">
-              <div>
-                <span className="student-panel-kicker">Readiness Snapshot</span>
-                <h2>Evaluated skills</h2>
-              </div>
+                <div>
+                  <h2>Evaluated skills</h2>
+                </div>
             </div>
             {evaluatedSkills.length > 0 ? (
-              <div className="student-skill-list">
-                {evaluatedSkills.slice(0, 5).map(s => <SkillRow key={s.section} skill={s} trend={getSkillTrend(s.section, approvedHistory)} />)}
-              </div>
+              <>
+                <div className="student-skill-list">
+                  {evaluatedSkills.slice(0, 5).map(s => <SkillRow key={s.section} skill={s} trend={getSkillTrend(s.section, approvedHistory)} />)}
+                </div>
+                <div className="coverage-note">
+                  Based on what was practised in class. Some sub-skills may not have been covered.
+                </div>
+              </>
             ) : (
               <div className="student-empty-card">
                 No evaluated skills yet. Your next class will create the evidence.
@@ -418,12 +418,13 @@ function HomeView({ student, onTab }) {
             )}
           </article>
 
-          <section
-            className="student-memo-board"
-            style={{ marginTop: '24px' }}
-          >
-            <MemoCard kicker="General memo" title="Memo Board" text={generalMemoText || 'No general memo posted yet.'} />
-            <MemoCard kicker="Personal note" title={`${student.firstName}'s note`} text={student.notes || student.goalNote || 'Your goal is MET preparation.'} />
+          <section className="student-memo-board">
+            <MemoCard
+              title={activeMemo?.title || 'No announcements yet.'}
+              text={activeMemo?.body || ''}
+              empty={!activeMemo}
+            />
+            <MemoCard title={`${student.firstName}'s note`} text={student.notes || student.goalNote || 'Your goal is MET preparation.'} />
           </section>
         </aside>
       </section>
@@ -446,36 +447,40 @@ function MetricCard({ icon, label, value, sub, tone }) {
 
 const MEMO_CLAMP = 4;
 
-function MemoCard({ kicker, title, text }) {
+function MemoCard({ title, text, empty }) {
   const [expanded, setExpanded] = useState(false);
-  const lines = text.split(/\n+/).filter(Boolean);
-  const needsClamp = lines.length > MEMO_CLAMP || text.length > 320;
+  const body = text || '';
+  const lines = body.split(/\n+/).filter(Boolean);
+  const needsClamp = lines.length > MEMO_CLAMP || body.length > 320;
   return (
     <article className="student-panel" style={{ marginBottom: '16px' }}>
-      <span className="student-panel-kicker">{kicker}</span>
-      <h2>{title}</h2>
-      <p style={{
-        margin: '8px 0 0',
-        fontSize: 'var(--text-sm)',
-        lineHeight: 1.6,
-        color: 'var(--sanctuary-text)',
-        overflow: 'hidden',
-        display: '-webkit-box',
-        WebkitLineClamp: expanded ? 'unset' : MEMO_CLAMP,
-        WebkitBoxOrient: 'vertical',
-      }}>
-        {text}
-      </p>
-      {needsClamp && (
-        <button
-          onClick={() => setExpanded(e => !e)}
-          style={{
-            background: 'none', border: 'none', padding: '6px 0 0',
-            cursor: 'pointer', fontSize: 'var(--text-xs)', fontWeight: 700,
-            color: 'var(--sanctuary-teal-deep)', letterSpacing: '0.03em',
+      <h2 style={{ color: empty ? 'var(--muted)' : undefined, margin: 0 }}>{title}</h2>
+      {!empty && body && (
+        <>
+          <p style={{
+            margin: '8px 0 0',
+            fontSize: 'var(--text-sm)',
+            lineHeight: 1.6,
+            color: 'var(--text-2)',
+            overflow: 'hidden',
+            display: '-webkit-box',
+            WebkitLineClamp: expanded ? 'unset' : MEMO_CLAMP,
+            WebkitBoxOrient: 'vertical',
           }}>
-          {expanded ? 'Show less ↑' : 'Read more ↓'}
-        </button>
+            {body}
+          </p>
+          {needsClamp && (
+            <button
+              onClick={() => setExpanded(e => !e)}
+              style={{
+                background: 'none', border: 'none', padding: '6px 0 0',
+                cursor: 'pointer', fontSize: 'var(--text-xs)', fontWeight: 700,
+                color: 'var(--accent-deep)', letterSpacing: '0.03em',
+              }}>
+              {expanded ? 'Show less ↑' : 'Read more ↓'}
+            </button>
+          )}
+        </>
       )}
     </article>
   );
@@ -552,7 +557,7 @@ function FeedbackView({ student, onTab }) {
 
   return (
     <div className="student-feedback-page">
-      <section className="student-hero">
+      <section className="student-hero anim-fade-up">
         <div>
           <p className="student-hero-kicker">Feedback</p>
           <h1>Your teacher's latest notes</h1>
@@ -572,22 +577,19 @@ function FeedbackView({ student, onTab }) {
         <>
           <section className="student-progress-profile">
             <div>
-              <span className="student-panel-kicker">Today's progress</span>
               <h2>{primarySkill ? `${primarySkill.section} progress` : 'MET progress'}</h2>
               <p>{feedback.classFocus || 'Your teacher has shared a short summary of your latest class.'}</p>
             </div>
             {stage && <span className="student-stage-badge">{stage.label}</span>}
           </section>
 
-          <section className="student-feedback-grid">
+          <section className="student-feedback-grid anim-fade-up stagger-2">
             <article className="student-panel">
-              <span className="student-panel-kicker">What improved</span>
               <h2>{firstWin?.strength || 'You made progress'}</h2>
               <p className="student-readable-copy">{firstWin?.explanation || feedback.finalNote || 'Your teacher noticed improvement in your latest class.'}</p>
             </article>
 
             <article className="student-panel">
-              <span className="student-panel-kicker">Current focus</span>
               <h2>{focusArea?.area || primarySkill?.section || 'Next MET skill'}</h2>
               <p className="student-readable-copy">{focusArea?.explanation || focusArea?.howToImprove || focusArea?.metImportance || nextStep}</p>
             </article>
@@ -602,7 +604,6 @@ function FeedbackView({ student, onTab }) {
               if (terms.length === 0) return null;
               return (
                 <article className="student-panel">
-                  <span className="student-panel-kicker">Concepts in your feedback</span>
                   <h2>What these terms mean</h2>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 4 }}>
                     {terms.map(({ term, definition }) => (
@@ -619,7 +620,6 @@ function FeedbackView({ student, onTab }) {
             <article className="student-panel student-panel--primary">
               <div className="student-panel-head">
                 <div>
-                  <span className="student-panel-kicker">Full feedback</span>
                   <h2>Teacher-approved feedback</h2>
                 </div>
                 {latest.createdAt && (
@@ -632,7 +632,6 @@ function FeedbackView({ student, onTab }) {
             </article>
 
             <article className="student-panel">
-              <span className="student-panel-kicker">Confidence check</span>
               <h2>Before the next class</h2>
               <div className="student-confidence-list">
                 <TodoRow done={false} label="I understand my teacher's main feedback" meta="Review the full note above" />
@@ -643,7 +642,6 @@ function FeedbackView({ student, onTab }) {
             </article>
 
             <article className="student-panel">
-              <span className="student-panel-kicker">Your view</span>
               <h2>Does this feedback match your experience?</h2>
               <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-2)', marginBottom: 12, lineHeight: 1.6 }}>
                 Your answer helps your teacher prepare the next class. There is no wrong response.
@@ -679,7 +677,6 @@ function FeedbackView({ student, onTab }) {
             <section className="student-panel student-feedback-history">
               <div className="student-panel-head">
                 <div>
-                  <span className="student-panel-kicker">History</span>
                   <h2>Past feedback</h2>
                 </div>
                 <span className="student-muted-pill">{feedbackItems.length - 1} older</span>
@@ -830,7 +827,7 @@ function HomeworkView({ student }) {
 
   return (
     <div className="student-homework-page">
-      <section className="student-hero">
+      <section className="student-hero anim-fade-up">
         <div>
           <p className="student-hero-kicker">Homework</p>
           <h1>Assigned practice</h1>
@@ -887,7 +884,6 @@ function HomeworkView({ student }) {
               onClick={() => toggleHomework(h)}
             >
               <div className="student-homework-title">
-                <span className="student-panel-kicker">Assigned homework</span>
                 <h2>{h.title || 'Homework task'}</h2>
                 <div className="student-homework-meta">
                   {isStructured ? (
@@ -1099,7 +1095,7 @@ function ProgressView({ student }) {
 
   return (
     <div className="student-progress-page">
-      <section className="student-hero">
+      <section className="student-hero anim-fade-up">
         <div>
           <p className="student-hero-kicker">MET progress profile</p>
           <h1>Your MET progress path</h1>
@@ -1111,7 +1107,6 @@ function ProgressView({ student }) {
         <section className="student-panel student-panel--readiness">
           <div className="student-panel-head">
             <div>
-              <span className="student-panel-kicker">Starting point</span>
               <h2>Your first progress steps</h2>
             </div>
           </div>
@@ -1125,11 +1120,17 @@ function ProgressView({ student }) {
       ) : (
         <>
           {skills.length > 0 ? (
-            <section className="student-readiness-grid">
-              {skills.map(skill => (
-                <ProgressProfileCard key={skill.section} skill={skill} trend={getSkillTrend(skill.section, diagnoses)} />
-              ))}
-            </section>
+            <>
+              <section className="student-readiness-grid">
+                {skills.map(skill => (
+                  <ProgressProfileCard key={skill.section} skill={skill} trend={getSkillTrend(skill.section, diagnoses)} />
+                ))}
+              </section>
+              <div className="score-disclaimer">
+                <strong>About these scores: </strong>
+                Each skill shows your latest assessment based on what was practised in that class. Some sub-skills within each area may not have been covered yet — a score reflects what was observed, not your full ability. Skills without enough evidence are not shown here.
+              </div>
+            </>
           ) : (
             <div className="student-empty-card" style={{ marginBottom: 18 }}>
               No evaluated skills are ready to show yet. When a class evaluates speaking only, only speaking progress will appear here.
@@ -1139,7 +1140,6 @@ function ProgressView({ student }) {
           <section className="student-panel">
             <div className="student-panel-head">
               <div>
-                <span className="student-panel-kicker">Progress history</span>
                 <h2>Recent approved diagnoses</h2>
               </div>
             </div>
@@ -1164,7 +1164,6 @@ function ProgressView({ student }) {
         <section className="student-panel">
           <div className="student-panel-head">
             <div>
-              <span className="student-panel-kicker">Teacher notes</span>
               <h2>Extra notes</h2>
             </div>
           </div>
@@ -1200,7 +1199,6 @@ function ProgressProfileCard({ skill, trend }) {
     <article className="student-progress-card">
       <div className="student-panel-head">
         <div>
-          <span className="student-panel-kicker">Skill progress</span>
           <h2>{skill.section}</h2>
         </div>
         <span className="student-stage-badge">{stage.label}</span>

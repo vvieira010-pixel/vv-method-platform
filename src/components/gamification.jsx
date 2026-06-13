@@ -1,7 +1,7 @@
 /**
  * gamification.jsx — XP, levels, streaks, and achievement badges
  */
-import { Pill } from './shared.jsx';
+import { Icon, Pill } from './shared.jsx';
 
 export const LEVELS = [
   { num: 1, name: 'Foundation',    minXp: 0    },
@@ -13,14 +13,14 @@ export const LEVELS = [
 ];
 
 const BADGE_DEFS = [
-  { id: 'first_session',  glyph: '🎯', label: 'First Step',     desc: 'Completed your first session',        threshold: (s) => s.length >= 1 },
-  { id: 'streak_3',       glyph: '🔥', label: 'On Fire',        desc: '3-week study streak',                  threshold: (s) => calcStreak(s) >= 3 },
-  { id: 'streak_5',       glyph: '⚡', label: 'Lightning',      desc: '5-week consistency streak',           threshold: (s) => calcStreak(s) >= 5 },
-  { id: 'hw_5',           glyph: '📚', label: 'Homework Hero',  desc: '5 homework sets submitted',           threshold: (s) => s.filter(x => x.homework).length >= 5 },
-  { id: 'sessions_10',    glyph: '🏆', label: 'Ten Sessions',   desc: 'Completed 10 sessions',               threshold: (s) => s.length >= 10 },
-  { id: 'speaking_up',    glyph: '🎤', label: 'Voice Up',       desc: 'Speaking score improved 5+ points',  threshold: (s) => scoreGain(s, 'speaking') >= 5 },
-  { id: 'grammar_up',     glyph: '✏️', label: 'Grammar Sharp',  desc: 'Grammar score improved 4+ points',   threshold: (s) => scoreGain(s, 'grammar') >= 4 },
-  { id: 'xp_1000',        glyph: '💎', label: 'Diamond',        desc: 'Earned 1000 XP',                     threshold: (s) => calcXP(s) >= 1000 },
+  { id: 'first_session',  iconKey: 'star',     label: 'First Step',     desc: 'Completed your first session',        threshold: (s) => s.length >= 1 },
+  { id: 'streak_3',       iconKey: 'bolt',     label: 'On Fire',        desc: '3-week study streak',                  threshold: (s) => calcStreak(s) >= 3 },
+  { id: 'streak_5',       iconKey: 'spark',    label: 'Lightning',      desc: '5-week consistency streak',           threshold: (s) => calcStreak(s) >= 5 },
+  { id: 'hw_5',           iconKey: 'homework', label: 'Homework Hero',  desc: '5 homework sets submitted',           threshold: (s) => s.filter(x => x.homework).length >= 5 },
+  { id: 'sessions_10',    iconKey: 'star',     label: 'Ten Sessions',   desc: 'Completed 10 sessions',               threshold: (s) => s.length >= 10 },
+  { id: 'speaking_up',    iconKey: 'mic',      label: 'Voice Up',       desc: 'Speaking score improved 5+ points',  threshold: (s) => scoreGain(s, 'speaking') >= 5 },
+  { id: 'grammar_up',     iconKey: 'edit',     label: 'Grammar Sharp',  desc: 'Grammar score improved 4+ points',   threshold: (s) => scoreGain(s, 'grammar') >= 4 },
+  { id: 'xp_1000',        iconKey: 'star',     label: 'Diamond',        desc: 'Earned 1000 XP',                     threshold: (s) => calcXP(s) >= 1000 },
 ];
 
 function calcStreak(sessions) {
@@ -66,7 +66,7 @@ export function computeGamification(sessions = [], track = 'MET') {
   const xpProgress = nextLevel ? Math.min(100, Math.round((xpInLevel / xpToNext) * 100)) : 100;
 
   const badges = BADGE_DEFS.map(b => ({
-    id: b.id, glyph: b.glyph, label: b.label, desc: b.desc,
+    id: b.id, iconKey: b.iconKey, label: b.label, desc: b.desc,
     earned: b.threshold(sessions),
   }));
   const earnedCount = badges.filter((badge) => badge.earned).length;
@@ -127,7 +127,7 @@ export function AchievementsCard({ gam }) {
       <div style={{ display: 'flex', gap: 16, marginBottom: 18 }}>
         <div style={{ textAlign: 'center' }}>
           <div style={{ fontSize: 22, fontWeight: 800, color: 'var(--accent)' }}>{streak}</div>
-          <div style={{ fontSize: 11, color: 'var(--muted)' }}>Week streak 🔥</div>
+          <div style={{ fontSize: 11, color: 'var(--muted)' }}>Week streak</div>
         </div>
         <div style={{ textAlign: 'center' }}>
           <div style={{ fontSize: 22, fontWeight: 800, color: 'var(--accent)' }}>{earned.length}</div>
@@ -148,7 +148,7 @@ export function AchievementsCard({ gam }) {
             fontSize: 12, fontWeight: 600, opacity: b.earned ? 1 : 0.5,
             display: 'flex', alignItems: 'center', gap: 5,
           }}>
-            <span>{b.glyph}</span>
+            <span>{Icon[b.iconKey] ? Icon[b.iconKey]({ size: 14 }) : null}</span>
             <span>{b.label}</span>
           </div>
         ))}

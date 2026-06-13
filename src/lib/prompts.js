@@ -198,17 +198,17 @@ ${SHARED_MET_DATA}
 RETURN ONLY VALID JSON:
 {
   "skillDiagnosis": {
-    "speaking": { "evaluated": boolean, "evidenceCount": number, "score0to80": number|null, "scoreConfidenceLevel": string, "scoreProvisional": boolean, "transcriptOnly": boolean, "ratingBreakdown": { "taskCompletion": { "score0to4": number, "notes": string }, "languageResources": { "score0to4": number, "notes": string }, "intelligibilityDelivery": { "score0to4": number|null, "notes": string } }, "subskillsAssessed": string[], "strengths": string[], "weaknesses": string[], "readinessTowardTarget": string, "whatToImproveNext": string },
+    "speaking": { "evaluated": boolean, "evidenceCount": number, "score0to80": number|null, "scoreConfidenceLevel": string, "scoreProvisional": boolean, "transcriptOnly": boolean, "ratingBreakdown": { "taskCompletion": { "score0to4": number, "notes": string }, "languageResources": { "score0to4": number, "notes": string }, "intelligibilityDelivery": { "score0to4": number|null, "notes": string } }, "subskillsAssessed": string[], "strengths": string[], "weaknesses": string[], "readinessTowardTarget": string, "whatToImproveNext": string, "evidenceNote": "1 sentence stating what evidence this score is based on (e.g. 'Based on 1 short Q3 opinion turn ≈45s' or 'Based on 2 short email paragraphs'). If limited, say 'Limited evidence — score is provisional.'" },
     "writing": { ... },
     "reading": { ... },
     "listening": { ... },
-    "grammar": { "evaluated": boolean, "evidenceCount": number, "score0to80": number|null, "scoreConfidenceLevel": string, "scoreProvisional": boolean, "subskillsAssessed": string[], "mainIssues": string[], "strengths": string[], "whatToImproveNext": string },
+    "grammar": { "evaluated": boolean, "evidenceCount": number, "score0to80": number|null, "scoreConfidenceLevel": string, "scoreProvisional": boolean, "subskillsAssessed": string[], "mainIssues": string[], "strengths": string[], "whatToImproveNext": string, "evidenceNote": "1 sentence stating what evidence this score is based on." },
     "vocabulary": { ... },
     "testStrategy": { ... }
   },
   "classSummary": "2-3 plain sentences that tie the whole diagnosis together: what was actually practised today, how it went, and the single most important takeaway. This is the cohesive overview the teacher reads first — not a thin restatement. No 'The class focused on...'.",
   "priorityDiagnosis": [
-    { "rank": 1, "urgency": "Critical|Developing|Strength", "area": "short skill/subskill name", "evidence": "exact quote from the evidence", "whatToImprove": "1 concrete sentence", "howToImprove": "1 sentence — one actionable practice direction" }
+    { "rank": 1, "urgency": "Critical|Developing|Strength", "area": "short skill/subskill name", "evidence": "exact quote from the evidence", "whatToImprove": "1 concrete sentence", "howToImprove": "1 sentence — frame as a testable hypothesis, not a guarantee. Use 'try...' / 'experiment with...' / 'see if...' rather than 'this will...'" }
   ],
   "targetScoreRelevance": { "gapToTarget": "string", "prioritySkillForTarget": "string", "estimatedSessionsToTarget": "string", "onTrack": "string" },
   "nextClassFocus": { "primaryFocus": "string", "suggestedActivities": ["string"], "warmUp": "string", "successCriteria": "string" },
@@ -253,13 +253,13 @@ Rules:
 JSON shape:
 {
   "skillDiagnosis": {
-    "speaking": { "evaluated": boolean, "evidenceCount": number, "score0to80": number|null, "scoreConfidenceLevel": string, "scoreProvisional": boolean, "transcriptOnly": boolean, "strengths": [string], "weaknesses": [string], "subskillsAssessed": [string], "readinessTowardTarget": string, "whatToImproveNext": string },
-    "writing": { "evaluated": boolean, "evidenceCount": number, "score0to80": number|null, "scoreConfidenceLevel": string, "scoreProvisional": boolean, "strengths": [string], "weaknesses": [string], "subskillsAssessed": [string], "readinessTowardTarget": string, "whatToImproveNext": string },
-    "reading": { "evaluated": boolean, "evidenceCount": number, "score0to80": number|null, "scoreConfidenceLevel": string, "scoreProvisional": boolean, "strengths": [string], "weaknesses": [string], "subskillsAssessed": [string], "readinessTowardTarget": string, "whatToImproveNext": string },
-    "listening": { "evaluated": boolean, "evidenceCount": number, "score0to80": number|null, "scoreConfidenceLevel": string, "scoreProvisional": boolean, "strengths": [string], "weaknesses": [string], "subskillsAssessed": [string], "readinessTowardTarget": string, "whatToImproveNext": string },
-    "grammar": { "evaluated": boolean, "evidenceCount": number, "score0to80": number|null, "scoreConfidenceLevel": string, "scoreProvisional": boolean, "strengths": [string], "mainIssues": [string], "subskillsAssessed": [string], "whatToImproveNext": string },
-    "vocabulary": { "evaluated": boolean, "evidenceCount": number, "score0to80": number|null, "scoreConfidenceLevel": string, "scoreProvisional": boolean, "strengths": [string], "weaknesses": [string], "subskillsAssessed": [string], "whatToImproveNext": string },
-    "testStrategy": { "evaluated": boolean, "evidenceCount": number, "score0to80": number|null, "scoreConfidenceLevel": string, "scoreProvisional": boolean, "strengths": [string], "weaknesses": [string], "subskillsAssessed": [string], "whatToImproveNext": string }
+    "speaking": { "evaluated": boolean, "evidenceCount": number, "score0to80": number|null, "scoreConfidenceLevel": string, "scoreProvisional": boolean, "transcriptOnly": boolean, "strengths": [string], "weaknesses": [string], "subskillsAssessed": [string], "readinessTowardTarget": string, "whatToImproveNext": string, "evidenceNote": "1 sentence stating what evidence this score is based on" },
+    "writing": { "evaluated": boolean, "evidenceCount": number, "score0to80": number|null, "scoreConfidenceLevel": string, "scoreProvisional": boolean, "strengths": [string], "weaknesses": [string], "subskillsAssessed": [string], "readinessTowardTarget": string, "whatToImproveNext": string, "evidenceNote": "1 sentence stating what evidence this score is based on" },
+    "reading": { "evaluated": boolean, "evidenceCount": number, "score0to80": number|null, "scoreConfidenceLevel": string, "scoreProvisional": boolean, "strengths": [string], "weaknesses": [string], "subskillsAssessed": [string], "readinessTowardTarget": string, "whatToImproveNext": string, "evidenceNote": "1 sentence stating what evidence this score is based on" },
+    "listening": { "evaluated": boolean, "evidenceCount": number, "score0to80": number|null, "scoreConfidenceLevel": string, "scoreProvisional": boolean, "strengths": [string], "weaknesses": [string], "subskillsAssessed": [string], "readinessTowardTarget": string, "whatToImproveNext": string, "evidenceNote": "1 sentence stating what evidence this score is based on" },
+    "grammar": { "evaluated": boolean, "evidenceCount": number, "score0to80": number|null, "scoreConfidenceLevel": string, "scoreProvisional": boolean, "strengths": [string], "mainIssues": [string], "subskillsAssessed": [string], "whatToImproveNext": string, "evidenceNote": "1 sentence stating what evidence this score is based on" },
+    "vocabulary": { "evaluated": boolean, "evidenceCount": number, "score0to80": number|null, "scoreConfidenceLevel": string, "scoreProvisional": boolean, "strengths": [string], "weaknesses": [string], "subskillsAssessed": [string], "readinessTowardTarget": string, "whatToImproveNext": string, "evidenceNote": "1 sentence stating what evidence this score is based on" },
+    "testStrategy": { "evaluated": boolean, "evidenceCount": number, "score0to80": number|null, "scoreConfidenceLevel": string, "scoreProvisional": boolean, "strengths": [string], "weaknesses": [string], "subskillsAssessed": [string], "readinessTowardTarget": string, "whatToImproveNext": string, "evidenceNote": "1 sentence stating what evidence this score is based on" }
   },
   "classSummary": "2-3 sentences",
   "priorityDiagnosis": [{ "rank": 1, "urgency": "Critical|Developing|Strength", "area": string, "evidence": string, "whatToImprove": string, "howToImprove": string }],
@@ -305,6 +305,7 @@ Write like a real teacher talking TO this student right after class — warm, sp
 • BANNED JARGON / AI-WORDS (never use): demonstrate, showcase, leverage, utilize, delve, crucial, essential, foster, robust, navigate, journey, elevate, "in terms of", "when it comes to", "this highlights", "this underscores", "a testament to". Use plain everyday words.
 • BANNED OPENERS: "Great work", "Well done", "Excellent", "Good job", "It is important", "Furthermore", "Additionally", "Moreover", "In addition", "Going forward", "In conclusion", "Overall".
 • BANNED PHRASES: "This demonstrates", "Your performance", "You demonstrated", "You exhibited", "This is crucial for", "This is essential", "This shows that you", "Continue to", "Keep up".
+• BANNED CERTAINTY PHRASES: "This will help", "This will improve", "This will make", "Doing X will Y" — these state pedagogical outcomes as proven fact. Instead, frame improvement advice as a testable hypothesis: "Try X and see if it helps", "One thing to experiment with is Y", "If you try Z next class, notice whether...". The goal is a suggestion the student can test, not a guaranteed result.
 • BREVITY: if a thought is one sentence, stop. No padding, no restating.
 • MET BUDGET: at most 2 sentences in the whole feedback may mention the MET exam, and each must be concrete (e.g., "examiners weight delivery in the third descriptor...").
 

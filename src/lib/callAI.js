@@ -9,12 +9,15 @@ const OPENAI_MODEL = import.meta.env.VITE_OPENAI_MODEL || 'gpt-4.1-mini';
 const GROQ_MODEL = import.meta.env.VITE_GROQ_MODEL || 'llama-3.3-70b-versatile';
 const GEMINI_MODEL = import.meta.env.VITE_GEMINI_MODEL || 'gemini-2.5-flash';
 const GEMINI_DEFAULT_MODELS = [
+  'gemini-2.5-pro',
   'gemini-2.5-flash',
   'gemini-2.5-flash-lite',
   'gemini-2.0-flash',
   'gemini-2.0-flash-lite',
   'gemma-4-31b-it',
   'gemma-4-26b-a4b-it',
+  'gemma-3-27b-it',
+  'gemma-3-12b-it',
 ];
 function geminiModels() {
   const parse = s => String(s || '').split(',').map(x => x.trim()).filter(Boolean);
@@ -28,17 +31,17 @@ function geminiModels() {
 
 const OPENROUTER_API = 'https://openrouter.ai/api/v1/chat/completions';
 const OPENROUTER_DEFAULT_MODELS = [
+  'deepseek/deepseek-r1-0528:free',
+  'qwen/qwen3-235b-a22b:free',
   'deepseek/deepseek-chat-v3-0324:free',
   'meta-llama/llama-3.3-70b-instruct:free',
   'nvidia/llama-3.1-nemotron-70b-instruct:free',
-  'qwen/qwen3-235b-a22b:free',
-  'qwen/qwen-2.5-72b-instruct:free',
   'nvidia/llama-3.3-nemotron-super-49b-v1:free',
+  'qwen/qwen-2.5-72b-instruct:free',
   'meta-llama/llama-4-scout:free',
-  'deepseek/deepseek-r1-0528:free',
+  'mistralai/mistral-small-3.1-24b-instruct:free',
   'google/gemma-3-27b-it:free',
   'nvidia/nemotron-nano-12b-instruct:free',
-  'mistralai/mistral-small-3.1-24b-instruct:free',
   'nvidia/llama-3.1-nemotron-nano-8b-v1:free',
   'meta-llama/llama-3.2-3b-instruct:free',
 ];

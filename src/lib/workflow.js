@@ -7,7 +7,7 @@
  * Function signatures are unchanged — all callers already `await`.
  */
 
-import { getDbContext, dbHasEntity, dbList, dbGet, dbUpsert, dbRemove } from './supabase-db.js';
+import { getDbContext, dbHasEntity, dbList, dbGet, dbUpsert, dbRemove, sbSelect } from './supabase-db.js';
 
 const K = {
   sessions:    'vv:sessions',
@@ -1361,4 +1361,58 @@ export async function exportStudentData(studentId) {
   exportPackage.data.classEvidence = allEvidence.filter(ev => studentEventIds.has(ev.classEventId));
 
   return exportPackage;
+}
+
+/* ─── GLOBAL MEMOS ──────────────────────────────────────────────── */
+
+/**
+ * Returns the latest active memo from the global_memos table,
+ * or null if none exists or if Supabase is unavailable.
+ * Shape: { id, title, body, created_at }
+ */
+export async function getActiveMemo() {
+  const ctx = getDbContext();
+  if (!ctx) return null;
+  try {
+    const rows = await sbSelect(
+      ctx,
+      'global_memos',
+      'select=id,title,body,created_at&is_active=eq.true&order=created_at.desc&limit=1',
+    );
+    return rows[0] || null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Upserts a global memo. Teachers only (enforced by RLS).
+ * Deactivates all existing memos, then inserts the new one as active.
+ */
+export async function saveGlobalMemo({ title, body }) {
+  const ctx = getDbContext();
+  if (!ctx) throw new Error('No Supabase connection. Connect Supabase to manage memos.');
+  const headers = {
+    apikey: ctx.anonKey,
+    Authorization: `Bearer ${ctx.token}`,
+    'Content-Type': 'application/json',
+    Prefer: 'return=representation',
+  };
+  // Deactivate all existing memos
+  await fetch(`${ctx.url}/rest/v1/global_memos?is_active=eq.true`, {
+    method: 'PATCH',
+    headers,
+    body: JSON.stringify({ is_active: false }),
+  });
+  // Insert fresh active memo
+  const res = await fetch(`${ctx.url}/rest/v1/global_memos`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({ title, body, is_active: true }),
+  });
+  if (!res.ok) {
+    const err = await res.text().catch(() => '');
+    throw new Error(`Failed to save memo: ${err}`);
+  }
+  return (await res.json())[0] || null;
 }

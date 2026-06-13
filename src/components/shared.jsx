@@ -8,85 +8,8 @@ import { useState, useRef, useEffect } from 'react';
 /* ─── CSS CUSTOM PROPERTIES (injected once) ─────────────────── */
 const GLOBAL_CSS = `
   @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800;1,9..40,400&family=DM+Serif+Display:ital@0;1&family=JetBrains+Mono:wght@500&display=swap');
-  :root {
-    /* ── Ocean Depths theme ── */
-    --accent:       #2d8b8b;
-    --accent-deep:  #1a2332;
-    --accent-soft:  #a8dadc;
-    --accent-subtle:#e4f2f2;
-    --primary:      #3da6a6;
-    --primary-ink:  #247070;
-    --on-dark:      #f1faee;
-    --on-dark-muted:rgba(241,250,238,0.68);
-    --bg:           #f0f6f6;
-    --bg-deep:      #dceeed;
-    --surface:      #FFFFFF;
-    --border:       #c2d9d9;
-    --divider:      #e2efef;
-    --faint:        #edf4f4;
-    --text:         #1a2332;
-    --text-2:       #2a3d4e;
-    --muted:        #4d6672;
-    --accent-text:  #0f5555;
-    --warning-text: #B45309;
-    --success:      #059669;
-    --success-bg:   #ECFDF5;
-    --success-soft: #D1FAE5;
-    --info:         #2d8b8b;
-    --info-bg:      #e4f2f2;
-    --warning:      #D97706;
-    --warning-bg:   #FFFBEB;
-    --warning-soft: #FDE68A;
-    --danger:       #B91C1C;
-    --danger-bg:    #FEF2F2;
-    --danger-soft:  #FECACA;
-    --orange:       #F97316;
-    --orange-deep:  #EA580C;
-    --dark-accent-border: rgba(168,218,220,0.15);
-    --radius-sm:    6px;
-    --radius-md:    8px;
-    --radius-lg:    12px;
-    --radius-pill:  999px;
-    --text-xs:      12px;
-    --text-sm:      13px;
-    --text-md:      15px;
-    --text-lg:      16px;
-    --text-xl:      18px;
-    --text-2xl:     22px;
-    --text-3xl:     28px;
-    --font-ui:      'DM Sans', 'Segoe UI', sans-serif;
-    --font-display: 'DM Sans', 'Segoe UI', sans-serif;
-    --font-display-serif: 'DM Serif Display', Georgia, serif;
-    --font-mono:    'JetBrains Mono', 'Fira Mono', monospace;
-    --ease:         cubic-bezier(0.16, 1, 0.3, 1);
-    --shadow-card:  0 16px 35px -20px rgba(26, 35, 50, 0.2), 0 3px 8px rgba(26, 35, 50, 0.06);
-    --shadow-modal: 0 24px 58px -24px rgba(26, 35, 50, 0.3), 0 8px 20px rgba(26, 35, 50, 0.1);
-    --shadow-toast: 0 4px 16px rgba(26, 35, 50, 0.18);
-    --space-1:  4px;
-    --space-2:  6px;
-    --space-3:  8px;
-    --space-4:  10px;
-    --space-5:  12px;
-    --space-6:  14px;
-    --space-7:  16px;
-    --space-8:  20px;
-    --space-9:  24px;
-    --space-10: 28px;
-    --space-11: 32px;
-    --space-12: 40px;
-  }
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    font-family: var(--font-ui);
-    background:
-      radial-gradient(1300px 460px at 105% -10%, rgba(45,139,139,0.12), transparent 55%),
-      radial-gradient(800px 360px at -15% 20%, rgba(168,218,220,0.15), transparent 60%),
-      linear-gradient(140deg, #f3f8f8 0%, #edf5f5 50%, #f6fafa 100%);
-    color: var(--text);
-    -webkit-font-smoothing: antialiased;
-    font-size: var(--text-md);
-    line-height: 1.55;
-  }
+  /* Variables now declared in design-system.css (imported via App.jsx) */
+  /* Body, reset, typography now in design-system.css */
   [data-cards="flat"]     .card { border: none; box-shadow: none; background: var(--bg); }
   [data-cards="bordered"] .card { border: 1px solid var(--border); box-shadow: none; background: var(--surface); }
   [data-cards="shadowed"] .card { border: none; box-shadow: var(--shadow-card); background: var(--surface); }
@@ -454,6 +377,16 @@ const GLOBAL_CSS = `
       scroll-behavior: auto !important;
     }
   }
+
+  /* ── Diagnostic review sections ── */
+  .dx-zone { display: flex; flex-direction: column; gap: 14px; }
+  .dx-group { border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
+  .dx-group-title { padding: 10px 16px; background: var(--surface); font-size: var(--text-xs); font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; color: var(--text-2); border-bottom: 1px solid var(--border); }
+  .dx-section { border-left: 3px solid transparent; border-radius: var(--radius-sm); margin-bottom: 4px; transition: border-color 0.15s; }
+  .dx-section.dx-approved { border-left-color: var(--success); }
+  .dx-section.dx-student { border-left-color: var(--accent); }
+  .dx-section + .dx-section { border-top: 1px solid var(--divider); }
+  .dx-label { display: block; font-size: var(--text-xs); font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
 `;
 
 let cssInjected = false;

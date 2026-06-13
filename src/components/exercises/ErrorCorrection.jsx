@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Icon } from '../shared.jsx';
 
 const TEAL = '#0D9488';
 const NAVY = '#0B1F3A';
@@ -8,7 +9,8 @@ function normalize(s) {
 }
 
 export default function ErrorCorrection({ exercise, onComplete }) {
-  const { errorText, correctedText, hint, context } = exercise;
+  const { errorText, correctedText, hint, context, imageUrl, image, imageSrc } = exercise;
+  const imgSrc = imageUrl || image || imageSrc || '';
   const [answer, setAnswer] = useState('');
   const [submitted, setSubmitted] = useState(false);
 
@@ -29,10 +31,18 @@ export default function ErrorCorrection({ exercise, onComplete }) {
         </div>
       )}
 
-      {/* Incorrect sentence */}
+      {/* Image */}
+      {imgSrc && (
+        <img
+          src={imgSrc} alt="Exercise visual"
+          style={{ width: '100%', borderRadius: 10, marginBottom: 14, maxHeight: 260, objectFit: 'cover', display: 'block' }}
+        />
+      )}
+
+      {/* Level Up challenge */}
       <div style={{ padding: '14px 16px', background: '#FEF2F2', border: '1.5px solid #FECACA', borderRadius: 10, marginBottom: 14 }}>
         <div style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--danger)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>
-          Incorrect sentence
+          Level Up — spot and fix the error
         </div>
         <p style={{ fontSize: 15.5, color: '#7F1D1D', lineHeight: 1.6, margin: 0, fontStyle: 'italic' }}>"{errorText}"</p>
       </div>
@@ -40,7 +50,7 @@ export default function ErrorCorrection({ exercise, onComplete }) {
       {/* Hint */}
       {hint && (
         <div style={{ padding: '10px 14px', background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: 8, marginBottom: 16, display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-          <span style={{ fontSize: 15, flexShrink: 0 }}>💡</span>
+          <Icon.info size={15} />
           <span style={{ fontSize: 13.5, color: '#92400E', lineHeight: 1.6 }}><strong>Hint:</strong> {hint}</span>
         </div>
       )}

@@ -588,7 +588,7 @@ export default function ToolDiagnostic({ student, students, onSelectStudent, onN
               <SectionHeader title="Priority Focus Areas" subtitle="Start here" />
               <div style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 12 }}>
                 {result.priorities.filter(p => p.area).slice(0, 3).map((p, i) => (
-                  <div key={i} style={{ padding: 14, borderRadius: "var(--radius-sm)", background: "var(--surface)", border: "1px solid var(--border)", borderLeft: `4px solid ${p.urgency === "Critical" ? "var(--danger)" : p.urgency === "Developing" ? "var(--warning)" : "var(--info)"}` }}>
+                  <div key={i} style={{ padding: 14, borderRadius: "var(--radius-sm)", background: p.urgency === "Critical" ? "var(--danger-bg)" : p.urgency === "Developing" ? "var(--warning-bg)" : "var(--info-bg)", border: `1px solid ${p.urgency === "Critical" ? "var(--danger)" : p.urgency === "Developing" ? "var(--warning)" : "var(--info)"}` }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
                       <Pill tone={p.urgency === "Critical" ? "danger" : p.urgency === "Developing" ? "warning" : "info"}>{p.urgency}</Pill>
                       <span style={{ fontWeight: 700, fontSize: "var(--text-sm)" }}>{p.area}</span>

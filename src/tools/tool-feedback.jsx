@@ -1055,7 +1055,7 @@ SECTION SELECTION (MUST FOLLOW):
     window.toast?.(status === 'published' ? 'Feedback published to student.' : 'Feedback saved as draft.', 'ok');
   };
 
-  return (
+  return selectedDiagnosis ? (
     <DiagnosisFeedbackWorkspace
       student={student}
       students={students}
@@ -1071,9 +1071,7 @@ SECTION SELECTION (MUST FOLLOW):
       saving={feedbackSaving}
       saved={saved}
     />
-  );
-
-  return (
+  ) : (
     !latestDiagnosis ? (
       <div className="page-shell">
         <div className="page-inner-narrow">
@@ -2685,7 +2683,8 @@ function DiagnosisFeedbackWorkspace({
         )}
       </div>
     </div>
-  );
+      )
+    );
 }
 
 function SmallList({ title, items }) {

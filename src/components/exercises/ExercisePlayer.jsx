@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { loadExercises } from './validateExercise.js';
 import MultipleChoice from './MultipleChoice.jsx';
 import FillBlank from './FillBlank.jsx';
@@ -6,6 +6,8 @@ import ShortAnswer from './ShortAnswer.jsx';
 import OrderSentences from './OrderSentences.jsx';
 import ErrorCorrection from './ErrorCorrection.jsx';
 import Listening from './Listening.jsx';
+import Reading from './Reading.jsx';
+import LevelUp from './LevelUp.jsx';
 
 const TEAL = '#0D9488';
 const NAVY = '#0B1F3A';
@@ -17,7 +19,7 @@ const TYPE_LABELS = {
   fill_blank: 'Fill in the Blank',
   short_answer: 'Speaking Practice',
   order_sentences: 'Order Sentences',
-  error_correction: 'Error Correction',
+  error_correction: 'Level Up',
   drag_and_drop_matching: 'Matching',
   true_false_with_explanation: 'True/False',
   interactive_scenario_case_study: 'Scenario',
@@ -26,8 +28,10 @@ const TYPE_LABELS = {
   blank: 'Fill in the Blank',
   short: 'Speaking Practice',
   order: 'Ordering',
-  fix: 'Error Correction',
+  fix: 'Level Up',
   listen: 'Listening',
+  reading: 'Reading',
+  levelup: 'Level Up',
 };
 
 function InvalidExercise({ reason }) {
@@ -60,6 +64,8 @@ function ExerciseCard({ exercise, index, total, result, onComplete, onNext }) {
       case 'error_correction':
       case 'fix':        return <ErrorCorrection {...props} />;
       case 'listen':     return <Listening {...props} />;
+      case 'reading':    return <Reading {...props} />;
+      case 'levelup':    return <LevelUp {...props} />;
       // New types (stubs for now)
       case 'drag_and_drop_matching':
       case 'true_false_with_explanation':
@@ -107,6 +113,16 @@ function ExerciseCard({ exercise, index, total, result, onComplete, onNext }) {
 
       {/* Exercise body */}
       <div style={{ padding: '20px 20px 24px' }}>
+        {/* Pre-exercise description (teacher-provided intro / instructions) */}
+        {exercise.description && (
+          <div style={{
+            padding: '10px 14px', marginBottom: 16, borderRadius: 8,
+            background: 'var(--accent-subtle)', border: '1px solid var(--accent-soft)',
+            fontSize: 13.5, lineHeight: 1.65, color: 'var(--text-2)',
+          }}>
+            {exercise.description}
+          </div>
+        )}
         {renderExercise()}
       </div>
 
@@ -193,13 +209,15 @@ export default function ExercisePlayer({ exercises: raw, title, onSessionComplet
   const { exercises, errors } = loadExercises(Array.isArray(raw) ? raw : (raw || []));
 
   const [current, setCurrent] = useState(0);
-  const [results, setResults] = useState([]); // { index, correct, ... }
+  const [results, setResults] = useState([]);
   const [done, setDone] = useState(false);
+  const resultsRef = useRef(results);
 
   const handleComplete = useCallback((result) => {
     setResults(prev => {
       const next = [...prev];
       next[current] = { ...result, index: current };
+      resultsRef.current = next;
       return next;
     });
   }, [current]);
@@ -209,14 +227,14 @@ export default function ExercisePlayer({ exercises: raw, title, onSessionComplet
     if (nextIdx >= exercises.length) {
       setDone(true);
       if (onSessionComplete) {
-        const closed = results.filter(r => r && r.correct !== null && r.correct !== undefined);
-        const score = closed.length > 0 ? Math.round((closed.filter(r => r.correct).length / closed.length) * 100) : null;
-        onSessionComplete({ results, score });
+        const live = resultsRef.current.filter(r => r && r.correct !== null && r.correct !== undefined);
+        const score = live.length > 0 ? Math.round((live.filter(r => r.correct).length / live.length) * 100) : null;
+        onSessionComplete({ results: resultsRef.current, score });
       }
     } else {
       setCurrent(nextIdx);
     }
-  }, [current, exercises.length, results, onSessionComplete]);
+  }, [current, exercises.length, onSessionComplete]);
 
   // Errors only (nothing valid loaded)
   if (errors.length > 0 && exercises.length === 0) {

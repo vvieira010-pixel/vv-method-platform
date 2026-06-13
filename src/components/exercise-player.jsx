@@ -293,7 +293,7 @@ function ShortPlayer({ ex, res, update, readOnly }) {
       )}
 
       {ex.rubric && (
-        <div style={{ margin: '0 0 12px', padding: '8px 12px', background: 'var(--surface)', borderLeft: '3px solid var(--accent-soft)', borderRadius: '0 var(--radius-sm) var(--radius-sm) 0', fontSize: 'var(--text-xs)', color: 'var(--text-2)', lineHeight: 1.6 }}>
+        <div style={{ margin: '0 0 12px', padding: '8px 12px', background: 'var(--accent-subtle)', border: '1px solid var(--accent-soft)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-xs)', color: 'var(--text-2)', lineHeight: 1.6 }}>
           <span style={{ fontWeight: 700, color: 'var(--accent-deep)', marginRight: 6 }}>Teacher note:</span>
           {ex.rubric}
         </div>
@@ -312,8 +312,8 @@ function ShortPlayer({ ex, res, update, readOnly }) {
           </button>
           {checklistOpen && (
             <div style={{ marginTop: 8, padding: '8px 12px', background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)' }}>
-              {WRITING_QUALITY_CHECKS.map((c, i) => (
-                <div key={i} style={{ display: 'flex', gap: 8, marginBottom: i < WRITING_QUALITY_CHECKS.length - 1 ? 6 : 0 }}>
+              {WRITING_QUALITY_CHECKS.map((c) => (
+                <div key={c.label} style={{ display: 'flex', gap: 8, marginBottom: 6 }}>
                   <span style={{ fontWeight: 700, color: 'var(--accent)', flexShrink: 0, fontSize: 'var(--text-xs)', marginTop: 1 }}>✓</span>
                   <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-2)', lineHeight: 1.55 }}>
                     <strong style={{ color: 'var(--text)' }}>{c.label}:</strong> {c.hint}
@@ -487,8 +487,8 @@ function SpeakPlayer({ ex, res, update, readOnly }) {
           </button>
           {strategyOpen && (
             <div style={{ marginTop: 8, padding: '8px 12px', background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)' }}>
-              {SPEAKING_STRATEGY_CHECKS.map((c, i) => (
-                <div key={i} style={{ display: 'flex', gap: 8, marginBottom: i < SPEAKING_STRATEGY_CHECKS.length - 1 ? 6 : 0 }}>
+              {SPEAKING_STRATEGY_CHECKS.map((c) => (
+                <div key={c.label} style={{ display: 'flex', gap: 8, marginBottom: 6 }}>
                   <span style={{ fontWeight: 700, color: 'var(--accent)', flexShrink: 0, fontSize: 'var(--text-xs)', marginTop: 1 }}>→</span>
                   <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-2)', lineHeight: 1.55 }}>
                     <strong style={{ color: 'var(--text)' }}>{c.label}:</strong> {c.hint}

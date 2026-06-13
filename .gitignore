@@ -33,3 +33,4 @@ product-audit/chrome-*/
 # OS
 Thumbs.db
 .DS_Store
+.vercel

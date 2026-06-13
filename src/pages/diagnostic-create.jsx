@@ -31,7 +31,7 @@ import {
   getHomework,
 } from '../lib/workflow.js';
 
-const labelStyle = { display: 'block', fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 };
+// Label styling migrated to CSS class .dx-label
 
 const SECTION_KEYS = [
   { key: 'readinessCheck',         label: 'Diagnostic Readiness Check',    studentFacing: false },
@@ -263,6 +263,7 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
   const [regenerating, setRegenerating] = useState(null);
   const [saving, setSaving] = useState(false);
   const [generatingStatus, setGeneratingStatus] = useState('Initializing...');
+  const [regeneratingAll, setRegeneratingAll] = useState(false);
 
   // Student selector (if no studentId passed)
   const [selectedStudentId, setSelectedStudentId] = useState(studentId || '');
@@ -549,6 +550,32 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
     });
   }
 
+  async function regenFailed() {
+    const failedKeys = SECTION_KEYS
+      .map(({ key }) => key)
+      .filter(key => {
+        const sec = sections[key];
+        if (!sec) return false;
+        const c = sec.content;
+        return (typeof c === 'string' && c.includes('Failed to generate')) || isSectionEmpty(c);
+      });
+    if (!failedKeys.length) { window.toast?.('No failed sections to regenerate.', 'ok'); return; }
+    setRegeneratingAll(true);
+    for (const key of failedKeys) {
+      await regenerateSection(key);
+    }
+    setRegeneratingAll(false);
+  }
+
+  async function regenAll() {
+    const keys = SECTION_KEYS.map(({ key }) => key).filter(key => sections[key]);
+    setRegeneratingAll(true);
+    for (const key of keys) {
+      await regenerateSection(key);
+    }
+    setRegeneratingAll(false);
+  }
+
   const approvedCount = Object.values(sections).filter(s => s.approved).length;
   const totalSections = SECTION_KEYS.length;
   const missingRequiredApprovals = REQUIRED_APPROVAL_KEYS.filter(key => {
@@ -789,7 +816,7 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
                 </p>
 
                 {/* Transcript */}
-                <label style={labelStyle}>Class transcript / student answers *</label>
+                <label className="dx-label">Class transcript / student answers *</label>
                 <textarea
                   className="input"
                   rows={8}
@@ -800,7 +827,7 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
                 />
 
                 {/* Teacher notes */}
-                <label style={labelStyle}>Teacher notes (optional)</label>
+                <label className="dx-label">Teacher notes (optional)</label>
                 <textarea
                   className="input"
                   rows={2}
@@ -811,7 +838,7 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
                 />
 
                 {/* Skills evaluated */}
-                <label style={{ ...labelStyle, marginBottom: 8 }}>Skills evaluated in this class *</label>
+                <label className="dx-label" style={{ marginBottom: 8 }}>Skills evaluated in this class *</label>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(170px, 1fr))', gap: 8 }}>
                   {SKILL_KEYS.map(({ key, evalKey, countKey }) => {
                     const evaluated = inlineSkills[evalKey];
@@ -895,6 +922,12 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
               </div>
             </div>
             <Button variant="ghost" size="sm" onClick={approveAll}>Approve All</Button>
+            <Button variant="ghost" size="sm" onClick={regenFailed} disabled={regeneratingAll || !!regenerating} title="Regenerate only sections that failed or are empty">
+              <Icon.refresh size={12} /> {regeneratingAll ? 'Regenerating…' : 'Regen Failed'}
+            </Button>
+            <Button variant="ghost" size="sm" onClick={regenAll} disabled={regeneratingAll || !!regenerating} title="Regenerate all sections from scratch">
+              <Icon.refresh size={12} /> Regen All
+            </Button>
             <Button variant="ghost" size="sm" onClick={() => handleSave(false)} disabled={saving}>Save Draft</Button>
             <Button variant="primary" onClick={() => handleSave(true)} disabled={saving || !canApproveDiagnosis}>
               <Icon.check size={14} /> Approve & Save
@@ -958,13 +991,10 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
                 </div>
               );
 
-              if (embedded) {
-                return <div key={key} style={{ borderTop: '1px solid var(--divider)' }}>{header}{body}</div>;
-              }
               return (
-                <Card key={key} style={{ padding: 0, overflow: 'hidden', border: sec.approved ? '2px solid var(--success)' : (studentFacing ? '2px solid var(--accent)' : '1px solid var(--border)') }}>
+                <div key={key} className={`dx-section ${sec.approved ? 'dx-approved' : studentFacing ? 'dx-student' : ''}`}>
                   {header}{body}
-                </Card>
+                </div>
               );
             };
 
@@ -976,25 +1006,25 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
             return SECTION_GROUPS.map(zone => {
               const groups = zone.groups.filter(g => g.keys.some(k => sections[k]));
               if (!groups.length) return null;
-              return (
-                <div key={zone.zone} style={{ display: 'flex', flexDirection: 'column', gap: 14, marginTop: zone.zone === 'student' ? 8 : 0 }}>
-                  <div>
-                    <div style={{ ...zoneHeaderStyle, color: zone.studentFacing ? 'var(--accent-text)' : 'var(--muted)' }}>{zone.title}</div>
-                    {zone.caption && <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', margin: '2px 2px 0' }}>{zone.caption}</div>}
+            return (
+                  <div key={zone.zone} className="dx-zone" style={{ marginTop: zone.zone === 'student' ? 8 : 0 }}>
+                    <div>
+                      <div style={{ ...zoneHeaderStyle, color: zone.studentFacing ? 'var(--accent-text)' : 'var(--muted)' }}>{zone.title}</div>
+                      {zone.caption && <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', margin: '2px 2px 0' }}>{zone.caption}</div>}
+                    </div>
+                    {groups.map(group => {
+                      const keys = group.keys.filter(k => sections[k]);
+                      if (keys.length === 1) return renderSection(keys[0], zone.studentFacing, false);
+                      // Merged group: single header, members stacked without cards.
+                      return (
+                        <div key={group.title} className="dx-group">
+                          <div className="dx-group-title">{group.title}</div>
+                          {keys.map(k => renderSection(k, zone.studentFacing, true))}
+                        </div>
+                      );
+                    })}
                   </div>
-                  {groups.map(group => {
-                    const keys = group.keys.filter(k => sections[k]);
-                    if (keys.length === 1) return renderSection(keys[0], zone.studentFacing, false);
-                    // Merged card: one outer card, members stacked inside.
-                    return (
-                      <Card key={group.title} style={{ padding: 0, overflow: 'hidden', border: '1px solid var(--border)' }}>
-                        <div style={{ padding: '10px 16px', background: 'var(--surface)', fontSize: 'var(--text-xs)', fontWeight: 800, letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--text-2)' }}>{group.title}</div>
-                        {keys.map(k => renderSection(k, zone.studentFacing, true))}
-                      </Card>
-                    );
-                  })}
-                </div>
-              );
+                );
             });
           })()}
 
@@ -1105,8 +1135,12 @@ function SectionContent({ sectionKey, content }) {
   if (sectionKey === 'skillDiagnosis' && typeof content === 'object') {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-        {Object.entries(content).map(([skill, data]) => (
-          <div key={skill} style={{ padding: 14, background: 'var(--bg)', borderRadius: 'var(--radius-sm)' }}>
+        {Object.entries(content).map(([skill, data]) => {
+          const evidenceCount = data?.evidenceCount || 0;
+          const hasManyConclusions = (data?.strengths?.length || 0) + (data?.weaknesses?.length || 0) + (data?.mainIssues?.length || 0) > 3;
+          const thinEvidence = evidenceCount > 0 && evidenceCount <= 2 && hasManyConclusions;
+          return (
+          <div key={skill} style={{ padding: 14, background: thinEvidence ? 'var(--warning-bg)' : 'var(--bg)', borderRadius: 'var(--radius-sm)', border: thinEvidence ? '1px solid var(--warning-soft)' : 'none' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
               <span style={{ fontWeight: 700, textTransform: 'capitalize', fontSize: 'var(--text-sm)' }}>{skill}</span>
               {data?.evaluated === false ? (
@@ -1122,6 +1156,14 @@ function SectionContent({ sectionKey, content }) {
               <p style={{ color: 'var(--muted)', fontSize: 'var(--text-xs)', fontStyle: 'italic', margin: 0 }}>{data.diagnosis || 'Not evaluated — no evidence.'}</p>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {thinEvidence && (
+                  <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--warning)', marginBottom: 4 }}>
+                    ⚠ {evidenceCount} turn{evidenceCount !== 1 ? 's' : ''} of evidence — moderate number of conclusions for this evidence volume
+                  </div>
+                )}
+                {data?.evidenceNote && !thinEvidence && (
+                  <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontStyle: 'italic', marginBottom: 4 }}>{data.evidenceNote}</div>
+                )}
                 {data?.strengths?.length > 0 && data.strengths.map((s, j) => (
                   <div key={j} style={{ fontSize: 'var(--text-xs)', color: 'var(--success)' }}>✓ {s}</div>
                 ))}
@@ -1135,7 +1177,8 @@ function SectionContent({ sectionKey, content }) {
               </div>
             )}
           </div>
-        ))}
+          );
+        })}
       </div>
     );
   }
@@ -1151,7 +1194,7 @@ function SectionContent({ sectionKey, content }) {
           <div style={{ padding: 12, background: 'var(--accent-subtle)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-sm)', lineHeight: 1.6 }}>{content.instructions}</div>
         )}
         {Array.isArray(content.tasks) && content.tasks.map((t, i) => (
-          <div key={i} style={{ padding: 14, background: 'var(--bg)', borderRadius: 'var(--radius-sm)' }}>
+          <div key={t.taskNumber ?? i} style={{ padding: 14, background: 'var(--bg)', borderRadius: 'var(--radius-sm)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
               <span style={{ fontSize: 'var(--text-xs)', fontWeight: 800, color: 'var(--accent)' }}>Task {t.taskNumber || i + 1}</span>
               {t.type && <Pill tone="accent">{t.type}</Pill>}
@@ -1211,7 +1254,7 @@ function SectionContent({ sectionKey, content }) {
           <div>
             <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--accent)', textTransform: 'uppercase', marginBottom: 8 }}>Vocabulary Targets</div>
             {vocab.map((v, i) => (
-              <div key={i} style={{ padding: 10, background: 'var(--bg)', borderRadius: 'var(--radius-sm)', marginBottom: 6 }}>
+              <div key={v.wordOrPhrase ?? i} style={{ padding: 10, background: 'var(--bg)', borderRadius: 'var(--radius-sm)', marginBottom: 6 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
                   <strong style={{ fontSize: 'var(--text-sm)' }}>{v.wordOrPhrase}</strong>
                   {v.category && <Pill tone="muted">{v.category}</Pill>}
@@ -1226,7 +1269,7 @@ function SectionContent({ sectionKey, content }) {
           <div>
             <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--warning)', textTransform: 'uppercase', marginBottom: 8 }}>Grammar Targets</div>
             {grammar.map((g, i) => (
-              <div key={i} style={{ padding: 10, background: 'var(--bg)', borderRadius: 'var(--radius-sm)', marginBottom: 6 }}>
+              <div key={g.area ?? i} style={{ padding: 10, background: 'var(--bg)', borderRadius: 'var(--radius-sm)', marginBottom: 6 }}>
                 <strong style={{ fontSize: 'var(--text-sm)' }}>{g.area}</strong>
                 {g.issue && <div style={{ fontSize: 'var(--text-xs)', color: 'var(--danger)', marginTop: 4 }}>{g.issue}</div>}
                 {g.correction && <div style={{ fontSize: 'var(--text-xs)', color: 'var(--success)', marginTop: 2 }}>{g.correction}</div>}

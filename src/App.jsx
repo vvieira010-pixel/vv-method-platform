@@ -64,7 +64,7 @@ export default function App() {
       const meta = sbUser?.user_metadata || {};
       const email = sbUser?.email || '';
       let claimed = null;
-      try { claimed = await claimStudentByEmail(email); } catch { /* fall through to the gate below */ }
+      try { claimed = await claimStudentByEmail(email); } catch (e) { console.warn('[Auth] claimStudentByEmail failed', e); }
       if (claimed) {
         setSessionRole('student');
         await ensureProfile('student', { displayName: meta.display_name || email, studentUuid: claimed.id });

@@ -53,10 +53,10 @@ export default function ToolPortal({ students = [], selectedStudentId, onSelectS
               onClick={() => onSelectStudent(s.id)}
               style={{
                 display: 'flex', alignItems: 'center', gap: 10, width: '100%',
-                padding: '10px 10px', borderRadius: 10, border: 'none', cursor: 'pointer',
+                padding: '10px 10px', borderRadius: 10, cursor: 'pointer',
                 background: selectedStudentId === s.id ? 'var(--accent-subtle)' : 'transparent',
-                borderLeft: selectedStudentId === s.id ? '3px solid var(--accent)' : '3px solid transparent',
-                textAlign: 'left', transition: 'background 0.12s', fontFamily: 'var(--font-ui)',
+                border: selectedStudentId === s.id ? '1px solid var(--accent-soft)' : '1px solid transparent',
+                textAlign: 'left', transition: 'background 0.12s, border-color 0.12s', fontFamily: 'var(--font-ui)',
               }}>
               <Avatar name={s.name} size={36} tone="auto" />
               <div style={{ flex: 1, minWidth: 0 }}>
