@@ -4,6 +4,7 @@
 import { useState, useEffect } from 'react';
 import { Icon, Card, SectionHeader, Pill, Button, Avatar } from '../components/shared.jsx';
 import { getStudents, saveStudent, deleteStudent, getDiagnoses, getHomework, getAllSubmissions, getClassEvents } from '../lib/workflow.js';
+import { sendMagicLink } from '../lib/supabase-storage.js';
 
 export default function StudentsPage({ students: propStudents, onNavigate }) {
   const [students, setStudents] = useState([]);
@@ -13,6 +14,7 @@ export default function StudentsPage({ students: propStudents, onNavigate }) {
   const [search, setSearch] = useState('');
   const [saving, setSaving] = useState(false);
   const [studentActions, setStudentActions] = useState({});
+  const [inviteStatus, setInviteStatus] = useState({});
 
   useEffect(() => { load(); }, []);
 
@@ -59,6 +61,22 @@ export default function StudentsPage({ students: propStudents, onNavigate }) {
     setSaving(false);
     setShowForm(false);
     window.toast?.(editStudent ? 'Student updated. Invite email is ready.' : 'Student added. Invite email is ready.', 'ok');
+  }
+
+  async function handleInvite(student) {
+    if (!student.email) { window.toast?.('Add the student\'s email first.', 'warn'); return; }
+    setInviteStatus(s => ({ ...s, [student.id]: 'sending' }));
+    try {
+      const redirectTo = window.location.origin + window.location.pathname;
+      await sendMagicLink(student.email.trim(), redirectTo, { createUser: true });
+      setInviteStatus(s => ({ ...s, [student.id]: 'sent' }));
+      window.toast?.(`Login link sent to ${student.email}`, 'ok');
+      setTimeout(() => setInviteStatus(s => ({ ...s, [student.id]: null })), 8000);
+    } catch (err) {
+      setInviteStatus(s => ({ ...s, [student.id]: 'error' }));
+      window.toast?.(`Could not send invite: ${err.message}`, 'error');
+      setTimeout(() => setInviteStatus(s => ({ ...s, [student.id]: null })), 5000);
+    }
   }
 
   async function handleDelete(student) {
@@ -140,7 +158,7 @@ export default function StudentsPage({ students: propStudents, onNavigate }) {
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {filtered.map(student => (
-            <StudentRow key={student.id} student={student} nextAction={studentActions[student.id]} onProfile={() => onNavigate('students:profile', { studentId: student.id })} onEdit={() => openEdit(student)} onDelete={() => handleDelete(student)} />
+            <StudentRow key={student.id} student={student} nextAction={studentActions[student.id]} inviteStatus={inviteStatus[student.id]} onProfile={() => onNavigate('students:profile', { studentId: student.id })} onEdit={() => openEdit(student)} onDelete={() => handleDelete(student)} onInvite={() => handleInvite(student)} />
           ))}
         </div>
       )}
@@ -148,8 +166,10 @@ export default function StudentsPage({ students: propStudents, onNavigate }) {
   );
 }
 
-function StudentRow({ student, nextAction, onProfile, onEdit, onDelete }) {
+function StudentRow({ student, nextAction, inviteStatus, onProfile, onEdit, onDelete, onInvite }) {
   const action = nextAction || { label: 'Ready for next class', tone: 'success' };
+  const isSending = inviteStatus === 'sending';
+  const isSent = inviteStatus === 'sent';
   return (
     <Card style={{ padding: '12px 16px' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
@@ -162,11 +182,22 @@ function StudentRow({ student, nextAction, onProfile, onEdit, onDelete }) {
           </div>
         </div>
         <Pill tone="muted">{student.currentLevel}</Pill>
-        <Pill tone={student.email ? 'success' : 'warning'}>{student.email ? 'Invite ready' : 'Email needed'}</Pill>
         <Pill tone={action.tone}>{action.label}</Pill>
         <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>Session {student.session || 1}/{student.totalSessions || 24}</span>
-        <div style={{ display: 'flex', gap: 6 }}>
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
           <Button variant="primary" size="sm" onClick={onProfile}>View Profile</Button>
+          {student.email && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onInvite}
+              disabled={isSending || isSent}
+              title={`Send login link to ${student.email}`}
+              style={isSent ? { color: 'var(--success)' } : {}}
+            >
+              {isSending ? 'Sending…' : isSent ? '✓ Link sent' : 'Send login link'}
+            </Button>
+          )}
           <Button variant="ghost" size="sm" onClick={onEdit}><Icon.edit size={13} /></Button>
           <Button variant="ghost" size="sm" onClick={onDelete} style={{ color: 'var(--danger)' }}><Icon.trash size={13} /></Button>
         </div>
