@@ -4,7 +4,7 @@
 import { useState, useEffect } from 'react';
 import { Icon, Card, SectionHeader, Pill, Button, Avatar } from '../components/shared.jsx';
 import { getStudents, saveStudent, deleteStudent, getDiagnoses, getHomework, getAllSubmissions, getClassEvents } from '../lib/workflow.js';
-import { sendMagicLink } from '../lib/supabase-storage.js';
+import { sendMagicLink, signUpWithPassword } from '../lib/supabase-storage.js';
 
 export default function StudentsPage({ students: propStudents, onNavigate }) {
   const [students, setStudents] = useState([]);
@@ -15,6 +15,7 @@ export default function StudentsPage({ students: propStudents, onNavigate }) {
   const [saving, setSaving] = useState(false);
   const [studentActions, setStudentActions] = useState({});
   const [inviteStatus, setInviteStatus] = useState({});
+  const [setup, setSetup] = useState(null); // { id, pwd, busy, result }
 
   useEffect(() => { load(); }, []);
 
@@ -76,6 +77,22 @@ export default function StudentsPage({ students: propStudents, onNavigate }) {
       setInviteStatus(s => ({ ...s, [student.id]: 'error' }));
       window.toast?.(`Could not send invite: ${err.message}`, 'error');
       setTimeout(() => setInviteStatus(s => ({ ...s, [student.id]: null })), 5000);
+    }
+  }
+
+  function openSetup(student) {
+    setSetup({ id: student.id, pwd: genPassword(), busy: false, result: null });
+  }
+
+  async function handleCreateAccount(student) {
+    if (!setup || setup.pwd.length < 6) return;
+    setSetup(s => ({ ...s, busy: true, result: null }));
+    try {
+      await signUpWithPassword(student.email.trim(), setup.pwd);
+      setSetup(s => ({ ...s, busy: false, result: { ok: true, email: student.email, password: s.pwd } }));
+      window.toast?.(`Account created for ${student.name}`, 'ok');
+    } catch (err) {
+      setSetup(s => ({ ...s, busy: false, result: { ok: false, error: err.message } }));
     }
   }
 
@@ -158,7 +175,21 @@ export default function StudentsPage({ students: propStudents, onNavigate }) {
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {filtered.map(student => (
-            <StudentRow key={student.id} student={student} nextAction={studentActions[student.id]} inviteStatus={inviteStatus[student.id]} onProfile={() => onNavigate('students:profile', { studentId: student.id })} onEdit={() => openEdit(student)} onDelete={() => handleDelete(student)} onInvite={() => handleInvite(student)} />
+            <StudentRow
+              key={student.id}
+              student={student}
+              nextAction={studentActions[student.id]}
+              inviteStatus={inviteStatus[student.id]}
+              setupState={setup?.id === student.id ? setup : null}
+              onProfile={() => onNavigate('students:profile', { studentId: student.id })}
+              onEdit={() => openEdit(student)}
+              onDelete={() => handleDelete(student)}
+              onInvite={() => handleInvite(student)}
+              onOpenSetup={() => openSetup(student)}
+              onCloseSetup={() => setSetup(null)}
+              onSetupPwd={pwd => setSetup(s => ({ ...s, pwd, result: null }))}
+              onCreateAccount={() => handleCreateAccount(student)}
+            />
           ))}
         </div>
       )}
@@ -166,12 +197,27 @@ export default function StudentsPage({ students: propStudents, onNavigate }) {
   );
 }
 
-function StudentRow({ student, nextAction, inviteStatus, onProfile, onEdit, onDelete, onInvite }) {
+function genPassword() {
+  const chars = 'abcdefghjkmnpqrstuvwxyz23456789';
+  let p = 'Met-';
+  for (let i = 0; i < 6; i++) p += chars[Math.floor(Math.random() * chars.length)];
+  return p;
+}
+
+function copyText(text) {
+  navigator.clipboard?.writeText(text).catch(() => {});
+}
+
+function StudentRow({ student, nextAction, inviteStatus, setupState, onProfile, onEdit, onDelete, onInvite, onOpenSetup, onCloseSetup, onSetupPwd, onCreateAccount }) {
   const action = nextAction || { label: 'Ready for next class', tone: 'success' };
   const isSending = inviteStatus === 'sending';
   const isSent = inviteStatus === 'sent';
+  const isSetupOpen = Boolean(setupState);
+  const result = setupState?.result;
+
   return (
     <Card style={{ padding: '12px 16px' }}>
+      {/* Main row */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
         <Avatar name={student.name} size={36} />
         <div style={{ flex: 1, minWidth: 160 }}>
@@ -187,14 +233,15 @@ function StudentRow({ student, nextAction, inviteStatus, onProfile, onEdit, onDe
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
           <Button variant="primary" size="sm" onClick={onProfile}>View Profile</Button>
           {student.email && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onInvite}
-              disabled={isSending || isSent}
+            <Button variant="ghost" size="sm" onClick={isSetupOpen ? onCloseSetup : onOpenSetup}
+              style={isSetupOpen ? { color: 'var(--accent)' } : {}}>
+              {isSetupOpen ? 'Cancel setup' : 'Set up account'}
+            </Button>
+          )}
+          {student.email && (
+            <Button variant="ghost" size="sm" onClick={onInvite} disabled={isSending || isSent}
               title={`Send login link to ${student.email}`}
-              style={isSent ? { color: 'var(--success)' } : {}}
-            >
+              style={isSent ? { color: 'var(--success)' } : {}}>
               {isSending ? 'Sending…' : isSent ? '✓ Link sent' : 'Send login link'}
             </Button>
           )}
@@ -202,6 +249,73 @@ function StudentRow({ student, nextAction, inviteStatus, onProfile, onEdit, onDe
           <Button variant="ghost" size="sm" onClick={onDelete} style={{ color: 'var(--danger)' }}><Icon.trash size={13} /></Button>
         </div>
       </div>
+
+      {/* Account setup panel */}
+      {isSetupOpen && (
+        <div style={{ marginTop: 14, paddingTop: 14, borderTop: '1px solid var(--border)' }}>
+          {result?.ok ? (
+            /* ── Success: show credentials ── */
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <p style={{ fontSize: 'var(--text-sm)', fontWeight: 700, color: 'var(--success)', margin: 0 }}>
+                ✓ Account created for {student.name}
+              </p>
+              <div style={{ background: 'var(--bg)', border: '1.5px solid var(--border)', borderRadius: 8, padding: '12px 16px', fontFamily: 'monospace', fontSize: 'var(--text-sm)', lineHeight: 2 }}>
+                <div><strong>Login (email):</strong> {result.email}</div>
+                <div><strong>Password:</strong> {result.password}</div>
+              </div>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                <Button variant="primary" size="sm" onClick={() => {
+                  copyText(`Login: ${result.email}\nPassword: ${result.password}`);
+                  window.toast?.('Credentials copied!', 'ok');
+                }}>
+                  Copy credentials
+                </Button>
+                <Button variant="ghost" size="sm" onClick={() => {
+                  const msg = `Hi ${student.firstName || student.name.split(' ')[0]}! Here are your login credentials for the MET Proficiency Mastery platform:\n\nWebsite: https://met-mastery.vercel.app\nEmail: ${result.email}\nPassword: ${result.password}\n\nAfter logging in, go to Settings to change your password if you'd like.`;
+                  copyText(msg);
+                  window.toast?.('WhatsApp message copied!', 'ok');
+                }}>
+                  Copy WhatsApp message
+                </Button>
+                <Button variant="ghost" size="sm" onClick={onCloseSetup}>Done</Button>
+              </div>
+            </div>
+          ) : (
+            /* ── Setup form ── */
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <p style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', margin: 0 }}>
+                Create a login for <strong>{student.name}</strong> ({student.email}). You can use the generated password or type your own.
+              </p>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                <input
+                  className="input"
+                  style={{ maxWidth: 240 }}
+                  value={setupState.pwd}
+                  onChange={e => onSetupPwd(e.target.value)}
+                  placeholder="Password (min. 6 chars)"
+                  disabled={setupState.busy}
+                />
+                <Button variant="ghost" size="sm" onClick={() => onSetupPwd(genPassword())} disabled={setupState.busy}>
+                  Regenerate
+                </Button>
+              </div>
+              {result?.error && (
+                <p style={{ fontSize: 'var(--text-sm)', color: 'var(--danger)', margin: 0 }}>
+                  {result.error.includes('email confirmation') ? (
+                    <>Email confirmation is ON in Supabase. Go to <strong>Supabase → Auth → Providers → Email</strong> and turn off "Confirm email", then try again.</>
+                  ) : result.error}
+                </p>
+              )}
+              <div style={{ display: 'flex', gap: 8 }}>
+                <Button variant="primary" size="sm" onClick={onCreateAccount} disabled={setupState.busy || !setupState.pwd}>
+                  {setupState.busy ? 'Creating…' : 'Create account'}
+                </Button>
+                <Button variant="ghost" size="sm" onClick={onCloseSetup} disabled={setupState.busy}>Cancel</Button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </Card>
   );
 }
