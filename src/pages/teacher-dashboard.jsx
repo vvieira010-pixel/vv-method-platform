@@ -54,19 +54,18 @@ export default function TeacherDashboard({ students, onNavigate, teacherName = '
   const priority = getTodayPriority(data);
 
   return (
-    <div style={styles.shell}>
-      {/* Header */}
+    <div className="td-shell">
       <div style={{ marginBottom: 16 }}>
-        <h1 style={styles.headline}>Good {timeOfDay()}, {teacherName}.</h1>
-        <p style={styles.sub}>{today}</p>
+        <h1 className="td-headline">Good {timeOfDay()}, {teacherName}.</h1>
+        <p className="td-sub">{today}</p>
       </div>
 
-      <Card className="teacher-priority-card" style={{ ...styles.priorityCard, animation: 'fadeUp 0.3s var(--ease) both', animationDelay: '0ms' }}>
-        <div style={styles.priorityIcon}>{priority.icon}</div>
-        <div className="teacher-priority-copy">
-          <div style={styles.priorityKicker}>Today priority</div>
-          <h2 style={styles.priorityTitle}>{priority.title}</h2>
-          <p style={styles.priorityText}>{priority.text}</p>
+      <Card className="teacher-priority-card td-anim" style={{ marginBottom: 12, padding: 14, border: '1.5px solid rgba(45,139,139,0.32)', background: 'linear-gradient(135deg, #ffffff 0%, #f0f8f8 100%)', animationDelay: '0ms' }}>
+        <div className="td-priority-icon">{priority.icon}</div>
+        <div className="td-priority-copy">
+          <div className="td-priority-kicker">Today priority</div>
+          <h2 className="td-priority-title">{priority.title}</h2>
+          <p className="td-priority-text">{priority.text}</p>
         </div>
         <Button variant="primary" onClick={() => onNavigate(priority.target, priority.params || {})}>
           {priority.action} <Icon.arrowR size={14} />
@@ -74,14 +73,14 @@ export default function TeacherDashboard({ students, onNavigate, teacherName = '
       </Card>
 
       {/* KPIs */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(130px,1fr))', gap: 8, marginBottom: 14 }}>
+      <div className="td-kpi-grid">
         {[
           { label: 'Students', value: data.stats.students, icon: <Icon.student size={16} /> },
           { label: 'Classes today', value: data.stats.classesToday, icon: <Icon.calendar size={16} />, tone: data.stats.classesToday > 0 ? 'info' : '' },
           { label: 'Need diagnosis', value: data.stats.needsDiagnosis, icon: <Icon.diagnose size={16} />, tone: data.stats.needsDiagnosis > 0 ? 'warning' : '', onClick: () => onNavigate('diagnostics') },
           { label: 'Pending review', value: data.stats.pendingReview, icon: <Icon.doc size={16} />, tone: data.stats.pendingReview > 0 ? 'danger' : '', onClick: () => onNavigate('submissions') },
         ].map((kpi, i) => (
-          <div key={kpi.label} style={{ animation: 'fadeUp 0.3s var(--ease) both', animationDelay: `${i * 60}ms` }}>
+          <div key={kpi.label} className="td-anim" style={{ animationDelay: `${i * 60}ms` }}>
             <KpiCard {...kpi} />
           </div>
         ))}
@@ -89,20 +88,20 @@ export default function TeacherDashboard({ students, onNavigate, teacherName = '
 
       <div className="teacher-dashboard-stack">
         {/* Today's classes */}
-        <Card style={{ padding: 14, animation: 'fadeUp 0.3s var(--ease) both', animationDelay: '80ms' }}>
+        <Card className="td-anim" style={{ padding: 14, animationDelay: '80ms' }}>
           <SectionHeader title="Today's Classes" icon={<Icon.calendar size={15} />} action={<Button variant="ghost" size="sm" onClick={() => onNavigate('calendar')}>View calendar</Button>} />
           {data.todayClasses.length === 0 ? (
-            <p style={styles.empty}>No classes scheduled today.</p>
+            <p className="td-empty">No classes scheduled today.</p>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 8 }}>
+            <div className="td-card-list">
               {data.todayClasses.map(ev => {
                 const student = students.find(s => s.id === ev.studentId);
                 return (
-                  <div key={ev.id} style={styles.listRow}>
+                  <div key={ev.id} className="td-list-row">
                     <Avatar name={student?.name || '?'} size={28} />
                     <div style={{ flex: 1 }}>
-                      <div style={styles.rowTitle}>{student?.firstName || 'Unknown'} — {ev.title}</div>
-                      <div style={styles.rowSub}>{ev.startTime || '—'} · {ev.classFocus || 'No focus set'}</div>
+                      <div className="td-row-title">{student?.firstName || 'Unknown'} — {ev.title}</div>
+                      <div className="td-row-sub">{ev.startTime || '—'} · {ev.classFocus || 'No focus set'}</div>
                     </div>
                     <Button variant="ghost" size="sm" onClick={() => onNavigate('calendar:class', { classEventId: ev.id })}>Open</Button>
                   </div>
@@ -113,20 +112,20 @@ export default function TeacherDashboard({ students, onNavigate, teacherName = '
         </Card>
 
         {/* Needs diagnosis */}
-        <Card style={{ padding: 14, animation: 'fadeUp 0.3s var(--ease) both', animationDelay: '160ms' }}>
+        <Card className="td-anim" style={{ padding: 14, animationDelay: '160ms' }}>
           <SectionHeader title="Classes Needing Diagnosis" icon={<Icon.diagnose size={15} />} action={<Button variant="ghost" size="sm" onClick={() => onNavigate('diagnostics')}>All diagnostics</Button>} />
           {data.needsDiagnosis.length === 0 ? (
-            <p style={styles.empty}>All caught up! No classes awaiting diagnosis.</p>
+            <p className="td-empty">All caught up! No classes awaiting diagnosis.</p>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 8 }}>
+            <div className="td-card-list">
               {data.needsDiagnosis.slice(0, 5).map(ev => {
                 const student = students.find(s => s.id === ev.studentId);
                 return (
-                  <div key={ev.id} style={styles.listRow}>
+                  <div key={ev.id} className="td-list-row">
                     <Avatar name={student?.name || '?'} size={28} />
                     <div style={{ flex: 1 }}>
-                      <div style={styles.rowTitle}>{student?.firstName || 'Unknown'}</div>
-                      <div style={styles.rowSub}>{new Date(ev.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })} · {ev.title}</div>
+                      <div className="td-row-title">{student?.firstName || 'Unknown'}</div>
+                      <div className="td-row-sub">{new Date(ev.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })} · {ev.title}</div>
                     </div>
                     <Button variant="primary" size="sm" onClick={() => onNavigate('diagnostics:create', { studentId: ev.studentId, classEventId: ev.id })}>
                       Diagnose
@@ -139,20 +138,20 @@ export default function TeacherDashboard({ students, onNavigate, teacherName = '
         </Card>
 
         {/* Pending submissions */}
-        <Card style={{ padding: 14, animation: 'fadeUp 0.3s var(--ease) both', animationDelay: '240ms' }}>
+        <Card className="td-anim" style={{ padding: 14, animationDelay: '240ms' }}>
           <SectionHeader title="Submissions Awaiting Review" icon={<Icon.doc size={15} />} action={<Button variant="ghost" size="sm" onClick={() => onNavigate('submissions')}>All submissions</Button>} />
           {data.pendingSubmissions.length === 0 ? (
-            <p style={styles.empty}>No submissions waiting for review.</p>
+            <p className="td-empty">No submissions waiting for review.</p>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 8 }}>
+            <div className="td-card-list">
               {data.pendingSubmissions.slice(0, 5).map(sub => {
                 const student = students.find(s => s.id === sub.studentId);
                 return (
-                  <div key={sub.id} style={styles.listRow}>
+                  <div key={sub.id} className="td-list-row">
                     <Avatar name={student?.name || '?'} size={28} />
                     <div style={{ flex: 1 }}>
-                      <div style={styles.rowTitle}>{student?.firstName || 'Unknown'}</div>
-                      <div style={styles.rowSub}>Submitted {new Date(sub.submittedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</div>
+                      <div className="td-row-title">{student?.firstName || 'Unknown'}</div>
+                      <div className="td-row-sub">Submitted {new Date(sub.submittedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</div>
                     </div>
                     <Button variant="primary" size="sm" onClick={() => onNavigate('submissions:review', { submissionId: sub.id })}>Review</Button>
                   </div>
@@ -249,31 +248,4 @@ function QuickAction({ icon, label, onClick }) {
   );
 }
 
-const styles = {
-  shell: { maxWidth: 1000, margin: '0 auto', padding: '18px 16px' },
-  headline: { fontFamily: 'var(--font-display-serif)', fontSize: 'var(--text-2xl)', fontWeight: 400, color: 'var(--accent-deep)', margin: 0 },
-  sub: { fontSize: 'var(--text-sm)', color: 'var(--muted)', margin: '4px 0 0' },
-  priorityCard: {
-    marginBottom: 12,
-    padding: 14,
-    border: '1.5px solid rgba(45,139,139,0.32)',
-    background: 'linear-gradient(135deg, #ffffff 0%, #f0f8f8 100%)',
-  },
-  priorityIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 'var(--radius-sm)',
-    display: 'grid',
-    placeItems: 'center',
-    background: 'var(--accent-subtle)',
-    color: 'var(--accent-text)',
-    flexShrink: 0,
-  },
-  priorityKicker: { fontSize: 'var(--text-xs)', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--accent-text)' },
-  priorityTitle: { margin: '1px 0 2px', fontSize: 'var(--text-lg)', color: 'var(--accent-deep)', fontWeight: 800 },
-  priorityText: { margin: 0, fontSize: 'var(--text-sm)', color: 'var(--text-2)', lineHeight: 1.5 },
-  empty: { color: 'var(--muted)', fontSize: 'var(--text-sm)', marginTop: 8, fontStyle: 'italic' },
-  listRow: { display: 'flex', alignItems: 'center', gap: 8, padding: '6px 0', borderBottom: '1px solid var(--divider)' },
-  rowTitle: { fontWeight: 600, fontSize: 'var(--text-sm)' },
-  rowSub: { fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: 2 },
-};
+// Styles migrated to CSS classes (td-*) in shared.jsx GLOBAL_CSS

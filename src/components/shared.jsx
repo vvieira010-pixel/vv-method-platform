@@ -387,6 +387,26 @@ const GLOBAL_CSS = `
   .dx-section.dx-student { border-left-color: var(--accent); }
   .dx-section + .dx-section { border-top: 1px solid var(--divider); }
   .dx-label { display: block; font-size: var(--text-xs); font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
+
+  /* ── Teacher dashboard ── */
+  .td-shell { max-width: 1000px; margin: 0 auto; padding: 18px 16px; }
+  .td-headline { font-size: var(--text-2xl); font-weight: 800; color: var(--primary); margin: 0; }
+  .td-sub { font-size: var(--text-sm); color: var(--muted); margin: 4px 0 0; }
+  .td-priority-card { margin-bottom: 12; padding: 14px; display: flex; align-items: center; gap: 12px; }
+  .td-priority-icon { width: 36px; height: 36px; border-radius: var(--radius-sm); display: grid; place-items: center; background: var(--accent-subtle); color: var(--accent-text); flex-shrink: 0; }
+  .td-priority-copy { flex: 1; }
+  .td-priority-kicker { font-size: var(--text-xs); font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent-text); }
+  .td-priority-title { margin: 1px 0 2px; font-size: var(--text-lg); color: var(--primary); font-weight: 800; }
+  .td-priority-text { margin: 0; font-size: var(--text-sm); color: var(--text-2); line-height: 1.5; }
+  .td-empty { color: var(--muted); font-size: var(--text-sm); margin-top: 8px; font-style: italic; }
+  .td-list-row { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--divider); }
+  .td-row-title { font-weight: 600; font-size: var(--text-sm); }
+  .td-row-sub { font-size: var(--text-xs); color: var(--muted); margin-top: 2px; }
+  .td-kpi-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(130px,1fr)); gap: 8px; margin-bottom: 14px; }
+  .td-section-title { font-weight: 700; font-size: var(--text-sm); color: var(--primary); margin: 0; }
+  .td-anim { animation: fadeUp 0.3s var(--ease-out) both; }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  .td-card-list { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
 `;
 
 let cssInjected = false;
