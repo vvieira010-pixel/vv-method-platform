@@ -678,9 +678,63 @@ export const buildExerciseListPrompt = ({ student, diagnosis, level, skill }) =>
   const vocab = pickArray(diagnosis?.vocabTargets?.vocabularyTargets, diagnosis?.sections?.vocabGrammarTargets?.content?.vocabularyTargets);
   const grammar = pickArray(diagnosis?.vocabTargets?.grammarTargets, diagnosis?.sections?.vocabGrammarTargets?.content?.grammarTargets);
   const levelNote = level ? `\nTarget CEFR level: ${level}` : '';
-  const skillNote = skill ? `\nSkill focus: ${skill}` : '';
 
-  return `You are a MET English exam preparation expert. Generate a menu of 7 distinct, ready-to-use exercises for the teacher to choose from.${levelNote}${skillNote}
+  const isSpeaking = skill === 'speaking';
+  const isWriting  = skill === 'writing';
+  const exerciseCount = isSpeaking ? 5 : isWriting ? 2 : 7;
+
+  const MET_SPEAKING_BRIEF = `
+━━━ MET SPEAKING TASK ALIGNMENT ━━━
+Generate exactly 5 exercises — one per MET Speaking task. Each must match the task structure below.
+Set metTask and targetSeconds exactly as specified. Do NOT invent your own time limits.
+
+Q1 | metTask:"Q1" | targetSeconds:60  | Picture description
+  Structure: general scene → key details (foreground/background) → inference about what may be happening
+  Register: neutral, descriptive. Use precise nouns. Avoid vague words like "a big thing".
+  imageDescription: required — write a 1–2 sentence vivid scene description the student will describe.
+
+Q2 | metTask:"Q2" | targetSeconds:60  | Personal experience / narrative
+  Structure: setup → event → outcome → brief reflection. Use past tenses consistently.
+  Register: informal, narrative. Include sequence connectors (first, then, in the end).
+  imageDescription: omit (no picture needed).
+
+Q3 | metTask:"Q3" | targetSeconds:90  | Opinion / preference
+  Structure: clear position stated first → Reason 1 + example → Reason 2 → brief conclusion.
+  Register: informal but committed. ONE side only — never give both sides.
+  imageDescription: omit.
+
+Q4 | metTask:"Q4" | targetSeconds:90  | Advantages and disadvantages
+  Structure: introduce both sides → Advantage 1 + support → Disadvantage 1 + support → balanced conclusion.
+  Register: neutral, balanced. BOTH sides required with equal development (~40 s each).
+  imageDescription: omit.
+
+Q5 | metTask:"Q5" | targetSeconds:90  | Persuade an authority figure
+  Structure: address authority respectfully → state problem → give 2–3 strong reasons → propose solution → clear request.
+  Register: formal throughout ("I strongly believe…", "I would like to suggest…"). ONE committed side only.
+  imageDescription: omit.`;
+
+  const MET_WRITING_BRIEF = `
+━━━ MET WRITING TASK ALIGNMENT ━━━
+Generate exactly 2 exercises — one per MET Writing task. Match the format exactly.
+
+T1 | metTask:"T1" | targetWords:80 | type:"short"
+  Format: 3 related personal questions about a real-world situation.
+  Student answers each in 2–3 sentences (direct answer + reason + small detail/example).
+  Rubric hint: "Answer all 3 questions directly. Add a reason and a specific detail to each."
+  Do NOT write an essay prompt. Write 3 numbered questions.
+
+T2 | metTask:"T2" | targetWords:250 | type:"short"
+  Format: a formal opinion essay prompt on a real-world topic.
+  Student writes intro (opinion) + body 1 (reason + example) + body 2 (reason or counterpoint) + conclusion.
+  Rubric hint: "4 paragraphs: opinion → reason + example → second point → conclusion. Use connectors."
+  Prompt should invite a genuine opinion, not just describe something.`;
+
+  const skillNote = isSpeaking ? MET_SPEAKING_BRIEF
+                  : isWriting  ? MET_WRITING_BRIEF
+                  : skill      ? `\nSkill focus: ${skill}`
+                  : '';
+
+  return `You are a MET English exam preparation expert. Generate a menu of ${exerciseCount} distinct, ready-to-use exercises for the teacher to choose from.${levelNote}${skillNote}
 
 ━━━ STUDENT ━━━
 Name: ${student?.name || 'Student'}
@@ -700,7 +754,7 @@ ${grammar.slice(0, 3).map(g => `- ${g.area}: ${g.issue}`).join('\n') || 'None.'}
 
 ━━━ RULES ━━━
 - Each exercise must be FULLY WRITTEN — the student opens it and starts immediately.
-- Cover different MET skills: speaking, writing, reading or listening, grammar, vocabulary, and test strategy.
+${isSpeaking ? '- Generate one exercise per MET Speaking task (Q1–Q5). Follow the task map above exactly.' : isWriting ? '- Generate one exercise per MET Writing task (T1 and T2). Follow the task format above exactly.' : '- Cover different MET skills: speaking, writing, reading or listening, grammar, vocabulary, and test strategy.'}
 - Each exercise should take 5–15 minutes.
 - Match B1–B2 transition level. Use general MET topics by default, not nurse/healthcare scenarios.
 - ${GENERAL_MET_TOPIC_RULES}
@@ -715,13 +769,13 @@ You MUST use these exact type IDs. Each has a specific JSON shape:
 1. "mcq" (Multiple Choice) — question + 4 options + correct answer index
 2. "blank" (Fill the Blank) — template with ___ markers + correct answers (pipe-separated alternatives)
 3. "short" (Short Answer) — prompt + rubric hint + target word count
-4. "speak" (Speaking Prompt) — prompt + target seconds
+4. "speak" (Speaking Prompt) — prompt + targetSeconds + metTask (required when skill=speaking: "Q1"–"Q5") + imageDescription (required for Q1 picture tasks)
 5. "order" (Order Sentences) — sentences array in correct order (student sees shuffled)
 6. "fix" (Error Correction) — errorText + correctedText + hint
 7. "flash" (Flashcards) — at least 10 pairs of term/definition
 8. "listen" (Listening Exercise) — audioText (the text read aloud via TTS) + plays (number of allowed listens, default 2) + question + 4 options + correct answer index + optional explanation
 
-Return ONLY valid JSON — an array of 7 exercises mixing different types:
+Return ONLY valid JSON — an array of ${exerciseCount} exercises${isSpeaking ? ' (one per MET Speaking task Q1–Q5)' : isWriting ? ' (T1 short questions, T2 essay)' : ' mixing different types'}:
 [
   {
     "title": "Short exercise title",

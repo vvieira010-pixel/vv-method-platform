@@ -454,6 +454,24 @@ function SpeakPlayer({ ex, res, update, readOnly }) {
         </div>
       ) : null}
 
+      {ex.metTask && (() => {
+        const MET_TASK_LABELS = {
+          Q1: 'Task 1 — Describe a picture · 60 s',
+          Q2: 'Task 2 — Personal experience · 60 s',
+          Q3: 'Task 3 — Give an opinion · 90 s',
+          Q4: 'Task 4 — Advantages & disadvantages · 90 s',
+          Q5: 'Task 5 — Persuade an authority · 90 s',
+        };
+        const label = MET_TASK_LABELS[ex.metTask];
+        if (!label) return null;
+        return (
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, marginBottom: 10, padding: '4px 10px', background: 'var(--accent-subtle)', border: '1px solid var(--accent-soft)', borderRadius: 'var(--radius-sm)' }}>
+            <span style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--accent-deep)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>MET</span>
+            <span style={{ fontSize: 'var(--text-xs)', color: 'var(--accent-deep)', fontWeight: 600 }}>{label}</span>
+          </div>
+        );
+      })()}
+
       <div style={{ background: 'var(--bg)', borderRadius: 0, padding: '14px 16px', marginBottom: 14 }}>
         <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>Speaking prompt</div>
         <p style={{ margin: 0, fontSize: 'var(--text-md)', color: 'var(--text)', lineHeight: 1.55, fontWeight: 500 }}>
