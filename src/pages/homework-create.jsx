@@ -142,7 +142,10 @@ export default function HomeworkCreate({ diagnosisId, studentId, students, onNav
   const [exerciseOptions, setExerciseOptions] = useState([]);
   const [loadingOptions, setLoadingOptions] = useState(false);
   const [showTypePicker, setShowTypePicker] = useState(false);
-  const [selectedLevel, setSelectedLevel] = useState('B1'); // New state for level
+  const [selectedLevel, setSelectedLevel] = useState('B1');
+  const [step2Phase, setStep2Phase] = useState('choose'); // 'choose' | 'generate'
+  const [selectedTypes, setSelectedTypes] = useState([]);
+  const [genPerType, setGenPerType] = useState(2);
   const [wizardDone, setWizardDone] = useState(false);
   const [selectedSkill, setSelectedSkill] = useState(null);
   const [showUnitBank, setShowUnitBank] = useState(false);
@@ -251,9 +254,56 @@ function getPriorityItems(dx) {
     const n = Math.max(1, Math.min(20, Number(count) || 1));
     const created = Array.from({ length: n }, () => createExercise(type, level));
     setForm(f => ({ ...f, exercises: [...f.exercises, ...created] }));
-    setExpandedEx(created[0].id); // expand the first of the batch for editing
+    setExpandedEx(created[0].id);
     setShowTypePicker(false);
     if (n > 1) window.toast?.(`Added ${n} ${level} ${type} exercises.`, 'ok');
+  }
+
+  function handleAddSelectedTypes() {
+    if (selectedTypes.length === 0) return;
+    const created = selectedTypes.flatMap(type =>
+      Array.from({ length: genPerType }, () => createExercise(type, selectedLevel))
+    );
+    setForm(f => ({ ...f, exercises: [...f.exercises, ...created] }));
+    setExpandedEx(created[0]?.id);
+    setStep2Phase('generate');
+    window.toast?.(`Added ${created.length} blank exercises (${selectedTypes.length} types).`, 'ok');
+  }
+
+  async function handleGenerateFromSelected() {
+    if (selectedTypes.length === 0 || !diagnosis) return;
+    setGenerating(true);
+    setGroupGenStatus('Generating exercises for selected types...');
+    try {
+      const allGenerated = [];
+      for (const type of selectedTypes) {
+        setGroupGenStatus(`Generating ${getExType(type)?.label || type} exercises...`);
+        const prompt = buildHomeworkGroupPrompt({
+          student, diagnosis,
+          group: type === 'mcq' ? 'grammar' : type === 'blank' ? 'grammar' : type === 'short' ? 'writing' : type === 'speak' ? 'speaking' : type === 'order' ? 'grammar' : type === 'fix' ? 'grammar' : type === 'flash' ? 'vocabulary' : type === 'listen' ? 'listening' : type === 'dialogue' ? 'speaking' : type === 'swap' ? 'vocabulary' : type === 'levelup' ? 'grammar' : 'grammar',
+          count: genPerType,
+        });
+        const data = await callAI(prompt, { ...HOMEWORK_AI_BASE_OPTIONS, max_tokens: 3500, temperature: 0.8 });
+        const raw = data?.content?.map(b => b.text || '').join('') || '';
+        const parsed = parseAiJson(raw);
+        const items = Array.isArray(parsed) ? parsed : (Array.isArray(parsed?.exercises) ? parsed.exercises : []);
+        const typedItems = items.map(item => ({ ...item, type }));
+        const { exercises, skipped } = buildCompleteExercises(typedItems);
+        allGenerated.push(...exercises);
+        if (exercises.length) {
+          window.toast?.(`${getExType(type)?.label}: ${exercises.length} generated${skipped ? `, ${skipped} skipped` : ''}.`, 'ok');
+        }
+      }
+      if (allGenerated.length > 0) {
+        setForm(f => ({ ...f, exercises: [...f.exercises, ...allGenerated] }));
+      }
+      setStep2Phase('generate');
+      window.toast?.(`${allGenerated.length} complete exercises generated across ${selectedTypes.length} types.`, allGenerated.length ? 'ok' : 'warn');
+    } catch (e) {
+      window.toast?.(`Generation failed: ${e.message}`, 'warn');
+    }
+    setGroupGenStatus('');
+    setGenerating(false);
   }
 
   function updateExercise(id, updated) {
@@ -620,217 +670,245 @@ function getPriorityItems(dx) {
           {currentStep === 2 && (
             <Card style={{ padding: 18 }}>
               <SectionHeader title="Step 2: Select Exercises" />
-              <div style={{ marginTop: 16 }}>
-                {/* Generate group */}
-                <div style={{ marginBottom: 8 }}>
-                  <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>Generate</div>
-                  <div className="homework-create-actions" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                    <Button variant="primary" size="sm" onClick={handleAiGenerate} disabled={!diagnosis || generating}>
-                      <Icon.spark size={12} /> {generating ? 'Generating...' : 'MET Homework with AI'}
-                    </Button>
-                    <Button variant="primary" size="sm" onClick={handleGenerateListening} disabled={!diagnosis || generatingListening}>
-                      <Icon.headphones size={12} /> {generatingListening ? 'Generating...' : 'Listening Task'}
-                    </Button>
-                    <Button variant="ghost" size="sm" onClick={handleGenerateOptions} disabled={!diagnosis || loadingOptions}>
-                      <Icon.refresh size={12} /> {loadingOptions ? 'Suggesting...' : 'Suggest from Diagnosis'}
-                    </Button>
-                    <Button variant="ghost" size="sm" onClick={() => setShowGroupGen(v => !v)} disabled={!diagnosis || generating}>
-                      <Icon.check size={12} /> Build by Skill
-                    </Button>
-                  </div>
-                </div>
 
-                {/* Browse group */}
-                <div style={{ marginBottom: 8 }}>
-                  <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>Browse & Add</div>
-                  <div className="homework-create-actions" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                    <Button variant="primary" size="sm" onClick={() => setShowTypePicker(!showTypePicker)}>
-                      <Icon.plus size={12} /> Add Exercise
-                    </Button>
-                    <Button variant="ghost" size="sm" onClick={() => { setShowB2Bank(v => !v); setShowLifestylePack(false); setShowTypePicker(false); }}>
-                      <Icon.homework size={12} /> MET B2 Pack
-                    </Button>
-                    <Button variant="ghost" size="sm" onClick={() => { setShowLifestylePack(v => !v); setShowB2Bank(false); setShowTypePicker(false); }}>
-                      <Icon.doc size={12} /> Lifestyle Pack
-                    </Button>
-                  </div>
-                </div>
-
-                {groupGenStatus && (
-                  <div style={{ marginBottom: 12, padding: '8px 10px', border: '1px solid var(--accent-soft)', borderRadius: 'var(--radius-sm)', background: 'var(--accent-subtle)', color: 'var(--accent-deep)', fontSize: 'var(--text-sm)' }}>
-                    {groupGenStatus}
-                  </div>
-                )}
-
-                {showGroupGen && (
-                  <div style={{ marginBottom: 16, padding: 14, border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', background: 'var(--surface)' }}>
-                    <div style={{ fontWeight: 700, fontSize: 'var(--text-sm)', marginBottom: 4 }}>Generate by MET skill</div>
-                    <div style={{ color: 'var(--muted)', fontSize: 'var(--text-xs)', lineHeight: 1.5, marginBottom: 12 }}>
-                      Choose the skills this homework should cover. Each generated item is checked for complete student-ready fields before it is added.
+              {step2Phase === 'choose' ? (
+                /* ── Phase: Choose types ── */
+                <div style={{ marginTop: 16 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 14 }}>
+                    <div style={{ fontSize: 'var(--text-sm)', fontWeight: 600 }}>Select exercise types to generate</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <span style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Level</span>
+                        <select
+                          value={selectedLevel}
+                          onChange={e => setSelectedLevel(e.target.value)}
+                          className="input"
+                          style={{ width: 72, padding: '4px 6px' }}
+                        >
+                          {['A1', 'A2', 'B1', 'B2', 'C1'].map(l => <option key={l} value={l}>{l}</option>)}
+                        </select>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <span style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Per type</span>
+                        <input
+                          type="number" min={1} max={10} value={genPerType}
+                          onChange={e => setGenPerType(Math.max(1, Math.min(10, Number(e.target.value) || 1)))}
+                          className="input"
+                          style={{ width: 56, padding: '4px 6px', textAlign: 'center' }}
+                        />
+                      </div>
                     </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 8 }}>
-                      {SKILL_GROUPS.map(group => (
-                        <label key={group.key} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', background: 'var(--bg)' }}>
-                          <span aria-hidden="true">{group.icon}</span>
-                          <span style={{ flex: 1, fontSize: 'var(--text-sm)', fontWeight: 600 }}>{group.label}</span>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 8, marginBottom: 16, maxHeight: 'min(52vh, 480px)', overflowY: 'auto' }}>
+                    {EX_TYPES.map(t => {
+                      const IconComp = Icon[t.iconKey];
+                      const checked = selectedTypes.includes(t.id);
+                      return (
+                        <label
+                          key={t.id}
+                          style={{
+                            display: 'flex', alignItems: 'center', gap: 10,
+                            padding: '10px 12px', borderRadius: 'var(--radius-md)',
+                            border: `1.5px solid ${checked ? t.color : 'var(--border)'}`,
+                            background: checked ? t.bg : 'var(--surface)',
+                            cursor: 'pointer', transition: 'all 0.12s',
+                          }}
+                        >
                           <input
-                            type="number"
-                            min="0"
-                            max="6"
-                            value={groupGenConfig[group.key] || 0}
-                            onChange={e => setGroupGenConfig(cfg => ({ ...cfg, [group.key]: Math.max(0, Math.min(6, Number(e.target.value) || 0)) }))}
-                            style={{ width: 48, padding: '4px 6px', border: '1px solid var(--border)', borderRadius: 6, fontSize: 'var(--text-sm)' }}
+                            type="checkbox"
+                            checked={checked}
+                            onChange={() => setSelectedTypes(ids => checked ? ids.filter(x => x !== t.id) : [...ids, t.id])}
+                            style={{ accentColor: t.color, width: 16, height: 16 }}
                           />
+                          <span style={{
+                            width: 28, height: 28, borderRadius: 6,
+                            background: t.bg, color: t.color,
+                            display: 'grid', placeItems: 'center', flexShrink: 0,
+                          }}>
+                            {IconComp && <IconComp size={13} />}
+                          </span>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontSize: 'var(--text-sm)', fontWeight: 600 }}>{t.label}</div>
+                            <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>{t.hint}</div>
+                          </div>
                         </label>
-                      ))}
-                    </div>
-                    <div className="homework-create-actions" style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-                      <Button variant="primary" size="sm" onClick={handleGenerateByGroups} disabled={generating}>
-                        <Icon.spark size={12} /> Generate Selected Skills
-                      </Button>
-                      <Button variant="ghost" size="sm" onClick={() => setShowGroupGen(false)} disabled={generating}>
-                        Close
-                      </Button>
-                    </div>
+                      );
+                    })}
                   </div>
-                )}
 
-                {showTypePicker && <ExerciseTypePicker onSelect={addExercise} onClose={() => setShowTypePicker(false)} />}
+                  <div className="homework-create-actions" style={{ display: 'flex', gap: 10, marginTop: 4, flexWrap: 'wrap' }}>
+                    <Button variant="primary" size="sm" onClick={handleAddSelectedTypes} disabled={selectedTypes.length === 0}>
+                      <Icon.plus size={12} /> Add Blank ({selectedTypes.length} type{selectedTypes.length !== 1 ? 's' : ''})
+                    </Button>
+                    <Button variant="primary" size="sm" onClick={handleGenerateFromSelected} disabled={selectedTypes.length === 0 || !diagnosis || generating}>
+                      <Icon.spark size={12} /> {generating ? 'Generating...' : 'Generate with AI'}
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={() => setStep2Phase('generate')}>
+                      Skip to Exercises ({form.exercises.length})
+                    </Button>
+                  </div>
 
-                {showB2Bank && (
-                  <div style={{ marginBottom: 16, border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: 'var(--accent-subtle)', borderBottom: '1px solid var(--border)' }}>
-                      <span style={{ fontWeight: 600, fontSize: 'var(--text-sm)' }}>{b2BankMeta.title}</span>
-                      <button onClick={() => setShowB2Bank(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)', fontSize: 16 }}>✕</button>
+                  <div style={{ marginTop: 16, borderTop: '1px solid var(--divider)', paddingTop: 14 }}>
+                    <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>Browse pre-made packs</div>
+                    <div className="homework-create-actions" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                      <Button variant="ghost" size="sm" onClick={() => { setShowB2Bank(v => !v); setShowLifestylePack(false); }}>
+                        <Icon.homework size={12} /> MET B2 Pack
+                      </Button>
+                      <Button variant="ghost" size="sm" onClick={() => { setShowLifestylePack(v => !v); setShowB2Bank(false); }}>
+                        <Icon.doc size={12} /> Lifestyle Pack
+                      </Button>
                     </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 0, maxHeight: 340, overflowY: 'auto' }}>
-                      {getB2Modules().map(mod => (
-                        <div key={mod.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', borderBottom: '1px solid var(--divider)', gap: 10 }}>
-                          <div>
-                            <div style={{ fontWeight: 500, fontSize: 'var(--text-sm)' }}>{mod.label}</div>
-                            <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', textTransform: 'capitalize' }}>{mod.skill} · {mod.exercises.length} exercises</div>
-                          </div>
-                          <Button variant="ghost" size="sm" onClick={() => addModuleFromB2Bank(mod)}>Add</Button>
+
+                    {showB2Bank && (
+                      <div style={{ marginTop: 10, marginBottom: 12, border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: 'var(--accent-subtle)', borderBottom: '1px solid var(--border)' }}>
+                          <span style={{ fontWeight: 600, fontSize: 'var(--text-sm)' }}>{b2BankMeta.title}</span>
+                          <button onClick={() => setShowB2Bank(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)', fontSize: 16 }}>✕</button>
                         </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {showLifestylePack && (
-                  <div style={{ marginBottom: 16, border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: 'var(--accent-subtle)', borderBottom: '1px solid var(--border)' }}>
-                      <div>
-                        <span style={{ fontWeight: 700, fontSize: 'var(--text-sm)' }}>{lifestylePackMeta.title}</span>
-                        <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: 2 }}>{lifestylePackMeta.level} · {lifestylePackMeta.subtitle}</div>
-                      </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <Button variant="ghost" size="sm" onClick={copyLifestylePrintablePack}>Copy printable</Button>
-                        <button onClick={() => setShowLifestylePack(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)', fontSize: 16 }}>✕</button>
-                      </div>
-                    </div>
-                    <div style={{ padding: '10px 14px', borderBottom: '1px solid var(--divider)', background: 'var(--surface)', fontSize: 'var(--text-xs)', color: 'var(--muted)', lineHeight: 1.5 }}>
-                      Converted from the bundled JSON pack in <strong>src/components/exercises</strong>. Use the Markdown file as the printable teacher copy.
-                    </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 0, maxHeight: 360, overflowY: 'auto' }}>
-                      {getLifestyleModules().map(mod => (
-                        <div key={mod.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', borderBottom: '1px solid var(--divider)', gap: 10 }}>
-                          <div style={{ minWidth: 0 }}>
-                            <div style={{ fontWeight: 600, fontSize: 'var(--text-sm)' }}>{mod.label}</div>
-                            <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', textTransform: 'capitalize' }}>
-                              {mod.skill} · {mod.sourceCount} source tasks · {mod.exerciseCount} platform exercises
-                            </div>
-                            {mod.note && (
-                              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 560 }}>
-                                {mod.note}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 0, maxHeight: 300, overflowY: 'auto' }}>
+                          {getB2Modules().map(mod => (
+                            <div key={mod.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', borderBottom: '1px solid var(--divider)', gap: 10 }}>
+                              <div>
+                                <div style={{ fontWeight: 500, fontSize: 'var(--text-sm)' }}>{mod.label}</div>
+                                <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', textTransform: 'capitalize' }}>{mod.skill} · {mod.exercises.length} exercises</div>
                               </div>
-                            )}
-                          </div>
-                          <Button variant="ghost" size="sm" onClick={() => addModuleFromLifestylePack(mod)}>Add</Button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {unitBankExercises.length > 0 && (
-                  <div style={{ marginBottom: 16, border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
-                    <button
-                      onClick={() => setShowUnitBank(v => !v)}
-                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', padding: '10px 14px', background: 'var(--accent-subtle)', border: 'none', cursor: 'pointer', borderBottom: showUnitBank ? '1px solid var(--border)' : 'none' }}
-                    >
-                      <span style={{ fontWeight: 600, fontSize: 'var(--text-sm)' }}>
-                        📚 Unit Bank — {subjectLabel || 'exercises'} from {selectedLevel} units ({unitBankExercises.length})
-                      </span>
-                      <Icon.chevronDown size={14} style={{ transform: showUnitBank ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s' }} />
-                    </button>
-                    {showUnitBank && (
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 0, maxHeight: 360, overflowY: 'auto' }}>
-                        {unitBankExercises.map((ex, i) => (
-                          <div key={ex.id || i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderBottom: '1px solid var(--divider)' }}>
-                            <ExTypeBadge typeId={ex.type} />
-                            <div style={{ flex: 1, minWidth: 0, fontSize: 'var(--text-sm)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                              {ex.question || ex.prompt || ex.errorText || (ex.pairs?.[0] ? `${ex.pairs[0].term} — ${ex.pairs[0].def}` : '')}
+                              <Button variant="ghost" size="sm" onClick={() => addModuleFromB2Bank(mod)}>Add</Button>
                             </div>
-                            <Button variant="ghost" size="sm" onClick={() => addUnitBankExercise(ex)}>Add</Button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {showLifestylePack && (
+                      <div style={{ marginTop: 10, marginBottom: 12, border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: 'var(--accent-subtle)', borderBottom: '1px solid var(--border)' }}>
+                          <div>
+                            <span style={{ fontWeight: 700, fontSize: 'var(--text-sm)' }}>{lifestylePackMeta.title}</span>
+                            <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: 2 }}>{lifestylePackMeta.level} · {lifestylePackMeta.subtitle}</div>
                           </div>
-                        ))}
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <Button variant="ghost" size="sm" onClick={copyLifestylePrintablePack}>Copy printable</Button>
+                            <button onClick={() => setShowLifestylePack(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)', fontSize: 16 }}>✕</button>
+                          </div>
+                        </div>
+                        <div style={{ padding: '10px 14px', borderBottom: '1px solid var(--divider)', background: 'var(--surface)', fontSize: 'var(--text-xs)', color: 'var(--muted)', lineHeight: 1.5 }}>
+                          Converted from the bundled JSON pack in <strong>src/components/exercises</strong>. Use the Markdown file as the printable teacher copy.
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 0, maxHeight: 320, overflowY: 'auto' }}>
+                          {getLifestyleModules().map(mod => (
+                            <div key={mod.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', borderBottom: '1px solid var(--divider)', gap: 10 }}>
+                              <div style={{ minWidth: 0 }}>
+                                <div style={{ fontWeight: 600, fontSize: 'var(--text-sm)' }}>{mod.label}</div>
+                                <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', textTransform: 'capitalize' }}>
+                                  {mod.skill} · {mod.sourceCount} source tasks · {mod.exerciseCount} platform exercises
+                                </div>
+                                {mod.note && (
+                                  <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 560 }}>
+                                    {mod.note}
+                                  </div>
+                                )}
+                              </div>
+                              <Button variant="ghost" size="sm" onClick={() => addModuleFromLifestylePack(mod)}>Add</Button>
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     )}
                   </div>
-                )}
 
-                {exerciseOptions.length > 0 && (
-                  <div style={{ marginBottom: 16, padding: 14, border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', background: 'var(--surface)' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 10 }}>
-                      <div>
-                        <div style={{ fontWeight: 700, fontSize: 'var(--text-sm)' }}>Complete AI suggestions</div>
-                        <div style={{ color: 'var(--muted)', fontSize: 'var(--text-xs)' }}>Reviewed for complete fields before adding.</div>
-                      </div>
-                      <Button variant="ghost" size="sm" onClick={() => setExerciseOptions([])}>Clear</Button>
-                    </div>
-                    <div style={{ display: 'grid', gap: 6 }}>
-                      {exerciseOptions.map((ex, i) => {
-                        const preview = exercisePreview(ex);
-                        const title = ex.title || getExType(ex.type)?.label || ex.type;
-                        const subtitle = preview.length > 90 ? preview.slice(0, 87) + '…' : preview;
-                        return (
-                          <div key={ex.id || i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', border: '1px solid var(--divider)', borderRadius: 'var(--radius-sm)', background: 'var(--bg)', overflow: 'hidden' }}>
-                            <ExTypeBadge typeId={ex.type} />
-                            <div style={{ flex: 1, minWidth: 0 }}>
-                              <div style={{ fontSize: 'var(--text-sm)', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{title}</div>
-                              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{subtitle}</div>
-                            </div>
-                            <Button variant="ghost" size="sm" onClick={() => addAiExerciseToList(ex)}>Add</Button>
-                          </div>
-                        );
-                      })}
-                    </div>
+                  <div className="homework-create-actions" style={{ display: 'flex', gap: 10, marginTop: 20 }}>
+                    <Button variant="ghost" onClick={() => setCurrentStep(1)}>Back</Button>
                   </div>
-                )}
-                 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  {form.exercises.map((ex, i) => (
-                    <ExerciseCard
-                      key={ex.id}
-                      exercise={ex}
-                      index={i}
-                      total={form.exercises.length}
-                      isExpanded={expandedEx === ex.id}
-                      onToggle={() => setExpandedEx(expandedEx === ex.id ? null : ex.id)}
-                      onChange={(updated) => updateExercise(ex.id, updated)}
-                      onRemove={() => removeExercise(ex.id)}
-                      onMove={(dir) => moveExercise(i, dir)}
-                      onSaveToLibrary={() => saveToLibrary(ex)}
-                    />
-                  ))}
                 </div>
+              ) : (
+                /* ── Phase: Generate & Edit ── */
+                <div style={{ marginTop: 16 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 14 }}>
+                    <div>
+                      <span style={{ fontSize: 'var(--text-sm)', fontWeight: 600 }}>Exercises ({form.exercises.length})</span>
+                      {selectedTypes.length > 0 && (
+                        <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginLeft: 8 }}>
+                          selected: {selectedTypes.map(id => getExType(id)?.label).join(', ')}
+                        </span>
+                      )}
+                    </div>
+                    <Button variant="ghost" size="sm" onClick={() => setStep2Phase('choose')}>
+                      <Icon.arrowL size={11} /> Change Types
+                    </Button>
+                  </div>
 
-                <div className="homework-create-actions" style={{ display: 'flex', gap: 10, marginTop: 24 }}>
-                  <Button variant="ghost" onClick={() => setCurrentStep(1)}>Back</Button>
-                  <Button variant="primary" onClick={() => setCurrentStep(3)}>Review Student View</Button>
+                  {/* Generate actions */}
+                  <div className="homework-create-actions" style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
+                    <Button variant="primary" size="sm" onClick={handleAiGenerate} disabled={!diagnosis || generating}>
+                      <Icon.spark size={12} /> {generating ? 'Generating...' : 'Generate All with AI'}
+                    </Button>
+                    <Button variant="primary" size="sm" onClick={handleGenerateOptions} disabled={!diagnosis || loadingOptions}>
+                      <Icon.refresh size={12} /> {loadingOptions ? 'Suggesting...' : 'Suggest from Diagnosis'}
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={handleGenerateListening} disabled={!diagnosis || generatingListening}>
+                      <Icon.headphones size={12} /> {generatingListening ? 'Generating...' : 'Add Listening Task'}
+                    </Button>
+                  </div>
+
+                  {groupGenStatus && (
+                    <div style={{ marginBottom: 12, padding: '8px 10px', border: '1px solid var(--accent-soft)', borderRadius: 'var(--radius-sm)', background: 'var(--accent-subtle)', color: 'var(--accent-deep)', fontSize: 'var(--text-sm)' }}>
+                      {groupGenStatus}
+                    </div>
+                  )}
+
+                  {exerciseOptions.length > 0 && (
+                    <div style={{ marginBottom: 16, padding: 14, border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', background: 'var(--surface)' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 10 }}>
+                        <div>
+                          <div style={{ fontWeight: 700, fontSize: 'var(--text-sm)' }}>Complete AI suggestions</div>
+                          <div style={{ color: 'var(--muted)', fontSize: 'var(--text-xs)' }}>Reviewed for complete fields before adding.</div>
+                        </div>
+                        <Button variant="ghost" size="sm" onClick={() => setExerciseOptions([])}>Clear</Button>
+                      </div>
+                      <div style={{ display: 'grid', gap: 6 }}>
+                        {exerciseOptions.map((ex, i) => {
+                          const preview = exercisePreview(ex);
+                          const title = ex.title || getExType(ex.type)?.label || ex.type;
+                          const subtitle = preview.length > 90 ? preview.slice(0, 87) + '…' : preview;
+                          return (
+                            <div key={ex.id || i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', border: '1px solid var(--divider)', borderRadius: 'var(--radius-sm)', background: 'var(--bg)', overflow: 'hidden' }}>
+                              <ExTypeBadge typeId={ex.type} />
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                <div style={{ fontSize: 'var(--text-sm)', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{title}</div>
+                                <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{subtitle}</div>
+                              </div>
+                              <Button variant="ghost" size="sm" onClick={() => addAiExerciseToList(ex)}>Add</Button>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {form.exercises.map((ex, i) => (
+                      <ExerciseCard
+                        key={ex.id}
+                        exercise={ex}
+                        index={i}
+                        total={form.exercises.length}
+                        isExpanded={expandedEx === ex.id}
+                        onToggle={() => setExpandedEx(expandedEx === ex.id ? null : ex.id)}
+                        onChange={(updated) => updateExercise(ex.id, updated)}
+                        onRemove={() => removeExercise(ex.id)}
+                        onMove={(dir) => moveExercise(i, dir)}
+                        onSaveToLibrary={() => saveToLibrary(ex)}
+                      />
+                    ))}
+                  </div>
+
+                  <div className="homework-create-actions" style={{ display: 'flex', gap: 10, marginTop: 24 }}>
+                    <Button variant="ghost" onClick={() => setCurrentStep(1)}>Back</Button>
+                    <Button variant="primary" onClick={() => setCurrentStep(3)}>Review Student View</Button>
+                  </div>
                 </div>
-              </div>
+              )}
             </Card>
           )}
           {currentStep === 3 && (
