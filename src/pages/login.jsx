@@ -289,7 +289,7 @@ export default function LoginScreen() {
       return;
     }
     if (!supabaseReady) {
-      setError('Access isn't set up yet. Contact your teacher to get started.');
+      setError("Access isn't set up yet. Contact your teacher to get started.");
       return;
     }
     if (isRegister && password.length < 6) {
