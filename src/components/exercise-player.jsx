@@ -3,6 +3,7 @@
  * Each type renders the exercise as the student experiences it.
  */
 import { useState, useRef, useEffect } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { Icon, Card, Button, Pill } from './shared.jsx';
 import { getExType, parseBlankTemplate, shuffleArray, autoGrade } from '../lib/exercise-types.js';
 import { ExTypeBadge } from './exercise-editor.jsx';
@@ -1150,18 +1151,28 @@ export function HomeworkStepThrough({ exercises, responses, onResponse, onSubmit
         </div>
       </div>
 
-      {/* Current exercise */}
-      <Card small className="student-exercise-mini-card" style={{ marginBottom: 10 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-          <ExTypeBadge typeId={current.type} size="md" />
-        </div>
-        <ExercisePlayer
-          exercise={current}
-          response={currentRes}
-          onResponse={(updated) => onResponse?.(current.id, updated)}
-          readOnly={readOnly}
-        />
-      </Card>
+      {/* Current exercise — slower transition for cognitively demanding types */}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={currentIdx}
+          initial={{ opacity: 0, x: 10 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -10 }}
+          transition={{ duration: ['fix','short','speak','order'].includes(current?.type) ? 0.38 : 0.18, ease: 'easeOut' }}
+        >
+          <Card small className="student-exercise-mini-card" style={{ marginBottom: 10 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+              <ExTypeBadge typeId={current.type} size="md" />
+            </div>
+            <ExercisePlayer
+              exercise={current}
+              response={currentRes}
+              onResponse={(updated) => onResponse?.(current.id, updated)}
+              readOnly={readOnly}
+            />
+          </Card>
+        </motion.div>
+      </AnimatePresence>
 
       {/* Navigation */}
       <div className="student-step-actions">

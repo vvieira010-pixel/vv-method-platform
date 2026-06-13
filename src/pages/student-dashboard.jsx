@@ -448,7 +448,7 @@ function HomeView({ student, onTab }) {
                 </div>
               ) : (
                 <div className="student-empty-card">
-                  Your teacher will add feedback after there is enough class evidence.
+                  Your teacher will add notes here after reviewing your next class.
                 </div>
               )}
             </article>
@@ -469,7 +469,7 @@ function HomeView({ student, onTab }) {
               </div>
             ) : (
               <div className="student-empty-card">
-                No evaluated skills yet. Your next class will create the evidence.
+                No skills evaluated yet — your first result appears after your next class.
               </div>
             )}
           </article>
@@ -1062,7 +1062,7 @@ function HomeworkView({ student }) {
 
       {homework.length === 0 && (
         <div className="student-empty-card">
-          No homework assigned yet. Your teacher will assign practice after your next class.
+          Nothing assigned yet — your teacher will send you tasks after class.
         </div>
       )}
 
@@ -1266,9 +1266,13 @@ function HomeworkView({ student }) {
 
                 {/* Submitted status */}
                 {submitted && !review && (
-                  <div className="student-homework-waiting">
-                    Submitted — Waiting for your teacher to review.
-                  </div>
+                  <motion.div
+                    className="student-homework-waiting"
+                    animate={{ opacity: [1, 0.55, 1] }}
+                    transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}
+                  >
+                    Submitted — your teacher will review this soon.
+                  </motion.div>
                 )}
 
                 {/* Teacher review — remaining items (score/notes at top, corrections inline above) */}
@@ -1505,7 +1509,19 @@ function ProgressProfileCard({ skill, trend }) {
           <span className="student-panel-kicker">Skill progress</span>
           <h2>{skill.section}</h2>
         </div>
-        <span className="student-stage-badge">{stage.label}</span>
+        {trend?.label === 'Moved up a stage' ? (
+          <motion.span
+            key={stage.label}
+            className="student-stage-badge"
+            initial={{ scale: 0.7, opacity: 0 }}
+            animate={{ scale: [1, 1.25, 0.9, 1.08, 1], opacity: 1 }}
+            transition={{ duration: 0.7 }}
+          >
+            {stage.label}
+          </motion.span>
+        ) : (
+          <span className="student-stage-badge">{stage.label}</span>
+        )}
       </div>
 
       <div className="student-stage-track student-stage-track--wide" aria-label={`${skill.section} stage: ${stage.label}`}>
