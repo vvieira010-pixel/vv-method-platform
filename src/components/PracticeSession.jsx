@@ -49,6 +49,7 @@ export default function PracticeSession({ mode, onClose }) {
   return (
     <div
       onClick={handleBackdropClick}
+      className="modal-overlay-enter"
       style={{
         position: 'fixed',
         inset: 0,
@@ -62,6 +63,7 @@ export default function PracticeSession({ mode, onClose }) {
       }}
     >
       <div
+        className="modal-card-enter"
         style={{
           width: '100%',
           maxWidth: 680,
