@@ -169,12 +169,10 @@ const GLOBAL_CSS = `
   .shell-nav-btn:hover  { background: rgba(255,255,255,0.14); color: #fff; }
   .shell-nav-btn:focus-visible { outline: 2px solid rgba(168,218,220,0.9); outline-offset: 1px; }
   .shell-nav-btn.active {
-    background: rgba(61,166,166,0.18);
+    background: rgba(61,166,166,0.24);
     color: #fff;
     font-weight: 700;
-    border: 1px solid rgba(168,218,220,0.25);
-    border-left: 3px solid var(--primary);
-    padding-left: 7px;
+    border: 1px solid rgba(168,218,220,0.38);
   }
   .shell-user { padding: 12px 14px; border-top: 1px solid var(--dark-accent-border); display: flex; align-items: center; gap: 9px; }
   .shell-user-name { font-size: var(--text-xs); color: #fff; font-weight: 600; }
@@ -295,13 +293,12 @@ const GLOBAL_CSS = `
   .homework-create-steps::-webkit-scrollbar { display: none; }
   .homework-create-grid > * { min-width: 0; }
   .homework-create-actions {
-    display: grid !important;
-    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
-    align-items: stretch;
+    display: flex !important;
+    flex-wrap: wrap;
+    align-items: center;
     gap: 8px;
   }
   .homework-create-actions .btn {
-    width: 100%;
     min-width: 0;
     justify-content: center;
     white-space: normal;
@@ -390,8 +387,8 @@ const GLOBAL_CSS = `
       padding: 12px !important;
     }
     .homework-create-actions {
-      display: grid !important;
-      grid-template-columns: minmax(0, 1fr) !important;
+      display: flex !important;
+      flex-direction: column;
       gap: 8px !important;
     }
     .homework-create-actions .btn {
@@ -536,84 +533,13 @@ function pickColor(name, palette) {
   return arr[h % arr.length];
 }
 
-export function Avatar({ name = '?', size = 36, tone = 'auto' }) {
-  const bg = pickColor(name, tone);
-  const initials = (name || '?').split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
-  return (
-    <div role="img" aria-label={name} style={{
-      width: size, height: size, borderRadius: '50%',
-      background: bg, color: '#fff',
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      fontSize: size * 0.36, fontWeight: 700, flexShrink: 0,
-      fontFamily: 'var(--font-ui)', userSelect: 'none', letterSpacing: '0.02em',
-    }}>
-      {initials}
-    </div>
-  );
-}
-
-/* ─── BUTTON ─────────────────────────────────────────────────── */
-export function Button({
-  children, variant = 'primary', size: sz = 'md',
-  onClick, disabled, type = 'button', block, icon, style, className = ''
-}) {
-  const cls = ['btn', `btn-${variant}`,
-    sz === 'sm' ? 'btn-sm' : sz === 'lg' ? 'btn-lg' : '',
-    block ? 'btn-block' : '', className
-  ].filter(Boolean).join(' ');
-  return (
-    <button type={type} className={cls} onClick={onClick} disabled={disabled} style={style}>
-      {icon}{children}
-    </button>
-  );
-}
-
-/* ─── CARD ───────────────────────────────────────────────────── */
-export function Card({ children, style, className = '', small }) {
-  return <div className={`card ${small ? 'card-sm' : ''} ${className}`} style={style}>{children}</div>;
-}
-
-/* ─── PILL ───────────────────────────────────────────────────── */
-const PILL_TONE = {
-  default:'pill-default', accent:'pill-accent', success:'pill-success',
-  warning:'pill-warning', danger:'pill-danger', muted:'pill-muted', info:'pill-info',
-  ok:'pill-success', error:'pill-danger', draft:'pill-muted', queued:'pill-info',
-  reviewed:'pill-success', overdue:'pill-danger', pending:'pill-warning',
-};
-export function Pill({ children, tone = 'default', icon, style }) {
-  return (
-    <span className={`pill ${PILL_TONE[tone] || 'pill-default'}`} style={style}>
-      {icon}{children}
-    </span>
-  );
-}
-
-/* ─── KPI ────────────────────────────────────────────────────── */
-export function Kpi({ label, eyebrow, value, sub, trend, trendDir }) {
-  const finalLabel = label || eyebrow || '';
-  return (
-    <div className="kpi">
-      <div className="kpi-label">{finalLabel}</div>
-      <div className="kpi-value">{value}</div>
-      {trend && <div className={`kpi-trend ${trendDir || ''}`}>{trend}</div>}
-      {sub && <div className="kpi-sub">{sub}</div>}
-    </div>
-  );
-}
-
-/* ─── SECTION HEADER ─────────────────────────────────────────── */
-export function SectionHeader({ title, sub, action, right }) {
-  const finalAction = action || right || null;
-  return (
-    <div className="section-header">
-      <div>
-        <div className="section-title">{title}</div>
-        {sub && <div className="section-sub">{sub}</div>}
-      </div>
-      {finalAction && <div>{finalAction}</div>}
-    </div>
-  );
-}
+/* ─── UI COMPONENTS ────────────────────────────────────────── */
+export { Button } from './ui/Button.jsx';
+export { Card } from './ui/Card.jsx';
+export { Avatar } from './ui/Avatar.jsx';
+export { Pill } from './ui/Pill.jsx';
+export { Kpi } from './ui/Kpi.jsx';
+export { SectionHeader } from './ui/SectionHeader.jsx';
 
 /* ─── PILL NAV ───────────────────────────────────────────────── */
 export function PillNav({ tabs, active, onChange, label = 'Tabs' }) {
@@ -666,7 +592,6 @@ export function StudentFeedbackView({ feedback }) {
   const fixes = (Array.isArray(feedback.whatToImprove) ? feedback.whatToImprove : [])
     .filter(f => f && (f.area || f.howToImprove || f.insteadOf));
 
-  // Each part gets its own card (same content as before, just grouped visually).
   const card = {
     border: '1px solid var(--border)', borderRadius: 'var(--radius-md)',
     padding: 16, background: 'var(--surface)',
@@ -747,6 +672,12 @@ export function StudentFeedbackView({ feedback }) {
           </p>
         </div>
       )}
+
+      {/* Sub-score correlation disclaimer — sub-scores are based on the same evidence */}
+      <div style={{ padding: '8px 12px', background: 'var(--warning-bg)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--warning-soft)', fontSize: 'var(--text-xs)', lineHeight: 1.6, color: 'var(--warning-text)' }}>
+        <strong style={{ textTransform: 'uppercase', letterSpacing: '0.04em' }}>How scores are built: </strong>
+        This feedback is based on what you produced in class today. Sub-scores (e.g. grammar, vocabulary, delivery) come from the same evidence and are not independently assessed — they are a single teacher's observation, not separate test results.
+      </div>
     </div>
   );
 }
