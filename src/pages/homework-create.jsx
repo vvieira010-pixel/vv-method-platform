@@ -33,6 +33,91 @@ const EMPTY_FORM = {
 
 const SKILL_TYPES = ['writing', 'speaking', 'grammar', 'vocabulary', 'reading', 'listening', 'mixed'];
 const HOMEWORK_AI_BASE_OPTIONS = { preferredProvider: 'gemini' };
+
+const HOMEWORK_CREATE_RESPONSIVE_CSS = `
+  .homework-create-page {
+    box-sizing: border-box;
+  }
+
+  .homework-create-page *,
+  .homework-create-page *::before,
+  .homework-create-page *::after {
+    box-sizing: border-box;
+  }
+
+  .homework-create-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(220px, 280px) !important;
+    gap: 20px !important;
+  }
+
+  .homework-create-steps,
+  .homework-create-actions,
+  .homework-create-toolbar > div {
+    flex-wrap: wrap !important;
+  }
+
+  .homework-create-summary {
+    align-self: start;
+  }
+
+  .exercise-type-picker {
+    width: 100%;
+  }
+
+  .exercise-type-picker-grid {
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)) !important;
+    max-height: min(56vh, 520px) !important;
+  }
+
+  @media (max-width: 980px) {
+    .homework-create-page {
+      padding: 12px !important;
+    }
+
+    .homework-create-grid {
+      grid-template-columns: minmax(0, 1fr) !important;
+      gap: 12px !important;
+    }
+
+    .homework-create-summary {
+      position: static !important;
+      order: -1;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .homework-create-page {
+      padding: 10px 8px 72px !important;
+    }
+
+    .homework-create-steps {
+      gap: 6px !important;
+    }
+
+    .homework-create-toolbar .btn,
+    .homework-create-actions .btn {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .exercise-type-picker {
+      padding: 12px !important;
+    }
+
+    .exercise-type-picker-head,
+    .exercise-type-picker-controls {
+      align-items: stretch !important;
+      flex-direction: column !important;
+      width: 100%;
+    }
+
+    .exercise-type-picker-grid {
+      grid-template-columns: minmax(0, 1fr) !important;
+      max-height: none !important;
+      overflow-y: visible !important;
+    }
+  }
+`;
 const MET_BALANCED_TYPES = ['speak', 'short', 'listen', 'mcq', 'blank', 'flash', 'fix'];
 
 // Skill groups available for per-group generation
@@ -462,7 +547,8 @@ function getPriorityItems(dx) {
   form.exercises.forEach(e => { typeCounts[e.type] = (typeCounts[e.type] || 0) + 1; });
 
   return (
-    <div className="homework-create-page" style={{ maxWidth: 1120, width: '100%', margin: '0 auto', padding: '22px 24px 14px' }}>
+    <div className="homework-create-page" style={{ maxWidth: 'min(100%, 1480px)', width: '100%', margin: '0 auto', padding: 'clamp(12px, 2vw, 24px)', minHeight: 'calc(100dvh - 72px)' }}>
+      <style>{HOMEWORK_CREATE_RESPONSIVE_CSS}</style>
       <button onClick={() => onNavigate('homework')} style={backStyle}>
         <Icon.arrowL size={13} /> Back
       </button>
@@ -535,28 +621,39 @@ function getPriorityItems(dx) {
             <Card style={{ padding: 18 }}>
               <SectionHeader title="Step 2: Select Exercises" />
               <div style={{ marginTop: 16 }}>
-                <div className="homework-create-actions" style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
+                {/* Generate group */}
+                <div style={{ marginBottom: 8 }}>
+                  <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>Generate</div>
+                  <div className="homework-create-actions" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                     <Button variant="primary" size="sm" onClick={handleAiGenerate} disabled={!diagnosis || generating}>
-                      <Icon.spark size={12} /> {generating ? 'Generating...' : 'Generate MET Homework with AI'}
+                      <Icon.spark size={12} /> {generating ? 'Generating...' : 'MET Homework with AI'}
                     </Button>
                     <Button variant="primary" size="sm" onClick={handleGenerateListening} disabled={!diagnosis || generatingListening}>
-                      <Icon.headphones size={12} /> {generatingListening ? 'Generating...' : 'Generate Listening Task'}
+                      <Icon.headphones size={12} /> {generatingListening ? 'Generating...' : 'Listening Task'}
                     </Button>
                     <Button variant="ghost" size="sm" onClick={handleGenerateOptions} disabled={!diagnosis || loadingOptions}>
-                      <Icon.refresh size={12} /> {loadingOptions ? 'Suggesting...' : 'Suggest Exercises from Diagnosis'}
+                      <Icon.refresh size={12} /> {loadingOptions ? 'Suggesting...' : 'Suggest from Diagnosis'}
                     </Button>
                     <Button variant="ghost" size="sm" onClick={() => setShowGroupGen(v => !v)} disabled={!diagnosis || generating}>
                       <Icon.check size={12} /> Build by Skill
                     </Button>
+                  </div>
+                </div>
+
+                {/* Browse group */}
+                <div style={{ marginBottom: 8 }}>
+                  <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>Browse & Add</div>
+                  <div className="homework-create-actions" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                     <Button variant="primary" size="sm" onClick={() => setShowTypePicker(!showTypePicker)}>
                       <Icon.plus size={12} /> Add Exercise
                     </Button>
                     <Button variant="ghost" size="sm" onClick={() => { setShowB2Bank(v => !v); setShowLifestylePack(false); setShowTypePicker(false); }}>
-                      <Icon.homework size={12} /> Browse MET B2 Pack
+                      <Icon.homework size={12} /> MET B2 Pack
                     </Button>
                     <Button variant="ghost" size="sm" onClick={() => { setShowLifestylePack(v => !v); setShowB2Bank(false); setShowTypePicker(false); }}>
-                      <Icon.doc size={12} /> Browse Lifestyle Pack
+                      <Icon.doc size={12} /> Lifestyle Pack
                     </Button>
+                  </div>
                 </div>
 
                 {groupGenStatus && (
