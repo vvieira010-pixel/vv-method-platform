@@ -9,6 +9,12 @@ export async function getInbox({ role, studentId } = {}) {
   if (role === 'student' && studentId) return all.filter(m => m.toStudentId === studentId || m.fromStudentId === studentId);
   return all;
 }
+
+export function requestInboxNotificationPermission() {
+  if (typeof Notification === 'undefined' || Notification.permission !== 'default') return;
+  Notification.requestPermission();
+}
+
 export async function sendMessage(data) {
   const all = load(K.inbox);
   const msg = { id: uid(), createdAt: new Date().toISOString(), read: false, ...data };
@@ -19,6 +25,14 @@ export async function sendMessage(data) {
     const unread = all.filter(m => m.fromRole === 'student' && !m.read).length;
     localStorage.setItem('inboxUnread', String(unread));
     window.dispatchEvent(new CustomEvent('vv:inbox-unread-changed'));
+    if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+      const sender = data.fromName || 'A student';
+      new Notification(`Message from ${sender}`, {
+        body: String(data.body || '').slice(0, 100),
+        icon: '/favicon.ico',
+        tag: 'inbox',
+      });
+    }
   }
   return msg;
 }

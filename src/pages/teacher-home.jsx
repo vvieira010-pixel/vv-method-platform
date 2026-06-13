@@ -4,7 +4,7 @@
  */
 import { useEffect, useState } from 'react';
 import { Icon, SectionHeader, Card, Pill, Avatar, Button } from '../components/shared.jsx';
-import { getStudentCycleState, getClassEvents, clearWorkflowData } from '../lib/workflow.js';
+import { getStudentCycleState, getClassEvents, clearWorkflowData, requestInboxNotificationPermission } from '../lib/workflow.js';
 
 function timeOfDay() {
   const h = new Date().getHours();
@@ -45,6 +45,7 @@ export default function EducatorView({ students, onNavigate }) {
       setLoading(false);
     }
     void load();
+    requestInboxNotificationPermission();
     window.addEventListener('focus', load);
     window.addEventListener('vv:students-updated', load);
     return () => {
