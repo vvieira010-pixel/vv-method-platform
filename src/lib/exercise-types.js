@@ -32,7 +32,7 @@ export function isStructuredExercise(activity) {
 /* ─── EXERCISE FACTORIES ────────────────────────────────────── */
 
 let _exCounter = 0;
-function exId() {
+export function exId() {
   return 'ex_' + Date.now().toString(36) + '_' + (++_exCounter).toString(36);
 }
 

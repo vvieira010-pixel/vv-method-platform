@@ -92,7 +92,7 @@ export function ExerciseTypePicker({ onSelect, onClose }) {
       <p style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', margin: '0 0 14px' }}>
         Pick a type to add {qty > 1 ? <strong>{qty} of them</strong> : 'one'} at <strong>{level} level</strong>.
       </p>
-      <div className="exercise-type-picker-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 8 }}>
+      <div className="exercise-type-picker-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 8, maxHeight: 360, overflowY: 'auto' }}>
         {EX_TYPES.map(t => {
           const IconComp = Icon[t.iconKey];
           return (
@@ -163,7 +163,7 @@ function MCQEditor({ ex, update }) {
       <div style={fieldWrap}>
         <label style={fieldLabel}>Question</label>
         <textarea
-          className="input" rows={2} value={ex.question}
+          className="input" rows={3} value={ex.question}
           onChange={e => update({ question: e.target.value })}
           placeholder="Which sentence uses the correct past simple tense?"
         />
@@ -195,10 +195,19 @@ function MCQEditor({ ex, update }) {
         ))}
       </div>
       {ex.correct !== null && (
-        <div style={{ fontSize: 'var(--text-xs)', color: 'var(--success)', fontWeight: 600 }}>
+        <div style={{ fontSize: 'var(--text-xs)', color: 'var(--success)', fontWeight: 600, marginBottom: 10 }}>
           Correct answer: {String.fromCharCode(65 + ex.correct)}
         </div>
       )}
+      <div style={fieldWrap}>
+        <label style={fieldLabel}>Explanation (optional)</label>
+        <textarea
+          className="input" rows={2} value={ex.explanation || ''}
+          onChange={e => update({ explanation: e.target.value })}
+          placeholder="Why is this the correct answer? Shown to students after submission."
+          style={{ resize: 'vertical' }}
+        />
+      </div>
     </div>
   );
 }
@@ -221,7 +230,7 @@ function BlankEditor({ ex, update }) {
       <div style={fieldWrap}>
         <label style={fieldLabel}>Sentence template</label>
         <textarea
-          className="input" rows={2} value={ex.template}
+          className="input" rows={3} value={ex.template}
           onChange={e => update({ template: e.target.value, blanks: syncBlanks(e.target.value) })}
           placeholder="I ___ at this hospital ___ March 2021."
         />
@@ -306,7 +315,7 @@ function SpeakEditor({ ex, update }) {
       <div style={fieldWrap}>
         <label style={fieldLabel}>Picture description (shown to student as a scene to describe or react to)</label>
         <textarea
-          className="input" rows={2} value={ex.imageDescription || ''}
+          className="input" rows={3} value={ex.imageDescription || ''}
           onChange={e => update({ imageDescription: e.target.value })}
           placeholder="A busy city street at rush hour. People are rushing past shops and cafés. A woman is checking her phone while holding a coffee cup."
         />

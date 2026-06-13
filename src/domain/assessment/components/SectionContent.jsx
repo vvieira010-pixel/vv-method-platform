@@ -1,5 +1,5 @@
 import { Icon, Pill } from '../../../components/shared.jsx';
-import { StudentFeedbackView } from '../../../components/shared.jsx';
+import { StudentFeedbackView } from '../../../components/domain-ui.jsx';
 
 export function camelToLabel(str) {
   return str.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase());

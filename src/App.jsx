@@ -37,6 +37,7 @@ const ReportsPage       = lazy(() => import('./pages/reports.jsx'));
 const SettingsPage      = lazy(() => import('./pages/settings.jsx'));
 
 const InboxPage         = lazy(() => import('./tools/tool-inbox.jsx'));
+const ExercisesPage     = lazy(() => import('./pages/exercises.jsx'));
 
 export default function App() {
   const [auth, setAuth] = useState(null);
@@ -342,11 +343,7 @@ function renderTeacherPage(view, params, ctx) {
       return <SettingsPage onNavigate={navigate} />;
 
     case 'exercises':
-      return <HomeworkCreate
-        students={students}
-        onNavigate={navigate}
-        initialStep={2}
-      />;
+      return <ExercisesPage onNavigate={navigate} />;
 
     default:
       return <TeacherDashboard students={students} onNavigate={navigate} teacherName={teacherName} />;

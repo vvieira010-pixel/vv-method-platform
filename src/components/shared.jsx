@@ -187,8 +187,6 @@ export function PillNav({ tabs, active, onChange, label = 'Tabs' }) {
   );
 }
 
-export { ReviewStatusBadge, StudentFeedbackView, EvidenceCard, MiniBars, STUDENT_FLOW, WorkflowStageStrip, StudentNextTask, RecommendedNextStep } from './domain-ui.jsx';
-
 /* ─── SHELL ──────────────────────────────────────────────────── */
 // Legacy section map for old tool:* IDs
 const LEGACY_NAV_SECTIONS = [

@@ -17,10 +17,17 @@ import {
   buildRetrievalPracticePrompt,
   buildLanguageDemandPrompt,
 } from '../lib/prompts.js';
-import { getDiagnoses, getStudent, saveHomework, updateClassEventStatus } from '../lib/workflow.js';
+import { getDiagnoses, getStudent, saveHomework, updateClassEventStatus, getErrorBank } from '../lib/workflow.js';
 import { EX_TYPES, createExercise, exercisePreview, getExType } from '../lib/exercise-types.js';
 import { getDueItems, getDueCount, toMCQ, getAllEntries } from '../lib/spaced-repetition.js';
 import { ExerciseEditor, ExerciseTypePicker, ExTypeBadge } from '../components/exercise-editor.jsx';
+import ExerciseCard from '../components/exercises/ExerciseCard.jsx';
+import PreviewExercise from '../components/exercises/PreviewExercise.jsx';
+import {
+  mapAiType, normalizeTaskTypes, buildCompleteExercises, createCompleteExercise,
+  isStructuredAiExerciseComplete, getHomeworkCognitiveSufficiencyWarning, applyAiTaskToExercise,
+  buildExercisesFromAiTasks, fillSelectedExercisesWithAi,
+} from '../lib/exercise-ai-helpers.js';
 import { getExerciseModules, getModuleExercises, bankMeta } from '../lib/exercise-bank.js';
 import { getB2Modules, getB2ModuleExercises, b2BankMeta } from '../lib/met-b2-bank.js';
 import { getLifestyleModules, getLifestyleModuleExercises, lifestylePackMeta } from '../lib/lifestyle-pack.js';
@@ -38,7 +45,6 @@ const EMPTY_FORM = {
 
 const SKILL_TYPES = ['writing', 'speaking', 'grammar', 'vocabulary', 'reading', 'listening', 'mixed'];
 const HOMEWORK_AI_BASE_OPTIONS = { preferredProvider: 'gemini' };
-const MET_BALANCED_TYPES = ['speak', 'short', 'listen', 'mcq', 'blank', 'flash', 'fix'];
 
 // Skill groups available for per-group generation
 const SKILL_GROUPS = [
@@ -72,7 +78,13 @@ export default function HomeworkCreate({ diagnosisId, studentId, students, onNav
   const [showLibrary, setShowLibrary] = useState(false);
   // activePanel replaces 5 separate booleans: type-picker/b2-bank/lifestyle/deep-research/group-gen
   const [activePanel, setActivePanel] = useState(null);
-  const togglePanel = key => setActivePanel(p => p === key ? null : key);
+  const togglePanel = key => {
+    setActivePanel(p => p === key ? null : key);
+    if (key !== null) setTimeout(() => {
+      const toolbar = document.querySelector('.homework-create-toolbar');
+      if (toolbar) toolbar.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 50);
+  };
   // Per-skill-group generation config: { speaking: 5, grammar: 4, ... }
   const [groupGenConfig, setGroupGenConfig] = useState({});
   const [groupGenStatus, setGroupGenStatus] = useState('');
@@ -86,6 +98,7 @@ export default function HomeworkCreate({ diagnosisId, studentId, students, onNav
   const [generatingRetrieval, setGeneratingRetrieval] = useState(false);
   const [languageDemand, setLanguageDemand] = useState(null);
   const [generatingLangDemand, setGeneratingLangDemand] = useState(false);
+  const [errorBankItems, setErrorBankItems] = useState([]);
 
   useEffect(() => {
     let cancelled = false;
@@ -98,14 +111,13 @@ export default function HomeworkCreate({ diagnosisId, studentId, students, onNav
   useEffect(() => {
     if (!selectedStudentId) {
       if (!studentId) setStudent(null);
+      setErrorBankItems([]);
       return;
     }
     const rosterStudent = students.find(s => s.id === selectedStudentId);
-    if (rosterStudent) {
-      setStudent(rosterStudent);
-      return;
-    }
-    getStudent(selectedStudentId).then(s => { if (s) setStudent(s); }).catch(() => {});
+    if (rosterStudent) setStudent(rosterStudent);
+    else getStudent(selectedStudentId).then(s => { if (s) setStudent(s); }).catch(() => {});
+    getErrorBank(selectedStudentId).then(items => setErrorBankItems(items || [])).catch(() => {});
   }, [selectedStudentId, studentId, students]);
 
   // Load spaced repetition due count when a student is known
@@ -626,7 +638,7 @@ function getPriorityItems(dx) {
       </div>
 
       {/* Step Content */}
-      <div className="homework-create-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: 24, alignItems: 'start' }}>
+      <div className="homework-create-grid" style={{ display: 'grid', gap: 24, alignItems: 'start' }}>
         <div>
           {currentStep === 1 && (
             <Card style={{ padding: 18 }}>
@@ -660,6 +672,30 @@ function getPriorityItems(dx) {
                 <Field label="Homework Goal" style={{ marginTop: 16 }}>
                   <input className="input" value={form.objective} onChange={e => setForm(f => ({ ...f, objective: e.target.value }))} placeholder="What this homework targets..." />
                 </Field>
+                {errorBankItems.filter(e => e.status !== 'solved').length > 0 && (
+                  <div style={{ marginTop: 16, padding: 12, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)' }}>
+                    <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>
+                      Error Bank — Active Patterns
+                    </div>
+                    {errorBankItems.filter(e => e.status !== 'solved').slice(0, 3).map(entry => (
+                      <div key={entry.id} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6, padding: '6px 10px', background: 'var(--bg)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--divider)' }}>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <span style={{ fontSize: 'var(--text-xs)', color: 'var(--danger)', fontWeight: 600 }}>{entry.error}</span>
+                          <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', margin: '0 4px' }}>→</span>
+                          <span style={{ fontSize: 'var(--text-xs)', color: 'var(--success)' }}>{entry.correct}</span>
+                          {entry.type && <span style={{ marginLeft: 6, fontSize: 10, color: 'var(--faint)', textTransform: 'capitalize' }}>{entry.type}</span>}
+                        </div>
+                        <button
+                          onClick={() => setForm(f => ({ ...f, objective: f.objective ? f.objective : `Fix error: ${entry.error} → ${entry.correct}` }))}
+                          style={{ fontSize: 'var(--text-xs)', padding: '2px 8px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', background: 'var(--surface)', cursor: 'pointer', whiteSpace: 'nowrap', color: 'var(--accent)', fontFamily: 'var(--font-ui)' }}
+                          title="Use as homework goal"
+                        >
+                          Use as goal
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
                 <div style={{ marginTop: 24 }}>
                   <Button variant="primary" onClick={() => setCurrentStep(2)}>
                     Select Exercises
@@ -673,7 +709,7 @@ function getPriorityItems(dx) {
               <SectionHeader title="Step 2: Select Exercises" />
               <div style={{ marginTop: 16 }}>
                 {/* ── Toolbar: two rows — Generate | Browse & Add ── */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 16 }}>
+                <div className="homework-create-toolbar" style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 16 }}>
                   {/* Row 1: AI generation */}
                   <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                     <Button variant="primary" size="sm" onClick={handleAiGenerate} disabled={!diagnosis || generating}>
@@ -1092,7 +1128,7 @@ function getPriorityItems(dx) {
         <Card className="homework-create-summary" style={{ padding: 18, position: 'sticky', top: 20 }}>
           <SectionHeader title="Homework Summary" />
           <div style={{ marginTop: 12, fontSize: 'var(--text-sm)' }}>
-            <p>Exercises: <strong>{exerciseCount} / 10</strong></p>
+            <p>Exercises: <strong style={exerciseCount > 10 ? { color: 'var(--danger)' } : {}}>{exerciseCount} / 10</strong></p>
             <p>Estimated Time: <strong>{/* Calculation needed */}</strong></p>
           </div>
         </Card>
@@ -1101,600 +1137,14 @@ function getPriorityItems(dx) {
   );
 }
 
-/* ─── EXERCISE CARD (collapsible) ───────────────────────────── */
-function ExerciseCard({ exercise, index, total, isExpanded, onToggle, onChange, onRemove, onMove, onSaveToLibrary }) {
-  const meta = getExType(exercise.type);
-  const previewText = exercisePreview(exercise);
 
+function Field({ label, children, style }) {
   return (
-    <div className="homework-exercise-card" style={{
-      border: isExpanded ? '1.5px solid var(--accent-soft)' : '1px solid var(--border)',
-      borderRadius: 'var(--radius-md)',
-      background: isExpanded ? 'var(--accent-subtle)' : 'var(--surface)',
-      overflow: 'hidden',
-      transition: 'all 0.15s var(--ease)',
-    }}>
-      {/* Header — always visible */}
-      <div
-        className="homework-exercise-card-header"
-        onClick={onToggle}
-        style={{
-          display: 'flex', alignItems: 'center', gap: 10,
-          padding: '10px 14px', cursor: 'pointer',
-        }}
-      >
-        <span style={{
-          fontFamily: 'var(--font-ui)', fontWeight: 700,
-          fontSize: 'var(--text-sm)', color: 'var(--accent)',
-          width: 22, textAlign: 'center', flexShrink: 0,
-        }}>
-          {index + 1}
-        </span>
-        <ExTypeBadge typeId={exercise.type} />
-        <span className="homework-exercise-card-title" style={{
-          flex: 1, fontSize: 'var(--text-sm)', color: 'var(--text-2)',
-          overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-        }}>
-          {previewText}
-        </span>
-        <div className="homework-exercise-card-controls" style={{ display: 'flex', gap: 4, alignItems: 'center', flexShrink: 0 }}>
-          {/* Save to reusable library */}
-          {onSaveToLibrary && (
-            <button
-              onClick={e => { e.stopPropagation(); onSaveToLibrary(); }}
-              style={{ ...arrowBtnStyle(false), color: 'var(--accent)' }}
-              title="Save to my exercise library"
-            >
-              <Icon.star size={12} />
-            </button>
-          )}
-          {/* Move arrows */}
-          <button
-            onClick={e => { e.stopPropagation(); onMove(-1); }}
-            disabled={index === 0}
-            style={arrowBtnStyle(index === 0)}
-            title="Move up"
-          >
-            ↑
-          </button>
-          <button
-            onClick={e => { e.stopPropagation(); onMove(1); }}
-            disabled={index === total - 1}
-            style={arrowBtnStyle(index === total - 1)}
-            title="Move down"
-          >
-            ↓
-          </button>
-          <button
-            onClick={e => { e.stopPropagation(); onRemove(); }}
-            style={{ ...arrowBtnStyle(false), color: 'var(--danger)' }}
-            title="Remove exercise"
-          >
-            <Icon.trash size={12} />
-          </button>
-          <span style={{ display: 'inline-flex', transform: isExpanded ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s', color: 'var(--muted)' }}>
-            <Icon.chevronDown size={14} />
-          </span>
-        </div>
-      </div>
-
-      {/* Body — expanded */}
-      {isExpanded && (
-        <div className="homework-exercise-card-body" style={{ padding: '0 14px 14px', borderTop: '1px solid var(--divider)' }}>
-          <div style={{ paddingTop: 14 }}>
-            <ExerciseEditor exercise={exercise} onChange={onChange} />
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-/* ─── PREVIEW EXERCISE (read-only student view) ─────────────── */
-function PreviewExercise({ exercise }) {
-  if (!exercise) return null;
-  switch (exercise.type) {
-    case 'mcq':
-      return (
-        <div>
-          <p style={{ fontWeight: 600, marginBottom: 10 }}>{exercise.question || 'Question…'}</p>
-          {(exercise.options || []).map((opt, i) => (
-            <div key={i} style={{
-              display: 'flex', alignItems: 'center', gap: 10,
-              padding: '8px 12px', marginBottom: 4,
-              borderRadius: 0, border: '1px solid var(--border)', background: 'var(--surface)',
-            }}>
-              <span style={{ width: 20, height: 20, borderRadius: '50%', border: '2px solid var(--border)', flexShrink: 0 }} />
-              <span>{opt || `Option ${String.fromCharCode(65 + i)}`}</span>
-            </div>
-          ))}
-        </div>
-      );
-
-    case 'blank':
-      return (
-        <div>
-          <p style={{ fontSize: 'var(--text-md)', lineHeight: 2 }}>
-            {(exercise.template || 'Sentence with ___ blanks…').split(/(_{3,})/).map((part, i) =>
-              /^_{3,}$/.test(part)
-                ? <span key={i} style={{ display: 'inline-block', width: 100, borderBottom: '2px solid var(--primary)', textAlign: 'center', margin: '0 4px', color: 'var(--muted)' }}>______</span>
-                : <span key={i}>{part}</span>
-            )}
-          </p>
-        </div>
-      );
-
-    case 'short':
-      return (
-        <div>
-          <p style={{ fontWeight: 600, marginBottom: 6 }}>{exercise.prompt || 'Prompt…'}</p>
-          {exercise.rubric && <p style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginBottom: 8 }}>{exercise.rubric}</p>}
-          <div style={{ border: '1px solid var(--border)', borderRadius: 0, padding: 10, background: 'var(--surface)', minHeight: 60, color: 'var(--faint)', fontSize: 'var(--text-sm)' }}>
-            Student writes here… (target: {exercise.targetWords || 120} words)
-          </div>
-        </div>
-      );
-
-    case 'speak':
-      return (
-        <div>
-          {exercise.imageUrl && (
-            <div style={{ marginBottom: 10, borderRadius: 0, overflow: 'hidden', border: '1px solid var(--border)', background: 'var(--bg)' }}>
-              <img
-                src={exercise.imageUrl}
-                alt={exercise.imageAlt || 'Speaking prompt image'}
-                style={{ width: '100%', maxHeight: 220, objectFit: 'cover', display: 'block' }}
-              />
-            </div>
-          )}
-          <div style={{ background: 'var(--surface)', borderRadius: 0, padding: '12px 14px', marginBottom: 10 }}>
-            <p style={{ fontWeight: 500, margin: 0 }}>{exercise.prompt || 'Speaking prompt…'}</p>
-            <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>Target: {exercise.targetSeconds || 60} seconds</span>
-          </div>
-          <Button variant="primary" size="sm" disabled><Icon.mic size={12} /> Start recording</Button>
-        </div>
-      );
-
-    case 'order':
-      return (
-        <div>
-          <p style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginBottom: 8 }}>Put the sentences in the correct order:</p>
-          {(exercise.sentences || []).filter(Boolean).map((s, i) => (
-            <div key={i} style={{
-              display: 'flex', alignItems: 'center', gap: 10,
-              padding: '10px 12px', marginBottom: 4,
-              borderRadius: 0, border: '1px solid var(--border)', background: 'var(--surface)',
-            }}>
-              <span style={{ fontWeight: 700, color: 'var(--accent)', width: 20, textAlign: 'center' }}>{i + 1}</span>
-              <span style={{ flex: 1 }}>{s}</span>
-              <span style={{ fontSize: 'var(--text-xs)', color: 'var(--faint)' }}>↑↓</span>
-            </div>
-          ))}
-        </div>
-      );
-
-    case 'fix':
-      return (
-        <div>
-          <p style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginBottom: 6 }}>Find and correct the errors:</p>
-          {exercise.hint && (
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '3px 10px', background: 'var(--warning-bg)', color: 'var(--warning)', borderRadius: 0, fontSize: 'var(--text-xs)', marginBottom: 8 }}>
-              <Icon.spark size={11} /> {exercise.hint}
-            </div>
-          )}
-          <div style={{ border: '1px solid var(--border)', borderRadius: 0, padding: 10, background: 'var(--surface)', lineHeight: 1.7 }}>
-            {exercise.errorText || 'Text with errors…'}
-          </div>
-        </div>
-      );
-
-    case 'flash': {
-      const filledPairs = (exercise.pairs || []).filter(p => p.term || p.def);
-      return (
-        <div>
-          <p style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginBottom: 8 }}>{filledPairs.length} flashcards · click to flip</p>
-          <div style={{
-            background: 'var(--surface)', border: '2px solid var(--border)',
-            borderRadius: 0, padding: '24px 20px', textAlign: 'center',
-          }}>
-            <div style={{ fontSize: 'var(--text-xs)', color: 'var(--faint)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Term</div>
-            <div style={{ fontFamily: 'var(--font-ui)', fontWeight: 600, fontSize: 'var(--text-xl)' }}>
-              {filledPairs[0]?.term || 'Term'}
-            </div>
-            <div style={{ fontSize: 'var(--text-xs)', color: 'var(--faint)', marginTop: 10 }}>Click to flip</div>
-          </div>
-        </div>
-      );
-    }
-
-    case 'listen':
-      return (
-        <div>
-          <div style={{
-            display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 12,
-            padding: '10px 14px', borderRadius: 0,
-            background: 'rgba(37,99,235,.06)', border: '1px solid rgba(37,99,235,.18)',
-          }}>
-            <Icon.play size={20} />
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--accent-text)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                Listen ({exercise.plays ?? 2}× allowed)
-              </div>
-              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: 4, lineHeight: 1.5 }}>
-                Audio script
-              </div>
-              <div style={{
-                marginTop: 6,
-                padding: '8px 10px',
-                borderRadius: 0,
-                background: 'var(--surface)',
-                border: '1px solid rgba(37,99,235,.12)',
-                color: 'var(--text)',
-                fontSize: 'var(--text-sm)',
-                lineHeight: 1.55,
-                whiteSpace: 'pre-wrap',
-              }}>
-                {exercise.audioText || 'Audio script not set yet.'}
-              </div>
-            </div>
-          </div>
-          <p style={{ fontWeight: 600, marginBottom: 10 }}>{exercise.question || 'Question…'}</p>
-          {(exercise.options || []).map((opt, i) => (
-            <div key={i} style={{
-              display: 'flex', alignItems: 'center', gap: 10,
-              padding: '8px 12px', marginBottom: 4,
-              borderRadius: 0, border: '1px solid var(--border)', background: 'var(--surface)',
-            }}>
-              <span style={{ width: 20, height: 20, borderRadius: '50%', border: '2px solid var(--border)', flexShrink: 0 }} />
-              <span>{opt || `Option ${String.fromCharCode(65 + i)}`}</span>
-            </div>
-          ))}
-        </div>
-      );
-
-    case 'read': {
-      const qCount = (exercise.questions || []).length;
-      return (
-        <div>
-          <div style={{
-            background: 'var(--surface)', border: '1px solid var(--border)',
-            borderRadius: 0, padding: '12px 14px', marginBottom: 10,
-            maxHeight: 160, overflowY: 'auto', lineHeight: 1.7,
-            fontSize: 'var(--text-sm)', fontFamily: 'var(--font-ui)',
-          }}>
-            {(exercise.passage || 'No passage provided.').slice(0, 300)}
-            {(exercise.passage || '').length > 300 ? '…' : ''}
-          </div>
-          {exercise.source && (
-            <p style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontStyle: 'italic', margin: '0 0 8px' }}>
-              — {exercise.source}
-            </p>
-          )}
-          <p style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginBottom: 8 }}>
-            {qCount} comprehension question{qCount !== 1 ? 's' : ''}
-          </p>
-          {(exercise.questions || []).map((q, qi) => (
-            <div key={q.id} style={{ marginBottom: 6 }}>
-              <p style={{ fontSize: 'var(--text-sm)', fontWeight: 600, margin: '0 0 4px' }}>{qi + 1}. {q.question}</p>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                {(q.options || []).map((opt, oi) => (
-                  <div key={oi} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 8px', borderRadius: 0, border: '1px solid var(--border)', background: 'var(--surface)', fontSize: 'var(--text-xs)' }}>
-                    <span style={{ width: 16, height: 16, borderRadius: '50%', border: '2px solid var(--border)', flexShrink: 0 }} />
-                    <span>{opt || `Option ${String.fromCharCode(65 + oi)}`}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-      );
-    }
-
-    default:
-      return <p>{exercise.instruction || exercisePreview(exercise)}</p>;
-  }
-}
-
-/* ─── HELPERS ───────────────────────────────────────────────── */
-
-function mapAiType(aiType) {
-  const t = (aiType || '').toLowerCase();
-  if (/multiple.?choice|mcq/.test(t)) return 'mcq';
-  if (/fill|blank/.test(t)) return 'blank';
-  if (/writ|essay|paragraph|response/.test(t)) return 'short';
-  if (/speak|audio|record/.test(t)) return 'speak';
-  if (/order|sequen/.test(t)) return 'order';
-  if (/error|correct|fix/.test(t)) return 'fix';
-  if (/flash|card|vocab/.test(t)) return 'flash';
-  if (/listen/.test(t)) return 'listen';
-  if (/read|strategy|test/.test(t)) return 'read';
-  return 'short'; // fallback
-}
-
-function normalizeTaskTypes(taskTypes) {
-  const fromAi = Array.isArray(taskTypes) ? taskTypes.map(mapAiType) : [];
-  const merged = [...fromAi, ...MET_BALANCED_TYPES].filter((type, idx, arr) => arr.indexOf(type) === idx);
-  return merged.slice(0, 7);
-}
-
-function buildCompleteExercises(items, options = {}) {
-  const exercises = [];
-  let skipped = 0;
-  for (const item of Array.isArray(items) ? items : []) {
-    const exercise = createCompleteExercise(item, options);
-    if (exercise) exercises.push(exercise);
-    else skipped += 1;
-  }
-  return { exercises, skipped };
-}
-
-function createCompleteExercise(aiTask, { defaultSkillGroup } = {}) {
-  if (!aiTask || typeof aiTask !== 'object') return null;
-  let type = mapAiType(aiTask.type || defaultSkillGroup);
-  // Listening and reading groups must produce their structured type, not a plain MCQ
-  if (defaultSkillGroup === 'listening' && type !== 'listen') type = 'listen';
-  if (defaultSkillGroup === 'reading' && type !== 'read') type = 'read';
-  const ex = applyAiTaskToExercise(createExercise(type, aiTask.level || 'B1'), { ...aiTask, skillGroup: aiTask.skillGroup || defaultSkillGroup });
-  return isStructuredAiExerciseComplete(ex) ? ex : null;
-}
-
-function isStructuredAiExerciseComplete(ex) {
-  if (!ex || !ex.type) return false;
-  if (ex.type === 'mcq') {
-    return Boolean(ex.question)
-      && (ex.options || []).filter(Boolean).length === 4
-      && ex.correct !== null
-      && ex.correct !== undefined
-      && Boolean(ex.explanation);
-  }
-  if (ex.type === 'blank') {
-    const blankCount = (String(ex.template || '').match(/_{3,}/g) || []).length;
-    return Boolean(ex.template) && blankCount > 0 && (ex.blanks || []).filter(Boolean).length >= blankCount;
-  }
-  if (ex.type === 'short') return Boolean(ex.prompt) && Boolean(ex.rubric) && Number(ex.targetWords) > 0;
-  if (ex.type === 'speak') return Boolean(ex.prompt) && Number(ex.targetSeconds) > 0;
-  if (ex.type === 'order') return (ex.sentences || []).filter(Boolean).length >= 3;
-  if (ex.type === 'fix') return Boolean(ex.errorText) && Boolean(ex.correctedText) && Boolean(ex.hint);
-  if (ex.type === 'flash') return (ex.pairs || []).filter(p => p.term && p.def).length >= 10;
-  if (ex.type === 'listen') {
-    return Boolean(ex.audioText)
-      && Boolean(ex.question)
-      && (ex.options || []).filter(Boolean).length === 4
-      && ex.correct !== null
-      && ex.correct !== undefined
-      && Boolean(ex.explanation);
-  }
-  if (ex.type === 'read') {
-    return Boolean(ex.passage)
-      && (ex.questions || []).filter(q => q.question && (q.options || []).filter(Boolean).length === 4 && q.correct !== null).length >= 1;
-  }
-  if (ex.type === 'dialogue') return (ex.lines || []).filter(l => l.text?.trim()).length >= 2;
-  if (ex.type === 'swap') return ex.sentence?.includes('[') && (ex.swaps || []).length > 0 && ex.swaps.every(s => s.options?.filter(Boolean).length >= 2);
-  if (ex.type === 'levelup') return !!(ex.b1 && ex.b2 && (ex.options || []).filter(Boolean).length >= 2 && ex.correct !== null);
-  return false;
-}
-
-// Returns a warning string if the homework set lacks production exercises when
-// the diagnosis priority is a production skill (speaking or writing).
-// Returns null when no concern is found.
-function getHomeworkCognitiveSufficiencyWarning(exercises, diagnosis) {
-  const priorities = Array.isArray(diagnosis?.priorityDiagnosis)
-    ? diagnosis.priorityDiagnosis
-    : Array.isArray(diagnosis?.sections?.priorityDiagnosis?.content)
-      ? diagnosis.sections.priorityDiagnosis.content
-      : [];
-  const topPriority = (priorities[0]?.area || '').toLowerCase();
-  const isProductionPriority = /speak|writ|produc/.test(topPriority);
-  if (!isProductionPriority) return null;
-  const hasProductionExercise = exercises.some(e => e.type === 'speak' || e.type === 'short');
-  if (!hasProductionExercise) {
-    return `Diagnosis priority is "${priorities[0]?.area}" but no speaking or writing exercise is included. Consider adding at least one.`;
-  }
-  return null;
-}
-
-function buildExercisesFromAiTasks(tasks, fallback) {
-  const built = (tasks || []).map(t => createExerciseFromAiTask(t)).filter(Boolean);
-  return built.length > 0 ? built : fallback;
-}
-
-function fillSelectedExercisesWithAi(exercises, tasks) {
-  if (!Array.isArray(exercises) || exercises.length === 0) return exercises;
-  const pool = Array.isArray(tasks) ? [...tasks] : [];
-  return exercises.map(ex => {
-    const aiTask = pullBestTaskForType(pool, ex.type);
-    if (!aiTask) return ex;
-    return applyAiTaskToExercise(ex, aiTask);
-  });
-}
-
-function pullBestTaskForType(pool, type) {
-  if (!Array.isArray(pool) || pool.length === 0) return null;
-  let idx = pool.findIndex(t => mapAiType(t?.type) === type);
-  if (idx < 0) idx = 0;
-  return idx >= 0 ? pool.splice(idx, 1)[0] : null;
-}
-
-function createExerciseFromAiTask(task) {
-  if (!task || typeof task !== 'object') return null;
-  const ex = createExercise(mapAiType(task.type));
-  return applyAiTaskToExercise(ex, task);
-}
-
-function applyAiTaskToExercise(exercise, aiTask) {
-  const ex = { ...exercise };
-  const content = aiTask?.content || aiTask?.description || aiTask?.question || aiTask?.prompt || aiTask?.title || '';
-  if (aiTask?.title) ex.title = aiTask.title;
-  if (aiTask?.skillGroup) ex.skillGroup = aiTask.skillGroup;
-  if (aiTask?.teacherNote) ex.teacherNote = aiTask.teacherNote;
-
-  if (ex.type === 'mcq') {
-    const options = normalizeMcqOptions(aiTask?.options);
-    ex.question = aiTask?.question || content;
-    ex.options = options;
-    ex.correct = normalizeCorrectIndex(aiTask?.correct, options.length);
-    ex.explanation = aiTask?.explanation || aiTask?.rationale || aiTask?.teacherNote || 'The correct answer best matches the MET skill focus in this item.';
-    return ex;
-  }
-
-  if (ex.type === 'blank') {
-    ex.template = aiTask?.template || content;
-    ex.blanks = normalizeBlankAnswers(aiTask?.blanks, ex.template);
-    return ex;
-  }
-
-  if (ex.type === 'order') {
-    ex.sentences = normalizeSentences(aiTask?.sentences, content);
-    return ex;
-  }
-
-  if (ex.type === 'fix') {
-    ex.errorText = aiTask?.errorText || content;
-    ex.correctedText = aiTask?.correctedText || aiTask?.example || ex.correctedText || '';
-    ex.hint = aiTask?.hint || aiTask?.teacherNote || '';
-    return ex;
-  }
-
-  if (ex.type === 'flash') {
-    ex.pairs = normalizeFlashPairs(aiTask?.pairs || aiTask?.cards || aiTask?.items || aiTask?.terms);
-    return ex;
-  }
-
-  if (ex.type === 'speak') {
-    ex.prompt = aiTask?.prompt || content;
-    ex.targetSeconds = normalizeTargetSeconds(aiTask?.targetSeconds, aiTask?.duration);
-    if (aiTask?.imageUrl) ex.imageUrl = aiTask.imageUrl;
-    if (aiTask?.imageAlt) ex.imageAlt = aiTask.imageAlt;
-    if (aiTask?.imageDescription) ex.imageDescription = aiTask.imageDescription;
-    return ex;
-  }
-
-  if (ex.type === 'read') {
-    ex.passage = aiTask?.passage || aiTask?.text || content;
-    ex.source = aiTask?.source || '';
-    const aiQs = Array.isArray(aiTask?.questions) ? aiTask.questions : [];
-    ex.questions = aiQs.length
-      ? aiQs.map(q => ({
-          id: exId(),
-          question: q.question || '',
-          options: normalizeMcqOptions(q.options),
-          correct: normalizeCorrectIndex(q.correct, 4),
-          explanation: q.explanation || '',
-        }))
-      : ex.questions;
-    return ex;
-  }
-
-  if (ex.type === 'listen') {
-    const options = normalizeMcqOptions(aiTask?.options);
-    ex.audioText = aiTask?.audioText || aiTask?.script || content;
-    ex.question = aiTask?.question || 'What is the speaker mainly trying to do?';
-    ex.options = options;
-    ex.correct = normalizeCorrectIndex(aiTask?.correct, options.length);
-    ex.explanation = aiTask?.explanation || aiTask?.rationale || aiTask?.teacherNote || 'The correct answer follows from the speaker purpose and key details in the audio.';
-    ex.plays = Number.isFinite(Number(aiTask?.plays)) ? Number(aiTask.plays) : 2;
-    if (aiTask?.pictureHint) ex.pictureHint = aiTask.pictureHint;
-    return ex;
-  }
-
-  ex.prompt = aiTask?.prompt || content;
-  ex.rubric = aiTask?.rubric || aiTask?.teacherNote || 'Answer the question clearly, support your idea with one example, and check grammar before submitting.';
-  if (Number.isFinite(Number(aiTask?.targetWords))) ex.targetWords = Number(aiTask.targetWords);
-  return ex;
-}
-
-function normalizeMcqOptions(options) {
-  if (!Array.isArray(options) || options.length === 0) return ['', '', '', ''];
-  const clean = options
-    .map(opt => (typeof opt === 'string' ? opt : opt?.text || opt?.label || ''))
-    .filter(Boolean)
-    .slice(0, 4);
-  while (clean.length < 4) clean.push('');
-  return clean;
-}
-
-function normalizeCorrectIndex(correct, optionCount) {
-  if (typeof correct === 'string') {
-    const trimmed = correct.trim().toUpperCase();
-    if (/^[A-D]$/.test(trimmed)) return trimmed.charCodeAt(0) - 65;
-  }
-  const n = Number(correct);
-  if (Number.isInteger(n) && n >= 0 && n < optionCount) return n;
-  return null;
-}
-
-function normalizeBlankAnswers(blanks, template) {
-  if (Array.isArray(blanks) && blanks.length > 0) return blanks.map(v => String(v));
-  const count = (String(template || '').match(/_{3,}/g) || []).length;
-  return Array.from({ length: count }, () => '');
-}
-
-function normalizeSentences(sentences, content) {
-  if (Array.isArray(sentences) && sentences.length > 0) return sentences.map(s => String(s));
-  return String(content || '')
-    .split('\n')
-    .map(s => s.trim())
-    .filter(Boolean);
-}
-
-function normalizeFlashPairs(pairs) {
-  if (!Array.isArray(pairs) || pairs.length === 0) return [{ term: '', def: '' }];
-  const clean = pairs
-    .map(p => {
-      if (typeof p === 'string') {
-        const [term, ...rest] = p.split(/[:–-]/);
-        return { term: term?.trim() || '', def: rest.join('-').trim() };
-      }
-      return { term: p?.term || p?.word || p?.phrase || '', def: p?.def || p?.definition || p?.meaning || '' };
-    })
-    .filter(p => p.term || p.def);
-  const filled = clean.filter(p => p.term && p.def);
-  if (filled.length === 0) return [{ term: '', def: '' }];
-  const fallback = [
-    { term: 'main idea', def: 'the central point of a passage or conversation' },
-    { term: 'specific detail', def: 'a fact or piece of information stated in the text' },
-    { term: 'inference', def: 'a conclusion based on evidence, not directly stated' },
-    { term: 'speaker purpose', def: 'the reason a speaker says something' },
-    { term: 'supporting example', def: 'a detail that makes an answer stronger' },
-    { term: 'transition', def: 'a word or phrase that connects ideas clearly' },
-    { term: 'collocation', def: 'words that naturally go together' },
-    { term: 'distractor', def: 'an answer choice that sounds possible but is not correct' },
-    { term: 'task completion', def: 'answering all parts of the question' },
-    { term: 'clarify', def: 'to make something easier to understand' },
-  ];
-  const seen = new Set(filled.map(p => p.term.toLowerCase()));
-  for (const pair of fallback) {
-    if (filled.length >= 10) break;
-    if (!seen.has(pair.term.toLowerCase())) filled.push(pair);
-  }
-  return filled;
-}
-
-function normalizeTargetSeconds(targetSeconds, duration) {
-  const parsed = Number(targetSeconds);
-  if (Number.isFinite(parsed) && parsed > 0) return parsed;
-  const durMatch = String(duration || '').match(/\d+/);
-  if (durMatch) return Math.max(30, Number(durMatch[0]) * 60);
-  return 60;
-}
-
-function Field({ label, children }) {
-  return (
-    <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+    <label style={{ display: 'flex', flexDirection: 'column', gap: 4, ...style }}>
       <span style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</span>
       {children}
     </label>
   );
-}
-
-function arrowBtnStyle(disabled) {
-  return {
-    width: 24, height: 24, padding: 0, fontFamily: 'var(--font-ui)',
-    fontSize: 12, border: '1px solid var(--border)', borderRadius: 0,
-    background: 'var(--surface)', color: disabled ? 'var(--faint)' : 'var(--text)',
-    cursor: disabled ? 'not-allowed' : 'pointer', display: 'inline-flex',
-    alignItems: 'center', justifyContent: 'center',
-  };
 }
 
 const backStyle = {
