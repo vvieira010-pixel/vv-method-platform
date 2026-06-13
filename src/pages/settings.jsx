@@ -2,7 +2,7 @@ import { useRef, useState } from 'react';
 import { Icon, Card, SectionHeader, Button } from '../components/shared.jsx';
 import { clearWorkflowData, syncLocalToCloud } from '../lib/workflow.js';
 import { getDbContext } from '../lib/supabase-db.js';
-import { getSupabaseConfig } from '../lib/supabase-storage.js';
+import { getSupabaseConfig, readStoredSupabaseSession, updateUserPassword } from '../lib/supabase-storage.js';
 
 const SENSITIVE_LOCAL_KEYS = new Set([
   'vv:groq_api_key',
@@ -59,9 +59,32 @@ export default function SettingsPage({ onNavigate }) {
   const [saved, setSaved] = useState('');
   const [syncing, setSyncing] = useState(false);
   const [syncResult, setSyncResult] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [passwordSaving, setPasswordSaving] = useState(false);
+  const [passwordMsg, setPasswordMsg] = useState(null); // { ok, text }
   const importInputRef = useRef(null);
 
   const supabaseConfigured = getSupabaseConfig().isConfigured;
+  const activeSession = readStoredSupabaseSession();
+
+  async function handleSetPassword(e) {
+    e.preventDefault();
+    if (newPassword.length < 6) { setPasswordMsg({ ok: false, text: 'Password must be at least 6 characters.' }); return; }
+    if (newPassword !== confirmPassword) { setPasswordMsg({ ok: false, text: 'Passwords do not match.' }); return; }
+    setPasswordSaving(true);
+    setPasswordMsg(null);
+    try {
+      await updateUserPassword(newPassword, activeSession.access_token);
+      setNewPassword('');
+      setConfirmPassword('');
+      setPasswordMsg({ ok: true, text: 'Password set! You can now sign in with your email and this password.' });
+      window.toast?.('Password updated.', 'ok');
+    } catch (err) {
+      setPasswordMsg({ ok: false, text: err.message });
+    }
+    setPasswordSaving(false);
+  }
 
   async function handleSyncToCloud() {
     if (!getDbContext()) {
@@ -345,6 +368,50 @@ export default function SettingsPage({ onNavigate }) {
           <Button variant="primary" onClick={saveExamDate}>Save exam date</Button>
         </div>
       </Card>
+
+      {/* Set / change password */}
+      {activeSession && (
+        <Card style={{ padding: 20, marginTop: 14 }}>
+          <SectionHeader title="Account Password" icon={<Icon.lock size={15} />} />
+          <p style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', margin: '8px 0 16px', lineHeight: 1.6 }}>
+            Set a password so you can sign in with your email and password next time — no login link needed.
+          </p>
+          <form onSubmit={handleSetPassword} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <Field label="New password (min. 6 characters)">
+              <input
+                className="input"
+                type="password"
+                autoComplete="new-password"
+                placeholder="Choose a password…"
+                value={newPassword}
+                onChange={e => setNewPassword(e.target.value)}
+                disabled={passwordSaving}
+              />
+            </Field>
+            <Field label="Confirm password">
+              <input
+                className="input"
+                type="password"
+                autoComplete="new-password"
+                placeholder="Repeat the password…"
+                value={confirmPassword}
+                onChange={e => setConfirmPassword(e.target.value)}
+                disabled={passwordSaving}
+              />
+            </Field>
+            {passwordMsg && (
+              <p style={{ fontSize: 'var(--text-sm)', color: passwordMsg.ok ? 'var(--success)' : 'var(--danger)', margin: 0 }}>
+                {passwordMsg.text}
+              </p>
+            )}
+            <div>
+              <Button type="submit" variant="primary" disabled={passwordSaving || !newPassword || !confirmPassword}>
+                {passwordSaving ? 'Saving…' : 'Set password'}
+              </Button>
+            </div>
+          </form>
+        </Card>
+      )}
 
       {/* Cloud sync */}
       {supabaseConfigured && (

@@ -228,6 +228,31 @@ export async function resetPasswordForEmail(email, redirectTo) {
 }
 
 /**
+ * Update the signed-in user's password. Requires an active session (the user
+ * must already be authenticated — either via magic link or a prior password).
+ * Returns { ok } or throws with the API error message.
+ */
+export async function updateUserPassword(newPassword, accessToken) {
+  const { url, anonKey, isConfigured } = getSupabaseConfig();
+  if (!isConfigured) throw new Error('Supabase is not configured.');
+  const res = await fetch(`${url}/auth/v1/user`, {
+    method: 'PUT',
+    headers: {
+      apikey: anonKey,
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ password: newPassword }),
+  });
+  if (!res.ok) {
+    let msg = `Password update failed (${res.status})`;
+    try { const j = await res.json(); msg = j.msg || j.error_description || j.error || msg; } catch {}
+    throw new Error(msg);
+  }
+  return { ok: true };
+}
+
+/**
  * Send a passwordless magic-link / OTP email using PKCE flow.
  * On click, Supabase redirects to `redirectTo?code=xxx` (PKCE) or
  * `redirectTo#access_token=xxx` (implicit, legacy) — App.jsx handles both.
