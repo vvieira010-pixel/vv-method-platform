@@ -275,33 +275,37 @@ export default function StudentHome({ student, onTab }) {
         );
       })()}
 
-      {pendingHw.length === 0 && (
-        <div className="student-practice-studio fade-up" style={{ '--delay': '0.2s' }}>
-          <div>
-            <h2>The Practice Studio</h2>
-            <p>Self-paced practice at your own level. No timer, no pressure.</p>
+      <section className="student-practice-studio fade-up" style={{ '--delay': '0.2s' }}>
+        <div className="student-practice-studio-copy">
+          <span className="student-practice-studio-kicker">Practice Studio</span>
+          <h2>Choose a quick practice</h2>
+          <p>Self-paced practice at your own level. No timer, no pressure.</p>
+          <div className="student-practice-studio-actions">
             {reviewCount > 0 && (
               <button className="student-wide-action student-wide-action-mb" onClick={handleOpenReview} aria-label={`Review ${reviewCount} spaced repetition item${reviewCount !== 1 ? 's' : ''}`}>
                 <Icon.refresh size={14} /> Review {reviewCount} item{reviewCount !== 1 ? 's' : ''} due
               </button>
             )}
-            <div className="studio-orbs">
-              <button className="studio-orb" onClick={() => setPracticeMode('grammar')} aria-label="Grammar Sprint">
-                <span className="studio-orb-icon" aria-hidden="true"><Icon.edit size={24} /></span>
-                <span className="studio-orb-label">Grammar Sprint</span>
-              </button>
-              <button className="studio-orb" onClick={() => setPracticeMode('vocab')} aria-label="Vocab Deep-Dive">
-                <span className="studio-orb-icon" aria-hidden="true"><Icon.star size={24} /></span>
-                <span className="studio-orb-label">Vocab Deep-Dive</span>
-              </button>
-              <button className="studio-orb" onClick={() => setPracticeMode('speaking')} aria-label="Speaking Mirror">
-                <span className="studio-orb-icon" aria-hidden="true"><Icon.mic size={24} /></span>
-                <span className="studio-orb-label">Speaking Mirror</span>
-              </button>
-            </div>
+            <button className="student-practice-primary" onClick={() => setPracticeMode('speaking')}>
+              <Icon.mic size={15} /> Start practice
+            </button>
           </div>
         </div>
-      )}
+        <div className="studio-orbs">
+          <button className="studio-orb" onClick={() => setPracticeMode('grammar')} aria-label="Grammar Sprint">
+            <span className="studio-orb-icon" aria-hidden="true"><Icon.edit size={24} /></span>
+            <span className="studio-orb-label">Grammar Sprint</span>
+          </button>
+          <button className="studio-orb" onClick={() => setPracticeMode('vocab')} aria-label="Vocab Deep-Dive">
+            <span className="studio-orb-icon" aria-hidden="true"><Icon.star size={24} /></span>
+            <span className="studio-orb-label">Vocab Deep-Dive</span>
+          </button>
+          <button className="studio-orb" onClick={() => setPracticeMode('speaking')} aria-label="Speaking Mirror">
+            <span className="studio-orb-icon" aria-hidden="true"><Icon.mic size={24} /></span>
+            <span className="studio-orb-label">Speaking Mirror</span>
+          </button>
+        </div>
+      </section>
       <Suspense fallback={null}>
         {practiceMode && (
           <PracticeSession mode={practiceMode} onClose={() => setPracticeMode(null)} />
@@ -314,20 +318,6 @@ export default function StudentHome({ student, onTab }) {
           />
         )}
       </Suspense>
-
-      {pendingHw.length > 0 && (
-        <div className="student-practice-compact fade-up" style={{ '--delay': '0.2s' }}>
-          <div className="student-practice-compact-copy">
-            <strong>Practice Studio</strong>
-            <small>Optional self-paced practice — no timer, no pressure.</small>
-          </div>
-          <div className="student-practice-compact-orbs">
-            <button className="student-practice-compact-orb" onClick={() => setPracticeMode('grammar')}><Icon.edit size={14} /> Grammar</button>
-            <button className="student-practice-compact-orb" onClick={() => setPracticeMode('vocab')}><Icon.star size={14} /> Vocab</button>
-            <button className="student-practice-compact-orb" onClick={() => setPracticeMode('speaking')}><Icon.mic size={14} /> Speaking</button>
-          </div>
-        </div>
-      )}
 
       <section className="student-grid fade-up" style={{ '--delay': '0.3s' }}>
         <div className="student-home-main">
