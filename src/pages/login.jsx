@@ -45,13 +45,13 @@ const CSS = `
     display: inline-block; margin-bottom: 18px;
     padding: 4px 10px; border-radius: 4px;
     background: rgba(72,199,199,.22); border: 1px solid rgba(72,199,199,.4);
-    font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #a8dce0;
+    font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #a8dce0;
   }
   .lp-brand-b2-badge {
     display: inline-block; margin-left: 8px; vertical-align: middle;
     padding: 3px 8px; border-radius: 4px;
     background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.25);
-    font-size: 10px; font-weight: 800; letter-spacing: .08em; color: #fff;
+    font-size: 11px; font-weight: 800; letter-spacing: .08em; color: #fff;
   }
   .lp-invite-notice {
     display: flex; align-items: center; gap: 8px;

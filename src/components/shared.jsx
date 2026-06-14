@@ -228,7 +228,7 @@ export function Shell({ tabs = [], active, onTab, children, rightSlot, workflowA
                     className={`shell-nav-btn ${active === tab.id ? 'active' : ''}`}
                     aria-current={active === tab.id ? 'page' : undefined}
                     onClick={() => onTab(tab.id)}>
-                    <span style={{ opacity:0.85, flexShrink:0, borderLeft: active === tab.id ? '3px solid var(--accent)' : 'none' }}>{tab.icon}</span>
+                    <span style={{ opacity:0.85, flexShrink:0 }}>{tab.icon}</span>
                     {tab.label}
                     {tab.badge > 0 && (
                       <span style={{
@@ -274,7 +274,41 @@ export function Shell({ tabs = [], active, onTab, children, rightSlot, workflowA
 
 
 /* ─── Modal ──────────────────────────────────────────────────── */
+const FOCUSABLE = 'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
 export function Modal({ open, onClose, kicker, title, subtitle, maxWidth = 680, children }) {
+  const dialogRef = useRef(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const previouslyFocused = document.activeElement;
+
+    // Focus first focusable element after paint
+    const timer = setTimeout(() => {
+      const els = dialogRef.current?.querySelectorAll(FOCUSABLE);
+      els?.[0]?.focus();
+    }, 0);
+
+    function handleKey(e) {
+      if (e.key === 'Escape') { onClose(); return; }
+      if (e.key !== 'Tab' || !dialogRef.current) return;
+      const els = Array.from(dialogRef.current.querySelectorAll(FOCUSABLE));
+      if (!els.length) return;
+      if (e.shiftKey && document.activeElement === els[0]) {
+        e.preventDefault(); els[els.length - 1].focus();
+      } else if (!e.shiftKey && document.activeElement === els[els.length - 1]) {
+        e.preventDefault(); els[0].focus();
+      }
+    }
+
+    document.addEventListener('keydown', handleKey);
+    return () => {
+      clearTimeout(timer);
+      document.removeEventListener('keydown', handleKey);
+      previouslyFocused?.focus?.();
+    };
+  }, [open, onClose]);
+
   if (!open) return null;
   function handleBackdrop(e) {
     if (e.target === e.currentTarget) onClose();
@@ -292,6 +326,10 @@ export function Modal({ open, onClose, kicker, title, subtitle, maxWidth = 680, 
       }}
     >
       <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="modal-title"
         className="modal-card-enter"
         style={{
           width: '100%', maxWidth, borderRadius: 20, overflow: 'hidden',
@@ -311,22 +349,21 @@ export function Modal({ open, onClose, kicker, title, subtitle, maxWidth = 680, 
                 textTransform: 'uppercase', opacity: 0.7, marginBottom: 2,
               }}>{kicker}</div>
             )}
-            <div style={{ fontWeight: 700, fontSize: '1.1rem' }}>{title}</div>
+            <div id="modal-title" style={{ fontWeight: 700, fontSize: '1.1rem' }}>{title}</div>
             {subtitle && (
               <div style={{ fontSize: '0.8rem', opacity: 0.7, marginTop: 2 }}>{subtitle}</div>
             )}
           </div>
           <button
             onClick={onClose}
-            aria-label="Close"
+            aria-label="Close dialog"
+            className="modal-close-btn"
             style={{
               background: 'rgba(255,255,255,0.15)', border: 'none', borderRadius: 10,
-              color: 'white', cursor: 'pointer', padding: '8px 12px',
+              color: 'white', cursor: 'pointer', padding: '10px 14px',
               fontSize: '1rem', lineHeight: 1, transition: 'background 0.15s ease',
-              flexShrink: 0, marginLeft: 12,
+              flexShrink: 0, marginLeft: 12, minHeight: 44,
             }}
-            onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.25)'}
-            onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.15)'}
           >
             <Icon.close size={14} />
           </button>

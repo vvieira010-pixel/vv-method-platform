@@ -2,7 +2,7 @@ import { shadeColor, softColor } from './lib/color-utils.js';
 import { useState, useEffect, lazy, Suspense } from 'react';
 import LoginScreen from './pages/login.jsx';
 import ErrorBoundary from './components/error-boundary.jsx';
-import { TweaksPanel, TweakSection, TweakRadio, TweakColor } from './components/tweaks-panel.jsx';
+import { TweaksPanel, TweakSection, TweakRadio, TweakColor, TweakToggle } from './components/tweaks-panel.jsx';
 import { Icon, Avatar, Button, Shell } from './components/shared.jsx';
 import { STUDENTS } from './data/students.jsx';
 import { seedStudentsIfEmpty, getStudents } from './lib/workflow-roster.js';
@@ -46,6 +46,7 @@ export default function App() {
   const [tweaks, setTweaksState] = useState(() => ({
     cardStyle: 'bordered',
     accent: '#148891',
+    darkMode: false,
     ...window.TWEAK_DEFAULTS,
   }));
   const [students, setStudents] = useState([]);
@@ -174,6 +175,7 @@ export default function App() {
 
   useEffect(() => {
     document.documentElement.setAttribute('data-cards', tweaks.cardStyle);
+    document.documentElement.setAttribute('data-theme', tweaks.darkMode ? 'dark' : 'light');
     document.documentElement.style.setProperty('--accent', tweaks.accent);
     document.documentElement.style.setProperty('--accent-deep', shadeColor(tweaks.accent, -22));
     document.documentElement.style.setProperty('--accent-soft', softColor(tweaks.accent));
@@ -224,6 +226,7 @@ export default function App() {
     if (!student) return <PageLoader />;
     return (
       <>
+        <OfflineBar />
         <a href="#student-main" className="skip-nav">Skip to content</a>
         <ErrorBoundary label="Dashboard unavailable">
           <Suspense fallback={<PageLoader />}>
@@ -274,6 +277,7 @@ export default function App() {
 
   return (
     <>
+      <OfflineBar />
       <a href="#teacher-main" className="skip-nav">Skip to content</a>
       <Shell tabs={teacherTabs} active={view} onTab={(id) => navigate(id)} rightSlot={rightSlot}>
         <ErrorBoundary label="Page unavailable">
@@ -398,7 +402,11 @@ function ToastHost() {
     go:   { bg: 'var(--accent)',      fg: '#fff', g: '→' },
   };
   return (
-    <div style={{ position: 'fixed', right: 22, bottom: 22, zIndex: 60, display: 'flex', flexDirection: 'column', gap: 10, pointerEvents: 'none' }}>
+    <div
+      aria-live="polite"
+      aria-atomic="true"
+      style={{ position: 'fixed', right: 22, bottom: 22, zIndex: 60, display: 'flex', flexDirection: 'column', gap: 10, pointerEvents: 'none' }}
+    >
       {toasts.map(t => {
         const tone = TONES[t.kind] || TONES.ok;
         return (
@@ -415,6 +423,9 @@ function ToastHost() {
 function TweaksUI({ tweaks, setTweak }) {
   return (
     <TweaksPanel title="Tweaks">
+      <TweakSection label="Theme">
+        <TweakToggle label="Dark mode" value={tweaks.darkMode} onChange={v => setTweak('darkMode', v)} />
+      </TweakSection>
       <TweakSection label="Card style">
         <TweakRadio options={[{ label: 'Flat', value: 'flat' }, { label: 'Bordered', value: 'bordered' }, { label: 'Shadowed', value: 'shadowed' }]} value={tweaks.cardStyle} onChange={v => setTweak('cardStyle', v)} />
       </TweakSection>
@@ -422,6 +433,33 @@ function TweaksUI({ tweaks, setTweak }) {
         <TweakColor value={tweaks.accent} onChange={v => setTweak('accent', v)} options={['#0f1b2d','#0f6b73','#148891','#c86607','#5bbcb8']} />
       </TweakSection>
     </TweaksPanel>
+  );
+}
+
+function OfflineBar() {
+  const [online, setOnline] = useState(navigator.onLine);
+  useEffect(() => {
+    const goOn  = () => setOnline(true);
+    const goOff = () => setOnline(false);
+    window.addEventListener('online',  goOn);
+    window.addEventListener('offline', goOff);
+    return () => {
+      window.removeEventListener('online',  goOn);
+      window.removeEventListener('offline', goOff);
+    };
+  }, []);
+  if (online) return null;
+  return (
+    <div role="status" aria-live="polite" style={{
+      position: 'fixed', top: 0, left: 0, right: 0, zIndex: 1000,
+      background: 'var(--warning)', color: '#fff',
+      padding: '9px 16px', textAlign: 'center',
+      fontSize: 'var(--text-sm)', fontWeight: 600,
+      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+    }}>
+      <span aria-hidden="true">⚠</span>
+      No internet connection — changes may not save until you're back online
+    </div>
   );
 }
 

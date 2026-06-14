@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Modal } from './shared.jsx';
 import { recordPractice } from '../lib/spaced-repetition.js';
 
@@ -23,6 +23,24 @@ export default function ReviewSession({ exercises, studentId, onClose }) {
       setIdx(i => i + 1);
     }
   }
+
+  // Keyboard shortcuts: 1–4 selects option, Enter advances
+  useEffect(() => {
+    if (finished) return;
+    function onKey(e) {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+      const num = parseInt(e.key, 10);
+      if (num >= 1 && num <= (ex?.options?.length ?? 0) && ex && answers[ex.id] == null) {
+        handleSelect(num - 1);
+        return;
+      }
+      if (e.key === 'Enter' && ex && answers[ex.id] != null) {
+        handleNext();
+      }
+    }
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [finished, ex, answers, idx]);
 
   return (
     <Modal
@@ -52,12 +70,20 @@ export default function ReviewSession({ exercises, studentId, onClose }) {
               const isCorrect = ex.correct === i;
               const showResult = answers[ex.id] != null;
               let cls = 'review-option';
-              if (showResult && isCorrect) cls += ' review-option--correct';
-              else if (showResult && selected) cls += ' review-option--wrong';
-              else if (selected) cls += ' review-option--selected';
+              let indicator = null;
+              if (showResult && isCorrect) {
+                cls += ' review-option--correct';
+                indicator = <span className="review-option-indicator" aria-hidden="true">✓ Correct</span>;
+              } else if (showResult && selected) {
+                cls += ' review-option--wrong';
+                indicator = <span className="review-option-indicator" aria-hidden="true">✗ Incorrect</span>;
+              } else if (selected) {
+                cls += ' review-option--selected';
+              }
               return (
                 <button key={i} className={cls} onClick={() => !showResult && handleSelect(i)} disabled={showResult}>
-                  {opt}
+                  <span className="review-option-text">{opt}</span>
+                  {indicator}
                 </button>
               );
             })}
