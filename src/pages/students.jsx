@@ -7,7 +7,7 @@ import { getStudents, saveStudent, deleteStudent, getDiagnoses, getHomework, get
 import { sendMagicLink } from '../lib/supabase-storage.js';
 import { getDbContext } from '../lib/supabase-db.js';
 
-export default function StudentsPage({ students: propStudents, onNavigate }) {
+export default function StudentsPage({ onNavigate }) {
   const [students, setStudents] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [editStudent, setEditStudent] = useState(null);
@@ -122,17 +122,12 @@ export default function StudentsPage({ students: propStudents, onNavigate }) {
   );
 
   return (
-    <div style={S.shell}>
-      {/* Header */}
-      <div style={S.pageHeader}>
-        <div>
-          <h1 style={S.headline}>Students</h1>
-          <p style={S.sub}>{students.length} student{students.length !== 1 ? 's' : ''} in your roster</p>
-        </div>
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-          <Button variant="primary" onClick={openAdd}><Icon.plus size={14} /> Add Student</Button>
-        </div>
-      </div>
+    <div className="page-shell">
+      <SectionHeader
+        title="Students"
+        sub={`${students.length} student${students.length !== 1 ? 's' : ''} in your roster`}
+        action={<Button variant="primary" onClick={openAdd}><Icon.plus size={14} /> Add Student</Button>}
+      />
 
       {/* Add/Edit form */}
       {showForm && (
@@ -176,17 +171,17 @@ export default function StudentsPage({ students: propStudents, onNavigate }) {
       )}
 
       {/* Search */}
-      <div style={{ marginBottom: 16 }}>
+      <div className="page-filters">
         <input className="input" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search students…" style={{ maxWidth: 320 }} />
       </div>
 
       {/* Student table */}
       {filtered.length === 0 ? (
-        <Card style={{ padding: 32, textAlign: 'center' }}>
+        <Card className="page-empty-state">
           <p style={{ color: 'var(--muted)' }}>{search ? 'No students match your search.' : 'No students yet. Add your first student above.'}</p>
         </Card>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <div className="page-list">
           {filtered.map(student => (
             <StudentRow
               key={student.id}
@@ -373,10 +368,4 @@ function Field({ label, children, style }) {
 
 const LEVELS = ['A2', 'B1', 'B1+', 'B2', 'B2+', 'C1'];
 const EMPTY_FORM = { name: '', email: '', currentLevel: 'B1', targetLevel: 'B2', examGoal: 'Pass MET B2', professionalContext: '', notes: '', totalSessions: 24 };
-const S = {
-  shell: { maxWidth: 960, margin: '0 auto', padding: '28px 20px' },
-  pageHeader: { display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 24 },
-  headline: { fontFamily: 'var(--font-ui)', fontSize: 'var(--text-2xl)', fontWeight: 700, color: 'var(--accent-deep)', margin: 0 },
-  sub: { fontSize: 'var(--text-sm)', color: 'var(--muted)', margin: '4px 0 0' },
-};
 

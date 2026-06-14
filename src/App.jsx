@@ -252,7 +252,7 @@ export default function App() {
   ];
 
   const rightSlot = (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+    <div className="shell-topbar-right">
       <span style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)' }}>Teacher</span>
       <Avatar name="Vini V" size={32} tone="ink" />
       <button
@@ -261,13 +261,7 @@ export default function App() {
         aria-label="Settings"
         title="Settings"
         aria-current={view === 'settings' ? 'page' : undefined}
-        style={{
-          display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-          width: 32, height: 32, borderRadius: 'var(--radius-sm)',
-          border: '1px solid var(--border)', cursor: 'pointer',
-          background: view === 'settings' ? 'var(--accent-soft)' : 'var(--surface)',
-          color: view === 'settings' ? 'var(--accent)' : 'var(--muted)',
-        }}
+        className={`shell-settings-btn${view === 'settings' ? ' active' : ''}`}
       >
         <Icon.settings size={16} />
       </button>

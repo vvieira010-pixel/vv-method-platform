@@ -315,60 +315,36 @@ export function Modal({ open, onClose, kicker, title, subtitle, maxWidth = 680, 
   }
   return (
     <div
-      className="modal-overlay-enter"
+      className="modal-overlay-enter modal-overlay"
       onClick={handleBackdrop}
-      style={{
-        position: 'fixed', inset: 0, zIndex: 200,
-        background: 'rgba(11,31,58,0.82)',
-        display: 'flex', alignItems: 'flex-start',
-        justifyContent: 'center', overflowY: 'auto',
-        padding: '24px 16px 48px',
-      }}
     >
       <div
         ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="modal-title"
-        className="modal-card-enter"
-        style={{
-          width: '100%', maxWidth, borderRadius: 20, overflow: 'hidden',
-          background: 'var(--surface)', boxShadow: '0 24px 64px rgba(0,0,0,0.35)',
-          marginTop: 48,
-        }}
+        className="modal-card-enter modal-card"
+        style={{ maxWidth }}
       >
-        <div style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          padding: '18px 22px 14px', borderBottom: '1px solid var(--border)',
-          background: 'var(--primary)', color: 'white',
-        }}>
+        <div className="modal-header">
           <div style={{ flex: 1, minWidth: 0 }}>
             {kicker && (
-              <div style={{
-                fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.08em',
-                textTransform: 'uppercase', opacity: 0.7, marginBottom: 2,
-              }}>{kicker}</div>
+              <div className="modal-kicker">{kicker}</div>
             )}
-            <div id="modal-title" style={{ fontWeight: 700, fontSize: '1.1rem' }}>{title}</div>
+            <div id="modal-title" className="modal-title">{title}</div>
             {subtitle && (
-              <div style={{ fontSize: '0.8rem', opacity: 0.7, marginTop: 2 }}>{subtitle}</div>
+              <div className="modal-subtitle">{subtitle}</div>
             )}
           </div>
           <button
             onClick={onClose}
             aria-label="Close dialog"
-            className="modal-close-btn"
-            style={{
-              background: 'rgba(255,255,255,0.15)', border: 'none', borderRadius: 10,
-              color: 'white', cursor: 'pointer', padding: '10px 14px',
-              fontSize: '1rem', lineHeight: 1, transition: 'background 0.15s ease',
-              flexShrink: 0, marginLeft: 12, minHeight: 44,
-            }}
+            className="modal-close"
           >
             <Icon.close size={14} />
           </button>
         </div>
-        <div style={{ padding: 22 }}>{children}</div>
+        <div className="modal-body">{children}</div>
       </div>
     </div>
   );
