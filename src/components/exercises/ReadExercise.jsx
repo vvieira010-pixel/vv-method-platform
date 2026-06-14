@@ -1,7 +1,7 @@
 import { useState } from 'react';
 
-const TEAL = '#0D9488';
-const NAVY = '#0B1F3A';
+const TEAL = 'var(--accent)';
+const NAVY = 'var(--primary-ink)';
 
 // MET Reading part banners — from met_test_basics_task_breakdown.md
 const MET_READING_CONFIG = {
@@ -40,7 +40,7 @@ export default function ReadExercise({ exercise, onComplete }) {
 
   function optionStyle(qIdx, oIdx) {
     const base = {
-      padding: '8px 12px', borderRadius: 0, border: '1.5px solid', cursor: submitted ? 'default' : 'pointer',
+      padding: '8px 12px', borderRadius: 'var(--radius-sm)', border: '1.5px solid', cursor: submitted ? 'default' : 'pointer',
       fontSize: 14, lineHeight: 1.5, fontFamily: 'var(--font-ui)', textAlign: 'left', width: '100%',
       background: 'var(--surface)', color: 'var(--text)',
       transition: 'all 0.1s',
@@ -63,7 +63,7 @@ export default function ReadExercise({ exercise, onComplete }) {
     <div>
       {/* MET part banner */}
       {partConfig && (
-        <div style={{ padding: '10px 14px', background: '#F0FDFA', border: '1px solid #99F6E4', borderRadius: 0, marginBottom: 14 }}>
+        <div style={{ padding: '10px 14px', background: '#F0FDFA', border: '1px solid #99F6E4', borderRadius: 'var(--radius-sm)', marginBottom: 14 }}>
           <div style={{ fontSize: 11, fontWeight: 700, color: '#065F46', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>
             {partConfig.label}
           </div>
@@ -75,21 +75,21 @@ export default function ReadExercise({ exercise, onComplete }) {
       )}
 
       {passage && !hidePassage && (
-        <div style={{ padding: '14px 16px', background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: 0, marginBottom: 20, fontSize: 14.5, lineHeight: 1.7, color: '#1E293B', whiteSpace: 'pre-wrap', maxHeight: 400, overflowY: 'auto' }}>
+        <div style={{ padding: '14px 16px', background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: 'var(--radius-sm)', marginBottom: 20, fontSize: 14.5, lineHeight: 1.7, color: '#1E293B', whiteSpace: 'pre-wrap', maxHeight: 400, overflowY: 'auto' }}>
           {passage}
           {source && <div style={{ marginTop: 8, fontSize: 12, color: 'var(--muted)', fontStyle: 'italic' }}>{source}</div>}
         </div>
       )}
 
       {passage && hidePassage && submitted && showTranscript && (
-        <div style={{ padding: '14px 16px', background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: 0, marginBottom: 20, fontSize: 14.5, lineHeight: 1.7, color: '#1E293B', whiteSpace: 'pre-wrap', maxHeight: 400, overflowY: 'auto' }}>
+        <div style={{ padding: '14px 16px', background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: 'var(--radius-sm)', marginBottom: 20, fontSize: 14.5, lineHeight: 1.7, color: '#1E293B', whiteSpace: 'pre-wrap', maxHeight: 400, overflowY: 'auto' }}>
           <div style={{ fontWeight: 600, fontSize: 12, color: '#92400E', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Transcript (revealed after answering)</div>
           {passage}
         </div>
       )}
 
       {hidePassage && !submitted && (
-        <div style={{ padding: '14px 16px', background: '#F0FDFA', border: '1px dashed #0D9488', borderRadius: 0, marginBottom: 20, fontSize: 13, color: '#0F766E', textAlign: 'center' }}>
+        <div style={{ padding: '14px 16px', background: '#F0FDFA', border: '1px dashed #0D9488', borderRadius: 'var(--radius-sm)', marginBottom: 20, fontSize: 13, color: '#0F766E', textAlign: 'center' }}>
           Listen to the audio, then answer the questions below. The transcript will be revealed after you check your answers.
         </div>
       )}
@@ -112,7 +112,7 @@ export default function ReadExercise({ exercise, onComplete }) {
 
       {!submitted ? (
         <button onClick={handleSubmit} disabled={!allAnswered} style={{
-          padding: '10px 24px', borderRadius: 0, border: 'none', cursor: allAnswered ? 'pointer' : 'not-allowed',
+          padding: '10px 24px', borderRadius: 'var(--radius-sm)', border: 'none', cursor: allAnswered ? 'pointer' : 'not-allowed',
           background: allAnswered ? `linear-gradient(120deg, ${TEAL} 0%, ${NAVY} 100%)` : 'var(--border)',
           color: '#fff', fontWeight: 600, fontSize: 14, fontFamily: 'var(--font-ui)',
           opacity: allAnswered ? 1 : 0.5, transition: 'all 0.15s',
@@ -120,7 +120,7 @@ export default function ReadExercise({ exercise, onComplete }) {
           Check answers
         </button>
       ) : (
-        <div style={{ padding: '12px 16px', borderRadius: 0, background: hits === total ? '#ECFDF5' : '#FFFBEB', border: `1px solid ${hits === total ? '#A7F3D0' : '#FDE68A'}`, color: hits === total ? '#065F46' : '#92400E', fontSize: 14, fontWeight: 500 }}>
+        <div style={{ padding: '12px 16px', borderRadius: 'var(--radius-sm)', background: hits === total ? '#ECFDF5' : '#FFFBEB', border: `1px solid ${hits === total ? '#A7F3D0' : '#FDE68A'}`, color: hits === total ? '#065F46' : '#92400E', fontSize: 14, fontWeight: 500 }}>
           {hits === total ? 'All answers correct!' : `${hits} of ${total} correct.`}
         </div>
       )}

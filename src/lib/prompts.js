@@ -494,8 +494,8 @@ export function buildSectionRegenPrompt(key, data) {
 ══════════════════════════════════════════════════════════════ */
 
 const EXERCISE_COMPLETENESS_RULES = `Complete exercise JSON requirements:
-- mcq: type, title, question, options with exactly 4 choices, correct as 0-3, explanation.
-- blank: type, title, template with ___ markers, blanks array matching every blank.
+- mcq: type, title, question, options with exactly 4 choices, correct as 0-3, explanation, hints (array of 2 strings: strategic hint shown after 2 wrong attempts, procedural hint after 3 wrong attempts).
+- blank: type, title, template with ___ markers, blanks array matching every blank, hints (array of 2 strings: shown after 2 and 3 wrong attempts).
 - short: type, title, prompt, rubric, targetWords.
 - speak: type, title, prompt, targetSeconds, imageDescription (1–2 sentence description of a scene or picture the student will describe or react to — required for picture-based speaking tasks, optional for opinion tasks).
 - order: type, title, sentences array in correct order with at least 3 sentences.
@@ -649,7 +649,7 @@ Return ONLY valid JSON — an array of ${count} exercise objects:
     "sentences": ["sentence 1", "sentence 2"],
     "errorText": "student-facing text with errors",
     "correctedText": "corrected version (for fix type)",
-    "hint": "optional hint",
+    "hints": ["strategic hint shown after 2nd wrong try", "procedural hint shown after 3rd wrong try"],
     "pairs": [{"term": "word", "def": "meaning"}],
     "audioText": "text to read aloud (for listen type)",
     "question": "the question",
@@ -781,6 +781,7 @@ Return ONLY valid JSON — an array of ${exerciseCount} exercises${isSpeaking ? 
     "options": ["Option A text", "Option B text", "Option C text", "Option D text"],
     "correct": 1,
     "explanation": "Why the correct option fits the grammar or MET evidence.",
+    "hints": ["Think about which tense fits the time context.", "The sentence refers to a completed action — which tense signals completion?"],
     "teacherNote": "What to look for"
   },
   {
@@ -790,6 +791,7 @@ Return ONLY valid JSON — an array of ${exerciseCount} exercises${isSpeaking ? 
     "content": "The student gave ___ presentation to ___ class on Friday.",
     "template": "The student gave ___ presentation to ___ class on Friday.",
     "blanks": ["the|a", "the"],
+    "hints": ["Think about whether these nouns are specific or general.", "Use 'the' for something both speaker and listener already know about."],
     "teacherNote": "Check article use before nouns"
   },
   {

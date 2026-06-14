@@ -1,12 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { Icon, Avatar } from '../components/shared.jsx';
 import { getDiagnoses, getReviews } from '../lib/workflow.js';
-import { hasVisibleApprovedStudentFeedback } from './student-helpers.js';
+import { hasVisibleApprovedStudentFeedback, asArray } from './student-helpers.js';
 import StudentHome from './student-home.jsx';
-import StudentHomework from './student-homework.jsx';
-import StudentFeedback from './student-feedback.jsx';
-import StudentProgress from './student-progress.jsx';
 import { StudentInbox, MessageTeacherDock } from '../components/message-center.jsx';
+
+const StudentHomework = lazy(() => import('./student-homework.jsx'));
+const StudentFeedback = lazy(() => import('./student-feedback.jsx'));
+const StudentProgress = lazy(() => import('./student-progress.jsx'));
 import '../styles/system.css';
 
 const TABS = [
@@ -50,6 +51,16 @@ export default function StudentDashboard({ student, onSignOut }) {
         if (reviewedAt > seenAt) next.homework = true;
       }
 
+      const progressDx = (diagnoses || [])
+        .filter(d => d.status === 'approved')
+        .filter(d => asArray(d.content?.section_snapshot).some(s => Number(s.score_0_80) > 0))
+        .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+      if (progressDx.length > 0) {
+        const newestAt = new Date(progressDx[0].createdAt || 0);
+        const seenAt = lv.progress ? new Date(lv.progress) : new Date(0);
+        if (newestAt > seenAt) next.progress = true;
+      }
+
       setDots(next);
     })();
   }, [student?.id]);
@@ -86,18 +97,20 @@ export default function StudentDashboard({ student, onSignOut }) {
         <div className="dash-topbar-right">
           <span className="dash-topbar-name">{student.firstName}</span>
           <Avatar name={student.name} size={30} tone="auto" />
-          <button onClick={onSignOut} style={{ background: 'none', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: '5px 10px', fontSize: 11.5, fontWeight: 500, color: 'var(--muted)', cursor: 'pointer', fontFamily: 'inherit' }}>
+          <button onClick={onSignOut} style={{ background: 'none', border: '1px solid rgba(72,199,199,0.28)', borderRadius: 'var(--radius-sm)', padding: '5px 10px', fontSize: 11.5, fontWeight: 500, color: 'rgba(241,250,238,0.65)', cursor: 'pointer', fontFamily: 'inherit', position: 'relative' }}>
             Sign out
           </button>
         </div>
       </header>
 
       <div className="dash-body">
-        {tab === 'home'     && <StudentHome student={student} onTab={setTab} />}
-        {tab === 'homework' && <StudentHomework student={student} />}
-        {tab === 'feedback' && <StudentFeedback student={student} onTab={setTab} />}
-        {tab === 'progress' && <StudentProgress student={student} />}
-        {tab === 'messages' && <StudentInbox student={student} />}
+        {tab === 'home' && <StudentHome student={student} onTab={setTab} />}
+        <Suspense fallback={<div style={{ padding: 40, color: 'var(--muted)', fontSize: 'var(--text-sm)' }}>Loading…</div>}>
+          {tab === 'homework' && <StudentHomework student={student} />}
+          {tab === 'feedback' && <StudentFeedback student={student} onTab={setTab} />}
+          {tab === 'progress' && <StudentProgress student={student} />}
+          {tab === 'messages' && <StudentInbox student={student} />}
+        </Suspense>
       </div>
       <MessageTeacherDock student={student} onSent={() => setTab('messages')} />
     </div>

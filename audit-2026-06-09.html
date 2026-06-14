@@ -1,0 +1,1262 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>MET Platform — Frontend Audit · June 2026</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600;700&display=swap');
+
+  :root {
+    --ink:       #0d1520;
+    --ink-2:     #2b3a4a;
+    --muted:     #5a6e7f;
+    --faint:     #8fa4b4;
+    --rule:      #dce8ee;
+    --bg:        #f5f8fa;
+    --surface:   #ffffff;
+    --teal:      #148891;
+    --teal-soft: #e6f4f4;
+    --amber:     #c06810;
+    --amber-bg:  #fff4e3;
+    --red:       #b5242a;
+    --red-bg:    #fef1f1;
+    --green:     #1a7a4a;
+    --green-bg:  #ebf7f1;
+    --blue:      #1e50a2;
+    --blue-bg:   #edf2fc;
+    --mono: 'IBM Plex Mono', monospace;
+    --serif: 'Libre Baskerville', Georgia, serif;
+    --sans: 'Instrument Sans', system-ui, sans-serif;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    margin: 0;
+    font-family: var(--sans);
+    font-size: 15px;
+    line-height: 1.65;
+    color: var(--ink);
+    background: var(--bg);
+  }
+
+  /* ── Cover ── */
+  .cover {
+    background: var(--ink);
+    color: #fff;
+    padding: 80px 48px 64px;
+    position: relative;
+    overflow: hidden;
+  }
+  .cover::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(900px 400px at 100% -10%, rgba(20,136,145,0.28), transparent 55%),
+      radial-gradient(600px 300px at -10% 100%, rgba(20,136,145,0.14), transparent 60%);
+    pointer-events: none;
+  }
+  .cover-inner { max-width: 880px; margin: 0 auto; position: relative; }
+  .cover-eyebrow {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(20,136,145,0.9);
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .cover-eyebrow::before {
+    content: '';
+    display: inline-block;
+    width: 28px;
+    height: 1px;
+    background: currentColor;
+  }
+  .cover h1 {
+    font-family: var(--serif);
+    font-size: clamp(32px, 5vw, 52px);
+    font-weight: 700;
+    line-height: 1.1;
+    margin: 0 0 20px;
+    letter-spacing: -0.02em;
+  }
+  .cover-sub {
+    font-size: 16px;
+    color: rgba(255,255,255,0.7);
+    max-width: 540px;
+    margin: 0 0 40px;
+    line-height: 1.7;
+  }
+  .cover-meta {
+    display: flex;
+    gap: 32px;
+    flex-wrap: wrap;
+  }
+  .cover-stat {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .cover-stat-n {
+    font-family: var(--serif);
+    font-size: 28px;
+    font-weight: 700;
+    color: #fff;
+    line-height: 1;
+  }
+  .cover-stat-label {
+    font-size: 12px;
+    color: rgba(255,255,255,0.55);
+    font-weight: 500;
+  }
+  .cover-divider {
+    width: 1px;
+    height: 40px;
+    background: rgba(255,255,255,0.15);
+    align-self: center;
+  }
+
+  /* ── Layout ── */
+  .body { max-width: 880px; margin: 0 auto; padding: 56px 32px 80px; }
+
+  /* ── Section headers ── */
+  .section-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--teal);
+    margin-bottom: 8px;
+  }
+  .section-title {
+    font-family: var(--serif);
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--ink);
+    margin: 0 0 6px;
+    letter-spacing: -0.02em;
+  }
+  .section-intro {
+    font-size: 14px;
+    color: var(--muted);
+    margin: 0 0 28px;
+    max-width: 640px;
+  }
+
+  /* ── Findings ── */
+  .findings { display: flex; flex-direction: column; gap: 0; }
+
+  .finding {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    gap: 0;
+    border-top: 1px solid var(--rule);
+    padding: 22px 0;
+  }
+  .finding:last-child { border-bottom: 1px solid var(--rule); }
+
+  .finding-meta { padding-right: 28px; padding-top: 2px; }
+
+  .severity {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 3px;
+    margin-bottom: 8px;
+  }
+  .sev-critical { background: var(--red-bg); color: var(--red); }
+  .sev-high     { background: var(--amber-bg); color: var(--amber); }
+  .sev-medium   { background: var(--blue-bg); color: var(--blue); }
+  .sev-low      { background: var(--teal-soft); color: var(--teal); }
+
+  .finding-cat {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--faint);
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    margin-top: 4px;
+  }
+  .finding-id {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--faint);
+    margin-top: 2px;
+  }
+
+  .finding-body {}
+  .finding-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--ink);
+    margin: 0 0 6px;
+  }
+  .finding-desc {
+    font-size: 14px;
+    color: var(--ink-2);
+    line-height: 1.65;
+    margin: 0 0 12px;
+  }
+  .finding-fix {
+    font-size: 13px;
+    color: var(--green);
+    background: var(--green-bg);
+    border-left: 3px solid var(--green);
+    padding: 8px 12px;
+    border-radius: 0 4px 4px 0;
+    line-height: 1.55;
+  }
+  .finding-fix strong { font-weight: 600; }
+
+  code, .code {
+    font-family: var(--mono);
+    font-size: 12px;
+    background: rgba(20,136,145,0.08);
+    color: var(--teal);
+    padding: 1px 5px;
+    border-radius: 3px;
+  }
+
+  pre.code-block {
+    font-family: var(--mono);
+    font-size: 12px;
+    background: #0d1520;
+    color: #a8d8dc;
+    padding: 14px 16px;
+    border-radius: 6px;
+    overflow-x: auto;
+    margin: 10px 0 0;
+    line-height: 1.55;
+  }
+  pre.code-block .dim { color: rgba(168,216,220,0.4); }
+  pre.code-block .hi  { color: #f0c080; }
+  pre.code-block .ok  { color: #7ddc98; }
+  pre.code-block .bad { color: #f48080; }
+
+  /* ── Summary table ── */
+  .summary-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 40px;
+  }
+  .summary-cell {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    padding: 18px 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .summary-cell-n {
+    font-family: var(--serif);
+    font-size: 26px;
+    font-weight: 700;
+    line-height: 1;
+    flex-shrink: 0;
+  }
+  .summary-cell-info {}
+  .summary-cell-label { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; }
+  .summary-cell-sub   { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .n-critical { color: var(--red); }
+  .n-high     { color: var(--amber); }
+  .n-medium   { color: var(--blue); }
+  .n-low      { color: var(--teal); }
+
+  /* ── Priority list ── */
+  .priority-list { list-style: none; padding: 0; margin: 0 0 40px; display: flex; flex-direction: column; gap: 6px; }
+  .priority-item {
+    display: grid;
+    grid-template-columns: 24px 1fr auto;
+    align-items: baseline;
+    gap: 12px;
+    font-size: 14px;
+    padding: 10px 14px;
+    border-radius: 6px;
+    background: var(--surface);
+    border: 1px solid var(--rule);
+  }
+  .priority-n {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--muted);
+  }
+  .priority-label { font-weight: 500; color: var(--ink); }
+  .priority-ref {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--faint);
+  }
+
+  /* ── Visual diffs ── */
+  .diff-pair {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin: 12px 0 0;
+  }
+  .diff-card {
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid var(--rule);
+  }
+  .diff-card-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 6px 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .diff-before { background: rgba(181,36,42,0.06); color: var(--red); }
+  .diff-after  { background: rgba(26,122,74,0.06); color: var(--green); }
+  .diff-before::before { content: '✕'; }
+  .diff-after::before  { content: '✓'; }
+  .diff-body { padding: 12px; background: var(--surface); }
+
+  /* ── Nav demo ── */
+  .nav-demo { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 12px 0 0; }
+  .nav-panel {
+    background: #131d2a;
+    border-radius: 8px;
+    padding: 12px 8px;
+    width: 100%;
+  }
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 10px;
+    border-radius: 6px;
+    font-family: var(--sans);
+    font-size: 12px;
+    color: rgba(255,255,255,0.65);
+    margin-bottom: 2px;
+  }
+  .nav-item.active-bad {
+    background: rgba(61,166,166,0.18);
+    color: #fff;
+    font-weight: 700;
+    border-left: 3px solid #1a2332; /* navy on navy — invisible */
+    padding-left: 7px;
+  }
+  .nav-item.active-good {
+    background: rgba(61,166,166,0.22);
+    color: #fff;
+    font-weight: 700;
+    border-left: 3px solid #3da6a6; /* teal — visible */
+    padding-left: 7px;
+  }
+  .nav-section-label {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.3);
+    padding: 8px 10px 3px;
+    margin-top: 4px;
+  }
+  .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .dot-teal { background: #3da6a6; }
+  .dot-muted { background: rgba(255,255,255,0.2); }
+
+  /* ── Mobile nav demo ── */
+  .mobile-nav-demo {
+    background: rgba(255,255,255,0.96);
+    border-top: 1px solid #dce8ee;
+    border-radius: 0 0 8px 8px;
+    display: flex;
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding: 5px 4px;
+    gap: 0;
+  }
+  .mobile-nav-demo::-webkit-scrollbar { display: none; }
+  .mobile-nav-btn {
+    flex: 0 0 64px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    font-size: 9px;
+    font-weight: 700;
+    color: #5a6e7f;
+    padding: 4px 2px;
+    border-radius: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .mobile-nav-btn.active { color: #247070; background: rgba(45,139,139,0.1); }
+  .mobile-phone {
+    width: 220px;
+    border: 2px solid var(--rule);
+    border-radius: 14px;
+    overflow: hidden;
+    margin: 12px auto 0;
+  }
+  .mobile-phone-screen {
+    background: #f4f8f8;
+    height: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  /* ── Spacers ── */
+  .mt-section { margin-top: 52px; }
+  .mt-block { margin-top: 32px; }
+  hr.rule { border: none; border-top: 1px solid var(--rule); margin: 40px 0; }
+
+  /* ── File size bars ── */
+  .file-list { display: flex; flex-direction: column; gap: 6px; margin: 12px 0 0; }
+  .file-row {
+    display: grid;
+    grid-template-columns: 220px 1fr 56px;
+    align-items: center;
+    gap: 10px;
+    font-size: 12px;
+  }
+  .file-name { font-family: var(--mono); color: var(--ink-2); }
+  .file-bar-track { background: var(--teal-soft); border-radius: 2px; height: 8px; }
+  .file-bar-fill { height: 8px; border-radius: 2px; background: var(--teal); }
+  .file-bar-fill.oversize { background: var(--amber); }
+  .file-size { font-family: var(--mono); font-size: 11px; color: var(--muted); text-align: right; }
+
+  @media (max-width: 640px) {
+    .cover { padding: 48px 24px; }
+    .body { padding: 36px 20px 60px; }
+    .finding { grid-template-columns: 1fr; }
+    .finding-meta { padding-right: 0; margin-bottom: 10px; }
+    .summary-grid { grid-template-columns: 1fr; }
+    .diff-pair { grid-template-columns: 1fr; }
+    .nav-demo { grid-template-columns: 1fr; }
+    .file-row { grid-template-columns: 160px 1fr 48px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Cover -->
+<header class="cover">
+  <div class="cover-inner">
+    <div class="cover-eyebrow">Frontend Audit</div>
+    <h1>MET Proficiency Mastery<br>Platform Review</h1>
+    <p class="cover-sub">
+      Code-grounded audit of the React + Vite application at <code style="color:rgba(168,218,220,0.9);background:rgba(20,136,145,0.2)">E:\Platform</code> — covering CSS architecture, visual bugs, navigation, code health, and accessibility.
+    </p>
+    <div class="cover-meta">
+      <div class="cover-stat">
+        <span class="cover-stat-n">2</span>
+        <span class="cover-stat-label">Critical</span>
+      </div>
+      <div class="cover-divider"></div>
+      <div class="cover-stat">
+        <span class="cover-stat-n">5</span>
+        <span class="cover-stat-label">High</span>
+      </div>
+      <div class="cover-divider"></div>
+      <div class="cover-stat">
+        <span class="cover-stat-n">6</span>
+        <span class="cover-stat-label">Medium</span>
+      </div>
+      <div class="cover-divider"></div>
+      <div class="cover-stat">
+        <span class="cover-stat-n">3</span>
+        <span class="cover-stat-label">Low</span>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="body">
+
+  <!-- Summary -->
+  <div class="mt-block">
+    <div class="section-label">Summary</div>
+    <h2 class="section-title">What was audited</h2>
+    <p class="section-intro">Audited from source code: <code>src/main.jsx</code>, <code>src/App.jsx</code>, all pages and components, all three CSS files, and the three prototype HTML files in the project root. No live browser session was available.</p>
+
+    <div class="summary-grid">
+      <div class="summary-cell">
+        <span class="summary-cell-n n-critical">2</span>
+        <div class="summary-cell-info">
+          <div class="summary-cell-label n-critical">Critical</div>
+          <div class="summary-cell-sub">Bugs and invisible UI elements</div>
+        </div>
+      </div>
+      <div class="summary-cell">
+        <span class="summary-cell-n n-high">5</span>
+        <div class="summary-cell-info">
+          <div class="summary-cell-label n-high">High</div>
+          <div class="summary-cell-sub">Navigation, mobile UX, code architecture</div>
+        </div>
+      </div>
+      <div class="summary-cell">
+        <span class="summary-cell-n n-medium">6</span>
+        <div class="summary-cell-info">
+          <div class="summary-cell-label n-medium">Medium</div>
+          <div class="summary-cell-sub">Consistency, dead code, typography</div>
+        </div>
+      </div>
+      <div class="summary-cell">
+        <span class="summary-cell-n n-low">3</span>
+        <div class="summary-cell-info">
+          <div class="summary-cell-label n-low">Low</div>
+          <div class="summary-cell-sub">Accessibility, motion, minor polish</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Priority order -->
+  <div class="mt-block">
+    <div class="section-label">Priority order</div>
+    <h2 class="section-title">Fix these first</h2>
+    <p class="section-intro">Ordered by impact on users. Fix the visible bugs before addressing architecture.</p>
+
+    <ul class="priority-list">
+      <li class="priority-item">
+        <span class="priority-n">01</span>
+        <span class="priority-label">Fix the invisible active sidebar indicator (navy-on-navy)</span>
+        <span class="priority-ref">C-01</span>
+      </li>
+      <li class="priority-item">
+        <span class="priority-n">02</span>
+        <span class="priority-label">Delete dead <code>design-system.css</code> or actually import it</span>
+        <span class="priority-ref">C-02</span>
+      </li>
+      <li class="priority-item">
+        <span class="priority-n">03</span>
+        <span class="priority-label">Trim or group the mobile nav — 11 tabs × 64px overflow a 390px phone</span>
+        <span class="priority-ref">H-01</span>
+      </li>
+      <li class="priority-item">
+        <span class="priority-n">04</span>
+        <span class="priority-label">Group the sidebar into sections (Work / Admin)</span>
+        <span class="priority-ref">H-02</span>
+      </li>
+      <li class="priority-item">
+        <span class="priority-n">05</span>
+        <span class="priority-label">Resolve the duplicate <code>.dash</code> / <code>.dash-topbar</code> rules across two CSS files</span>
+        <span class="priority-ref">H-03</span>
+      </li>
+      <li class="priority-item">
+        <span class="priority-n">06</span>
+        <span class="priority-label">Break up <code>tool-feedback.jsx</code> (156 kB) and <code>shared.jsx</code> (55 kB)</span>
+        <span class="priority-ref">H-04</span>
+      </li>
+      <li class="priority-item">
+        <span class="priority-n">07</span>
+        <span class="priority-label">Delete the three loose prototype HTML files from the project root</span>
+        <span class="priority-ref">M-01</span>
+      </li>
+      <li class="priority-item">
+        <span class="priority-n">08</span>
+        <span class="priority-label">Resolve Inter usage in <code>met-platform-2.0.html</code> against brand fonts</span>
+        <span class="priority-ref">M-02</span>
+      </li>
+      <li class="priority-item">
+        <span class="priority-n">09</span>
+        <span class="priority-label">Add <code>prefers-reduced-motion</code> guard to fadeUp/pulseDot/edgeFlow animations</span>
+        <span class="priority-ref">L-01</span>
+      </li>
+      <li class="priority-item">
+        <span class="priority-n">10</span>
+        <span class="priority-label">Confirm previous audit's mobile login clip is fixed at 390 px</span>
+        <span class="priority-ref">L-02</span>
+      </li>
+    </ul>
+  </div>
+
+  <hr class="rule">
+
+  <!-- Critical findings -->
+  <div class="section-label">Critical findings</div>
+  <h2 class="section-title">Bugs visible to users</h2>
+  <p class="section-intro">These cause UI elements to be invisible or misleading right now.</p>
+
+  <div class="findings">
+
+    <!-- C-01 -->
+    <div class="finding">
+      <div class="finding-meta">
+        <div class="severity sev-critical">Critical</div>
+        <div class="finding-cat">Visual Bug</div>
+        <div class="finding-id">C-01</div>
+      </div>
+      <div class="finding-body">
+        <div class="finding-title">Active sidebar indicator is navy-on-navy — invisible</div>
+        <p class="finding-desc">
+          The sidebar active state in <code>shared.jsx:109</code> sets <code>border-left: 3px solid var(--primary)</code>.
+          <code>--primary</code> is <code>#1a2332</code> (dark navy). The sidebar background is a dark navy gradient
+          (<code>linear-gradient(180deg, #131d2a 0%, #1a2332 55%, #0f1720 100%)</code>).
+          The indicator is the same color as the background — completely invisible. Teachers cannot tell which
+          page they are on.
+        </p>
+        <div class="diff-pair">
+          <div class="diff-card">
+            <div class="diff-card-label diff-before">Current (invisible)</div>
+            <div class="diff-body">
+              <div class="nav-panel" style="width:100%">
+                <div class="nav-item active-bad">
+                  <div class="dot dot-muted"></div> Diagnostics
+                </div>
+                <div class="nav-item"><div class="dot dot-muted"></div> Homework</div>
+                <div class="nav-item"><div class="dot dot-muted"></div> Submissions</div>
+              </div>
+            </div>
+          </div>
+          <div class="diff-card">
+            <div class="diff-card-label diff-after">Fixed (teal accent)</div>
+            <div class="diff-body">
+              <div class="nav-panel" style="width:100%">
+                <div class="nav-item active-good">
+                  <div class="dot dot-teal"></div> Diagnostics
+                </div>
+                <div class="nav-item"><div class="dot dot-muted"></div> Homework</div>
+                <div class="nav-item"><div class="dot dot-muted"></div> Submissions</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="finding-fix" style="margin-top:12px">
+          <strong>Fix:</strong> In <code>shared.jsx</code>, change <code>border-left: 3px solid var(--primary)</code>
+          to <code>border-left: 3px solid var(--accent)</code> (or <code>#3da6a6</code>) inside the
+          <code>.shell-nav-btn.active</code> block at line 109.
+        </div>
+      </div>
+    </div>
+
+    <!-- C-02 -->
+    <div class="finding">
+      <div class="finding-meta">
+        <div class="severity sev-critical">Critical</div>
+        <div class="finding-cat">CSS Architecture</div>
+        <div class="finding-id">C-02</div>
+      </div>
+      <div class="finding-body">
+        <div class="finding-title"><code>design-system.css</code> is never imported — dead code with conflicting values</div>
+        <p class="finding-desc">
+          <code>src/styles/design-system.css</code> (11.6 kB) defines <code>--font-sans</code> as system fonts, a complete spacing scale, and
+          a different button shape (pill radius vs. <code>radius-md</code> in <code>shared.jsx</code>).
+          It is documented in <code>DESIGN_SYSTEM_UPDATE.md</code> as "the new source of truth" — but no
+          file in <code>src/</code> imports it. The app loads: <code>logbook.css</code> (via
+          <code>main.jsx</code>), <code>injectGlobalCSS()</code> (inline from <code>shared.jsx</code>),
+          and <code>sanctuary.css</code> (via student-dashboard). If someone adds an import later, conflicting
+          variable definitions will silently break styling.
+        </p>
+        <pre class="code-block"><span class="dim">// main.jsx — what IS loaded</span>
+import <span class="ok">'./styles/logbook.css'</span>;        <span class="dim">// ✓ loaded</span>
+injectGlobalCSS();                          <span class="dim">// ✓ loaded (inline style tag)</span>
+
+<span class="dim">// what is NOT loaded</span>
+<span class="bad">// import './styles/design-system.css';   ← never imported</span></pre>
+        <div class="finding-fix">
+          <strong>Decision needed:</strong> Either (a) delete <code>design-system.css</code> and <code>DESIGN_SYSTEM_UPDATE.md</code>
+          if the inline CSS in <code>shared.jsx</code> is the authoritative source, or (b) migrate all CSS variables into
+          <code>design-system.css</code>, add the import to <code>main.jsx</code>, and remove duplicates from
+          <code>shared.jsx</code>'s <code>injectGlobalCSS()</code>. Option (b) is better long-term.
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /findings -->
+
+  <hr class="rule">
+
+  <!-- High findings -->
+  <div class="section-label">High findings</div>
+  <h2 class="section-title">Navigation, mobile, and code health</h2>
+  <p class="section-intro">These don't crash the app but meaningfully harm usability or maintainability.</p>
+
+  <div class="findings">
+
+    <!-- H-01 -->
+    <div class="finding">
+      <div class="finding-meta">
+        <div class="severity sev-high">High</div>
+        <div class="finding-cat">Mobile UX</div>
+        <div class="finding-id">H-01</div>
+      </div>
+      <div class="finding-body">
+        <div class="finding-title">Mobile nav: 11 items × 64 px overflows a 390 px phone, hiding navigation</div>
+        <p class="finding-desc">
+          The Shell renders every tab in the mobile bottom bar — all 11 of them. At <code>flex: 0 0 70px</code>
+          that is 770 px of minimum content on a 390 px screen. The bar scrolls horizontally
+          (<code>overflow-x: auto</code>) so tabs like Error Bank, Exercises, and Settings are hidden off-screen
+          with no affordance that more items exist. Students (who use StudentDashboard) have their own topbar nav
+          and are unaffected, but teachers on mobile cannot navigate effectively.
+        </p>
+        <div style="margin:14px 0 0">
+          <div style="font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">360 px phone — primary tabs visible, rest hidden</div>
+          <div class="mobile-phone">
+            <div class="mobile-phone-screen">Teacher page content</div>
+            <div class="mobile-nav-demo">
+              <div class="mobile-nav-btn active">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+                Home
+              </div>
+              <div class="mobile-nav-btn">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                Students
+              </div>
+              <div class="mobile-nav-btn">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                Calendar
+              </div>
+              <div class="mobile-nav-btn">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+                Diagnostic…
+              </div>
+              <div class="mobile-nav-btn" style="opacity:.4">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/></svg>
+                Homework
+              </div>
+              <div class="mobile-nav-btn" style="opacity:.2">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/></svg>
+                Submissio…
+              </div>
+            </div>
+          </div>
+          <div style="font-size:11px;color:var(--muted);margin-top:6px;font-style:italic">Inbox, Error Bank, Reports, Exercises, Settings not visible without scrolling</div>
+        </div>
+        <div class="finding-fix" style="margin-top:12px">
+          <strong>Fix:</strong> Restrict the mobile nav to 5 primary tabs:
+          Dashboard, Students, Diagnostics, Homework, Submissions. Add a "More ···" button as the 6th slot
+          that opens an overflow sheet with the remaining items. Or collapse the bottom bar entirely on mobile
+          and use only the sidebar (with a hamburger toggle).
+        </div>
+      </div>
+    </div>
+
+    <!-- H-02 -->
+    <div class="finding">
+      <div class="finding-meta">
+        <div class="severity sev-high">High</div>
+        <div class="finding-cat">Navigation</div>
+        <div class="finding-id">H-02</div>
+      </div>
+      <div class="finding-body">
+        <div class="finding-title">11 flat sidebar items with no grouping obscures the teaching workflow</div>
+        <p class="finding-desc">
+          The teacher sidebar renders 11 items with equal visual weight (Dashboard, Students, Calendar,
+          Diagnostics, Homework, Submissions, Inbox, Error Bank, Reports, Exercises, Settings).
+          The core teaching loop — Class → Diagnosis → Homework → Review — is buried alongside
+          administrative tools. This was flagged in the June 7 audit and remains unchanged.
+          PRODUCT.md says the platform is a "teacher's command center", but the nav treats Settings and
+          Exercises as equals to Diagnostics and Submissions.
+        </p>
+        <div class="diff-pair">
+          <div class="diff-card">
+            <div class="diff-card-label diff-before">Current — flat list</div>
+            <div class="diff-body">
+              <div class="nav-panel" style="width:100%">
+                <div class="nav-item"><div class="dot dot-muted"></div> Dashboard</div>
+                <div class="nav-item"><div class="dot dot-muted"></div> Students</div>
+                <div class="nav-item"><div class="dot dot-muted"></div> Calendar</div>
+                <div class="nav-item active-good"><div class="dot dot-teal"></div> Diagnostics</div>
+                <div class="nav-item"><div class="dot dot-muted"></div> Homework</div>
+                <div class="nav-item"><div class="dot dot-muted"></div> Submissions</div>
+                <div class="nav-item"><div class="dot dot-muted"></div> Inbox</div>
+                <div class="nav-item"><div class="dot dot-muted"></div> Error Bank</div>
+                <div class="nav-item"><div class="dot dot-muted"></div> Reports</div>
+                <div class="nav-item"><div class="dot dot-muted"></div> Exercises</div>
+                <div class="nav-item"><div class="dot dot-muted"></div> Settings</div>
+              </div>
+            </div>
+          </div>
+          <div class="diff-card">
+            <div class="diff-card-label diff-after">Proposed — grouped sections</div>
+            <div class="diff-body">
+              <div class="nav-panel" style="width:100%">
+                <div class="nav-item"><div class="dot dot-muted"></div> Dashboard</div>
+                <div class="nav-section-label">Teaching</div>
+                <div class="nav-item"><div class="dot dot-muted"></div> Students</div>
+                <div class="nav-item"><div class="dot dot-muted"></div> Calendar</div>
+                <div class="nav-item active-good"><div class="dot dot-teal"></div> Diagnostics</div>
+                <div class="nav-item"><div class="dot dot-muted"></div> Homework</div>
+                <div class="nav-item"><div class="dot dot-muted"></div> Submissions</div>
+                <div class="nav-section-label">Review &amp; Track</div>
+                <div class="nav-item"><div class="dot dot-muted"></div> Inbox</div>
+                <div class="nav-item"><div class="dot dot-muted"></div> Error Bank</div>
+                <div class="nav-item"><div class="dot dot-muted"></div> Reports</div>
+                <div class="nav-section-label">Admin</div>
+                <div class="nav-item"><div class="dot dot-muted"></div> Exercises</div>
+                <div class="nav-item"><div class="dot dot-muted"></div> Settings</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="finding-fix" style="margin-top:12px">
+          <strong>Fix:</strong> In <code>App.jsx:231–242</code>, change <code>teacherTabs</code> to include a
+          <code>section</code> property per tab. Update the Shell's <code>renderSidebarNav()</code> in
+          <code>shared.jsx</code> to render section labels between groups. Three sections: Teaching, Review &amp; Track, Admin.
+        </div>
+      </div>
+    </div>
+
+    <!-- H-03 -->
+    <div class="finding">
+      <div class="finding-meta">
+        <div class="severity sev-high">High</div>
+        <div class="finding-cat">CSS Conflict</div>
+        <div class="finding-id">H-03</div>
+      </div>
+      <div class="finding-body">
+        <div class="finding-title">Duplicate <code>.dash</code> / <code>.dash-topbar</code> rules in two CSS files produce unpredictable behaviour</div>
+        <p class="finding-desc">
+          Both <code>logbook.css</code> and <code>sanctuary.css</code> define <code>.dash</code>,
+          <code>.dash-topbar</code>, <code>.dash-brand-name</code>, and related selectors with different values.
+          <code>logbook.css</code> sets the dashboard background to <code>var(--bg)</code>; <code>sanctuary.css</code>
+          sets it to <code>var(--sanctuary-parchment)</code> (#f7f5f0). Both are loaded globally (logbook via
+          main.jsx, sanctuary via the student-dashboard import which is not lazy). Whichever loads last wins —
+          currently sanctuary wins because it is imported by a component that loads after the global CSS.
+          If the import order changes, the student dashboard background silently changes.
+        </p>
+        <pre class="code-block"><span class="dim">/* logbook.css */</span>
+.dash { background: <span class="bad">var(--bg)</span>; }          <span class="dim">/* #edf5f5-ish */</span>
+
+<span class="dim">/* sanctuary.css — loaded after, wins */</span>
+.dash { background: <span class="ok">var(--sanctuary-parchment)</span>; }  <span class="dim">/* #f7f5f0 — warm parchment */</span></pre>
+        <div class="finding-fix">
+          <strong>Fix:</strong> Consolidate. Move all student dashboard classes into <code>sanctuary.css</code>
+          (the intended student-only stylesheet) and remove the duplicates from <code>logbook.css</code>. Or rename
+          the student classes to use a <code>.student-</code> prefix throughout and avoid collision entirely.
+        </div>
+      </div>
+    </div>
+
+    <!-- H-04 -->
+    <div class="finding">
+      <div class="finding-meta">
+        <div class="severity sev-high">High</div>
+        <div class="finding-cat">Code Architecture</div>
+        <div class="finding-id">H-04</div>
+      </div>
+      <div class="finding-body">
+        <div class="finding-title">Several files are dangerously oversized — feedback tool at 156 kB</div>
+        <p class="finding-desc">
+          Five files account for the majority of edit complexity and create hard-to-review diffs. A bug in any
+          one of them risks breaking a large surface area.
+        </p>
+        <div class="file-list">
+          <div class="file-row">
+            <span class="file-name">tool-feedback.jsx</span>
+            <div class="file-bar-track"><div class="file-bar-fill oversize" style="width:100%"></div></div>
+            <span class="file-size">156 kB</span>
+          </div>
+          <div class="file-row">
+            <span class="file-name">diagnostic-create.jsx</span>
+            <div class="file-bar-track"><div class="file-bar-fill oversize" style="width:47%"></div></div>
+            <span class="file-size">73 kB</span>
+          </div>
+          <div class="file-row">
+            <span class="file-name">workflow.js</span>
+            <div class="file-bar-track"><div class="file-bar-fill oversize" style="width:38%"></div></div>
+            <span class="file-size">60 kB</span>
+          </div>
+          <div class="file-row">
+            <span class="file-name">student-dashboard.jsx</span>
+            <div class="file-bar-track"><div class="file-bar-fill oversize" style="width:38%"></div></div>
+            <span class="file-size">59 kB</span>
+          </div>
+          <div class="file-row">
+            <span class="file-name">shared.jsx</span>
+            <div class="file-bar-track"><div class="file-bar-fill" style="width:35%"></div></div>
+            <span class="file-size">55 kB</span>
+          </div>
+          <div class="file-row">
+            <span class="file-name">homework-create.jsx</span>
+            <div class="file-bar-track"><div class="file-bar-fill" style="width:44%"></div></div>
+            <span class="file-size">68 kB</span>
+          </div>
+        </div>
+        <div class="finding-fix" style="margin-top:12px">
+          <strong>Fix:</strong> Start with <code>shared.jsx</code> — split icons into <code>icons.jsx</code>,
+          shell layout into <code>shell.jsx</code>, and form primitives into <code>primitives.jsx</code>.
+          Then tackle <code>tool-feedback.jsx</code>: identify the 3-4 logical sub-sections (transcript view,
+          scoring panel, student feedback preview, action toolbar) and extract each into its own component.
+          <code>workflow.js</code> should separate data fetching from business logic.
+        </div>
+      </div>
+    </div>
+
+    <!-- H-05 -->
+    <div class="finding">
+      <div class="finding-meta">
+        <div class="severity sev-high">High</div>
+        <div class="finding-cat">Visual</div>
+        <div class="finding-id">H-05</div>
+      </div>
+      <div class="finding-body">
+        <div class="finding-title">Primary button gradient direction conflicts with the teal accent identity</div>
+        <p class="finding-desc">
+          The primary button style in <code>shared.jsx:37</code> is:
+          <code>linear-gradient(135deg, var(--primary) 0%, var(--primary-ink) 100%)</code>.
+          <code>--primary</code> is navy <code>#1a2332</code> and <code>--primary-ink</code> is teal
+          <code>#247070</code>. The result is a navy→teal gradient button with a teal glow shadow.
+          On hover (line 38), it inverts to <code>teal→navy</code>.
+          This reads as inconsistent: the platform's primary action colour appears to be both navy and teal depending
+          on state. The brand colour system says teal is the accent, navy is the base — primary CTAs should be one
+          solid identity, not a gradient between them.
+        </p>
+        <div class="finding-fix">
+          <strong>Fix:</strong> Use a solid teal for the primary button:
+          <code>background: var(--accent)</code> (<code>#2d8b8b</code>) with a subtle darken on hover.
+          Reserve the navy for secondary "dark" CTAs where a heavier weight is needed.
+          This aligns with the PRODUCT.md "calm, focused" brand — solid beats gradient for expert confidence.
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /findings -->
+
+  <hr class="rule">
+
+  <!-- Medium findings -->
+  <div class="section-label">Medium findings</div>
+  <h2 class="section-title">Consistency and polish</h2>
+  <p class="section-intro">These do not immediately break things but erode quality over time.</p>
+
+  <div class="findings">
+
+    <div class="finding">
+      <div class="finding-meta">
+        <div class="severity sev-medium">Medium</div>
+        <div class="finding-cat">Files / Hygiene</div>
+        <div class="finding-id">M-01</div>
+      </div>
+      <div class="finding-body">
+        <div class="finding-title">Three loose prototype HTML files in the project root</div>
+        <p class="finding-desc">
+          <code>met-platform-2.0.html</code> (176 kB), <code>met-platform-one-page.html</code> (67 kB),
+          and <code>met-clinician-portal-third-file.html</code> (23 kB) are prototype/exploration files
+          sitting in the project root alongside <code>index.html</code>, <code>vite.config.js</code>, and
+          <code>package.json</code>. They show three different visual directions and make it unclear which
+          design is canonical. They will be deployed to Netlify/Vercel because the root is the build context.
+        </p>
+        <div class="finding-fix">
+          <strong>Fix:</strong> Move them to <code>docs/prototypes/</code> or delete them. Add
+          <code>*.html</code> (excepting <code>index.html</code>) to <code>.gitignore</code> to prevent recurrence.
+          Also: <code>l.id</code>, <code>o.isCorrect)</code>, <code>o.text)</code>, <code>student</code>,
+          and the file named <code>3000</code> in the root appear to be accidental zero-byte files — delete them.
+        </div>
+      </div>
+    </div>
+
+    <div class="finding">
+      <div class="finding-meta">
+        <div class="severity sev-medium">Medium</div>
+        <div class="finding-cat">Typography / Brand</div>
+        <div class="finding-id">M-02</div>
+      </div>
+      <div class="finding-body">
+        <div class="finding-title"><code>met-platform-2.0.html</code> uses Inter — explicitly listed as an anti-reference in PRODUCT.md</div>
+        <p class="finding-desc">
+          PRODUCT.md anti-references say: "Generic SaaS dashboards: cookie-cutter admin panels with default blue
+          buttons." <code>met-platform-2.0.html</code> uses
+          <code>font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif</code> —
+          Inter is the archetypal "generic SaaS dashboard" font. If this file is the design direction for version 2,
+          it contradicts the brand. The live app uses DM Sans (correct and distinctive).
+        </p>
+        <div class="finding-fix">
+          <strong>Fix:</strong> Either (a) delete <code>met-platform-2.0.html</code> as a stale exploration,
+          or (b) if it represents the intended v2 redesign, update it to use DM Sans + DM Serif Display to stay
+          aligned with the current brand font decisions.
+        </div>
+      </div>
+    </div>
+
+    <div class="finding">
+      <div class="finding-meta">
+        <div class="severity sev-medium">Medium</div>
+        <div class="finding-cat">Design Docs</div>
+        <div class="finding-id">M-03</div>
+      </div>
+      <div class="finding-body">
+        <div class="finding-title"><code>DESIGN_SYSTEM_UPDATE.md</code> documents an orange-accent system that does not match the live app</div>
+        <p class="finding-desc">
+          The update doc describes an orange accent (<code>oklch(70% 0.15 50)</code>) for waveforms, charts, and
+          CTA elements. The live app uses teal everywhere. The doc lists button shapes as pill-radius, but the live
+          app uses <code>radius-md</code>. This may be a future direction, a rejected exploration, or a doc written
+          for a different version. Having an authoritative-sounding design doc that contradicts the running code
+          confuses anyone trying to extend the system.
+        </p>
+        <div class="finding-fix">
+          <strong>Fix:</strong> Add a note at the top of the file marking it as "proposed" or "archived", or
+          delete it. If orange CTAs are the intended direction, update the live CSS to match.
+        </div>
+      </div>
+    </div>
+
+    <div class="finding">
+      <div class="finding-meta">
+        <div class="severity sev-medium">Medium</div>
+        <div class="finding-cat">Typography</div>
+        <div class="finding-id">M-04</div>
+      </div>
+      <div class="finding-body">
+        <div class="finding-title"><code>font-weight: 800</code> used extensively — works but may undermine the "calm, expert" brand</div>
+        <p class="finding-desc">
+          Both <code>logbook.css</code> and <code>shared.jsx</code> use weight 800 for kickers, labels, and UI text
+          in many places. DM Sans at 800 is quite heavy and wide. PRODUCT.md brand personality is
+          "calm, focused, expert — quiet confidence over flashy energy." Heavy uppercase kickers at 800 weight
+          can read as shouting, especially in a product aimed at adult learners. The teacher dashboard headline
+          correctly uses <code>DM Serif Display</code> at 400 (italic-capable, editorial) — that is exactly right.
+          The surrounding UI can afford to step down.
+        </p>
+        <div class="finding-fix">
+          <strong>Fix:</strong> Audit all <code>font-weight: 800</code> uses and reduce to 700 for most UI labels.
+          Reserve 800 for the brand mark and the largest display headlines. Kickers (uppercase tracking labels)
+          look better at 600–700 with wider letter-spacing.
+        </div>
+      </div>
+    </div>
+
+    <div class="finding">
+      <div class="finding-meta">
+        <div class="severity sev-medium">Medium</div>
+        <div class="finding-cat">Empty States</div>
+        <div class="finding-id">M-05</div>
+      </div>
+      <div class="finding-body">
+        <div class="finding-title">Empty state copy is polite but not actionable — from June 7 audit, still present</div>
+        <p class="finding-desc">
+          The June 7 audit identified that empty states say "No diagnoses yet" or "No classes scheduled today"
+          but do not direct the teacher to the next specific step. From the teacher-dashboard source,
+          empty todayClasses renders: <code>"No classes scheduled today."</code> — no link, no call to action,
+          no "Add a class →" pointer. Same pattern repeats across Submissions and Diagnostics empty states.
+        </p>
+        <div class="finding-fix">
+          <strong>Fix:</strong> Each empty state should include a ghost button or inline link pointing to the
+          relevant creation flow. "No classes today. <span style="text-decoration:underline;color:var(--teal)">Schedule one →</span>"
+          for the calendar, "No diagnoses yet. <span style="text-decoration:underline;color:var(--teal)">Start after your next class →</span>"
+          for diagnostics.
+        </div>
+      </div>
+    </div>
+
+    <div class="finding">
+      <div class="finding-meta">
+        <div class="severity sev-medium">Medium</div>
+        <div class="finding-cat">Accessibility</div>
+        <div class="finding-id">M-06</div>
+      </div>
+      <div class="finding-body">
+        <div class="finding-title">Interactive <code>div</code> cards with <code>onClick</code> have no ARIA role or keyboard handler</div>
+        <p class="finding-desc">
+          Several cards in the teacher dashboard and KPI grid use <code>div</code> or a custom component with an
+          <code>onClick</code> prop (e.g. the KPI cards at <code>teacher-dashboard.jsx:81–83</code> with
+          <code>onClick: () =&gt; onNavigate('diagnostics')</code>). These are not <code>button</code> elements,
+          so they are not keyboard-reachable by default and are not announced as interactive by screen readers.
+          The June 7 audit also flagged this pattern.
+        </p>
+        <div class="finding-fix">
+          <strong>Fix:</strong> For any <code>div</code>/<code>Card</code> that accepts an <code>onClick</code>,
+          either (a) render a <code>&lt;button&gt;</code> instead and style it appropriately, or (b) add
+          <code>role="button"</code>, <code>tabIndex={0}</code>, and a matching <code>onKeyDown</code> handler
+          that triggers the action on Enter/Space. The <code>Kpi</code> and <code>KpiCard</code> components in
+          <code>shared.jsx</code> should encapsulate this pattern once.
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /findings -->
+
+  <hr class="rule">
+
+  <!-- Low findings -->
+  <div class="section-label">Low findings</div>
+  <h2 class="section-title">Polish and future-proofing</h2>
+
+  <div class="findings">
+
+    <div class="finding">
+      <div class="finding-meta">
+        <div class="severity sev-low">Low</div>
+        <div class="finding-cat">Accessibility</div>
+        <div class="finding-id">L-01</div>
+      </div>
+      <div class="finding-body">
+        <div class="finding-title">Animations have no <code>prefers-reduced-motion</code> guard</div>
+        <p class="finding-desc">
+          <code>shared.jsx</code> defines <code>@keyframes fadeUp</code>, <code>pulseDot</code>, and
+          <code>edgeFlow</code>. The teacher dashboard and KPI cards use
+          <code>animation: fadeUp 0.3s var(--ease) both</code> with staggered delays.
+          No <code>@media (prefers-reduced-motion: reduce)</code> block disables or reduces them.
+          The <code>PRODUCT.md</code> accessibility target is WCAG AAA, which recommends respecting
+          reduced-motion preferences.
+        </p>
+        <pre class="code-block"><span class="dim">/* Add to the end of injectGlobalCSS() in shared.jsx */</span>
+<span class="ok">@media (prefers-reduced-motion: reduce) {</span>
+  <span class="ok">*, *::before, *::after {</span>
+    <span class="ok">animation-duration: 0.01ms !important;</span>
+    <span class="ok">animation-iteration-count: 1 !important;</span>
+    <span class="ok">transition-duration: 0.01ms !important;</span>
+  <span class="ok">}</span>
+<span class="ok">}</span></pre>
+        <div class="finding-fix">
+          <strong>Fix:</strong> Add the above block. One addition, covers all animations in the app globally.
+        </div>
+      </div>
+    </div>
+
+    <div class="finding">
+      <div class="finding-meta">
+        <div class="severity sev-low">Low</div>
+        <div class="finding-cat">Mobile</div>
+        <div class="finding-id">L-02</div>
+      </div>
+      <div class="finding-body">
+        <div class="finding-title">Confirm mobile login clip at 390 px is fixed (from June 7 audit)</div>
+        <p class="finding-desc">
+          The June 7 audit documented that the mobile login form clips horizontally at 390 px —
+          the email field and sign-in button extending past the right edge. The June 2026 login code
+          in <code>login.jsx:67</code> defines <code>.lp-signin-inner { width: min(100%, 420px); max-width: calc(100vw - 48px); }</code>
+          which should prevent overflow, but the previous screenshot captured the bug.
+          This could not be verified without a live browser session.
+        </p>
+        <div class="finding-fix">
+          <strong>Fix:</strong> Open <code>http://localhost:4173</code> at 390 px viewport width and verify
+          the sign-in form fits. If the clip persists, add <code>min-width: 0; overflow-x: hidden;</code>
+          to <code>.lp-root</code>.
+        </div>
+      </div>
+    </div>
+
+    <div class="finding">
+      <div class="finding-meta">
+        <div class="severity sev-low">Low</div>
+        <div class="finding-cat">Housekeeping</div>
+        <div class="finding-id">L-03</div>
+      </div>
+      <div class="finding-body">
+        <div class="finding-title">Accidental zero-byte files in project root will confuse editors and CI</div>
+        <p class="finding-desc">
+          The project root contains several zero-byte files: <code>l.id</code>, <code>o.isCorrect)</code>,
+          <code>o.text)</code>, <code>student</code>, <code>3000</code>, and <code>90</code> and <code>i)</code>
+          (most recent, timestamped 2026-06-09). These look like accidental fragments from console output,
+          glob patterns, or mistyped commands. They will appear in <code>git status</code> and make the root
+          directory harder to navigate.
+        </p>
+        <div class="finding-fix">
+          <strong>Fix:</strong> Delete all of them. Run:
+          <code>Remove-Item l.id, "o.isCorrect)", "o.text)", student, 3000, 90, "i)"</code> from
+          the project root in PowerShell.
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /findings -->
+
+  <hr class="rule">
+
+  <!-- What's strong -->
+  <div class="mt-block">
+    <div class="section-label">Strengths</div>
+    <h2 class="section-title">What's working well</h2>
+    <p class="section-intro">These are genuinely good decisions that should be preserved.</p>
+
+    <div class="findings">
+      <div class="finding">
+        <div class="finding-meta">
+          <div class="severity sev-low" style="background:var(--green-bg);color:var(--green)">Good</div>
+          <div class="finding-cat">Auth / Security</div>
+        </div>
+        <div class="finding-body">
+          <div class="finding-title">Auth is tight — teacher-only gate, PKCE flow, token validation on restore</div>
+          <p class="finding-desc">
+            <code>App.jsx</code> validates every restored session against Supabase, rejects unauthorized emails
+            explicitly, handles both PKCE and implicit flows, and clears the URL immediately after consuming
+            the code. The teacher/student role split is clean and the unauthorized path notifies the user
+            with a friendly message. This is production-quality auth work.
+          </p>
+        </div>
+      </div>
+      <div class="finding">
+        <div class="finding-meta">
+          <div class="severity sev-low" style="background:var(--green-bg);color:var(--green)">Good</div>
+          <div class="finding-cat">Student UX</div>
+        </div>
+        <div class="finding-body">
+          <div class="finding-title">Student feedback visibility rules are correct and responsible</div>
+          <p class="finding-desc">
+            <code>student-dashboard.jsx</code> only shows feedback marked
+            <code>sections.studentFeedback.approved === true</code>. Unapproved diagnostic detail stays
+            teacher-only. The MET concept glossary popups (<code>MET_CONCEPT_GLOSSARY</code>) turn opaque
+            rubric terms into plain English inline — this is a genuinely useful and uncommon feature.
+          </p>
+        </div>
+      </div>
+      <div class="finding">
+        <div class="finding-meta">
+          <div class="severity sev-low" style="background:var(--green-bg);color:var(--green)">Good</div>
+          <div class="finding-cat">Typography</div>
+        </div>
+        <div class="finding-body">
+          <div class="finding-title">DM Sans + DM Serif Display is a strong, on-brand font pairing</div>
+          <p class="finding-desc">
+            DM Sans (geometric humanist) for UI and DM Serif Display (elegant, editorial) for headlines
+            is a coherent pairing that matches the "calm expert" brand. The teacher dashboard headline
+            using DM Serif Display at regular weight is exactly the kind of quiet authority that PRODUCT.md
+            describes. The <code>--font-display-serif</code> variable is the right call; use it more, not less.
+          </p>
+        </div>
+      </div>
+      <div class="finding">
+        <div class="finding-meta">
+          <div class="severity sev-low" style="background:var(--green-bg);color:var(--green)">Good</div>
+          <div class="finding-cat">Navigation / A11y</div>
+        </div>
+        <div class="finding-body">
+          <div class="finding-title">Focus is moved to main content on SPA navigation — correct and rare</div>
+          <p class="finding-desc">
+            <code>App.jsx:196–198</code> finds <code>.shell-main</code>, sets <code>tabindex="-1"</code>, and
+            calls <code>focus()</code> on every view change. This means screen reader users hear the new page
+            announced without having to manually find it. Mobile nav items have <code>aria-current="page"</code>.
+            These are the right accessibility fundamentals — they just need the interactive-card ARIA fix (M-06)
+            to complete the picture.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="rule">
+
+  <!-- Footer -->
+  <div style="margin-top:40px;padding-top:24px;border-top:1px solid var(--rule);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+    <div>
+      <div style="font-weight:600;font-size:13px;color:var(--ink)">MET Proficiency Mastery — Frontend Audit</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:2px">Code-grounded · June 9, 2026 · E:\Platform</div>
+    </div>
+    <div style="font-family:var(--mono);font-size:11px;color:var(--faint)">2 critical · 5 high · 6 medium · 3 low</div>
+  </div>
+
+</div><!-- /body -->
+</body>
+</html>

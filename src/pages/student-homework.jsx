@@ -4,7 +4,7 @@ import { Button } from '../components/shared.jsx';
 import { getHomework, submitHomework, getReviews, getDraft, saveDraft } from '../lib/workflow.js';
 import { isStructuredExercise, autoGrade } from '../lib/exercise-types.js';
 import { ExercisePlayer, HomeworkStepThrough } from '../components/exercise-player.jsx';
-import { ExTypeBadge } from '../components/exercise-editor.jsx';
+import { ExTypeBadge } from '../components/exercise-badge.jsx';
 import { recordPractice } from '../lib/spaced-repetition.js';
 import { printHomework } from '../lib/print-homework.js';
 import { asArray, exerciseSearchText } from './student-helpers.js';

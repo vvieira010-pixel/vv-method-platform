@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { Icon } from '../shared.jsx';
 
-const TEAL = '#0D9488';
-const NAVY = '#0B1F3A';
+const TEAL = 'var(--accent)';
+const NAVY = 'var(--primary-ink)';
 
 const RUBRIC_CATEGORIES = [
   { id: 'grammatical_accuracy', label: 'Grammatical Accuracy', description: 'Tense, agreement, sentence structure' },
@@ -17,7 +17,7 @@ function normalize(s) {
 }
 
 export default function ErrorCorrection({ exercise, onComplete }) {
-  const { errorText, correctedText, hint, context, rubricCategory, explanation } = exercise;
+  const { errorText, correctedText, hint, context, instruction, rubricCategory, explanation } = exercise;
   const [answer, setAnswer] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const [categoryGuess, setCategoryGuess] = useState(null);
@@ -40,14 +40,17 @@ export default function ErrorCorrection({ exercise, onComplete }) {
 
   return (
     <div>
+      {instruction && (
+        <p style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', marginBottom: 10, lineHeight: 1.6 }}>{instruction}</p>
+      )}
       {context && (
-        <div style={{ padding: '10px 14px', background: 'var(--bg)', borderRadius: 0, marginBottom: 14, fontSize: 14, lineHeight: 1.7, color: 'var(--text-2)' }}>
+        <div style={{ padding: '10px 14px', background: 'var(--bg)', borderRadius: 'var(--radius-sm)', marginBottom: 14, fontSize: 14, lineHeight: 1.7, color: 'var(--text-2)' }}>
           {context}
         </div>
       )}
 
       {/* Incorrect sentence */}
-      <div style={{ padding: '14px 16px', background: '#FEF2F2', border: '1.5px solid #FECACA', borderRadius: 0, marginBottom: 14 }}>
+      <div style={{ padding: '14px 16px', background: '#FEF2F2', border: '1.5px solid #FECACA', borderRadius: 'var(--radius-sm)', marginBottom: 14 }}>
         <div style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--danger)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>
           Incorrect sentence
         </div>
@@ -56,7 +59,7 @@ export default function ErrorCorrection({ exercise, onComplete }) {
 
       {/* Hint */}
       {hint && (
-        <div style={{ padding: '10px 14px', background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: 0, marginBottom: 16, display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+        <div style={{ padding: '10px 14px', background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: 'var(--radius-sm)', marginBottom: 16, display: 'flex', gap: 10, alignItems: 'flex-start' }}>
           <Icon.bulb size={15} />
           <span style={{ fontSize: 13.5, color: '#92400E', lineHeight: 1.6 }}><strong>Hint:</strong> {hint}</span>
         </div>
@@ -74,7 +77,7 @@ export default function ErrorCorrection({ exercise, onComplete }) {
         placeholder="Type the corrected sentence…"
         aria-label="Corrected sentence"
         style={{
-          width: '100%', padding: '12px 14px', borderRadius: 0,
+          width: '100%', padding: '12px 14px', borderRadius: 'var(--radius-sm)',
           border: `1.5px solid ${submitted ? (isCorrect ? '#059669' : 'var(--danger)') : answer.trim() ? TEAL : 'var(--border)'}`,
           fontSize: 14.5, fontFamily: 'var(--font-ui)', outline: 'none',
           background: submitted ? (isCorrect ? '#ECFDF5' : '#FEF2F2') : '#fff',
@@ -89,7 +92,7 @@ export default function ErrorCorrection({ exercise, onComplete }) {
           onClick={handleSubmit}
           disabled={!answer.trim()}
           style={{
-            padding: '10px 24px', borderRadius: 0, border: 'none',
+            padding: '10px 24px', borderRadius: 'var(--radius-sm)', border: 'none',
             cursor: answer.trim() ? 'pointer' : 'not-allowed',
             background: answer.trim() ? `linear-gradient(120deg, ${TEAL} 0%, ${NAVY} 100%)` : 'var(--border)',
             color: '#fff', fontWeight: 600, fontSize: 14, fontFamily: 'var(--font-ui)',
@@ -101,7 +104,7 @@ export default function ErrorCorrection({ exercise, onComplete }) {
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           <div style={{
-            padding: '12px 16px', borderRadius: 0, fontSize: 14, fontWeight: 500,
+            padding: '12px 16px', borderRadius: 'var(--radius-sm)', fontSize: 14, fontWeight: 500,
             background: isCorrect ? '#ECFDF5' : '#FEF2F2',
             border: `1px solid ${isCorrect ? '#A7F3D0' : '#FECACA'}`,
             color: isCorrect ? '#065F46' : '#991B1B',
@@ -127,7 +130,7 @@ export default function ErrorCorrection({ exercise, onComplete }) {
           )}
 
           {explanation && (
-            <div style={{ fontSize: 13.5, color: '#374151', lineHeight: 1.65, padding: '10px 14px', background: '#F8FAFC', borderRadius: 0, border: '1px solid #E2E8F0' }}>
+            <div style={{ fontSize: 13.5, color: '#374151', lineHeight: 1.65, padding: '10px 14px', background: '#F8FAFC', borderRadius: 'var(--radius-sm)', border: '1px solid #E2E8F0' }}>
               {explanation}
             </div>
           )}
@@ -157,7 +160,7 @@ export default function ErrorCorrection({ exercise, onComplete }) {
                     disabled={!!categoryGuess}
                     style={{
                       display: 'flex', alignItems: 'baseline', gap: 8,
-                      padding: '9px 12px', borderRadius: 0,
+                      padding: '9px 12px', borderRadius: 'var(--radius-sm)',
                       border: `1.5px solid ${isSelected || (isRevealed && isActualAnswer) ? border : 'var(--border)'}`,
                       background: isRevealed && (isSelected || isActualAnswer) ? bg : isSelected ? '#F0FDFA' : '#fff',
                       cursor: categoryGuess ? 'default' : 'pointer',
@@ -186,7 +189,7 @@ export default function ErrorCorrection({ exercise, onComplete }) {
               </div>
             )}
             {categoryGuess && correctCategory && (
-              <div style={{ marginTop: 10, fontSize: 13, lineHeight: 1.5, padding: '8px 12px', borderRadius: 0,
+              <div style={{ marginTop: 10, fontSize: 13, lineHeight: 1.5, padding: '8px 12px', borderRadius: 'var(--radius-sm)',
                 background: categoryCorrect ? '#ECFDF5' : '#FFFBEB',
                 border: `1px solid ${categoryCorrect ? '#A7F3D0' : '#FDE68A'}`,
                 color: categoryCorrect ? '#065F46' : '#92400E',

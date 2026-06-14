@@ -1,6 +1,6 @@
 import { K, load, loadObj, save, uid, loadWithIds, dbReady, listVia, saveVia, removeVia, upsert } from './workflow-core.js';
 import { dbList, dbUpsert, dbRemove, getDbContext } from './supabase-db.js';
-import { initSchedule } from './spaced-repetition.js';
+import { initSchedule, markSRMastered } from './spaced-repetition.js';
 import { getDiagnoses, getHomework, getSubmissions, getReviews, getFeedback } from './workflow-academic.js';
 
 /* ─── INBOX ──────────────────────────────────────────────────── */
@@ -137,7 +137,7 @@ export async function promoteErrorToLongTerm(diagnosisId, errorIndex, studentId)
   const existing = await getErrorBank(sid);
   const dupe = existing.find(it => it.error === sourceItem.error && it.correct === sourceItem.correct);
   if (dupe) return dupe;
-  const record = { id: uid(), studentId: sid, error: sourceItem.error || '', correct: sourceItem.correct || '', type: sourceItem.type || 'grammar', explanation: sourceItem.explanation || '', example_sentence: sourceItem.example_sentence || '', sourceDiagnosisId: diagnosisId, status: 'active', practiceCount: 0, lastPracticed: null, createdAt: new Date().toISOString() };
+  const record = { id: uid(), studentId: sid, error: sourceItem.error || '', correct: sourceItem.correct || '', type: sourceItem.type || 'grammar', explanation: sourceItem.explanation || '', example_sentence: sourceItem.example_sentence || '', sourceDiagnosisId: diagnosisId, status: 'active', practiceCount: 0, lastPracticed: null, submissionAppearances: 0, createdAt: new Date().toISOString() };
   if (dbReady('errorBank')) { try { const saved = await dbUpsert('errorBank', record); if (saved) return saved; } catch (e) { console.warn('[workflow] promoteErrorToLongTerm via Supabase failed, using localStorage:', e.message); } }
   const obj = loadObj(K.errorBankGlobal);
   obj[sid] = [record, ...(obj[sid] || [])];
@@ -153,6 +153,7 @@ export async function markErrorPracticed(studentId, errorId) {
       const practiceCount = (entry.practiceCount || 0) + 1;
       const saved = await dbUpsert('errorBank', { ...entry, practiceCount, status: practiceCount >= 3 ? 'solved' : 'practicing', lastPracticed: new Date().toISOString() });
       if (wasFirst) initSchedule(studentId, { ...entry, id: errorId });
+      if (practiceCount >= 3) markSRMastered(studentId, errorId);
       return saved;
     } catch (e) { console.warn('[workflow] markErrorPracticed via Supabase failed, using localStorage:', e.message); }
   }
@@ -161,10 +162,12 @@ export async function markErrorPracticed(studentId, errorId) {
   const idx = list.findIndex(e => e.id === errorId);
   if (idx < 0) return null;
   const wasFirst = (list[idx].practiceCount || 0) === 0;
-  list[idx] = { ...list[idx], practiceCount: (list[idx].practiceCount || 0) + 1, status: list[idx].practiceCount + 1 >= 3 ? 'solved' : 'practicing', lastPracticed: new Date().toISOString() };
+  const newCount = (list[idx].practiceCount || 0) + 1;
+  list[idx] = { ...list[idx], practiceCount: newCount, status: newCount >= 3 ? 'solved' : 'practicing', lastPracticed: new Date().toISOString() };
   obj[studentId] = list;
   save(K.errorBankGlobal, obj);
   if (wasFirst) initSchedule(studentId, { ...list[idx], id: errorId });
+  if (newCount >= 3) markSRMastered(studentId, errorId);
   return list[idx];
 }
 export async function markErrorSolved(studentId, errorId) {
@@ -172,7 +175,9 @@ export async function markErrorSolved(studentId, errorId) {
     try {
       const entry = (await dbList('errorBank') || []).find(e => e.id === errorId);
       if (!entry) return null;
-      return await dbUpsert('errorBank', { ...entry, status: 'solved', lastPracticed: new Date().toISOString() });
+      const saved = await dbUpsert('errorBank', { ...entry, status: 'solved', lastPracticed: new Date().toISOString() });
+      markSRMastered(studentId, errorId);
+      return saved;
     } catch (e) { console.warn('[workflow] markErrorSolved via Supabase failed, using localStorage:', e.message); }
   }
   const obj = loadObj(K.errorBankGlobal);
@@ -180,6 +185,27 @@ export async function markErrorSolved(studentId, errorId) {
   const idx = list.findIndex(e => e.id === errorId);
   if (idx < 0) return null;
   list[idx] = { ...list[idx], status: 'solved', lastPracticed: new Date().toISOString() };
+  obj[studentId] = list;
+  save(K.errorBankGlobal, obj);
+  markSRMastered(studentId, errorId);
+  return list[idx];
+}
+
+/** Increment submissionAppearances counter — called each time this error is marked
+ *  active in a submission review, so the teacher can spot persistent patterns. */
+export async function incrementErrorAppearance(studentId, errorId) {
+  if (dbReady('errorBank')) {
+    try {
+      const entry = (await dbList('errorBank') || []).find(e => e.id === errorId);
+      if (!entry) return null;
+      return await dbUpsert('errorBank', { ...entry, submissionAppearances: (entry.submissionAppearances || 0) + 1 });
+    } catch (e) { console.warn('[workflow] incrementErrorAppearance via Supabase failed, using localStorage:', e.message); }
+  }
+  const obj = loadObj(K.errorBankGlobal);
+  const list = obj[studentId] || [];
+  const idx = list.findIndex(e => e.id === errorId);
+  if (idx < 0) return null;
+  list[idx] = { ...list[idx], submissionAppearances: (list[idx].submissionAppearances || 0) + 1 };
   obj[studentId] = list;
   save(K.errorBankGlobal, obj);
   return list[idx];

@@ -5,7 +5,7 @@ import ErrorBoundary from './components/error-boundary.jsx';
 import { TweaksPanel, TweakSection, TweakRadio, TweakColor } from './components/tweaks-panel.jsx';
 import { Icon, Avatar, Button, Shell } from './components/shared.jsx';
 import { STUDENTS } from './data/students.jsx';
-import { seedStudentsIfEmpty, getStudents } from './lib/workflow.js';
+import { seedStudentsIfEmpty, getStudents } from './lib/workflow-roster.js';
 import {
   getSupabaseConfig,
   parseSupabaseHashFragment,

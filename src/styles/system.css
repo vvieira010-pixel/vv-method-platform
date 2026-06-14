@@ -1160,14 +1160,25 @@ p {
   align-items: center;
   justify-content: space-between;
   padding: 12px 24px;
-  background: transparent;
-  border-bottom: 1px solid var(--border);
+  background: linear-gradient(180deg, #0f1b2d 0%, #172437 100%);
+  border-bottom: 1px solid rgba(72,199,199,0.18);
+  position: relative;
+}
+
+.dash-topbar::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 15% 50%, rgba(72,199,199,0.14) 0%, transparent 60%);
+  pointer-events: none;
 }
 
 .dash-brand-name {
   font-size: var(--text-xl);
   font-weight: 700;
-  color: var(--primary);
+  color: #fff;
+  letter-spacing: 0.01em;
+  position: relative;
 }
 
 .dash-top-nav {
@@ -1177,28 +1188,31 @@ p {
 
 .dash-nav-btn {
   background: none;
-  border: none;
+  border: 1px solid transparent;
   padding: 7px 12px;
   cursor: pointer;
   display: flex;
   align-items: center;
   gap: 8px;
-  color: var(--muted);
+  color: rgba(241,250,238,0.65);
   font-weight: 500;
   font-size: 0.9rem;
   border-radius: var(--radius-sm);
   transition: all 0.2s ease;
   min-height: unset;
+  position: relative;
 }
 
 .dash-nav-btn.active {
-  background: var(--primary);
-  color: white;
+  background: rgba(20,136,145,0.28);
+  color: #fff;
+  border-color: rgba(72,199,199,0.35);
+  font-weight: 700;
 }
 
 .dash-nav-btn:hover:not(.active) {
-  background: var(--teal-soft);
-  color: var(--primary);
+  background: rgba(255,255,255,0.1);
+  color: rgba(241,250,238,0.9);
 }
 
 .dash-nav-btn:focus-visible {
@@ -1207,10 +1221,12 @@ p {
 }
 
 .dash-nav-dot {
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
-  background: var(--accent);
+  background: #48C7C7;
+  box-shadow: 0 0 6px rgba(72,199,199,0.85);
+  flex-shrink: 0;
 }
 
 .dash-body {
@@ -1228,7 +1244,8 @@ p {
 .dash-topbar-name {
   font-size: var(--text-sm);
   font-weight: 600;
-  color: var(--text);
+  color: rgba(241,250,238,0.82);
+  position: relative;
 }
 
 /* ── Student home ──────────────────────────────────────────────── */
@@ -1523,21 +1540,21 @@ p {
 }
 
 .student-panel {
-  background: white;
+  background: var(--surface);
   border-radius: var(--radius-sm);
   padding: 20px;
   border: 1px solid var(--border);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+  box-shadow: var(--shadow-sm);
   transition: box-shadow 0.3s ease, border-color 0.3s ease;
 }
 .student-panel:hover {
-  border-color: var(--accent-soft);
-  box-shadow: 0 4px 16px rgba(0,0,0,0.04);
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-md);
 }
 
 .student-panel--primary {
-  background: linear-gradient(135deg, #ffffff 0%, #fdfbf7 100%);
-  border: 1px solid var(--teal-soft);
+  background: linear-gradient(135deg, var(--surface) 0%, #f4fbfb 100%);
+  border: 1px solid var(--accent-soft);
 }
 
 .student-panel-head {
@@ -1551,7 +1568,7 @@ p {
   text-transform: uppercase;
   font-size: 0.7rem;
   font-weight: 700;
-  color: var(--interaction);
+  color: var(--accent-text);
   letter-spacing: 0.08em;
   display: block;
   margin-bottom: 4px;
@@ -2744,7 +2761,7 @@ textarea:focus, .textarea:focus {
 }
 .homework-create-grid {
   display: grid;
-  grid-template-columns: 1fr 300px;
+  grid-template-columns: minmax(0, 1fr) 300px;
   gap: 24px;
   align-items: start;
 }
@@ -2773,6 +2790,8 @@ textarea:focus, .textarea:focus {
   border-radius: var(--radius-sm);
   overflow: hidden;
   background: var(--surface);
+  box-shadow: var(--shadow-sm);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 .homework-exercise-card-header {
   display: flex;
@@ -2854,7 +2873,7 @@ textarea:focus, .textarea:focus {
     grid-template-columns: 1fr auto;
     gap: 8px;
     padding: 8px 12px;
-    background: rgba(249, 247, 242, 0.96);
+    background: rgba(15, 27, 45, 0.97);
     -webkit-backdrop-filter: blur(10px);
     backdrop-filter: blur(10px);
   }

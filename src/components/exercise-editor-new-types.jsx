@@ -46,10 +46,6 @@ export function DialogueEditor({ ex, update }) {
         </div>
       </div>
       <div style={fieldWrap}>
-        <label style={fieldLabel}>Context / instruction (optional)</label>
-        <input className="input" value={ex.instruction || ''} onChange={e => update({ instruction: e.target.value })} placeholder="e.g. A nurse greets a patient on admission…" />
-      </div>
-      <div style={fieldWrap}>
         <label style={fieldLabel}>Dialogue lines</label>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
           {lines.map((line, idx) => (
@@ -114,10 +110,6 @@ export function SwapEditor({ ex, update }) {
 
   return (
     <div>
-      <div style={fieldWrap}>
-        <label style={fieldLabel}>Context (optional)</label>
-        <input className="input" value={ex.instruction || ''} onChange={e => update({ instruction: e.target.value })} placeholder="e.g. Upgrade the underlined words to B2 level" />
-      </div>
       <div style={fieldWrap}>
         <label style={fieldLabel}>Sentence — wrap words in [brackets] to make them swappable</label>
         <textarea className="input" rows={3}

@@ -49,11 +49,25 @@ export function initSchedule(studentId, errorEntry) {
     nextDue: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
     sourceDiagnosisId: errorEntry.sourceDiagnosisId || null,
     practiceCount: 1,
+    mastered: false,
   };
   list.push(entry);
   save(studentId, list);
   maybeSync(studentId, list);
   return entry;
+}
+
+/**
+ * Mark a scheduled item as mastered — stops it from appearing in due items.
+ * Called when the error bank entry reaches 'solved' status.
+ */
+export function markSRMastered(studentId, errorId) {
+  const list = load(studentId);
+  const idx = list.findIndex(e => e.errorId === errorId);
+  if (idx < 0) return;
+  list[idx] = { ...list[idx], mastered: true };
+  save(studentId, list);
+  maybeSync(studentId, list);
 }
 
 /**
@@ -92,7 +106,9 @@ export function recordPractice(studentId, scheduleId, correct) {
 export function getDueItems(studentId) {
   const list = load(studentId);
   const now = new Date().toISOString();
-  return list.filter(e => e.nextDue <= now).sort((a, b) => new Date(a.nextDue) - new Date(b.nextDue));
+  return list
+    .filter(e => !e.mastered && e.nextDue <= now)
+    .sort((a, b) => new Date(a.nextDue) - new Date(b.nextDue));
 }
 
 /**

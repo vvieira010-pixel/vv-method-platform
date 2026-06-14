@@ -8,7 +8,7 @@ import { parseAiJson } from '../lib/ai-helpers.js';
 import {
   getAllSubmissions, getHomework, getReviews, saveReview, deleteReview,
   getDiagnoses, getErrorBank, promoteErrorToLongTerm, markErrorSolved, saveProgressNote,
-  getStudent, getInbox, sendMessage,
+  incrementErrorAppearance, getStudent, getInbox, sendMessage,
 } from '../lib/workflow.js';
 import { createSignedAudioUrl } from '../lib/supabase-db.js';
 
@@ -177,6 +177,11 @@ Return JSON:
 
   async function handleSave() {
     setSaving(true);
+    const normalizedActiveErrors = form.activeErrors
+      .split('\n')
+      .map(s => s.trim().toLowerCase())
+      .filter(Boolean);
+    const previousActiveErrors = (existingReview?.activeErrors || []).map(s => String(s || '').trim().toLowerCase()).filter(Boolean);
     const rev = await saveReview({
       id: existingReview?.id,
       submissionId,
@@ -196,6 +201,20 @@ Return JSON:
     // Save progress note
     if (form.whatImproved) {
       await saveProgressNote({ studentId: submission?.studentId, sourceType: 'review', sourceId: rev.id, note: form.whatImproved });
+    }
+
+    // Track persistence: increment submissionAppearances for any active error bank
+    // entries that are newly marked active in this review.
+    if (submission?.studentId && normalizedActiveErrors.length > 0) {
+      for (const err of errors) {
+        if (err.status !== 'active') continue;
+        const errText = (err.error || '').toLowerCase();
+        const isCurrentMatch = normalizedActiveErrors.some(line => line.includes(errText) || errText.includes(line.slice(0, 20)));
+        const wasAlreadyCounted = previousActiveErrors.some(line => line.includes(errText) || errText.includes(line.slice(0, 20)));
+        if (isCurrentMatch && !wasAlreadyCounted) {
+          incrementErrorAppearance(submission.studentId, err.id).catch(() => {});
+        }
+      }
     }
 
     if (form.sendFeedback && submission?.studentId) {
@@ -350,19 +369,28 @@ Return JSON:
             <Card style={{ padding: 18 }}>
               <SectionHeader title="Active Error Bank" icon={<Icon.warning size={15} />} />
               <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 6 }}>
-                {activeErrorBank.slice(0, 5).map(err => (
-                  <div key={err.id} style={{ fontSize: 'var(--text-xs)', display: 'flex', alignItems: 'center', gap: 8, padding: '5px 8px', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', cursor: 'pointer' }}
-                    onClick={() => addErrorToCorrections(err)}
-                    title="Click to add to corrections"
-                  >
-                    <span style={{ color: 'var(--danger)', fontWeight: 600 }}>{err.error}</span>
-                    <span style={{ color: 'var(--muted)' }}>→</span>
-                    <span style={{ color: 'var(--success)' }}>{err.correct}</span>
-                    <Button variant="ghost" size="sm" style={{ marginLeft: 'auto', fontSize: 10 }} onClick={async (e) => { e.stopPropagation(); await markErrorSolved(submission.studentId, err.id); load(); }}>
-                      Solved
-                    </Button>
-                  </div>
-                ))}
+                {activeErrorBank.slice(0, 5).map(err => {
+                  const appearances = err.submissionAppearances || 0;
+                  const isPersistent = appearances >= 3;
+                  return (
+                    <div key={err.id} style={{ fontSize: 'var(--text-xs)', display: 'flex', alignItems: 'center', gap: 8, padding: '5px 8px', background: isPersistent ? 'var(--warning-bg)' : 'var(--surface)', border: `1px solid ${isPersistent ? 'var(--warning-soft)' : 'var(--border)'}`, borderRadius: 'var(--radius-sm)', cursor: 'pointer' }}
+                      onClick={() => addErrorToCorrections(err)}
+                      title="Click to add to corrections"
+                    >
+                      <span style={{ color: 'var(--danger)', fontWeight: 600 }}>{err.error}</span>
+                      <span style={{ color: 'var(--muted)' }}>→</span>
+                      <span style={{ color: 'var(--success)' }}>{err.correct}</span>
+                      {isPersistent && (
+                        <span title={`Appeared in ${appearances} submissions — consider a different teaching approach`} style={{ marginLeft: 4, padding: '1px 6px', borderRadius: 'var(--radius-pill)', background: 'var(--warning-soft)', color: 'var(--warning-text)', fontWeight: 700, fontSize: 10, whiteSpace: 'nowrap' }}>
+                          Persistent ×{appearances}
+                        </span>
+                      )}
+                      <Button variant="ghost" size="sm" style={{ marginLeft: 'auto', fontSize: 10 }} onClick={async (e) => { e.stopPropagation(); await markErrorSolved(submission.studentId, err.id); load(); }}>
+                        Solved
+                      </Button>
+                    </div>
+                  );
+                })}
               </div>
             </Card>
           )}

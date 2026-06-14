@@ -7,6 +7,7 @@ import { useState } from 'react';
 import { Icon, Card, Button } from './shared.jsx';
 import { EX_TYPES, getExType } from '../lib/exercise-types.js';
 import { DialogueEditor, SwapEditor, LevelUpEditor, ReadEditor } from './exercise-editor-new-types.jsx';
+export { ExTypeBadge } from './exercise-badge.jsx';
 
 /* ─── SHARED STYLES ─────────────────────────────────────────── */
 const fieldLabel = {
@@ -17,26 +18,6 @@ const fieldLabel = {
 const fieldWrap = { marginBottom: 12 };
 const hintText = { fontSize: 'var(--text-xs)', color: 'var(--faint)', marginTop: 4 };
 
-/* ─── TYPE BADGE ────────────────────────────────────────────── */
-export function ExTypeBadge({ typeId, size = 'sm' }) {
-  const meta = getExType(typeId);
-  if (!meta) return null;
-  const IconComp = Icon[meta.iconKey];
-  const iconSize = size === 'sm' ? 11 : 13;
-  const fontSize = size === 'sm' ? 'var(--text-xs)' : 'var(--text-sm)';
-  const padding = size === 'sm' ? '3px 8px' : '4px 10px';
-  return (
-    <span className="ex-type-badge" style={{
-      display: 'inline-flex', alignItems: 'center', gap: 5,
-      background: meta.bg, color: meta.color,
-      fontSize, padding, borderRadius: 0, fontWeight: 600,
-    }}>
-      {IconComp && <span style={{ display: 'inline-flex' }}><IconComp size={iconSize} /></span>}
-      {meta.label}
-    </span>
-  );
-}
-
 /* ─── EXERCISE TYPE PICKER ──────────────────────────────────── */
 export function ExerciseTypePicker({ onSelect, onClose }) {
   const [qty, setQty] = useState(1);
@@ -45,7 +26,7 @@ export function ExerciseTypePicker({ onSelect, onClose }) {
   const stepBtn = {
     width: 26, height: 26, display: 'grid', placeItems: 'center',
     border: '1px solid var(--border)', background: 'var(--surface)',
-    borderRadius: 0, cursor: 'pointer', fontSize: 16, lineHeight: 1, color: 'var(--text)',
+    borderRadius: 'var(--radius-sm)', cursor: 'pointer', fontSize: 16, lineHeight: 1, color: 'var(--text)',
   };
   return (
     <Card className="exercise-type-picker" style={{ padding: 20 }}>
@@ -60,7 +41,7 @@ export function ExerciseTypePicker({ onSelect, onClose }) {
             <select
               value={level}
               onChange={e => setLevel(e.target.value)}
-              style={{ padding: '4px 6px', border: '1px solid var(--border)', borderRadius: 0, fontSize: 'var(--text-sm)' }}
+              style={{ padding: '4px 6px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-sm)' }}
             >
               {['A1', 'A2', 'B1', 'B2', 'C1'].map(l => <option key={l} value={l}>{l}</option>)}
             </select>
@@ -76,7 +57,7 @@ export function ExerciseTypePicker({ onSelect, onClose }) {
               onChange={e => setQty(clamp(parseInt(e.target.value, 10)))}
               style={{
                 width: 48, textAlign: 'center', padding: '4px 6px',
-                border: '1px solid var(--border)', borderRadius: 0,
+                border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)',
                 fontFamily: 'var(--font-ui)', fontSize: 'var(--text-sm)', color: 'var(--text)',
               }}
             />
@@ -92,7 +73,7 @@ export function ExerciseTypePicker({ onSelect, onClose }) {
       <p style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', margin: '0 0 14px' }}>
         Pick a type to add {qty > 1 ? <strong>{qty} of them</strong> : 'one'} at <strong>{level} level</strong>.
       </p>
-      <div className="exercise-type-picker-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 8, maxHeight: 360, overflowY: 'auto' }}>
+      <div className="exercise-type-picker-grid" style={{ display: 'grid', gap: 8, maxHeight: 360, overflowY: 'auto', alignItems: 'stretch', gridAutoRows: '1fr' }}>
         {EX_TYPES.map(t => {
           const IconComp = Icon[t.iconKey];
           return (
@@ -100,17 +81,17 @@ export function ExerciseTypePicker({ onSelect, onClose }) {
               key={t.id}
               onClick={() => onSelect(t.id, qty, level)} // Pass level here
               style={{
-                display: 'flex', alignItems: 'center', gap: 10,
+                display: 'flex', alignItems: 'flex-start', gap: 10,
                 padding: '12px 14px', borderRadius: 'var(--radius-md)',
                 border: '1px solid var(--border)', background: 'var(--surface)',
                 cursor: 'pointer', fontFamily: 'var(--font-ui)', textAlign: 'left',
-                transition: 'all 0.15s var(--ease)',
+                transition: 'all 0.15s var(--ease)', width: '100%', height: '100%',
               }}
               onMouseEnter={e => { e.currentTarget.style.borderColor = t.color; e.currentTarget.style.background = t.bg; }}
               onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.background = 'var(--surface)'; }}
             >
               <span style={{
-                width: 32, height: 32, borderRadius: 0,
+                width: 32, height: 32, borderRadius: 'var(--radius-sm)',
                 background: t.bg, color: t.color,
                 display: 'grid', placeItems: 'center', flexShrink: 0,
               }}>
@@ -138,6 +119,23 @@ export function ExerciseEditor({ exercise, onChange }) {
   if (!exercise) return null;
   const update = (patch) => onChange({ ...exercise, ...patch });
 
+  return (
+    <div>
+      <div style={fieldWrap}>
+        <label style={fieldLabel}>Instructions (optional)</label>
+        <input
+          className="input"
+          value={exercise.instruction || ''}
+          onChange={e => update({ instruction: e.target.value })}
+          placeholder="Tell the student what to do — e.g. 'Read the sentence carefully and choose the best word.'"
+        />
+      </div>
+      {renderSubEditor(exercise, update)}
+    </div>
+  );
+}
+
+function renderSubEditor(exercise, update) {
   switch (exercise.type) {
     case 'mcq':    return <MCQEditor    ex={exercise} update={update} />;
     case 'blank':  return <BlankEditor  ex={exercise} update={update} />;

@@ -10,8 +10,8 @@ import ErrorCorrection from './ErrorCorrection.jsx';
 import Listening from './Listening.jsx';
 import ReadExercise from './ReadExercise.jsx';
 
-const TEAL = '#148891';
-const NAVY = '#0f1b2d';
+const TEAL = 'var(--accent)';
+const NAVY = 'var(--primary-ink)';
 
 const TYPE_LABELS = {
   multiple_choice: 'Multiple Choice',

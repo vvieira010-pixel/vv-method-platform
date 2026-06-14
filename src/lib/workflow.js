@@ -45,6 +45,7 @@ export {
   getPracticeResources, savePracticeResource, deletePracticeResource,
   getPracticeSubmissions, savePracticeSubmission,
   getErrorBank, promoteErrorToLongTerm, markErrorPracticed, markErrorSolved,
+  incrementErrorAppearance,
   seedErrorBankFromProfile,
   getStudents, getStudent, saveStudent, deleteStudent, seedStudentsIfEmpty,
   getTargetProfiles, getActiveTargetProfile, saveTargetProfile, setActiveTargetProfile, deleteTargetProfile,

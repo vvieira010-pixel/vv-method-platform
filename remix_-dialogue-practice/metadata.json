@@ -1,0 +1,10 @@
+{
+  "name": "Remix: Dialogue Practice",
+  "description": "Interactive 10-unit course dialogue simulator, speaking practices, vocabulary matchers, and grammar workouts.",
+  "requestFramePermissions": [
+    "microphone"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

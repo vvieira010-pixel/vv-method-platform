@@ -1,7 +1,7 @@
 import { useState } from 'react';
 
-const TEAL = '#148891';
-const NAVY = '#0f1b2d';
+const TEAL = 'var(--accent)';
+const NAVY = 'var(--primary-ink)';
 
 const MET_SECTION_CONFIG = {
   grammar: {
@@ -55,7 +55,7 @@ const MET_SECTION_CONFIG = {
 };
 
 export default function MultipleChoice({ exercise, onComplete }) {
-  const { question, options, correct, skill, context, metSection, imageUrl, imageAlt } = exercise;
+  const { question, options, correct, skill, context, instruction, metSection, imageUrl, imageAlt } = exercise;
   const [selected, setSelected] = useState(null);
   const [submitted, setSubmitted] = useState(false);
 
@@ -121,6 +121,9 @@ export default function MultipleChoice({ exercise, onComplete }) {
         </div>
       )}
 
+      {instruction && (
+        <p style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', marginBottom: 10, lineHeight: 1.6 }}>{instruction}</p>
+      )}
       {context && (
         <p style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', marginBottom: 10, lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{context}</p>
       )}

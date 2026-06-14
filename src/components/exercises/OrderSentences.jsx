@@ -1,7 +1,7 @@
 import { useState } from 'react';
 
-const TEAL = '#0D9488';
-const NAVY = '#0B1F3A';
+const TEAL = 'var(--accent)';
+const NAVY = 'var(--primary-ink)';
 
 // MET section hints for ordering exercises — from met_test_basics_task_breakdown.md
 const MET_ORDER_CONFIG = {
@@ -69,7 +69,7 @@ export default function OrderSentences({ exercise, onComplete }) {
     if (!submitted) {
       return {
         display: 'flex', alignItems: 'center', gap: 12,
-        padding: '12px 14px', borderRadius: 0,
+        padding: '12px 14px', borderRadius: 'var(--radius-sm)',
         border: '1.5px solid var(--border)', background: 'var(--surface)',
         cursor: 'grab', transition: 'all 0.15s',
       };
@@ -77,7 +77,7 @@ export default function OrderSentences({ exercise, onComplete }) {
     const correct = origIdx === pos;
     return {
       display: 'flex', alignItems: 'center', gap: 12,
-      padding: '12px 14px', borderRadius: 0,
+      padding: '12px 14px', borderRadius: 'var(--radius-sm)',
       border: `1.5px solid ${correct ? '#A7F3D0' : '#FECACA'}`,
       background: correct ? '#ECFDF5' : '#FEF2F2',
       transition: 'all 0.15s',
@@ -91,7 +91,7 @@ export default function OrderSentences({ exercise, onComplete }) {
     <div>
       {/* MET section banner */}
       {sectionConfig && (
-        <div style={{ padding: '10px 14px', background: '#EFF6FF', border: '1px solid #BFDBFE', borderRadius: 0, marginBottom: 14 }}>
+        <div style={{ padding: '10px 14px', background: '#EFF6FF', border: '1px solid #BFDBFE', borderRadius: 'var(--radius-sm)', marginBottom: 14 }}>
           <div style={{ fontSize: 11, fontWeight: 700, color: '#1D4ED8', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>
             {sectionConfig.label}
           </div>
@@ -102,7 +102,7 @@ export default function OrderSentences({ exercise, onComplete }) {
 
       {instruction && <p style={{ fontSize: 13.5, color: 'var(--muted)', marginBottom: 8, lineHeight: 1.6 }}>{instruction}</p>}
       {context && (
-        <div style={{ padding: '10px 14px', background: 'var(--bg)', borderRadius: 0, marginBottom: 14, fontSize: 14, lineHeight: 1.7, color: 'var(--text-2)' }}>
+        <div style={{ padding: '10px 14px', background: 'var(--bg)', borderRadius: 'var(--radius-sm)', marginBottom: 14, fontSize: 14, lineHeight: 1.7, color: 'var(--text-2)' }}>
           {context}
         </div>
       )}
@@ -175,7 +175,7 @@ export default function OrderSentences({ exercise, onComplete }) {
         <button
           onClick={handleSubmit}
           style={{
-            padding: '10px 24px', borderRadius: 0, border: 'none', cursor: 'pointer',
+            padding: '10px 24px', borderRadius: 'var(--radius-sm)', border: 'none', cursor: 'pointer',
             background: `linear-gradient(120deg, ${TEAL} 0%, ${NAVY} 100%)`,
             color: '#fff', fontWeight: 600, fontSize: 14, fontFamily: 'var(--font-ui)',
           }}
@@ -185,7 +185,7 @@ export default function OrderSentences({ exercise, onComplete }) {
       ) : (
         <div>
           <div style={{
-            padding: '12px 16px', borderRadius: 0, fontSize: 14, fontWeight: 500, marginBottom: 12,
+            padding: '12px 16px', borderRadius: 'var(--radius-sm)', fontSize: 14, fontWeight: 500, marginBottom: 12,
             background: allCorrect ? '#ECFDF5' : '#FFFBEB',
             border: `1px solid ${allCorrect ? '#A7F3D0' : '#FDE68A'}`,
             color: allCorrect ? '#065F46' : '#92400E',
@@ -198,7 +198,7 @@ export default function OrderSentences({ exercise, onComplete }) {
             <button
               onClick={handleReset}
               style={{
-                padding: '9px 20px', borderRadius: 0, border: '1.5px solid var(--border)', cursor: 'pointer',
+                padding: '9px 20px', borderRadius: 'var(--radius-sm)', border: '1.5px solid var(--border)', cursor: 'pointer',
                 background: 'var(--surface)', color: 'var(--text-2)', fontWeight: 600, fontSize: 13.5,
                 fontFamily: 'var(--font-ui)',
               }}

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 
-const TEAL = '#148891';
-const NAVY = '#0f1b2d';
+const TEAL = 'var(--accent)';
+const NAVY = 'var(--primary-ink)';
 
 const SCORE_DESCRIPTORS = [
   { score: 4, label: 'Fully relevant — extensive supporting detail' },
@@ -131,7 +131,7 @@ const DEFAULT_CHECKS = [
 ];
 
 export default function ShortAnswer({ exercise, onComplete }) {
-  const { prompt, rubric, context, imageUrl, imageAlt, metTaskType } = exercise;
+  const { prompt, rubric, context, instruction, imageUrl, imageAlt, metTaskType } = exercise;
   const taskConfig = metTaskType ? MET_TASK_CONFIG[metTaskType] : null;
   const reflectionChecks = taskConfig ? taskConfig.checks : DEFAULT_CHECKS;
 
@@ -154,6 +154,9 @@ export default function ShortAnswer({ exercise, onComplete }) {
 
   return (
     <div>
+      {instruction && (
+        <p style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', marginBottom: 10, lineHeight: 1.6 }}>{instruction}</p>
+      )}
       {context && (
         <div style={{ padding: '10px 14px', background: 'var(--bg)', borderRadius: 'var(--radius-sm, 6px)', marginBottom: 14, fontSize: 'var(--text-sm)', lineHeight: 1.7, color: 'var(--text-2)' }}>
           {context}

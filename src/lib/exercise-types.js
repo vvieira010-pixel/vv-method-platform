@@ -37,18 +37,18 @@ export function exId() {
 }
 
 const FACTORIES = {
-  mcq:    () => ({ id: exId(), type: 'mcq',    question: '', options: ['', '', '', ''], correct: null }),
-  blank:  () => ({ id: exId(), type: 'blank',  template: '', blanks: [] }),
-  short:  () => ({ id: exId(), type: 'short',  prompt: '', rubric: '', targetWords: 120, scaffolding: { vocabulary: [], structure: [] } }),
-  speak:  () => ({ id: exId(), type: 'speak',  prompt: '', imageDescription: '', targetSeconds: 60, scaffolding: { vocabulary: [], structure: [] } }),
-  order:  () => ({ id: exId(), type: 'order',  sentences: [''] }),
-  fix:    () => ({ id: exId(), type: 'fix',    errorText: '', correctedText: '', hint: '' }),
-  flash:  () => ({ id: exId(), type: 'flash',  pairs: [{ term: '', def: '' }] }),
-  listen:   () => ({ id: exId(), type: 'listen',   audioText: '', plays: 0, question: '', options: ['', '', '', ''], correct: null, explanation: '', pictureHint: '' }),
-  dialogue: () => ({ id: exId(), type: 'dialogue', speakerA: 'Speaker A', speakerB: 'Speaker B', instruction: '', lines: [{ id: exId(), speaker: 'A', text: '' }, { id: exId(), speaker: 'B', text: '' }] }),
+  mcq:    () => ({ id: exId(), type: 'mcq',    instruction: '', question: '', options: ['', '', '', ''], correct: null }),
+  blank:  () => ({ id: exId(), type: 'blank',  instruction: '', template: '', blanks: [] }),
+  short:  () => ({ id: exId(), type: 'short',  instruction: '', prompt: '', rubric: '', targetWords: 120, scaffolding: { vocabulary: [], structure: [] } }),
+  speak:  () => ({ id: exId(), type: 'speak',  instruction: '', prompt: '', imageDescription: '', targetSeconds: 60, scaffolding: { vocabulary: [], structure: [] } }),
+  order:  () => ({ id: exId(), type: 'order',  instruction: '', sentences: [''] }),
+  fix:    () => ({ id: exId(), type: 'fix',    instruction: '', errorText: '', correctedText: '', hint: '' }),
+  flash:  () => ({ id: exId(), type: 'flash',  instruction: '', pairs: [{ term: '', def: '' }] }),
+  listen:   () => ({ id: exId(), type: 'listen',   instruction: '', audioText: '', plays: 0, question: '', options: ['', '', '', ''], correct: null, explanation: '', pictureHint: '' }),
+  dialogue: () => ({ id: exId(), type: 'dialogue', instruction: '', speakerA: 'Speaker A', speakerB: 'Speaker B', lines: [{ id: exId(), speaker: 'A', text: '' }, { id: exId(), speaker: 'B', text: '' }] }),
   swap:     () => ({ id: exId(), type: 'swap',     instruction: '', sentence: '', swaps: [] }),
-  levelup:  () => ({ id: exId(), type: 'levelup',  b1: '', b2: '', c1: '', options: ['', '', ''], correct: 0, keywords: [], explanation: '' }),
-  read: () => ({ id: exId(), type: 'read', passage: '', source: '', questions: [{ id: exId(), question: '', options: ['', '', '', ''], correct: null }] }),
+  levelup:  () => ({ id: exId(), type: 'levelup',  instruction: '', b1: '', b2: '', c1: '', options: ['', '', ''], correct: 0, keywords: [], explanation: '' }),
+  read: () => ({ id: exId(), type: 'read', instruction: '', passage: '', source: '', questions: [{ id: exId(), question: '', options: ['', '', '', ''], correct: null }] }),
 };
 
 /**

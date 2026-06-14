@@ -6,7 +6,7 @@ import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Icon, Card, Button, Pill } from './shared.jsx';
 import { getExType, parseBlankTemplate, shuffleArray, autoGrade } from '../lib/exercise-types.js';
-import { ExTypeBadge } from './exercise-editor.jsx';
+import { ExTypeBadge } from './exercise-badge.jsx';
 import Listening from './exercises/Listening.jsx';
 import { getDbContext, uploadSubmissionAudio, createSignedAudioUrl } from '../lib/supabase-db.js';
 import { DialoguePlayer, SwapPlayer, LevelUpPlayer } from './exercise-player-new-types.jsx';
@@ -146,6 +146,18 @@ function MCQPlayer({ ex, res, update, readOnly }) {
           Not quite — try another option. ({wrongPicks.length}/{wrongLimit})
         </div>
       )}
+      {!done && ex.hints && wrongPicks.length >= 2 && ex.hints[0] && (
+        <div style={{ marginTop: 8, padding: '9px 13px', borderRadius: 0, background: 'var(--accent-subtle)', color: 'var(--accent-deep)', fontSize: 'var(--text-sm)', borderLeft: '3px solid var(--accent)' }}>
+          <strong style={{ fontSize: 'var(--text-xs)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Hint</strong>
+          <p style={{ margin: '4px 0 0' }}>{ex.hints[0]}</p>
+        </div>
+      )}
+      {!done && ex.hints && wrongPicks.length >= 3 && ex.hints[1] && (
+        <div style={{ marginTop: 6, padding: '9px 13px', borderRadius: 0, background: 'var(--info-bg)', color: 'var(--accent-deep)', fontSize: 'var(--text-sm)', borderLeft: '3px solid var(--info)' }}>
+          <strong style={{ fontSize: 'var(--text-xs)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Another hint</strong>
+          <p style={{ margin: '4px 0 0' }}>{ex.hints[1]}</p>
+        </div>
+      )}
     </div>
   );
 }
@@ -245,6 +257,18 @@ function BlankPlayer({ ex, res, update, readOnly }) {
         <div style={{ fontSize: 'var(--text-xs)', color: 'var(--success)', display: 'flex', alignItems: 'center', gap: 6 }}>
           <Icon.check size={12} />
           <span>Answer shown after {BLANK_MAX_TRIES} tries — type it in to finish the blank.</span>
+        </div>
+      )}
+      {!readOnly && ex.hints && Object.values(attempts).some(n => n >= 2) && ex.hints[0] && (
+        <div style={{ marginTop: 10, padding: '9px 13px', borderRadius: 0, background: 'var(--accent-subtle)', color: 'var(--accent-deep)', fontSize: 'var(--text-sm)', borderLeft: '3px solid var(--accent)' }}>
+          <strong style={{ fontSize: 'var(--text-xs)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Hint</strong>
+          <p style={{ margin: '4px 0 0' }}>{ex.hints[0]}</p>
+        </div>
+      )}
+      {!readOnly && ex.hints && Object.values(attempts).some(n => n >= 3) && ex.hints[1] && (
+        <div style={{ marginTop: 6, padding: '9px 13px', borderRadius: 0, background: 'var(--info-bg)', color: 'var(--accent-deep)', fontSize: 'var(--text-sm)', borderLeft: '3px solid var(--info)' }}>
+          <strong style={{ fontSize: 'var(--text-xs)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Another hint</strong>
+          <p style={{ margin: '4px 0 0' }}>{ex.hints[1]}</p>
         </div>
       )}
     </div>

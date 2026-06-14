@@ -1130,7 +1130,7 @@ function getPriorityItems(dx) {
           <SectionHeader title="Homework Summary" />
           <div style={{ marginTop: 12, fontSize: 'var(--text-sm)' }}>
             <p>Exercises: <strong style={exerciseCount > 10 ? { color: 'var(--danger)' } : {}}>{exerciseCount} / 10</strong></p>
-            <p>Estimated Time: <strong>{/* Calculation needed */}</strong></p>
+            <p>Est. time: <strong>~{Math.max(5, exerciseCount * 4)} min</strong></p>
           </div>
         </Card>
       </div>

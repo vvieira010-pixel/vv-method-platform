@@ -1,7 +1,7 @@
 import { useState } from 'react';
 
-const TEAL = '#148891';
-const NAVY = '#0f1b2d';
+const TEAL = 'var(--accent)';
+const NAVY = 'var(--primary-ink)';
 
 function normalize(str) {
   return (str || '').toLowerCase().trim();

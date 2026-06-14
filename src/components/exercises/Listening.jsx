@@ -16,8 +16,8 @@
 import { useState, useRef, useCallback } from 'react';
 import { Icon } from '../shared.jsx';
 
-const TEAL = '#0D9488';
-const NAVY = '#0B1F3A';
+const TEAL = 'var(--accent)';
+const NAVY = 'var(--primary-ink)';
 const EL_VOICE    = '21m00Tcm4TlvDq8ikWAM'; // ElevenLabs — Rachel, natural American English
 const DEEPGRAM_MODEL = 'aura-2-thalia-en';    // Deepgram Aura-2 — clear American English
 const OPENAI_VOICE = 'nova';                  // OpenAI TTS — nova (female, clear, neutral)
@@ -184,6 +184,7 @@ export default function Listening({ exercise, onComplete }) {
     plays = 0,
     pictureHint = '',
     metPart = '',    // 'P1' | 'P2' | 'P3' — optional MET context
+    instruction = '',
   } = exercise;
 
   const [playCount, setPlayCount] = useState(0);
@@ -261,7 +262,7 @@ export default function Listening({ exercise, onComplete }) {
   function optionStyle(i) {
     const base = {
       display: 'flex', alignItems: 'center', gap: 12,
-      padding: '12px 16px', borderRadius: 0,
+      padding: '12px 16px', borderRadius: 'var(--radius-sm)',
       border: '1.5px solid', cursor: submitted ? 'default' : 'pointer',
       transition: 'all 0.15s', fontSize: 14.5, lineHeight: 1.5,
       fontFamily: 'var(--font-ui)', textAlign: 'left', width: '100%',
@@ -291,7 +292,7 @@ export default function Listening({ exercise, onComplete }) {
 
       {/* MET part banner */}
       {partConfig && (
-        <div style={{ padding: '10px 14px', background: '#F0F9FF', border: '1px solid #BAE6FD', borderRadius: 0, marginBottom: 14 }}>
+        <div style={{ padding: '10px 14px', background: '#F0F9FF', border: '1px solid #BAE6FD', borderRadius: 'var(--radius-sm)', marginBottom: 14 }}>
           <div style={{ fontSize: 11, fontWeight: 700, color: '#0369A1', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>
             {partConfig.label}
           </div>
@@ -302,10 +303,14 @@ export default function Listening({ exercise, onComplete }) {
         </div>
       )}
 
+      {instruction && (
+        <p style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', marginBottom: 12, lineHeight: 1.6 }}>{instruction}</p>
+      )}
+
       {/* Picture hint (context clue before listening) */}
       {pictureHint && (
         <div style={{
-          padding: '8px 12px', marginBottom: 16, borderRadius: 0,
+          padding: '8px 12px', marginBottom: 16, borderRadius: 'var(--radius-sm)',
           background: 'var(--accent-subtle)', color: 'var(--muted)',
           fontSize: 13, fontStyle: 'italic', lineHeight: 1.5, border: '1px solid var(--accent-soft)',
         }}>
@@ -315,7 +320,7 @@ export default function Listening({ exercise, onComplete }) {
 
       {/* Audio player */}
       <div style={{
-        padding: '20px 16px', borderRadius: 0, marginBottom: 20,
+        padding: '20px 16px', borderRadius: 'var(--radius-sm)', marginBottom: 20,
         background: 'linear-gradient(135deg, #F0FDFA 0%, #EEF2FF 100%)',
         border: '1.5px solid rgba(13,148,136,.22)',
         display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14,
@@ -370,7 +375,7 @@ export default function Listening({ exercise, onComplete }) {
           (accessibility fallback). Hidden during the normal listening challenge. */}
       {audioText && (submitted || error) && (
         <div style={{
-          padding: '12px 14px', marginBottom: 16, borderRadius: 0,
+          padding: '12px 14px', marginBottom: 16, borderRadius: 'var(--radius-sm)',
           background: 'var(--bg)', border: '1px solid var(--border)',
         }}>
           <div style={{
@@ -425,7 +430,7 @@ export default function Listening({ exercise, onComplete }) {
               onClick={handleSubmit}
               disabled={selected == null}
               style={{
-                padding: '10px 24px', borderRadius: 0, border: 'none',
+                padding: '10px 24px', borderRadius: 'var(--radius-sm)', border: 'none',
                 cursor: selected == null ? 'not-allowed' : 'pointer',
                 background: selected == null
                   ? 'var(--border)'
@@ -439,7 +444,7 @@ export default function Listening({ exercise, onComplete }) {
             </button>
           ) : (
             <div style={{
-              padding: '12px 16px', borderRadius: 0,
+              padding: '12px 16px', borderRadius: 'var(--radius-sm)',
               background: isCorrect ? '#ECFDF5' : '#FEF2F2',
               border: `1px solid ${isCorrect ? '#A7F3D0' : '#FECACA'}`,
               fontSize: 14,

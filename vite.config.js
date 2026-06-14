@@ -7,6 +7,16 @@ export default defineConfig({
   build: {
     outDir: 'dist-build',
     emptyOutDir: true,
+    target: 'esnext',
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor-react':    ['react', 'react-dom'],
+          'vendor-motion':   ['motion'],
+          'vendor-recharts': ['recharts'],
+        },
+      },
+    },
   },
   server: {
     port: 5173,

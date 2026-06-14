@@ -25,6 +25,9 @@ export default function ExerciseCard({ exercise, index, total, isExpanded, onTog
 
   return (
     <div ref={cardRef} className="homework-exercise-card" style={{
+      width: '100%',
+      maxWidth: '100%',
+      minWidth: 0,
       border: isExpanded ? '1.5px solid var(--accent-soft)' : '1px solid var(--border)',
       borderRadius: 'var(--radius-md)',
       background: isExpanded ? 'var(--accent-subtle)' : 'var(--surface)',
@@ -41,7 +44,7 @@ export default function ExerciseCard({ exercise, index, total, isExpanded, onTog
           display: 'flex', alignItems: 'center', gap: 10,
           padding: '10px 14px', cursor: 'pointer',
           width: '100%', background: 'transparent', border: 'none',
-          textAlign: 'left', fontFamily: 'var(--font-ui)',
+          textAlign: 'left', fontFamily: 'var(--font-ui)', minWidth: 0,
         }}
       >
         <span style={{
@@ -53,7 +56,7 @@ export default function ExerciseCard({ exercise, index, total, isExpanded, onTog
         </span>
         <ExTypeBadge typeId={exercise.type} />
         <span className="homework-exercise-card-title" style={{
-          flex: 1, fontSize: 'var(--text-sm)', color: 'var(--text-2)',
+          flex: 1, minWidth: 0, fontSize: 'var(--text-sm)', color: 'var(--text-2)',
           overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
         }}>
           {previewText}

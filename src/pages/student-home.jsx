@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { Icon, Avatar, Button } from '../components/shared.jsx';
 import { getHomework, getDiagnoses, getClassEvents, getReviews } from '../lib/workflow.js';
 import { recordPractice, getDueCount, getDueItems, toMCQ, getAllEntries } from '../lib/spaced-repetition.js';
-import PracticeSession from '../components/PracticeSession.jsx';
-import ReviewSession from '../components/ReviewSession.jsx';
+
+const PracticeSession = lazy(() => import('../components/PracticeSession.jsx'));
+const ReviewSession   = lazy(() => import('../components/ReviewSession.jsx'));
 import { asArray, getProgressStage, getSkillTrend, hasVisibleApprovedStudentFeedback } from './student-helpers.js';
 import { getTeacherSetting } from '../lib/supabase-db.js';
 
@@ -176,10 +177,16 @@ export default function StudentHome({ student, onTab }) {
         .filter(hasVisibleApprovedStudentFeedback)
         .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
       if (approvedDx.length > 0) {
-        const dx = approvedDx[0];
-        setLatestFeedback(dx.sections.studentFeedback.content);
-        setSnapshot(asArray(dx.content?.section_snapshot));
-        setApprovedHistory(approvedDx);
+        setLatestFeedback(approvedDx[0].sections.studentFeedback.content);
+      }
+
+      // Skill snapshot uses all approved diagnoses — feedback visibility is separate
+      const allApprovedDx = (diagnoses || [])
+        .filter(d => d.status === 'approved')
+        .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+      if (allApprovedDx.length > 0) {
+        setSnapshot(asArray(allApprovedDx[0].content?.section_snapshot));
+        setApprovedHistory(allApprovedDx);
       }
     })();
   }, [student.id]);
@@ -295,15 +302,31 @@ export default function StudentHome({ student, onTab }) {
           </div>
         </div>
       )}
-      {practiceMode && (
-        <PracticeSession mode={practiceMode} onClose={() => setPracticeMode(null)} />
-      )}
-      {reviewMode && (
-        <ReviewSession
-          exercises={reviewExercises}
-          studentId={student.id}
-          onClose={() => { setReviewMode(false); setReviewExercises([]); setReviewCount(getDueCount(student.id)); }}
-        />
+      <Suspense fallback={null}>
+        {practiceMode && (
+          <PracticeSession mode={practiceMode} onClose={() => setPracticeMode(null)} />
+        )}
+        {reviewMode && (
+          <ReviewSession
+            exercises={reviewExercises}
+            studentId={student.id}
+            onClose={() => { setReviewMode(false); setReviewExercises([]); setReviewCount(getDueCount(student.id)); }}
+          />
+        )}
+      </Suspense>
+
+      {pendingHw.length > 0 && (
+        <div className="student-practice-compact fade-up" style={{ '--delay': '0.2s' }}>
+          <div className="student-practice-compact-copy">
+            <strong>Practice Studio</strong>
+            <small>Optional self-paced practice — no timer, no pressure.</small>
+          </div>
+          <div className="student-practice-compact-orbs">
+            <button className="student-practice-compact-orb" onClick={() => setPracticeMode('grammar')}><Icon.edit size={14} /> Grammar</button>
+            <button className="student-practice-compact-orb" onClick={() => setPracticeMode('vocab')}><Icon.star size={14} /> Vocab</button>
+            <button className="student-practice-compact-orb" onClick={() => setPracticeMode('speaking')}><Icon.mic size={14} /> Speaking</button>
+          </div>
+        </div>
       )}
 
       <section className="student-grid fade-up" style={{ '--delay': '0.3s' }}>
@@ -408,19 +431,6 @@ export default function StudentHome({ student, onTab }) {
         </aside>
       </section>
 
-      {pendingHw.length > 0 && (
-        <div className="student-practice-compact fade-up" style={{ '--delay': '0.4s' }}>
-          <div className="student-practice-compact-copy">
-            <strong>Practice Studio</strong>
-            <small>Optional self-paced practice — no timer, no pressure.</small>
-          </div>
-          <div className="student-practice-compact-orbs">
-            <button className="student-practice-compact-orb" onClick={() => setPracticeMode('grammar')}><Icon.edit size={14} /> Grammar</button>
-            <button className="student-practice-compact-orb" onClick={() => setPracticeMode('vocab')}><Icon.star size={14} /> Vocab</button>
-            <button className="student-practice-compact-orb" onClick={() => setPracticeMode('speaking')}><Icon.mic size={14} /> Speaking</button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

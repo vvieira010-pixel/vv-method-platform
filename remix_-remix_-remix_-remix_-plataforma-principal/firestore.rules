@@ -1,0 +1,47 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global safety net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isValidPeerMessage(data) {
+      return data.keys().hasAll(['text', 'authorId', 'authorName', 'timestamp']) &&
+             data.keys().size() == 4 &&
+             data.text is string &&
+             data.text.size() <= 1000 &&
+             data.text.size() > 0 &&
+             data.authorId is string &&
+             data.authorName is string &&
+             data.authorName.size() <= 50;
+    }
+
+    match /topics/{topicId}/messages/{messageId} {
+      allow read: if isSignedIn() && isValidId(topicId);
+      
+      allow create: if isSignedIn() && 
+                       isValidId(topicId) && 
+                       isValidId(messageId) &&
+                       isValidPeerMessage(incoming()) &&
+                       incoming().authorId == request.auth.uid &&
+                       incoming().timestamp == request.time;
+    }
+  }
+}
