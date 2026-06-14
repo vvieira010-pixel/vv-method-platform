@@ -185,46 +185,47 @@ export default async function handler(req, res) {
     return null;
   }
 
-  // Global model priority: best models first across all providers.
+  // Global model priority: OpenRouter first-class, then Gemini, Groq, OpenAI, and Anthropic.
   const MODEL_PRIORITY = [
-    // ── Tier 1: Frontier Reasoning ──
-    ['deepseek/deepseek-r1-0528:free',           'openrouter'],
-    ['deepseek/deepseek-chat-v3-0324:free',      'openrouter'],
-    ['nvidia/nemotron-3-ultra-550b-a55b:free',   'openrouter'],
-    ['gemini-3.5-flash',                         'gemini'],
-    ['gemini-3.1-pro',                           'gemini'],
-    ['gemini-3.1-flash-lite',                    'gemini'],
-    ['gemini-2.5-flash',                         'gemini'],
-    ['gemini-2.5-flash-lite',                    'gemini'],
-    ['gemini-2.0-flash',                         'gemini'],
-    ['gemini-2.0-flash-lite',                    'gemini'],
-    ['gemma-4-31b-it',                           'gemini'],
-    ['gemma-4-26b-a4b-it',                       'gemini'],
-    // ── Tier 2: Strong Models ──
-    ['meta-llama/llama-3.3-70b-instruct:free',   'openrouter'],
-    ['llama-3.3-70b-versatile',                  'groq'],
-    ['gpt-4.1',                                  'openai'],
-    ['qwen/qwen3-235b-a22b:free',                'openrouter'],
-    ['qwen3-32b',                                'groq'],
-    ['gpt-4.1-mini',                             'openai'],
-    ['deepseek-r1-distill-70b',                  'groq'],
-    ['meta-llama/llama-4-scout:free',             'openrouter'],
-    // ── Tier 3: Capable / Fast ──
-    ['gpt-4o',                                   'openai'],
-    ['llama-3.1-8b-instant',                     'groq'],
-    ['llama-4-scout-17b-16e-instruct',           'groq'],
-    ['qwen/qwen-2.5-72b-instruct:free',          'openrouter'],
-    ['google/gemma-3-27b-it:free',               'openrouter'],
+    // ── OpenRouter: strongest/free first ──
+    ['deepseek/deepseek-r1-0528:free',              'openrouter'],
+    ['deepseek/deepseek-chat-v3-0324:free',         'openrouter'],
+    ['nvidia/nemotron-3-ultra-550b-a55b:free',      'openrouter'],
+    ['meta-llama/llama-3.3-70b-instruct:free',      'openrouter'],
+    ['qwen/qwen3-235b-a22b:free',                   'openrouter'],
+    ['meta-llama/llama-4-scout:free',               'openrouter'],
+    ['qwen/qwen-2.5-72b-instruct:free',             'openrouter'],
+    ['google/gemma-3-27b-it:free',                  'openrouter'],
     ['nvidia/llama-3.1-nemotron-70b-instruct:free', 'openrouter'],
-    ['mistralai/mistral-small-3.1-24b-instruct:free', 'openrouter'],
-    ['nvidia/nemotron-3-nano-30b-a3b:free',       'openrouter'],
-    // ── Tier 4: Budget / Fallback ──
-    ['gpt-4o-mini',                              'openai'],
-    ['gpt-4.1-nano',                             'openai'],
-    ['openrouter/free',                          'openrouter'],
-    ['claude-sonnet-4-6',                        'anthropic'],
-    ['claude-3-5-haiku-latest',                  'anthropic'],
-    ['claude-3-haiku-20240307',                  'anthropic'],
+    ['mistralai/mistral-small-3.1-24b-instruct:free','openrouter'],
+    ['nvidia/nemotron-3-nano-30b-a3b:free',         'openrouter'],
+    ['openrouter/free',                             'openrouter'],
+    // ── Gemini: fast, strong general fallback ──
+    ['gemini-3.5-flash',                            'gemini'],
+    ['gemini-3.1-pro',                              'gemini'],
+    ['gemini-3.1-flash-lite',                       'gemini'],
+    ['gemini-2.5-flash',                            'gemini'],
+    ['gemini-2.5-flash-lite',                       'gemini'],
+    ['gemini-2.0-flash',                            'gemini'],
+    ['gemini-2.0-flash-lite',                       'gemini'],
+    ['gemma-4-31b-it',                              'gemini'],
+    ['gemma-4-26b-a4b-it',                          'gemini'],
+    // ── Groq: speed-focused backup ──
+    ['llama-3.3-70b-versatile',                     'groq'],
+    ['qwen3-32b',                                   'groq'],
+    ['deepseek-r1-distill-70b',                     'groq'],
+    ['llama-3.1-8b-instant',                        'groq'],
+    ['llama-4-scout-17b-16e-instruct',              'groq'],
+    // ── OpenAI: fallback ──
+    ['gpt-4.1',                                     'openai'],
+    ['gpt-4.1-mini',                                'openai'],
+    ['gpt-4o',                                      'openai'],
+    ['gpt-4o-mini',                                 'openai'],
+    ['gpt-4.1-nano',                                'openai'],
+    // ── Anthropic: last resort ──
+    ['claude-sonnet-4-6',                           'anthropic'],
+    ['claude-3-5-haiku-latest',                     'anthropic'],
+    ['claude-3-haiku-20240307',                     'anthropic'],
   ];
 
   const providerKeys = { gemini: geminiKeys, groq: groqKeys, openrouter: openrouterKeys, anthropic: anthropicKeys, openai: openaiKeys };
