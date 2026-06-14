@@ -2,6 +2,7 @@ import { useState, useEffect, lazy, Suspense } from 'react';
 import { Icon, Avatar, Button } from '../components/shared.jsx';
 import { getHomework, getDiagnoses, getClassEvents, getReviews } from '../lib/workflow.js';
 import { recordPractice, getDueCount, getDueItems, toMCQ, getAllEntries } from '../lib/spaced-repetition.js';
+import { readStoredSupabaseSession, updateUserPassword } from '../lib/supabase-storage.js';
 
 const PracticeSession = lazy(() => import('../components/PracticeSession.jsx'));
 const ReviewSession   = lazy(() => import('../components/ReviewSession.jsx'));
@@ -122,6 +123,11 @@ export default function StudentHome({ student, onTab }) {
   const [reviewMode, setReviewMode] = useState(false);
   const [reviewExercises, setReviewExercises] = useState([]);
   const [generalMemoText, setGeneralMemoText] = useState(() => localStorage.getItem('vv:student_general_memo') || '');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [passwordSaving, setPasswordSaving] = useState(false);
+  const [passwordMsg, setPasswordMsg] = useState(null);
+  const activeSession = readStoredSupabaseSession();
 
   useEffect(() => {
     getTeacherSetting('general_memo').then(val => {
@@ -212,6 +218,34 @@ export default function StudentHome({ student, onTab }) {
     const exercises = due.map(e => toMCQ(e, all));
     setReviewExercises(exercises);
     setReviewMode(true);
+  }
+
+  async function handleSetPassword(e) {
+    e.preventDefault();
+    if (!activeSession?.access_token) {
+      setPasswordMsg({ ok: false, text: 'Sign in with your email link first, then set a password.' });
+      return;
+    }
+    if (newPassword.length < 6) {
+      setPasswordMsg({ ok: false, text: 'Password must be at least 6 characters.' });
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setPasswordMsg({ ok: false, text: 'Passwords do not match.' });
+      return;
+    }
+    setPasswordSaving(true);
+    setPasswordMsg(null);
+    try {
+      await updateUserPassword(newPassword, activeSession.access_token);
+      setNewPassword('');
+      setConfirmPassword('');
+      setPasswordMsg({ ok: true, text: 'Password updated. You can now use email and password next time.' });
+      window.toast?.('Password updated.', 'ok');
+    } catch (err) {
+      setPasswordMsg({ ok: false, text: err.message });
+    }
+    setPasswordSaving(false);
   }
 
   const heroAction = pendingHw.length > 0
@@ -417,6 +451,59 @@ export default function StudentHome({ student, onTab }) {
           <section className="student-memo-board">
             <MemoCard kicker="General memo" title="Memo Board" text={generalMemoText || 'No general memo posted yet.'} />
           </section>
+
+          <article className="student-panel">
+            <div className="student-panel-head">
+              <div>
+                <span className="student-panel-kicker">Account</span>
+                <h2>Change password</h2>
+              </div>
+              <span className="student-pill">{activeSession?.access_token ? 'Signed in' : 'Needs sign in link'}</span>
+            </div>
+            <p style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', lineHeight: 1.6, marginBottom: 14 }}>
+              Keep your account secure by choosing a password you can use next time instead of the login link.
+            </p>
+            {activeSession?.access_token ? (
+              <form onSubmit={handleSetPassword} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  <span style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>New password</span>
+                  <input
+                    className="input"
+                    type="password"
+                    autoComplete="new-password"
+                    placeholder="Choose a password"
+                    value={newPassword}
+                    onChange={e => setNewPassword(e.target.value)}
+                    disabled={passwordSaving}
+                  />
+                </label>
+                <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  <span style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Confirm password</span>
+                  <input
+                    className="input"
+                    type="password"
+                    autoComplete="new-password"
+                    placeholder="Repeat the password"
+                    value={confirmPassword}
+                    onChange={e => setConfirmPassword(e.target.value)}
+                    disabled={passwordSaving}
+                  />
+                </label>
+                {passwordMsg && (
+                  <p style={{ fontSize: 'var(--text-sm)', color: passwordMsg.ok ? 'var(--success)' : 'var(--danger)', margin: 0, lineHeight: 1.5 }}>
+                    {passwordMsg.text}
+                  </p>
+                )}
+                <Button type="submit" variant="primary" disabled={passwordSaving || !newPassword || !confirmPassword}>
+                  {passwordSaving ? 'Saving…' : 'Set password'}
+                </Button>
+              </form>
+            ) : (
+              <div className="student-empty-card" style={{ marginTop: 8 }}>
+                Sign in with your email link first, then you can set a password here.
+              </div>
+            )}
+          </article>
         </aside>
       </section>
 
