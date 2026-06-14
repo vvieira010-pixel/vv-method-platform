@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Icon, Modal } from './shared.jsx';
 import ExercisePlayer from './exercises/ExercisePlayer.jsx';
 import {
@@ -20,21 +20,34 @@ const MODE_SUBTITLES = {
   speaking: 'Speaking & writing practice prompts',
 };
 
+const KIND_OPTIONS = [
+  { id: 'grammar', label: 'Grammar' },
+  { id: 'vocab', label: 'Vocabulary' },
+  { id: 'speaking', label: 'Speaking' },
+];
+
 export default function PracticeSession({ mode, onClose }) {
   const [selectedTopic, setSelectedTopic] = useState(null);
+  const [selectedKind, setSelectedKind] = useState(mode);
   const [sessionKey, setSessionKey] = useState(0);
 
   const topics = getTopicList();
 
+  useEffect(() => {
+    setSelectedKind(mode);
+    setSelectedTopic(null);
+    setSessionKey(k => k + 1);
+  }, [mode]);
+
   function getExercises() {
-    if (mode === 'grammar') return getGrammarExercises();
-    if (mode === 'vocab') return selectedTopic ? getVocabExercises(selectedTopic) : [];
-    if (mode === 'speaking') return selectedTopic ? getSpeakingExercises(selectedTopic) : [];
+    if (selectedKind === 'grammar') return getGrammarExercises();
+    if (selectedKind === 'vocab') return selectedTopic ? getVocabExercises(selectedTopic) : [];
+    if (selectedKind === 'speaking') return selectedTopic ? getSpeakingExercises(selectedTopic) : [];
     return [];
   }
 
   const exercises = getExercises();
-  const showTopicPicker = mode !== 'grammar' && !selectedTopic;
+  const showTopicPicker = selectedKind !== 'grammar' && !selectedTopic;
   const selectedTopicTitle = topics.find(t => t.id === selectedTopic)?.title || '';
 
   function handleTryAnother() {
@@ -47,26 +60,53 @@ export default function PracticeSession({ mode, onClose }) {
       open
       onClose={onClose}
       kicker="Practice Studio"
-      title={MODE_LABELS[mode] + (selectedTopicTitle ? ` — ${selectedTopicTitle}` : '')}
-      subtitle={MODE_SUBTITLES[mode]}
+      title={MODE_LABELS[selectedKind] + (selectedTopicTitle ? ` — ${selectedTopicTitle}` : '')}
+      subtitle={MODE_SUBTITLES[selectedKind]}
     >
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
+        {KIND_OPTIONS.map(k => (
+          <button
+            key={k.id}
+            type="button"
+            onClick={() => {
+              setSelectedKind(k.id);
+              setSelectedTopic(null);
+              setSessionKey(key => key + 1);
+            }}
+            style={{
+              padding: '8px 14px',
+              borderRadius: 999,
+              border: selectedKind === k.id ? '1.5px solid var(--accent)' : '1.5px solid var(--border)',
+              background: selectedKind === k.id ? 'var(--accent-subtle)' : 'var(--surface)',
+              color: selectedKind === k.id ? 'var(--accent-deep)' : 'var(--text)',
+              fontSize: 'var(--text-xs)',
+              fontWeight: 700,
+              cursor: 'pointer',
+              transition: 'all 0.15s ease',
+            }}
+          >
+            {k.label}
+          </button>
+        ))}
+      </div>
+
       {showTopicPicker ? (
         <TopicPicker
           topics={topics}
-          mode={mode}
+          mode={selectedKind}
           onSelect={setSelectedTopic}
         />
       ) : (
         <div key={sessionKey}>
           <ExercisePlayer exercises={exercises} />
-          {mode !== 'grammar' && (
+          {selectedKind !== 'grammar' && (
             <div style={{ marginTop: 16, textAlign: 'center' }}>
               <button
                 onClick={handleTryAnother}
                 style={{
                   background: 'none',
-                border: '1.5px solid var(--accent, #148891)',
-                color: 'var(--accent, #148891)',
+                  border: '1.5px solid var(--accent, #148891)',
+                  color: 'var(--accent, #148891)',
                   borderRadius: 99,
                   padding: '8px 20px',
                   fontSize: '0.875rem',
@@ -74,8 +114,8 @@ export default function PracticeSession({ mode, onClose }) {
                   cursor: 'pointer',
                   transition: 'all 0.15s ease',
                 }}
-              onMouseEnter={e => { e.currentTarget.style.background = 'var(--accent, #148891)'; e.currentTarget.style.color = 'white'; }}
-              onMouseLeave={e => { e.currentTarget.style.background = 'none'; e.currentTarget.style.color = 'var(--accent, #148891)'; }}
+                onMouseEnter={e => { e.currentTarget.style.background = 'var(--accent, #148891)'; e.currentTarget.style.color = 'white'; }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'none'; e.currentTarget.style.color = 'var(--accent, #148891)'; }}
               >
                 ← Try another topic
               </button>
