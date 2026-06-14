@@ -1,135 +1,278 @@
-# MET Platform — Design / UX / Functionality Review + Action Plan
+# MET Platform — Educational Product Audit
 
-## Context
-The platform (React 19 + Vite SPA) is a solo-teacher MET-prep tool for adult healthcare students.
-Teacher runs the loop **Class → Diagnosis → Feedback → Homework → Submission → Review → Next class**;
-students get a dashboard with homework, feedback, progress, and practice.
+## Audit context
 
-This review finds what looks unprofessional/confusing, what's duplicated or broken, and what to fix
-first. Findings are grounded in the actual source. The plan is a prioritized cleanup, **not** a
-rewrite — the design tokens and exercise player are already strong.
+This audit reviews the current React/Vite platform as a MET preparation product for adult nurses and healthcare professionals. It focuses on learning clarity, teacher workflow, feedback quality, assessment honesty, MET alignment, and visual trust.
 
----
+The platform has moved in a good direction since the earlier review: the teacher home is now a single **Today** command center, the student dashboard uses the correct **MET Proficiency Mastery** name, feedback is teacher-approved before students see it, practice remains available even when homework exists, and progress bars now appear for evaluated skills.
 
-## Biggest problems (ranked)
+## Overall assessment
 
-### P0 — Duplicate "command center" screens (teacher)
-- `src/pages/teacher-dashboard.jsx` ("Dashboard") **and** `src/pages/teacher-home.jsx`
-  ("Class Prep") both render a greeting, the same stat cards (Students / Classes today /
-  Pending review / Needs diagnosis), and a prioritized "who needs attention" list. Two front
-  doors, ~70% overlap, different layouts.
-- **Fix:** Keep ONE. Merge into a single "Today" home: priority banner + KPIs (from
-  `teacher-dashboard`) + the stage-filtered Cycle Board (from `teacher-home`). Delete the other
-  from nav. Rename tab to **Today** (or **Home**).
+**Current level: strong foundation, needs consistency and trust polish.**
 
-### P0 — Inconsistent product identity
-- Student shell brand = "MET Proficiency Mastery" (`src/pages/student-dashboard.jsx:75`);
-  package = "V.V. Method"; `PRODUCT.md` brand = "V.V. Method"; student hero kicker =
-  "MET preparation dashboard".
-- Student half uses a warm cream theme (`--student-bg #f7f5f0`) + top-nav; teacher half uses
-  navy/teal + side `Shell`. Reads like two different apps.
-- **Fix:** Pick ONE product name, apply everywhere. Unify the shell chrome + background so teacher
-  and student feel like the same product.
+The product already feels more like a serious teacher workflow than a generic AI tool. The strongest areas are:
 
-### P1 — Teacher nav overload (12 flat tabs)
-Dashboard, Class Prep, Students, Calendar, Diagnostics, Homework, Submissions, Inbox, Error Bank,
-Reports, Exercises, Settings — no grouping; several are stages of one cycle.
-- **Fix:** Group to ~6: **Today · Students · Calendar · Teaching cycle** (Diagnostics/Homework/
-  Submissions/Error Bank as sub-views) **· Library** (Exercises) **· Inbox**. Settings → avatar menu.
+- A clear teacher cycle: diagnosis → feedback → homework → submission → review.
+- A supportive student home with next class, homework, feedback, progress, and practice access.
+- Student feedback labels that are warmer and more human than generic rubric language.
+- Honest progress behavior that avoids showing skill bars when no score exists.
 
-### P1 — Feedback shown twice with different labels (student)
-On the Feedback page the summary grid uses kickers **"What improved" / "Current focus"**
-(`src/pages/student-feedback.jsx`), then the full `StudentFeedbackView` repeats the *same* content
-under **"What is getting stronger" / "Try this next" / "A note from your teacher"**
-(`src/components/domain-ui.jsx`). Same data, two headings, one screen → repetitive and confusing.
-- **Fix:** Show feedback ONCE. Standardize section names (see wording below). Drop the duplicate
-  summary cards; lead with a one-line takeaway + the single structured view.
-
-### P1 — Practice Studio disappears when homework exists
-`src/pages/student-home.jsx:266` gates the whole Practice Studio behind `pendingHw.length === 0`.
-A student with homework cannot reach self-practice from Home.
-- **Fix:** Always show practice; just de-emphasize it (smaller card / move below homework) when
-  homework is pending. Don't hide a whole feature.
-
-### P1 — "What to do next" is told in 4 places (student Home)
-Hero action button + metric cards + "What's Next" prep box + "Daily Agenda / What to do now" todo
-list all answer the same question with slightly different content.
-- **Fix:** ONE authoritative "Up next" block (reuse `StudentNextTask` in `domain-ui.jsx`). Demote
-  the rest to supporting detail.
-
-### P2 — Progress is barely visualized on Home
-`SkillRow` renders only `Last assessed: <stage label>` — no score, no bar, no trend. `TrendChip` is
-defined but never used (dead code). "Readiness Snapshot" feels empty for an exam-prep tool.
-- **Fix:** Show a real skill bar (score_0_80 → %) + the existing trend arrow. `recharts` is already
-  a dependency.
-
-### P2 — Pervasive inline styles vs the design system
-`teacher-dashboard`, `teacher-home`, `student-feedback`, `domain-ui` are heavily inline-styled
-despite `src/styles/system.css` claiming to be the "single source of truth." Drives drift and
-inconsistent spacing/color.
-- **Fix:** Move repeated inline blocks to classes/tokens incrementally (start with stat cards,
-  panels, feedback cards).
-
-### P2 — MET specifics under-supported
-- Exam countdown is gated behind `localStorage 'vv:met_exam_date'`; if unset, it silently vanishes.
-  Make exam date a first-class field set by teacher per student.
-- Mixed scales with no student-facing explanation: CEFR bands (B1/B2), `score_0_80`, teacher
-  `score/100`, `confidence 1–4`. Field names also inconsistent (`currentLevel`/`band`/`currentBand`).
-- **Fix:** Normalize student level fields; add a tiny "what these numbers mean" affordance; surface
-  a single MET-readiness indicator.
-
-### P3 — Smaller issues
-- Self-check checkboxes (`student-homework.jsx:294`) and the feedback "Confidence check" rows don't
-  persist — look interactive, do nothing.
-- Variable metric count (4–6 cards) makes a ragged grid; "Current focus" can be a long skill name in
-  a card meant for short values → overflow.
-- Likely dead/duplicate modules: `exercise-editor-new-types.jsx`, `exercise-player-new-types.jsx`,
-  `components/exercises/ExercisePlayer.jsx` vs `components/exercise-player.jsx`. Confirm + remove.
-- "Danger zone → Clear all workflow data" sits on the main Class Prep screen. Move to Settings.
+The biggest remaining risk is **fragmentation**: several screens repeat similar “next step” information, some assessment scales are mixed without student explanation, and teacher-only diagnostic depth is not yet visually separated enough from student-facing feedback in every workflow.
 
 ---
 
-## Better wording (feedback & sections)
-| Current | Better |
-|---|---|
-| "What you did well" / "What improved" | **"What's working"** |
-| "What to improve" / "Try this next" | **"Your next focus"** (one focus, not a list) |
-| "A note from your teacher" | keep — it's good |
-| "Readiness Snapshot / Evaluated skills" | **"Where you stand"** |
-| "Daily Agenda / What to do now" | **"Up next"** (single source) |
-| "Class Prep" (teacher tab, but shows cycle board) | **"Today"** |
-| Confidence check (4 dead checkboxes) | replace with 1 line: *"Before next class, can you name your focus and one win?"* |
+## What is working well
 
-## Better student feedback shape (concise, practical, motivating)
-> **Focus:** Linking ideas with connectors. **One win:** clear opening sentence.
-> **Try next:** swap "and then" → "as a result / however". **Why it matters:** MET Speaking rewards
-> organized answers. *(one screen, no duplicate cards)*
+### 1. Teacher workflow is much clearer than a generic dashboard
+
+The teacher dashboard is now explicitly positioned as **Today**, and it combines priority work, KPIs, today’s classes, the student cycle board, and quick actions in one place. This supports the real teaching loop instead of making the teacher hunt through unrelated pages.
+
+**Why it matters:** the teacher should feel, “This saves me time without reducing my quality.” The current structure supports that goal.
+
+### 2. The student dashboard gives a useful first answer: “What should I do next?”
+
+The student home includes next class details, pending homework, feedback readiness, current focus, review due items, and a clear homework action. The compact Practice Studio also keeps self-paced work reachable even when homework is pending.
+
+**Why it matters:** the student should feel, “I know what I need to do next.” The home page is close to that standard.
+
+### 3. Student feedback tone is warmer and more teacher-like
+
+The shared feedback view uses sections like **Current focus**, **What’s working**, **Your next focus**, and **A note from your teacher**. These labels match the desired supportive tone better than formal diagnostic headings.
+
+**Why it matters:** students get feedback that sounds human and practical instead of clinical or robotic.
+
+### 4. Progress display is more honest than many learning dashboards
+
+The student home filters out skills with no score before rendering progress rows. This is aligned with the rule not to assign scores to skills that were not evaluated.
+
+**Why it matters:** MET preparation must be credible. Empty or guessed scores damage trust.
 
 ---
 
-## Action plan
-**Phase 1 — De-duplicate & rename (highest impact, low risk)**
-1. Merge teacher Dashboard + Class Prep → one "Today" page; remove dup tab. `App.jsx`,
-   `teacher-dashboard.jsx`, `teacher-home.jsx`.
-2. Single product name + unified shell/background across teacher & student. `App.jsx`,
-   `student-dashboard.jsx`, `system.css`.
-3. Feedback shown once; standardize section names. `student-feedback.jsx`, `domain-ui.jsx`.
+## Priority findings
 
-**Phase 2 — Student clarity**
-4. One "Up next" block on Home; stop hiding Practice Studio. `student-home.jsx`.
-5. Real progress bars + trend on Home/Progress. `student-home.jsx`, `student-progress.jsx`.
+### P0 — Make one “Up next” source authoritative on the student home
 
-**Phase 3 — MET fit & polish**
-6. Exam date as a per-student field; normalize level fields; readiness indicator.
-7. Group teacher nav to ~6 items; Settings → avatar menu. `App.jsx`.
+The student home still presents next action information in several places: the hero action, metric cards, next class panel, prep box, todo list, feedback summary, and compact practice area. Each is useful alone, but together they can dilute the main action.
 
-**Phase 4 — Hygiene (can wait)**
-8. Persist self-check/confidence state; fix ragged metric grid + overflow.
-9. Remove confirmed dead modules; migrate inline styles → tokens; move Danger zone to Settings.
+**Recommendation:** create one authoritative **Up next** panel near the top. It should choose exactly one primary action:
 
-## Verification
-- `npm run dev`, sign in as teacher (VITE_TEACHER_EMAIL) and as a roster student.
-- Teacher: confirm a single command-center; walk Class→Diagnosis→Feedback→Homework→Review with no
-  dead-ends or duplicate screens.
-- Student: Home shows ONE "next", practice always reachable, feedback appears once with new labels,
-  progress shows bars. `npm run lint` clean.
+1. Review returned homework if available.
+2. Complete pending homework.
+3. Read new teacher feedback.
+4. Prepare for the next class.
+5. Practice independently.
+
+Supporting cards can remain, but they should not compete with the primary next step.
+
+**Suggested student copy:**
+
+> **Up next:** Complete “MET Speaking: Giving a fuller answer.”  
+> Due before your next class. Focus on giving one clear example.
+
+### P0 — Add a visible target score profile before diagnosis and progress interpretation
+
+The platform supports MET work, but the student-facing dashboard still leans on bands, sessions, and scores without a single visible target profile such as:
+
+- Endorsement goal: 55 overall / 55 speaking
+- VisaScreen or work visa goal: 58 overall / 59 speaking
+- Healthcare professional preparation: 58 overall / 59 speaking
+
+**Recommendation:** add a target profile card to the student profile/teacher diagnosis flow and surface a simple version on student progress:
+
+> **Your target:** Healthcare professional preparation — 58 overall / 59 speaking.
+
+This should happen before diagnosis when possible, so feedback and readiness are interpreted against the correct goal.
+
+### P1 — Explain assessment scales in plain English
+
+The platform uses several assessment ideas: B1/B2 bands, MET-style scores out of 80, teacher scores out of 100, confidence 1–4, and stage labels. These are useful for teachers, but students need a short explanation so the numbers feel trustworthy.
+
+**Recommendation:** add a small “What this means” affordance on Progress and Feedback:
+
+> We only show a skill score after your teacher has enough evidence. A missing score means “not evaluated yet,” not a bad result.
+
+For students, avoid exposing too many scale names at once. Use one main readiness language and keep detailed diagnostics teacher-facing.
+
+### P1 — Separate teacher diagnostic depth from student feedback more visibly
+
+The workflow correctly requires approved feedback before student display, but the product should make the boundary visually obvious in the diagnosis creation/review experience:
+
+- Teacher notes: detailed, diagnostic, editable, private by default.
+- Student feedback: short, warm, approved, practical.
+- Publish action: explicit and confirmable.
+
+**Recommendation:** in diagnosis creation, label panels as **Teacher-only notes** and **Student feedback preview**. The teacher should never wonder which text the student will see.
+
+### P1 — Strengthen healthcare-specific MET positioning in recurring UI
+
+The app includes MET language, but healthcare preparation could be more consistently connected to MET tasks. The student home and practice studio should make the 70/30 positioning clearer:
+
+- 70% MET preparation
+- 30% healthcare communication support
+
+**Recommendation:** use healthcare as a topic lane, not a separate purpose. Example:
+
+> Practice MET speaking organization with a healthcare workplace topic.
+
+This keeps healthcare English supportive of the exam goal.
+
+### P2 — Reduce inline styling drift and protect the premium visual system
+
+Several important components still use large inline style blocks. The visual direction is professional, but inline styles make it easier for spacing, color, and card behavior to drift across teacher and student experiences.
+
+**Recommendation:** move repeated panel, metric, feedback, and teacher row styles into reusable design-system classes gradually. Prioritize:
+
+1. Student feedback cards.
+2. Teacher dashboard cards/rows.
+3. Confidence/result cards.
+4. Reply and history blocks.
+
+### P2 — Persist student self-reflection controls beyond local-only behavior
+
+The student feedback self-assessment is useful, and the “understood” action sends a teacher message. However, self-assessment is stored locally for the latest diagnosis. That can be lost across devices and may not reliably support teacher planning.
+
+**Recommendation:** store self-assessment as a workflow record or inbox event, similar to “feedback understood.” This makes it teacher-visible and durable.
+
+### P2 — Make announcements/memos feel more like a study board
+
+The memo board exists, but it can be more educationally useful with a light structure:
+
+- This week’s MET focus
+- New resource
+- Reminder
+- Encouragement
+
+**Recommendation:** keep the human tone, but add optional announcement categories so the board feels purposeful rather than a free-text note area.
+
+---
+
+## Screen-by-screen audit
+
+### Teacher Today
+
+**Status:** strong.
+
+Keep:
+
+- Today priority.
+- KPIs.
+- Student cycle board.
+- Stage filters.
+- Direct action buttons.
+
+Improve:
+
+- Group secondary navigation into teaching-cycle categories later.
+- Make stale diagnosis thresholds configurable.
+- Add a quick preview of the next recommended class focus for each student.
+
+### Diagnosis and feedback workflow
+
+**Status:** educationally valuable, needs clearer publish boundaries.
+
+Improve:
+
+- Add target profile selection before diagnosis.
+- Clearly label teacher-only vs student-visible sections.
+- Keep student feedback short: class focus, one win, one focus, one next step.
+- Avoid showing multiple improvement areas to the student unless the teacher chooses to share them.
+
+### Student Home
+
+**Status:** good information, slightly too many competing next-step areas.
+
+Improve:
+
+- Promote one primary **Up next** decision.
+- Keep metrics as status, not instructions.
+- Keep Practice Studio reachable but visually secondary when homework is pending.
+- Add target score profile and readiness interpretation.
+
+### Student Feedback
+
+**Status:** supportive and much better aligned with the desired tone.
+
+Improve:
+
+- Keep feedback shown once.
+- Make “What this means” available for scores/stages.
+- Store student self-assessment durably.
+- Consider showing one concise takeaway above the full feedback:
+
+> **Main takeaway:** Your examples are clearer. Next, organize your answer before you speak.
+
+### Student Progress
+
+**Status:** honest but should become more exam-focused.
+
+Improve:
+
+- Show evaluated vs not evaluated skills clearly.
+- Add target profile.
+- Explain that missing scores mean not enough evidence.
+- Add trend over time for speaking/writing when enough approved diagnoses exist.
+
+### Practice Studio and homework
+
+**Status:** useful feature set.
+
+Improve:
+
+- Connect practice choices more explicitly to MET skills.
+- Add healthcare-topic variants as optional topics.
+- Make each practice activity end with one clear next step.
+
+---
+
+## Recommended roadmap
+
+### Phase 1 — Trust and clarity
+
+1. Add target profile selection and display.
+2. Add one authoritative **Up next** block on student home.
+3. Add plain-English assessment explanation on Progress/Feedback.
+4. Label diagnosis sections as teacher-only vs student-visible.
+
+### Phase 2 — MET readiness
+
+1. Normalize score/band language in student UI.
+2. Add a MET readiness summary tied to the selected target profile.
+3. Show not-evaluated skills explicitly instead of omitting the whole area when useful.
+4. Add trend history only when enough evidence exists.
+
+### Phase 3 — Teacher efficiency
+
+1. Group teacher nav into fewer mental buckets.
+2. Add next-class recommendation from latest diagnosis.
+3. Add durable student self-assessment records.
+4. Add announcement categories for memo board.
+
+### Phase 4 — Design-system polish
+
+1. Move repeated inline styles into reusable CSS classes.
+2. Standardize panel spacing and card headings.
+3. Audit mobile layouts for student home, homework, and feedback.
+4. Remove confirmed dead or duplicate exercise modules only after import checks.
+
+---
+
+## Suggested acceptance checks
+
+Use these checks after implementing the next set of changes:
+
+- A student can answer “What should I do next?” within five seconds of opening Home.
+- A teacher can see which text is private and which text the student will see before publishing feedback.
+- A skill with no evidence is shown as “Not evaluated yet” or omitted intentionally, never scored.
+- The selected MET target profile is visible before diagnosis and on student progress.
+- Healthcare content supports a MET skill instead of replacing exam preparation.
+- The platform looks like one product across teacher and student views.
+
+## Bottom line
+
+The platform is on the right path. It already supports a real teacher-led MET preparation cycle and has a supportive student experience. The next improvements should not add complexity; they should make the existing workflow more trustworthy, more exam-specific, and easier to interpret.
+
+The standard should remain simple:
+
+- Student: “I know what to do next.”
+- Teacher: “I can prepare, diagnose, and follow up faster without losing quality.”
