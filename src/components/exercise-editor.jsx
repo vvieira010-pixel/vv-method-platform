@@ -326,7 +326,7 @@ function SpeakEditor({ ex, update }) {
           placeholder="https://…/images/speaking/speaking_picture_01_ski_resort.png"
         />
         {ex.imageUrl && (
-          <img src={ex.imageUrl} alt="preview" style={{ marginTop: 8, maxWidth: '100%', maxHeight: 160, borderRadius: 0, border: '1px solid var(--border)' }} />
+          <img src={ex.imageUrl} alt="preview" style={{ marginTop: 8, maxWidth: '100%', maxHeight: 160, borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)' }} />
         )}
       </div>
       <div style={fieldWrap}>

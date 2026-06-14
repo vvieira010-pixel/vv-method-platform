@@ -658,7 +658,7 @@ function getPriorityItems(dx) {
                   </Field>
                 )}
                 {diagnosis && (
-                  <div style={{ padding: 14, background: 'var(--accent-subtle)', borderRadius: 'var(--radius-md)', border: '1px solid var(--accent-soft)' }}>
+                  <div style={{ padding: 14, background: 'var(--surface)', borderRadius: 'var(--radius-md)', border: '1px solid var(--accent-soft)', boxShadow: 'var(--shadow-sm)' }}>
                     <div style={{ fontWeight: 600, fontSize: 'var(--text-sm)', color: 'var(--accent-deep)', marginBottom: 4 }}>
                       Diagnostic Focus:
                     </div>
@@ -753,7 +753,7 @@ function getPriorityItems(dx) {
                 </div>
 
                 {groupGenStatus && (
-                  <div style={{ marginBottom: 12, padding: '12px 14px', border: '1.5px solid var(--accent)', borderRadius: 'var(--radius-sm)', background: 'var(--accent-subtle)', color: 'var(--accent-deep)', fontSize: 'var(--text-sm)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <div style={{ marginBottom: 12, padding: '12px 14px', border: '1.5px solid var(--accent-soft)', borderRadius: 'var(--radius-sm)', background: 'var(--surface)', color: 'var(--accent-deep)', fontSize: 'var(--text-sm)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 10, boxShadow: 'var(--shadow-sm)' }}>
                     <span style={{ width: 14, height: 14, borderRadius: '50%', border: '2px solid var(--accent)', borderTopColor: 'transparent', animation: 'spin .7s linear infinite' }} />
                     {groupGenStatus}
                   </div>
@@ -776,7 +776,7 @@ function getPriorityItems(dx) {
                             max="6"
                             value={groupGenConfig[group.key] || 0}
                             onChange={e => setGroupGenConfig(cfg => ({ ...cfg, [group.key]: Math.max(0, Math.min(6, Number(e.target.value) || 0)) }))}
-                            style={{ width: 48, padding: '4px 6px', border: '1px solid var(--border)', borderRadius: 0, fontSize: 'var(--text-sm)' }}
+                            style={{ width: 48, padding: '4px 6px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-sm)' }}
                           />
                         </label>
                       ))}
@@ -796,7 +796,7 @@ function getPriorityItems(dx) {
 
                 {activePanel === 'b2-bank' && (
                   <div style={{ marginBottom: 16, border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: 'var(--accent-subtle)', borderBottom: '1px solid var(--border)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: 'var(--surface)', borderBottom: '1px solid var(--border)' }}>
                       <span style={{ fontWeight: 600, fontSize: 'var(--text-sm)' }}>{b2BankMeta.title}</span>
                       <button onClick={() => setActivePanel(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)' }}><Icon.close size={16} /></button>
                     </div>
@@ -816,7 +816,7 @@ function getPriorityItems(dx) {
 
                 {activePanel === 'lifestyle' && (
                   <div style={{ marginBottom: 16, border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: 'var(--accent-subtle)', borderBottom: '1px solid var(--border)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: 'var(--surface)', borderBottom: '1px solid var(--border)' }}>
                       <div>
                         <span style={{ fontWeight: 700, fontSize: 'var(--text-sm)' }}>{lifestylePackMeta.title}</span>
                         <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: 2 }}>{lifestylePackMeta.level} · {lifestylePackMeta.subtitle}</div>
@@ -852,7 +852,7 @@ function getPriorityItems(dx) {
 
                 {activePanel === 'deep-research' && (
                   <div style={{ marginBottom: 16, border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: 'var(--accent-subtle)', borderBottom: '1px solid var(--border)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: 'var(--surface)', borderBottom: '1px solid var(--border)' }}>
                       <div>
                         <span style={{ fontWeight: 700, fontSize: 'var(--text-sm)' }}>{deepResearchMeta.title}</span>
                         <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: 2 }}>{deepResearchMeta.level} · {deepResearchMeta.exerciseCount} exercises across {deepResearchMeta.moduleCount} skills</div>
@@ -880,7 +880,7 @@ function getPriorityItems(dx) {
                   <div style={{ marginBottom: 16, border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
                     <button
                       onClick={() => setShowUnitBank(v => !v)}
-                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', padding: '10px 14px', background: 'var(--accent-subtle)', border: 'none', cursor: 'pointer', borderBottom: showUnitBank ? '1px solid var(--border)' : 'none' }}
+                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', padding: '10px 14px', background: 'var(--surface)', border: 'none', cursor: 'pointer', borderBottom: showUnitBank ? '1px solid var(--border)' : 'none' }}
                     >
                       <span style={{ fontWeight: 600, fontSize: 'var(--text-sm)' }}>
                         <Icon.book size={14} /> Unit Bank — {subjectLabel || 'exercises'} from {selectedLevel} units ({unitBankExercises.length})
@@ -906,7 +906,7 @@ function getPriorityItems(dx) {
                 )}
 
                 {exerciseOptions.length > 0 && (
-                  <div className="homework-create-ai-suggestions" style={{ marginBottom: 16, padding: 14, border: '1px solid var(--accent)', borderRadius: 'var(--radius-md)', background: 'var(--surface)' }}>
+                  <div className="homework-create-ai-suggestions" style={{ marginBottom: 16, padding: 14, border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', background: 'var(--surface)', boxShadow: 'var(--shadow-sm)' }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 10 }}>
                       <div>
                         <div style={{ fontWeight: 700, fontSize: 'var(--text-sm)' }}>AI exercise suggestions</div>
@@ -938,9 +938,9 @@ function getPriorityItems(dx) {
                 {reviewDueCount > 0 && (
                   <div style={{
                     marginBottom: 16, padding: '12px 14px',
-                    border: `1px solid ${includeReview ? 'var(--accent)' : 'var(--border)'}`,
+                    border: `1px solid ${includeReview ? 'var(--border-strong)' : 'var(--border)'}`,
                     borderRadius: 'var(--radius-md)',
-                    background: includeReview ? 'var(--accent-subtle)' : 'var(--surface)',
+                    background: 'var(--surface)',
                     transition: 'border-color .15s, background .15s',
                   }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
@@ -949,7 +949,7 @@ function getPriorityItems(dx) {
                           <span>Review ({reviewDueCount} item{reviewDueCount !== 1 ? 's' : ''} due)</span>
                           <span style={{
                             display: 'inline-flex', alignItems: 'center', gap: 4,
-                            padding: '1px 8px', borderRadius: 0,
+                            padding: '1px 8px', borderRadius: 'var(--radius-pill)',
                             background: 'var(--warning-bg)', color: 'var(--warning)',
                             fontSize: 'var(--text-xs)', fontWeight: 600,
                           }}>
@@ -1050,7 +1050,7 @@ function getPriorityItems(dx) {
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
                       <span style={{ fontWeight: 700, fontSize: 'var(--text-sm)' }}>Language Demand Analysis</span>
                       <span style={{
-                        padding: '2px 8px', borderRadius: 0, fontSize: 11, fontWeight: 700, textTransform: 'uppercase',
+                        padding: '2px 8px', borderRadius: 'var(--radius-pill)', fontSize: 11, fontWeight: 700, textTransform: 'uppercase',
                         background: languageDemand.overall_demand === 'high' ? '#FEF2F2' : languageDemand.overall_demand === 'medium' ? '#FFFBEB' : '#F0FDFA',
                         color: languageDemand.overall_demand === 'high' ? '#991B1B' : languageDemand.overall_demand === 'medium' ? '#92400E' : '#065F46',
                       }}>{languageDemand.overall_demand} demand</span>

@@ -138,7 +138,7 @@
   --dark-accent-border: rgba(72,199,199,0.18);
 
   /* ── Student dashboard theme ─────────────────────────────────── */
-  --student-bg: #f7f5f0;
+  --student-bg: #f5fafc;
   --teal-soft: rgba(20,136,145,0.08);
 }
 
@@ -1148,7 +1148,7 @@ p {
 
 
 .dash {
-  background-color: var(--student-bg);
+  background-color: var(--bg);
   color: var(--text);
   min-height: 100vh;
   font-family: var(--font-ui);
@@ -1274,9 +1274,9 @@ p {
   margin-bottom: -16px;
   z-index: 2;
   background:
-    radial-gradient(ellipse at 80% -10%, rgba(20,136,145,0.1) 0%, transparent 55%),
-    radial-gradient(ellipse at -10% 120%, rgba(200,102,7,0.05) 0%, transparent 50%),
-    var(--student-bg);
+    radial-gradient(ellipse at 82% -12%, rgba(20,136,145,0.08) 0%, transparent 56%),
+    radial-gradient(ellipse at -8% 115%, rgba(72,199,199,0.06) 0%, transparent 52%),
+    linear-gradient(180deg, rgba(255,255,255,0.96) 0%, rgba(245,250,252,0.98) 100%);
 }
 
 .student-hero::before {
@@ -1310,7 +1310,7 @@ p {
   letter-spacing: 0.1em;
   font-size: 0.75rem;
   font-weight: 700;
-  color: var(--interaction);
+  color: var(--accent-text);
 }
 
 .student-hero-action {

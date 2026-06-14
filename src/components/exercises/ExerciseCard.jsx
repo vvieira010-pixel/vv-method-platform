@@ -6,7 +6,7 @@ import { ExTypeBadge, ExerciseEditor } from '../exercise-editor.jsx';
 function arrowBtnStyle(disabled) {
   return {
     width: 24, height: 24, padding: 0, fontFamily: 'var(--font-ui)',
-    fontSize: 12, border: '1px solid var(--border)', borderRadius: 0,
+    fontSize: 12, border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)',
     background: 'var(--surface)', color: disabled ? 'var(--faint)' : 'var(--text)',
     cursor: disabled ? 'not-allowed' : 'pointer', display: 'inline-flex',
     alignItems: 'center', justifyContent: 'center',
@@ -28,9 +28,9 @@ export default function ExerciseCard({ exercise, index, total, isExpanded, onTog
       width: '100%',
       maxWidth: '100%',
       minWidth: 0,
-      border: isExpanded ? '1.5px solid var(--accent-soft)' : '1px solid var(--border)',
+      border: isExpanded ? '1.5px solid var(--border-strong)' : '1px solid var(--border)',
       borderRadius: 'var(--radius-md)',
-      background: isExpanded ? 'var(--accent-subtle)' : 'var(--surface)',
+      background: 'var(--surface)',
       overflow: 'hidden',
       transition: 'border-color 0.15s var(--ease), background 0.15s var(--ease)',
     }}>
@@ -43,15 +43,15 @@ export default function ExerciseCard({ exercise, index, total, isExpanded, onTog
         style={{
           display: 'flex', alignItems: 'center', gap: 10,
           padding: '10px 14px', cursor: 'pointer',
-          width: '100%', background: 'transparent', border: 'none',
+          width: '100%', background: 'var(--surface)', border: 'none',
           textAlign: 'left', fontFamily: 'var(--font-ui)', minWidth: 0,
         }}
       >
-        <span style={{
-          fontFamily: 'var(--font-ui)', fontWeight: 700,
-          fontSize: 'var(--text-sm)', color: 'var(--accent)',
-          width: 22, textAlign: 'center', flexShrink: 0,
-        }}>
+          <span style={{
+            fontFamily: 'var(--font-ui)', fontWeight: 700,
+            fontSize: 'var(--text-sm)', color: 'var(--accent)',
+            width: 22, textAlign: 'center', flexShrink: 0,
+          }}>
           {index + 1}
         </span>
         <ExTypeBadge typeId={exercise.type} />

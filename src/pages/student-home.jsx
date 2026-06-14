@@ -426,7 +426,6 @@ export default function StudentHome({ student, onTab }) {
 
           <section className="student-memo-board">
             <MemoCard kicker="General memo" title="Memo Board" text={generalMemoText || 'No general memo posted yet.'} />
-            <MemoCard kicker="Personal note" title={`${student.firstName}'s note`} text={student.notes || student.goalNote || 'Your goal is MET preparation.'} />
           </section>
         </aside>
       </section>
