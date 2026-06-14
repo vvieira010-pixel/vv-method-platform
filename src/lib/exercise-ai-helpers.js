@@ -196,8 +196,31 @@ function normalizeCorrectIndex(correct, optionCount) {
   return null;
 }
 
+function normalizeBlankAnswer(value) {
+  if (value == null) return '';
+  if (typeof value === 'string') return value.trim();
+  if (typeof value === 'number' || typeof value === 'boolean') return String(value);
+  if (Array.isArray(value)) {
+    return value.map(normalizeBlankAnswer).filter(Boolean).join(' | ');
+  }
+  if (typeof value === 'object') {
+    for (const key of ['answer', 'text', 'value', 'correctAnswer']) {
+      const normalized = normalizeBlankAnswer(value[key]);
+      if (normalized) return normalized;
+    }
+  }
+  return String(value).trim();
+}
+
 function normalizeBlankAnswers(blanks, template) {
-  if (Array.isArray(blanks) && blanks.length > 0) return blanks.map(v => String(v));
+  if (Array.isArray(blanks) && blanks.length > 0) {
+    const clean = blanks.map(normalizeBlankAnswer).filter(Boolean);
+    if (clean.length > 0) return clean;
+  }
+  if (blanks && typeof blanks === 'object') {
+    const direct = normalizeBlankAnswer(blanks);
+    if (direct) return [direct];
+  }
   const count = (String(template || '').match(/_{3,}/g) || []).length;
   return Array.from({ length: count }, () => '');
 }
@@ -215,7 +238,7 @@ function normalizeFlashPairs(pairs) {
   const clean = pairs
     .map(p => {
       if (typeof p === 'string') {
-        const [term, ...rest] = p.split(/[:–-]/);
+        const [term, ...rest] = p.split(/[:\u2013-]/);
         return { term: term?.trim() || '', def: rest.join('-').trim() };
       }
       return { term: p?.term || p?.word || p?.phrase || '', def: p?.def || p?.definition || p?.meaning || '' };
