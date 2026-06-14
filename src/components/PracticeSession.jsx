@@ -26,7 +26,7 @@ const KIND_OPTIONS = [
   { id: 'speaking', label: 'Speaking' },
 ];
 
-export default function PracticeSession({ mode, onClose }) {
+export default function PracticeSession({ mode, onClose, onSessionComplete }) {
   const [selectedTopic, setSelectedTopic] = useState(null);
   const [selectedKind, setSelectedKind] = useState(mode);
   const [sessionKey, setSessionKey] = useState(0);
@@ -55,6 +55,16 @@ export default function PracticeSession({ mode, onClose }) {
     setSessionKey(k => k + 1);
   }
 
+  function handleSessionComplete(summary) {
+    onSessionComplete?.({
+      ...summary,
+      mode: selectedKind,
+      topicId: selectedTopic,
+      topicTitle: selectedTopicTitle,
+      exerciseCount: exercises.length,
+    });
+  }
+
   return (
     <Modal
       open
@@ -75,7 +85,7 @@ export default function PracticeSession({ mode, onClose }) {
             }}
             style={{
               padding: '8px 14px',
-              borderRadius: 999,
+              borderRadius: 0,
               border: selectedKind === k.id ? '1.5px solid var(--accent)' : '1.5px solid var(--border)',
               background: selectedKind === k.id ? 'var(--accent-subtle)' : 'var(--surface)',
               color: selectedKind === k.id ? 'var(--accent-deep)' : 'var(--text)',
@@ -98,7 +108,7 @@ export default function PracticeSession({ mode, onClose }) {
         />
       ) : (
         <div key={sessionKey}>
-          <ExercisePlayer exercises={exercises} />
+          <ExercisePlayer exercises={exercises} onSessionComplete={handleSessionComplete} />
           {selectedKind !== 'grammar' && (
             <div style={{ marginTop: 16, textAlign: 'center' }}>
               <button
@@ -107,7 +117,7 @@ export default function PracticeSession({ mode, onClose }) {
                   background: 'none',
                   border: '1.5px solid var(--accent, #148891)',
                   color: 'var(--accent, #148891)',
-                  borderRadius: 99,
+                  borderRadius: 0,
                   padding: '8px 20px',
                   fontSize: '0.875rem',
                   fontWeight: 600,
@@ -155,7 +165,7 @@ function TopicPicker({ topics, mode, onSelect }) {
             style={{
               background: 'var(--bg, #fff)',
               border: '1.5px solid var(--border, #e5e7eb)',
-              borderRadius: 14,
+              borderRadius: 0,
               padding: '14px 16px',
               textAlign: 'left',
               cursor: 'pointer',
