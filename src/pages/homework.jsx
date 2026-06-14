@@ -20,16 +20,14 @@ export default function HomeworkPage({ students, onNavigate }) {
   });
 
   return (
-    <div style={{ maxWidth: 960, margin: '0 auto', padding: '28px 20px' }}>
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 24 }}>
-        <div>
-          <h1 style={S.headline}>Homework</h1>
-          <p style={S.sub}>{homework.length} total · {homework.filter(h => h.status === 'submitted').length} submitted</p>
-        </div>
-        <Button variant="primary" onClick={() => onNavigate('homework:create', {})}><Icon.plus size={14} /> Create Homework</Button>
-      </div>
+    <div className="page-shell">
+      <SectionHeader
+        title="Homework"
+        sub={`${homework.length} total · ${homework.filter(h => h.status === 'submitted').length} submitted`}
+        action={<Button variant="primary" onClick={() => onNavigate('homework:create', {})}><Icon.plus size={14} /> Create Homework</Button>}
+      />
 
-      <div style={{ display: 'flex', gap: 10, marginBottom: 16 }}>
+      <div className="page-filters">
         <select className="input" style={{ maxWidth: 200 }} value={filterStudent} onChange={e => setFilterStudent(e.target.value)}>
           <option value="">All students</option>
           {students.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
@@ -41,11 +39,11 @@ export default function HomeworkPage({ students, onNavigate }) {
       </div>
 
       {filtered.length === 0 ? (
-        <Card style={{ padding: 32, textAlign: 'center' }}>
+        <Card className="page-empty-state">
           <p style={{ color: 'var(--muted)' }}>No homework assigned yet. Start from a student's approved diagnosis.</p>
         </Card>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <div className="page-list">
           {filtered.map(h => {
             const student = students.find(s => s.id === h.studentId);
             return (
@@ -78,9 +76,4 @@ export default function HomeworkPage({ students, onNavigate }) {
     </div>
   );
 }
-
-const S = {
-  headline: { fontFamily: 'var(--font-ui)', fontSize: 'var(--text-2xl)', fontWeight: 700, color: 'var(--accent-deep)', margin: 0 },
-  sub: { fontSize: 'var(--text-sm)', color: 'var(--muted)', margin: '4px 0 0' },
-};
 

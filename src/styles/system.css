@@ -893,7 +893,56 @@ p {
 
 /* ── Page shell ────────────────────────────────────────────────── */
 .page-shell {
+  max-width: 960px;
+  margin: 0 auto;
   padding: var(--space-7) var(--space-6);
+}
+
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+}
+
+.page-title {
+  font-size: var(--text-3xl);
+  font-weight: var(--weight-bold);
+  color: var(--accent-deep);
+  line-height: 1.1;
+  margin: 0;
+}
+
+.page-subtitle {
+  font-size: var(--text-sm);
+  color: var(--muted);
+  margin: var(--space-1) 0 0;
+}
+
+.page-toolbar {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.page-filters {
+  display: flex;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.page-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.page-empty-state {
+  padding: var(--space-8);
+  text-align: center;
 }
 
 /* ══════════════════════════════════════════════════════════════════

@@ -21,19 +21,15 @@ export default function DiagnosticsPage({ students, onNavigate }) {
   });
 
   return (
-    <div style={{ maxWidth: 960, margin: '0 auto', padding: '28px 20px' }}>
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 24 }}>
-        <div>
-          <h1 style={S.headline}>Diagnostics</h1>
-          <p style={S.sub}>{diagnoses.length} total · {diagnoses.filter(d => d.status === 'approved').length} approved</p>
-        </div>
-        <Button variant="primary" onClick={() => onNavigate('diagnostics:create', {})}>
-          <Icon.plus size={14} /> New Diagnosis
-        </Button>
-      </div>
+    <div className="page-shell">
+      <SectionHeader
+        title="Diagnostics"
+        sub={`${diagnoses.length} total · ${diagnoses.filter(d => d.status === 'approved').length} approved`}
+        action={<Button variant="primary" onClick={() => onNavigate('diagnostics:create', {})}><Icon.plus size={14} /> New Diagnosis</Button>}
+      />
 
       {/* Filters */}
-      <div style={{ display: 'flex', gap: 10, marginBottom: 16 }}>
+      <div className="page-filters">
         <select className="input" style={{ maxWidth: 200 }} value={filterStudent} onChange={e => setFilterStudent(e.target.value)}>
           <option value="">All students</option>
           {students.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
@@ -46,11 +42,11 @@ export default function DiagnosticsPage({ students, onNavigate }) {
       </div>
 
       {filtered.length === 0 ? (
-        <Card style={{ padding: 32, textAlign: 'center' }}>
+        <Card className="page-empty-state">
           <p style={{ color: 'var(--muted)' }}>No diagnoses yet. Diagnoses appear here after you run one following a class.</p>
         </Card>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <div className="page-list">
           {filtered.map(dx => {
             const student = students.find(s => s.id === dx.studentId);
             const approvedCount = dx.sections ? Object.values(dx.sections).filter(s => s.approved).length : 0;
@@ -127,8 +123,6 @@ function getEvidenceSummary(dx) {
 }
 
 const S = {
-  headline: { fontFamily: 'var(--font-ui)', fontSize: 'var(--text-2xl)', fontWeight: 700, color: 'var(--accent-deep)', margin: 0 },
-  sub: { fontSize: 'var(--text-sm)', color: 'var(--muted)', margin: '4px 0 0' },
   evidenceRow: { display: 'flex', flexWrap: 'wrap', gap: 5, marginTop: 7 },
   evidenceChip: {
     display: 'inline-flex',
