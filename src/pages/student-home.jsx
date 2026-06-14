@@ -293,7 +293,7 @@ export default function StudentHome({ student, onTab }) {
               </button>
             )}
             <MetricCard icon={<Icon.progress size={19} />} label="Current focus" value={focusSkill} sub={focusTrend.dir !== 'none' ? `Progress: ${focusTrend.label}` : 'next useful practice'} tone="navy" textValue />
-            <MetricCard icon={<Icon.inbox size={19} />} label="Feedback" value={latestFeedback ? 'Ready' : 'Waiting'} sub={latestFeedback ? 'teacher approved' : 'after diagnosis'} tone="amber" />
+            <MetricCard icon={<Icon.inbox size={19} />} label="Feedback" value={latestFeedback ? 'Ready' : 'Waiting'} sub={latestFeedback ? 'teacher approved' : 'after diagnosis'} tone="teal" />
             {daysLeft !== null && (
               <MetricCard
                 icon={<Icon.calendar size={19} />}
@@ -311,9 +311,9 @@ export default function StudentHome({ student, onTab }) {
 
       <section className="student-practice-studio fade-up" style={{ '--delay': '0.2s' }}>
         <div className="student-practice-studio-copy">
-          <span className="student-practice-studio-kicker">Practice Studio</span>
-          <h2>Choose a quick practice</h2>
-          <p>Self-paced practice at your own level. No timer, no pressure.</p>
+          <span className="student-practice-studio-kicker">Independent MET practice</span>
+          <h2>Practice Studio</h2>
+          <p>Choose one focused skill and build exam confidence between classes.</p>
           <div className="student-practice-studio-actions">
             {reviewCount > 0 && (
               <button className="student-wide-action student-wide-action-mb" onClick={handleOpenReview} aria-label={`Review ${reviewCount} spaced repetition item${reviewCount !== 1 ? 's' : ''}`}>
@@ -321,7 +321,7 @@ export default function StudentHome({ student, onTab }) {
               </button>
             )}
             <button className="student-practice-primary" onClick={() => setPracticeMode('speaking')}>
-              <Icon.mic size={15} /> Start practice
+              <Icon.mic size={15} /> Start speaking practice
             </button>
           </div>
         </div>
