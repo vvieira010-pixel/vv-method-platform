@@ -57,6 +57,8 @@ const SKILL_GROUPS = [
 
 export default function HomeworkCreate({ diagnosisId, studentId, students, onNavigate, initialStep = 1 }) {
   const exerciseListRef = useRef(null);
+  const revisionRef = useRef(null);
+  const assignRef = useRef(null);
   const [diagnosis, setDiagnosis] = useState(null);
   const [student, setStudent] = useState(null);
   const [selectedStudentId, setSelectedStudentId] = useState(studentId || '');
@@ -90,7 +92,7 @@ export default function HomeworkCreate({ diagnosisId, studentId, students, onNav
   // Saved-exercise library (Supabase or localStorage). Reloaded when libVersion bumps.
   const [libVersion, setLibVersion] = useState(0);
   const [libraryExercises, setLibraryExercises] = useState([]);
-  const [currentStep, setCurrentStep] = useState(initialStep); // 1: Diagnosis, 2: Select, 3: Review, 4: Assign
+  const [currentStep, setCurrentStep] = useState(initialStep); // 1: Prebuilt, 2: Retrieval, 3: Build & Revision
   // Spaced repetition review items
   const [reviewDueCount, setReviewDueCount] = useState(0);
   const [includeReview, setIncludeReview] = useState(false);
@@ -524,6 +526,49 @@ function getPriorityItems(dx) {
     }
   }
 
+  function addB2Pack() {
+    const exercises = getB2Modules().flatMap(mod => getB2ModuleExercises(mod.id));
+    if (!exercises.length) {
+      window.toast?.('No MET B2 pack exercises found.', 'warn');
+      return;
+    }
+    setForm(f => ({ ...f, exercises: [...f.exercises, ...exercises] }));
+    window.toast?.(`Added ${exercises.length} MET B2 pack exercises.`, 'ok');
+  }
+
+  function addLifestylePack() {
+    const exercises = getLifestyleModules().flatMap(mod => getLifestyleModuleExercises(mod.id));
+    if (!exercises.length) {
+      window.toast?.('No lifestyle pack exercises found.', 'warn');
+      return;
+    }
+    setForm(f => ({ ...f, exercises: [...f.exercises, ...exercises] }));
+    window.toast?.(`Added ${exercises.length} lifestyle pack exercises.`, 'ok');
+  }
+
+  function addDeepResearchPack() {
+    const exercises = getDeepResearchModules().flatMap(mod => getDeepResearchModuleExercises(mod.id));
+    if (!exercises.length) {
+      window.toast?.('No deep research exercises found.', 'warn');
+      return;
+    }
+    setForm(f => ({ ...f, exercises: [...f.exercises, ...exercises] }));
+    window.toast?.(`Added ${exercises.length} deep research exercises.`, 'ok');
+  }
+
+  function addUnitBankPack() {
+    if (!unitBankExercises.length) {
+      window.toast?.('No unit bank exercises available yet.', 'warn');
+      return;
+    }
+    const exercises = unitBankExercises.map(ex => ({
+      ...ex,
+      id: 'ub_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+    }));
+    setForm(f => ({ ...f, exercises: [...f.exercises, ...exercises] }));
+    window.toast?.(`Added ${exercises.length} unit bank exercises.`, 'ok');
+  }
+
   /* ── Custom exercise library (teacher's saved bank) ── */
   async function saveToLibrary(ex) {
     try {
@@ -570,6 +615,8 @@ function getPriorityItems(dx) {
       title: form.title,
       objective: form.objective,
       description: form.description,
+      workflowTemplate: 'prebuilt-retrieval-build-revision',
+      workflowStages: ['prebuilt', 'retrieval', 'build_revision'],
       activities: form.exercises,
       selfCheck: form.selfCheck.filter(Boolean),
       skillType: form.skillType,
@@ -606,6 +653,7 @@ function getPriorityItems(dx) {
   const subjectLabel = SUBJECT_OPTIONS.find(s => s.id === selectedSkill)?.label;
 
   const exerciseCount = form.exercises.length;
+  const retrievalCount = form.exercises.filter(ex => ex.focus === 'retrieval').length;
   const typeCounts = {};
   form.exercises.forEach(e => { typeCounts[e.type] = (typeCounts[e.type] || 0) + 1; });
 
@@ -625,7 +673,7 @@ function getPriorityItems(dx) {
         </div>
       )}
       <div className="homework-create-steps" style={{ display: 'flex', flexDirection: 'row', gap: 8, marginBottom: 20 }}>
-        {['Diagnosis', 'Select Exercises', 'Review', 'Assign'].map((step, i) => (
+        {['Prebuilt', 'Retrieval', 'Build & Revision'].map((step, i) => (
           <div key={step} style={{
             fontSize: 'var(--text-xs)', fontWeight: 600,
             color: currentStep === i + 1 ? 'var(--accent)' : 'var(--muted)',
@@ -641,7 +689,7 @@ function getPriorityItems(dx) {
         <div>
           {currentStep === 1 && (
             <Card style={{ padding: 18 }}>
-              <SectionHeader title="Step 1: Homework Source" />
+              <SectionHeader title="Step 1: Prebuilt Homework" />
               <div style={{ marginTop: 16 }}>
                 {studentId || diagnosis?.studentId ? (
                   <p style={{ fontSize: 'var(--text-md)', marginBottom: 8 }}>Student: <strong>{student?.name || 'Loading…'}</strong></p>
@@ -695,9 +743,35 @@ function getPriorityItems(dx) {
                     ))}
                   </div>
                 )}
+                <div style={{ marginTop: 18, padding: 14, background: 'var(--surface)', border: '1px solid var(--accent-soft)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-sm)' }}>
+                  <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>
+                    Step 1. Prebuilt homework
+                  </div>
+                  <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-2)', lineHeight: 1.5, marginBottom: 12 }}>
+                    Start with a ready-made pack. You can add a full prebuilt set now, then move into retrieval and your own selected exercises.
+                  </div>
+                  <div style={{ display: 'grid', gap: 8 }}>
+                    <button className="student-text-action" onClick={addB2Pack} style={{ justifyContent: 'space-between' }}>
+                      <span>MET B2 Pack</span>
+                      <span>{getB2Modules().length} modules</span>
+                    </button>
+                    <button className="student-text-action" onClick={addLifestylePack} style={{ justifyContent: 'space-between' }}>
+                      <span>Lifestyle Pack</span>
+                      <span>{getLifestyleModules().length} modules</span>
+                    </button>
+                    <button className="student-text-action" onClick={addDeepResearchPack} style={{ justifyContent: 'space-between' }}>
+                      <span>Deep Research Pack</span>
+                      <span>{getDeepResearchModules().length} modules</span>
+                    </button>
+                    <button className="student-text-action" onClick={addUnitBankPack} style={{ justifyContent: 'space-between' }}>
+                      <span>Unit Bank</span>
+                      <span>{unitBankExercises.length} exercises</span>
+                    </button>
+                  </div>
+                </div>
                 <div style={{ marginTop: 24 }}>
                   <Button variant="primary" onClick={() => setCurrentStep(2)}>
-                    Select Exercises
+                    Next: Retrieval
                   </Button>
                 </div>
               </div>
@@ -705,7 +779,36 @@ function getPriorityItems(dx) {
           )}
           {currentStep === 2 && (
             <Card style={{ padding: 18 }}>
-              <SectionHeader title="Step 2: Select Exercises" />
+              <SectionHeader title="Step 2: MET Retrieval" />
+              <div style={{ marginTop: 16 }}>
+                <div style={{ padding: 16, background: 'var(--surface)', border: '1px solid var(--accent-soft)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-sm)' }}>
+                  <div style={{ fontWeight: 700, fontSize: 'var(--text-sm)', marginBottom: 6 }}>Add recall before the build stage</div>
+                  <div style={{ color: 'var(--text-2)', fontSize: 'var(--text-sm)', lineHeight: 1.6, marginBottom: 12 }}>
+                    Generate retrieval questions from the homework objective so the student practices remembering the target language before the rest of the homework is built.
+                  </div>
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 12 }}>
+                    <span style={{ padding: '4px 10px', borderRadius: 'var(--radius-pill)', background: 'var(--bg)', border: '1px solid var(--border)', fontSize: 'var(--text-xs)', color: 'var(--text-2)' }}>
+                      {retrievalCount} retrieval exercise{retrievalCount === 1 ? '' : 's'} added
+                    </span>
+                    <span style={{ padding: '4px 10px', borderRadius: 'var(--radius-pill)', background: 'var(--bg)', border: '1px solid var(--border)', fontSize: 'var(--text-xs)', color: 'var(--text-2)' }}>
+                      {exerciseCount} total exercise{exerciseCount === 1 ? '' : 's'}
+                    </span>
+                  </div>
+                  <Button variant="primary" size="sm" onClick={handleGenerateRetrieval} disabled={generatingRetrieval || generating}>
+                    <Icon.spark size={12} /> {generatingRetrieval ? 'Generating…' : 'Generate Retrieval Practice'}
+                  </Button>
+                </div>
+
+                <div className="homework-create-actions" style={{ display: 'flex', gap: 10, marginTop: 24 }}>
+                  <Button variant="ghost" onClick={() => setCurrentStep(1)}>Back</Button>
+                  <Button variant="primary" onClick={() => setCurrentStep(3)}>Next: Build & Revision</Button>
+                </div>
+              </div>
+            </Card>
+          )}
+          {currentStep === 3 && (
+            <Card style={{ padding: 18 }}>
+              <SectionHeader title="Step 3: Build & Revision" />
               <div style={{ marginTop: 16 }}>
                 {/* ── Toolbar: two rows — Generate | Browse & Add ── */}
                 <div className="homework-create-toolbar" style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 16 }}>
@@ -713,9 +816,6 @@ function getPriorityItems(dx) {
                   <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                     <Button variant="primary" size="sm" onClick={handleAiGenerate} disabled={!diagnosis || generating}>
                       <Icon.spark size={12} /> {generating ? 'Generating…' : 'Generate MET Homework'}
-                    </Button>
-                    <Button variant="primary" size="sm" onClick={handleGenerateRetrieval} disabled={generatingRetrieval || generating} title="Generate retrieval practice questions (recall → blank → MCQ) based on the homework objective">
-                      <Icon.spark size={12} /> {generatingRetrieval ? 'Generating…' : 'Retrieval Practice'}
                     </Button>
                     <Button variant="primary" size="sm" onClick={handleGenerateListening} disabled={!diagnosis || generatingListening}>
                       <Icon.headphones size={12} /> {generatingListening ? 'Generating…' : 'Listening Task'}
@@ -731,23 +831,10 @@ function getPriorityItems(dx) {
                       <Icon.check size={12} /> Build by Skill
                     </Button>
                   </div>
-                  {/* Row 2: Browse packs & add manually */}
                   <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                     <Button variant="primary" size="sm" onClick={() => togglePanel('type-picker')}
                       style={activePanel === 'type-picker' ? { opacity: 0.75 } : {}}>
                       <Icon.plus size={12} /> Add Exercise
-                    </Button>
-                    <Button variant="ghost" size="sm" onClick={() => togglePanel('b2-bank')}
-                      style={activePanel === 'b2-bank' ? { borderColor: 'var(--accent)', color: 'var(--accent)' } : {}}>
-                      <Icon.homework size={12} /> MET B2 Pack
-                    </Button>
-                    <Button variant="ghost" size="sm" onClick={() => togglePanel('lifestyle')}
-                      style={activePanel === 'lifestyle' ? { borderColor: 'var(--accent)', color: 'var(--accent)' } : {}}>
-                      <Icon.doc size={12} /> Lifestyle Pack
-                    </Button>
-                    <Button variant="ghost" size="sm" onClick={() => togglePanel('deep-research')}
-                      style={activePanel === 'deep-research' ? { borderColor: 'var(--accent)', color: 'var(--accent)' } : {}}>
-                      <Icon.search size={12} /> Deep Research
                     </Button>
                   </div>
                 </div>
@@ -1003,16 +1090,16 @@ function getPriorityItems(dx) {
                 </div>
 
                 <div className="homework-create-actions" style={{ display: 'flex', gap: 10, marginTop: 24 }}>
-                  <Button variant="ghost" onClick={() => setCurrentStep(1)}>Back</Button>
-                  <Button variant="primary" onClick={() => setCurrentStep(3)}>Review Student View</Button>
+                  <Button variant="ghost" onClick={() => setCurrentStep(2)}>Back</Button>
+                  <Button variant="primary" onClick={() => revisionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>Go to Revision</Button>
                 </div>
               </div>
             </Card>
           )}
           {currentStep === 3 && (
             <Card style={{ padding: 18 }}>
-              <SectionHeader title="Step 3: Review Student View" />
-              <div style={{ marginTop: 16 }}>
+              <SectionHeader title="Revision & Assign" />
+              <div ref={revisionRef} style={{ marginTop: 16 }}>
                 {(() => {
                   const warn = getHomeworkCognitiveSufficiencyWarning(form.exercises, diagnosis);
                   return warn ? (
@@ -1039,7 +1126,7 @@ function getPriorityItems(dx) {
 
                 <div className="homework-create-actions" style={{ display: 'flex', gap: 10, marginTop: 24, flexWrap: 'wrap', alignItems: 'center' }}>
                   <Button variant="ghost" onClick={() => setCurrentStep(2)}>Back</Button>
-                  <Button variant="primary" onClick={() => setCurrentStep(4)}>Proceed to Assign</Button>
+                  <Button variant="primary" onClick={() => assignRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>Go to Assign</Button>
                   <Button variant="ghost" size="sm" onClick={handleAnalyzeLanguageDemand} disabled={generatingLangDemand || !form.exercises.length} title="Check vocabulary load and get pre-teaching suggestions">
                     <Icon.search size={12} /> {generatingLangDemand ? 'Analysing…' : 'Check Language Demands'}
                   </Button>
@@ -1086,10 +1173,39 @@ function getPriorityItems(dx) {
                     )}
                   </div>
                 )}
+                <div ref={assignRef} style={{ marginTop: 16, padding: 16, border: '1px solid var(--accent-soft)', borderRadius: 'var(--radius-md)', background: 'var(--surface)' }}>
+                  <div style={{ fontWeight: 700, fontSize: 'var(--text-sm)', marginBottom: 12 }}>Assign homework</div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                    {studentId || diagnosis?.studentId ? null : (
+                      <Field label="Student">
+                        <select
+                          className="input"
+                          value={selectedStudentId}
+                          onChange={e => setSelectedStudentId(e.target.value)}
+                        >
+                          <option value="">Choose student</option>
+                          {students.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                        </select>
+                      </Field>
+                    )}
+                    <Field label="Homework Title">
+                      <input className="input" value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} />
+                    </Field>
+                    <Field label="Due Date">
+                      <input className="input" type="date" value={form.dueDate} onChange={e => setForm(f => ({ ...f, dueDate: e.target.value }))} />
+                    </Field>
+                  </div>
+                  <div className="homework-create-actions" style={{ marginTop: 24, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                    <Button variant="ghost" onClick={() => setCurrentStep(2)}>Back</Button>
+                    <Button variant="primary" onClick={handleAssign} disabled={saving}>
+                      {saving ? 'Assigning…' : 'Assign Homework'}
+                    </Button>
+                  </div>
+                </div>
               </div>
             </Card>
           )}
-          {currentStep === 4 && (
+          {false && (
             <Card style={{ padding: 18 }}>
               <SectionHeader title="Step 4: Assign Homework" />
               <div style={{ marginTop: 16 }}>
