@@ -27,6 +27,8 @@ export default function SubmissionReview({ submissionId, students, onNavigate })
   const [feedbackReplies, setFeedbackReplies] = useState([]);
   const [feedbackUnderstood, setFeedbackUnderstood] = useState(false);
   const [replyToStudent, setReplyToStudent] = useState('');
+  const [questionEvals, setQuestionEvals] = useState({});
+  const [showPreview, setShowPreview] = useState(false);
 
   useEffect(() => { load(); }, [submissionId]);
 
@@ -64,6 +66,7 @@ export default function SubmissionReview({ submissionId, students, onNavigate })
         redoRequired: rev.redoRequired || false,
         sendFeedback: true,
       });
+      if (rev.questionEvals) setQuestionEvals(rev.questionEvals);
     }
 
     if (hwItem?.diagnosisId) {
@@ -168,11 +171,64 @@ Return JSON:
     setAiComparing(false);
   }
 
-  async function handleSave() {
+  async function evaluateQuestion(exId) {
+    const entry = submissionEvidence.entries.find(e => e.id === exId);
+    if (!entry) return;
+    const activity = activityById[exId] || {};
+    const skill = TYPE_SKILL[activity.type] || 'Language';
+    const hasAudio = Boolean(audioUrls[exId] || entry.hasAudio);
+    const studentResponse = entry.transcript
+      ? `Transcript: ${entry.transcript}`
+      : entry.answer
+      ? `Written response: ${entry.answer}`
+      : hasAudio
+      ? 'Student submitted audio. No transcript available — evaluate that the task was attempted and note what to listen for.'
+      : '(no response recorded)';
+
+    setQuestionEvals(q => ({ ...q, [exId]: { ...(q[exId] || {}), aiRunning: true } }));
+    const prompt = `Evaluate this single homework question response.
+
+Skill: ${skill}
+Prompt/Question: ${entry.prompt || activity.prompt || activity.question || '(no prompt)'}
+Objective: ${activity.objective || homework?.objective || ''}
+Student response: ${studentResponse}
+
+Return JSON:
+{
+  "assessment": "1-2 sentence evaluation of this specific response",
+  "corrections": [{ "original": "error text", "improved": "corrected text", "note": "brief explanation" }],
+  "questionNote": "short, specific feedback note for the student about this question"
+}`;
+
+    try {
+      const data = await callAI(prompt, { max_tokens: 900, temperature: 0.65 });
+      const raw = data.content?.map(b => b.text || '').join('') || '';
+      const parsed = parseAiJson(raw);
+      setQuestionEvals(q => ({
+        ...q,
+        [exId]: {
+          ...(q[exId] || {}),
+          aiRunning: false,
+          aiResult: parsed,
+          corrections: (parsed?.corrections || []).map(c => ({ ...c, id: Math.random().toString(36).slice(2, 9) })),
+        },
+      }));
+    } catch (e) {
+      setQuestionEvals(q => ({ ...q, [exId]: { ...(q[exId] || {}), aiRunning: false } }));
+      window.toast?.(`Question evaluation failed: ${e.message}`, 'warn');
+    }
+  }
+
+  async function doSave() {
+    setShowPreview(false);
     setSaving(true);
     const normalizedActiveErrors = form.activeErrors
       .split('\n').map(s => s.trim().toLowerCase()).filter(Boolean);
     const previousActiveErrors = (existingReview?.activeErrors || []).map(s => String(s || '').trim().toLowerCase()).filter(Boolean);
+    const allCorrections = [
+      ...form.corrections.filter(c => c.original || c.improved),
+      ...Object.values(questionEvals).flatMap(qe => (qe.corrections || []).filter(c => c.original || c.improved)),
+    ];
     const rev = await saveReview({
       id: existingReview?.id,
       submissionId,
@@ -182,11 +238,12 @@ Return JSON:
       whatImproved: form.whatImproved,
       activeErrors: form.activeErrors.split('\n').filter(Boolean),
       newErrors: form.newErrors.split('\n').filter(Boolean),
-      corrections: form.corrections.filter(c => c.original || c.improved),
+      corrections: allCorrections,
       overallNote: form.overallNote,
       score: form.score !== '' ? Number(form.score) : null,
       redoRequired: form.redoRequired,
       feedbackSentToStudent: form.sendFeedback,
+      questionEvals,
     });
 
     if (form.whatImproved) {
@@ -223,18 +280,16 @@ Return JSON:
     setExistingReview(rev);
   }
 
+  function handleSave() {
+    if (form.sendFeedback) { setShowPreview(true); return; }
+    doSave();
+  }
+
   if (!submission) return <div style={{ padding: 40, color: 'var(--muted)' }}>Submission not found.</div>;
 
   const activeErrorBank = errors.filter(e => e.status === 'active');
   const activityById = Object.fromEntries((homework?.activities || []).map(a => [a.id, a]));
   const submissionEvidence = buildSubmissionEvidence(submission, homework);
-  const audioResponses = Object.entries(submission.responses || {})
-    .filter(([exId, res]) => res && (audioUrls[exId] || res.audioB64))
-    .map(([exId, res], i) => {
-      const ex = activityById[exId];
-      const label = ex?.prompt || ex?.question || ex?.title || `Speaking response ${i + 1}`;
-      return { exId, res, label, url: audioUrls[exId] || res.audioB64 };
-    });
 
   function addErrorToCorrections(err) {
     setForm(f => ({
@@ -263,8 +318,92 @@ Return JSON:
 
   const formativeRec = getFormativeRecommendation(form.score !== '' ? Number(form.score) : null);
 
+  const previewCorrections = [
+    ...form.corrections.filter(c => c.original || c.improved),
+    ...Object.values(questionEvals).flatMap(qe => (qe.corrections || []).filter(c => c.original || c.improved)),
+  ];
+  const previewQuestions = submissionEvidence.entries
+    .map(e => ({ entry: e, qe: questionEvals[e.id] || {}, activity: activityById[e.id] || {} }))
+    .filter(({ qe }) => qe.note || (qe.corrections || []).some(c => c.original || c.improved));
+
   return (
     <div>
+      {/* ── Preview modal ─────────────────────────────────────── */}
+      {showPreview && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 50, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}
+          onClick={e => { if (e.target === e.currentTarget) setShowPreview(false); }}>
+          <div style={{ background: 'var(--surface)', borderRadius: 'var(--radius)', maxWidth: 560, width: '100%', maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 16px 48px rgba(0,0,0,0.28)', padding: 28 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
+              <div>
+                <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--accent-deep)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 3 }}>Preview — student will see</div>
+                <div style={{ fontWeight: 700, fontSize: 'var(--text-lg)', color: 'var(--text)' }}>Homework Review: {homework?.title || 'Homework'}</div>
+              </div>
+              <Button variant="ghost" size="sm" onClick={() => setShowPreview(false)}>✕ Edit</Button>
+            </div>
+
+            {form.overallNote && (
+              <div style={{ padding: '12px 14px', background: 'var(--bg)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-sm)', lineHeight: 1.7, color: 'var(--text-2)', whiteSpace: 'pre-wrap', marginBottom: 14 }}>
+                {form.overallNote}
+              </div>
+            )}
+            {form.whatImproved && (
+              <div style={{ padding: '8px 12px', borderRadius: 'var(--radius-sm)', background: 'rgba(46,106,63,.06)', border: '1px solid var(--success-soft, var(--border))', fontSize: 'var(--text-sm)', color: 'var(--text-2)', marginBottom: 14 }}>
+                <strong style={{ color: 'var(--success, var(--accent))' }}>What improved: </strong>{form.whatImproved}
+              </div>
+            )}
+
+            {previewQuestions.length > 0 && (
+              <div style={{ marginBottom: 14 }}>
+                <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>Per-question feedback</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {previewQuestions.map(({ entry, qe, activity }, i) => (
+                    <div key={entry.id} style={{ padding: '10px 12px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', background: 'var(--bg)' }}>
+                      <div style={{ fontWeight: 600, fontSize: 'var(--text-sm)', marginBottom: 4 }}>
+                        {entry.prompt || activity.prompt || `Question ${i + 1}`}
+                      </div>
+                      {qe.note && <p style={{ margin: '0 0 6px', fontSize: 'var(--text-sm)', color: 'var(--text-2)', lineHeight: 1.5 }}>{qe.note}</p>}
+                      {(qe.corrections || []).filter(c => c.original || c.improved).map((c, ci) => (
+                        <div key={ci} style={{ fontSize: 'var(--text-xs)', display: 'flex', gap: 6, marginTop: 4, alignItems: 'baseline' }}>
+                          <span style={{ color: 'var(--danger)', textDecoration: 'line-through' }}>{c.original}</span>
+                          <span style={{ color: 'var(--muted)' }}>→</span>
+                          <span style={{ color: 'var(--success, var(--accent))' }}>{c.improved}</span>
+                        </div>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {previewCorrections.length > 0 && previewQuestions.length === 0 && (
+              <div style={{ marginBottom: 14 }}>
+                <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>Corrections</div>
+                {previewCorrections.map((c, i) => (
+                  <div key={i} style={{ fontSize: 'var(--text-sm)', display: 'flex', gap: 8, alignItems: 'baseline', marginBottom: 4 }}>
+                    <span style={{ color: 'var(--danger)', textDecoration: 'line-through' }}>{c.original}</span>
+                    <span style={{ color: 'var(--muted)' }}>→</span>
+                    <span style={{ color: 'var(--success, var(--accent))' }}>{c.improved}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {form.redoRequired && (
+              <div style={{ padding: '8px 12px', borderRadius: 'var(--radius-sm)', background: 'var(--warning-bg)', border: '1px solid var(--warning-soft)', fontSize: 'var(--text-sm)', color: 'var(--warning-text)', fontWeight: 600, marginBottom: 14 }}>
+                Redo required — your teacher will ask you to resubmit this homework.
+              </div>
+            )}
+
+            <div style={{ borderTop: '1px solid var(--border)', paddingTop: 16, display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+              <Button variant="ghost" onClick={() => setShowPreview(false)}>Edit first</Button>
+              <Button variant="primary" disabled={saving} onClick={() => doSave()}>
+                {saving ? 'Sending…' : 'Confirm & Send to Student'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ── Sticky context + action bar ──────────────────────────── */}
       <div style={{
         position: 'sticky', top: 0, zIndex: 20,
@@ -296,8 +435,7 @@ Return JSON:
               <Icon.spark size={13} /> {aiComparing ? 'Analyzing…' : 'AI Compare'}
             </Button>
             <Button variant="primary" size="sm" onClick={handleSave} disabled={saving}>
-              {saving ? 'Saving…' : existingReview ? 'Update' : 'Save Review'}
-              {form.sendFeedback && !saving && ' & Notify'}
+              {saving ? 'Saving…' : form.sendFeedback ? 'Preview & Notify' : existingReview ? 'Update' : 'Save Review'}
             </Button>
           </div>
         </div>
@@ -321,51 +459,131 @@ Return JSON:
                 {submission.content || <em style={{ color: 'var(--muted)' }}>No text content submitted.</em>}
               </div>
 
-              {submissionEvidence.entries.length > 0 && (
-                <div style={{ marginTop: 14 }}>
-                  <div style={{ fontSize: 'var(--text-xs)', fontWeight: 800, color: 'var(--accent-deep)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 5 }}>
-                    <Icon.check size={12} /> Review evidence
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    {submissionEvidence.entries.map((entry) => (
-                      <div key={entry.id} style={{ padding: 10, border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', background: 'var(--surface)' }}>
-                        <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--accent)', marginBottom: 4 }}>{entry.title}</div>
-                        {entry.prompt && (
-                          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', lineHeight: 1.5, marginBottom: 5 }}>Prompt: {entry.prompt}</div>
-                        )}
-                        {entry.transcript ? (
-                          <div style={{ padding: '8px 10px', background: 'var(--bg)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-sm)', lineHeight: 1.6, color: 'var(--text-2)', whiteSpace: 'pre-wrap' }}>
-                            <strong style={{ color: 'var(--accent-deep)' }}>Transcript: </strong>{entry.transcript}
-                          </div>
-                        ) : entry.answer ? (
-                          <div style={{ padding: '8px 10px', background: 'var(--bg)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-sm)', lineHeight: 1.6, color: 'var(--text-2)', whiteSpace: 'pre-wrap' }}>{entry.answer}</div>
-                        ) : (
-                          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>Audio submitted — add transcript for AI review.</div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
+            </Card>
 
-              {audioResponses.length > 0 && (
-                <div style={{ marginTop: 14, display: 'flex', flexDirection: 'column', gap: 12 }}>
-                  {audioResponses.map(({ exId, res, label, url }) => (
-                    <div key={exId}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--accent)', marginBottom: 6 }}>
-                        <Icon.mic size={13} /> {label}
+            {/* ── Per-question evaluation ── */}
+            {submissionEvidence.entries.length > 0 && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <div style={{ fontSize: 'var(--text-xs)', fontWeight: 800, color: 'var(--accent-deep)', textTransform: 'uppercase', letterSpacing: '0.06em', display: 'flex', alignItems: 'center', gap: 5 }}>
+                  <Icon.check size={12} /> Per-question review
+                </div>
+                {submissionEvidence.entries.map((entry, idx) => {
+                  const activity = activityById[entry.id] || {};
+                  const skill = TYPE_SKILL[activity.type || entry.type] || 'Response';
+                  const qe = questionEvals[entry.id] || {};
+                  const audioUrl = audioUrls[entry.id];
+                  return (
+                    <Card key={entry.id} style={{ padding: 16 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                        <span style={{ fontWeight: 700, fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>Q{idx + 1}</span>
+                        <span style={{ padding: '2px 8px', borderRadius: 'var(--radius-pill)', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', background: 'var(--accent-subtle)', color: 'var(--accent-deep)', letterSpacing: '0.04em' }}>
+                          {skill}
+                        </span>
+                        {activity.objective && (
+                          <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', flex: 1 }}>{activity.objective}</span>
+                        )}
+                        <Button variant="ghost" size="sm" disabled={qe.aiRunning}
+                          onClick={() => evaluateQuestion(entry.id)}
+                          style={{ marginLeft: 'auto', flexShrink: 0 }}>
+                          <Icon.spark size={12} /> {qe.aiRunning ? 'Evaluating…' : 'AI Evaluate'}
+                        </Button>
                       </div>
-                      <audio controls src={url} style={{ width: '100%', height: 38 }} />
-                      {res.transcript && (
-                        <div style={{ marginTop: 6, padding: '8px 10px', background: 'var(--bg)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-sm)', lineHeight: 1.6, color: 'var(--text-2)', fontStyle: 'italic', whiteSpace: 'pre-wrap' }}>
-                          <strong style={{ color: 'var(--accent-deep)', fontStyle: 'normal' }}>Transcript: </strong>{res.transcript}
+
+                      {entry.prompt && (
+                        <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', lineHeight: 1.5, marginBottom: 8, padding: '6px 8px', background: 'var(--bg)', borderRadius: 'var(--radius-sm)' }}>
+                          {entry.prompt}
                         </div>
                       )}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </Card>
+
+                      {/* Student response */}
+                      {entry.transcript ? (
+                        <div style={{ padding: '8px 10px', background: 'var(--bg)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-sm)', lineHeight: 1.6, color: 'var(--text-2)', whiteSpace: 'pre-wrap', marginBottom: 8 }}>
+                          <strong style={{ color: 'var(--accent-deep)', display: 'block', fontSize: 'var(--text-xs)', marginBottom: 3 }}>Transcript</strong>
+                          {entry.transcript}
+                        </div>
+                      ) : entry.answer ? (
+                        <div style={{ padding: '8px 10px', background: 'var(--bg)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-sm)', lineHeight: 1.6, color: 'var(--text-2)', whiteSpace: 'pre-wrap', marginBottom: 8 }}>{entry.answer}</div>
+                      ) : null}
+
+                      {audioUrl && (
+                        <div style={{ marginBottom: 8 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--accent)', marginBottom: 4 }}>
+                            <Icon.mic size={12} /> Audio
+                            {!entry.transcript && <span style={{ fontWeight: 400, color: 'var(--muted)' }}>— no transcript · AI will still evaluate</span>}
+                          </div>
+                          <audio controls src={audioUrl} style={{ width: '100%', height: 36 }} />
+                        </div>
+                      )}
+
+                      {!entry.transcript && !entry.answer && !audioUrl && (
+                        <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginBottom: 8 }}>No response recorded.</div>
+                      )}
+
+                      {/* AI result */}
+                      {qe.aiResult && (
+                        <div style={{ padding: '10px 12px', background: 'rgba(var(--accent-rgb, 56,111,249), 0.06)', border: '1px solid var(--accent-light)', borderRadius: 'var(--radius-sm)', marginBottom: 8 }}>
+                          <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--accent-deep)', marginBottom: 4 }}>AI assessment</div>
+                          <p style={{ margin: 0, fontSize: 'var(--text-sm)', lineHeight: 1.6, color: 'var(--text-2)' }}>{qe.aiResult.assessment}</p>
+                          {qe.aiResult.questionNote && (
+                            <p style={{ margin: '6px 0 0', fontSize: 'var(--text-xs)', color: 'var(--text-2)', fontStyle: 'italic', borderTop: '1px solid var(--border)', paddingTop: 6 }}>
+                              Suggested note: {qe.aiResult.questionNote}
+                            </p>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Per-question teacher note */}
+                      <textarea
+                        className="input"
+                        rows={2}
+                        placeholder="Note for this question (optional)…"
+                        value={qe.note || ''}
+                        style={{ fontSize: 'var(--text-sm)', marginBottom: 6 }}
+                        onChange={e => setQuestionEvals(q => ({ ...q, [entry.id]: { ...(q[entry.id] || {}), note: e.target.value } }))}
+                      />
+
+                      {/* Per-question corrections */}
+                      {((qe.corrections || []).length > 0) && (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                          <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Corrections</span>
+                          {(qe.corrections || []).map((c, ci) => (
+                            <div key={c.id || ci} style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                              <input className="input" value={c.original} placeholder="Original" style={{ flex: 1, fontSize: 'var(--text-xs)' }}
+                                onChange={e => setQuestionEvals(q => {
+                                  const cs = [...(q[entry.id]?.corrections || [])];
+                                  cs[ci] = { ...cs[ci], original: e.target.value };
+                                  return { ...q, [entry.id]: { ...(q[entry.id] || {}), corrections: cs } };
+                                })} />
+                              <span style={{ color: 'var(--muted)', fontSize: 'var(--text-xs)', flexShrink: 0 }}>→</span>
+                              <input className="input" value={c.improved} placeholder="Correction" style={{ flex: 1, fontSize: 'var(--text-xs)' }}
+                                onChange={e => setQuestionEvals(q => {
+                                  const cs = [...(q[entry.id]?.corrections || [])];
+                                  cs[ci] = { ...cs[ci], improved: e.target.value };
+                                  return { ...q, [entry.id]: { ...(q[entry.id] || {}), corrections: cs } };
+                                })} />
+                              <Button variant="ghost" size="sm" style={{ padding: '2px 6px', flexShrink: 0 }}
+                                onClick={() => setQuestionEvals(q => {
+                                  const cs = (q[entry.id]?.corrections || []).filter((_, i) => i !== ci);
+                                  return { ...q, [entry.id]: { ...(q[entry.id] || {}), corrections: cs } };
+                                })}>
+                                <Icon.trash size={11} />
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      <Button variant="ghost" size="sm" style={{ marginTop: 4, fontSize: 11 }}
+                        onClick={() => setQuestionEvals(q => {
+                          const cs = [...(q[entry.id]?.corrections || []), { id: Math.random().toString(36).slice(2, 9), original: '', improved: '', note: '' }];
+                          return { ...q, [entry.id]: { ...(q[entry.id] || {}), corrections: cs } };
+                        })}>
+                        <Icon.plus size={11} /> Add correction
+                      </Button>
+                    </Card>
+                  );
+                })}
+              </div>
+            )}
 
             {/* Homework instructions */}
             {homework && (
@@ -737,6 +955,12 @@ function cleanText(value) {
 }
 
 /* ── Constants ───────────────────────────────────────────────────── */
+
+const TYPE_SKILL = {
+  speak: 'Speaking', listen: 'Listening', read: 'Reading',
+  short: 'Writing', fix: 'Grammar', blank: 'Grammar',
+  mcq: 'Reading / Listening', flash: 'Vocabulary', order: 'Grammar',
+};
 
 const EMPTY_FORM = {
   whatImproved: '',
