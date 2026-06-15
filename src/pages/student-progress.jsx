@@ -103,7 +103,7 @@ export default function StudentProgress({ student }) {
   const skills = sorted.reduce((acc, d) => {
     if (acc.length > 0) return acc;
     const snap = asArray(d?.content?.section_snapshot);
-    return snap.filter(s => Number(s.score_0_80) > 0);
+    return snap.filter(s => s.evaluated || Number(s.score_0_80) > 0);
   }, []);
 
   return (
@@ -180,7 +180,7 @@ export default function StudentProgress({ student }) {
               </div>
               <div className="student-history-list">
                 {sorted.map(dx => {
-                  const snap = asArray(dx?.content?.section_snapshot).filter(s => Number(s.score_0_80) > 0);
+                  const snap = asArray(dx?.content?.section_snapshot).filter(s => s.evaluated || Number(s.score_0_80) > 0);
                   if (snap.length === 0) return null;
                   return (
                     <div key={dx.id} className="student-history-item" style={{ alignItems: 'flex-start', gap: 16 }}>
