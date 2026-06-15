@@ -673,7 +673,7 @@ function getPriorityItems(dx) {
         </div>
       )}
       <div className="homework-create-steps" style={{ display: 'flex', flexDirection: 'row', gap: 8, marginBottom: 20 }}>
-        {['Prebuilt', 'Retrieval', 'Build & Revision'].map((step, i) => (
+        {['Prebuilt', 'Retrieval', 'Build', 'Revision & Assign'].map((step, i) => (
           <div key={step} style={{
             fontSize: 'var(--text-xs)', fontWeight: 600,
             color: currentStep === i + 1 ? 'var(--accent)' : 'var(--muted)',
@@ -1091,12 +1091,12 @@ function getPriorityItems(dx) {
 
                 <div className="homework-create-actions" style={{ display: 'flex', gap: 10, marginTop: 24 }}>
                   <Button variant="ghost" onClick={() => setCurrentStep(2)}>Back</Button>
-                  <Button variant="primary" onClick={() => revisionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>Go to Revision</Button>
+                  <Button variant="primary" onClick={() => setCurrentStep(4)}>Go to Revision & Assign</Button>
                 </div>
               </div>
             </Card>
           )}
-          {currentStep === 3 && (
+          {currentStep === 4 && (
             <Card style={{ padding: 18 }}>
               <SectionHeader title="Revision & Assign" />
               <div ref={revisionRef} style={{ marginTop: 16 }}>
@@ -1125,8 +1125,7 @@ function getPriorityItems(dx) {
                 </div>
 
                 <div className="homework-create-actions" style={{ display: 'flex', gap: 10, marginTop: 24, flexWrap: 'wrap', alignItems: 'center' }}>
-                  <Button variant="ghost" onClick={() => setCurrentStep(2)}>Back</Button>
-                  <Button variant="primary" onClick={() => assignRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>Go to Assign</Button>
+                  <Button variant="ghost" onClick={() => setCurrentStep(3)}>Back to Build</Button>
                   <Button variant="ghost" size="sm" onClick={handleAnalyzeLanguageDemand} disabled={generatingLangDemand || !form.exercises.length} title="Check vocabulary load and get pre-teaching suggestions">
                     <Icon.search size={12} /> {generatingLangDemand ? 'Analysing…' : 'Check Language Demands'}
                   </Button>
@@ -1196,7 +1195,7 @@ function getPriorityItems(dx) {
                     </Field>
                   </div>
                   <div className="homework-create-actions" style={{ marginTop: 24, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                    <Button variant="ghost" onClick={() => setCurrentStep(2)}>Back</Button>
+                    <Button variant="ghost" onClick={() => setCurrentStep(3)}>Back to Build</Button>
                     <Button variant="primary" onClick={handleAssign} disabled={saving}>
                       {saving ? 'Assigning…' : 'Assign Homework'}
                     </Button>

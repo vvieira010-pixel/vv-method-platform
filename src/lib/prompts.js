@@ -507,17 +507,55 @@ Do not return placeholder text. Do not omit answer keys.`;
 
 export const buildHomeworkBlueprintPrompt = ({ student, diagnosis }) => {
   const priorities = pickArray(diagnosis?.priorityDiagnosis, diagnosis?.sections?.priorityDiagnosis?.content);
+  const skillDx = diagnosis?.sections?.skillDiagnosis?.content || {};
+
+  // Map each MET skill to the exercise types that practice it
+  const SKILL_TO_TYPES = {
+    speaking:   ['speak', 'short'],
+    writing:    ['short', 'fix'],
+    grammar:    ['fix', 'blank', 'mcq'],
+    vocabulary: ['flash', 'blank'],
+    reading:    ['read'],
+    listening:  ['listen'],
+  };
+  const FALLBACK_TYPES = ['speak', 'short', 'listen', 'mcq', 'blank', 'flash', 'fix'];
+
+  // Find evaluated skills ordered by score ascending (weakest first)
+  const weakSkills = Object.entries(skillDx)
+    .filter(([, d]) => d?.evaluated)
+    .sort((a, b) => (a[1]?.score0to80 ?? 100) - (b[1]?.score0to80 ?? 100))
+    .map(([skill, d]) => ({ skill, score: d?.score0to80, weaknesses: arr(d?.weaknesses) }));
+
+  // Build task type list: types for the weakest skills first, fill to 7 from fallback
+  const seen = new Set();
+  const taskTypes = [];
+  for (const { skill } of weakSkills) {
+    for (const t of (SKILL_TO_TYPES[skill] || [])) {
+      if (!seen.has(t)) { taskTypes.push(t); seen.add(t); }
+    }
+  }
+  for (const t of FALLBACK_TYPES) {
+    if (!seen.has(t) && taskTypes.length < 7) { taskTypes.push(t); seen.add(t); }
+  }
+  const finalTypes = taskTypes.slice(0, 7);
+
+  const weakSummary = weakSkills.length
+    ? weakSkills.slice(0, 3).map(({ skill, score, weaknesses }) =>
+        `${skill}${score != null ? ` (${score}/80)` : ''}: ${weaknesses.slice(0, 2).join(', ') || 'needs work'}`
+      ).join(' | ')
+    : null;
+
   return `Create a complete MET homework blueprint for ${student?.name || 'the student'}.
 Priorities: ${priorities.slice(0, 3).map(p => `${p.area}: ${p.whatToImprove || ''}`).join(' | ') || 'MET B1-B2 readiness'}.
+${weakSummary ? `Diagnosed weaknesses (weakest first): ${weakSummary}.` : ''}
 
 Rules:
-- Build a balanced MET set with 7 tasks.
-- Include speaking, writing, listening or reading comprehension, grammar, vocabulary, and test strategy.
+- Build a targeted MET set using exactly these task types in this order: ${finalTypes.join(', ')}.
+- The order reflects the student's diagnosed gaps — do not reorder.
 - ${GENERAL_MET_TOPIC_RULES}
-- Use only these type IDs: mcq, blank, short, speak, order, fix, flash, listen.
 
 Return JSON only:
-{ "title": string, "objective": string, "taskTypes": ["speak","short","listen","mcq","blank","flash","fix"] }`;
+{ "title": string, "objective": string, "taskTypes": ${JSON.stringify(finalTypes)} }`;
 };
 
 export const buildTaskGeneratorPrompt = ({ student, diagnosis, taskBlueprint, taskType }) => {
