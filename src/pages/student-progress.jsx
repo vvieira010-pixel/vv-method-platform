@@ -179,27 +179,37 @@ export default function StudentProgress({ student }) {
                 <div><span className="student-panel-kicker">Compare by date</span><h2>Skill progress</h2></div>
               </div>
               <div className="student-history-list">
-                {sorted.map((dx, i) => {
+                {sorted.map(dx => {
                   const snap = asArray(dx?.content?.section_snapshot).filter(s => Number(s.score_0_80) > 0);
                   if (snap.length === 0) return null;
                   return (
-                    <div key={dx.id} className="student-history-item" style={{ alignItems: 'flex-start', gap: 12 }}>
-                      <span style={{ minWidth: 80, color: 'var(--muted)', fontSize: 'var(--text-xs)', paddingTop: 2 }}>
+                    <div key={dx.id} className="student-history-item" style={{ alignItems: 'flex-start', gap: 16 }}>
+                      <span style={{ minWidth: 80, color: 'var(--muted)', fontSize: 'var(--text-xs)', paddingTop: 3, flexShrink: 0 }}>
                         {new Date(dx.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
                       </span>
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                        {snap.map(s => (
-                          <span key={s.section} style={{
-                            display: 'inline-flex', alignItems: 'center', gap: 4,
-                            fontSize: 'var(--text-xs)', fontWeight: 600,
-                            background: 'var(--surface-2)', border: '1px solid var(--border)',
-                            borderRadius: 'var(--radius-pill)', padding: '2px 10px',
-                            color: 'var(--text)',
-                          }}>
-                            {s.section.replace(/_/g, ' ')}
-                            <span style={{ color: 'var(--accent)', fontWeight: 700 }}>{s.score_0_80}/80</span>
-                          </span>
-                        ))}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, flex: 1 }}>
+                        {snap.map(s => {
+                          const stage = getProgressStage(s.score_0_80);
+                          return (
+                            <div key={s.section} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                              <span style={{ minWidth: 88, fontSize: 'var(--text-xs)', color: 'var(--muted)', textTransform: 'capitalize' }}>
+                                {s.section.replace(/_/g, ' ')}
+                              </span>
+                              <span style={{ fontSize: 'var(--text-xs)', fontWeight: 600, color: 'var(--text)', minWidth: 148 }}>
+                                {stage.label}
+                              </span>
+                              <div style={{ display: 'flex', gap: 3 }} aria-label={`${stage.order} of 5 stages`}>
+                                {PROGRESS_STAGES.map(st => (
+                                  <span key={st.label} style={{
+                                    width: 16, height: 6, borderRadius: 3,
+                                    background: st.order <= stage.order ? 'var(--accent)' : 'var(--border)',
+                                    transition: 'background 0.2s',
+                                  }} />
+                                ))}
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
                   );
