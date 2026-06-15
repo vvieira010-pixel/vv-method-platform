@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { getDiagnoses, getProgressNotes } from '../lib/workflow.js';
+import { getDiagnoses } from '../lib/workflow.js';
 import { asArray, getProgressStage, getSkillTrend, PROGRESS_STAGES, STAGE_DESCRIPTIONS } from './student-helpers.js';
 
 function sectionToLabel(section) {
@@ -88,15 +88,13 @@ function ProgressProfileCard({ skill, trend }) {
 
 export default function StudentProgress({ student }) {
   const [diagnoses, setDiagnoses] = useState([]);
-  const [notes, setNotes] = useState([]);
   const [legendOpen, setLegendOpen] = useState(false);
 
   useEffect(() => {
     (async () => {
-      const [dx, pn] = await Promise.all([getDiagnoses(student.id), getProgressNotes(student.id)]);
+      const dx = await getDiagnoses(student.id);
       const approved = (dx || []).filter(d => d.status === 'approved');
       setDiagnoses(approved);
-      setNotes(pn || []);
     })();
   }, [student.id]);
 
@@ -175,38 +173,41 @@ export default function StudentProgress({ student }) {
             <div className="student-empty-card" style={{ marginBottom: 18 }}>No evaluated skills are ready to show yet. When a class evaluates speaking only, only speaking progress will appear here.</div>
           )}
 
-          <section className="student-panel">
-            <div className="student-panel-head">
-              <div><span className="student-panel-kicker">Progress history</span><h2>Recent approved diagnoses</h2></div>
-            </div>
-            <div className="student-history-list">
-              {sorted.map((dx, i) => (
-                <div key={dx.id} className="student-history-item">
-                  <div>
-                    <strong>Class #{sorted.length - i}</strong>
-                    {dx.sections?.profileUpdateSuggestions?.content?.progressNote && <p>{dx.sections.profileUpdateSuggestions.content.progressNote}</p>}
-                  </div>
-                  <span>{new Date(dx.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
-                </div>
-              ))}
-            </div>
-          </section>
-        </>
-      )}
-
-      {notes.length > 0 && (
-        <section className="student-panel">
-          <div className="student-panel-head">
-            <div><span className="student-panel-kicker">Teacher notes</span><h2>Extra notes</h2></div>
-          </div>
-          <div className="student-history-list">
-            {notes.map(n => (
-              <div key={n.id} className="student-history-item">
-                <div><strong>{new Date(n.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</strong><p>{n.note}</p></div>
+          {sorted.length > 1 && (
+            <section className="student-panel">
+              <div className="student-panel-head">
+                <div><span className="student-panel-kicker">Compare by date</span><h2>Skill progress</h2></div>
               </div>
-            ))}
-          </div>
-        </section>
+              <div className="student-history-list">
+                {sorted.map((dx, i) => {
+                  const snap = asArray(dx?.content?.section_snapshot).filter(s => Number(s.score_0_80) > 0);
+                  if (snap.length === 0) return null;
+                  return (
+                    <div key={dx.id} className="student-history-item" style={{ alignItems: 'flex-start', gap: 12 }}>
+                      <span style={{ minWidth: 80, color: 'var(--muted)', fontSize: 'var(--text-xs)', paddingTop: 2 }}>
+                        {new Date(dx.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                      </span>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                        {snap.map(s => (
+                          <span key={s.section} style={{
+                            display: 'inline-flex', alignItems: 'center', gap: 4,
+                            fontSize: 'var(--text-xs)', fontWeight: 600,
+                            background: 'var(--surface-2)', border: '1px solid var(--border)',
+                            borderRadius: 'var(--radius-pill)', padding: '2px 10px',
+                            color: 'var(--text)',
+                          }}>
+                            {s.section.replace(/_/g, ' ')}
+                            <span style={{ color: 'var(--accent)', fontWeight: 700 }}>{s.score_0_80}/80</span>
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
+          )}
+        </>
       )}
     </div>
   );
