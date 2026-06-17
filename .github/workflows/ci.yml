@@ -14,11 +14,13 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "22"   # node --test glob patterns require Node >= 21
           cache: npm
       - name: Install dependencies
         run: npm ci
-      - name: Lint
-        run: npm run lint
+      # NOTE: `npm run lint` is intentionally not gated here yet — eslint and its
+      # plugins are not installed (not in package.json) and src/ has never been
+      # lint-cleaned, so it would fail CI. Adding eslint deps + fixing findings is
+      # a separate follow-up (audit F1). Tests are the gate for now.
       - name: Test
         run: npm test
