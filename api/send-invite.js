@@ -18,6 +18,24 @@
 
 const env = (name) => process.env[name] || process.env[`VITE_${name}`] || '';
 
+/** Verify the caller's Supabase JWT and return the user object, or null on failure. */
+async function requireTeacherSession(req) {
+  const token = (req.headers['authorization'] || '').replace(/^bearer\s+/i, '').trim();
+  if (!token) return null;
+  const supabaseUrl = env('SUPABASE_URL') || env('VITE_SUPABASE_URL');
+  const anonKey = env('SUPABASE_ANON_KEY') || env('VITE_SUPABASE_ANON_KEY');
+  if (!supabaseUrl || !anonKey) return null;
+  try {
+    const res = await fetch(`${supabaseUrl}/auth/v1/user`, {
+      headers: { apikey: anonKey, Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch {
+    return null;
+  }
+}
+
 /** Minutes the given IANA timezone is ahead of UTC at `date`. */
 function tzOffsetMinutes(timeZone, date) {
   const dtf = new Intl.DateTimeFormat('en-US', {
@@ -88,6 +106,16 @@ function buildICS({ uid, dtStamp, dtStart, dtEnd, allDay, summary, description, 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: { message: 'Method not allowed' } });
+  }
+
+  // Require a valid teacher session — prevents open relay abuse.
+  const user = await requireTeacherSession(req);
+  if (!user) {
+    return res.status(401).json({ error: { message: 'Teacher sign-in required to send invites.' } });
+  }
+  const teacherEmails = env('VITE_TEACHER_EMAIL').split(',').map(e => e.trim().toLowerCase()).filter(Boolean);
+  if (teacherEmails.length && !teacherEmails.includes((user.email || '').toLowerCase())) {
+    return res.status(403).json({ error: { message: 'Only teachers can send class invites.' } });
   }
 
   let body = req.body;
