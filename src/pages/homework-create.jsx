@@ -1,4 +1,4 @@
-/**
+﻿/**
  * homework-create.jsx — Interactive homework builder with 7 exercise types.
  * Teacher picks exercise types, fills type-specific fields, previews as student.
  */
@@ -41,47 +41,6 @@ const EMPTY_FORM = {
   selfCheck: [''],
   skillType: 'grammar', dueDate: '', teacherNotes: '',
 };
-
-const GENERATED_GROUP_ORDER = ['grammar', 'vocabulary', 'reading', 'listening', 'speaking', 'mixed', ''];
-const GENERATED_TYPE_ORDER = ['mcq', 'blank', 'short', 'listen', 'read', 'speak', 'order', 'fix', 'flash', 'dialogue', 'swap', 'levelup'];
-
-function normalizeGeneratedGroup(value) {
-  const v = String(value || '').toLowerCase();
-  if (!v) return '';
-  if (v.includes('mixed')) return 'mixed';
-  if (v.includes('grammar')) return 'grammar';
-  if (v.includes('vocab')) return 'vocabulary';
-  if (v.includes('read')) return 'reading';
-  if (v.includes('listen')) return 'listening';
-  if (v.includes('speak')) return 'speaking';
-  return v;
-}
-
-function rankValue(value, order) {
-  const idx = order.indexOf(value);
-  return idx >= 0 ? idx : order.length;
-}
-
-function orderGeneratedExercises(exercises) {
-  return [...(Array.isArray(exercises) ? exercises : [])]
-    .map((ex, index) => ({ ex, index }))
-    .sort((a, b) => {
-      const aGroup = normalizeGeneratedGroup(a.ex.skillGroup || a.ex.skillType || a.ex.type);
-      const bGroup = normalizeGeneratedGroup(b.ex.skillGroup || b.ex.skillType || b.ex.type);
-      const groupDiff = rankValue(aGroup, GENERATED_GROUP_ORDER) - rankValue(bGroup, GENERATED_GROUP_ORDER);
-      if (groupDiff) return groupDiff;
-
-      const typeDiff = rankValue(String(a.ex.type || '').toLowerCase(), GENERATED_TYPE_ORDER) - rankValue(String(b.ex.type || '').toLowerCase(), GENERATED_TYPE_ORDER);
-      if (typeDiff) return typeDiff;
-
-      const titleA = String(a.ex.title || a.ex.prompt || a.ex.question || a.ex.instruction || '').toLowerCase();
-      const titleB = String(b.ex.title || b.ex.prompt || b.ex.question || b.ex.instruction || '').toLowerCase();
-      if (titleA !== titleB) return titleA.localeCompare(titleB);
-
-      return a.index - b.index;
-    })
-    .map(item => item.ex);
-}
 
 const SKILL_TYPES = ['writing', 'speaking', 'grammar', 'vocabulary', 'reading', 'listening', 'mixed'];
 const HOMEWORK_AI_BASE_OPTIONS = { preferredProvider: 'gemini' };
@@ -198,12 +157,10 @@ export default function HomeworkCreate({ diagnosisId, studentId, students, onNav
 
   function populateFromDiagnosis(dx, s) {
     const hwRec = dx.sections?.homeworkRecommendation?.content;
-    const teacherRec = dx.teacherMeaning?.homeworkRecommendation;
     const priority = getPriorityItems(dx)[0];
     const title = hwRec?.title || (priority ? `${s?.firstName || 'Student'} — ${priority.area}` : 'Homework from Diagnosis');
-    const description = teacherRec || hwRec?.instructions || '';
+    const description = hwRec?.instructions || '';
     const type = hwRec?.expectedSubmissionType?.split('|')[0] || inferSkillType(getPriorityItems(dx));
-    const objective = hwRec?.objective || (teacherRec ? `Practice: ${teacherRec}` : (priority ? priority.whatToImprove : ''));
 
     // Convert legacy tasks to structured exercises where possible
     const legacyTasks = Array.isArray(hwRec?.tasks) ? hwRec.tasks : [];
@@ -216,7 +173,7 @@ export default function HomeworkCreate({ diagnosisId, studentId, students, onNav
 
     setForm({
       title,
-      objective,
+      objective: hwRec?.objective || (priority ? priority.whatToImprove : ''),
       description,
       exercises,
       selfCheck: Array.isArray(hwRec?.selfCheck) ? hwRec.selfCheck : [''],
@@ -235,15 +192,11 @@ function inferSkillType(priorities) {
 }
 
 function getPriorityItems(dx) {
-  return Array.isArray(dx?.teacherMeaning?.priorityDiagnosis)
-    ? dx.teacherMeaning.priorityDiagnosis
-    : Array.isArray(dx?.diagnosticData?.priorityRecommendations)
-      ? dx.diagnosticData.priorityRecommendations
-      : Array.isArray(dx?.priorityDiagnosis)
-        ? dx.priorityDiagnosis
-        : Array.isArray(dx?.sections?.priorityDiagnosis?.content)
-          ? dx.sections.priorityDiagnosis.content
-          : [];
+  return Array.isArray(dx?.priorityDiagnosis)
+    ? dx.priorityDiagnosis
+    : Array.isArray(dx?.sections?.priorityDiagnosis?.content)
+      ? dx.sections.priorityDiagnosis.content
+      : [];
 }
 
   /* ── Exercise management ── */
@@ -254,53 +207,6 @@ function getPriorityItems(dx) {
     setExpandedEx(created[0].id);
     setActivePanel(null);
     if (n > 1) window.toast?.(`Added ${n} ${level} ${type} exercises.`, 'ok');
-  }
-
-  function handleAddSelectedTypes() {
-    if (selectedTypes.length === 0) return;
-    const created = selectedTypes.flatMap(type =>
-      Array.from({ length: genPerType }, () => createExercise(type, selectedLevel))
-    );
-    setForm(f => ({ ...f, exercises: [...f.exercises, ...created] }));
-    setExpandedEx(created[0]?.id);
-    setStep2Phase('generate');
-    window.toast?.(`Added ${created.length} blank exercises (${selectedTypes.length} types).`, 'ok');
-  }
-
-  async function handleGenerateFromSelected() {
-    if (selectedTypes.length === 0 || !diagnosis) return;
-    setGenerating(true);
-    setGroupGenStatus('Generating exercises for selected types...');
-    try {
-      const allGenerated = [];
-      for (const type of selectedTypes) {
-        setGroupGenStatus(`Generating ${getExType(type)?.label || type} exercises...`);
-        const prompt = buildHomeworkGroupPrompt({
-          student, diagnosis,
-          group: type === 'mcq' ? 'grammar' : type === 'blank' ? 'grammar' : type === 'short' ? 'writing' : type === 'speak' ? 'speaking' : type === 'order' ? 'grammar' : type === 'fix' ? 'grammar' : type === 'flash' ? 'vocabulary' : type === 'listen' ? 'listening' : type === 'dialogue' ? 'speaking' : type === 'swap' ? 'vocabulary' : type === 'levelup' ? 'grammar' : 'grammar',
-          count: genPerType,
-        });
-        const data = await callAI(prompt, { ...HOMEWORK_AI_BASE_OPTIONS, max_tokens: 3500, temperature: 0.8 });
-        const raw = data?.content?.map(b => b.text || '').join('') || '';
-        const parsed = parseAiJson(raw);
-        const items = Array.isArray(parsed) ? parsed : (Array.isArray(parsed?.exercises) ? parsed.exercises : []);
-        const typedItems = items.map(item => ({ ...item, type }));
-        const { exercises, skipped } = buildCompleteExercises(typedItems);
-        allGenerated.push(...exercises);
-        if (exercises.length) {
-          window.toast?.(`${getExType(type)?.label}: ${exercises.length} generated${skipped ? `, ${skipped} skipped` : ''}.`, 'ok');
-        }
-      }
-      if (allGenerated.length > 0) {
-        setForm(f => ({ ...f, exercises: [...f.exercises, ...allGenerated] }));
-      }
-      setStep2Phase('generate');
-      window.toast?.(`${allGenerated.length} complete exercises generated across ${selectedTypes.length} types.`, allGenerated.length ? 'ok' : 'warn');
-    } catch (e) {
-      window.toast?.(`Generation failed: ${e.message}`, 'warn');
-    }
-    setGroupGenStatus('');
-    setGenerating(false);
   }
 
   function updateExercise(id, updated) {
@@ -352,7 +258,7 @@ function getPriorityItems(dx) {
         const parsed = parseAiJson(raw);
         const items = Array.isArray(parsed) ? parsed : (Array.isArray(parsed?.exercises) ? parsed.exercises : []);
         const { exercises, skipped } = buildCompleteExercises(items, { defaultSkillGroup: group });
-        allGenerated.push(...orderGeneratedExercises(exercises));
+        allGenerated.push(...exercises);
         window.toast?.(`${group.charAt(0).toUpperCase() + group.slice(1)}: ${exercises.length} complete exercises generated${skipped ? `, ${skipped} skipped` : ''}.`, exercises.length ? 'ok' : 'warn');
       } catch (e) {
         window.toast?.(`${group} exercises failed: ${e.message}`, 'warn');
@@ -385,7 +291,6 @@ function getPriorityItems(dx) {
       const parsed = parseAiJson(data.content?.map(b => b.text || '').join('') || '');
       
       if (!parsed || parsed.type !== 'listen') throw new Error('AI returned invalid listening task.');
-      if (!isStructuredAiExerciseComplete(parsed, 'listen')) throw new Error('Listening task missing required fields.');
       
       const fresh = createExercise('listen');
       const listeningEx = { 
@@ -461,8 +366,7 @@ function getPriorityItems(dx) {
         tasks.push(parseAiJson(tData.content?.map(b => b.text || '').join('') || ''));
       }
       const { exercises, skipped } = buildCompleteExercises(tasks);
-      const orderedExercises = orderGeneratedExercises(exercises);
-      if (!orderedExercises.length) throw new Error('AI returned tasks, but none were complete enough to add.');
+      if (!exercises.length) throw new Error('AI returned tasks, but none were complete enough to add.');
       
       setGroupGenStatus('Refining and finalising…');
       // 3. Final Refinement
@@ -474,7 +378,7 @@ function getPriorityItems(dx) {
         title: blueprint?.title || 'MET Practice Homework',
         objective: blueprint?.objective || f.objective || 'Build MET readiness through targeted practice.',
         description: refinement?.instructions || 'Complete each exercise carefully. Bring questions to the next class.',
-        exercises: orderedExercises,
+        exercises,
         selfCheck: Array.isArray(refinement?.selfCheck) && refinement.selfCheck.length ? refinement.selfCheck : ['I checked my answers before submitting.'],
         teacherNotes: skipped ? `${refinement?.teacherNotes || ''}\n\n${skipped} incomplete AI exercise(s) were skipped.`.trim() : (refinement?.teacherNotes || ''),
         skillType: inferSkillType(getPriorityItems(diagnosis)),
@@ -614,14 +518,6 @@ function getPriorityItems(dx) {
     setForm(f => ({ ...f, exercises: [...f.exercises, ...exercises] }));
     window.toast?.(`Added ${exercises.length} exercises from "${mod.label}".`, 'ok');
     setActivePanel(null);
-  }
-
-  function addModuleFromHomeworkBank(mod) {
-    const exercises = getHomeworkModuleExercises(mod.id);
-    if (!exercises.length) { window.toast?.('No exercises in this module.', 'warn'); return; }
-    setForm(f => ({ ...f, exercises: [...f.exercises, ...exercises] }));
-    window.toast?.(`Added ${exercises.length} homework exercises from "${mod.label}".`, 'ok');
-    setShowHomeworkBank(false);
   }
 
   async function copyLifestylePrintablePack() {
@@ -765,8 +661,7 @@ function getPriorityItems(dx) {
   form.exercises.forEach(e => { typeCounts[e.type] = (typeCounts[e.type] || 0) + 1; });
 
   return (
-    <div className="homework-create-page" style={{ maxWidth: 'min(100%, 1480px)', width: '100%', margin: '0 auto', padding: 'clamp(12px, 2vw, 24px)', minHeight: 'calc(100dvh - 72px)' }}>
-      <style>{HOMEWORK_CREATE_RESPONSIVE_CSS}</style>
+    <div className="homework-create-page" style={{ maxWidth: 1120, width: '100%', margin: '0 auto', padding: '22px 24px 14px' }}>
       <button onClick={() => onNavigate('homework')} style={backStyle}>
         <Icon.arrowL size={13} /> Back
       </button>
@@ -960,23 +855,11 @@ function getPriorityItems(dx) {
                     <div style={{ color: 'var(--muted)', fontSize: 'var(--text-xs)', lineHeight: 1.5, marginBottom: 12 }}>
                       Choose the skills this homework should cover. Each generated item is checked for complete student-ready fields before it is added.
                     </div>
-                  </div>
-
-                  <div className="exercise-type-picker-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gridAutoRows: '1fr', alignItems: 'stretch', gap: 8, marginBottom: 16, maxHeight: 'min(52vh, 480px)', overflowY: 'auto' }}>
-                    {EX_TYPES.map(t => {
-                      const IconComp = Icon[t.iconKey];
-                      const checked = selectedTypes.includes(t.id);
-                      return (
-                        <label
-                          key={t.id}
-                          style={{
-                            display: 'flex', alignItems: 'center', gap: 10,
-                            padding: '10px 12px', borderRadius: 'var(--radius-md)',
-                            border: `1.5px solid ${checked ? t.color : 'var(--border)'}`,
-                            background: checked ? t.bg : 'var(--surface)',
-                            cursor: 'pointer', transition: 'all 0.12s',
-                          }}
-                        >
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 8 }}>
+                      {SKILL_GROUPS.map(group => (
+                        <label key={group.key} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', background: 'var(--bg)' }}>
+                          <span aria-hidden="true">{group.icon}</span>
+                          <span style={{ flex: 1, fontSize: 'var(--text-sm)', fontWeight: 600 }}>{group.label}</span>
                           <input
                             type="number"
                             min="0"
@@ -985,17 +868,6 @@ function getPriorityItems(dx) {
                             onChange={e => setGroupGenConfig(cfg => ({ ...cfg, [group.key]: Math.max(0, Math.min(6, Number(e.target.value) || 0)) }))}
                             style={{ width: 48, padding: '4px 6px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-sm)' }}
                           />
-                          <span style={{
-                            width: 28, height: 28, borderRadius: 6,
-                            background: t.bg, color: t.color,
-                            display: 'grid', placeItems: 'center', flexShrink: 0,
-                          }}>
-                            {IconComp && <IconComp size={13} />}
-                          </span>
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ fontSize: 'var(--text-sm)', fontWeight: 600 }}>{t.label}</div>
-                            <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>{t.hint}</div>
-                          </div>
                         </label>
                       ))}
                     </div>
@@ -1008,6 +880,7 @@ function getPriorityItems(dx) {
                       </Button>
                     </div>
                   </div>
+                )}
 
                 {activePanel === 'type-picker' && <ExerciseTypePicker onSelect={addExercise} onClose={() => setActivePanel(null)} />}
 
@@ -1017,12 +890,14 @@ function getPriorityItems(dx) {
                       <span style={{ fontWeight: 600, fontSize: 'var(--text-sm)' }}>{b2BankMeta.title}</span>
                       <button onClick={() => setActivePanel(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)' }}><Icon.close size={16} /></button>
                     </div>
-
-                    {showB2Bank && (
-                      <div style={{ marginTop: 10, marginBottom: 12, border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: 'var(--accent-subtle)', borderBottom: '1px solid var(--border)' }}>
-                          <span style={{ fontWeight: 600, fontSize: 'var(--text-sm)' }}>{b2BankMeta.title}</span>
-                          <button onClick={() => setShowB2Bank(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)', fontSize: 16 }}>✕</button>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 0, maxHeight: 340, overflowY: 'auto' }}>
+                      {getB2Modules().map(mod => (
+                        <div key={mod.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', borderBottom: '1px solid var(--divider)', gap: 10 }}>
+                          <div>
+                            <div style={{ fontWeight: 500, fontSize: 'var(--text-sm)' }}>{mod.label}</div>
+                            <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', textTransform: 'capitalize' }}>{mod.skill} · {mod.exercises.length} exercises</div>
+                          </div>
+                          <Button variant="ghost" size="sm" onClick={() => addModuleFromB2Bank(mod)}>Add</Button>
                         </div>
                       ))}
                     </div>
@@ -1114,58 +989,11 @@ function getPriorityItems(dx) {
                             </div>
                             <Button variant="ghost" size="sm" style={{ flexShrink: 0 }} onClick={() => addUnitBankExercise(ex)}>Add</Button>
                           </div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                            <Button variant="ghost" size="sm" onClick={copyLifestylePrintablePack}>Copy printable</Button>
-                            <button onClick={() => setShowLifestylePack(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)', fontSize: 16 }}>✕</button>
-                          </div>
-                        </div>
-                        <div style={{ padding: '10px 14px', borderBottom: '1px solid var(--divider)', background: 'var(--surface)', fontSize: 'var(--text-xs)', color: 'var(--muted)', lineHeight: 1.5 }}>
-                          Converted from the bundled JSON pack in <strong>src/components/exercises</strong>. Use the Markdown file as the printable teacher copy.
-                        </div>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 0, maxHeight: 320, overflowY: 'auto' }}>
-                          {getLifestyleModules().map(mod => (
-                            <div key={mod.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', borderBottom: '1px solid var(--divider)', gap: 10 }}>
-                              <div style={{ minWidth: 0 }}>
-                                <div style={{ fontWeight: 600, fontSize: 'var(--text-sm)' }}>{mod.label}</div>
-                                <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', textTransform: 'capitalize' }}>
-                                  {mod.skill} · {mod.sourceCount} source tasks · {mod.exerciseCount} platform exercises
-                                </div>
-                                {mod.note && (
-                                  <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 560 }}>
-                                    {mod.note}
-                                  </div>
-                                )}
-                              </div>
-                              <Button variant="ghost" size="sm" onClick={() => addModuleFromLifestylePack(mod)}>Add</Button>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {showHomeworkBank && (
-                      <div style={{ marginTop: 10, marginBottom: 12, border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: 'var(--accent-subtle)', borderBottom: '1px solid var(--border)' }}>
-                          <div>
-                            <span style={{ fontWeight: 700, fontSize: 'var(--text-sm)' }}>{homeworkBankMeta.title}</span>
-                            <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: 2 }}>{homeworkBankMeta.level} · {homeworkBankMeta.moduleCount} sections · {homeworkBankMeta.exerciseCount} exercises</div>
-                          </div>
-                          <button onClick={() => setShowHomeworkBank(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)', fontSize: 16 }}>✕</button>
-                        </div>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 0, maxHeight: 340, overflowY: 'auto' }}>
-                          {getHomeworkModules().map(mod => (
-                            <div key={mod.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', borderBottom: '1px solid var(--divider)', gap: 10 }}>
-                              <div>
-                                <div style={{ fontWeight: 500, fontSize: 'var(--text-sm)' }}>{mod.label}</div>
-                                <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', textTransform: 'capitalize' }}>{mod.skill} · {mod.exercises.length} exercises</div>
-                              </div>
-                              <Button variant="ghost" size="sm" onClick={() => addModuleFromHomeworkBank(mod)}>Add</Button>
-                            </div>
-                          ))}
-                        </div>
+                        ))}
                       </div>
                     )}
                   </div>
+                )}
 
                 {exerciseOptions.length > 0 && (
                   <div className="homework-create-ai-suggestions" style={{ marginBottom: 16, padding: 14, border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', background: 'var(--surface)', boxShadow: 'var(--shadow-sm)' }}>
@@ -1263,28 +1091,12 @@ function getPriorityItems(dx) {
                     />
                   ))}
                 </div>
-              ) : (
-                /* ── Phase: Generate & Edit ── */
-                <div style={{ marginTop: 16 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 14 }}>
-                    <div>
-                      <span style={{ fontSize: 'var(--text-sm)', fontWeight: 600 }}>Exercises ({form.exercises.length})</span>
-                      {selectedTypes.length > 0 && (
-                        <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginLeft: 8 }}>
-                          selected: {selectedTypes.map(id => getExType(id)?.label).join(', ')}
-                        </span>
-                      )}
-                    </div>
-                    <Button variant="ghost" size="sm" onClick={() => setStep2Phase('choose')}>
-                      <Icon.arrowL size={11} /> Change Types
-                    </Button>
-                  </div>
 
                 <div className="homework-create-actions" style={{ display: 'flex', gap: 10, marginTop: 24 }}>
                   <Button variant="ghost" onClick={() => setCurrentStep(2)}>Back</Button>
                   <Button variant="primary" onClick={() => setCurrentStep(4)}>Go to Revision & Assign</Button>
                 </div>
-              )}
+              </div>
             </Card>
           )}
           {currentStep === 4 && (
