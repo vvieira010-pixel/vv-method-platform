@@ -6,7 +6,7 @@ import { readStoredSupabaseSession, updateUserPassword } from '../lib/supabase-s
 
 const PracticeSession = lazy(() => import('../components/PracticeSession.jsx'));
 const ReviewSession   = lazy(() => import('../components/ReviewSession.jsx'));
-import { asArray, getProgressStage, getSkillTrend, hasVisibleApprovedStudentFeedback } from './student-helpers.js';
+import { asArray, getProgressStage, getSkillTrend, hasVisibleApprovedStudentFeedback, PROGRESS_STAGES } from './student-helpers.js';
 import { getTeacherSetting } from '../lib/supabase-db.js';
 
 function daysUntilExam() {
@@ -83,17 +83,21 @@ function TodoRow({ done, label, meta }) {
 
 function SkillRow({ skill, trend }) {
   const score = Number(skill.score_0_80) || 0;
-  if (score <= 0) return null;
-  const stage = getProgressStage(score);
-  const pct = Math.max(4, Math.min(100, Math.round((score / 80) * 100)));
+  const stage = score > 0 ? getProgressStage(score) : PROGRESS_STAGES[0];
   return (
     <div className="student-skill-row">
       <div className="student-skill-top">
-        <strong>{skill.section}</strong>
+        <strong style={{ textTransform: 'capitalize' }}>{skill.section}</strong>
         <span className="student-skill-stage">{stage.label}</span>
       </div>
-      <div className="student-skill-bar" role="img" aria-label={`${skill.section}: ${stage.label}, ${score} of 80`}>
-        <span className="student-skill-bar-fill" style={{ width: `${pct}%` }} />
+      <div style={{ display: 'flex', gap: 4, margin: '6px 0' }} aria-label={`${skill.section}: ${stage.label}`}>
+        {PROGRESS_STAGES.map(st => (
+          <span key={st.label} style={{
+            flex: 1, height: 6, borderRadius: 3,
+            background: st.order <= stage.order ? 'var(--accent)' : 'var(--border)',
+            transition: 'background 0.2s',
+          }} />
+        ))}
       </div>
       <TrendChip trend={trend} />
     </div>
@@ -203,12 +207,15 @@ export default function StudentHome({ student, onTab }) {
   }
 
   const pendingTitle = pendingHw[0]?.title || 'No homework pending';
-  const snapshotEvaluatedSkills = snapshot.filter(s => Number(s.score_0_80) > 0);
+  // Include transcript-only evaluated skills (evaluated:true, score may be null)
+  // so the Readiness Snapshot stays honest, and fall back to approved history
+  // when the latest snapshot has nothing evaluated yet.
+  const snapshotEvaluatedSkills = snapshot.filter(s => s.evaluated || Number(s.score_0_80) > 0);
   const evaluatedSkills = snapshotEvaluatedSkills.length > 0
     ? snapshotEvaluatedSkills
     : approvedHistory
         .flatMap(dx => asArray(dx?.content?.section_snapshot))
-        .filter(s => Number(s.score_0_80) > 0)
+        .filter(s => s.evaluated || Number(s.score_0_80) > 0)
         .filter((skill, index, list) => index === list.findIndex(item => item.section === skill.section));
   const fallbackFocus = nextClass?.metSkillFocus || nextClass?.classFocus || student.focusSkill || 'MET speaking organization';
   const focusSkill = snapshotEvaluatedSkills[0]?.section || fallbackFocus;

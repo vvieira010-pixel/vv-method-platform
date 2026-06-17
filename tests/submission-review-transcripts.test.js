@@ -17,12 +17,12 @@ assert.match(
 
 assert.match(
   source,
-  /Teacher review evidence/,
-  'Teacher UI should show the response evidence used for review.'
+  /Per-question review/,
+  'Teacher UI should show the per-question response evidence used for review.'
 );
 
 assert.match(
   source,
-  /Transcript used for review/,
+  /Transcript<\/strong>/,
   'Teacher UI should clearly label transcripts used for review.'
 );

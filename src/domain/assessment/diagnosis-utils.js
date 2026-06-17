@@ -197,14 +197,17 @@ export function normalizeEvidenceCounts(evidence) {
 
 export function buildSnapshot(skillDiagnosis) {
   if (!skillDiagnosis || typeof skillDiagnosis !== 'object') return [];
-  return Object.entries(skillDiagnosis).map(([skill, data]) => ({
-    section: skill.charAt(0).toUpperCase() + skill.slice(1),
-    score_0_80: data?.score0to80 ?? 0,
-    score_0_4: data?.score0to80 ? Math.round((data.score0to80 / 80) * 4 * 100) / 100 : 0,
-    confidence: data?.scoreProvisional ? 'low' : 'medium',
-    trend: 'stable',
-    strength: data?.strengths?.[0] || '',
-    gap: data?.weaknesses?.[0] || '',
-    next_step: data?.whatToImproveNext || '',
-  }));
+  return Object.entries(skillDiagnosis)
+    .filter(([, data]) => data?.evaluated)
+    .map(([skill, data]) => ({
+      section: skill.charAt(0).toUpperCase() + skill.slice(1),
+      evaluated: true,
+      score_0_80: data?.score0to80 ?? 0,
+      score_0_4: data?.score0to80 ? Math.round((data.score0to80 / 80) * 4 * 100) / 100 : 0,
+      confidence: data?.scoreProvisional ? 'low' : 'medium',
+      trend: 'stable',
+      strength: data?.strengths?.[0] || '',
+      gap: data?.weaknesses?.[0] || '',
+      next_step: data?.whatToImproveNext || '',
+    }));
 }

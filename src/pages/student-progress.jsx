@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { getDiagnoses, getProgressNotes } from '../lib/workflow.js';
+import { getDiagnoses } from '../lib/workflow.js';
 import { asArray, getProgressStage, getSkillTrend, PROGRESS_STAGES, STAGE_DESCRIPTIONS } from './student-helpers.js';
 
 function sectionToLabel(section) {
@@ -88,15 +88,13 @@ function ProgressProfileCard({ skill, trend }) {
 
 export default function StudentProgress({ student }) {
   const [diagnoses, setDiagnoses] = useState([]);
-  const [notes, setNotes] = useState([]);
   const [legendOpen, setLegendOpen] = useState(false);
 
   useEffect(() => {
     (async () => {
-      const [dx, pn] = await Promise.all([getDiagnoses(student.id), getProgressNotes(student.id)]);
+      const dx = await getDiagnoses(student.id);
       const approved = (dx || []).filter(d => d.status === 'approved');
       setDiagnoses(approved);
-      setNotes(pn || []);
     })();
   }, [student.id]);
 
@@ -105,7 +103,7 @@ export default function StudentProgress({ student }) {
   const skills = sorted.reduce((acc, d) => {
     if (acc.length > 0) return acc;
     const snap = asArray(d?.content?.section_snapshot);
-    return snap.filter(s => Number(s.score_0_80) > 0);
+    return snap.filter(s => s.evaluated || Number(s.score_0_80) > 0);
   }, []);
 
   return (
@@ -175,38 +173,51 @@ export default function StudentProgress({ student }) {
             <div className="student-empty-card" style={{ marginBottom: 18 }}>No evaluated skills are ready to show yet. When a class evaluates speaking only, only speaking progress will appear here.</div>
           )}
 
-          <section className="student-panel">
-            <div className="student-panel-head">
-              <div><span className="student-panel-kicker">Progress history</span><h2>Recent approved diagnoses</h2></div>
-            </div>
-            <div className="student-history-list">
-              {sorted.map((dx, i) => (
-                <div key={dx.id} className="student-history-item">
-                  <div>
-                    <strong>Class #{sorted.length - i}</strong>
-                    {dx.sections?.profileUpdateSuggestions?.content?.progressNote && <p>{dx.sections.profileUpdateSuggestions.content.progressNote}</p>}
-                  </div>
-                  <span>{new Date(dx.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
-                </div>
-              ))}
-            </div>
-          </section>
-        </>
-      )}
-
-      {notes.length > 0 && (
-        <section className="student-panel">
-          <div className="student-panel-head">
-            <div><span className="student-panel-kicker">Teacher notes</span><h2>Extra notes</h2></div>
-          </div>
-          <div className="student-history-list">
-            {notes.map(n => (
-              <div key={n.id} className="student-history-item">
-                <div><strong>{new Date(n.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</strong><p>{n.note}</p></div>
+          {sorted.length > 1 && (
+            <section className="student-panel">
+              <div className="student-panel-head">
+                <div><span className="student-panel-kicker">Compare by date</span><h2>Skill progress</h2></div>
               </div>
-            ))}
-          </div>
-        </section>
+              <div className="student-history-list">
+                {sorted.map(dx => {
+                  const snap = asArray(dx?.content?.section_snapshot).filter(s => s.evaluated || Number(s.score_0_80) > 0);
+                  if (snap.length === 0) return null;
+                  return (
+                    <div key={dx.id} className="student-history-item" style={{ alignItems: 'flex-start', gap: 16 }}>
+                      <span style={{ minWidth: 80, color: 'var(--muted)', fontSize: 'var(--text-xs)', paddingTop: 3, flexShrink: 0 }}>
+                        {new Date(dx.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                      </span>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, flex: 1 }}>
+                        {snap.map(s => {
+                          const stage = getProgressStage(s.score_0_80);
+                          return (
+                            <div key={s.section} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                              <span style={{ minWidth: 88, fontSize: 'var(--text-xs)', color: 'var(--muted)', textTransform: 'capitalize' }}>
+                                {s.section.replace(/_/g, ' ')}
+                              </span>
+                              <span style={{ fontSize: 'var(--text-xs)', fontWeight: 600, color: 'var(--text)', minWidth: 148 }}>
+                                {stage.label}
+                              </span>
+                              <div style={{ display: 'flex', gap: 3 }} aria-label={`${stage.order} of 5 stages`}>
+                                {PROGRESS_STAGES.map(st => (
+                                  <span key={st.label} style={{
+                                    width: 16, height: 6, borderRadius: 3,
+                                    background: st.order <= stage.order ? 'var(--accent)' : 'var(--border)',
+                                    transition: 'background 0.2s',
+                                  }} />
+                                ))}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
+          )}
+        </>
       )}
     </div>
   );
