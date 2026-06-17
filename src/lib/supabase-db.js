@@ -425,34 +425,41 @@ export async function dbRemove(entityKey, appId) {
   return true;
 }
 
-/* ─── Storage (student speaking audio) ───────────────────────── */
+/* ─── Generic Storage Interface (Audio & Images) ──────────────── */
 
-const AUDIO_BUCKET = 'submission-audio';
-
-/** Upload a recorded audio Blob to the private bucket. Returns the object path. Throws on failure. */
-export async function uploadSubmissionAudio(blob, path) {
+/**
+ * Upload any file Blob to a specific Supabase bucket.
+ * @param {Blob} blob - The file content
+ * @param {string} bucket - The bucket name ('submission-audio' | 'assets')
+ * @param {string} path - The destination path
+ */
+export async function uploadAsset(blob, bucket, path) {
   const ctx = getDbContext();
   if (!ctx) throw new Error('Not signed in.');
-  const res = await fetch(`${ctx.url}/storage/v1/object/${AUDIO_BUCKET}/${path}`, {
+  const res = await fetch(`${ctx.url}/storage/v1/object/${bucket}/${path}`, {
     method: 'POST',
     headers: {
       apikey: ctx.anonKey,
       Authorization: `Bearer ${ctx.token}`,
-      'Content-Type': blob.type || 'audio/webm',
+      'Content-Type': blob.type || 'application/octet-stream',
       'x-upsert': 'true',
     },
     body: blob,
   });
-  if (!res.ok) throw new Error(`audio upload → ${res.status} ${await res.text().catch(() => '')}`);
+  if (!res.ok) throw new Error(`Asset upload (${bucket}) → ${res.status} ${await res.text().catch(() => '')}`);
   return path;
 }
 
-/** Create a time-limited signed URL to play a private audio object. Returns null on failure. */
-export async function createSignedAudioUrl(path, expiresIn = 3600) {
+/**
+ * Create a time-limited signed URL for a file in a specific bucket.
+ * @param {string} path - The object path
+ * @param {string} bucket - The bucket name
+ */
+export async function getAssetUrl(path, bucket, expiresIn = 3600) {
   const ctx = getDbContext();
   if (!ctx || !path) return null;
   try {
-    const res = await fetch(`${ctx.url}/storage/v1/object/sign/${AUDIO_BUCKET}/${path}`, {
+    const res = await fetch(`${ctx.url}/storage/v1/object/sign/${bucket}/${path}`, {
       method: 'POST',
       headers: { apikey: ctx.anonKey, Authorization: `Bearer ${ctx.token}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ expiresIn }),
@@ -464,6 +471,13 @@ export async function createSignedAudioUrl(path, expiresIn = 3600) {
     return null;
   }
 }
+
+/* ─── Legacy Storage compatibility ───────────────────────────── */
+const AUDIO_BUCKET = 'submission-audio';
+
+export async function uploadSubmissionAudio(blob, path) { return uploadAsset(blob, AUDIO_BUCKET, path); }
+export async function createSignedAudioUrl(path, expiresIn = 3600) { return getAssetUrl(path, AUDIO_BUCKET, expiresIn); }
+
 
 /* ─── teacher settings ───────────────────────────────────────── */
 
