@@ -4,6 +4,7 @@
 import { useState, useEffect } from 'react';
 import { Icon, Card, SectionHeader, Pill, Button, Avatar } from '../components/shared.jsx';
 import { getClassEvents, saveClassEvent, deleteClassEvent, updateClassEventStatus, getStudents } from '../lib/workflow.js';
+import { sendClassInvite, getZoomUrl } from '../lib/send-invite.js';
 
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const STATUS_TONE = { scheduled: 'info', completed: 'success', canceled: 'danger' };
@@ -53,6 +54,38 @@ export default function CalendarPage({ students, onNavigate }) {
     if (!confirm('Delete this class event?')) return;
     await deleteClassEvent(ev.id);
     await load();
+  }
+
+  async function handleSendInvite(ev) {
+    const zoomUrl = getZoomUrl();
+    if (!zoomUrl) {
+      window.toast?.('Add your Zoom link in Settings → Class Video Link first.', 'warn');
+      onNavigate?.('settings');
+      return;
+    }
+    const student = students.find(s => s.id === ev.studentId);
+    if (!student?.email) {
+      window.toast?.(`No email on file for ${student?.firstName || 'this student'}.`, 'warn');
+      return;
+    }
+    window.toast?.(`Sending invite to ${student.firstName}…`, 'info');
+    try {
+      await sendClassInvite({
+        to: student.email,
+        studentName: student.name,
+        teacherName: localStorage.getItem('vv:teacher_name') || '',
+        title: ev.title,
+        date: ev.date,
+        startTime: ev.startTime || '',
+        endTime: ev.endTime || '',
+        zoomUrl,
+        classFocus: ev.classFocus || '',
+        timezone: student.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone,
+      });
+      window.toast?.(`Invite emailed to ${student.firstName}.`, 'ok');
+    } catch (e) {
+      window.toast?.(`Invite failed: ${e.message}`, 'warn');
+    }
   }
 
   // Calendar grid
@@ -168,7 +201,7 @@ export default function CalendarPage({ students, onNavigate }) {
                 <p style={{ color: 'var(--muted)', fontSize: 'var(--text-sm)', marginTop: 8 }}>No classes on this day.</p>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 10 }}>
-                  {selectedEvents.map(ev => <EventCard key={ev.id} ev={ev} students={students} onNavigate={onNavigate} onMarkComplete={handleMarkComplete} onDelete={handleDelete} />)}
+                  {selectedEvents.map(ev => <EventCard key={ev.id} ev={ev} students={students} onNavigate={onNavigate} onMarkComplete={handleMarkComplete} onDelete={handleDelete} onSendInvite={handleSendInvite} />)}
                 </div>
               )}
             </Card>
@@ -216,7 +249,7 @@ export default function CalendarPage({ students, onNavigate }) {
   );
 }
 
-function EventCard({ ev, students, onNavigate, onMarkComplete, onDelete }) {
+function EventCard({ ev, students, onNavigate, onMarkComplete, onDelete, onSendInvite }) {
   const student = students.find(s => s.id === ev.studentId);
   return (
     <div style={{ padding: '10px 12px', background: 'var(--bg)', borderRadius: 'var(--radius-sm)', display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -226,6 +259,9 @@ function EventCard({ ev, students, onNavigate, onMarkComplete, onDelete }) {
         <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>{ev.startTime || '—'} · {ev.classFocus || 'No focus'}</div>
       </div>
       <Pill tone={STATUS_TONE[ev.status] || 'muted'}>{ev.status}</Pill>
+      {ev.status === 'scheduled' && onSendInvite && (
+        <Button variant="ghost" size="sm" aria-label="Email Zoom invite" title="Email Zoom invite" onClick={() => onSendInvite(ev)}><Icon.send size={12} /> Invite</Button>
+      )}
       <Button variant="ghost" size="sm" onClick={() => onNavigate('calendar:class', { classEventId: ev.id })}>Record</Button>
       {ev.status === 'scheduled' && <Button variant="ghost" size="sm" onClick={() => onMarkComplete(ev)}>Done</Button>}
       {ev.status === 'completed' && ev.diagnosticStatus === 'not-started' && (
