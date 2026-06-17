@@ -6,49 +6,49 @@ const NAVY = 'var(--primary-ink)';
 const MET_SECTION_CONFIG = {
   grammar: {
     label: 'Reading Part 1 — Grammar',
-    color: '#7C3AED',
-    bg: '#F5F3FF',
-    border: '#DDD6FE',
+    color: 'var(--ex-cat-purple-text)',
+    bg: 'var(--ex-cat-purple-bg)',
+    border: 'var(--ex-cat-purple-border)',
     tip: 'Choose the option that fits both meaning AND structure. Check: tense · subject–verb agreement · articles · prepositions · modals · connectors · word form.',
     trap: 'Choosing an option that sounds familiar but does not fit grammatically.',
   },
   listening_p1: {
     label: 'Listening Part 1 — Short Conversation',
-    color: '#0369A1',
-    bg: '#F0F9FF',
-    border: '#BAE6FD',
+    color: 'var(--ex-cat-sky-text)',
+    bg: 'var(--ex-cat-sky-bg)',
+    border: 'var(--ex-cat-sky-border)',
     tip: 'Listen for: main point · speaker intention · specific detail · implied meaning. Do not choose an answer based on one word — listen to the whole exchange.',
     trap: 'Choosing based on one familiar word instead of the overall meaning.',
   },
   listening_p2: {
     label: 'Listening Part 2 — Longer Conversation',
-    color: '#0369A1',
-    bg: '#F0F9FF',
-    border: '#BAE6FD',
+    color: 'var(--ex-cat-sky-text)',
+    bg: 'var(--ex-cat-sky-bg)',
+    border: 'var(--ex-cat-sky-border)',
     tip: 'Listen for: main topic · sequence of events · problem and solution · what the speakers agree or disagree about · what a speaker will probably do next.',
     trap: 'Forgetting earlier information by the time the questions appear.',
   },
   listening_p3: {
     label: 'Listening Part 3 — Short Talk',
-    color: '#0369A1',
-    bg: '#F0F9FF',
-    border: '#BAE6FD',
+    color: 'var(--ex-cat-sky-text)',
+    bg: 'var(--ex-cat-sky-bg)',
+    border: 'var(--ex-cat-sky-border)',
     tip: 'Listen for: purpose of the talk · main idea · key detail · reason · speaker attitude · what happens next. Do not focus only on isolated words.',
     trap: 'Missing the purpose of the talk and focusing only on isolated details.',
   },
   reading_p2: {
     label: 'Reading Part 2 — Single Text',
-    color: '#065F46',
-    bg: '#F0FDFA',
-    border: '#99F6E4',
+    color: 'var(--ex-correct-text)',
+    bg: 'var(--ex-selected-bg)',
+    border: 'var(--ex-selected-border)',
     tip: 'Find: main idea · specific detail · vocabulary in context · reference words (it/they/this) · inference · author purpose. Manage your time — 5 questions per text.',
     trap: 'Reading too slowly and spending too much time on one text.',
   },
   reading_p3: {
     label: 'Reading Part 3 — Multiple Texts',
-    color: '#065F46',
-    bg: '#F0FDFA',
-    border: '#99F6E4',
+    color: 'var(--ex-correct-text)',
+    bg: 'var(--ex-selected-bg)',
+    border: 'var(--ex-selected-border)',
     tip: 'Three related texts — look for: which text says a specific idea · how texts are similar or different · what writers agree or disagree about · inference across texts.',
     trap: 'Treating the three texts separately and missing cross-text questions.',
   },
@@ -77,11 +77,11 @@ export default function MultipleChoice({ exercise, onComplete }) {
       fontFamily: 'var(--font-ui)',
     };
     if (!submitted) {
-      if (selected === i) return { ...base, borderColor: TEAL, background: '#F0FDFA', color: NAVY };
+      if (selected === i) return { ...base, borderColor: TEAL, background: 'var(--ex-selected-bg)', color: NAVY };
       return { ...base, borderColor: 'var(--border)', background: 'var(--surface)', color: 'var(--text)' };
     }
-    if (i === correct) return { ...base, borderColor: '#059669', background: '#ECFDF5', color: '#065F46' };
-    if (i === selected && !isCorrect) return { ...base, borderColor: 'var(--danger)', background: '#FEF2F2', color: '#991B1B' };
+    if (i === correct) return { ...base, borderColor: 'var(--ex-correct-strong)', background: 'var(--ex-correct-bg)', color: 'var(--ex-correct-text)' };
+    if (i === selected && !isCorrect) return { ...base, borderColor: 'var(--danger)', background: 'var(--ex-wrong-bg)', color: 'var(--ex-wrong-text)' };
     return { ...base, borderColor: 'var(--divider)', background: 'var(--surface)', color: 'var(--muted)', opacity: 0.6 };
   }
 
@@ -99,11 +99,11 @@ export default function MultipleChoice({ exercise, onComplete }) {
           <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: sectionConfig.color, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 5 }}>
             {sectionConfig.label}
           </div>
-          <div style={{ fontSize: 'var(--text-sm)', color: sectionConfig.color === '#7C3AED' ? '#4C1D95' : sectionConfig.color === '#0369A1' ? '#0C4A6E' : '#064E3B', lineHeight: 1.55 }}>
+          <div style={{ fontSize: 'var(--text-sm)', color: sectionConfig.color === 'var(--ex-cat-purple-text)' ? 'var(--ex-cat-purple-strong)' : sectionConfig.color === 'var(--ex-cat-sky-text)' ? 'var(--ex-cat-sky-strong)' : 'var(--ex-correct-text)', lineHeight: 1.55 }}>
             {sectionConfig.tip}
           </div>
           {sectionConfig.trap && (
-            <div style={{ marginTop: 6, fontSize: 'var(--text-xs)', color: '#92400E' }}>
+            <div style={{ marginTop: 6, fontSize: 'var(--text-xs)', color: 'var(--ex-hint-text)' }}>
               <strong>Watch out:</strong> {sectionConfig.trap}
             </div>
           )}
@@ -111,7 +111,7 @@ export default function MultipleChoice({ exercise, onComplete }) {
       )}
 
       {skill && !sectionConfig && (
-        <div style={{ display: 'inline-block', marginBottom: 10, padding: '2px 8px', background: '#EFF6FF', border: '1px solid #BFDBFE', borderRadius: 'var(--radius-sm, 6px)', fontSize: 'var(--text-xs)', fontWeight: 600, color: '#1D4ED8', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+        <div style={{ display: 'inline-block', marginBottom: 10, padding: '2px 8px', background: 'var(--ex-cat-blue-bg)', border: '1px solid var(--ex-cat-blue-border)', borderRadius: 'var(--radius-sm, 6px)', fontSize: 'var(--text-xs)', fontWeight: 600, color: 'var(--ex-cat-blue-text)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
           {skill}
         </div>
       )}
@@ -129,7 +129,7 @@ export default function MultipleChoice({ exercise, onComplete }) {
       )}
 
       {imageUrl && (
-        <div style={{ marginBottom: 16, border: '1px solid var(--border)', borderRadius: 'var(--radius-sm, 6px)', overflow: 'hidden', background: '#F8FAFC', textAlign: 'center' }}>
+        <div style={{ marginBottom: 16, border: '1px solid var(--border)', borderRadius: 'var(--radius-sm, 6px)', overflow: 'hidden', background: 'var(--ex-panel-bg)', textAlign: 'center' }}>
           <img src={imageUrl} alt={imageAlt || 'Image for this question'} style={{ maxWidth: '100%', maxHeight: 320, display: 'block', margin: '0 auto' }} />
         </div>
       )}
@@ -151,7 +151,7 @@ export default function MultipleChoice({ exercise, onComplete }) {
             <span style={{
               width: 24, height: 24, borderRadius: '50%', display: 'grid', placeItems: 'center',
               fontSize: 'var(--text-sm)', fontWeight: 700, flexShrink: 0,
-              background: submitted && i === correct ? '#059669' : submitted && i === selected && !isCorrect ? 'var(--danger)' : 'transparent',
+              background: submitted && i === correct ? 'var(--ex-correct-strong)' : submitted && i === selected && !isCorrect ? 'var(--danger)' : 'transparent',
               color: submitted && (i === correct || (i === selected && !isCorrect)) ? '#fff' : 'inherit',
             }}>
               {getMarker(i)}
@@ -179,36 +179,36 @@ export default function MultipleChoice({ exercise, onComplete }) {
         <>
           <div style={{
             borderRadius: 'var(--radius-sm, 6px)', overflow: 'hidden',
-            border: `1px solid ${isCorrect ? '#A7F3D0' : '#FECACA'}`,
+            border: `1px solid ${isCorrect ? 'var(--ex-correct-border)' : 'var(--ex-wrong-border)'}`,
             animation: 'fadeUp 0.22s ease-out both',
           }}>
             <div style={{
               padding: '10px 14px',
-              background: isCorrect ? '#ECFDF5' : '#FEF2F2',
+              background: isCorrect ? 'var(--ex-correct-bg)' : 'var(--ex-wrong-bg)',
               fontSize: 'var(--text-sm)', fontWeight: 600,
-              color: isCorrect ? '#065F46' : '#991B1B',
-              borderBottom: `1px solid ${isCorrect ? '#A7F3D0' : '#FECACA'}`,
+              color: isCorrect ? 'var(--ex-correct-text)' : 'var(--ex-wrong-text)',
+              borderBottom: `1px solid ${isCorrect ? 'var(--ex-correct-border)' : 'var(--ex-wrong-border)'}`,
             }}>
               {isCorrect ? '✓ Correct' : '✗ Not quite'}
             </div>
-            <div style={{ padding: '10px 14px', background: '#fff', fontSize: 'var(--text-sm)', lineHeight: 1.7 }}>
+            <div style={{ padding: '10px 14px', background: 'var(--surface)', fontSize: 'var(--text-sm)', lineHeight: 1.7 }}>
               {!isCorrect && (
                 <div style={{ marginBottom: 6 }}>
-                  <span style={{ fontWeight: 600, color: '#991B1B' }}>Your answer: </span>
-                  <span style={{ color: '#374151' }}>{options[selected]}</span>
+                  <span style={{ fontWeight: 600, color: 'var(--ex-wrong-text)' }}>Your answer: </span>
+                  <span style={{ color: 'var(--ex-panel-text)' }}>{options[selected]}</span>
                 </div>
               )}
               <div>
-                <span style={{ fontWeight: 600, color: '#065F46' }}>Correct answer: </span>
-                <span style={{ color: '#374151' }}>{options[correct]}</span>
+                <span style={{ fontWeight: 600, color: 'var(--ex-correct-text)' }}>Correct answer: </span>
+                <span style={{ color: 'var(--ex-panel-text)' }}>{options[correct]}</span>
               </div>
             </div>
           </div>
           {exercise.explanation && (
             <div style={{
-              marginTop: 10, fontSize: 'var(--text-sm)', color: '#374151', lineHeight: 1.65,
-              padding: '11px 14px', background: '#F8FAFC', borderRadius: 'var(--radius-sm, 6px)',
-              border: '1px solid #E2E8F0',
+              marginTop: 10, fontSize: 'var(--text-sm)', color: 'var(--ex-panel-text)', lineHeight: 1.65,
+              padding: '11px 14px', background: 'var(--ex-panel-bg)', borderRadius: 'var(--radius-sm, 6px)',
+              border: '1px solid var(--ex-panel-border)',
             }}>
               <span style={{ fontWeight: 700, color: NAVY }}>Why: </span>
               {exercise.explanation}

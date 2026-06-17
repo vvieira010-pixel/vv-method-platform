@@ -269,11 +269,11 @@ export default function Listening({ exercise, onComplete }) {
     };
     if (!submitted) {
       return selected === i
-        ? { ...base, borderColor: TEAL, background: '#F0FDFA', color: NAVY }
+        ? { ...base, borderColor: TEAL, background: 'var(--ex-selected-bg)', color: NAVY }
         : { ...base, borderColor: 'var(--border)', background: 'var(--surface)', color: 'var(--text)' };
     }
-    if (i === correct) return { ...base, borderColor: '#059669', background: '#ECFDF5', color: '#065F46' };
-    if (i === selected && !isCorrect) return { ...base, borderColor: 'var(--danger)', background: '#FEF2F2', color: '#991B1B' };
+    if (i === correct) return { ...base, borderColor: 'var(--ex-correct-strong)', background: 'var(--ex-correct-bg)', color: 'var(--ex-correct-text)' };
+    if (i === selected && !isCorrect) return { ...base, borderColor: 'var(--danger)', background: 'var(--ex-wrong-bg)', color: 'var(--ex-wrong-text)' };
     return { ...base, borderColor: 'var(--divider)', background: 'var(--surface)', color: 'var(--muted)', opacity: 0.6 };
   }
 
@@ -292,12 +292,12 @@ export default function Listening({ exercise, onComplete }) {
 
       {/* MET part banner */}
       {partConfig && (
-        <div style={{ padding: '10px 14px', background: '#F0F9FF', border: '1px solid #BAE6FD', borderRadius: 'var(--radius-sm)', marginBottom: 14 }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: '#0369A1', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>
+        <div style={{ padding: '10px 14px', background: 'var(--ex-cat-sky-bg)', border: '1px solid var(--ex-cat-sky-border)', borderRadius: 'var(--radius-sm)', marginBottom: 14 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--ex-cat-sky-text)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>
             {partConfig.label}
           </div>
-          <div style={{ fontSize: 13, color: '#0C4A6E', lineHeight: 1.55 }}>{partConfig.tip}</div>
-          <div style={{ marginTop: 5, fontSize: 12, color: '#92400E' }}>
+          <div style={{ fontSize: 13, color: 'var(--ex-cat-sky-strong)', lineHeight: 1.55 }}>{partConfig.tip}</div>
+          <div style={{ marginTop: 5, fontSize: 12, color: 'var(--ex-hint-text)' }}>
             <strong>Watch out:</strong> {partConfig.trap}
           </div>
         </div>
@@ -321,13 +321,13 @@ export default function Listening({ exercise, onComplete }) {
       {/* Audio player */}
       <div style={{
         padding: '20px 16px', borderRadius: 'var(--radius-sm)', marginBottom: 20,
-        background: 'linear-gradient(135deg, #F0FDFA 0%, #EEF2FF 100%)',
+        background: 'linear-gradient(135deg, var(--ex-selected-bg) 0%, var(--ex-cat-blue-bg) 100%)',
         border: '1.5px solid rgba(13,148,136,.22)',
         display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14,
       }}>
         <div style={{
           fontSize: 11, fontWeight: 700, letterSpacing: '0.08em',
-          color: '#0E5F6B', textTransform: 'uppercase',
+          color: 'var(--accent)', textTransform: 'uppercase',
         }}>
           <Icon.headphones size={14} /> Listening Exercise
         </div>
@@ -410,7 +410,7 @@ export default function Listening({ exercise, onComplete }) {
                   display: 'grid', placeItems: 'center',
                   fontSize: 13, fontWeight: 700, flexShrink: 0,
                   background: submitted && i === correct
-                    ? '#059669'
+                    ? 'var(--ex-correct-strong)'
                     : submitted && i === selected && !isCorrect
                       ? 'var(--danger)'
                       : 'transparent',
@@ -445,19 +445,19 @@ export default function Listening({ exercise, onComplete }) {
           ) : (
             <div style={{
               padding: '12px 16px', borderRadius: 'var(--radius-sm)',
-              background: isCorrect ? '#ECFDF5' : '#FEF2F2',
-              border: `1px solid ${isCorrect ? '#A7F3D0' : '#FECACA'}`,
+              background: isCorrect ? 'var(--ex-correct-bg)' : 'var(--ex-wrong-bg)',
+              border: `1px solid ${isCorrect ? 'var(--ex-correct-border)' : 'var(--ex-wrong-border)'}`,
               fontSize: 14,
             }}>
               <div style={{
-                color: isCorrect ? '#065F46' : '#991B1B',
+                color: isCorrect ? 'var(--ex-correct-text)' : 'var(--ex-wrong-text)',
                 fontWeight: 600,
                 marginBottom: explanation ? 6 : 0,
               }}>
                 {isCorrect ? '✓ Correct — well done.' : '✗ Not quite. Review the correct answer above.'}
               </div>
               {explanation && (
-                <div style={{ color: '#374151', fontWeight: 400, fontSize: 13.5, lineHeight: 1.65 }}>
+                <div style={{ color: 'var(--ex-panel-text)', fontWeight: 400, fontSize: 13.5, lineHeight: 1.65 }}>
                   {explanation}
                 </div>
               )}
