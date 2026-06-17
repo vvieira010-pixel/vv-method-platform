@@ -16,7 +16,8 @@ import {
   clearStoredSupabaseSession,
   fetchSupabaseUser,
 } from './lib/supabase-storage.js';
-import { claimStudentByEmail, ensureProfile, setSessionRole } from './lib/supabase-db.js';
+import { claimStudentByEmail, ensureProfile, setSessionRole, upsertReviewSchedule, loadReviewSchedule } from './lib/supabase-db.js';
+import { enableSync } from './lib/spaced-repetition.js';
 
 // Lazy-loaded pages
 const StudentDashboard  = lazy(() => import('./pages/student-dashboard.jsx'));
@@ -158,6 +159,19 @@ export default function App() {
       if (!wasPKCE) handleHash().then(wasHash => { if (!wasHash) restoreSession(); });
     }).catch(() => { clearStoredSupabaseSession(); });
   }, []);
+
+  // Wire spaced-repetition Supabase sync for student sessions
+  useEffect(() => {
+    if (!auth || auth.role !== 'student' || !auth.studentId) return;
+    const { studentId } = auth;
+    enableSync((sid, list) => upsertReviewSchedule(sid, list));
+    loadReviewSchedule(studentId).then(rows => {
+      if (!rows.length) return;
+      try {
+        localStorage.setItem(`vv:reviewSchedule:${studentId}`, JSON.stringify(rows));
+      } catch { /* storage unavailable */ }
+    }).catch(() => { /* silent — localStorage is the fallback */ });
+  }, [auth]);
 
   // Seed students from hardcoded list on first run, then load live roster
   useEffect(() => {

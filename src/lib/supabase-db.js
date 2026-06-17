@@ -516,6 +516,73 @@ export async function setTeacherSetting(key, value) {
   }
 }
 
+/* ─── review schedule (spaced-repetition persistence) ───────── */
+
+/**
+ * Bulk-upsert a student's full review schedule.
+ * Called by spaced-repetition.js via enableSync() on every SR state change.
+ * @param {string} localStudentId — app local string id (e.g. "ana-paula")
+ * @param {object[]} list — full schedule array from localStorage
+ */
+export async function upsertReviewSchedule(localStudentId, list) {
+  const ctx = getDbContext();
+  if (!ctx || !list?.length) return;
+  const sid = await studentUuid(ctx, localStudentId);
+  if (!sid) return;
+  const rows = list.map(e => ({
+    student_id: sid,
+    error_id: e.errorId,
+    error_text: e.errorText || '',
+    correct_text: e.correctText || '',
+    interval_days: e.interval || 1,
+    last_seen: e.lastSeen || null,
+    next_due: e.nextDue || null,
+    source_diagnosis_id: e.sourceDiagnosisId || null,
+    practice_count: e.practiceCount || 0,
+    mastered: Boolean(e.mastered),
+  }));
+  await sbFetch(ctx, 'review_schedule?on_conflict=student_id,error_id', {
+    method: 'POST',
+    headers: { Prefer: 'resolution=merge-duplicates,return=minimal' },
+    body: JSON.stringify(rows),
+  });
+}
+
+/**
+ * Load a student's review schedule from Supabase and write it to localStorage
+ * so the in-memory SR module picks it up without a schema change.
+ * Returns the list of schedule entries (or [] if DB unavailable / empty).
+ */
+export async function loadReviewSchedule(localStudentId) {
+  const ctx = getDbContext();
+  if (!ctx) return [];
+  try {
+    const sid = await studentUuid(ctx, localStudentId);
+    if (!sid) return [];
+    const rows = await sbSelect(
+      ctx,
+      'review_schedule',
+      `student_id=eq.${sid}&select=*&order=created_at.asc`,
+    );
+    return rows.map(r => ({
+      id: r.id,
+      studentId: localStudentId,
+      errorId: r.error_id,
+      errorText: r.error_text || '',
+      correctText: r.correct_text || '',
+      interval: r.interval_days || 1,
+      lastSeen: r.last_seen || null,
+      nextDue: r.next_due || null,
+      sourceDiagnosisId: r.source_diagnosis_id || null,
+      practiceCount: r.practice_count || 0,
+      mastered: Boolean(r.mastered),
+    }));
+  } catch (e) {
+    console.warn('[supabase-db] loadReviewSchedule:', e.message);
+    return [];
+  }
+}
+
 /* ─── auth / profile linking (called at sign-in) ─────────────── */
 
 /** Upsert the caller's own profile row (id = auth uid). Best-effort. */
