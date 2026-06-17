@@ -144,7 +144,7 @@ export default async function handler(req, res) {
       ? [elevenLabs]
     : provider === 'aivoov'
       ? [aivoovTts]
-      : [aivoovTts, elevenLabs, deepgramTts, openAiTts];
+      : [elevenLabs, openAiTts, deepgramTts, aivoovTts];
 
   for (const run of attempts) {
     try {

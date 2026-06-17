@@ -139,16 +139,31 @@ async function fetchAudio(text) {
   return null;
 }
 
+let _synthVoices = [];
+if (typeof window !== 'undefined' && window.speechSynthesis) {
+  _synthVoices = speechSynthesis.getVoices();
+  if (!_synthVoices.length) {
+    speechSynthesis.onvoiceschanged = () => { _synthVoices = speechSynthesis.getVoices(); };
+  }
+}
+function pickBestVoice() {
+  return _synthVoices.find(v =>
+    /Google US English|Samantha|Microsoft.*David|Microsoft.*Zira|Microsoft.*Jenny|Microsoft.*Aria|Microsoft.*Guy|Google.*UK/i.test(v.name)
+  ) || _synthVoices.find(v => v.lang.startsWith('en') && v.name.includes('Female'))
+    || _synthVoices.find(v => v.lang.startsWith('en')) || null;
+}
 function speakBrowser(text) {
   return new Promise((resolve) => {
     if (typeof window === 'undefined' || !window.speechSynthesis) { resolve(); return; }
     speechSynthesis.cancel();
     const utter = new SpeechSynthesisUtterance(text);
     utter.lang = 'en-US';
-    utter.rate = 0.88;
+    utter.rate = 0.85;
     utter.pitch = 1;
     utter.onend = resolve;
     utter.onerror = resolve;
+    const preferred = pickBestVoice();
+    if (preferred) utter.voice = preferred;
     speechSynthesis.speak(utter);
   });
 }
