@@ -3,7 +3,7 @@
  * Teacher picks exercise types, fills type-specific fields, previews as student.
  */
 import { useState, useEffect, useRef } from 'react';
-import { Icon, Card, SectionHeader, Button, Pill } from '../components/shared.jsx';
+import { Icon, Card, SectionHeader, Button, Pill, Modal } from '../components/shared.jsx';
 import { callAI } from '../components/shared.jsx';
 import { parseAiJson } from '../lib/ai-helpers.js';
 import {
@@ -18,11 +18,11 @@ import {
   buildLanguageDemandPrompt,
 } from '../lib/prompts.js';
 import { getDiagnoses, getStudent, saveHomework, updateClassEventStatus, getErrorBank } from '../lib/workflow.js';
-import { EX_TYPES, createExercise, exercisePreview, getExType } from '../lib/exercise-types.js';
+import { EX_TYPES, createExercise, exercisePreview, getExType, isStructuredExercise } from '../lib/exercise-types.js';
 import { getDueItems, getDueCount, toMCQ, getAllEntries } from '../lib/spaced-repetition.js';
 import { ExerciseEditor, ExerciseTypePicker, ExTypeBadge } from '../components/exercise-editor.jsx';
 import ExerciseCard from '../components/exercises/ExerciseCard.jsx';
-import PreviewExercise from '../components/exercises/PreviewExercise.jsx';
+import { ExercisePlayer, HomeworkStepThrough } from '../components/exercise-player.jsx';
 import {
   normalizeTaskTypes, buildCompleteExercises, createCompleteExercise,
   isStructuredAiExerciseComplete, getHomeworkCognitiveSufficiencyWarning,
@@ -100,6 +100,9 @@ export default function HomeworkCreate({ diagnosisId, studentId, students, onNav
   const [languageDemand, setLanguageDemand] = useState(null);
   const [generatingLangDemand, setGeneratingLangDemand] = useState(false);
   const [errorBankItems, setErrorBankItems] = useState([]);
+  // "Preview as student" — ephemeral walkthrough of the full set; nothing persisted.
+  const [studentPreview, setStudentPreview] = useState(false);
+  const [previewResponses, setPreviewResponses] = useState({});
 
   useEffect(() => {
     let cancelled = false;
@@ -1119,17 +1122,46 @@ function getPriorityItems(dx) {
                         <span style={{ fontWeight: 700, color: 'var(--accent)' }}>{i + 1}.</span>
                         <ExTypeBadge typeId={ex.type} />
                       </div>
-                      <PreviewExercise exercise={ex} />
+                      <ExercisePlayer exercise={ex} readOnly />
                     </div>
                   ))}
                 </div>
 
                 <div className="homework-create-actions" style={{ display: 'flex', gap: 10, marginTop: 24, flexWrap: 'wrap', alignItems: 'center' }}>
                   <Button variant="ghost" onClick={() => setCurrentStep(3)}>Back to Build</Button>
+                  <Button variant="secondary" size="sm" onClick={() => { setPreviewResponses({}); setStudentPreview(true); }} disabled={!form.exercises.some(isStructuredExercise)} title="Step through the whole homework exactly as the student will receive it">
+                    <Icon.play size={12} /> Preview as student
+                  </Button>
                   <Button variant="ghost" size="sm" onClick={handleAnalyzeLanguageDemand} disabled={generatingLangDemand || !form.exercises.length} title="Check vocabulary load and get pre-teaching suggestions">
                     <Icon.search size={12} /> {generatingLangDemand ? 'Analysing…' : 'Check Language Demands'}
                   </Button>
                 </div>
+
+                <Modal
+                  open={studentPreview}
+                  onClose={() => setStudentPreview(false)}
+                  kicker="Student view"
+                  title="Preview as student"
+                  subtitle="Exactly what your student receives. Nothing here is saved or sent."
+                  maxWidth={760}
+                >
+                  {(() => {
+                    const previewExercises = form.exercises.filter(isStructuredExercise);
+                    if (!previewExercises.length) {
+                      return <p style={{ color: 'var(--muted)' }}>No previewable exercises yet. Add structured exercises to preview the student experience.</p>;
+                    }
+                    return (
+                      <HomeworkStepThrough
+                        exercises={previewExercises}
+                        responses={previewResponses}
+                        onResponse={(id, updated) => setPreviewResponses(r => ({ ...r, [id]: updated }))}
+                        onSave={() => {}}
+                        onSubmit={() => { window.toast?.('Preview only — nothing was sent to the student.', 'ok'); setStudentPreview(false); }}
+                        readOnly={false}
+                      />
+                    );
+                  })()}
+                </Modal>
 
                 {languageDemand && (
                   <div style={{ marginTop: 16, padding: 14, border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', background: 'var(--surface)' }}>
