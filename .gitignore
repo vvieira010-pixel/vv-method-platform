@@ -12,6 +12,7 @@ dist-build/
 
 # vite / editor caches
 .vite-cache/
+.vite-cache-v2/
 .vite-dev.log
 .vite-dev.err.log
 .tmp-vv-method/
