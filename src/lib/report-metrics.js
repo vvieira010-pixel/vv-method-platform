@@ -1,4 +1,8 @@
-export const REPORT_SKILLS = ['Grammar', 'Reading', 'Writing', 'Listening', 'Speaking', 'Vocabulary', 'Test Strategy'];
+// Canonical MET skill set — single source of truth (audit C2). Consumers that
+// need an extra bucket derive from this (reports add "Test Strategy", the
+// calendar class-focus picker adds "Mixed").
+export const MET_SKILLS = ['Grammar', 'Reading', 'Writing', 'Listening', 'Speaking', 'Vocabulary'];
+export const REPORT_SKILLS = [...MET_SKILLS, 'Test Strategy'];
 export const MIN_READINESS_SKILLS = 4;
 
 export function buildReadinessEvidence(skills, requiredCount = MIN_READINESS_SKILLS) {
