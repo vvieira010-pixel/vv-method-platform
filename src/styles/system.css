@@ -2,9 +2,6 @@
    Single source of truth replacing design-system.css, globals.css, sanctuary.css, logbook.css
    Navy + teal + amber system for a calm, professional MET preparation platform. */
 
-/* ── Google Font ──────────────────────────────────────────────── */
-@import url("https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800;1,9..40,400&display=swap");
-@import url("https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&display=swap");
 
 /* ══════════════════════════════════════════════════════════════════
    1. DESIGN TOKENS
@@ -17,7 +14,7 @@
   --accent: #148891;                         /* Teal — login button / interactive teal */
   --accent-hover: #0f6b73;
   --accent-light: #c8ecea;
-  --accent-deep: #0f1b2d;
+  --accent-deep: #0f1b2d;                    /* Same as --primary — used for dark headings, not teal despite name */
   --accent-soft: #48C7C7;                    /* Bright teal — login glow dots / decorative */
   --accent-subtle: #e3f5f4;
   --accent-text: #0a6e74;
@@ -1411,6 +1408,7 @@ p {
 }
 
 .student-metric {
+  cursor: pointer;
   background: linear-gradient(180deg, #ffffff 0%, #fcfdfd 100%);
   padding: var(--space-5);
   border-radius: var(--radius-sm);
@@ -1673,6 +1671,7 @@ p {
 }
 
 .student-panel {
+  cursor: pointer;
   background: linear-gradient(180deg, #ffffff 0%, #fdfefe 100%);
   border-radius: var(--radius-sm);
   padding: 20px;
@@ -2753,6 +2752,16 @@ p {
   background-size: 180px 180px;
 }
 
+/* ── Page transitions ──────────────────────────────────────────── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.shell-main > * {
+  animation: fadeUp 0.2s ease-out both;
+}
+
 /* ── Accessibility: reduced motion ─────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
@@ -2799,6 +2808,10 @@ p {
 .font-medium { font-weight: var(--weight-medium); }
 .font-semibold { font-weight: var(--weight-semibold); }
 .font-bold { font-weight: var(--weight-bold); }
+
+.cursor-pointer { cursor: pointer; }
+.transition { transition: all var(--transition-base); }
+.transition-fast { transition: all var(--transition-fast); }
 
 .truncate {
   overflow: hidden;
@@ -3075,6 +3088,43 @@ textarea:focus, .textarea:focus {
 
 /* ── Tablet / small desktop (≤1024px) ──────────────────────────── */
 @media (max-width: 1024px) {
+  .shell-sidebar {
+    width: 56px;
+    overflow: hidden;
+  }
+  .shell-sidebar .shell-brand-sub,
+  .shell-sidebar .shell-nav-section-label,
+  .shell-sidebar .shell-nav-btn span,
+  .shell-sidebar .shell-user-name,
+  .shell-sidebar .shell-user-role {
+    display: none;
+  }
+  .shell-sidebar .shell-brand {
+    padding: 16px 12px;
+    text-align: center;
+  }
+  .shell-sidebar .shell-brand-name {
+    font-size: 0;
+  }
+  .shell-sidebar .shell-brand-name::first-letter {
+    font-size: var(--text-lg);
+  }
+  .shell-sidebar .shell-nav-btn {
+    justify-content: center;
+    padding: 8px 0;
+  }
+  .shell-sidebar .shell-nav-btn.active {
+    border-left-width: 2px;
+    padding-left: 0;
+  }
+  .shell-sidebar .shell-nav {
+    padding: 8px 4px;
+  }
+  .shell-sidebar .shell-user {
+    justify-content: center;
+    padding: 8px;
+  }
+
   .td-kpi-grid {
     grid-template-columns: repeat(2, 1fr);
   }
@@ -3088,6 +3138,20 @@ textarea:focus, .textarea:focus {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 12px;
+  }
+
+  .student-next-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .student-hero {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .student-metrics {
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 
@@ -3627,6 +3691,329 @@ textarea:focus, .textarea:focus {
 [data-theme="dark"] .lp-mode-switch {
   background: var(--faint);
   border-color: var(--border);
+}
+
+/* ── Dark mode: Shell ────────────────────────────────────────── */
+[data-theme="dark"] .shell-sidebar {
+  background: #0a1118;
+  border-right-color: rgba(72,199,199,0.08);
+}
+
+[data-theme="dark"] .shell-nav-btn {
+  color: rgba(255,255,255,0.65);
+}
+
+[data-theme="dark"] .shell-nav-btn:hover {
+  background: rgba(255,255,255,0.08);
+  color: #fff;
+}
+
+[data-theme="dark"] .shell-nav-btn.active {
+  background: rgba(20,136,145,0.16);
+  border-color: rgba(72,199,199,0.2);
+}
+
+[data-theme="dark"] .shell-brand {
+  border-bottom-color: rgba(72,199,199,0.08);
+}
+
+[data-theme="dark"] .shell-user {
+  border-top-color: rgba(72,199,199,0.08);
+}
+
+[data-theme="dark"] .shell-mobile-nav {
+  background: var(--surface);
+  border-top-color: var(--border);
+}
+
+[data-theme="dark"] .shell-mobile-title strong {
+  color: var(--on-dark);
+}
+
+[data-theme="dark"] .workflow-strip {
+  background: rgba(15,24,35,0.6);
+  border-bottom-color: rgba(72,199,199,0.08);
+}
+
+/* ── Dark mode: Cards ────────────────────────────────────────── */
+[data-theme="dark"] .card {
+  background: var(--surface);
+  border-color: var(--border);
+}
+
+[data-theme="dark"] .card:hover {
+  border-color: var(--border-strong);
+}
+
+[data-theme="dark"] .page-shell {
+  background: transparent;
+}
+
+[data-theme="dark"] .question-item {
+  background: var(--surface);
+  border-color: var(--border);
+}
+
+[data-theme="dark"] .evidence-card {
+  background: var(--surface);
+  border-color: var(--border);
+}
+
+/* ── Dark mode: Components ───────────────────────────────────── */
+[data-theme="dark"] .btn-secondary {
+  border-color: var(--border);
+  color: var(--text-2);
+}
+
+[data-theme="dark"] .btn-ghost {
+  border-color: var(--border);
+  color: var(--text-2);
+}
+
+[data-theme="dark"] .btn-ghost:hover:not(:disabled) {
+  background: var(--faint);
+}
+
+[data-theme="dark"] .btn-quiet {
+  color: var(--muted);
+}
+
+[data-theme="dark"] .btn-quiet:hover:not(:disabled) {
+  background: var(--divider);
+  color: var(--text);
+}
+
+[data-theme="dark"] .tabs {
+  background: var(--surface);
+  border-color: var(--border);
+}
+
+[data-theme="dark"] .tab:hover {
+  color: var(--text);
+  background: var(--faint);
+}
+
+[data-theme="dark"] .tab.active {
+  background: var(--primary-light);
+  color: var(--text);
+}
+
+[data-theme="dark"] .progress-bar {
+  background: var(--border);
+}
+
+[data-theme="dark"] .input {
+  background: var(--surface);
+  color: var(--text);
+  border-color: var(--border);
+}
+
+[data-theme="dark"] .input:hover {
+  border-color: var(--border-strong);
+}
+
+[data-theme="dark"] .pill-default { background: var(--divider); color: var(--text-2); }
+[data-theme="dark"] .pill-accent  { background: rgba(20,136,145,0.18); color: var(--accent-soft); }
+[data-theme="dark"] .pill-muted   { background: var(--faint); color: var(--muted); }
+[data-theme="dark"] .pill-info    { background: rgba(20,136,145,0.14); color: var(--accent-soft); }
+
+[data-theme="dark"] .shell-settings-btn {
+  background: var(--surface);
+  border-color: var(--border);
+  color: var(--muted);
+}
+
+[data-theme="dark"] .shell-settings-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* ── Dark mode: Student dashboard ────────────────────────────── */
+[data-theme="dark"] .dash-topbar {
+  background: linear-gradient(180deg, #0a1118 0%, #111d2a 100%);
+  border-bottom-color: rgba(72,199,199,0.08);
+}
+
+[data-theme="dark"] .dash-nav-btn {
+  color: rgba(241,250,238,0.5);
+}
+
+[data-theme="dark"] .dash-nav-btn.active {
+  background: rgba(20,136,145,0.22);
+  border-color: rgba(72,199,199,0.25);
+}
+
+[data-theme="dark"] .dash-nav-btn:hover:not(.active) {
+  background: rgba(255,255,255,0.06);
+}
+
+[data-theme="dark"] .student-metric {
+  background: var(--surface);
+  border-color: var(--border);
+}
+
+[data-theme="dark"] .student-metric:hover {
+  border-color: var(--accent);
+}
+
+[data-theme="dark"] .student-panel {
+  background: var(--surface);
+  border-color: var(--border);
+}
+
+[data-theme="dark"] .student-panel:hover {
+  border-color: var(--border-strong);
+}
+
+[data-theme="dark"] .student-panel--primary {
+  border-color: rgba(20,136,145,0.2);
+}
+
+[data-theme="dark"] .student-prep-box {
+  background: var(--faint);
+  border-color: var(--border);
+}
+
+[data-theme="dark"] .student-upcoming-row {
+  border-bottom-color: var(--divider);
+}
+
+[data-theme="dark"] .student-todo-row {
+  border-bottom-color: var(--divider);
+}
+
+[data-theme="dark"] .student-skill-row {
+  border-bottom-color: var(--divider);
+}
+
+[data-theme="dark"] .student-todo-check {
+  border-color: var(--border-strong);
+}
+
+[data-theme="dark"] .student-stage-legend {
+  border-color: var(--border);
+  background: var(--surface);
+}
+
+[data-theme="dark"] .student-stage-legend-body {
+  border-top-color: var(--border);
+}
+
+[data-theme="dark"] .student-stage-legend-toggle:hover {
+  background: var(--teal-soft);
+}
+
+/* ── Dark mode: KPI ──────────────────────────────────────────── */
+[data-theme="dark"] .kpi-value {
+  color: var(--text);
+}
+
+[data-theme="dark"] .section-title {
+  color: var(--text);
+}
+
+[data-theme="dark"] .page-title {
+  color: var(--on-dark);
+}
+
+[data-theme="dark"] .td-headline {
+  color: var(--on-dark);
+}
+
+/* ── Dark mode: Teacher dashboard ────────────────────────────── */
+[data-theme="dark"] .td-priority-card {
+  background: var(--surface) !important;
+  border-color: var(--border);
+}
+
+[data-theme="dark"] .td-priority-title {
+  color: var(--text);
+}
+
+[data-theme="dark"] .td-priority-text {
+  color: var(--muted);
+}
+
+[data-theme="dark"] .td-kpi-card:hover {
+  box-shadow: var(--shadow-md);
+}
+
+[data-theme="dark"] .td-list-row {
+  border-bottom-color: var(--divider);
+}
+
+[data-theme="dark"] .td-quick-action {
+  border-bottom-color: var(--divider);
+  color: var(--text);
+}
+
+[data-theme="dark"] .td-quick-action:hover {
+  color: var(--accent);
+}
+
+[data-theme="dark"] .td-quick-action-icon {
+  color: var(--muted);
+}
+
+/* ── Dark mode: Misc ─────────────────────────────────────────── */
+[data-theme="dark"] .page-subtitle {
+  color: var(--muted);
+}
+
+[data-theme="dark"] .section-sub {
+  color: var(--muted);
+}
+
+[data-theme="dark"] .kpi-label {
+  color: var(--muted);
+}
+
+[data-theme="dark"] .td-sub {
+  color: var(--muted);
+}
+
+[data-theme="dark"] .td-priority-kicker {
+  color: var(--muted);
+}
+
+[data-theme="dark"] .student-practice-compact {
+  background: var(--surface);
+  border-color: rgba(20,136,145,0.2);
+}
+
+[data-theme="dark"] .student-practice-compact-orb {
+  background: var(--surface);
+  border-color: var(--border);
+  color: var(--text);
+}
+
+[data-theme="dark"] .student-practice-compact-orb:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+[data-theme="dark"] .student-practice-primary {
+  color: var(--text);
+  border-color: rgba(255,255,255,0.12);
+}
+
+[data-theme="dark"] .student-wide-action {
+  background: var(--teal-soft);
+  border-color: var(--teal-soft);
+  color: var(--on-dark);
+}
+
+[data-theme="dark"] .student-wide-action:hover {
+  background: rgba(20,136,145,0.18);
+}
+
+[data-theme="dark"] .student-empty-card {
+  background: var(--surface);
+  border-color: var(--border);
+}
+
+[data-theme="dark"] .student-confidence-list .student-upcoming-row {
+  border-bottom-color: var(--divider);
 }
 
 /* ══════════════════════════════════════════════════════════════════
