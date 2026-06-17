@@ -558,15 +558,22 @@ Return JSON only:
 { "title": string, "objective": string, "taskTypes": ${JSON.stringify(finalTypes)} }`;
 };
 
-export const buildTaskGeneratorPrompt = ({ student, diagnosis, taskBlueprint, taskType }) => {
-  const priorities = pickArray(diagnosis?.priorityDiagnosis, diagnosis?.sections?.priorityDiagnosis?.content);
-  const errors = pickArray(diagnosis?.errorBank, diagnosis?.sections?.errorBankSuggestions?.content);
-  const vocab = pickArray(diagnosis?.vocabTargets?.vocabularyTargets, diagnosis?.sections?.vocabGrammarTargets?.content?.vocabularyTargets);
-  const grammar = pickArray(diagnosis?.vocabTargets?.grammarTargets, diagnosis?.sections?.vocabGrammarTargets?.content?.grammarTargets);
+// ... (previous content remains) ...
+
+  export const buildTaskGeneratorPrompt = ({ student, diagnosis, taskBlueprint, taskType }) => {
+  // ... (existing variable definitions) ...
 
   return `You are a MET English Instructional Designer. Generate exactly one complete, fully written ${taskType} exercise for ${student?.name || 'the student'}.
 
-CRITICAL: The exercise MUST strictly adhere to the official MET scoring rubric for this type. If it is a speaking task, it MUST have the required metTask (Q1-Q5) and structure. If writing, it MUST follow the T1/T2 structure.
+CRITICAL: The exercise MUST strictly adhere to the official MET scoring rubric for this type.
+If taskType is 'speak':
+- You MUST include a "metTask" field (Q1, Q2, Q3, Q4, or Q5).
+- If metTask is "Q1", you MUST include a "imageDescription" field (a vivid 1-2 sentence description of a scene/picture).
+- Use the structure defined by the MET rubric for the selected task.
+- Generate high-quality content using the advanced reasoning capabilities of Gemini.
+
+If taskType is 'short' (writing):
+- You MUST include a "rubric" field guiding the student on structure (e.g., "Answer all 3 questions", "Use 4 paragraphs").
 
 Student: ${student?.currentLevel || 'B1'} -> ${student?.targetLevel || 'B2'}
 Priorities: ${priorities.slice(0, 3).map(p => `${p.area}: ${p.whatToImprove || ''}`).join(' | ') || 'MET readiness'}
@@ -584,6 +591,7 @@ MET-STRICT GENERATION RULES:
 
 Return ONLY one valid JSON object.`;
 };
+// ... (rest of file) ...
 
 export const buildFinalRefinementPrompt = ({ student, blueprint, tasks }) => {
   const types = (tasks || []).map(t => (t?.type || t?.skillGroup || '')).filter(Boolean).join(', ');
