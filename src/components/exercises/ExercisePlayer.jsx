@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'; // ExercisePlayer
+import { useState, useCallback, useRef } from 'react'; // ExercisePlayer
 import { motion } from 'motion/react';
 import { Icon } from '../shared.jsx';
 import { loadExercises } from './validateExercise.js';
