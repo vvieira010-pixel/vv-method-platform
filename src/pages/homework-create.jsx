@@ -815,21 +815,35 @@ function getPriorityItems(dx) {
               <div style={{ marginTop: 16 }}>
                 {/* ── Toolbar: two rows — Generate | Browse & Add ── */}
                 <div className="homework-create-toolbar" style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 16 }}>
-                  {/* Row 1: AI generation */}
+                  {/* Row 1: MET-Aligned generation */}
                   <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                    <Button variant="primary" size="sm" onClick={handleAiGenerate} disabled={!diagnosis || generating}>
-                      <Icon.spark size={12} /> {generating ? 'Generating…' : 'Generate MET Homework'}
+                    <Button variant="primary" size="sm" onClick={() => togglePanel('group-gen')} disabled={!diagnosis || generating}
+                      style={activePanel === 'group-gen' ? { borderColor: 'var(--accent)', color: 'var(--accent)' } : {}}>
+                      <Icon.spark size={12} /> Generate MET Tasks by Skill
                     </Button>
                     <Button variant="primary" size="sm" onClick={handleGenerateListening} disabled={!diagnosis || generatingListening}>
-                      <Icon.headphones size={12} /> {generatingListening ? 'Generating…' : 'Listening Task'}
+                      <Icon.headphones size={12} /> Listening Task
                     </Button>
                     <Button variant="primary" size="sm" onClick={handleGenerateReading} disabled={generatingReading}>
-                      <Icon.doc size={12} /> {generatingReading ? 'Generating…' : 'Reading Task'}
+                      <Icon.doc size={12} /> Reading Task
                     </Button>
-                    <Button variant="ghost" size="sm" onClick={handleGenerateOptions} disabled={!diagnosis || loadingOptions}>
-                      <Icon.refresh size={12} /> {loadingOptions ? 'Suggesting…' : 'Suggest from Diagnosis'}
+                  </div>
+                  {/* Row 2: Manual/Bank Additions */}
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                    <Button variant="ghost" size="sm" onClick={() => togglePanel('type-picker')}>
+                      <Icon.plus size={12} /> Add Manual Exercise
                     </Button>
-                    <Button variant="ghost" size="sm" onClick={() => togglePanel('group-gen')} disabled={!diagnosis || generating}
+                    <Button variant="ghost" size="sm" onClick={() => togglePanel('b2-bank')}>
+                      <Icon.book size={12} /> MET B2 Bank
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={() => togglePanel('lifestyle')}>
+                      <Icon.book size={12} /> Lifestyle Pack
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={() => togglePanel('deep-research')}>
+                      <Icon.book size={12} /> Deep Research
+                    </Button>
+                  </div>
+                </div>
                       style={activePanel === 'group-gen' ? { borderColor: 'var(--accent)', color: 'var(--accent)' } : {}}>
                       <Icon.check size={12} /> Build by Skill
                     </Button>
