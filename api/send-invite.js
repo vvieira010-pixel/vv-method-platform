@@ -18,6 +18,29 @@
 
 const env = (name) => process.env[name] || process.env[`VITE_${name}`] || '';
 
+/** Verify the caller's Supabase JWT and return the user object, or null on failure. */
+async function requireTeacherSession(req) {
+  const token = (req.headers['authorization'] || '').replace(/^bearer\s+/i, '').trim();
+  if (!token) return null;
+  // Fall back to the project's hardwired public values (same as
+  // src/lib/supabase-storage.js) so auth works even when env vars are unset —
+  // this project deliberately does not rely on Supabase env vars.
+  const supabaseUrl = (env('SUPABASE_URL') || env('VITE_SUPABASE_URL') ||
+    'https://grnzzgzqizoxfcbflnwq.supabase.co').replace(/\/+$/, '');
+  const anonKey = env('SUPABASE_ANON_KEY') || env('VITE_SUPABASE_ANON_KEY') ||
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdybnp6Z3pxaXpveGZjYmZsbndxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1ODQ0MzcsImV4cCI6MjA5NjE2MDQzN30.5T7xFRlbJ9GQX9WvhJ5o2nIDgp3T99fJeGk5wCpuVnI';
+  if (!supabaseUrl || !anonKey) return null;
+  try {
+    const res = await fetch(`${supabaseUrl}/auth/v1/user`, {
+      headers: { apikey: anonKey, Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch {
+    return null;
+  }
+}
+
 /** Minutes the given IANA timezone is ahead of UTC at `date`. */
 function tzOffsetMinutes(timeZone, date) {
   const dtf = new Intl.DateTimeFormat('en-US', {
@@ -88,6 +111,16 @@ function buildICS({ uid, dtStamp, dtStart, dtEnd, allDay, summary, description, 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: { message: 'Method not allowed' } });
+  }
+
+  // Require a valid teacher session — prevents open relay abuse.
+  const user = await requireTeacherSession(req);
+  if (!user) {
+    return res.status(401).json({ error: { message: 'Teacher sign-in required to send invites.' } });
+  }
+  const teacherEmails = env('VITE_TEACHER_EMAIL').split(',').map(e => e.trim().toLowerCase()).filter(Boolean);
+  if (teacherEmails.length && !teacherEmails.includes((user.email || '').toLowerCase())) {
+    return res.status(403).json({ error: { message: 'Only teachers can send class invites.' } });
   }
 
   let body = req.body;

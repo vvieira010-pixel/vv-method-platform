@@ -25,10 +25,21 @@ export function getZoomUrl() {
  * @param {string} [p.classFocus]
  * @param {string} [p.timezone]  IANA tz of the class wall-clock time
  */
+function getSessionToken() {
+  try {
+    const raw = localStorage.getItem('vv:supabase_session');
+    return raw ? (JSON.parse(raw)?.access_token || '') : '';
+  } catch { return ''; }
+}
+
 export async function sendClassInvite(p) {
+  const token = getSessionToken();
   const r = await fetch('/api/send-invite', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
     body: JSON.stringify(p),
   });
   const data = await r.json().catch(() => ({}));
