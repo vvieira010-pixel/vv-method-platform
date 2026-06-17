@@ -8,6 +8,7 @@ import { Icon, Card, Button, Pill } from './shared.jsx';
 import { getExType, parseBlankTemplate, shuffleArray, autoGrade } from '../lib/exercise-types.js';
 import { ExTypeBadge } from './exercise-badge.jsx';
 import Listening from './exercises/Listening.jsx';
+import { fetchAudio, speakBrowser } from '../lib/tts.js';
 import { getDbContext, uploadSubmissionAudio, createSignedAudioUrl } from '../lib/supabase-db.js';
 import { DialoguePlayer, SwapPlayer, LevelUpPlayer } from './exercise-player-new-types.jsx';
 
@@ -971,6 +972,66 @@ function FlashPlayer({ ex, res, update, readOnly }) {
  */
 /* ─── 12. READING ───────────────────────────────────────── */
 
+/**
+ * PassageAudio — listen control for reading items flagged hidePassage:true.
+ * The passage IS the audio script; students hear it (pre-recorded audioSrc, then
+ * the TTS cascade, then browser speech) instead of reading it (audit E1).
+ */
+function PassageAudio({ passage, audioSrc, plays = 2, source }) {
+  const [playCount, setPlayCount] = useState(0);
+  const [playing, setPlaying] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const urlRef = useRef(null);
+  const maxPlays = plays === 0 ? Infinity : plays;
+  const canPlay = !playing && !loading && playCount < maxPlays;
+
+  async function handlePlay() {
+    if (!canPlay) return;
+    setError(''); setLoading(true);
+    try {
+      let url = urlRef.current;
+      if (!url) { url = audioSrc || await fetchAudio(passage); if (url) urlRef.current = url; }
+      setLoading(false);
+      if (url) {
+        const audio = new Audio(url);
+        setPlaying(true);
+        audio.onended = () => { setPlaying(false); setPlayCount(c => c + 1); };
+        audio.onerror = () => { setPlaying(false); setError('Could not play audio.'); };
+        await audio.play();
+      } else {
+        setPlaying(true);
+        await speakBrowser(passage);
+        setPlaying(false); setPlayCount(c => c + 1);
+      }
+    } catch (e) {
+      setLoading(false); setPlaying(false); setError(e.message || 'Could not play audio.');
+    }
+  }
+
+  const playsLeft = maxPlays === Infinity ? null : maxPlays - playCount;
+  return (
+    <div style={{
+      display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14,
+      padding: '12px 16px', borderRadius: 'var(--radius-sm)',
+      background: 'var(--accent-subtle)', border: '1px solid var(--accent-soft)',
+    }}>
+      <Button variant="primary" size="sm" onClick={handlePlay} disabled={!canPlay}>
+        <Icon.play size={13} /> {playing ? 'Playing…' : loading ? 'Loading…' : playCount === 0 ? 'Listen' : 'Replay'}
+      </Button>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--accent-deep)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+          Listening{playsLeft != null ? ` — ${playsLeft} play${playsLeft !== 1 ? 's' : ''} left` : ''}
+        </div>
+        {error
+          ? <div style={{ fontSize: 'var(--text-xs)', color: 'var(--danger)', marginTop: 2 }}>{error}</div>
+          : <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: 2 }}>Listen and answer — the script is hidden.</div>}
+        {source && <div style={{ fontSize: 'var(--text-xs)', color: 'var(--faint)', fontStyle: 'italic', marginTop: 2 }}>— {source}</div>}
+      </div>
+    </div>
+  );
+}
+
 function ReadPlayer({ ex, res, update, readOnly }) {
   const answers = res?.answers || {};
   const questions = ex.questions || [];
@@ -997,21 +1058,25 @@ function ReadPlayer({ ex, res, update, readOnly }) {
 
   return (
     <div>
-      {/* Passage */}
-      <div style={{
-        background: 'var(--surface)', border: '1px solid var(--border)',
-        borderRadius: 'var(--radius-sm)', padding: '14px 16px', marginBottom: 14,
-        maxHeight: 260, overflowY: 'auto', lineHeight: 1.8,
-        fontSize: 'var(--text-sm)', fontFamily: 'var(--font-ui)',
-        color: 'var(--text)',
-      }}>
-        <p style={{ margin: 0, whiteSpace: 'pre-wrap' }}>{ex.passage || 'No passage provided.'}</p>
-        {ex.source && (
-          <p style={{ margin: '8px 0 0', fontSize: 'var(--text-xs)', color: 'var(--muted)', fontStyle: 'italic', fontFamily: 'var(--font-ui)' }}>
-            — {ex.source}
-          </p>
-        )}
-      </div>
+      {/* Passage — heard (hidePassage: it's a listening script) or read */}
+      {ex.hidePassage ? (
+        <PassageAudio passage={ex.passage} audioSrc={ex.audioSrc} plays={ex.plays} source={ex.source} />
+      ) : (
+        <div style={{
+          background: 'var(--surface)', border: '1px solid var(--border)',
+          borderRadius: 'var(--radius-sm)', padding: '14px 16px', marginBottom: 14,
+          maxHeight: 260, overflowY: 'auto', lineHeight: 1.8,
+          fontSize: 'var(--text-sm)', fontFamily: 'var(--font-ui)',
+          color: 'var(--text)',
+        }}>
+          <p style={{ margin: 0, whiteSpace: 'pre-wrap' }}>{ex.passage || 'No passage provided.'}</p>
+          {ex.source && (
+            <p style={{ margin: '8px 0 0', fontSize: 'var(--text-xs)', color: 'var(--muted)', fontStyle: 'italic', fontFamily: 'var(--font-ui)' }}>
+              — {ex.source}
+            </p>
+          )}
+        </div>
+      )}
 
       {/* Questions */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
