@@ -324,7 +324,7 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
       const legacySections = {
         ...sections,
         studentFeedback: {
-          content: teacherMeaning.studentFeedback,
+          content: sections.studentFeedback?.content,
           approved: approve,
           hidden: false,
         },
@@ -361,10 +361,10 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
         cycleStage: approve ? 'diagnosed' : 'needs-diagnosis',
         classSummary: typeof sections.classSummary?.content === 'string' ? sections.classSummary.content : '',
         content: {
-          overall_result: teacherMeaning.classSummary || '',
+          overall_result: (typeof sections.classSummary?.content === 'string' ? sections.classSummary.content : '') || '',
           priorities: sections.priorityDiagnosis?.content || [],
-          student_friendly_feedback: teacherMeaning.studentFeedback || null,
-          homework: teacherMeaning.homeworkRecommendation || '',
+          student_friendly_feedback: sections.studentFeedback?.content || null,
+          homework: sections.homeworkRecommendation?.content?.instructions || '',
           error_bank: sections.errorBankSuggestions?.content || [],
           section_snapshot: buildSnapshot(sections.skillDiagnosis?.content),
         },
@@ -479,6 +479,9 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
         </div>
         {savedDiagnosis && <Pill tone={savedDiagnosis.status === 'approved' ? 'success' : 'warning'}>{savedDiagnosis.status}</Pill>}
       </div>
+
+      {/* ── Step progress bar ── */}
+      <DiagnosisStepBar step={step} />
 
       {/* ── STEP: PREREQ ── */}
       {step === 'prereq' && (
@@ -789,6 +792,55 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+const DIAGNOSIS_STEPS = [
+  { id: 'prereq',     label: 'Set up' },
+  { id: 'generating', label: 'Analyzing' },
+  { id: 'review',     label: 'Review' },
+  { id: 'saved',      label: 'Done' },
+];
+const STEP_ORDER = DIAGNOSIS_STEPS.map(s => s.id);
+
+function DiagnosisStepBar({ step }) {
+  const current = STEP_ORDER.indexOf(step);
+  return (
+    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 0, marginBottom: 4 }}>
+      {DIAGNOSIS_STEPS.map((s, i) => {
+        const done   = i < current;
+        const active = i === current;
+        return (
+          <div key={s.id} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5, position: 'relative' }}>
+            {/* connector line */}
+            {i > 0 && (
+              <div style={{
+                position: 'absolute', top: 9, right: '50%', left: '-50%', height: 2,
+                background: done ? 'var(--accent)' : 'var(--divider)',
+                transition: 'background 0.3s',
+              }} />
+            )}
+            {/* dot */}
+            <div style={{
+              width: 20, height: 20, borderRadius: '50%', zIndex: 1,
+              display: 'grid', placeItems: 'center', flexShrink: 0,
+              background: active ? 'var(--accent)' : done ? 'var(--accent)' : 'var(--divider)',
+              border: active ? '2px solid var(--accent-deep)' : 'none',
+              transition: 'background 0.3s',
+            }}>
+              {done && <Icon.check size={10} color="#fff" />}
+              {active && <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#fff' }} />}
+            </div>
+            {/* label */}
+            <span style={{
+              fontSize: 'var(--text-xs)', whiteSpace: 'nowrap',
+              color: active ? 'var(--accent-deep)' : done ? 'var(--accent)' : 'var(--muted)',
+              fontWeight: active ? 700 : 400,
+            }}>{s.label}</span>
+          </div>
+        );
+      })}
     </div>
   );
 }

@@ -274,7 +274,7 @@ p {
 }
 
 .btn:focus-visible {
-  outline: 2px solid var(--primary);
+  outline: 2px solid var(--accent);
   outline-offset: 3px;
 }
 
@@ -2639,7 +2639,7 @@ p {
 
 .modal-card {
   width: 100%;
-  border-radius: 20px;
+  border-radius: var(--radius-lg);
   overflow: hidden;
   background: var(--surface);
   box-shadow: 0 24px 64px rgba(0,0,0,0.35);
@@ -2679,7 +2679,7 @@ p {
 .modal-close {
   background: rgba(255,255,255,0.15);
   border: none;
-  border-radius: 10px;
+  border-radius: var(--radius-sm);
   color: white;
   cursor: pointer;
   padding: 8px 12px;
