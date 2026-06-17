@@ -56,6 +56,8 @@ export default function SettingsPage({ onNavigate }) {
   const [piperUrl, setPiperUrl] = useState(() => localStorage.getItem('vv:piper_server_url') || '');
   const [generalMemo, setGeneralMemo] = useState(() => localStorage.getItem('vv:student_general_memo') || '');
   const [examDate, setExamDate] = useState(() => localStorage.getItem('vv:met_exam_date') || '');
+  const [zoomUrl, setZoomUrl] = useState(() => localStorage.getItem('vv:zoom_meeting_url') || '');
+  const [teacherName, setTeacherName] = useState(() => localStorage.getItem('vv:teacher_name') || '');
   const [saved, setSaved] = useState('');
   const [syncing, setSyncing] = useState(false);
   const [syncResult, setSyncResult] = useState('');
@@ -132,6 +134,20 @@ export default function SettingsPage({ onNavigate }) {
     if (examDate) localStorage.setItem('vv:met_exam_date', examDate);
     else localStorage.removeItem('vv:met_exam_date');
     window.toast?.('Exam date saved — students will see the countdown on their dashboard.', 'ok');
+  }
+
+  function saveClassLink() {
+    const url = zoomUrl.trim();
+    if (url && !/^https?:\/\//i.test(url)) {
+      window.toast?.('Enter a full link starting with https://', 'warn');
+      return;
+    }
+    if (url) localStorage.setItem('vv:zoom_meeting_url', url);
+    else localStorage.removeItem('vv:zoom_meeting_url');
+    const name = teacherName.trim();
+    if (name) localStorage.setItem('vv:teacher_name', name);
+    else localStorage.removeItem('vv:teacher_name');
+    window.toast?.('Class link saved — use "Send invite" on a class in the Calendar.', 'ok');
   }
 
   async function saveGeneralMemo() {
@@ -369,6 +385,48 @@ export default function SettingsPage({ onNavigate }) {
         )}
         <div style={{ marginTop: 12 }}>
           <Button variant="primary" onClick={saveExamDate}>Save exam date</Button>
+        </div>
+      </Card>
+
+      {/* Class video link (Zoom) for calendar invites */}
+      <Card style={{ padding: 20, marginTop: 14 }}>
+        <SectionHeader title="Class Video Link (Zoom)" icon={<Icon.calendar size={15} />} />
+        <p style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', margin: '8px 0 14px', lineHeight: 1.6 }}>
+          Paste your Zoom Personal Meeting Room link. Every calendar invite you send from a class
+          will include this link and an <code>.ics</code> calendar attachment for the student.
+        </p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <Field label="Zoom meeting link">
+            <input
+              className="input"
+              type="url"
+              value={zoomUrl}
+              onChange={e => setZoomUrl(e.target.value)}
+              placeholder="https://us05web.zoom.us/j/0000000000?pwd=…"
+            />
+            <a href="https://zoom.us/profile" target="_blank" rel="noopener noreferrer" style={{ fontSize: 'var(--text-xs)', color: 'var(--accent)', marginTop: 3 }}>Find your Personal Meeting Room link →</a>
+          </Field>
+          <Field label="Your name (shown as the organizer)">
+            <input
+              className="input"
+              value={teacherName}
+              onChange={e => setTeacherName(e.target.value)}
+              placeholder="e.g. Vinicius — MET Coach"
+            />
+          </Field>
+          <div style={{
+            padding: '10px 14px', fontSize: 'var(--text-xs)',
+            background: 'var(--accent-subtle)', color: 'var(--muted)', lineHeight: 1.6,
+            border: '1px solid var(--accent-soft)',
+          }}>
+            <strong>Emailing setup</strong> — sending invites also needs a transactional email
+            provider configured on the server: set <code>RESEND_API_KEY</code> and
+            <code> INVITE_FROM_EMAIL</code> (a verified sender) in your Vercel environment.
+            Until then, the link is saved but invites can't be emailed.
+          </div>
+          <div>
+            <Button variant="primary" onClick={saveClassLink}>Save class link</Button>
+          </div>
         </div>
       </Card>
 
