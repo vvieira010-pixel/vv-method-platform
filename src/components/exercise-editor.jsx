@@ -6,6 +6,7 @@
 import { useState } from 'react';
 import { Icon, Card, Button } from './shared.jsx';
 import { EX_TYPES, getExType } from '../lib/exercise-types.js';
+import { metTaskOptions } from '../lib/met-task-spec.js';
 import { DialogueEditor, SwapEditor, LevelUpEditor, ReadEditor } from './exercise-editor-new-types.jsx';
 export { ExTypeBadge } from './exercise-badge.jsx';
 
@@ -275,6 +276,13 @@ function ShortEditor({ ex, update }) {
           placeholder="Should night shifts in hospitals be capped at 10 hours? Argue for or against in ~120 words."
         />
       </div>
+      <div style={fieldWrap}>
+        <label style={fieldLabel}>MET task type (adds task-specific frames, checks & traps for the student)</label>
+        <select className="input" value={ex.metTaskType || ''} onChange={e => update({ metTaskType: e.target.value || undefined })}>
+          <option value="">— None (generic short answer) —</option>
+          {metTaskOptions('short').map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+        </select>
+      </div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 12 }}>
         <div style={fieldWrap}>
           <label style={fieldLabel}>Rubric hint (shown to student)</label>
@@ -309,6 +317,13 @@ function SpeakEditor({ ex, update }) {
           onChange={e => update({ prompt: e.target.value })}
           placeholder="Tell me about a moment when your training kicked in faster than thought. Past simple only."
         />
+      </div>
+      <div style={fieldWrap}>
+        <label style={fieldLabel}>MET task type (adds task-specific frames, checks & traps for the student)</label>
+        <select className="input" value={ex.metTaskType || ''} onChange={e => update({ metTaskType: e.target.value || undefined })}>
+          <option value="">— None (generic speaking prompt) —</option>
+          {metTaskOptions('speak').map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+        </select>
       </div>
       <div style={fieldWrap}>
         <label style={fieldLabel}>Picture description (shown to student as a scene to describe or react to)</label>
