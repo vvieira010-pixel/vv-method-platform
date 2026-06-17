@@ -272,6 +272,14 @@ export default function App() {
     );
   }
 
+  // ── Pending submissions badge ──
+  const [pendingSubmissions, setPendingSubmissions] = useState(0);
+  useEffect(() => {
+    getAllSubmissions().then(list => {
+      setPendingSubmissions((list || []).filter(s => s.status === 'submitted').length);
+    }).catch(() => {});
+  }, []);
+
   // ── Teacher shell ──
   const teacherTabs = [
     { id: 'dashboard',    label: 'Today',        icon: <Icon.home size={16} /> },
