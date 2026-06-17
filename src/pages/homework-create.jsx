@@ -20,6 +20,7 @@ import { ExerciseEditor, ExerciseTypePicker, ExTypeBadge } from '../components/e
 import { getExerciseModules, getModuleExercises, bankMeta } from '../lib/exercise-bank.js';
 import { getB2Modules, getB2ModuleExercises, b2BankMeta } from '../lib/met-b2-bank.js';
 import { getLifestyleModules, getLifestyleModuleExercises, lifestylePackMeta } from '../lib/lifestyle-pack.js';
+import { getHomeworkModules, getHomeworkModuleExercises, homeworkBankMeta } from '../lib/met-homework-bank.js';
 import { getLibraryExercises, saveExerciseToLibrary, deleteLibraryExercise, incrementUsage } from '../lib/exercise-library.js';
 import HomeworkSetWizard from '../components/homework-set-wizard.jsx';
 import { getUnitsByLevel, getSkillExercises, SUBJECT_OPTIONS } from '../lib/unit-bank.js';
@@ -30,6 +31,47 @@ const EMPTY_FORM = {
   selfCheck: [''],
   skillType: 'grammar', dueDate: '', teacherNotes: '',
 };
+
+const GENERATED_GROUP_ORDER = ['grammar', 'vocabulary', 'reading', 'listening', 'speaking', 'mixed', ''];
+const GENERATED_TYPE_ORDER = ['mcq', 'blank', 'short', 'listen', 'read', 'speak', 'order', 'fix', 'flash', 'dialogue', 'swap', 'levelup'];
+
+function normalizeGeneratedGroup(value) {
+  const v = String(value || '').toLowerCase();
+  if (!v) return '';
+  if (v.includes('mixed')) return 'mixed';
+  if (v.includes('grammar')) return 'grammar';
+  if (v.includes('vocab')) return 'vocabulary';
+  if (v.includes('read')) return 'reading';
+  if (v.includes('listen')) return 'listening';
+  if (v.includes('speak')) return 'speaking';
+  return v;
+}
+
+function rankValue(value, order) {
+  const idx = order.indexOf(value);
+  return idx >= 0 ? idx : order.length;
+}
+
+function orderGeneratedExercises(exercises) {
+  return [...(Array.isArray(exercises) ? exercises : [])]
+    .map((ex, index) => ({ ex, index }))
+    .sort((a, b) => {
+      const aGroup = normalizeGeneratedGroup(a.ex.skillGroup || a.ex.skillType || a.ex.type);
+      const bGroup = normalizeGeneratedGroup(b.ex.skillGroup || b.ex.skillType || b.ex.type);
+      const groupDiff = rankValue(aGroup, GENERATED_GROUP_ORDER) - rankValue(bGroup, GENERATED_GROUP_ORDER);
+      if (groupDiff) return groupDiff;
+
+      const typeDiff = rankValue(String(a.ex.type || '').toLowerCase(), GENERATED_TYPE_ORDER) - rankValue(String(b.ex.type || '').toLowerCase(), GENERATED_TYPE_ORDER);
+      if (typeDiff) return typeDiff;
+
+      const titleA = String(a.ex.title || a.ex.prompt || a.ex.question || a.ex.instruction || '').toLowerCase();
+      const titleB = String(b.ex.title || b.ex.prompt || b.ex.question || b.ex.instruction || '').toLowerCase();
+      if (titleA !== titleB) return titleA.localeCompare(titleB);
+
+      return a.index - b.index;
+    })
+    .map(item => item.ex);
+}
 
 const SKILL_TYPES = ['writing', 'speaking', 'grammar', 'vocabulary', 'reading', 'listening', 'mixed'];
 const HOMEWORK_AI_BASE_OPTIONS = { preferredProvider: 'gemini' };
@@ -154,6 +196,7 @@ export default function HomeworkCreate({ diagnosisId, studentId, students, onNav
   const [showLibrary, setShowLibrary] = useState(false);
   const [showB2Bank, setShowB2Bank] = useState(false);
   const [showLifestylePack, setShowLifestylePack] = useState(false);
+  const [showHomeworkBank, setShowHomeworkBank] = useState(false);
   // Per-skill-group generation config: { speaking: 5, grammar: 4, ... }
   const [groupGenConfig, setGroupGenConfig] = useState({});
   const [showGroupGen, setShowGroupGen] = useState(false);
@@ -207,10 +250,12 @@ export default function HomeworkCreate({ diagnosisId, studentId, students, onNav
 
   function populateFromDiagnosis(dx, s) {
     const hwRec = dx.sections?.homeworkRecommendation?.content;
+    const teacherRec = dx.teacherMeaning?.homeworkRecommendation;
     const priority = getPriorityItems(dx)[0];
     const title = hwRec?.title || (priority ? `${s?.firstName || 'Student'} — ${priority.area}` : 'Homework from Diagnosis');
-    const description = hwRec?.instructions || '';
+    const description = teacherRec || hwRec?.instructions || '';
     const type = hwRec?.expectedSubmissionType?.split('|')[0] || inferSkillType(getPriorityItems(dx));
+    const objective = hwRec?.objective || (teacherRec ? `Practice: ${teacherRec}` : (priority ? priority.whatToImprove : ''));
 
     // Convert legacy tasks to structured exercises where possible
     const legacyTasks = Array.isArray(hwRec?.tasks) ? hwRec.tasks : [];
@@ -223,7 +268,7 @@ export default function HomeworkCreate({ diagnosisId, studentId, students, onNav
 
     setForm({
       title,
-      objective: hwRec?.objective || (priority ? priority.whatToImprove : ''),
+      objective,
       description,
       exercises,
       selfCheck: Array.isArray(hwRec?.selfCheck) ? hwRec.selfCheck : [''],
@@ -242,11 +287,15 @@ function inferSkillType(priorities) {
 }
 
 function getPriorityItems(dx) {
-  return Array.isArray(dx?.priorityDiagnosis)
-    ? dx.priorityDiagnosis
-    : Array.isArray(dx?.sections?.priorityDiagnosis?.content)
-      ? dx.sections.priorityDiagnosis.content
-      : [];
+  return Array.isArray(dx?.teacherMeaning?.priorityDiagnosis)
+    ? dx.teacherMeaning.priorityDiagnosis
+    : Array.isArray(dx?.diagnosticData?.priorityRecommendations)
+      ? dx.diagnosticData.priorityRecommendations
+      : Array.isArray(dx?.priorityDiagnosis)
+        ? dx.priorityDiagnosis
+        : Array.isArray(dx?.sections?.priorityDiagnosis?.content)
+          ? dx.sections.priorityDiagnosis.content
+          : [];
 }
 
   /* ── Exercise management ── */
@@ -355,7 +404,7 @@ function getPriorityItems(dx) {
         const parsed = parseAiJson(raw);
         const items = Array.isArray(parsed) ? parsed : (Array.isArray(parsed?.exercises) ? parsed.exercises : []);
         const { exercises, skipped } = buildCompleteExercises(items, { defaultSkillGroup: group });
-        allGenerated.push(...exercises);
+        allGenerated.push(...orderGeneratedExercises(exercises));
         window.toast?.(`${group.charAt(0).toUpperCase() + group.slice(1)}: ${exercises.length} complete exercises generated${skipped ? `, ${skipped} skipped` : ''}.`, exercises.length ? 'ok' : 'warn');
       } catch (e) {
         window.toast?.(`${group} exercises failed: ${e.message}`, 'warn');
@@ -386,6 +435,7 @@ function getPriorityItems(dx) {
       const parsed = parseAiJson(data.content?.map(b => b.text || '').join('') || '');
       
       if (!parsed || parsed.type !== 'listen') throw new Error('AI returned invalid listening task.');
+      if (!isStructuredAiExerciseComplete(parsed, 'listen')) throw new Error('Listening task missing required fields.');
       
       const fresh = createExercise('listen');
       const listeningEx = { 
@@ -428,7 +478,8 @@ function getPriorityItems(dx) {
         tasks.push(parseAiJson(tData.content?.map(b => b.text || '').join('') || ''));
       }
       const { exercises, skipped } = buildCompleteExercises(tasks);
-      if (!exercises.length) throw new Error('AI returned tasks, but none were complete enough to add.');
+      const orderedExercises = orderGeneratedExercises(exercises);
+      if (!orderedExercises.length) throw new Error('AI returned tasks, but none were complete enough to add.');
       
       setGroupGenStatus('Refining and finalising...');
       // 3. Final Refinement
@@ -440,7 +491,7 @@ function getPriorityItems(dx) {
         title: blueprint?.title || 'MET Practice Homework',
         objective: blueprint?.objective || f.objective || 'Build MET readiness through targeted practice.',
         description: refinement?.instructions || 'Complete each exercise carefully. Bring questions to the next class.',
-        exercises,
+        exercises: orderedExercises,
         selfCheck: Array.isArray(refinement?.selfCheck) && refinement.selfCheck.length ? refinement.selfCheck : ['I checked my answers before submitting.'],
         teacherNotes: skipped ? `${refinement?.teacherNotes || ''}\n\n${skipped} incomplete AI exercise(s) were skipped.`.trim() : (refinement?.teacherNotes || ''),
         skillType: inferSkillType(getPriorityItems(diagnosis)),
@@ -466,9 +517,10 @@ function getPriorityItems(dx) {
       const parsed = parseAiJson(raw);
       const list = Array.isArray(parsed) ? parsed : parsed.exercises || [];
       const { exercises, skipped } = buildCompleteExercises(list);
-      setExerciseOptions(exercises);
-      if (exercises.length === 0) window.toast?.('No complete exercises returned. Try again.', 'warn');
-      else window.toast?.(`${exercises.length} complete suggestions ready${skipped ? `, ${skipped} skipped` : ''}.`, 'ok');
+      const orderedExercises = orderGeneratedExercises(exercises);
+      setExerciseOptions(orderedExercises);
+      if (orderedExercises.length === 0) window.toast?.('No complete exercises returned. Try again.', 'warn');
+      else window.toast?.(`${orderedExercises.length} complete suggestions ready${skipped ? `, ${skipped} skipped` : ''}.`, 'ok');
     } catch (e) {
       window.toast?.(`Exercise generation failed: ${e.message}`, 'warn');
     }
@@ -508,6 +560,14 @@ function getPriorityItems(dx) {
     setForm(f => ({ ...f, exercises: [...f.exercises, ...exercises] }));
     window.toast?.(`Added ${exercises.length} lifestyle exercises from "${mod.label}".`, 'ok');
     setShowLifestylePack(false);
+  }
+
+  function addModuleFromHomeworkBank(mod) {
+    const exercises = getHomeworkModuleExercises(mod.id);
+    if (!exercises.length) { window.toast?.('No exercises in this module.', 'warn'); return; }
+    setForm(f => ({ ...f, exercises: [...f.exercises, ...exercises] }));
+    window.toast?.(`Added ${exercises.length} homework exercises from "${mod.label}".`, 'ok');
+    setShowHomeworkBank(false);
   }
 
   async function copyLifestylePrintablePack() {
@@ -565,6 +625,8 @@ function getPriorityItems(dx) {
       title: form.title,
       objective: form.objective,
       description: form.description,
+      level: selectedLevel,
+      kind: selectedSkill,
       activities: form.exercises,
       selfCheck: form.selfCheck.filter(Boolean),
       skillType: form.skillType,
@@ -700,7 +762,7 @@ function getPriorityItems(dx) {
                     </div>
                   </div>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 8, marginBottom: 16, maxHeight: 'min(52vh, 480px)', overflowY: 'auto' }}>
+                  <div className="exercise-type-picker-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gridAutoRows: '1fr', alignItems: 'stretch', gap: 8, marginBottom: 16, maxHeight: 'min(52vh, 480px)', overflowY: 'auto' }}>
                     {EX_TYPES.map(t => {
                       const IconComp = Icon[t.iconKey];
                       const checked = selectedTypes.includes(t.id);
@@ -752,11 +814,14 @@ function getPriorityItems(dx) {
                   <div style={{ marginTop: 16, borderTop: '1px solid var(--divider)', paddingTop: 14 }}>
                     <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>Browse pre-made packs</div>
                     <div className="homework-create-actions" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                      <Button variant="ghost" size="sm" onClick={() => { setShowB2Bank(v => !v); setShowLifestylePack(false); }}>
+                      <Button variant="ghost" size="sm" onClick={() => { setShowB2Bank(v => !v); setShowLifestylePack(false); setShowHomeworkBank(false); }}>
                         <Icon.homework size={12} /> MET B2 Pack
                       </Button>
-                      <Button variant="ghost" size="sm" onClick={() => { setShowLifestylePack(v => !v); setShowB2Bank(false); }}>
+                      <Button variant="ghost" size="sm" onClick={() => { setShowLifestylePack(v => !v); setShowB2Bank(false); setShowHomeworkBank(false); }}>
                         <Icon.doc size={12} /> Lifestyle Pack
+                      </Button>
+                      <Button variant="ghost" size="sm" onClick={() => { setShowHomeworkBank(v => !v); setShowB2Bank(false); setShowLifestylePack(false); }}>
+                        <Icon.homework size={12} /> Homework Bank
                       </Button>
                     </div>
 
@@ -810,6 +875,29 @@ function getPriorityItems(dx) {
                                 )}
                               </div>
                               <Button variant="ghost" size="sm" onClick={() => addModuleFromLifestylePack(mod)}>Add</Button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {showHomeworkBank && (
+                      <div style={{ marginTop: 10, marginBottom: 12, border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: 'var(--accent-subtle)', borderBottom: '1px solid var(--border)' }}>
+                          <div>
+                            <span style={{ fontWeight: 700, fontSize: 'var(--text-sm)' }}>{homeworkBankMeta.title}</span>
+                            <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: 2 }}>{homeworkBankMeta.level} · {homeworkBankMeta.moduleCount} sections · {homeworkBankMeta.exerciseCount} exercises</div>
+                          </div>
+                          <button onClick={() => setShowHomeworkBank(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)', fontSize: 16 }}>✕</button>
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 0, maxHeight: 340, overflowY: 'auto' }}>
+                          {getHomeworkModules().map(mod => (
+                            <div key={mod.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', borderBottom: '1px solid var(--divider)', gap: 10 }}>
+                              <div>
+                                <div style={{ fontWeight: 500, fontSize: 'var(--text-sm)' }}>{mod.label}</div>
+                                <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', textTransform: 'capitalize' }}>{mod.skill} · {mod.exercises.length} exercises</div>
+                              </div>
+                              <Button variant="ghost" size="sm" onClick={() => addModuleFromHomeworkBank(mod)}>Add</Button>
                             </div>
                           ))}
                         </div>
@@ -1327,11 +1415,7 @@ function isStructuredAiExerciseComplete(ex) {
 // the diagnosis priority is a production skill (speaking or writing).
 // Returns null when no concern is found.
 function getHomeworkCognitiveSufficiencyWarning(exercises, diagnosis) {
-  const priorities = Array.isArray(diagnosis?.priorityDiagnosis)
-    ? diagnosis.priorityDiagnosis
-    : Array.isArray(diagnosis?.sections?.priorityDiagnosis?.content)
-      ? diagnosis.sections.priorityDiagnosis.content
-      : [];
+  const priorities = getPriorityItems(diagnosis);
   const topPriority = (priorities[0]?.area || '').toLowerCase();
   const isProductionPriority = /speak|writ|produc/.test(topPriority);
   if (!isProductionPriority) return null;

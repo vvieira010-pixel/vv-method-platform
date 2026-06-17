@@ -440,9 +440,9 @@ const pickArray = (...values) => values.map(arr).find(v => v.length) || [];
 
 export const buildHomeworkPrompt = (data) => {
   const { student, diagnosis } = data;
-  const priorities = pickArray(diagnosis?.priorityDiagnosis, diagnosis?.sections?.priorityDiagnosis?.content);
-  const errors = pickArray(data?.errorBank, diagnosis?.errorBank, diagnosis?.sections?.errorBankSuggestions?.content);
-  const vocab = pickArray(data?.vocabTargets?.vocabularyTargets, diagnosis?.vocabTargets?.vocabularyTargets, diagnosis?.sections?.vocabGrammarTargets?.content?.vocabularyTargets);
+  const priorities = pickArray(diagnosis?.teacherMeaning?.priorityDiagnosis, diagnosis?.diagnosticData?.priorityRecommendations, diagnosis?.priorityDiagnosis, diagnosis?.sections?.priorityDiagnosis?.content);
+  const errors = pickArray(data?.errorBank, diagnosis?.diagnosticData?.errors, diagnosis?.errorBank, diagnosis?.sections?.errorBankSuggestions?.content);
+  const vocab = pickArray(data?.vocabTargets?.vocabularyTargets, diagnosis?.diagnosticData?.vocabulary, diagnosis?.vocabTargets?.vocabularyTargets, diagnosis?.sections?.vocabGrammarTargets?.content?.vocabularyTargets);
   const grammar = pickArray(data?.vocabTargets?.grammarTargets, diagnosis?.vocabTargets?.grammarTargets, diagnosis?.sections?.vocabGrammarTargets?.content?.grammarTargets);
 
   return `You are an expert MET Instructional Designer.
@@ -549,7 +549,7 @@ Do not return placeholder text. Do not omit answer keys.`;
 const GENERAL_MET_TOPIC_RULES = `Topics should reflect real-life situations appropriate for the MET exam: education, work, healthcare, technology, community, lifestyle, environment, personal decisions, public services, health and wellbeing. Avoid overly niche or culturally specific topics.`;
 
 export const buildHomeworkBlueprintPrompt = ({ student, diagnosis }) => {
-  const priorities = pickArray(diagnosis?.priorityDiagnosis, diagnosis?.sections?.priorityDiagnosis?.content);
+  const priorities = pickArray(diagnosis?.teacherMeaning?.priorityDiagnosis, diagnosis?.diagnosticData?.priorityRecommendations, diagnosis?.priorityDiagnosis, diagnosis?.sections?.priorityDiagnosis?.content);
   return `Create a complete MET homework blueprint for ${student?.name || 'the student'}.
 Priorities: ${priorities.slice(0, 3).map(p => `${p.area}: ${p.whatToImprove || ''}`).join(' | ') || 'MET B1-B2 readiness'}.
 
@@ -564,9 +564,9 @@ Return JSON only:
 };
 
 export const buildTaskGeneratorPrompt = ({ student, diagnosis, taskBlueprint, taskType }) => {
-  const priorities = pickArray(diagnosis?.priorityDiagnosis, diagnosis?.sections?.priorityDiagnosis?.content);
-  const errors = pickArray(diagnosis?.errorBank, diagnosis?.sections?.errorBankSuggestions?.content);
-  const vocab = pickArray(diagnosis?.vocabTargets?.vocabularyTargets, diagnosis?.sections?.vocabGrammarTargets?.content?.vocabularyTargets);
+  const priorities = pickArray(diagnosis?.teacherMeaning?.priorityDiagnosis, diagnosis?.diagnosticData?.priorityRecommendations, diagnosis?.priorityDiagnosis, diagnosis?.sections?.priorityDiagnosis?.content);
+  const errors = pickArray(diagnosis?.diagnosticData?.errors, diagnosis?.errorBank, diagnosis?.sections?.errorBankSuggestions?.content);
+  const vocab = pickArray(diagnosis?.diagnosticData?.vocabulary, diagnosis?.vocabTargets?.vocabularyTargets, diagnosis?.sections?.vocabGrammarTargets?.content?.vocabularyTargets);
   const grammar = pickArray(diagnosis?.vocabTargets?.grammarTargets, diagnosis?.sections?.vocabGrammarTargets?.content?.grammarTargets);
 
   return `Generate one complete, fully written ${taskType} exercise for ${student?.name || 'the student'}.
@@ -620,7 +620,7 @@ Return JSON: { "instructions": string, "selfCheck": [string], "teacherNotes": st
    so each call is small and cascade-resilient.
 ══════════════════════════════════════════════════════════════ */
 export const buildHomeworkGroupPrompt = ({ student, diagnosis, group, count = 5 }) => {
-  const priorities = pickArray(diagnosis?.priorityDiagnosis, diagnosis?.sections?.priorityDiagnosis?.content);
+  const priorities = pickArray(diagnosis?.teacherMeaning?.priorityDiagnosis, diagnosis?.diagnosticData?.priorityRecommendations, diagnosis?.priorityDiagnosis, diagnosis?.sections?.priorityDiagnosis?.content);
   const errors     = pickArray(diagnosis?.errorBank, diagnosis?.sections?.errorBankSuggestions?.content);
   const vocab      = pickArray(diagnosis?.vocabTargets?.vocabularyTargets, diagnosis?.sections?.vocabGrammarTargets?.content?.vocabularyTargets);
   const grammar    = pickArray(diagnosis?.vocabTargets?.grammarTargets, diagnosis?.sections?.vocabGrammarTargets?.content?.grammarTargets);
@@ -700,9 +700,9 @@ Include only the fields relevant to the exercise type. The "content" field alway
    Restored: was dropped during the module-prompt refactor.
 ══════════════════════════════════════════════════════════════ */
 export const buildExerciseListPrompt = ({ student, diagnosis, level, skill }) => {
-  const priorities = pickArray(diagnosis?.priorityDiagnosis, diagnosis?.sections?.priorityDiagnosis?.content);
-  const errors = pickArray(diagnosis?.errorBank, diagnosis?.sections?.errorBankSuggestions?.content);
-  const vocab = pickArray(diagnosis?.vocabTargets?.vocabularyTargets, diagnosis?.sections?.vocabGrammarTargets?.content?.vocabularyTargets);
+  const priorities = pickArray(diagnosis?.teacherMeaning?.priorityDiagnosis, diagnosis?.diagnosticData?.priorityRecommendations, diagnosis?.priorityDiagnosis, diagnosis?.sections?.priorityDiagnosis?.content);
+  const errors = pickArray(diagnosis?.diagnosticData?.errors, diagnosis?.errorBank, diagnosis?.sections?.errorBankSuggestions?.content);
+  const vocab = pickArray(diagnosis?.diagnosticData?.vocabulary, diagnosis?.vocabTargets?.vocabularyTargets, diagnosis?.sections?.vocabGrammarTargets?.content?.vocabularyTargets);
   const grammar = pickArray(diagnosis?.vocabTargets?.grammarTargets, diagnosis?.sections?.vocabGrammarTargets?.content?.grammarTargets);
   const levelNote = level ? `\nTarget CEFR level: ${level}` : '';
   const skillNote = skill ? `\nSkill focus: ${skill}` : '';
@@ -827,9 +827,9 @@ Return ONLY valid JSON — an array of 7 exercises mixing different types:
  * Focus: High-fidelity listening tasks for MET.
  */
 export const buildListeningGeneratorPrompt = ({ student, diagnosis, taskBlueprint }) => {
-  const priorities = pickArray(diagnosis?.priorityDiagnosis, diagnosis?.sections?.priorityDiagnosis?.content);
-  const errors = pickArray(diagnosis?.errorBank, diagnosis?.sections?.errorBankSuggestions?.content);
-  const vocab = pickArray(diagnosis?.vocabTargets?.vocabularyTargets, diagnosis?.sections?.vocabGrammarTargets?.content?.vocabularyTargets);
+  const priorities = pickArray(diagnosis?.teacherMeaning?.priorityDiagnosis, diagnosis?.diagnosticData?.priorityRecommendations, diagnosis?.priorityDiagnosis, diagnosis?.sections?.priorityDiagnosis?.content);
+  const errors = pickArray(diagnosis?.diagnosticData?.errors, diagnosis?.errorBank, diagnosis?.sections?.errorBankSuggestions?.content);
+  const vocab = pickArray(diagnosis?.diagnosticData?.vocabulary, diagnosis?.vocabTargets?.vocabularyTargets, diagnosis?.sections?.vocabGrammarTargets?.content?.vocabularyTargets);
 
   return `You are a MET English Instructional Designer specializing in Listening comprehension.
 Build one complete, student-ready listening exercise.
