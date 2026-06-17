@@ -844,17 +844,6 @@ function getPriorityItems(dx) {
                     </Button>
                   </div>
                 </div>
-                      style={activePanel === 'group-gen' ? { borderColor: 'var(--accent)', color: 'var(--accent)' } : {}}>
-                      <Icon.check size={12} /> Build by Skill
-                    </Button>
-                  </div>
-                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                    <Button variant="primary" size="sm" onClick={() => togglePanel('type-picker')}
-                      style={activePanel === 'type-picker' ? { opacity: 0.75 } : {}}>
-                      <Icon.plus size={12} /> Add Exercise
-                    </Button>
-                  </div>
-                </div>
 
                 {groupGenStatus && (
                   <div style={{ marginBottom: 12, padding: '12px 14px', border: '1.5px solid var(--accent-soft)', borderRadius: 'var(--radius-sm)', background: 'var(--surface)', color: 'var(--accent-deep)', fontSize: 'var(--text-sm)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 10, boxShadow: 'var(--shadow-sm)' }}>
