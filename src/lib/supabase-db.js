@@ -541,7 +541,7 @@ export async function upsertReviewSchedule(localStudentId, list) {
     practice_count: e.practiceCount || 0,
     mastered: Boolean(e.mastered),
   }));
-  await sbFetch(ctx, 'review_schedule', {
+  await sbFetch(ctx, 'review_schedule?on_conflict=student_id,error_id', {
     method: 'POST',
     headers: { Prefer: 'resolution=merge-duplicates,return=minimal' },
     body: JSON.stringify(rows),
