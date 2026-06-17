@@ -1,4 +1,4 @@
-/**
+﻿/**
  * diagnostic-create.jsx — Multi-step diagnosis: prereqs → AI → preview/approve → save
  *
  * The most important page. Teacher must:
@@ -320,10 +320,24 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
         setSaving(false);
         return;
       }
-      const studentFeedbackSection = sections.studentFeedback;
-      const homeworkSection = sections.homeworkRecommendation;
-      const visibleStudentFeedback = studentFeedbackSection?.approved && !studentFeedbackSection.hidden ? studentFeedbackSection.content : null;
-      const visibleHomework = homeworkSection?.approved && !homeworkSection.hidden ? homeworkSection.content : null;
+      // Build legacy sections from new data for backward compat + student dashboard visibility
+      const legacySections = {
+        ...sections,
+        studentFeedback: {
+          content: teacherMeaning.studentFeedback,
+          approved: approve,
+          hidden: false,
+        },
+        profileUpdateSuggestions: sections?.profileUpdateSuggestions || {
+          content: {
+            progressNote: '',
+            suggestedLevelChange: 'No change yet.',
+            recurringErrorsToTrack: [],
+            masteredItems: [],
+          },
+          approved: approve,
+        },
+      };
 
       const dx = await saveDiagnosis({
         id: savedDiagnosis?.id,
@@ -340,18 +354,17 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
           vocabulary: normalizedEvidence?.vocabularyEvidenceCount || 0,
           testStrategy: normalizedEvidence?.testStrategyEvidenceCount || 0,
         },
-        sections,
+        sections: legacySections,
         aiRaw: aiResult,
         status: approve ? 'approved' : 'draft',
         teacherApproved: approve,
         cycleStage: approve ? 'diagnosed' : 'needs-diagnosis',
         classSummary: typeof sections.classSummary?.content === 'string' ? sections.classSummary.content : '',
         content: {
-          overall_result: typeof sections.classSummary?.content === 'string' ? sections.classSummary.content : '',
+          overall_result: teacherMeaning.classSummary || '',
           priorities: sections.priorityDiagnosis?.content || [],
-          student_friendly_feedback: visibleStudentFeedback,
-          homework: visibleHomework?.instructions || '',
-          homework_directions: visibleHomework,
+          student_friendly_feedback: teacherMeaning.studentFeedback || null,
+          homework: teacherMeaning.homeworkRecommendation || '',
           error_bank: sections.errorBankSuggestions?.content || [],
           section_snapshot: buildSnapshot(sections.skillDiagnosis?.content),
         },

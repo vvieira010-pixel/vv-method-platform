@@ -173,7 +173,8 @@ export default function ToolInbox({ students = [], onNavigate, workspaceQuery = 
                   style={{
                     ...S.messageItem,
                     background: selected?.id === m.id ? 'var(--accent-subtle)' : (m.fromRole === 'student' && !m.read ? 'var(--info-bg)' : '#fff'),
-                    borderLeft: selected?.id === m.id ? '3px solid var(--accent)' : '3px solid transparent',
+                    outline: selected?.id === m.id ? '1.5px solid var(--accent-soft)' : 'none',
+                    outlineOffset: '-1px',
                   }}
                 >
                   <div style={S.messageTop}>
@@ -290,10 +291,8 @@ const S = {
     width: '100%',
     padding: '12px 14px',
     textAlign: 'left',
+    border: 'none',
     borderBottom: '1px solid var(--divider)',
-    borderTop: 'none',
-    borderRight: 'none',
-    borderLeft: '3px solid transparent',
     cursor: 'pointer',
     fontFamily: 'var(--font-ui)',
   },

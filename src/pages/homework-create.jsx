@@ -1,4 +1,4 @@
-/**
+﻿/**
  * homework-create.jsx — Interactive homework builder with 7 exercise types.
  * Teacher picks exercise types, fills type-specific fields, previews as student.
  */

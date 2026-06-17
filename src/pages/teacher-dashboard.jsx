@@ -125,7 +125,7 @@ export default function TeacherDashboard({ students, onNavigate, teacherName = '
           { label: 'Need diagnosis', value: needDiagnosis, icon: <Icon.diagnose size={16} />, tone: needDiagnosis > 0 ? 'warning' : '', onClick: () => setStageFilter('needs-diagnosis') },
           { label: 'Pending review', value: pendingReview, icon: <Icon.doc size={16} />, tone: pendingReview > 0 ? 'danger' : '', onClick: () => onNavigate('submissions') },
         ].map((kpi, i) => (
-          <div key={kpi.label} style={{ animation: 'fadeUp 0.3s var(--ease) both', animationDelay: `${i * 60}ms` }}>
+          <div key={kpi.label} className="td-anim" style={{ animationDelay: `${i * 60}ms` }}>
             <KpiCard {...kpi} />
           </div>
         ))}

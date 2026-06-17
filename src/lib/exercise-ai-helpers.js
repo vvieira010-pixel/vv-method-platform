@@ -94,8 +94,21 @@ export function getHomeworkCognitiveSufficiencyWarning(exercises, diagnosis) {
   return null;
 }
 
+// Map whatever task tag the AI emits (legacy `metTask`: Q1–Q5, T1, T2) onto the
+// canonical `metTaskType` keys the player/editor use (Q1–Q5, W1Q1–W1Q3, W2).
+// T1 is a 3-question composite with no single per-question scaffold → left generic.
+const MET_TASK_ALIASES = {
+  Q1: 'Q1', Q2: 'Q2', Q3: 'Q3', Q4: 'Q4', Q5: 'Q5',
+  W1Q1: 'W1Q1', W1Q2: 'W1Q2', W1Q3: 'W1Q3', W2: 'W2', T2: 'W2',
+};
+function normalizeMetTaskType(raw) {
+  if (!raw) return undefined;
+  return MET_TASK_ALIASES[String(raw).trim().toUpperCase()] || undefined;
+}
+
 export function applyAiTaskToExercise(exercise, aiTask) {
   const ex = { ...exercise };
+  const metTaskType = normalizeMetTaskType(aiTask?.metTaskType || aiTask?.metTask);
   const content = aiTask?.content || aiTask?.description || aiTask?.question || aiTask?.prompt || aiTask?.title || '';
   if (aiTask?.title) ex.title = aiTask.title;
   if (aiTask?.skillGroup) ex.skillGroup = aiTask.skillGroup;
@@ -139,6 +152,7 @@ export function applyAiTaskToExercise(exercise, aiTask) {
     if (aiTask?.imageUrl) ex.imageUrl = aiTask.imageUrl;
     if (aiTask?.imageAlt) ex.imageAlt = aiTask.imageAlt;
     if (aiTask?.imageDescription) ex.imageDescription = aiTask.imageDescription;
+    if (metTaskType) ex.metTaskType = metTaskType;
     return ex;
   }
 
@@ -173,6 +187,7 @@ export function applyAiTaskToExercise(exercise, aiTask) {
   ex.prompt = aiTask?.prompt || content;
   ex.rubric = aiTask?.rubric || aiTask?.teacherNote || 'Answer the question clearly, support your idea with one example, and check grammar before submitting.';
   if (Number.isFinite(Number(aiTask?.targetWords))) ex.targetWords = Number(aiTask.targetWords);
+  if (metTaskType) ex.metTaskType = metTaskType;
   return ex;
 }
 

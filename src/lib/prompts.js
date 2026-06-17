@@ -126,11 +126,21 @@ Test Strategy: time_management, question_type_recognition, distractor_management
 
 // ━━━ PROMPT MODULES ━━━
 
-const GENERAL_MET_TOPIC_RULES = `MET topic rules:
+function topicRules() {
+  const isHealthcare = typeof window !== 'undefined' && window.localStorage?.getItem('vv:healthcare_mode') === 'true';
+  if (isHealthcare) {
+    return `MET topic rules:
+- Default to healthcare and nursing contexts: patient handovers, explaining medications, describing symptoms, giving instructions, reassuring patients, explaining procedures, reporting changes in patient condition, communicating with coworkers, handling difficult patient situations, and other clinical communication scenarios.
+- Include general MET topics for balance: education, work, technology, community life, environment, personal decisions, travel, communication, public services, health and wellbeing, or study habits.
+- Healthcare scenarios should feel practical and realistic for a nursing context.
+- Tone should be professional, calm, and clear.`;
+  }
+  return `MET topic rules:
 - Default to general MET preparation topics: education, work, technology, community life, environment, personal decisions, travel, communication, public services, health and wellbeing, or study habits.
 - Do NOT default to nurses, hospitals, patients, doctors, medication, wards, symptoms, procedures, or healthcare roleplays.
 - Use healthcare/nursing content only when the teacher explicitly asks for a healthcare task or the source exercise bank item is already healthcare-specific.
 - If the student's profile mentions nursing or healthcare, treat it as background context, not as the topic for automatic diagnosis-based exercises.`;
+}
 
 /**
  * Module 1: Skill Diagnosis (The Analyst)
@@ -193,17 +203,17 @@ ${SHARED_MET_DATA}
 RETURN ONLY VALID JSON:
 {
   "skillDiagnosis": {
-    "speaking": { "evaluated": boolean, "evidenceCount": number, "score0to80": number|null, "scoreConfidenceLevel": string, "scoreProvisional": boolean, "transcriptOnly": boolean, "ratingBreakdown": { "taskCompletion": { "score0to4": number, "notes": string }, "languageResources": { "score0to4": number, "notes": string }, "intelligibilityDelivery": { "score0to4": number|null, "notes": string } }, "subskillsAssessed": string[], "strengths": string[], "weaknesses": string[], "readinessTowardTarget": string, "whatToImproveNext": string },
+    "speaking": { "evaluated": boolean, "evidenceCount": number, "score0to80": number|null, "scoreConfidenceLevel": string, "scoreProvisional": boolean, "transcriptOnly": boolean, "ratingBreakdown": { "taskCompletion": { "score0to4": number, "notes": string }, "languageResources": { "score0to4": number, "notes": string }, "intelligibilityDelivery": { "score0to4": number|null, "notes": string } }, "subskillsAssessed": string[], "strengths": string[], "weaknesses": string[], "readinessTowardTarget": string, "whatToImproveNext": string, "evidenceNote": "1 sentence stating what evidence this score is based on (e.g. 'Based on 1 short Q3 opinion turn ≈45s' or 'Based on 2 short email paragraphs'). If limited, say 'Limited evidence — score is provisional.'" },
     "writing": { ... },
     "reading": { ... },
     "listening": { ... },
-    "grammar": { "evaluated": boolean, "evidenceCount": number, "score0to80": number|null, "scoreConfidenceLevel": string, "scoreProvisional": boolean, "subskillsAssessed": string[], "mainIssues": string[], "strengths": string[], "whatToImproveNext": string },
+    "grammar": { "evaluated": boolean, "evidenceCount": number, "score0to80": number|null, "scoreConfidenceLevel": string, "scoreProvisional": boolean, "subskillsAssessed": string[], "mainIssues": string[], "strengths": string[], "whatToImproveNext": string, "evidenceNote": "1 sentence stating what evidence this score is based on." },
     "vocabulary": { ... },
     "testStrategy": { ... }
   },
   "classSummary": "2-3 plain sentences that tie the whole diagnosis together: what was actually practised today, how it went, and the single most important takeaway. This is the cohesive overview the teacher reads first — not a thin restatement. No 'The class focused on...'.",
   "priorityDiagnosis": [
-    { "rank": 1, "urgency": "Critical|Developing|Strength", "area": "short skill/subskill name", "evidence": "exact quote from the evidence", "whatToImprove": "1 concrete sentence", "howToImprove": "1 sentence — one actionable practice direction" }
+    { "rank": 1, "urgency": "Critical|Developing|Strength", "area": "short skill/subskill name", "evidence": "exact quote from the evidence", "whatToImprove": "1 concrete sentence", "howToImprove": "1 sentence — frame as a testable hypothesis, not a guarantee. Use 'try...' / 'experiment with...' / 'see if...' rather than 'this will...'" }
   ],
   "targetScoreRelevance": { "gapToTarget": "string", "prioritySkillForTarget": "string", "estimatedSessionsToTarget": "string", "onTrack": "string" },
   "nextClassFocus": { "primaryFocus": "string", "suggestedActivities": ["string"], "warmUp": "string", "successCriteria": "string" },
@@ -316,13 +326,13 @@ Rules:
 JSON shape:
 {
   "skillDiagnosis": {
-    "speaking": { "evaluated": boolean, "evidenceCount": number, "score0to80": number|null, "scoreConfidenceLevel": string, "scoreProvisional": boolean, "transcriptOnly": boolean, "strengths": [string], "weaknesses": [string], "subskillsAssessed": [string], "readinessTowardTarget": string, "whatToImproveNext": string },
-    "writing": { "evaluated": boolean, "evidenceCount": number, "score0to80": number|null, "scoreConfidenceLevel": string, "scoreProvisional": boolean, "strengths": [string], "weaknesses": [string], "subskillsAssessed": [string], "readinessTowardTarget": string, "whatToImproveNext": string },
-    "reading": { "evaluated": boolean, "evidenceCount": number, "score0to80": number|null, "scoreConfidenceLevel": string, "scoreProvisional": boolean, "strengths": [string], "weaknesses": [string], "subskillsAssessed": [string], "readinessTowardTarget": string, "whatToImproveNext": string },
-    "listening": { "evaluated": boolean, "evidenceCount": number, "score0to80": number|null, "scoreConfidenceLevel": string, "scoreProvisional": boolean, "strengths": [string], "weaknesses": [string], "subskillsAssessed": [string], "readinessTowardTarget": string, "whatToImproveNext": string },
-    "grammar": { "evaluated": boolean, "evidenceCount": number, "score0to80": number|null, "scoreConfidenceLevel": string, "scoreProvisional": boolean, "strengths": [string], "mainIssues": [string], "subskillsAssessed": [string], "whatToImproveNext": string },
-    "vocabulary": { "evaluated": boolean, "evidenceCount": number, "score0to80": number|null, "scoreConfidenceLevel": string, "scoreProvisional": boolean, "strengths": [string], "weaknesses": [string], "subskillsAssessed": [string], "whatToImproveNext": string },
-    "testStrategy": { "evaluated": boolean, "evidenceCount": number, "score0to80": number|null, "scoreConfidenceLevel": string, "scoreProvisional": boolean, "strengths": [string], "weaknesses": [string], "subskillsAssessed": [string], "whatToImproveNext": string }
+    "speaking": { "evaluated": boolean, "evidenceCount": number, "score0to80": number|null, "scoreConfidenceLevel": string, "scoreProvisional": boolean, "transcriptOnly": boolean, "strengths": [string], "weaknesses": [string], "subskillsAssessed": [string], "readinessTowardTarget": string, "whatToImproveNext": string, "evidenceNote": "1 sentence stating what evidence this score is based on" },
+    "writing": { "evaluated": boolean, "evidenceCount": number, "score0to80": number|null, "scoreConfidenceLevel": string, "scoreProvisional": boolean, "strengths": [string], "weaknesses": [string], "subskillsAssessed": [string], "readinessTowardTarget": string, "whatToImproveNext": string, "evidenceNote": "1 sentence stating what evidence this score is based on" },
+    "reading": { "evaluated": boolean, "evidenceCount": number, "score0to80": number|null, "scoreConfidenceLevel": string, "scoreProvisional": boolean, "strengths": [string], "weaknesses": [string], "subskillsAssessed": [string], "readinessTowardTarget": string, "whatToImproveNext": string, "evidenceNote": "1 sentence stating what evidence this score is based on" },
+    "listening": { "evaluated": boolean, "evidenceCount": number, "score0to80": number|null, "scoreConfidenceLevel": string, "scoreProvisional": boolean, "strengths": [string], "weaknesses": [string], "subskillsAssessed": [string], "readinessTowardTarget": string, "whatToImproveNext": string, "evidenceNote": "1 sentence stating what evidence this score is based on" },
+    "grammar": { "evaluated": boolean, "evidenceCount": number, "score0to80": number|null, "scoreConfidenceLevel": string, "scoreProvisional": boolean, "strengths": [string], "mainIssues": [string], "subskillsAssessed": [string], "whatToImproveNext": string, "evidenceNote": "1 sentence stating what evidence this score is based on" },
+    "vocabulary": { "evaluated": boolean, "evidenceCount": number, "score0to80": number|null, "scoreConfidenceLevel": string, "scoreProvisional": boolean, "strengths": [string], "weaknesses": [string], "subskillsAssessed": [string], "readinessTowardTarget": string, "whatToImproveNext": string, "evidenceNote": "1 sentence stating what evidence this score is based on" },
+    "testStrategy": { "evaluated": boolean, "evidenceCount": number, "score0to80": number|null, "scoreConfidenceLevel": string, "scoreProvisional": boolean, "strengths": [string], "weaknesses": [string], "subskillsAssessed": [string], "readinessTowardTarget": string, "whatToImproveNext": string, "evidenceNote": "1 sentence stating what evidence this score is based on" }
   },
   "classSummary": "2-3 sentences",
   "priorityDiagnosis": [{ "rank": 1, "urgency": "Critical|Developing|Strength", "area": string, "evidence": string, "whatToImprove": string, "howToImprove": string }],
@@ -330,6 +340,100 @@ JSON shape:
   "nextClassFocus": { "primaryFocus": string, "suggestedActivities": [string], "warmUp": string, "successCriteria": string },
   "profileUpdateSuggestions": { "progressNote": string, "suggestedLevelChange": string, "recurringErrorsToTrack": [string], "masteredItems": [string] },
   "estimatedOverallScore": { "estimate": "number or Not evaluated enough", "confidence": string, "note": string }
+}`;
+};
+
+/**
+ * Module 1b: Diagnostic Data Only (The Analyst — data only, no narrative)
+ * Returns ONLY structured data — scores, errors, vocabulary, gaps, priority recommendations.
+ * No student-facing text, no feedback, no narrative. Teacher reads this data and writes meaning.
+ */
+export const buildDiagnosticDataPrompt = (data) => {
+  const { student, classEvent, classEvidence, targetProfile } = data;
+  const ev = classEvidence || {};
+  const tp = targetProfile || {};
+  const bool = (v) => v ? 'Yes' : 'No';
+  const count = (n) => `${n || 0} turn${(n || 1) === 1 ? '' : 's'}`;
+
+  return `You are the Diagnostic Data Analyst for a MET English teaching platform.
+Your job is to produce ONLY structured data — scores, errors, vocabulary, gaps, and priority recommendations.
+Do NOT write any narrative, student-facing text, or feedback. Output must be pure JSON data only.
+
+━━━ STUDENT PROFILE ━━━
+Name: ${student?.name || 'Unknown'}
+Current level: ${student?.currentLevel || student?.band || 'B1'}
+Target level: ${student?.targetLevel || student?.bandTarget || 'B2'}
+Exam goal: ${student?.examGoal || student?.goal || 'Pass MET B2'}
+
+━━━ TARGET SCORE PROFILE ━━━
+Profile: ${tp.label || tp.profileName || 'not selected'}
+Targets: Overall ${tp.overallTarget ?? '?'} | Speaking ${tp.speakingTarget ?? '?'} | Writing ${tp.writingTarget ?? '?'} | Reading ${tp.readingTarget ?? '?'} | Listening ${tp.listeningTarget ?? '?'}
+
+━━━ EVALUATED SKILLS ━━━
+Speaking: ${bool(ev.evaluatedSpeaking)} (${count(ev.speakingEvidenceCount)})
+Writing: ${bool(ev.evaluatedWriting)} (${count(ev.writingEvidenceCount)})
+Reading: ${bool(ev.evaluatedReading)} (${count(ev.readingEvidenceCount)})
+Listening: ${bool(ev.evaluatedListening)} (${count(ev.listeningEvidenceCount)})
+Grammar: ${bool(ev.evaluatedGrammar)} (${count(ev.grammarEvidenceCount)})
+Vocabulary: ${bool(ev.evaluatedVocabulary)} (${count(ev.vocabularyEvidenceCount)})
+Test strategy: ${bool(ev.evaluatedTestStrategy)} (${count(ev.testStrategyEvidenceCount)})
+
+━━━ CLASS EVIDENCE ━━━
+Transcript/Answer:
+${ev.studentTranscript || ev.studentAnswer || 'not provided'}
+
+Performance Notes:
+${ev.studentPerformance || 'not provided'}
+
+Additional Teacher Notes:
+${ev.additionalNotes || ev.teacherNotes || 'none'}
+
+${SHARED_MET_DATA}
+
+━━━ RULES ━━━
+1. ONLY score skills that were evaluated (Evaluated: Yes).
+2. For unevaluated skills: set evaluated:false, score0to80:null, scoreConfidenceLevel:"Not evaluated enough".
+3. Never create a score estimate for unevaluated skills.
+4. Use the exact scoreConfidenceLevel strings from the reference.
+5. For speaking with transcript only: score0to4 for Intelligibility/Delivery must be null and note "audio required."
+6. subskillsAssessed should only list subskills you have actual evidence for.
+7. ratingBreakdown for speaking and writing must align with the official MET rating scales.
+8. priorityRecommendations: recommend 3–5 ranked priorities. Each must include an exact evidence quote from the transcript above — never invent.
+9. errors: extract all correctable errors from the evidence. Each must include exact quote and corrected version.
+10. vocabulary: identify new high-value B1–B2 words from the evidence. Do NOT include words the student already knows or basic vocabulary.
+11. gapVsTarget: compute the gap between each evaluated skill's score and the corresponding target. Use null for unevaluated skills.
+12. FORMAT: Return only the JSON structure below. No extra text, no commentary, no markdown.
+
+RETURN ONLY VALID JSON:
+{
+  "scores": {
+    "speaking": { "evaluated": boolean, "evidenceCount": number, "score0to80": number|null, "scoreConfidenceLevel": string, "scoreProvisional": boolean, "transcriptOnly": boolean, "ratingBreakdown": { "taskCompletion": { "score0to4": number, "notes": string }, "languageResources": { "score0to4": number, "notes": string }, "intelligibilityDelivery": { "score0to4": number|null, "notes": string } }, "subskillsAssessed": string[], "strengths": string[], "weaknesses": string[], "readinessTowardTarget": string, "whatToImproveNext": string, "evidenceNote": "1 sentence stating what evidence this score is based on" },
+    "writing": { "evaluated": boolean, "evidenceCount": number, "score0to80": number|null, "scoreConfidenceLevel": string, "scoreProvisional": boolean, "strengths": string[], "weaknesses": string[], "subskillsAssessed": string[], "readinessTowardTarget": string, "whatToImproveNext": string, "evidenceNote": "1 sentence" },
+    "reading": { "evaluated": boolean, "evidenceCount": number, "score0to80": number|null, "scoreConfidenceLevel": string, "scoreProvisional": boolean, "strengths": string[], "weaknesses": string[], "subskillsAssessed": string[], "readinessTowardTarget": string, "whatToImproveNext": string, "evidenceNote": "1 sentence" },
+    "listening": { "evaluated": boolean, "evidenceCount": number, "score0to80": number|null, "scoreConfidenceLevel": string, "scoreProvisional": boolean, "strengths": string[], "weaknesses": string[], "subskillsAssessed": string[], "readinessTowardTarget": string, "whatToImproveNext": string, "evidenceNote": "1 sentence" },
+    "grammar": { "evaluated": boolean, "evidenceCount": number, "score0to80": number|null, "scoreConfidenceLevel": string, "scoreProvisional": boolean, "subskillsAssessed": string[], "mainIssues": string[], "strengths": string[], "whatToImproveNext": string, "evidenceNote": "1 sentence" },
+    "vocabulary": { "evaluated": boolean, "evidenceCount": number, "score0to80": number|null, "scoreConfidenceLevel": string, "scoreProvisional": boolean, "subskillsAssessed": string[], "mainIssues": string[], "strengths": string[], "whatToImproveNext": string, "evidenceNote": "1 sentence" },
+    "testStrategy": { "evaluated": boolean, "evidenceCount": number, "score0to80": number|null, "scoreConfidenceLevel": string, "scoreProvisional": boolean, "subskillsAssessed": string[], "mainIssues": string[], "strengths": string[], "whatToImproveNext": string, "evidenceNote": "1 sentence" }
+  },
+  "errors": [
+    { "error": "exact student quote with error", "correct": "corrected version", "category": "grammar|vocabulary|pronunciation|register|strategy|cohesion", "priority": "high|medium|low", "evidence": "exact quote", "explanation": "short 1-sentence rule" }
+  ],
+  "vocabulary": [
+    { "wordOrPhrase": "word", "meaning": "definition appropriate for B1-B2 level", "exampleSentence": "example using this word", "category": "topic tag" }
+  ],
+  "gapVsTarget": {
+    "speaking": "X points below target or 'Not evaluated'",
+    "writing": "X points below target or 'Not evaluated'",
+    "reading": "X points below target or 'Not evaluated'",
+    "listening": "X points below target or 'Not evaluated'",
+    "grammar": "X points below target or 'Not evaluated'",
+    "vocabulary": "X points below target or 'Not evaluated'",
+    "testStrategy": "X points below target or 'Not evaluated'",
+    "prioritySkillForTarget": "name of the single skill most holding the student back from their target"
+  },
+  "priorityRecommendations": [
+    { "rank": 1, "urgency": "Critical|Developing|Strength", "area": "short skill/subskill name", "evidence": "exact quote from the evidence", "whatToImprove": "1 concrete sentence", "howToImprove": "1 sentence — frame as hypothesis, not guarantee. Use 'try...' / 'experiment with...' / 'see if...'" }
+  ]
 }`;
 };
 
@@ -368,6 +472,7 @@ Write like a real teacher talking TO this student right after class — warm, sp
 • BANNED JARGON / AI-WORDS (never use): demonstrate, showcase, leverage, utilize, delve, crucial, essential, foster, robust, navigate, journey, elevate, "in terms of", "when it comes to", "this highlights", "this underscores", "a testament to". Use plain everyday words.
 • BANNED OPENERS: "Great work", "Well done", "Excellent", "Good job", "It is important", "Furthermore", "Additionally", "Moreover", "In addition", "Going forward", "In conclusion", "Overall".
 • BANNED PHRASES: "This demonstrates", "Your performance", "You demonstrated", "You exhibited", "This is crucial for", "This is essential", "This shows that you", "Continue to", "Keep up".
+• BANNED CERTAINTY PHRASES: "This will help", "This will improve", "This will make", "Doing X will Y" — these state pedagogical outcomes as proven fact. Instead, frame improvement advice as a testable hypothesis: "Try X and see if it helps", "One thing to experiment with is Y", "If you try Z next class, notice whether...". The goal is a suggestion the student can test, not a guaranteed result.
 • BREVITY: if a thought is one sentence, stop. No padding, no restating.
 • MET BUDGET: at most 2 sentences in the whole feedback may mention the MET exam, and each must be concrete (e.g., "examiners weight delivery in the third descriptor...").
 
@@ -398,9 +503,9 @@ const pickArray = (...values) => values.map(arr).find(v => v.length) || [];
 
 export const buildHomeworkPrompt = (data) => {
   const { student, diagnosis } = data;
-  const priorities = pickArray(diagnosis?.priorityDiagnosis, diagnosis?.sections?.priorityDiagnosis?.content);
-  const errors = pickArray(data?.errorBank, diagnosis?.errorBank, diagnosis?.sections?.errorBankSuggestions?.content);
-  const vocab = pickArray(data?.vocabTargets?.vocabularyTargets, diagnosis?.vocabTargets?.vocabularyTargets, diagnosis?.sections?.vocabGrammarTargets?.content?.vocabularyTargets);
+  const priorities = pickArray(diagnosis?.teacherMeaning?.priorityDiagnosis, diagnosis?.diagnosticData?.priorityRecommendations, diagnosis?.priorityDiagnosis, diagnosis?.sections?.priorityDiagnosis?.content);
+  const errors = pickArray(data?.errorBank, diagnosis?.diagnosticData?.errors, diagnosis?.errorBank, diagnosis?.sections?.errorBankSuggestions?.content);
+  const vocab = pickArray(data?.vocabTargets?.vocabularyTargets, diagnosis?.diagnosticData?.vocabulary, diagnosis?.vocabTargets?.vocabularyTargets, diagnosis?.sections?.vocabGrammarTargets?.content?.vocabularyTargets);
   const grammar = pickArray(data?.vocabTargets?.grammarTargets, diagnosis?.vocabTargets?.grammarTargets, diagnosis?.sections?.vocabGrammarTargets?.content?.grammarTargets);
 
   return `You are an expert MET Instructional Designer.
@@ -424,7 +529,7 @@ Grammar: ${grammar.map(g => g.area).join(', ') || 'No grammar targets'}
 3. VARIETY: Include at least one reading, one listening, and one speaking/writing task.
 4. TARGET-DRIVEN: Every task must target a specific weakness identified in the diagnosis.
 5. LEVEL-APPROPRIATE: B1-B2 level.
-6. TOPICS: ${GENERAL_MET_TOPIC_RULES}
+ 6. TOPICS: ${topicRules()}
 
 RETURN ONLY VALID JSON:
 {
@@ -505,6 +610,8 @@ const EXERCISE_COMPLETENESS_RULES = `Complete exercise JSON requirements:
 - read: type, title, passage (full reading text, 150–250 words, authentic MET-style), questions array of at least 3 items each with {question, options[4], correct as 0-3, explanation}.
 Do not return placeholder text. Do not omit answer keys.`;
 
+const GENERAL_MET_TOPIC_RULES = `Topics should reflect real-life situations appropriate for the MET exam: education, work, healthcare, technology, community, lifestyle, environment, personal decisions, public services, health and wellbeing. Avoid overly niche or culturally specific topics.`;
+
 export const buildHomeworkBlueprintPrompt = ({ student, diagnosis }) => {
   const priorities = pickArray(diagnosis?.priorityDiagnosis, diagnosis?.sections?.priorityDiagnosis?.content);
   const skillDx = diagnosis?.sections?.skillDiagnosis?.content || {};
@@ -559,9 +666,9 @@ Return JSON only:
 };
 
 export const buildTaskGeneratorPrompt = ({ student, diagnosis, taskBlueprint, taskType }) => {
-  const priorities = pickArray(diagnosis?.priorityDiagnosis, diagnosis?.sections?.priorityDiagnosis?.content);
-  const errors = pickArray(diagnosis?.errorBank, diagnosis?.sections?.errorBankSuggestions?.content);
-  const vocab = pickArray(diagnosis?.vocabTargets?.vocabularyTargets, diagnosis?.sections?.vocabGrammarTargets?.content?.vocabularyTargets);
+  const priorities = pickArray(diagnosis?.teacherMeaning?.priorityDiagnosis, diagnosis?.diagnosticData?.priorityRecommendations, diagnosis?.priorityDiagnosis, diagnosis?.sections?.priorityDiagnosis?.content);
+  const errors = pickArray(diagnosis?.diagnosticData?.errors, diagnosis?.errorBank, diagnosis?.sections?.errorBankSuggestions?.content);
+  const vocab = pickArray(diagnosis?.diagnosticData?.vocabulary, diagnosis?.vocabTargets?.vocabularyTargets, diagnosis?.sections?.vocabGrammarTargets?.content?.vocabularyTargets);
   const grammar = pickArray(diagnosis?.vocabTargets?.grammarTargets, diagnosis?.sections?.vocabGrammarTargets?.content?.grammarTargets);
 
   return `Generate one complete, fully written ${taskType} exercise for ${student?.name || 'the student'}.
@@ -581,7 +688,7 @@ MET focus:
 - Listening/reading: test main idea, detail, inference, purpose, attitude, or distractor recognition.
 - Grammar/vocabulary: practice the exact language needed to perform better on MET tasks.
 - Test strategy: help the student notice evidence, distractors, timing, or answer organization.
-- ${GENERAL_MET_TOPIC_RULES}
+- ${topicRules()}
 
 Return ONLY one valid JSON object for type "${taskType}".`;
 };
@@ -615,7 +722,7 @@ Return JSON: { "instructions": string, "selfCheck": [string], "teacherNotes": st
    so each call is small and cascade-resilient.
 ══════════════════════════════════════════════════════════════ */
 export const buildHomeworkGroupPrompt = ({ student, diagnosis, group, count = 5 }) => {
-  const priorities = pickArray(diagnosis?.priorityDiagnosis, diagnosis?.sections?.priorityDiagnosis?.content);
+  const priorities = pickArray(diagnosis?.teacherMeaning?.priorityDiagnosis, diagnosis?.diagnosticData?.priorityRecommendations, diagnosis?.priorityDiagnosis, diagnosis?.sections?.priorityDiagnosis?.content);
   const errors     = pickArray(diagnosis?.errorBank, diagnosis?.sections?.errorBankSuggestions?.content);
   const vocab      = pickArray(diagnosis?.vocabTargets?.vocabularyTargets, diagnosis?.sections?.vocabGrammarTargets?.content?.vocabularyTargets);
   const grammar    = pickArray(diagnosis?.vocabTargets?.grammarTargets, diagnosis?.sections?.vocabGrammarTargets?.content?.grammarTargets);
@@ -706,9 +813,9 @@ Include only the fields relevant to the exercise type. The "content" field alway
    Restored: was dropped during the module-prompt refactor.
 ══════════════════════════════════════════════════════════════ */
 export const buildExerciseListPrompt = ({ student, diagnosis, level, skill }) => {
-  const priorities = pickArray(diagnosis?.priorityDiagnosis, diagnosis?.sections?.priorityDiagnosis?.content);
-  const errors = pickArray(diagnosis?.errorBank, diagnosis?.sections?.errorBankSuggestions?.content);
-  const vocab = pickArray(diagnosis?.vocabTargets?.vocabularyTargets, diagnosis?.sections?.vocabGrammarTargets?.content?.vocabularyTargets);
+  const priorities = pickArray(diagnosis?.teacherMeaning?.priorityDiagnosis, diagnosis?.diagnosticData?.priorityRecommendations, diagnosis?.priorityDiagnosis, diagnosis?.sections?.priorityDiagnosis?.content);
+  const errors = pickArray(diagnosis?.diagnosticData?.errors, diagnosis?.errorBank, diagnosis?.sections?.errorBankSuggestions?.content);
+  const vocab = pickArray(diagnosis?.diagnosticData?.vocabulary, diagnosis?.vocabTargets?.vocabularyTargets, diagnosis?.sections?.vocabGrammarTargets?.content?.vocabularyTargets);
   const grammar = pickArray(diagnosis?.vocabTargets?.grammarTargets, diagnosis?.sections?.vocabGrammarTargets?.content?.grammarTargets);
   const levelNote = level ? `\nTarget CEFR level: ${level}` : '';
 
@@ -790,7 +897,7 @@ ${grammar.slice(0, 3).map(g => `- ${g.area}: ${g.issue}`).join('\n') || 'None.'}
 ${isSpeaking ? '- Generate one exercise per MET Speaking task (Q1–Q5). Follow the task map above exactly.' : isWriting ? '- Generate one exercise per MET Writing task (T1 and T2). Follow the task format above exactly.' : '- Cover different MET skills: speaking, writing, reading or listening, grammar, vocabulary, and test strategy.'}
 - Each exercise should take 5–15 minutes.
 - Match B1–B2 transition level. Use general MET topics by default, not nurse/healthcare scenarios.
-- ${GENERAL_MET_TOPIC_RULES}
+- ${topicRules()}
 - Use the INTERACTIVE EXERCISE TYPES below to create varied, engaging exercises.
 - Return only exercises that include all required fields and answer keys.
 
@@ -889,9 +996,9 @@ Return ONLY valid JSON — an array of ${exerciseCount} exercises${isSpeaking ? 
  * Focus: High-fidelity listening tasks for MET.
  */
 export const buildListeningGeneratorPrompt = ({ student, diagnosis, taskBlueprint }) => {
-  const priorities = pickArray(diagnosis?.priorityDiagnosis, diagnosis?.sections?.priorityDiagnosis?.content);
-  const errors = pickArray(diagnosis?.errorBank, diagnosis?.sections?.errorBankSuggestions?.content);
-  const vocab = pickArray(diagnosis?.vocabTargets?.vocabularyTargets, diagnosis?.sections?.vocabGrammarTargets?.content?.vocabularyTargets);
+  const priorities = pickArray(diagnosis?.teacherMeaning?.priorityDiagnosis, diagnosis?.diagnosticData?.priorityRecommendations, diagnosis?.priorityDiagnosis, diagnosis?.sections?.priorityDiagnosis?.content);
+  const errors = pickArray(diagnosis?.diagnosticData?.errors, diagnosis?.errorBank, diagnosis?.sections?.errorBankSuggestions?.content);
+  const vocab = pickArray(diagnosis?.diagnosticData?.vocabulary, diagnosis?.vocabTargets?.vocabularyTargets, diagnosis?.sections?.vocabGrammarTargets?.content?.vocabularyTargets);
 
   return `You are a MET English Instructional Designer specializing in Listening comprehension.
 Build one complete, student-ready listening exercise.
@@ -911,7 +1018,7 @@ Vocab: ${vocab.slice(0, 4).map(v => v.wordOrPhrase).join(', ') || 'general MET v
 1. COMPLETENESS: The output must be a single valid JSON object for the 'listen' type.
 2. AUDIO TEXT: The 'audioText' must be a realistic, 2–5 sentence dialogue or monologue. 
    - Use a general MET topic by default, not the student's professional context.
-   - ${GENERAL_MET_TOPIC_RULES}
+   - ${topicRules()}
    - It should target B1-B2 level complexity.
 3. MET FOCUS: The task must target one of these MET listening subskills: main_idea, detail, inference, speaker_purpose, or vocabulary_in_context.
 4. QUESTIONS: The 'question' must be clear. The 'options' must have exactly 4 choices.

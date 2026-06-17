@@ -52,7 +52,7 @@ export default function ErrorCorrection({ exercise, onComplete }) {
       {/* Incorrect sentence */}
       <div style={{ padding: '14px 16px', background: '#FEF2F2', border: '1.5px solid #FECACA', borderRadius: 'var(--radius-sm)', marginBottom: 14 }}>
         <div style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--danger)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>
-          Incorrect sentence
+          Level Up — spot and fix the error
         </div>
         <p style={{ fontSize: 15.5, color: '#7F1D1D', lineHeight: 1.6, margin: 0, fontStyle: 'italic' }}>"{errorText}"</p>
       </div>

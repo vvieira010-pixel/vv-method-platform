@@ -3,7 +3,7 @@ import { Component } from 'react';
 export default class ErrorBoundary extends Component {
   constructor(props) {
     super(props);
-    this.state = { hasError: false, error: null };
+    this.state = { hasError: false, error: null, retryCount: 0 };
   }
   static getDerivedStateFromError(error) {
     return { hasError: true, error };
@@ -24,7 +24,7 @@ export default class ErrorBoundary extends Component {
             {this.state.error?.message}
           </div>
           <button
-            onClick={() => this.setState({ hasError: false, error: null })}
+            onClick={() => this.setState(prev => ({ hasError: false, error: null, retryCount: prev.retryCount + 1 }))}
             style={{
               marginTop: 14, padding: '6px 14px', background: 'var(--danger)', color: '#fff',
               border: 'none', borderRadius: 7, cursor: 'pointer', fontSize: 13, fontWeight: 600,
@@ -36,6 +36,6 @@ export default class ErrorBoundary extends Component {
         </div>
       );
     }
-    return this.props.children;
+    return <div key={this.state.retryCount}>{this.props.children}</div>;
   }
 }

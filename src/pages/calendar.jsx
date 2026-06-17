@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import { Icon, Card, SectionHeader, Pill, Button, Avatar } from '../components/shared.jsx';
 import { getClassEvents, saveClassEvent, deleteClassEvent, updateClassEventStatus, getStudents } from '../lib/workflow.js';
 import { sendClassInvite, getZoomUrl } from '../lib/send-invite.js';
+import { MET_SKILLS } from '../lib/report-metrics.js';
 
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const STATUS_TONE = { scheduled: 'info', completed: 'success', canceled: 'danger' };
@@ -147,7 +148,7 @@ export default function CalendarPage({ students, onNavigate }) {
             <Field label="MET skill focus">
               <select className="input" value={form.metSkillFocus} onChange={e => setForm(f => ({ ...f, metSkillFocus: e.target.value }))}>
                 <option value="">Select skill…</option>
-                {['Speaking', 'Writing', 'Reading', 'Listening', 'Grammar', 'Vocabulary', 'Mixed'].map(s => <option key={s}>{s}</option>)}
+                {[...MET_SKILLS, 'Mixed'].map(s => <option key={s}>{s}</option>)}
               </select>
             </Field>
           </div>
