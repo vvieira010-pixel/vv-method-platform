@@ -1,18 +1,20 @@
 /**
- * diagnostic-create.jsx — Multi-step diagnosis: prereqs → AI → preview/approve → save
+ * diagnostic-create.jsx — Split workflow: AI does data, teacher writes meaning
  *
  * The most important page. Teacher must:
  * 1. Select target score profile (blocker)
  * 2. Confirm evaluated skills (blocker)
- * 3. Run AI diagnosis
- * 4. Preview and approve each section
- * 5. Save approved diagnosis
+ * 3. Run AI diagnosis → data only (scores, errors, gaps, priorities)
+ * 4. Write meaning from that data (class summary, feedback, next steps)
+ * 5. Review and approve
+ * 6. Save
  */
 import { useState, useEffect } from 'react';
 import { Icon, Card, SectionHeader, Pill, Button, Avatar, StudentFeedbackView } from '../components/shared.jsx';
 import { callAI } from '../components/shared.jsx';
 import { parseAiJson } from '../lib/ai-helpers.js';
 import { 
+  buildDiagnosticDataPrompt,
   buildSkillDiagnosisPrompt, 
   buildCompactSkillDiagnosisPrompt,
   buildStudentFeedbackPrompt, 
@@ -33,23 +35,6 @@ import {
 
 // Label styling migrated to CSS class .dx-label
 
-const SECTION_KEYS = [
-  { key: 'readinessCheck',         label: 'Diagnostic Readiness Check',    studentFacing: false },
-  { key: 'classSummary',           label: 'Class Summary',                 studentFacing: false },
-  { key: 'targetScoreRelevance',   label: 'Target Score Relevance',        studentFacing: false },
-  { key: 'estimatedOverallScore',  label: 'Estimated Overall Score',       studentFacing: false },
-  { key: 'skillDiagnosis',         label: 'Skill Diagnosis',               studentFacing: false },
-  { key: 'errorBankSuggestions',   label: 'Error Bank Suggestions',        studentFacing: false },
-  { key: 'vocabGrammarTargets',    label: 'Vocabulary & Grammar Targets',  studentFacing: false },
-  { key: 'priorityDiagnosis',      label: 'Priority Diagnosis (Top 3)',    studentFacing: false },
-  { key: 'studentFeedback',        label: 'Personalized Student Feedback', studentFacing: true  },
-  { key: 'homeworkRecommendation', label: 'Homework Recommendation',       studentFacing: true  },
-  { key: 'nextClassFocus',         label: 'Next Class Focus',              studentFacing: false },
-  { key: 'profileUpdateSuggestions',label:'Profile Update Suggestions',   studentFacing: false },
-];
-
-const REQUIRED_APPROVAL_KEYS = ['skillDiagnosis', 'studentFeedback', 'homeworkRecommendation', 'nextClassFocus'];
-const SECTION_LABELS = Object.fromEntries(SECTION_KEYS.map(section => [section.key, section.label]));
 const DIAGNOSIS_DERIVED_KEYS = new Set([
   'skillDiagnosis',
   'classSummary',
@@ -63,28 +48,6 @@ const DIAGNOSIS_DERIVED_KEYS = new Set([
 // Review layout: two zones, with thin teacher sections merged into fuller cards.
 // A group with one key renders as its own card; multiple keys render together in
 // one card (each member keeps its own approve/edit/regen controls).
-const SECTION_GROUPS = [
-  {
-    zone: 'teacher', title: 'Teacher Analysis', studentFacing: false,
-    groups: [
-      { title: 'Readiness Check', keys: ['readinessCheck'] },
-      { title: 'Overview', keys: ['classSummary', 'targetScoreRelevance', 'estimatedOverallScore'] },
-      { title: 'Skill Diagnosis', keys: ['skillDiagnosis'] },
-      { title: 'Priorities', keys: ['priorityDiagnosis'] },
-      { title: 'Errors & Targets', keys: ['errorBankSuggestions', 'vocabGrammarTargets'] },
-      { title: 'Class Planning', keys: ['nextClassFocus', 'profileUpdateSuggestions'] },
-    ],
-  },
-  {
-    zone: 'student', title: 'Student-Facing', studentFacing: true,
-    caption: 'This is exactly what your student will see.',
-    groups: [
-      { title: 'Personalized Student Feedback', keys: ['studentFeedback'] },
-      { title: 'Homework Recommendation', keys: ['homeworkRecommendation'] },
-    ],
-  },
-];
-
 function shouldRetryCompact(error) {
   const msg = String(error?.message || error || '').toLowerCase();
   return msg.includes('request too large')
@@ -107,10 +70,6 @@ function friendlyAiError(error) {
     return 'Diagnosis failed because one provider could not be reached from the browser. Check the key/provider setup and try again.';
   }
   return `Diagnosis failed: ${msg}`;
-}
-
-function aiText(res) {
-  return res?.content?.map(b => b.text || '').join('') || '';
 }
 
 async function generateDiagnosisJson(promptData, setStatus = () => {}) {
@@ -248,13 +207,33 @@ function pickFirstArray(...values) {
 }
 
 export default function DiagnosticCreate({ studentId, classEventId, diagnosisId, students, onNavigate }) {
-  const [step, setStep] = useState('prereq'); // prereq | generating | review | saved
+  const [step, setStep] = useState('prereq'); // prereq | analyzing | write | review | saved
   const [student, setStudent] = useState(null);
   const [classEvent, setClassEvent] = useState(null);
   const [classEvidence, setClassEvidence] = useState(null);
   const [targetProfile, setTargetProfile] = useState(null);
   const [profiles, setProfiles] = useState([]);
-  const [aiResult, setAiResult] = useState(null);
+
+  // AI data layer (generated by AI, read by teacher)
+  const [diagnosticData, setDiagnosticData] = useState(null);
+
+  // Teacher meaning layer (written by teacher, read by student)
+  const [teacherMeaning, setTeacherMeaning] = useState({
+    classSummary: '',
+    studentFeedback: { classFocus: '', whatYouDidWell: [], whatToImprove: [], finalNote: '' },
+    priorityDiagnosis: [],
+    nextClassFocus: { primaryFocus: '', suggestedActivities: [], warmUp: '', successCriteria: '' },
+    homeworkRecommendation: '',
+    progressNote: '',
+  });
+
+  // Optional AI drafts (never primary content)
+  const [aiDrafts, setAiDrafts] = useState({});
+
+  // Draft overlay state
+  const [draftOverlay, setDraftOverlay] = useState(null); // { section, draft }
+
+  // Legacy sections for backward compat
   const [sections, setSections] = useState({});
   const [savedDiagnosis, setSavedDiagnosis] = useState(null);
   const [error, setError] = useState('');
@@ -262,7 +241,7 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
   const [editText, setEditText] = useState('');
   const [regenerating, setRegenerating] = useState(null);
   const [saving, setSaving] = useState(false);
-  const [generatingStatus, setGeneratingStatus] = useState('Initializing...');
+  const [generatingStatus, setGeneratingStatus] = useState('');
   const [regeneratingAll, setRegeneratingAll] = useState(false);
 
   // Student selector (if no studentId passed)
@@ -309,11 +288,19 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
         setSelectedStudentId(dx.studentId);
         loadStudent(dx.studentId);
       }
-      if (dx.sections) {
+      // Handle new data model
+      if (dx.diagnosticData) {
+        setDiagnosticData(dx.diagnosticData);
+      }
+      if (dx.teacherMeaning) {
+        setTeacherMeaning(dx.teacherMeaning);
+      }
+      // Handle legacy format (sections, no teacherMeaning)
+      if (dx.sections && !dx.teacherMeaning) {
         setSections(dx.sections);
         setAiResult(dx.aiRaw || null);
       }
-      setStep('review');
+      setStep(dx.teacherMeaning && dx.diagnosticData ? 'review' : 'review');
     } else {
       setError('Could not load that diagnosis — it may have been deleted.');
     }
@@ -363,69 +350,35 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
     return normalizedEvidence && (normalizedEvidence[countKey] === 0 || normalizedEvidence[countKey] === undefined);
   });
 
-  // ── Run AI diagnosis ──
+  // ── Run AI diagnosis (data only) ──
   async function handleGenerate() {
     if (!prereqOk) return;
-    setStep('generating');
+    setStep('analyzing');
     setGeneratingStatus('Analyzing class evidence...');
     setError('');
     if (!diagnosisId) setSavedDiagnosis(null);
 
     try {
       const promptData = { student: selectedStudent, classEvent, classEvidence: normalizedEvidence, targetProfile };
-      
-      // Sequential generation: diagnosis first, then informed layers.
       const getContent = (res) => (res?.content?.map(b => b.text || '').join('') || '');
 
-      // Phase 1: Core skill diagnosis
-      setGeneratingStatus('Step 1/4 — Generating skill diagnosis…');
-      const diagnosisResult = await generateDiagnosisJson(promptData, (status) => setGeneratingStatus(status));
-      const diagnosisRaw = diagnosisResult.raw;
-      const parsedDiagnosis = diagnosisResult.parsed;
+      // Single data-only AI call
+      setGeneratingStatus('Generating skill scores and error analysis…');
+      const dataRaw = await callAI(buildDiagnosticDataPrompt(promptData), { max_tokens: 5000, preferredProvider: 'gemini' });
+      const text = aiText(dataRaw);
+      const parsed = parseAiJson(text) || {};
+      if (!parsed.scores) throw new Error('AI returned incomplete data.');
 
-      // Phase 2: Error bank + vocab targets (informed by the diagnosis)
-      setGeneratingStatus('Step 2/4 — Analysing errors and vocabulary targets…');
-      const errorBankRaw = await callAI(buildErrorBankPrompt({ ...promptData, diagnosis: parsedDiagnosis }), { max_tokens: 2500, preferredProvider: 'gemini' }).catch(() => null);
-      const parsedErrorBank = normalizeErrorTargets(errorBankRaw ? parseAiJson(getContent(errorBankRaw)) : {});
+      const data = normalizeDiagnosticData(parsed, normalizedEvidence);
+      setDiagnosticData(data);
 
-      // Phase 3: Student feedback (informed by the full diagnosis)
-      setGeneratingStatus('Step 3/4 — Writing student feedback…');
-      const feedbackRaw = await callAI(buildStudentFeedbackPrompt({ ...promptData, diagnosis: parsedDiagnosis }), { max_tokens: 2500, preferredProvider: 'gemini' }).catch(() => null);
-      const parsedFeedback = feedbackRaw ? parseAiJson(getContent(feedbackRaw)) : {};
+      // Seed teacherMeaning with AI-recommended priorities
+      setTeacherMeaning(tm => ({
+        ...tm,
+        priorityDiagnosis: (data.priorityRecommendations || []).map(p => ({ ...p, confirmed: false })),
+      }));
 
-      // Phase 4: Homework recommendation (informed by diagnosis + errors + vocab)
-      setGeneratingStatus('Step 4/4 — Building homework recommendation…');
-      const homeworkRaw = await callAI(buildHomeworkPrompt({
-        ...promptData,
-        diagnosis: parsedDiagnosis,
-        errorBank: parsedErrorBank.errorBankSuggestions,
-        vocabTargets: parsedErrorBank.vocabGrammarTargets,
-      }), { max_tokens: 3000, preferredProvider: 'gemini' }).catch(() => null);
-      const parsedHomework = homeworkRaw ? parseAiJson(getContent(homeworkRaw)) : {};
-
-      setGeneratingStatus('Structuring results…');
-
-      // Combine results into the sections state, marking failed ones for Regen
-      const FAILED = { content: "Failed to generate — click Regen to retry.", approved: false, hidden: false, edited: false };
-      const initSections = {
-        skillDiagnosis:        diagnosisRaw  ? { content: parsedDiagnosis.skillDiagnosis ?? null,              approved: false, hidden: false, edited: false } : FAILED,
-        studentFeedback:       feedbackRaw   ? { content: parsedFeedback,                                       approved: false, hidden: false, edited: false } : FAILED,
-        homeworkRecommendation:homeworkRaw   ? { content: parsedHomework,                                       approved: false, hidden: false, edited: false } : FAILED,
-        errorBankSuggestions:  { content: parsedErrorBank.errorBankSuggestions ?? [], approved: false, hidden: false, edited: false },
-        vocabGrammarTargets:   { content: parsedErrorBank.vocabGrammarTargets ?? { vocabularyTargets: [], grammarTargets: [] }, approved: false, hidden: false, edited: false },
-        readinessCheck: { content: { targetProfileSelected: !!targetProfile, evaluatedSkills: evaluatedSkills, notEvaluatedSkills: [], diagnosisAllowed: true }, approved: true, hidden: false, edited: false },
-        classSummary: { content: parsedDiagnosis.classSummary || '', approved: false, hidden: false, edited: false },
-        targetScoreRelevance: { content: parsedDiagnosis.targetScoreRelevance || {}, approved: false, hidden: false, edited: false },
-        estimatedOverallScore: { content: parsedDiagnosis.estimatedOverallScore || {}, approved: false, hidden: false, edited: false },
-        priorityDiagnosis: { content: parsedDiagnosis.priorityDiagnosis || [], approved: false, hidden: false, edited: false },
-        nextClassFocus: { content: parsedDiagnosis.nextClassFocus || {}, approved: false, hidden: false, edited: false },
-        profileUpdateSuggestions: { content: parsedDiagnosis.profileUpdateSuggestions || {}, approved: false, hidden: false, edited: false },
-      };
-
-      setAiResult(parsedDiagnosis);
-      setSections(initSections);
-
-      // Auto-save draft immediately
+      // Auto-save draft
       try {
         const draft = await saveDiagnosis({
           id: diagnosisId ? savedDiagnosis?.id : undefined,
@@ -442,32 +395,28 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
             vocabulary: normalizedEvidence?.vocabularyEvidenceCount || 0,
             testStrategy: normalizedEvidence?.testStrategyEvidenceCount || 0,
           },
-          sections: initSections,
-          aiRaw: parsedDiagnosis,
+          diagnosticData: data,
+          teacherMeaning: teacherMeaning,
           status: 'draft',
           cycleStage: 'needs-diagnosis',
-          classSummary: typeof parsedDiagnosis.classSummary === 'string' ? parsedDiagnosis.classSummary : '',
-          content: { 
-            overall_result: typeof parsedDiagnosis.classSummary === 'string' ? parsedDiagnosis.classSummary : '', 
-            priorities: parsedDiagnosis.priorityDiagnosis || [], 
-            error_bank: parsedErrorBank.errorBankSuggestions || [] 
-          },
+          classSummary: '',
+          content: { overall_result: '', priorities: data.priorityRecommendations || [], error_bank: data.errors || [] },
         });
         if (draft) setSavedDiagnosis(draft);
       } catch (autoSaveErr) {
         console.warn('Auto-save draft failed:', autoSaveErr);
       }
 
-      if (!diagnosisRaw || !errorBankRaw || !feedbackRaw || !homeworkRaw) {
-        window.toast?.('Some sections failed to generate — please Regen them.', 'warn');
-      }
-
-      setStep('review');
+      setStep('write');
     } catch (e) {
       console.error(e);
       setError(friendlyAiError(e));
       setStep('prereq');
     }
+  }
+
+  function aiText(res) {
+    return res?.content?.map(b => b.text || '').join('') || '';
   }
 
   // ── Section actions ──
@@ -550,58 +499,22 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
     });
   }
 
-  async function regenFailed() {
-    const failedKeys = SECTION_KEYS
-      .map(({ key }) => key)
-      .filter(key => {
-        const sec = sections[key];
-        if (!sec) return false;
-        const c = sec.content;
-        return (typeof c === 'string' && c.includes('Failed to generate')) || isSectionEmpty(c);
-      });
-    if (!failedKeys.length) { window.toast?.('No failed sections to regenerate.', 'ok'); return; }
-    setRegeneratingAll(true);
-    for (const key of failedKeys) {
-      await regenerateSection(key);
-    }
-    setRegeneratingAll(false);
-  }
-
-  async function regenAll() {
-    const keys = SECTION_KEYS.map(({ key }) => key).filter(key => sections[key]);
-    setRegeneratingAll(true);
-    for (const key of keys) {
-      await regenerateSection(key);
-    }
-    setRegeneratingAll(false);
-  }
-
-  const approvedCount = Object.values(sections).filter(s => s.approved).length;
-  const totalSections = SECTION_KEYS.length;
-  const missingRequiredApprovals = REQUIRED_APPROVAL_KEYS.filter(key => {
-    const section = sections[key];
-    return !section?.approved || section.hidden;
-  });
-  const canApproveDiagnosis = missingRequiredApprovals.length === 0;
+  const canApproveDiagnosis = Boolean(
+    teacherMeaning.classSummary?.trim() &&
+    (teacherMeaning.studentFeedback?.classFocus?.trim() || teacherMeaning.studentFeedback?.whatYouDidWell?.length)
+  );
 
   // ── Save diagnosis ──
   async function handleSave(approve = false) {
     setSaving(true);
     try {
       if (approve && !canApproveDiagnosis) {
-        const missing = missingRequiredApprovals.map(key => SECTION_LABELS[key]).join(', ');
-        window.toast?.(`Approve required sections first: ${missing}`, 'warn');
+        window.toast?.('Write a class summary and at least one feedback item before approving.', 'warn');
         setSaving(false);
         return;
       }
-      const studentFeedbackSection = sections.studentFeedback;
-      const homeworkSection = sections.homeworkRecommendation;
-      const visibleStudentFeedback = studentFeedbackSection?.approved && !studentFeedbackSection.hidden
-        ? studentFeedbackSection.content
-        : null;
-      const visibleHomework = homeworkSection?.approved && !homeworkSection.hidden
-        ? homeworkSection.content
-        : null;
+      // Build legacy sections from new data for backward compat
+      const legacySections = sections;
       const dx = await saveDiagnosis({
         id: savedDiagnosis?.id,
         studentId: selectedStudentId || studentId,
@@ -617,25 +530,32 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
           vocabulary: normalizedEvidence?.vocabularyEvidenceCount || 0,
           testStrategy: normalizedEvidence?.testStrategyEvidenceCount || 0,
         },
-        sections,
-        aiRaw: aiResult,
+        diagnosticData,
+        teacherMeaning,
+        sections: legacySections,
         status: approve ? 'approved' : 'draft',
         teacherApproved: approve,
         cycleStage: approve ? 'diagnosed' : 'needs-diagnosis',
-        // Legacy compat fields
-        classSummary: typeof sections.classSummary?.content === 'string' ? sections.classSummary.content : '',
+        classSummary: teacherMeaning.classSummary || '',
         content: {
-          overall_result: typeof sections.classSummary?.content === 'string' ? sections.classSummary.content : '',
-          priorities: sections.priorityDiagnosis?.content || [],
-          student_friendly_feedback: visibleStudentFeedback,
-          homework: visibleHomework?.instructions || '',
-          homework_directions: visibleHomework,
-          error_bank: sections.errorBankSuggestions?.content || [],
-          section_snapshot: buildSnapshot(sections.skillDiagnosis?.content),
+          overall_result: teacherMeaning.classSummary || '',
+          priorities: teacherMeaning.priorityDiagnosis || [],
+          student_friendly_feedback: teacherMeaning.studentFeedback || null,
+          homework: teacherMeaning.homeworkRecommendation || '',
+          error_bank: diagnosticData?.errors || [],
+          section_snapshot: diagnosticData?.scores ? Object.entries(diagnosticData.scores).map(([skill, d]) => ({
+            section: skill.charAt(0).toUpperCase() + skill.slice(1),
+            score_0_80: d?.score0to80 ?? 0,
+            score_0_4: d?.score0to80 ? Math.round((d.score0to80 / 80) * 4 * 100) / 100 : 0,
+            confidence: d?.scoreProvisional ? 'low' : 'medium',
+            trend: 'stable',
+            strength: d?.strengths?.[0] || '',
+            gap: d?.weaknesses?.[0] || '',
+            next_step: d?.whatToImproveNext || '',
+          })) : [],
         },
       });
       setSavedDiagnosis(dx);
-      // Update class event diagnostic status
       if (selectedClassEventId || classEventId) {
         await updateClassEventStatus(selectedClassEventId || classEventId, { diagnosticStatus: approve ? 'approved' : 'draft' });
       }
@@ -701,13 +621,13 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
   }
 
   // ── Render ──
-  if (step === 'generating') {
+  if (step === 'analyzing') {
     return (
       <div style={{ maxWidth: 600, margin: '80px auto', textAlign: 'center', padding: '0 20px' }}>
-        <div style={{ fontSize: 'var(--text-xl)', fontWeight: 700, color: 'var(--accent-deep)', marginBottom: 12 }}>Running Diagnosis…</div>
+        <div style={{ fontSize: 'var(--text-xl)', fontWeight: 700, color: 'var(--accent-deep)', marginBottom: 12 }}>Analyzing Class Evidence…</div>
         <p style={{ color: 'var(--muted)', marginBottom: 24 }}>{generatingStatus}</p>
         <div style={{ height: 4, background: 'var(--bg-deep)', borderRadius: 99, overflow: 'hidden' }}>
-          <div role="progressbar" aria-label="Generating diagnosis" aria-valuemin={0} aria-valuemax={100} style={{ height: '100%', background: 'var(--accent)', borderRadius: 99, animation: 'slideIn 2s ease-in-out infinite alternate' }} />
+          <div role="progressbar" aria-label="Analyzing class evidence" aria-valuemin={0} aria-valuemax={100} style={{ height: '100%', background: 'var(--accent)', borderRadius: 99, animation: 'slideIn 2s ease-in-out infinite alternate' }} />
         </div>
         <style>{`@keyframes slideIn { from { width: 20%; margin-left: 0; } to { width: 60%; margin-left: 40%; } }`}</style>
       </div>
@@ -740,7 +660,7 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
         <Icon.arrowL size={13} /> Back to diagnostics
       </button>
 
-      <h1 style={S.headline}>{step === 'review' ? 'Review Diagnosis' : 'New Diagnosis'}</h1>
+      <h1 style={S.headline}>{step === 'prereq' ? 'New Diagnosis' : step === 'write' ? 'Write Diagnosis' : step === 'review' ? 'Review Diagnosis' : ''}</h1>
       {selectedStudent && <p style={S.sub}>{selectedStudent.name} · {selectedStudent.currentLevel} → {selectedStudent.targetLevel}</p>}
 
       {/* ── STEP: PREREQ ── */}
@@ -905,139 +825,432 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
         </div>
       )}
 
-      {/* ── STEP: REVIEW ── */}
+      {/* ── STEP: WRITE (data summary + teacher writes meaning) ── */}
+      {step === 'write' && (
+        <div style={{ marginTop: 20 }}>
+          {/* Phase indicator */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20, padding: '10px 14px', background: 'var(--accent-subtle)', borderRadius: 'var(--radius-md)', fontSize: 'var(--text-xs)' }}>
+            <Pill tone="success">✓ AI analysis complete</Pill>
+            <span style={{ color: 'var(--muted)' }}>→</span>
+            <Pill tone="accent">You write the meaning</Pill>
+            <span style={{ flex: 1 }} />
+            <Button variant="ghost" size="sm" onClick={() => setStep('review')} disabled={!canApproveDiagnosis}>
+              <Icon.arrowR size={13} /> Review & Approve
+            </Button>
+          </div>
+
+          {/* ── DATA SUMMARY SECTION (AI output, read-only) ── */}
+          <Card style={{ padding: 18, marginBottom: 20 }}>
+            <SectionHeader title="AI Data Summary" />
+            <p style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginBottom: 14 }}>AI-generated scores, errors, and gaps. Read this, then write your meaning below.</p>
+            {diagnosticData && <DiagnosticDataSummary data={diagnosticData} />}
+          </Card>
+
+          {/* ── TEACHER WRITER SECTION ── */}
+          <Card style={{ padding: 18, marginBottom: 20 }}>
+            <SectionHeader title="Your Notes" />
+            <TeacherWriter
+              student={selectedStudent}
+              diagnosticData={diagnosticData}
+              teacherMeaning={teacherMeaning}
+              setTeacherMeaning={setTeacherMeaning}
+              aiDrafts={aiDrafts}
+              setAiDrafts={setAiDrafts}
+              setDraftOverlay={setDraftOverlay}
+              draftOverlay={draftOverlay}
+            />
+          </Card>
+
+          {/* ── Bottom actions ── */}
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+            <Button variant="ghost" size="sm" onClick={() => handleSave(false)} disabled={saving}>Save Draft</Button>
+            <Button variant="primary" onClick={() => setStep('review')} disabled={!canApproveDiagnosis}>
+              <Icon.arrowR size={14} /> Review & Approve
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* ── STEP: REVIEW (simple preview of teacher-written content) ── */}
       {step === 'review' && (
         <div style={{ marginTop: 20 }}>
-          {/* Approval status bar */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', background: 'var(--bg)', borderRadius: 'var(--radius-md)', marginBottom: 20 }}>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontWeight: 600, fontSize: 'var(--text-sm)' }}>{approvedCount} of {totalSections} sections approved</div>
-              {missingRequiredApprovals.length > 0 && (
-                <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: 4 }}>
-                  Required before final approval: {missingRequiredApprovals.map(key => SECTION_LABELS[key]).join(', ')}
-                </div>
-              )}
-              <div style={{ height: 6, background: 'var(--bg-deep)', borderRadius: 99, marginTop: 6, overflow: 'hidden' }}>
-                <div style={{ height: '100%', width: '100%', background: approvedCount === totalSections ? 'var(--success)' : 'var(--accent)', borderRadius: 99, transform: `scaleX(${approvedCount / totalSections})`, transformOrigin: 'left', transition: 'transform 0.3s' }} />
-              </div>
-            </div>
-            <Button variant="ghost" size="sm" onClick={approveAll}>Approve All</Button>
-            <Button variant="ghost" size="sm" onClick={regenFailed} disabled={regeneratingAll || !!regenerating} title="Regenerate only sections that failed or are empty">
-              <Icon.refresh size={12} /> {regeneratingAll ? 'Regenerating…' : 'Regen Failed'}
-            </Button>
-            <Button variant="ghost" size="sm" onClick={regenAll} disabled={regeneratingAll || !!regenerating} title="Regenerate all sections from scratch">
-              <Icon.refresh size={12} /> Regen All
-            </Button>
-            <Button variant="ghost" size="sm" onClick={() => handleSave(false)} disabled={saving}>Save Draft</Button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20, padding: '10px 14px', background: 'var(--bg)', borderRadius: 'var(--radius-md)', fontSize: 'var(--text-xs)' }}>
+            <Button variant="ghost" size="sm" onClick={() => setStep('write')}><Icon.arrowL size={13} /> Back to edit</Button>
+            <span style={{ flex: 1 }} />
             <Button variant="primary" onClick={() => handleSave(true)} disabled={saving || !canApproveDiagnosis}>
               <Icon.check size={14} /> Approve & Save
             </Button>
           </div>
 
-          {/* Empty draft — no generated content */}
-          {!SECTION_KEYS.some(({ key }) => sections[key]) && (
-            <Card style={{ padding: 28, textAlign: 'center' }}>
-              <p style={{ color: 'var(--muted)', fontSize: 'var(--text-sm)', marginBottom: 14 }}>
-                This diagnosis has no generated content — it was saved before the AI analysis completed.
-              </p>
-              <Button variant="primary" size="sm" onClick={() => onNavigate('diagnostics:create', { studentId: savedDiagnosis?.studentId || selectedStudentId || studentId })}>
-                <Icon.diagnose size={13} /> Start a new diagnosis
-              </Button>
-            </Card>
-          )}
+          <Card style={{ padding: 18 }}>
+            <SectionHeader title="Class Summary" />
+            <p style={{ lineHeight: 1.7, fontSize: 'var(--text-sm)', whiteSpace: 'pre-wrap' }}>
+              {teacherMeaning.classSummary || <span style={{ color: 'var(--muted)', fontStyle: 'italic' }}>Not written yet</span>}
+            </p>
+          </Card>
 
-          {/* Sections — grouped into Teacher Analysis + Student-Facing zones */}
-          {(() => {
-            // One section's header + body. `embedded` = rendered inside a merged
-            // card (no outer Card chrome); otherwise gets its own card.
-            const renderSection = (key, studentFacing, embedded) => {
-              const sec = sections[key];
-              if (!sec) return null;
-              const label = SECTION_LABELS[key] || key;
-              const isEditing = editingSection === key;
-              const isRegenning = regenerating === key;
+          <Card style={{ padding: 18, marginTop: 12 }}>
+            <SectionHeader title="Student Feedback" />
+            <ReviewFeedbackSection meaning={teacherMeaning.studentFeedback} />
+          </Card>
 
-              const header = (
-                <div style={{ padding: '12px 16px', background: sec.approved ? 'var(--success-bg)' : (studentFacing ? 'var(--accent-soft)' : 'var(--bg)'), display: 'flex', alignItems: 'center', gap: 10, borderBottom: '1px solid var(--divider)' }}>
-                  <span style={{ fontWeight: 700, fontSize: 'var(--text-sm)', flex: 1 }}>{label}</span>
-                  {studentFacing && <Pill tone="info">Student-facing</Pill>}
-                  {sec.edited && <Pill tone="warning">Edited</Pill>}
-                  {sec.hidden && <Pill tone="muted">Hidden</Pill>}
-                  {sec.approved && <Pill tone="success">✓ Approved</Pill>}
-                  <div style={{ display: 'flex', gap: 6 }}>
-                    <Button variant="ghost" size="sm" onClick={() => startEdit(key)} disabled={isRegenning}><Icon.edit size={12} /> Edit</Button>
-                    <Button variant="ghost" size="sm" onClick={() => regenerateSection(key)} disabled={isRegenning}><Icon.refresh size={12} /> {isRegenning ? '…' : 'Regen'}</Button>
-                    <Button variant="ghost" size="sm" onClick={() => toggleHide(key)} style={{ color: sec.hidden ? 'var(--muted)' : 'var(--text)' }}><Icon.eye size={12} /></Button>
-                    <Button variant={sec.approved ? 'ghost' : 'primary'} size="sm" onClick={() => toggleApprove(key)} style={sec.approved ? { color: 'var(--danger)' } : {}}>
-                      {sec.approved ? '✕ Unapprove' : '✓ Approve'}
-                    </Button>
-                  </div>
-                </div>
-              );
-
-              const body = (
-                <div style={{ padding: 16 }}>
-                  {isEditing ? (
-                    <div>
-                      <textarea value={editText} onChange={e => setEditText(e.target.value)} rows={10} style={{ width: '100%', fontFamily: 'var(--font-mono)', fontSize: 'var(--text-xs)', padding: 10, border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', resize: 'vertical' }} />
-                      <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-                        <Button variant="primary" size="sm" onClick={() => saveEdit(key)}>Save Edit</Button>
-                        <Button variant="ghost" size="sm" onClick={() => setEditingSection(null)}>Cancel</Button>
-                      </div>
+          <Card style={{ padding: 18, marginTop: 12 }}>
+            <SectionHeader title="Priority Diagnosis" />
+            {teacherMeaning.priorityDiagnosis.length > 0 ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {teacherMeaning.priorityDiagnosis.map((p, i) => (
+                  <div key={i} style={{ padding: 10, background: 'var(--bg)', borderRadius: 'var(--radius-sm)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                      <Pill tone={p.urgency === 'Critical' ? 'danger' : p.urgency === 'Developing' ? 'warning' : 'info'}>{p.urgency}</Pill>
+                      <strong style={{ fontSize: 'var(--text-sm)' }}>{p.area}</strong>
                     </div>
-                  ) : (
-                    <SectionContent sectionKey={key} content={sec.content} />
-                  )}
-                </div>
-              );
-
-              return (
-                <div key={key} className={`dx-section ${sec.approved ? 'dx-approved' : studentFacing ? 'dx-student' : ''}`}>
-                  {header}{body}
-                </div>
-              );
-            };
-
-            const zoneHeaderStyle = {
-              fontSize: 'var(--text-xs)', fontWeight: 800, letterSpacing: '0.08em',
-              textTransform: 'uppercase', color: 'var(--muted)', margin: '4px 2px 0',
-            };
-
-            return SECTION_GROUPS.map(zone => {
-              const groups = zone.groups.filter(g => g.keys.some(k => sections[k]));
-              if (!groups.length) return null;
-            return (
-                  <div key={zone.zone} className="dx-zone" style={{ marginTop: zone.zone === 'student' ? 8 : 0 }}>
-                    <div>
-                      <div style={{ ...zoneHeaderStyle, color: zone.studentFacing ? 'var(--accent-text)' : 'var(--muted)' }}>{zone.title}</div>
-                      {zone.caption && <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', margin: '2px 2px 0' }}>{zone.caption}</div>}
-                    </div>
-                    {groups.map(group => {
-                      const keys = group.keys.filter(k => sections[k]);
-                      if (keys.length === 1) return renderSection(keys[0], zone.studentFacing, false);
-                      // Merged group: single header, members stacked without cards.
-                      return (
-                        <div key={group.title} className="dx-group">
-                          <div className="dx-group-title">{group.title}</div>
-                          {keys.map(k => renderSection(k, zone.studentFacing, true))}
-                        </div>
-                      );
-                    })}
+                    {p.evidence && <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontStyle: 'italic', marginBottom: 4 }}>Evidence: {p.evidence}</div>}
+                    <div style={{ fontSize: 'var(--text-sm)' }}>{p.whatToImprove}</div>
                   </div>
-                );
-            });
-          })()}
+                ))}
+              </div>
+            ) : (
+              <p style={{ color: 'var(--muted)', fontSize: 'var(--text-xs)', fontStyle: 'italic' }}>No priorities set</p>
+            )}
+          </Card>
 
-          {/* Bottom actions */}
+          <Card style={{ padding: 18, marginTop: 12 }}>
+            <SectionHeader title="Next Class Focus" />
+            {teacherMeaning.nextClassFocus?.primaryFocus ? (
+              <div style={{ fontSize: 'var(--text-sm)', lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>{teacherMeaning.nextClassFocus.primaryFocus}</div>
+            ) : (
+              <p style={{ color: 'var(--muted)', fontSize: 'var(--text-xs)', fontStyle: 'italic' }}>Not set</p>
+            )}
+          </Card>
+
           <div style={{ display: 'flex', gap: 10, marginTop: 20, flexWrap: 'wrap' }}>
-            <Button variant="ghost" size="sm" onClick={() => handleSave(false)} disabled={saving}>Save Draft</Button>
+            <Button variant="ghost" size="sm" onClick={() => setStep('write')}><Icon.arrowL size={13} /> Back to edit</Button>
             <Button variant="primary" onClick={() => handleSave(true)} disabled={saving || !canApproveDiagnosis}>
-              <Icon.check size={14} /> Approve & Save ({approvedCount}/{totalSections})
+              <Icon.check size={14} /> Approve & Save
             </Button>
-            {savedDiagnosis && <Button variant="ghost" size="sm" onClick={() => setStep('saved')}>Post-approval actions</Button>}
           </div>
         </div>
       )}
+
+      {/* ── DRAFT OVERLAY (modal) ── */}
+      {draftOverlay && (
+        <DraftOverlay
+          section={draftOverlay.section}
+          draft={draftOverlay.draft}
+          onAccept={(section, text) => {
+            setTeacherMeaning(tm => {
+              const next = { ...tm };
+              if (section === 'classSummary') next.classSummary = text;
+              if (section === 'studentFeedback') next.studentFeedback = { ...next.studentFeedback };
+              if (section === 'nextClassFocus') next.nextClassFocus = { ...next.nextClassFocus, primaryFocus: text };
+              if (section === 'homeworkRecommendation') next.homeworkRecommendation = text;
+              return next;
+            });
+            setDraftOverlay(null);
+          }}
+          onDismiss={() => setDraftOverlay(null)}
+        />
+      )}
+    </div>
+  );
+}
+
+/* ── DIAGNOSTIC DATA SUMMARY (read-only) ── */
+function DiagnosticDataSummary({ data }) {
+  if (!data) return null;
+  const { scores, errors, vocabulary, gapVsTarget, priorityRecommendations } = data;
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+      {/* Skill scores */}
+      <div>
+        <div style={{ fontWeight: 700, fontSize: 'var(--text-xs)', color: 'var(--muted)', textTransform: 'uppercase', marginBottom: 8 }}>Skill Scores</div>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+          {scores && Object.entries(scores).map(([skill, s]) => (
+            <div key={skill} style={{
+              padding: '8px 12px', borderRadius: 'var(--radius-sm)',
+              background: s.evaluated ? (s.score0to80 >= 55 ? 'var(--success-bg)' : s.score0to80 >= 40 ? 'var(--warning-bg)' : 'var(--danger-bg)') : 'var(--bg)',
+              border: '1px solid var(--border)', minWidth: 130,
+            }}>
+              <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, textTransform: 'capitalize' }}>{skill}</div>
+              {s.evaluated ? (
+                <>
+                  <div style={{ fontSize: 'var(--text-lg)', fontWeight: 700 }}>{s.score0to80 != null ? `${s.score0to80}/80` : '—'}</div>
+                  <div style={{ fontSize: 10, color: 'var(--muted)' }}>{s.scoreConfidenceLevel} · {s.evidenceCount} turn{s.evidenceCount !== 1 ? 's' : ''}</div>
+                </>
+              ) : (
+                <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontStyle: 'italic' }}>Not evaluated</div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Gap vs target */}
+      {gapVsTarget && (
+        <div>
+          <div style={{ fontWeight: 700, fontSize: 'var(--text-xs)', color: 'var(--muted)', textTransform: 'uppercase', marginBottom: 8 }}>Gap to Target</div>
+          <p style={{ fontSize: 'var(--text-sm)' }}>
+            Priority skill: <strong>{gapVsTarget.prioritySkillForTarget || 'unevaluated'}</strong>
+          </p>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+            {Object.entries(gapVsTarget).filter(([k]) => k !== 'prioritySkillForTarget').map(([skill, gap]) => (
+              <Pill key={skill} tone={gap.includes('Not evaluated') ? 'muted' : gap.includes('below') ? (parseInt(gap) > 20 ? 'danger' : 'warning') : 'success'}>
+                {skill}: {gap}
+              </Pill>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Errors */}
+      {errors && errors.length > 0 && (
+        <div>
+          <div style={{ fontWeight: 700, fontSize: 'var(--text-xs)', color: 'var(--muted)', textTransform: 'uppercase', marginBottom: 8 }}>Errors Found ({errors.length})</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {errors.slice(0, 5).map((err, i) => (
+              <div key={i} style={{ padding: 8, background: 'var(--bg)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-xs)' }}>
+                <span style={{ color: 'var(--danger)', fontWeight: 600 }}>"{err.error}"</span>
+                <span style={{ color: 'var(--muted)' }}> → </span>
+                <span style={{ color: 'var(--success)', fontWeight: 600 }}>{err.correct}</span>
+                <Pill tone={err.priority === 'high' ? 'danger' : 'muted'} style={{ marginLeft: 8 }}>{err.category}</Pill>
+              </div>
+            ))}
+            {errors.length > 5 && <p style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>+{errors.length - 5} more</p>}
+          </div>
+        </div>
+      )}
+
+      {/* Vocabulary */}
+      {vocabulary && vocabulary.length > 0 && (
+        <div>
+          <div style={{ fontWeight: 700, fontSize: 'var(--text-xs)', color: 'var(--muted)', textTransform: 'uppercase', marginBottom: 8 }}>New Vocabulary ({vocabulary.length})</div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+            {vocabulary.slice(0, 8).map((v, i) => (
+              <Pill key={i} tone="accent" title={v.meaning}>{v.wordOrPhrase}</Pill>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ── TEACHER WRITER (teacher enters meaning) ── */
+function TeacherWriter({ student, diagnosticData, teacherMeaning, setTeacherMeaning, aiDrafts, setAiDrafts, setDraftOverlay, draftOverlay }) {
+
+  function update(path, value) {
+    setTeacherMeaning(tm => {
+      const next = { ...tm };
+      const keys = path.split('.');
+      let obj = next;
+      for (let i = 0; i < keys.length - 1; i++) obj = obj[keys[i]];
+      obj[keys[keys.length - 1]] = value;
+      return next;
+    });
+  }
+
+  async function requestDraft(field, promptBuilder) {
+    if (!diagnosticData) return;
+    const draft = await promptBuilder({ student, data: diagnosticData }).catch(() => 'Draft generation failed.');
+    if (draft) {
+      setDraftOverlay({ section: field, draft });
+    }
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 20, marginTop: 12 }}>
+      {/* 1. Class Summary */}
+      <WriterField
+        label="Class Summary"
+        hint="What was practiced, how it went, key takeaway"
+        value={teacherMeaning.classSummary}
+        onChange={v => update('classSummary', v)}
+        onDraft={() => requestDraft('classSummary', () => Promise.resolve(''))}
+        required
+      />
+
+      {/* 2. Student Feedback */}
+      <div>
+        <div style={{ fontWeight: 700, fontSize: 'var(--text-sm)', marginBottom: 4 }}>Student Feedback</div>
+        <p style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginBottom: 10 }}>This is what the student will read. Write in your own voice.</p>
+
+        <div style={{ background: 'var(--accent-subtle)', padding: 14, borderRadius: 'var(--radius-sm)', marginBottom: 12 }}>
+          <div style={{ fontWeight: 600, fontSize: 'var(--text-xs)', marginBottom: 6 }}>Today's Focus</div>
+          <textarea className="input" rows={2} value={teacherMeaning.studentFeedback.classFocus}
+            onChange={e => update('studentFeedback.classFocus', e.target.value)}
+            placeholder="What did the student work on today?" />
+        </div>
+
+        <div style={{ background: 'var(--success-bg)', padding: 14, borderRadius: 'var(--radius-sm)', marginBottom: 12 }}>
+          <div style={{ fontWeight: 600, fontSize: 'var(--text-xs)', marginBottom: 6 }}>What Is Becoming Stronger</div>
+          <textarea className="input" rows={2} value={teacherMeaning.studentFeedback.whatYouDidWell?.[0]?.explanation || ''}
+            onChange={e => update('studentFeedback.whatYouDidWell', [{ strength: 'Improvement', explanation: e.target.value }])}
+            placeholder="What did the student do well? Include a quote if you can." />
+        </div>
+
+        <div style={{ background: 'var(--warning-bg)', padding: 14, borderRadius: 'var(--radius-sm)' }}>
+          <div style={{ fontWeight: 600, fontSize: 'var(--text-xs)', marginBottom: 6 }}>Your Next Step</div>
+          <textarea className="input" rows={2} value={teacherMeaning.studentFeedback.whatToImprove?.[0]?.howToImprove || ''}
+            onChange={e => update('studentFeedback.whatToImprove', [{ area: 'Next step', howToImprove: e.target.value }])}
+            placeholder="One clear thing to work on next." />
+        </div>
+      </div>
+
+      {/* 3. Priority Diagnosis (AI recommended, teacher confirms) */}
+      <div>
+        <div style={{ fontWeight: 700, fontSize: 'var(--text-sm)', marginBottom: 4 }}>Priority Diagnosis</div>
+        <p style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginBottom: 8 }}>AI-recommended priorities — confirm, edit, or add your own.</p>
+        {diagnosticData?.priorityRecommendations?.map((rec, i) => {
+          const confirmed = teacherMeaning.priorityDiagnosis.find(p => p.rank === rec.rank);
+          return (
+            <div key={i} style={{
+              padding: 10, marginBottom: 8, borderRadius: 'var(--radius-sm)',
+              border: `1px solid ${confirmed ? 'var(--success)' : 'var(--border)'}`,
+              background: confirmed ? 'var(--success-bg)' : 'var(--bg)',
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                <Pill tone={rec.urgency === 'Critical' ? 'danger' : rec.urgency === 'Developing' ? 'warning' : 'info'}>{rec.urgency}</Pill>
+                <input className="input" style={{ flex: 1, fontWeight: 600, padding: '4px 8px', fontSize: 'var(--text-sm)' }}
+                  value={rec.area} onChange={e => {
+                    const updated = [...teacherMeaning.priorityDiagnosis];
+                    const idx = updated.findIndex(p => p.rank === rec.rank);
+                    if (idx >= 0) updated[idx] = { ...updated[idx], area: e.target.value };
+                    else updated.push({ ...rec, area: e.target.value, confirmed: true });
+                    setTeacherMeaning(tm => ({ ...tm, priorityDiagnosis: updated }));
+                  }} />
+                <Button variant="ghost" size="sm" onClick={() => {
+                  const updated = teacherMeaning.priorityDiagnosis.filter(p => p.rank !== rec.rank);
+                  setTeacherMeaning(tm => ({ ...tm, priorityDiagnosis: updated }));
+                }}><Icon.close size={10} /></Button>
+              </div>
+              <textarea className="input" rows={1} style={{ fontSize: 'var(--text-xs)', marginTop: 4 }}
+                value={rec.evidence} placeholder="Evidence quote"
+                onChange={e => {
+                  const updated = [...teacherMeaning.priorityDiagnosis];
+                  const idx = updated.findIndex(p => p.rank === rec.rank);
+                  if (idx >= 0) updated[idx] = { ...updated[idx], evidence: e.target.value };
+                  else updated.push({ ...rec, evidence: e.target.value, confirmed: true });
+                  setTeacherMeaning(tm => ({ ...tm, priorityDiagnosis: updated }));
+                }} />
+            </div>
+          );
+        })}
+      </div>
+
+      {/* 4. Next Class Focus */}
+      <WriterField
+        label="Next Class Focus"
+        hint="What should the next class focus on?"
+        value={teacherMeaning.nextClassFocus?.primaryFocus || ''}
+        onChange={v => update('nextClassFocus.primaryFocus', v)}
+        onDraft={() => requestDraft('nextClassFocus', () => Promise.resolve(''))}
+      />
+
+      {/* 5. Homework Recommendation */}
+      <WriterField
+        label="Homework Recommendation"
+        hint="What should the student practice? (AI will generate exercises later)"
+        value={teacherMeaning.homeworkRecommendation}
+        onChange={v => update('homeworkRecommendation', v)}
+        onDraft={() => requestDraft('homeworkRecommendation', () => Promise.resolve(''))}
+      />
+    </div>
+  );
+}
+
+/* ── SINGLE WRITER FIELD ── */
+function WriterField({ label, hint, value, onChange, onDraft, required, rows = 3 }) {
+  return (
+    <div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+        <div style={{ fontWeight: 700, fontSize: 'var(--text-sm)' }}>
+          {label}
+          {required && <span style={{ color: 'var(--danger)', marginLeft: 4 }}>*</span>}
+        </div>
+        <Button variant="ghost" size="sm" onClick={onDraft} title="Suggest a draft">
+          <Icon.doc size={11} /> Draft
+        </Button>
+      </div>
+      {hint && <p style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginBottom: 6 }}>{hint}</p>}
+      <textarea className="input" rows={rows} value={value} onChange={e => onChange(e.target.value)}
+        placeholder={hint} />
+    </div>
+  );
+}
+
+/* ── REVIEW FEEDBACK SECTION ── */
+function ReviewFeedbackSection({ meaning }) {
+  if (!meaning || (!meaning.classFocus && !meaning.whatYouDidWell?.length && !meaning.whatToImprove?.length)) {
+    return <p style={{ color: 'var(--muted)', fontSize: 'var(--text-xs)', fontStyle: 'italic' }}>No feedback written yet</p>;
+  }
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+      {meaning.classFocus && (
+        <div style={{ padding: 10, background: 'var(--bg)', borderRadius: 'var(--radius-sm)' }}>
+          <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--accent)', marginBottom: 4 }}>Today's Focus</div>
+          <p style={{ fontSize: 'var(--text-sm)', lineHeight: 1.6 }}>{meaning.classFocus}</p>
+        </div>
+      )}
+      {meaning.whatYouDidWell?.map((item, i) => (
+        <div key={i} style={{ padding: 10, background: 'var(--success-bg)', borderRadius: 'var(--radius-sm)' }}>
+          <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--success)', marginBottom: 4 }}>What Is Becoming Stronger</div>
+          <p style={{ fontSize: 'var(--text-sm)' }}>{item.explanation}</p>
+        </div>
+      ))}
+      {meaning.whatToImprove?.map((item, i) => (
+        <div key={i} style={{ padding: 10, background: 'var(--warning-bg)', borderRadius: 'var(--radius-sm)' }}>
+          <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--warning)', marginBottom: 4 }}>Your Next Step</div>
+          <p style={{ fontSize: 'var(--text-sm)' }}>{item.howToImprove}</p>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/* ── DRAFT OVERLAY (modal) ── */
+function DraftOverlay({ section, draft, onAccept, onDismiss }) {
+  const [editing, setEditing] = useState(draft || '');
+
+  const sectionLabel = {
+    classSummary: 'Class Summary',
+    studentFeedback: 'Student Feedback',
+    nextClassFocus: 'Next Class Focus',
+    homeworkRecommendation: 'Homework Recommendation',
+  }[section] || section;
+
+  return (
+    <div style={{
+      position: 'fixed', inset: 0, zIndex: 1000,
+      background: 'rgba(0,0,0,0.4)', display: 'grid', placeItems: 'center',
+      padding: 20,
+    }}>
+      <div style={{
+        background: 'var(--surface)', borderRadius: 'var(--radius-lg)',
+        maxWidth: 600, width: '100%', maxHeight: '80vh', overflow: 'auto',
+        boxShadow: 'var(--shadow-modal)',
+      }}>
+        <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--divider)' }}>
+          <div style={{ fontWeight: 700, fontSize: 'var(--text-md)' }}>AI Draft: {sectionLabel}</div>
+        </div>
+        <div style={{ padding: 16 }}>
+          <div style={{ padding: 12, background: 'var(--accent-subtle)', borderRadius: 'var(--radius-sm)', border: '1px dashed var(--accent)', marginBottom: 12 }}>
+            <div style={{ fontSize: 'var(--text-xs)', fontWeight: 600, color: 'var(--accent)', marginBottom: 6 }}>AI Suggestion</div>
+            <textarea className="input" rows={6} value={editing}
+              onChange={e => setEditing(e.target.value)}
+              style={{ background: 'white', fontSize: 'var(--text-sm)' }} />
+          </div>
+          <p style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginBottom: 12 }}>
+            This is an AI draft. Edit it as you like, then accept to use it, or dismiss.
+          </p>
+        </div>
+        <div style={{ padding: '12px 20px', borderTop: '1px solid var(--divider)', display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+          <Button variant="ghost" onClick={onDismiss}>Dismiss</Button>
+          <Button variant="primary" onClick={() => onAccept(section, editing)}>
+            <Icon.check size={13} /> Accept & Use
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }
@@ -1371,6 +1584,50 @@ function normalizeEvidenceCounts(evidence) {
     else next[countKey] = 0;
   });
   return next;
+}
+
+function normalizeDiagnosticData(parsed, evidence = {}) {
+  if (!parsed || typeof parsed !== 'object') return { scores: {}, errors: [], vocabulary: [], gapVsTarget: {}, priorityRecommendations: [] };
+  const scores = parsed.scores || {};
+  const skillMeta = {
+    speaking: ['evaluatedSpeaking', 'speakingEvidenceCount'],
+    writing: ['evaluatedWriting', 'writingEvidenceCount'],
+    reading: ['evaluatedReading', 'readingEvidenceCount'],
+    listening: ['evaluatedListening', 'listeningEvidenceCount'],
+    grammar: ['evaluatedGrammar', 'grammarEvidenceCount'],
+    vocabulary: ['evaluatedVocabulary', 'vocabularyEvidenceCount'],
+    testStrategy: ['evaluatedTestStrategy', 'testStrategyEvidenceCount'],
+  };
+  Object.entries(skillMeta).forEach(([skill, [flagKey, countKey]]) => {
+    const existing = scores[skill] || {};
+    if (!scores[skill]) {
+      const evaluated = Boolean(existing.evaluated ?? evidence?.[flagKey]);
+      const evidenceCount = Number(existing.evidenceCount ?? evidence?.[countKey] ?? 0) || 0;
+      scores[skill] = {
+        evaluated,
+        evidenceCount,
+        score0to80: evaluated ? (existing.score0to80 ?? null) : null,
+        scoreConfidenceLevel: evaluated ? (existing.scoreConfidenceLevel || 'Limited evidence') : 'Not evaluated enough',
+        scoreProvisional: existing.scoreProvisional ?? evaluated,
+        transcriptOnly: existing.transcriptOnly ?? (skill === 'speaking'),
+        strengths: Array.isArray(existing.strengths) ? existing.strengths : [],
+        weaknesses: Array.isArray(existing.weaknesses) ? existing.weaknesses : [],
+        mainIssues: Array.isArray(existing.mainIssues) ? existing.mainIssues : [],
+        subskillsAssessed: Array.isArray(existing.subskillsAssessed) ? existing.subskillsAssessed : [],
+        readinessTowardTarget: existing.readinessTowardTarget || (evaluated ? 'Limited evidence gathered.' : 'Not evaluated yet.'),
+        whatToImproveNext: existing.whatToImproveNext || '',
+        evidenceNote: existing.evidenceNote || '',
+        ratingBreakdown: existing.ratingBreakdown,
+      };
+    }
+  });
+  return {
+    scores,
+    errors: Array.isArray(parsed.errors) ? parsed.errors : [],
+    vocabulary: Array.isArray(parsed.vocabulary) ? parsed.vocabulary : [],
+    gapVsTarget: parsed.gapVsTarget || {},
+    priorityRecommendations: Array.isArray(parsed.priorityRecommendations) ? parsed.priorityRecommendations : [],
+  };
 }
 
 function buildSnapshot(skillDiagnosis) {
