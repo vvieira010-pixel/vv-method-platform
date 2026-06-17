@@ -1,8 +1,8 @@
 import { useRef, useState } from 'react';
 import { Icon, Card, SectionHeader, Button } from '../components/shared.jsx';
 import { clearWorkflowData, syncLocalToCloud } from '../lib/workflow.js';
-import { getDbContext } from '../lib/supabase-db.js';
-import { getSupabaseConfig } from '../lib/supabase-storage.js';
+import { getDbContext, setTeacherSetting } from '../lib/supabase-db.js';
+import { getSupabaseConfig, readStoredSupabaseSession, updateUserPassword } from '../lib/supabase-storage.js';
 
 const SENSITIVE_LOCAL_KEYS = new Set([
   'vv:groq_api_key',
@@ -55,12 +55,36 @@ export default function SettingsPage({ onNavigate }) {
   const [deepgramKey, setDeepgramKey] = useState(() => localStorage.getItem('vv:deepgram_api_key') || '');
   const [piperUrl, setPiperUrl] = useState(() => localStorage.getItem('vv:piper_server_url') || '');
   const [generalMemo, setGeneralMemo] = useState(() => localStorage.getItem('vv:student_general_memo') || '');
+  const [examDate, setExamDate] = useState(() => localStorage.getItem('vv:met_exam_date') || '');
   const [saved, setSaved] = useState('');
   const [syncing, setSyncing] = useState(false);
   const [syncResult, setSyncResult] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [passwordSaving, setPasswordSaving] = useState(false);
+  const [passwordMsg, setPasswordMsg] = useState(null); // { ok, text }
   const importInputRef = useRef(null);
 
   const supabaseConfigured = getSupabaseConfig().isConfigured;
+  const activeSession = readStoredSupabaseSession();
+
+  async function handleSetPassword(e) {
+    e.preventDefault();
+    if (newPassword.length < 6) { setPasswordMsg({ ok: false, text: 'Password must be at least 6 characters.' }); return; }
+    if (newPassword !== confirmPassword) { setPasswordMsg({ ok: false, text: 'Passwords do not match.' }); return; }
+    setPasswordSaving(true);
+    setPasswordMsg(null);
+    try {
+      await updateUserPassword(newPassword, activeSession.access_token);
+      setNewPassword('');
+      setConfirmPassword('');
+      setPasswordMsg({ ok: true, text: 'Password set! You can now sign in with your email and this password.' });
+      window.toast?.('Password updated.', 'ok');
+    } catch (err) {
+      setPasswordMsg({ ok: false, text: err.message });
+    }
+    setPasswordSaving(false);
+  }
 
   async function handleSyncToCloud() {
     if (!getDbContext()) {
@@ -104,9 +128,17 @@ export default function SettingsPage({ onNavigate }) {
     window.toast?.('API keys saved.', 'ok');
   }
 
-  function saveGeneralMemo() {
-    if (generalMemo.trim()) localStorage.setItem('vv:student_general_memo', generalMemo.trim());
+  function saveExamDate() {
+    if (examDate) localStorage.setItem('vv:met_exam_date', examDate);
+    else localStorage.removeItem('vv:met_exam_date');
+    window.toast?.('Exam date saved — students will see the countdown on their dashboard.', 'ok');
+  }
+
+  async function saveGeneralMemo() {
+    const text = generalMemo.trim();
+    if (text) localStorage.setItem('vv:student_general_memo', text);
     else localStorage.removeItem('vv:student_general_memo');
+    await setTeacherSetting('general_memo', text || null);
     window.dispatchEvent(new CustomEvent('vv:student-memo-changed'));
     window.toast?.('General memo saved.', 'ok');
   }
@@ -121,6 +153,7 @@ export default function SettingsPage({ onNavigate }) {
     localStorage.removeItem('vv:vocabularyBank');
     localStorage.removeItem('vv:progressNotes');
     localStorage.removeItem('vv:student_general_memo');
+    await setTeacherSetting('general_memo', null);
     window.toast?.('All data cleared.', 'info');
     window.location.reload();
   }
@@ -255,14 +288,14 @@ export default function SettingsPage({ onNavigate }) {
             <a href="https://console.deepgram.com/" target="_blank" rel="noopener noreferrer" style={{ fontSize: 'var(--text-xs)', color: 'var(--accent)', marginTop: 3 }}>Get your Deepgram key →</a>
           </Field>
           <div style={{
-            padding: '10px 14px', borderRadius: 8, fontSize: 'var(--text-xs)',
+            padding: '10px 14px', borderRadius: 0, fontSize: 'var(--text-xs)',
             background: 'var(--accent-subtle)', color: 'var(--muted)', lineHeight: 1.6,
             border: '1px solid var(--accent-soft)',
           }}>
             <strong>Voice note</strong> — use one woman voice and one man voice for listening variety. The default server setup uses an ElevenLabs woman voice first, Deepgram's Aura fallback, then OpenAI <em>nova</em>. You can change voices with <code>ELEVENLABS_VOICE_ID</code>, <code>DEEPGRAM_TTS_MODEL</code>, or <code>OPENAI_TTS_VOICE</code> in the server environment.
           </div>
           <div style={{
-            padding: '10px 14px', borderRadius: 8, fontSize: 'var(--text-xs)',
+            padding: '10px 14px', borderRadius: 0, fontSize: 'var(--text-xs)',
             background: 'var(--accent-subtle)', color: 'var(--muted)', lineHeight: 1.6,
             border: '1px solid var(--accent-soft)',
           }}>
@@ -309,6 +342,79 @@ export default function SettingsPage({ onNavigate }) {
           <Button variant="primary" onClick={saveGeneralMemo}>Save General Memo</Button>
         </div>
       </Card>
+
+      {/* Class & Exam Settings */}
+      <Card style={{ padding: 20, marginTop: 14 }}>
+        <SectionHeader title="Class & Exam Date" icon={<Icon.calendar size={15} />} />
+        <p style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', margin: '8px 0 14px', lineHeight: 1.6 }}>
+          Set the MET exam date for your students. It appears as a live countdown on their Home dashboard.
+          Leave blank to hide the countdown.
+        </p>
+        <Field label="MET exam date">
+          <input
+            className="input"
+            type="date"
+            value={examDate}
+            onChange={e => setExamDate(e.target.value)}
+            style={{ maxWidth: 220 }}
+          />
+        </Field>
+        {examDate && (
+          <p style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: 6 }}>
+            {(() => {
+              const d = Math.ceil((new Date(examDate) - new Date().setHours(0,0,0,0)) / 86400000);
+              return d > 0 ? `${d} day${d !== 1 ? 's' : ''} from today` : d === 0 ? 'Today!' : 'This date has passed.';
+            })()}
+          </p>
+        )}
+        <div style={{ marginTop: 12 }}>
+          <Button variant="primary" onClick={saveExamDate}>Save exam date</Button>
+        </div>
+      </Card>
+
+      {/* Set / change password */}
+      {activeSession && (
+        <Card style={{ padding: 20, marginTop: 14 }}>
+          <SectionHeader title="Account Password" icon={<Icon.lock size={15} />} />
+          <p style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', margin: '8px 0 16px', lineHeight: 1.6 }}>
+            Set a password so you can sign in with your email and password next time — no login link needed.
+          </p>
+          <form onSubmit={handleSetPassword} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <Field label="New password (min. 6 characters)">
+              <input
+                className="input"
+                type="password"
+                autoComplete="new-password"
+                placeholder="Choose a password…"
+                value={newPassword}
+                onChange={e => setNewPassword(e.target.value)}
+                disabled={passwordSaving}
+              />
+            </Field>
+            <Field label="Confirm password">
+              <input
+                className="input"
+                type="password"
+                autoComplete="new-password"
+                placeholder="Repeat the password…"
+                value={confirmPassword}
+                onChange={e => setConfirmPassword(e.target.value)}
+                disabled={passwordSaving}
+              />
+            </Field>
+            {passwordMsg && (
+              <p style={{ fontSize: 'var(--text-sm)', color: passwordMsg.ok ? 'var(--success)' : 'var(--danger)', margin: 0 }}>
+                {passwordMsg.text}
+              </p>
+            )}
+            <div>
+              <Button type="submit" variant="primary" disabled={passwordSaving || !newPassword || !confirmPassword}>
+                {passwordSaving ? 'Saving…' : 'Set password'}
+              </Button>
+            </div>
+          </form>
+        </Card>
+      )}
 
       {/* Cloud sync */}
       {supabaseConfigured && (
@@ -365,5 +471,6 @@ function Field({ label, children }) {
 }
 
 const S = {
-  headline: { fontFamily: 'var(--font-display)', fontSize: 'var(--text-2xl)', fontWeight: 700, color: 'var(--accent-deep)', margin: 0 },
+  headline: { fontFamily: 'var(--font-ui)', fontSize: 'var(--text-2xl)', fontWeight: 700, color: 'var(--accent-deep)', margin: 0 },
 };
+

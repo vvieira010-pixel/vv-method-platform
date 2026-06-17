@@ -1,4 +1,5 @@
 {
+  "installCommand": "npm ci",
   "buildCommand": "vite build",
   "outputDirectory": "dist-build",
   "rewrites": [{ "source": "/((?!api/).*)", "destination": "/index.html" }],

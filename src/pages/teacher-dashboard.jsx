@@ -1,11 +1,13 @@
 /**
- * teacher-dashboard.jsx — Command center showing today's priorities
+ * teacher-dashboard.jsx — "Today": the single teacher command center.
+ * Merges the old Dashboard (priority banner + KPIs + today's classes + quick actions)
+ * with the old Class Prep cycle board (per-student stage + next action).
  */
 import { useState, useEffect } from 'react';
-import { Icon, Card, SectionHeader, Pill, Button, Avatar, Kpi } from '../components/shared.jsx';
+import { Icon, Card, SectionHeader, Pill, Button, Avatar } from '../components/shared.jsx';
 import {
-  getClassEvents, getDiagnoses, getHomework, getAllSubmissions,
-  getReviews, getStudents,
+  getClassEvents, getAllSubmissions, getReviews,
+  getStudentCycleState, requestInboxNotificationPermission,
 } from '../lib/workflow.js';
 
 function timeOfDay() {
@@ -13,56 +15,99 @@ function timeOfDay() {
   return h < 12 ? 'morning' : h < 17 ? 'afternoon' : 'evening';
 }
 
+/* ─── Cycle stage config (from the former Class Prep view) ─────── */
+const STAGE_CONFIG = {
+  'needs-diagnosis':   { label: 'Needs diagnosis',   tone: 'danger',  action: 'Run diagnosis',     getNav: (s) => ['diagnostics:create', { studentId: s.id }] },
+  'diagnosed':         { label: 'Diagnosed',         tone: 'info',    action: 'Send feedback',     getNav: (s) => ['diagnostics:create', { diagnosisId: s.cycle.latestDiagnosis?.id, studentId: s.id }] },
+  'feedback-sent':     { label: 'Feedback sent',     tone: 'info',    action: 'Assign homework',   getNav: (s) => ['homework:create', { studentId: s.id, diagnosisId: s.cycle.latestDiagnosis?.id }] },
+  'homework-assigned': { label: 'Homework assigned', tone: 'warning', action: 'View homework',     getNav: ()  => ['homework', {}] },
+  'submitted':         { label: 'Submitted',         tone: 'success', action: 'Review submission', getNav: (s) => ['submissions:review', { submissionId: s.cycle.pendingSubmissions[0]?.id }] },
+  'reviewed':          { label: 'Reviewed',          tone: 'success', action: 'New diagnosis',     getNav: (s) => ['diagnostics:create', { studentId: s.id }] },
+};
+const URGENCY_ORDER = ['submitted', 'needs-diagnosis', 'diagnosed', 'feedback-sent', 'homework-assigned', 'reviewed'];
+
 export default function TeacherDashboard({ students, onNavigate, teacherName = 'Vini' }) {
-  const [data, setData] = useState({
-    todayClasses: [], needsDiagnosis: [], pendingSubmissions: [],
-    recentActivity: [], stats: { students: 0, classesToday: 0, pendingReview: 0, activeErrors: 0 },
-  });
+  const [todayClasses, setTodayClasses] = useState([]);
+  const [cycleStates, setCycleStates] = useState({});
+  const [classesToday, setClassesToday] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [stageFilter, setStageFilter] = useState('all');
 
   useEffect(() => {
-    loadDashboard();
-    window.addEventListener('focus', loadDashboard);
-    return () => window.removeEventListener('focus', loadDashboard);
+    let live = true;
+    async function load() {
+      const todayStr = new Date().toISOString().slice(0, 10);
+      const [events, , , entries] = await Promise.all([
+        getClassEvents(),
+        getAllSubmissions(),
+        getReviews(),
+        Promise.all(students.map(async (s) => [s.id, await getStudentCycleState(s.id)])),
+      ]);
+      if (!live) return;
+      const todays = (events || []).filter(e => e.date === todayStr && e.status !== 'canceled');
+      setTodayClasses(todays);
+      setClassesToday(todays.length);
+      setCycleStates(Object.fromEntries(entries));
+      setLoading(false);
+    }
+    void load();
+    requestInboxNotificationPermission();
+    window.addEventListener('focus', load);
+    window.addEventListener('vv:students-updated', load);
+    return () => {
+      live = false;
+      window.removeEventListener('focus', load);
+      window.removeEventListener('vv:students-updated', load);
+    };
   }, [students]);
 
-  async function loadDashboard() {
-    const today = new Date().toISOString().slice(0, 10);
-    const [events, submissions] = await Promise.all([
-      getClassEvents(), getAllSubmissions(),
-    ]);
+  const studentsWithCycle = students.map(s => ({
+    ...s,
+    cycle: cycleStates[s.id] || {
+      cycleStage: 'needs-diagnosis', latestDiagnosis: null,
+      pendingHomework: [], pendingSubmissions: [], daysSinceLastDiagnosis: null, totalDiagnoses: 0,
+    },
+  }));
 
-    const todayClasses = events.filter(e => e.date === today && e.status !== 'canceled');
-    const needsDiagnosis = events.filter(e => e.status === 'completed' && e.diagnosticStatus === 'not-started');
-    const allSubs = submissions || [];
-    const reviewedIds = new Set((await getReviews())?.map(r => r.submissionId) || []);
-    const pendingSubmissions = allSubs.filter(s => s.status === 'submitted' && !reviewedIds.has(s.id));
+  const stageCounts = {};
+  studentsWithCycle.forEach(s => { stageCounts[s.cycle.cycleStage] = (stageCounts[s.cycle.cycleStage] || 0) + 1; });
 
-    setData({
-      todayClasses,
-      needsDiagnosis,
-      pendingSubmissions,
-      stats: {
-        students: students.length,
-        classesToday: todayClasses.length,
-        pendingReview: pendingSubmissions.length,
-        needsDiagnosis: needsDiagnosis.length,
-      },
-    });
-  }
+  const needsAttention = studentsWithCycle.filter(s =>
+    s.cycle.cycleStage === 'submitted' ||
+    s.cycle.cycleStage === 'needs-diagnosis' ||
+    (s.cycle.daysSinceLastDiagnosis !== null && s.cycle.daysSinceLastDiagnosis > 14)
+  );
+  const pendingReview = studentsWithCycle.filter(s => s.cycle.cycleStage === 'submitted').length;
+  const needDiagnosis = stageCounts['needs-diagnosis'] || 0;
+
+  const filtered = stageFilter === 'all'
+    ? studentsWithCycle
+    : studentsWithCycle.filter(s => s.cycle.cycleStage === stageFilter);
+  const urgencySorted = [...filtered].sort(
+    (a, b) => URGENCY_ORDER.indexOf(a.cycle.cycleStage) - URGENCY_ORDER.indexOf(b.cycle.cycleStage)
+  );
+
+  const handleAction = (student) => {
+    const config = STAGE_CONFIG[student.cycle.cycleStage] || STAGE_CONFIG['needs-diagnosis'];
+    const [target, params] = config.getNav(student);
+    onNavigate(target, params);
+  };
 
   const today = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
-  const priority = getTodayPriority(data);
+  const priority = getTodayPriority({ needsAttention, todayClasses });
 
   return (
     <div className="td-shell">
+      {/* Header */}
       <div style={{ marginBottom: 16 }}>
         <h1 className="td-headline">Good {timeOfDay()}, {teacherName}.</h1>
-        <p className="td-sub">{today}</p>
+        <p className="td-sub">{today} — your teaching cycle at a glance.</p>
       </div>
 
-      <Card className="teacher-priority-card td-anim" style={{ marginBottom: 12, padding: 14, border: '1.5px solid rgba(45,139,139,0.32)', background: 'linear-gradient(135deg, #ffffff 0%, #f0f8f8 100%)', animationDelay: '0ms' }}>
+      {/* Today's priority */}
+      <Card className="td-priority-card" style={{ animation: 'fadeUp 0.3s var(--ease) both' }}>
         <div className="td-priority-icon">{priority.icon}</div>
-        <div className="td-priority-copy">
+        <div className="teacher-priority-copy">
           <div className="td-priority-kicker">Today priority</div>
           <h2 className="td-priority-title">{priority.title}</h2>
           <p className="td-priority-text">{priority.text}</p>
@@ -75,10 +120,10 @@ export default function TeacherDashboard({ students, onNavigate, teacherName = '
       {/* KPIs */}
       <div className="td-kpi-grid">
         {[
-          { label: 'Students', value: data.stats.students, icon: <Icon.student size={16} /> },
-          { label: 'Classes today', value: data.stats.classesToday, icon: <Icon.calendar size={16} />, tone: data.stats.classesToday > 0 ? 'info' : '' },
-          { label: 'Need diagnosis', value: data.stats.needsDiagnosis, icon: <Icon.diagnose size={16} />, tone: data.stats.needsDiagnosis > 0 ? 'warning' : '', onClick: () => onNavigate('diagnostics') },
-          { label: 'Pending review', value: data.stats.pendingReview, icon: <Icon.doc size={16} />, tone: data.stats.pendingReview > 0 ? 'danger' : '', onClick: () => onNavigate('submissions') },
+          { label: 'Students', value: students.length, icon: <Icon.student size={16} /> },
+          { label: 'Classes today', value: classesToday, icon: <Icon.calendar size={16} />, tone: classesToday > 0 ? 'info' : '' },
+          { label: 'Need diagnosis', value: needDiagnosis, icon: <Icon.diagnose size={16} />, tone: needDiagnosis > 0 ? 'warning' : '', onClick: () => setStageFilter('needs-diagnosis') },
+          { label: 'Pending review', value: pendingReview, icon: <Icon.doc size={16} />, tone: pendingReview > 0 ? 'danger' : '', onClick: () => onNavigate('submissions') },
         ].map((kpi, i) => (
           <div key={kpi.label} className="td-anim" style={{ animationDelay: `${i * 60}ms` }}>
             <KpiCard {...kpi} />
@@ -88,13 +133,16 @@ export default function TeacherDashboard({ students, onNavigate, teacherName = '
 
       <div className="teacher-dashboard-stack">
         {/* Today's classes */}
-        <Card className="td-anim" style={{ padding: 14, animationDelay: '80ms' }}>
+        <Card style={{ padding: 14 }}>
           <SectionHeader title="Today's Classes" icon={<Icon.calendar size={15} />} action={<Button variant="ghost" size="sm" onClick={() => onNavigate('calendar')}>View calendar</Button>} />
-          {data.todayClasses.length === 0 ? (
-            <p className="td-empty">No classes scheduled today.</p>
+          {todayClasses.length === 0 ? (
+            <div className="td-empty-state">
+              <p className="td-empty">No classes scheduled today.</p>
+              <Button variant="ghost" size="sm" onClick={() => onNavigate('calendar')}>Schedule a class →</Button>
+            </div>
           ) : (
-            <div className="td-card-list">
-              {data.todayClasses.map(ev => {
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 8 }}>
+              {todayClasses.map(ev => {
                 const student = students.find(s => s.id === ev.studentId);
                 return (
                   <div key={ev.id} className="td-list-row">
@@ -111,52 +159,49 @@ export default function TeacherDashboard({ students, onNavigate, teacherName = '
           )}
         </Card>
 
-        {/* Needs diagnosis */}
-        <Card className="td-anim" style={{ padding: 14, animationDelay: '160ms' }}>
-          <SectionHeader title="Classes Needing Diagnosis" icon={<Icon.diagnose size={15} />} action={<Button variant="ghost" size="sm" onClick={() => onNavigate('diagnostics')}>All diagnostics</Button>} />
-          {data.needsDiagnosis.length === 0 ? (
-            <p className="td-empty">All caught up! No classes awaiting diagnosis.</p>
-          ) : (
-            <div className="td-card-list">
-              {data.needsDiagnosis.slice(0, 5).map(ev => {
-                const student = students.find(s => s.id === ev.studentId);
+        {/* Needs your attention */}
+        {needsAttention.length > 0 && (
+          <Card style={{ padding: 14, border: '1.5px solid rgba(245,158,11,0.3)', background: 'rgba(255,251,235,0.7)' }}>
+            <SectionHeader title="Needs Your Attention" icon={<Icon.spark size={15} />} />
+            <div style={{ marginTop: 8 }}>
+              {needsAttention.slice(0, 5).map((s, i) => {
+                const config = STAGE_CONFIG[s.cycle.cycleStage] || STAGE_CONFIG['needs-diagnosis'];
+                const staleNote = s.cycle.daysSinceLastDiagnosis > 14 ? ` — ${s.cycle.daysSinceLastDiagnosis}d since last diagnosis` : '';
                 return (
-                  <div key={ev.id} className="td-list-row">
-                    <Avatar name={student?.name || '?'} size={28} />
-                    <div style={{ flex: 1 }}>
-                      <div className="td-row-title">{student?.firstName || 'Unknown'}</div>
-                      <div className="td-row-sub">{new Date(ev.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })} · {ev.title}</div>
-                    </div>
-                    <Button variant="primary" size="sm" onClick={() => onNavigate('diagnostics:create', { studentId: ev.studentId, classEventId: ev.id })}>
-                      Diagnose
-                    </Button>
+                  <div key={s.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 0', borderTop: i > 0 ? '1px solid rgba(0,0,0,0.06)' : 'none' }}>
+                    <Avatar name={s.name} size={28} />
+                    <span style={{ fontSize: 'var(--text-sm)', fontWeight: 600, flex: 1 }}>{s.firstName}</span>
+                    <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>{config.label}{staleNote}</span>
+                    <Button variant="primary" size="sm" onClick={() => handleAction(s)}>{config.action}</Button>
                   </div>
                 );
               })}
             </div>
-          )}
-        </Card>
+          </Card>
+        )}
 
-        {/* Pending submissions */}
-        <Card className="td-anim" style={{ padding: 14, animationDelay: '240ms' }}>
-          <SectionHeader title="Submissions Awaiting Review" icon={<Icon.doc size={15} />} action={<Button variant="ghost" size="sm" onClick={() => onNavigate('submissions')}>All submissions</Button>} />
-          {data.pendingSubmissions.length === 0 ? (
-            <p className="td-empty">No submissions waiting for review.</p>
+        {/* Student cycle board */}
+        <Card style={{ padding: 14 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', marginBottom: 8 }}>
+            <SectionHeader title="Student Cycle Board" icon={<Icon.student size={15} />} />
+            <div style={{ display: 'flex', gap: 6, marginLeft: 'auto', flexWrap: 'wrap' }}>
+              <FilterChip label="All" count={students.length} active={stageFilter === 'all'} onClick={() => setStageFilter('all')} />
+              {Object.entries(STAGE_CONFIG)
+                .filter(([key]) => stageCounts[key] > 0)
+                .map(([key, cfg]) => (
+                  <FilterChip key={key} label={cfg.label} count={stageCounts[key]} active={stageFilter === key} onClick={() => setStageFilter(key)} />
+                ))}
+            </div>
+          </div>
+          {loading ? (
+            <p style={{ color: 'var(--muted)', padding: 16 }}>Loading student data…</p>
+          ) : urgencySorted.length === 0 ? (
+            <p style={{ color: 'var(--muted)', padding: 16 }}>No students match this filter.</p>
           ) : (
-            <div className="td-card-list">
-              {data.pendingSubmissions.slice(0, 5).map(sub => {
-                const student = students.find(s => s.id === sub.studentId);
-                return (
-                  <div key={sub.id} className="td-list-row">
-                    <Avatar name={student?.name || '?'} size={28} />
-                    <div style={{ flex: 1 }}>
-                      <div className="td-row-title">{student?.firstName || 'Unknown'}</div>
-                      <div className="td-row-sub">Submitted {new Date(sub.submittedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</div>
-                    </div>
-                    <Button variant="primary" size="sm" onClick={() => onNavigate('submissions:review', { submissionId: sub.id })}>Review</Button>
-                  </div>
-                );
-              })}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {urgencySorted.map(s => (
+                <StudentRow key={s.id} student={s} onNavigate={onNavigate} onAction={handleAction} />
+              ))}
             </div>
           )}
         </Card>
@@ -177,30 +222,30 @@ export default function TeacherDashboard({ students, onNavigate, teacherName = '
   );
 }
 
-function getTodayPriority(data) {
-  const firstSubmission = data.pendingSubmissions[0];
-  if (firstSubmission) {
+function getTodayPriority({ needsAttention, todayClasses }) {
+  const submitted = needsAttention.find(s => s.cycle.cycleStage === 'submitted');
+  if (submitted) {
     return {
       icon: <Icon.doc size={20} />,
       title: 'Review the newest submission',
       text: 'Give the student clear feedback while the homework attempt is still fresh.',
-      action: 'Open review',
+      action: 'Review submission',
       target: 'submissions:review',
-      params: { submissionId: firstSubmission.id },
+      params: { submissionId: submitted.cycle.pendingSubmissions[0]?.id },
     };
   }
-  const firstDiagnosis = data.needsDiagnosis[0];
-  if (firstDiagnosis) {
+  const needsDx = needsAttention.find(s => s.cycle.cycleStage === 'needs-diagnosis');
+  if (needsDx) {
     return {
       icon: <Icon.diagnose size={20} />,
       title: 'Finish the next diagnosis',
       text: 'Turn the completed class evidence into teacher notes, student feedback, and homework.',
-      action: 'Diagnose class',
+      action: 'Run diagnosis',
       target: 'diagnostics:create',
-      params: { studentId: firstDiagnosis.studentId, classEventId: firstDiagnosis.id },
+      params: { studentId: needsDx.id },
     };
   }
-  const firstClass = data.todayClasses[0];
+  const firstClass = todayClasses[0];
   if (firstClass) {
     return {
       icon: <Icon.calendar size={20} />,
@@ -221,31 +266,94 @@ function getTodayPriority(data) {
 }
 
 function KpiCard({ label, value, icon, tone, onClick }) {
-  const bg = tone === 'warning' ? 'var(--warning-bg)' : tone === 'danger' ? 'var(--danger-bg)' : tone === 'info' ? 'var(--info-bg)' : 'var(--surface)';
+  const cls = ['td-kpi-card', tone ? `td-kpi-card--${tone}` : ''].filter(Boolean).join(' ');
   const fg = tone === 'warning' ? 'var(--warning)' : tone === 'danger' ? 'var(--danger)' : tone === 'info' ? 'var(--info)' : 'var(--accent-deep)';
   return (
-    <Card style={{ padding: '12px 14px', background: bg, cursor: onClick ? 'pointer' : 'default' }} onClick={onClick}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+    <Card className={cls} onClick={onClick}>
+      <div className="td-kpi-card-inner">
         <span style={{ color: fg }}>{icon}</span>
-        <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', flex: 1 }}>{label}</span>
+        <span className="td-kpi-icon">{label}</span>
       </div>
-      <div style={{ fontSize: 'var(--text-xl)', fontWeight: 700, color: fg, marginTop: 2 }}>{value}</div>
+      <div className="td-kpi-value" style={{ color: fg }}>{value}</div>
     </Card>
+  );
+}
+
+function StudentRow({ student: s, onNavigate, onAction }) {
+  const config = STAGE_CONFIG[s.cycle.cycleStage] || STAGE_CONFIG['needs-diagnosis'];
+  const diag = s.cycle.latestDiagnosis;
+  const focusArea = diag?.content?.priorities?.[0]?.area || '';
+  const diagDate = diag ? new Date(diag.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : '—';
+  const days = s.cycle.daysSinceLastDiagnosis;
+  const isStale21 = days !== null && days > 21;
+  const isStale14 = days !== null && days > 14;
+  const currentBand = s.currentBand || s.band || 'B1';
+  const targetBand = s.targetBand || s.bandTarget || 'B2';
+  const isPrimary = s.cycle.cycleStage === 'submitted';
+
+  return (
+    <Card style={{ padding: '14px 18px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+        <button
+          type="button"
+          onClick={() => onNavigate('students:profile', { studentId: s.id })}
+          style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10, flex: 1, minWidth: 160, textAlign: 'left', fontFamily: 'var(--font-ui)' }}
+        >
+          <Avatar name={s.name} size={34} />
+          <div>
+            <div style={{ fontWeight: 600, fontSize: 'var(--text-md)', color: 'var(--text-1)' }}>{s.name}</div>
+            <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: 2 }}>
+              {currentBand} → {targetBand} · Session {s.session}/{s.totalSessions} · Last diagnosis: {diagDate}
+            </div>
+            {focusArea && (
+              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-2)', marginTop: 2, fontStyle: 'italic' }}>
+                Focus: {focusArea.length > 65 ? focusArea.slice(0, 65) + '…' : focusArea}
+              </div>
+            )}
+          </div>
+        </button>
+
+        {isStale21 && <Pill tone="danger">{days}d overdue</Pill>}
+        {!isStale21 && isStale14 && <Pill tone="warning">{days}d stale</Pill>}
+
+        {s.cycle.pendingHomework.length > 0 && (
+          <span style={{ fontSize: 'var(--text-xs)', color: 'var(--warning)', fontWeight: 600 }}>{s.cycle.pendingHomework.length} homework pending</span>
+        )}
+        {s.cycle.pendingSubmissions.length > 0 && (
+          <span style={{ fontSize: 'var(--text-xs)', color: 'var(--success, #16a34a)', fontWeight: 600 }}>{s.cycle.pendingSubmissions.length} to review</span>
+        )}
+
+        <Pill tone={config.tone}>{config.label}</Pill>
+        <Button variant={isPrimary ? 'primary' : 'ghost'} size="sm" onClick={() => onAction(s)}>{config.action}</Button>
+      </div>
+    </Card>
+  );
+}
+
+function FilterChip({ label, count, active, onClick }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      style={{
+        display: 'inline-flex', alignItems: 'center', gap: 4, padding: '4px 10px',
+        borderRadius: 'var(--radius-pill)', border: active ? '1.5px solid var(--accent)' : '1px solid var(--border)',
+        background: active ? 'var(--accent-soft, rgba(37,99,235,0.1))' : 'var(--surface)',
+        color: active ? 'var(--accent)' : 'var(--muted)', fontSize: 'var(--text-xs)', fontWeight: 600,
+        cursor: 'pointer', fontFamily: 'var(--font-ui)',
+      }}
+    >
+      {label}{count > 0 && <span style={{ opacity: 0.65 }}>({count})</span>}
+    </button>
   );
 }
 
 function QuickAction({ icon, label, onClick }) {
   return (
-    <button onClick={onClick} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)', background: 'var(--surface)', cursor: 'pointer', fontFamily: 'var(--font-ui)', fontSize: 'var(--text-sm)', fontWeight: 500, color: 'var(--text)', textAlign: 'left', transition: 'background 0.15s' }}
-      onMouseEnter={e => e.currentTarget.style.background = 'var(--bg)'}
-      onMouseLeave={e => e.currentTarget.style.background = 'var(--surface)'}
-      onFocus={e => e.currentTarget.style.background = 'var(--bg)'}
-      onBlur={e => e.currentTarget.style.background = 'var(--surface)'}>
-      <span style={{ color: 'var(--accent)' }}>{icon}</span>
+    <button onClick={onClick} className="td-quick-action">
+      <span className="td-quick-action-icon">{icon}</span>
       {label}
-      <Icon.arrowR size={13} style={{ marginLeft: 'auto', color: 'var(--muted)' }} />
+      <Icon.arrowR size={13} className="td-quick-action-arrow" />
     </button>
   );
 }
-
-// Styles migrated to CSS classes (td-*) in shared.jsx GLOBAL_CSS

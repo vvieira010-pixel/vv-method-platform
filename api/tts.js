@@ -12,6 +12,7 @@ const ELEVENLABS_MODEL = env('ELEVENLABS_MODEL') || 'eleven_multilingual_v2';
 const DEEPGRAM_MODEL = env('DEEPGRAM_TTS_MODEL') || 'aura-2-thalia-en';
 const OPENAI_TTS_MODEL = env('OPENAI_TTS_MODEL') || 'tts-1';
 const OPENAI_TTS_VOICE = env('OPENAI_TTS_VOICE') || 'nova';
+const AIVOOV_VOICE = env('AIVOOV_VOICE_ID') || 'a9c6e858-cbcb-4380-91e5-21cea93be41f';
 
 async function fetchT(url, init, ms = 12000) {
   const ctrl = new AbortController();
@@ -37,6 +38,30 @@ async function readBody(req) {
   });
 }
 
+async function aivoovTts(text) {
+  const key = env('AIVOOV_API_KEY');
+  if (!key) throw new Error('AiVOOV key is not configured.');
+
+  const params = new URLSearchParams();
+  params.append('voice_id[]', AIVOOV_VOICE);
+  params.append('transcribe_text[]', text);
+
+  const r = await fetchT('https://aivoov.com/api/v8/create', {
+    method: 'POST',
+    headers: {
+      'X-API-KEY': key,
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: params.toString(),
+  }, 15000);
+
+  const data = await r.json().catch(() => ({}));
+  if (!data.status || !data.audio) {
+    throw new Error(data.message || `AiVOOV error ${r.status}`);
+  }
+  return { bytes: Buffer.from(data.audio, 'base64'), contentType: 'audio/mpeg' };
+}
+
 async function elevenLabs(text) {
   const key = env('ELEVENLABS_API_KEY');
   if (!key) throw new Error('ElevenLabs key is not configured.');
@@ -58,7 +83,7 @@ async function elevenLabs(text) {
     const e = await r.json().catch(() => ({}));
     throw new Error(e.detail?.message || `ElevenLabs error ${r.status}`);
   }
-  return { res: r, contentType: r.headers.get('content-type') || 'audio/mpeg' };
+  return { bytes: Buffer.from(await r.arrayBuffer()), contentType: r.headers.get('content-type') || 'audio/mpeg' };
 }
 
 async function openAiTts(text) {
@@ -77,7 +102,7 @@ async function openAiTts(text) {
     const e = await r.json().catch(() => ({}));
     throw new Error(e.error?.message || `OpenAI TTS error ${r.status}`);
   }
-  return { res: r, contentType: r.headers.get('content-type') || 'audio/mpeg' };
+  return { bytes: Buffer.from(await r.arrayBuffer()), contentType: r.headers.get('content-type') || 'audio/mpeg' };
 }
 
 async function deepgramTts(text) {
@@ -96,7 +121,7 @@ async function deepgramTts(text) {
     const e = await r.json().catch(() => ({}));
     throw new Error(e.err_msg || e.message || `Deepgram TTS error ${r.status}`);
   }
-  return { res: r, contentType: r.headers.get('content-type') || 'audio/mpeg' };
+  return { bytes: Buffer.from(await r.arrayBuffer()), contentType: r.headers.get('content-type') || 'audio/mpeg' };
 }
 
 export default async function handler(req, res) {
@@ -117,12 +142,13 @@ export default async function handler(req, res) {
       ? [deepgramTts]
     : provider === 'elevenlabs'
       ? [elevenLabs]
-      : [elevenLabs, deepgramTts, openAiTts];
+    : provider === 'aivoov'
+      ? [aivoovTts]
+      : [aivoovTts, elevenLabs, deepgramTts, openAiTts];
 
   for (const run of attempts) {
     try {
-      const { res: audioRes, contentType } = await run(text);
-      const bytes = Buffer.from(await audioRes.arrayBuffer());
+      const { bytes, contentType } = await run(text);
       res.setHeader('Content-Type', contentType);
       res.setHeader('Cache-Control', 'no-store');
       return res.status(200).send(bytes);

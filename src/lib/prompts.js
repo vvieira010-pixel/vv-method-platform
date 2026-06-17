@@ -198,12 +198,7 @@ ${SHARED_MET_DATA}
 8. priorityDiagnosis: 3–5 ranked items. urgency "Critical" = blocks the target; "Developing" = active growth area; "Strength" = cite one genuine strength. Every "evidence" MUST be a real quote from the evidence above — never invent. Base priorities only on evaluated skills.
 9. classSummary, nextClassFocus, targetScoreRelevance, profileUpdateSuggestions: base ONLY on what was actually evaluated — never fabricate progress for an unevaluated skill. If almost nothing was evaluated, say so plainly.
 10. profileUpdateSuggestions.progressNote is shown directly to the STUDENT — keep it plain, specific, and honest (no empty praise, no jargon).
-11. REQUIRED OUTPUT — You MUST always return substantive content for every one of these fields, even when evidence is limited (write "limited evidence — [your best estimate]" rather than leaving blank):
-    - classSummary: at least 1 sentence. Never return "".
-    - nextClassFocus: all four keys (primaryFocus, suggestedActivities, warmUp, successCriteria). Never return {}.
-    - targetScoreRelevance: all four keys (gapToTarget, prioritySkillForTarget, estimatedSessionsToTarget, onTrack). Never return {}.
-    - profileUpdateSuggestions: all four keys (progressNote, suggestedLevelChange, recurringErrorsToTrack, masteredItems). Never return {}.
-    - estimatedOverallScore: all three keys (estimate, confidence, note). Never return {}.
+11. HONEST OUTPUT — If you have enough evidence to evaluate a skill, provide substantive content. If you lack evidence, return null or "Not enough evidence" rather than fabricating or guessing. Never invent scores, progress, or observations for unevaluated skills.
 
 RETURN ONLY VALID JSON:
 {
@@ -224,6 +219,74 @@ RETURN ONLY VALID JSON:
   "nextClassFocus": { "primaryFocus": "string", "suggestedActivities": ["string"], "warmUp": "string", "successCriteria": "string" },
   "profileUpdateSuggestions": { "progressNote": "1-2 student-facing sentences about progress this class", "suggestedLevelChange": "string", "recurringErrorsToTrack": ["string"], "masteredItems": ["string"] },
   "estimatedOverallScore": { "estimate": "number or 'Not evaluated enough'", "confidence": "string", "note": "1 sentence explaining the basis for this estimate — which evaluated skills it rests on and why the confidence level. Never leave blank." }
+}`;
+};
+
+/**
+ * Retrieval Practice Generator (retrieval-practice-generator skill)
+ * Returns exercises in the platform's native format (mcq / blank / short).
+ * Free Recall → short, Cued Recall → blank, Recognition → mcq.
+ */
+export const buildRetrievalPracticePrompt = ({ topic, studentLevel, questionCount = 5 }) => `You are a retrieval practice designer for a MET English exam preparation course.
+Create a mix of retrieval practice questions for a student at level ${studentLevel}.
+
+Topic / learning objective: ${topic}
+Total questions: ${questionCount}
+
+${GENERAL_MET_TOPIC_RULES}
+
+Return a balanced mix: some Free Recall (open response), some Cued Recall (fill-in-the-blank), some Recognition (multiple choice).
+
+Return ONLY valid JSON. Each question MUST match exactly one of these three formats:
+
+Free Recall (becomes a written practice task):
+{ "retrieval_type": "Free Recall", "type": "short", "prompt": "...", "rubric": "Key points expected: ...", "targetWords": 40, "focus": "skill name" }
+
+Cued Recall (fill-in-the-blank — use ___ for each blank):
+{ "retrieval_type": "Cued Recall", "type": "blank", "template": "sentence with ___ marking each blank", "blanks": [{"answer": "word"}], "focus": "skill name" }
+
+Recognition (multiple choice — exactly 4 options, correct is the 0-based index):
+{ "retrieval_type": "Recognition", "type": "mcq", "question": "...", "options": ["opt A", "opt B", "opt C", "opt D"], "correct": 0, "explanation": "...", "focus": "skill name" }
+
+{
+  "questions": [ ... ],
+  "spacing_recommendation": "e.g. Review again in 1 day, then 3 days, then 1 week",
+  "teacher_script": "one sentence on how to use these questions in the next session"
+}`;
+
+/**
+ * Language Demand Analyser (language-demand-analyser skill, EAL/Cummins BICS/CALP)
+ * Returns only the highest-priority actions to avoid overwhelming teachers.
+ */
+export const buildLanguageDemandPrompt = ({ exercises, studentLevel, objective = '' }) => {
+  const exerciseList = (exercises || [])
+    .slice(0, 12)
+    .map((ex, i) => `${i + 1}. [${ex.type}] ${ex.prompt || ex.question || ex.template || ex.sentence || ex.errorText || ex.title || '(no text)'}`)
+    .join('\n');
+  return `You are a language demand analyst for an EFL/MET English exam preparation platform.
+Apply Cummins' BICS/CALP framework to identify the highest-priority language scaffolding needs.
+
+Student level: ${studentLevel}
+${objective ? `Learning objective: ${objective}` : ''}
+
+Exercises to analyse:
+${exerciseList || 'No exercise content provided.'}
+
+Focus on what the student needs BEFORE attempting these tasks. Keep recommendations specific and actionable.
+
+Return ONLY valid JSON:
+{
+  "priority_actions": [
+    {
+      "demand_type": "vocabulary | grammar | discourse | genre",
+      "description": "specific language challenge in these exercises",
+      "recommendation": "one concrete thing the teacher should add or pre-teach"
+    }
+  ],
+  "tier2_vocabulary": ["academic or instructional words the student may not know"],
+  "tier3_vocabulary": ["MET exam-specific or topic-specific terms to pre-teach"],
+  "overall_demand": "low | medium | high",
+  "teacher_note": "one-sentence summary"
 }`;
 };
 
@@ -536,31 +599,70 @@ export function buildSectionRegenPrompt(key, data) {
 ══════════════════════════════════════════════════════════════ */
 
 const EXERCISE_COMPLETENESS_RULES = `Complete exercise JSON requirements:
-- mcq: type, title, question, options with exactly 4 choices, correct as 0-3, explanation.
-- blank: type, title, template with ___ markers, blanks array matching every blank.
+- mcq: type, title, question, options with exactly 4 choices, correct as 0-3, explanation, hints (array of 2 strings: strategic hint shown after 2 wrong attempts, procedural hint after 3 wrong attempts).
+- blank: type, title, template with ___ markers, blanks array matching every blank, hints (array of 2 strings: shown after 2 and 3 wrong attempts).
 - short: type, title, prompt, rubric, targetWords.
-- speak: type, title, prompt, targetSeconds.
+- speak: type, title, prompt, targetSeconds, imageDescription (1–2 sentence description of a scene or picture the student will describe or react to — required for picture-based speaking tasks, optional for opinion tasks).
 - order: type, title, sentences array in correct order with at least 3 sentences.
 - fix: type, title, errorText, correctedText, hint.
 - flash: type, title, pairs array with at least 10 { "term", "def" } items.
 - listen: type, title, audioText, question, options with exactly 4 choices, correct as 0-3, explanation, plays.
+- read: type, title, passage (full reading text, 150–250 words, authentic MET-style), questions array of at least 3 items each with {question, options[4], correct as 0-3, explanation}.
 Do not return placeholder text. Do not omit answer keys.`;
 
 const GENERAL_MET_TOPIC_RULES = `Topics should reflect real-life situations appropriate for the MET exam: education, work, healthcare, technology, community, lifestyle, environment, personal decisions, public services, health and wellbeing. Avoid overly niche or culturally specific topics.`;
 
 export const buildHomeworkBlueprintPrompt = ({ student, diagnosis }) => {
-  const priorities = pickArray(diagnosis?.teacherMeaning?.priorityDiagnosis, diagnosis?.diagnosticData?.priorityRecommendations, diagnosis?.priorityDiagnosis, diagnosis?.sections?.priorityDiagnosis?.content);
+  const priorities = pickArray(diagnosis?.priorityDiagnosis, diagnosis?.sections?.priorityDiagnosis?.content);
+  const skillDx = diagnosis?.sections?.skillDiagnosis?.content || {};
+
+  // Map each MET skill to the exercise types that practice it
+  const SKILL_TO_TYPES = {
+    speaking:   ['speak', 'short'],
+    writing:    ['short', 'fix'],
+    grammar:    ['fix', 'blank', 'mcq'],
+    vocabulary: ['flash', 'blank'],
+    reading:    ['read'],
+    listening:  ['listen'],
+  };
+  const FALLBACK_TYPES = ['speak', 'short', 'listen', 'mcq', 'blank', 'flash', 'fix'];
+
+  // Find evaluated skills ordered by score ascending (weakest first)
+  const weakSkills = Object.entries(skillDx)
+    .filter(([, d]) => d?.evaluated)
+    .sort((a, b) => (a[1]?.score0to80 ?? 100) - (b[1]?.score0to80 ?? 100))
+    .map(([skill, d]) => ({ skill, score: d?.score0to80, weaknesses: arr(d?.weaknesses) }));
+
+  // Build task type list: types for the weakest skills first, fill to 7 from fallback
+  const seen = new Set();
+  const taskTypes = [];
+  for (const { skill } of weakSkills) {
+    for (const t of (SKILL_TO_TYPES[skill] || [])) {
+      if (!seen.has(t)) { taskTypes.push(t); seen.add(t); }
+    }
+  }
+  for (const t of FALLBACK_TYPES) {
+    if (!seen.has(t) && taskTypes.length < 7) { taskTypes.push(t); seen.add(t); }
+  }
+  const finalTypes = taskTypes.slice(0, 7);
+
+  const weakSummary = weakSkills.length
+    ? weakSkills.slice(0, 3).map(({ skill, score, weaknesses }) =>
+        `${skill}${score != null ? ` (${score}/80)` : ''}: ${weaknesses.slice(0, 2).join(', ') || 'needs work'}`
+      ).join(' | ')
+    : null;
+
   return `Create a complete MET homework blueprint for ${student?.name || 'the student'}.
 Priorities: ${priorities.slice(0, 3).map(p => `${p.area}: ${p.whatToImprove || ''}`).join(' | ') || 'MET B1-B2 readiness'}.
+${weakSummary ? `Diagnosed weaknesses (weakest first): ${weakSummary}.` : ''}
 
 Rules:
-- Build a balanced MET set with 7 tasks.
-- Include speaking, writing, listening or reading comprehension, grammar, vocabulary, and test strategy.
-- ${topicRules()}
-- Use only these type IDs: mcq, blank, short, speak, order, fix, flash, listen.
+- Build a targeted MET set using exactly these task types in this order: ${finalTypes.join(', ')}.
+- The order reflects the student's diagnosed gaps — do not reorder.
+- ${GENERAL_MET_TOPIC_RULES}
 
 Return JSON only:
-{ "title": string, "objective": string, "taskTypes": ["speak","short","listen","mcq","blank","flash","fix"] }`;
+{ "title": string, "objective": string, "taskTypes": ${JSON.stringify(finalTypes)} }`;
 };
 
 export const buildTaskGeneratorPrompt = ({ student, diagnosis, taskBlueprint, taskType }) => {
@@ -630,18 +732,23 @@ export const buildHomeworkGroupPrompt = ({ student, diagnosis, group, count = 5 
   const skillData  = skillDx[group] || {};
   const weaknesses = arr(skillData.weaknesses).slice(0, 4);
 
-  // Map group key to recommended exercise types
+  // Map group key to required exercise types. listening/reading are LOCKED to their structured type.
   const TYPE_HINTS = {
     speaking:    'speak, short',
     writing:     'short, fix',
     grammar:     'fix, blank, mcq',
     vocabulary:  'flash, blank, mcq',
-    reading:     'mcq, order, short',
-    listening:   'listen, mcq',
+    reading:     'read',
+    listening:   'listen',
     mixed:       'mcq, blank, short, fix',
   };
   const typeHint = TYPE_HINTS[group] || 'mcq, blank, short';
   const groupLabel = group.charAt(0).toUpperCase() + group.slice(1);
+  const typeRule = group === 'listening'
+    ? `- MANDATORY: Every exercise MUST be type "listen". Include audioText (2–4 sentence spoken script), question, 4 options, correct index, and explanation. No other types allowed.`
+    : group === 'reading'
+    ? `- MANDATORY: Every exercise MUST be type "read". Include passage (150–250 words), questions array with at least 3 items (each with question, 4 options, correct index, explanation). No other types allowed.`
+    : `- Use types: ${typeHint}. Mix them for variety. Use the structured types: mcq, blank, short, speak, order, fix, flash, listen, read.`;
 
   return `You are a MET English exam preparation expert. Generate exactly ${count} structured exercises targeting ${groupLabel}.
 
@@ -655,7 +762,10 @@ ${weaknesses.length ? weaknesses.map(w => `- ${w}`).join('\n') : `Target: B1→B
 ${priorities.slice(0, 2).map(p => `- [${p.urgency}] ${p.area}: ${p.whatToImprove}`).join('\n') || 'None recorded.'}
 
 ━━━ ERRORS TO TARGET ━━━
-${errors.filter(e => (e.category || '').toLowerCase().includes(group) || group === 'mixed').slice(0, 4).map(e => `- "${e.error}" → "${e.correct}" (${e.category})`).join('\n') || errors.slice(0, 3).map(e => `- "${e.error}" → "${e.correct}" (${e.category})`).join('\n') || 'None recorded.'}
+${(errors.filter(e => (e.category || '').toLowerCase().includes(group)).slice(0, 4).length
+  ? errors.filter(e => (e.category || '').toLowerCase().includes(group)).slice(0, 4)
+  : errors.slice(0, 4)
+).map(e => `- "${e.error}" → "${e.correct}" (${e.category})`).join('\n') || 'None recorded.'}
 
 ━━━ VOCABULARY / GRAMMAR TARGETS ━━━
 ${group === 'vocabulary' || group === 'mixed' ? vocab.slice(0, 4).map(v => `- ${v.wordOrPhrase}: ${v.meaning || ''}`).join('\n') || 'None.' : ''}
@@ -663,7 +773,7 @@ ${group === 'grammar' || group === 'mixed' ? grammar.slice(0, 3).map(g => `- ${g
 
 ━━━ RULES ━━━
 - Generate exactly ${count} exercises. Every exercise is FULLY WRITTEN — student opens and starts immediately.
-- Recommended types: ${typeHint}. Mix them for variety. Use the 8 structured types: mcq, blank, short, speak, order, fix, flash, listen.
+${typeRule}
 - Use general MET topics by default. ${GENERAL_MET_TOPIC_RULES}
 - B1–B2 level. Each exercise should take 3–5 minutes.
 - Keep every item connected to MET skills: speaking organization, writing support, reading/listening evidence, grammar control, vocabulary range, or test strategy.
@@ -673,7 +783,7 @@ ${EXERCISE_COMPLETENESS_RULES}
 Return ONLY valid JSON — an array of ${count} exercise objects:
 [
   {
-    "type": "mcq|blank|short|speak|order|fix|flash|listen",
+    "type": "mcq|blank|short|speak|order|fix|flash|listen|read",
     "skillGroup": "${group}",
     "title": "specific MET exercise title",
     "content": "FULLY WRITTEN exercise content — the actual sentences, questions, or scenario",
@@ -684,11 +794,14 @@ Return ONLY valid JSON — an array of ${count} exercise objects:
     "sentences": ["sentence 1", "sentence 2"],
     "errorText": "student-facing text with errors",
     "correctedText": "corrected version (for fix type)",
-    "hint": "optional hint",
+    "hints": ["strategic hint shown after 2nd wrong try", "procedural hint shown after 3rd wrong try"],
     "pairs": [{"term": "word", "def": "meaning"}],
     "audioText": "text to read aloud (for listen type)",
     "question": "the question",
-    "explanation": "why this answer is correct"
+    "explanation": "why this answer is correct",
+    "imageDescription": "for speak type: 1–2 sentence description of the scene/picture shown to the student",
+    "passage": "for read type: full 150–250 word reading text",
+    "questions": [{"question": "...", "options": ["A","B","C","D"], "correct": 0, "explanation": "..."}]
   }
 ]
 Include only the fields relevant to the exercise type. The "content" field always contains the main exercise text.`;
@@ -705,9 +818,63 @@ export const buildExerciseListPrompt = ({ student, diagnosis, level, skill }) =>
   const vocab = pickArray(diagnosis?.diagnosticData?.vocabulary, diagnosis?.vocabTargets?.vocabularyTargets, diagnosis?.sections?.vocabGrammarTargets?.content?.vocabularyTargets);
   const grammar = pickArray(diagnosis?.vocabTargets?.grammarTargets, diagnosis?.sections?.vocabGrammarTargets?.content?.grammarTargets);
   const levelNote = level ? `\nTarget CEFR level: ${level}` : '';
-  const skillNote = skill ? `\nSkill focus: ${skill}` : '';
 
-  return `You are a MET English exam preparation expert. Generate a menu of 7 distinct, ready-to-use exercises for the teacher to choose from.${levelNote}${skillNote}
+  const isSpeaking = skill === 'speaking';
+  const isWriting  = skill === 'writing';
+  const exerciseCount = isSpeaking ? 5 : isWriting ? 2 : 7;
+
+  const MET_SPEAKING_BRIEF = `
+━━━ MET SPEAKING TASK ALIGNMENT ━━━
+Generate exactly 5 exercises — one per MET Speaking task. Each must match the task structure below.
+Set metTask and targetSeconds exactly as specified. Do NOT invent your own time limits.
+
+Q1 | metTask:"Q1" | targetSeconds:60  | Picture description
+  Structure: general scene → key details (foreground/background) → inference about what may be happening
+  Register: neutral, descriptive. Use precise nouns. Avoid vague words like "a big thing".
+  imageDescription: required — write a 1–2 sentence vivid scene description the student will describe.
+
+Q2 | metTask:"Q2" | targetSeconds:60  | Personal experience / narrative
+  Structure: setup → event → outcome → brief reflection. Use past tenses consistently.
+  Register: informal, narrative. Include sequence connectors (first, then, in the end).
+  imageDescription: omit (no picture needed).
+
+Q3 | metTask:"Q3" | targetSeconds:90  | Opinion / preference
+  Structure: clear position stated first → Reason 1 + example → Reason 2 → brief conclusion.
+  Register: informal but committed. ONE side only — never give both sides.
+  imageDescription: omit.
+
+Q4 | metTask:"Q4" | targetSeconds:90  | Advantages and disadvantages
+  Structure: introduce both sides → Advantage 1 + support → Disadvantage 1 + support → balanced conclusion.
+  Register: neutral, balanced. BOTH sides required with equal development (~40 s each).
+  imageDescription: omit.
+
+Q5 | metTask:"Q5" | targetSeconds:90  | Persuade an authority figure
+  Structure: address authority respectfully → state problem → give 2–3 strong reasons → propose solution → clear request.
+  Register: formal throughout ("I strongly believe…", "I would like to suggest…"). ONE committed side only.
+  imageDescription: omit.`;
+
+  const MET_WRITING_BRIEF = `
+━━━ MET WRITING TASK ALIGNMENT ━━━
+Generate exactly 2 exercises — one per MET Writing task. Match the format exactly.
+
+T1 | metTask:"T1" | targetWords:80 | type:"short"
+  Format: 3 related personal questions about a real-world situation.
+  Student answers each in 2–3 sentences (direct answer + reason + small detail/example).
+  Rubric hint: "Answer all 3 questions directly. Add a reason and a specific detail to each."
+  Do NOT write an essay prompt. Write 3 numbered questions.
+
+T2 | metTask:"T2" | targetWords:250 | type:"short"
+  Format: a formal opinion essay prompt on a real-world topic.
+  Student writes intro (opinion) + body 1 (reason + example) + body 2 (reason or counterpoint) + conclusion.
+  Rubric hint: "4 paragraphs: opinion → reason + example → second point → conclusion. Use connectors."
+  Prompt should invite a genuine opinion, not just describe something.`;
+
+  const skillNote = isSpeaking ? MET_SPEAKING_BRIEF
+                  : isWriting  ? MET_WRITING_BRIEF
+                  : skill      ? `\nSkill focus: ${skill}`
+                  : '';
+
+  return `You are a MET English exam preparation expert. Generate a menu of ${exerciseCount} distinct, ready-to-use exercises for the teacher to choose from.${levelNote}${skillNote}
 
 ━━━ STUDENT ━━━
 Name: ${student?.name || 'Student'}
@@ -727,7 +894,7 @@ ${grammar.slice(0, 3).map(g => `- ${g.area}: ${g.issue}`).join('\n') || 'None.'}
 
 ━━━ RULES ━━━
 - Each exercise must be FULLY WRITTEN — the student opens it and starts immediately.
-- Cover different MET skills: speaking, writing, reading or listening, grammar, vocabulary, and test strategy.
+${isSpeaking ? '- Generate one exercise per MET Speaking task (Q1–Q5). Follow the task map above exactly.' : isWriting ? '- Generate one exercise per MET Writing task (T1 and T2). Follow the task format above exactly.' : '- Cover different MET skills: speaking, writing, reading or listening, grammar, vocabulary, and test strategy.'}
 - Each exercise should take 5–15 minutes.
 - Match B1–B2 transition level. Use general MET topics by default, not nurse/healthcare scenarios.
 - ${topicRules()}
@@ -742,13 +909,13 @@ You MUST use these exact type IDs. Each has a specific JSON shape:
 1. "mcq" (Multiple Choice) — question + 4 options + correct answer index
 2. "blank" (Fill the Blank) — template with ___ markers + correct answers (pipe-separated alternatives)
 3. "short" (Short Answer) — prompt + rubric hint + target word count
-4. "speak" (Speaking Prompt) — prompt + target seconds
+4. "speak" (Speaking Prompt) — prompt + targetSeconds + metTask (required when skill=speaking: "Q1"–"Q5") + imageDescription (required for Q1 picture tasks)
 5. "order" (Order Sentences) — sentences array in correct order (student sees shuffled)
 6. "fix" (Error Correction) — errorText + correctedText + hint
 7. "flash" (Flashcards) — at least 10 pairs of term/definition
 8. "listen" (Listening Exercise) — audioText (the text read aloud via TTS) + plays (number of allowed listens, default 2) + question + 4 options + correct answer index + optional explanation
 
-Return ONLY valid JSON — an array of 7 exercises mixing different types:
+Return ONLY valid JSON — an array of ${exerciseCount} exercises${isSpeaking ? ' (one per MET Speaking task Q1–Q5)' : isWriting ? ' (T1 short questions, T2 essay)' : ' mixing different types'}:
 [
   {
     "title": "Short exercise title",
@@ -759,6 +926,7 @@ Return ONLY valid JSON — an array of 7 exercises mixing different types:
     "options": ["Option A text", "Option B text", "Option C text", "Option D text"],
     "correct": 1,
     "explanation": "Why the correct option fits the grammar or MET evidence.",
+    "hints": ["Think about which tense fits the time context.", "The sentence refers to a completed action — which tense signals completion?"],
     "teacherNote": "What to look for"
   },
   {
@@ -768,6 +936,7 @@ Return ONLY valid JSON — an array of 7 exercises mixing different types:
     "content": "The student gave ___ presentation to ___ class on Friday.",
     "template": "The student gave ___ presentation to ___ class on Friday.",
     "blanks": ["the|a", "the"],
+    "hints": ["Think about whether these nouns are specific or general.", "Use 'the' for something both speaker and listener already know about."],
     "teacherNote": "Check article use before nouns"
   },
   {
@@ -870,5 +1039,58 @@ RETURN ONLY VALID JSON:
   "explanation": "why it's correct",
   "plays": 2,
   "teacherNote": "what to look for in the student's response"
+}`;
+};
+
+/**
+ * Module 6: Reading Generator (The Passage Architect)
+ * Focus: High-fidelity reading comprehension tasks for MET.
+ */
+export const buildReadingGeneratorPrompt = ({ student, diagnosis, questionCount = 3 }) => {
+  const priorities = pickArray(diagnosis?.priorityDiagnosis, diagnosis?.sections?.priorityDiagnosis?.content);
+  const vocab = pickArray(diagnosis?.vocabTargets?.vocabularyTargets, diagnosis?.sections?.vocabGrammarTargets?.content?.vocabularyTargets);
+  const level = student?.currentLevel || 'B1';
+  const targetLevel = student?.targetLevel || 'B2';
+
+  return `You are a MET English Instructional Designer specializing in Reading comprehension.
+Build one complete, student-ready reading exercise with a passage and ${questionCount} comprehension questions.
+
+━━━ STUDENT ━━━
+Name: ${student?.name || 'Student'}
+Level: ${level} → Target: ${targetLevel}
+
+━━━ DIAGNOSIS PRIORITIES ━━━
+${priorities.slice(0, 3).map(p => `- [${p.urgency}] ${p.area}: ${p.whatToImprove}`).join('\n') || 'none'}
+
+━━━ TARGET VOCAB ━━━
+${vocab.slice(0, 6).map(v => v.wordOrPhrase).join(', ') || 'general MET academic vocabulary'}
+
+━━━ RULES ━━━
+1. PASSAGE: Write a realistic 120–200 word passage at ${level}–${targetLevel} level.
+   - Use an informational or opinion text on a general interest topic.
+   - ${GENERAL_MET_TOPIC_RULES}
+   - Weave 2–3 of the target vocab words in naturally.
+2. QUESTIONS: Write exactly ${questionCount} MCQ comprehension questions.
+   - Cover different subskills: main_idea, specific_detail, inference, vocabulary_in_context.
+   - Each question must have exactly 4 options. One must be unambiguously correct.
+   - Distractors should be plausible — paraphrased details or reasonable inferences from the passage.
+3. CORRECT: Use integer index (0–3) to mark the correct option.
+4. COMPLETENESS: Every question must have all 4 options filled. No empty strings.
+
+RETURN ONLY VALID JSON:
+{
+  "type": "read",
+  "title": "short title",
+  "passage": "the full reading passage here",
+  "source": "Adapted from [source] (optional, or empty string)",
+  "questions": [
+    {
+      "question": "Q1 text",
+      "options": ["A", "B", "C", "D"],
+      "correct": 0,
+      "explanation": "why A is correct"
+    }
+  ],
+  "teacherNote": "reading skill focus and what to discuss"
 }`;
 };

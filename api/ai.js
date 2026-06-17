@@ -14,8 +14,10 @@
  *   GEMINI_API_KEY / GROQ_API_KEY / OPENROUTER_API_KEY / OPENAI_API_KEY /
  *   ANTHROPIC_API_KEY   (comma- or newline-separated for multiple keys)
  *
- * Optional model overrides: GEMINI_MODELS, OPENROUTER_MODELS, GROQ_MODEL,
- * ANTHROPIC_MODEL, OPENAI_MODEL.
+ * Optional model overrides (comma-separated, best-first priority):
+ *   OPENAI_MODELS, ANTHROPIC_MODELS, GEMINI_MODELS, OPENROUTER_MODELS, GROQ_MODELS
+ * Cascade is globally ordered by MODEL_PRIORITY — best models across all providers
+ * first. Each model is skipped if not in its provider's configured model list.
  */
 
 const env = (name) => process.env[name] || process.env[`VITE_${name}`] || '';
@@ -24,35 +26,66 @@ const multiKeys = (name) =>
     .filter((k, i, a) => a.indexOf(k) === i);
 
 const GEMINI_DEFAULT_MODELS = [
-  'gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemini-2.0-flash',
-  'gemini-2.0-flash-lite', 'gemma-4-31b-it', 'gemma-4-26b-a4b-it',
+  'gemini-3.5-flash',
+  'gemini-3.1-pro',
+  'gemini-3.1-flash-lite',
+  'gemini-2.5-flash',
+  'gemini-2.5-flash-lite',
+  'gemini-2.0-flash',
+  'gemini-2.0-flash-lite',
+  'gemma-4-31b-it',
+  'gemma-4-26b-a4b-it',
 ];
+
+const OPENAI_DEFAULT_MODELS = [
+  'gpt-4.1',
+  'gpt-4.1-mini',
+  'gpt-4o',
+  'gpt-4o-mini',
+  'gpt-4.1-nano',
+];
+
+const ANTHROPIC_DEFAULT_MODELS = [
+  'claude-sonnet-4-6',
+  'claude-3-5-haiku-latest',
+  'claude-3-haiku-20240307',
+];
+
 const OPENROUTER_DEFAULT_MODELS = [
+  'openrouter/free',
   'deepseek/deepseek-chat-v3-0324:free',
+  'deepseek/deepseek-r1-0528:free',
+  'nvidia/nemotron-3-ultra-550b-a55b:free',
   'meta-llama/llama-3.3-70b-instruct:free',
-  'nvidia/llama-3.1-nemotron-70b-instruct:free',
+  'meta-llama/llama-4-scout:free',
   'qwen/qwen3-235b-a22b:free',
   'qwen/qwen-2.5-72b-instruct:free',
-  'meta-llama/llama-4-scout:free',
   'google/gemma-3-27b-it:free',
+  'nvidia/llama-3.1-nemotron-70b-instruct:free',
   'mistralai/mistral-small-3.1-24b-instruct:free',
-  'meta-llama/llama-3.2-3b-instruct:free',
+  'nvidia/nemotron-3-nano-30b-a3b:free',
 ];
+
+const GROQ_DEFAULT_MODELS = [
+  'llama-3.3-70b-versatile',
+  'qwen3-32b',
+  'deepseek-r1-distill-70b',
+  'llama-3.1-8b-instant',
+  'llama-4-scout-17b-16e-instruct',
+];
+
 const parseList = (s) => String(s || '').split(',').map((x) => x.trim()).filter(Boolean);
 
 const GEMINI_MODELS = parseList(env('GEMINI_MODELS')).length
   ? parseList(env('GEMINI_MODELS')) : GEMINI_DEFAULT_MODELS;
 const OPENROUTER_MODELS = parseList(env('OPENROUTER_MODELS')).length
   ? parseList(env('OPENROUTER_MODELS')) : OPENROUTER_DEFAULT_MODELS;
-const GROQ_MODELS = [
-  env('GROQ_MODEL') || 'llama-3.3-70b-versatile',
-  'meta-llama/llama-4-maverick-17b-128e-instruct',
-  'meta-llama/llama-4-scout-17b-16e-instruct',
-  'qwen/qwen3-32b',
-  'llama-3.1-8b-instant',
-].filter((m, i, a) => a.indexOf(m) === i);
-const ANTHROPIC_MODEL = env('ANTHROPIC_MODEL') || 'claude-sonnet-4-6';
-const OPENAI_MODEL = env('OPENAI_MODEL') || 'gpt-4.1-mini';
+const GROQ_MODELS = parseList(env('GROQ_MODELS')).length
+  ? parseList(env('GROQ_MODELS')) : GROQ_DEFAULT_MODELS;
+const ANTHROPIC_MODELS = parseList(env('ANTHROPIC_MODELS')).length
+  ? parseList(env('ANTHROPIC_MODELS')) : ANTHROPIC_DEFAULT_MODELS;
+const OPENAI_MODELS = parseList(env('OPENAI_MODELS')).length
+  ? parseList(env('OPENAI_MODELS')) : OPENAI_DEFAULT_MODELS;
 
 /** fetch with an abort-backed timeout so a hung provider can't stall the function. */
 async function fetchT(url, init, ms = 8000) {
@@ -138,27 +171,80 @@ export default async function handler(req, res) {
     return null;
   }
 
-  async function tryAnthropic(key) {
+  async function tryAnthropic(key, model) {
     try {
       const r = await fetchT('https://api.anthropic.com/v1/messages', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01' },
-        body: JSON.stringify({ model: ANTHROPIC_MODEL, max_tokens, temperature, system: sys, messages: [{ role: 'user', content: prompt }] }),
+        body: JSON.stringify({ model: model || 'claude-sonnet-4-6', max_tokens, temperature, system: sys, messages: [{ role: 'user', content: prompt }] }),
       });
       if (r.ok) return r.json();
       const e = await r.json().catch(() => ({}));
-      errors.push(`Anthropic: ${e.error?.message || r.status}`);
-    } catch (e) { errors.push(`Anthropic: ${e.message}`); }
+      errors.push(`Anthropic/${model}: ${e.error?.message || r.status}`);
+    } catch (e) { errors.push(`Anthropic/${model}: ${e.message}`); }
     return null;
   }
 
-  // Build cascade: Gemini → OpenRouter → Groq → Anthropic → OpenAI
+  // Global model priority: OpenRouter first-class, then Gemini, Groq, OpenAI, and Anthropic.
+  const MODEL_PRIORITY = [
+    // ── OpenRouter: strongest/free first ──
+    ['deepseek/deepseek-r1-0528:free',              'openrouter'],
+    ['deepseek/deepseek-chat-v3-0324:free',         'openrouter'],
+    ['nvidia/nemotron-3-ultra-550b-a55b:free',      'openrouter'],
+    ['meta-llama/llama-3.3-70b-instruct:free',      'openrouter'],
+    ['qwen/qwen3-235b-a22b:free',                   'openrouter'],
+    ['meta-llama/llama-4-scout:free',               'openrouter'],
+    ['qwen/qwen-2.5-72b-instruct:free',             'openrouter'],
+    ['google/gemma-3-27b-it:free',                  'openrouter'],
+    ['nvidia/llama-3.1-nemotron-70b-instruct:free', 'openrouter'],
+    ['mistralai/mistral-small-3.1-24b-instruct:free','openrouter'],
+    ['nvidia/nemotron-3-nano-30b-a3b:free',         'openrouter'],
+    ['openrouter/free',                             'openrouter'],
+    // ── Gemini: fast, strong general fallback ──
+    ['gemini-3.5-flash',                            'gemini'],
+    ['gemini-3.1-pro',                              'gemini'],
+    ['gemini-3.1-flash-lite',                       'gemini'],
+    ['gemini-2.5-flash',                            'gemini'],
+    ['gemini-2.5-flash-lite',                       'gemini'],
+    ['gemini-2.0-flash',                            'gemini'],
+    ['gemini-2.0-flash-lite',                       'gemini'],
+    ['gemma-4-31b-it',                              'gemini'],
+    ['gemma-4-26b-a4b-it',                          'gemini'],
+    // ── Groq: speed-focused backup ──
+    ['llama-3.3-70b-versatile',                     'groq'],
+    ['qwen3-32b',                                   'groq'],
+    ['deepseek-r1-distill-70b',                     'groq'],
+    ['llama-3.1-8b-instant',                        'groq'],
+    ['llama-4-scout-17b-16e-instruct',              'groq'],
+    // ── OpenAI: fallback ──
+    ['gpt-4.1',                                     'openai'],
+    ['gpt-4.1-mini',                                'openai'],
+    ['gpt-4o',                                      'openai'],
+    ['gpt-4o-mini',                                 'openai'],
+    ['gpt-4.1-nano',                                'openai'],
+    // ── Anthropic: last resort ──
+    ['claude-sonnet-4-6',                           'anthropic'],
+    ['claude-3-5-haiku-latest',                     'anthropic'],
+    ['claude-3-haiku-20240307',                     'anthropic'],
+  ];
+
+  const providerKeys = { gemini: geminiKeys, groq: groqKeys, openrouter: openrouterKeys, anthropic: anthropicKeys, openai: openaiKeys };
+  const providerModels = { gemini: new Set(GEMINI_MODELS), groq: new Set(GROQ_MODELS), openrouter: new Set(OPENROUTER_MODELS), anthropic: new Set(ANTHROPIC_MODELS), openai: new Set(OPENAI_MODELS) };
+  const providerRunner = {
+    gemini: (k, m) => ({ id: 'gemini', run: () => tryGemini(k, m) }),
+    groq: (k, m) => ({ id: 'groq', run: () => tryOpenAICompat('https://api.groq.com/openai/v1/chat/completions', k, m) }),
+    openrouter: (k, m) => ({ id: 'openrouter', run: () => tryOpenAICompat('https://openrouter.ai/api/v1/chat/completions', k, m, { 'X-Title': 'MET Proficiency Mastery' }) }),
+    anthropic: (k, m) => ({ id: 'anthropic', run: () => tryAnthropic(k, m) }),
+    openai: (k, m) => ({ id: 'openai', run: () => tryOpenAICompat('https://api.openai.com/v1/chat/completions', k, m) }),
+  };
+
   const attempts = [];
-  for (const m of (geminiKeys.length ? GEMINI_MODELS : [])) geminiKeys.forEach((k) => attempts.push({ id: 'gemini', run: () => tryGemini(k, m) }));
-  for (const m of (openrouterKeys.length ? OPENROUTER_MODELS : [])) openrouterKeys.forEach((k) => attempts.push({ id: 'openrouter', run: () => tryOpenAICompat('https://openrouter.ai/api/v1/chat/completions', k, m, { 'X-Title': 'MET Proficiency Mastery' }) }));
-  for (const m of (groqKeys.length ? GROQ_MODELS : [])) groqKeys.forEach((k) => attempts.push({ id: 'groq', run: () => tryOpenAICompat('https://api.groq.com/openai/v1/chat/completions', k, m) }));
-  anthropicKeys.forEach((k) => attempts.push({ id: 'anthropic', run: () => tryAnthropic(k) }));
-  openaiKeys.forEach((k) => attempts.push({ id: 'openai', run: () => tryOpenAICompat('https://api.openai.com/v1/chat/completions', k, OPENAI_MODEL) }));
+  for (const [model, provider] of MODEL_PRIORITY) {
+    const keys = providerKeys[provider];
+    if (keys.length && providerModels[provider].has(model)) {
+      keys.forEach((k) => attempts.push(providerRunner[provider](k, model)));
+    }
+  }
 
   // preferredProvider: float its attempts to the front.
   let ordered = attempts;

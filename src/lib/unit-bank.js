@@ -98,12 +98,22 @@ function fromSwapperTarget(challenge, target) {
   };
 }
 
-function fromSpeaking(unit) {
+const MET_SPEAKING_TASKS = [
+  { metTask: 'Q1', targetSeconds: 60,  label: 'Describe a picture' },
+  { metTask: 'Q2', targetSeconds: 60,  label: 'Personal experience' },
+  { metTask: 'Q3', targetSeconds: 90,  label: 'Give an opinion' },
+  { metTask: 'Q4', targetSeconds: 90,  label: 'Advantages & disadvantages' },
+  { metTask: 'Q5', targetSeconds: 90,  label: 'Persuade an authority figure' },
+];
+
+function fromSpeaking(unit, taskIndex = 0) {
   const sp = unit.speaking;
+  const task = MET_SPEAKING_TASKS[taskIndex % MET_SPEAKING_TASKS.length];
   return {
     id: uid(), type: 'speak',
     prompt: `${sp.setup || ''}\n\n${sp.instructions || ''}`.trim(),
-    targetSeconds: 90,
+    targetSeconds: task.targetSeconds,
+    metTask: task.metTask,
   };
 }
 
@@ -113,7 +123,8 @@ function fromWriting(unit) {
     id: uid(), type: 'short',
     prompt: wr.prompt || '',
     rubric: (wr.criteria || []).join(' | '),
-    targetWords: parseInt(wr.wordCount) || 120,
+    targetWords: parseInt(wr.wordCount) || 250,
+    metTask: 'T2',
   };
 }
 
@@ -173,7 +184,7 @@ export function getSkillExercises(units, skill, maxCount = 10) {
         break;
 
       case 'speaking':
-        results.push(fromSpeaking(unit));
+        results.push(fromSpeaking(unit, results.length));
         break;
 
       case 'writing':

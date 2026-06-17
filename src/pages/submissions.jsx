@@ -26,13 +26,13 @@ export default function SubmissionsPage({ students, onNavigate }) {
   const pendingCount = submissions.filter(s => s.status === 'submitted' && !reviewedIds.has(s.id)).length;
 
   return (
-    <div style={{ maxWidth: 960, margin: '0 auto', padding: '28px 20px' }}>
-      <div style={{ marginBottom: 24 }}>
-        <h1 style={S.headline}>Submissions</h1>
-        <p style={S.sub}>{pendingCount} pending review · {submissions.length} total</p>
-      </div>
+    <div className="page-shell">
+      <SectionHeader
+        title="Submissions"
+        sub={`${pendingCount} pending review · ${submissions.length} total`}
+      />
 
-      <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+      <div className="page-filters">
         {['pending', 'reviewed', 'all'].map(f => (
           <button key={f} onClick={() => setFilter(f)} aria-pressed={filter === f} style={{ padding: '8px 14px', borderRadius: 'var(--radius-pill)', border: `1.5px solid ${filter === f ? 'var(--accent)' : 'var(--border)'}`, background: filter === f ? 'var(--accent-subtle)' : 'var(--surface)', color: filter === f ? 'var(--accent)' : 'var(--muted)', fontFamily: 'var(--font-ui)', fontSize: 'var(--text-xs)', fontWeight: 600, cursor: 'pointer', textTransform: 'capitalize' }}>
             {f} {f === 'pending' ? `(${pendingCount})` : ''}
@@ -41,11 +41,11 @@ export default function SubmissionsPage({ students, onNavigate }) {
       </div>
 
       {filtered.length === 0 ? (
-        <Card style={{ padding: 32, textAlign: 'center' }}>
+        <Card className="page-empty-state">
           <p style={{ color: 'var(--muted)' }}>{filter === 'pending' ? 'No submissions awaiting review.' : 'No submissions found.'}</p>
         </Card>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <div className="page-list">
           {filtered.map(sub => {
             const student = students.find(s => s.id === sub.studentId);
             const hw = homework.find(h => h.id === sub.homeworkId);
@@ -83,7 +83,3 @@ export default function SubmissionsPage({ students, onNavigate }) {
   );
 }
 
-const S = {
-  headline: { fontFamily: 'var(--font-display)', fontSize: 'var(--text-2xl)', fontWeight: 700, color: 'var(--accent-deep)', margin: 0 },
-  sub: { fontSize: 'var(--text-sm)', color: 'var(--muted)', margin: '4px 0 0' },
-};

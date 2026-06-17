@@ -1,0 +1,22 @@
+{
+  "entities": {
+    "PeerMessage": {
+      "title": "PeerMessage",
+      "description": "A chat message in a specific peer discussion topic.",
+      "type": "object",
+      "properties": {
+        "text": { "type": "string" },
+        "authorId": { "type": "string" },
+        "authorName": { "type": "string" },
+        "timestamp": { "type": "string" }
+      },
+      "required": ["text", "authorId", "authorName", "timestamp"]
+    }
+  },
+  "firestore": {
+    "/topics/{topicId}/messages/{messageId}": {
+      "schema": { "$ref": "#/entities/PeerMessage" },
+      "description": "Chat messages stored securely."
+    }
+  }
+}

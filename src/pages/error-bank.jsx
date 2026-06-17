@@ -72,7 +72,7 @@ export default function ErrorBankPage({ students, workspaceQuery = '' }) {
 
       <Card style={{ padding: 14, marginBottom: 16 }}>
         <div style={S.filterGrid}>
-          <input className="input" value={localSearch} onChange={(e) => setLocalSearch(e.target.value)} placeholder="Search student, error, correction..." />
+          <input className="input" value={localSearch} onChange={(e) => setLocalSearch(e.target.value)} placeholder="Search student, error, correction…" />
           <select className="input" value={filterStudent} onChange={(e) => setFilterStudent(e.target.value)}>
             <option value="">All students</option>
             {students.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
@@ -92,7 +92,7 @@ export default function ErrorBankPage({ students, workspaceQuery = '' }) {
 
       {loading ? (
         <Card style={{ padding: 28, textAlign: 'center' }}>
-          <p style={{ color: 'var(--muted)', margin: 0 }}>Loading error bank...</p>
+          <p style={{ color: 'var(--muted)', margin: 0 }}>Loading error bank…</p>
         </Card>
       ) : filtered.length === 0 ? (
         <Card style={{ padding: 28, textAlign: 'center' }}>
@@ -167,12 +167,12 @@ const S = {
     flexWrap: 'wrap',
     marginBottom: 18,
     padding: 18,
-    borderRadius: 4,
+    borderRadius: 0,
     background: 'linear-gradient(130deg, #102131 0%, #1a3148 45%, #2e5f75 100%)',
     color: '#fff',
   },
   heroTag: { fontSize: 'var(--text-xs)', letterSpacing: '0.1em', textTransform: 'uppercase', color: '#9fd6d6', fontWeight: 700, marginBottom: 6 },
-  headline: { fontFamily: 'var(--font-display)', fontSize: 'var(--text-2xl)', fontWeight: 700, color: '#fff', margin: 0 },
+  headline: { fontFamily: 'var(--font-ui)', fontSize: 'var(--text-2xl)', fontWeight: 700, color: '#fff', margin: 0 },
   sub: { fontSize: 'var(--text-sm)', color: 'rgba(255,255,255,.78)', margin: '4px 0 0', maxWidth: 620 },
   kpiGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 10, marginBottom: 16 },
   filterGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: 10 },
@@ -189,3 +189,4 @@ const S = {
     gap: 4,
   },
 };
+

@@ -8,12 +8,12 @@
  */
 
 import { useState, useEffect } from 'react';
-import { injectGlobalCSS } from '../components/shared.jsx';
 import {
   signInWithPassword, signUpWithPassword,
   storeSupabaseSession, getSupabaseConfig,
   resetPasswordForEmail,
 } from '../lib/supabase-storage.js';
+import { Icon } from '../components/shared.jsx';
 
 const CSS = `
   .lp-root {
@@ -25,7 +25,7 @@ const CSS = `
 
   /* ── Brand panel ── */
   .lp-brand {
-    background: linear-gradient(180deg, #0F172A 0%, #1E293B 100%);
+    background: linear-gradient(180deg, #0f1b2d 0%, #172437 100%);
     display: flex; flex-direction: column; justify-content: space-between;
     padding: 48px 44px; min-height: 100dvh; position: sticky; top: 0;
     overflow: hidden;
@@ -45,8 +45,41 @@ const CSS = `
     display: inline-block; margin-bottom: 18px;
     padding: 4px 10px; border-radius: 4px;
     background: rgba(72,199,199,.22); border: 1px solid rgba(72,199,199,.4);
-    font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #a8dce0;
+    font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #a8dce0;
   }
+  .lp-brand-b2-badge {
+    display: inline-block; margin-left: 8px; vertical-align: middle;
+    padding: 3px 8px; border-radius: 4px;
+    background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.25);
+    font-size: 11px; font-weight: 800; letter-spacing: .08em; color: #fff;
+  }
+  .lp-invite-notice {
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 22px; padding: 9px 12px;
+    border-radius: var(--radius-sm);
+    background: var(--accent-subtle); border: 1px solid var(--accent-soft);
+    font-size: 12px; color: var(--accent-deep); line-height: 1.4;
+  }
+  .lp-mode-switch {
+    display: flex; gap: 4px; margin-bottom: 28px;
+    padding: 4px; background: var(--bg); border: 1.5px solid var(--border);
+    border-radius: var(--radius-md);
+  }
+  .lp-mode-switch button {
+    flex: 1; padding: 9px 12px;
+    border: none; border-radius: 6px;
+    font-size: var(--text-sm); font-weight: 600; font-family: var(--font-ui);
+    cursor: pointer; color: var(--muted);
+    background: transparent; transition: all .15s;
+  }
+  .lp-mode-switch button.active {
+    background: var(--accent); color: #fff;
+    box-shadow: 0 1px 4px rgba(20,136,145,.3);
+  }
+  .lp-mode-switch button:hover:not(.active):not(:disabled) {
+    color: var(--accent-deep); background: var(--accent-subtle);
+  }
+  .lp-mode-switch button:disabled { opacity: .5; cursor: default; }
   .lp-brand-headline {
     font-size: clamp(26px, 3vw, 34px); font-weight: 800; color: #fff;
     line-height: 1.2; margin: 0 0 16px; letter-spacing: -.02em;
@@ -72,7 +105,7 @@ const CSS = `
     margin-bottom: 28px;
     padding: 16px 18px;
     border-radius: 10px;
-    background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+    background: linear-gradient(135deg, #0f1b2d 0%, #172437 100%);
   }
   .lp-mobile-brand-name {
     display: block;
@@ -106,30 +139,30 @@ const CSS = `
   }
   .lp-input {
     width: 100%; padding: 12px 14px; box-sizing: border-box;
-    border: 1.5px solid #8aacac; border-radius: 8px;
-    font-size: 16px; font-family: var(--font-ui); color: var(--text);
-    background: #f3f9f9; outline: none;
+    border: 1.5px solid var(--border); border-radius: var(--radius-md);
+    font-size: var(--text-base); font-family: var(--font-ui); color: var(--text);
+    background: var(--surface); outline: none;
     transition: border-color .15s, box-shadow .15s;
   }
   .lp-input:focus {
     border-color: var(--accent);
-    box-shadow: 0 0 0 3px rgba(29,140,150,.15);
-    background: #fff;
+    box-shadow: 0 0 0 4px rgba(72,199,199,0.22);
+    background: var(--surface);
   }
-  .lp-input::placeholder { color: #4d6672; }
+  .lp-input::placeholder { color: var(--muted); }
 
   .lp-submit {
     width: 100%; padding: 13px; margin-top: 8px;
-    background: var(--primary); color: #fff;
-    border: none; border-radius: 8px; cursor: pointer;
-    font-size: 15px; font-weight: 700; font-family: var(--font-ui);
+    background: var(--accent); color: #fff;
+    border: none; border-radius: var(--radius-md); cursor: pointer;
+    font-size: var(--text-lg); font-weight: 700; font-family: var(--font-ui);
     letter-spacing: .01em;
     transition: opacity .15s, box-shadow .15s, transform .1s;
-    display: flex; align-items: center; justify-content: center; gap: 8px;
+    display: flex; align-items: center; justify-content: center; gap: var(--space-2);
     box-sizing: border-box; max-width: 100%;
   }
   .lp-submit:hover:not(:disabled) {
-    box-shadow: 0 4px 16px rgba(61,166,166,.4);
+    box-shadow: 0 4px 16px rgba(20,136,145,.4);
     transform: translateY(-1px);
   }
   .lp-submit:active:not(:disabled) { transform: translateY(0); }
@@ -144,15 +177,15 @@ const CSS = `
   }
 
   .lp-error {
-    margin-top: 16px; padding: 12px 16px; border-radius: 8px;
-    background: #fff5f5; border: 1px solid #fed7d7;
-    font-size: 13px; color: var(--danger); line-height: 1.5;
+    margin-top: 16px; padding: 12px 16px; border-radius: var(--radius-md);
+    background: var(--danger-bg); border: 1px solid var(--danger-soft);
+    font-size: var(--text-sm); color: var(--danger); line-height: 1.5;
   }
 
   .lp-success {
-    margin-top: 16px; padding: 14px 16px; border-radius: 8px;
+    margin-top: 16px; padding: 14px 16px; border-radius: var(--radius-md);
     background: var(--success-bg); border: 1px solid var(--success-soft);
-    font-size: 13px; color: var(--success); line-height: 1.6;
+    font-size: var(--text-sm); color: var(--success); line-height: 1.6;
   }
 
   .lp-footer {
@@ -161,13 +194,15 @@ const CSS = `
   }
 
   .lp-toggle {
-    margin-top: 20px; text-align: center;
-    font-size: 13px; color: var(--muted);
+    margin-top: 18px; padding: 12px 16px;
+    border-radius: var(--radius-md); border: 1px solid var(--border);
+    background: var(--bg);
+    font-size: 13px; color: var(--muted); text-align: center;
   }
   .lp-toggle button {
-    background: none; border: none; padding: 0; margin-left: 6px;
-    font-size: 13px; font-weight: 700; color: var(--accent-deep);
-    cursor: pointer; font-family: var(--font-ui); text-decoration: underline;
+    background: none; border: none; padding: 0 4px; margin-left: var(--space-1);
+    font-size: 13px; font-weight: 700; color: var(--accent);
+    cursor: pointer; font-family: var(--font-ui);
   }
   .lp-toggle button:disabled { opacity: .5; cursor: default; }
 
@@ -182,7 +217,7 @@ const CSS = `
   }
   .lp-forgot button:hover { color: var(--accent-deep); }
 
-  @media (max-width: 860px) {
+  @media (max-width: 768px) {
     .lp-root { grid-template-columns: 1fr; }
     .lp-brand { display: none; }
     .lp-signin { align-items: flex-start; justify-content: flex-start; padding: 36px 24px; }
@@ -190,7 +225,7 @@ const CSS = `
     .lp-mobile-brand { display: block; }
     .lp-greeting { margin-bottom: 28px; }
   }
-  @media (max-width: 420px) {
+  @media (max-width: 480px) {
     .lp-signin { padding: 32px 20px; }
   }
 `;
@@ -216,7 +251,6 @@ export default function LoginScreen() {
   const isReset = mode === 'reset';
 
   useEffect(() => {
-    injectGlobalCSS();
     injectCSS();
     try {
       const notice = localStorage.getItem('vv:auth_notice');
@@ -238,7 +272,7 @@ export default function LoginScreen() {
 
     if (isReset) {
       if (!email.trim()) { setError('Enter your email address.'); return; }
-      if (!supabaseReady) { setError('Sign-in is not configured. Contact your teacher.'); return; }
+      if (!supabaseReady) { setError("Access isn't set up yet. Contact your teacher to get started."); return; }
       setLoading(true);
       try {
         await resetPasswordForEmail(email.trim(), window.location.origin + window.location.pathname);
@@ -255,7 +289,7 @@ export default function LoginScreen() {
       return;
     }
     if (!supabaseReady) {
-      setError('Sign-in is not configured. Contact your teacher.');
+      setError("Access isn't set up yet. Contact your teacher to get started.");
       return;
     }
     if (isRegister && password.length < 6) {
@@ -293,7 +327,10 @@ export default function LoginScreen() {
         </div>
 
         <div className="lp-brand-hero">
-          <div className="lp-brand-tag">Your learning path</div>
+          <div>
+            <span className="lp-brand-tag">Your learning path</span>
+            <span className="lp-brand-b2-badge">B2 Target</span>
+          </div>
           <h2 className="lp-brand-headline">Clear practice.<br />Better feedback.<br />Real progress.</h2>
           <p className="lp-brand-copy">
             Everything you need to reach B2 — lessons, feedback, homework, and your full progress history in one place.
@@ -301,7 +338,7 @@ export default function LoginScreen() {
         </div>
 
         <div className="lp-brand-features">
-          {['Personalized homework plans', 'Real-time progress tracking'].map(f => (
+          {['Personalized homework plans', 'Real-time progress tracking', 'Focused MET skill coaching from your teacher'].map(f => (
             <div key={f} className="lp-brand-feature">
               <span className="lp-brand-feature-dot" aria-hidden="true" />
               {f}
@@ -318,22 +355,36 @@ export default function LoginScreen() {
             <span className="lp-mobile-brand-sub">Michigan English Test Preparation</span>
           </div>
 
+          {!isReset && (
+            <div className="lp-mode-switch" role="tablist" aria-label="Account mode">
+              <button type="button" role="tab" aria-selected={!isRegister} className={!isRegister ? 'active' : ''} onClick={() => switchMode('signin')} disabled={loading}>Sign in</button>
+              <button type="button" role="tab" aria-selected={isRegister} className={isRegister ? 'active' : ''} onClick={() => switchMode('register')} disabled={loading}>New student</button>
+            </div>
+          )}
+
+          {!isRegister && !isReset && (
+            <div className="lp-invite-notice" role="note">
+              <Icon.lock size={14} />
+              Private platform · Contact Teacher Vinicius to get access
+            </div>
+          )}
+
           <div className="lp-greeting">
             <h1>
-              {isReset ? 'Reset your password' : isRegister ? 'Create your password' : 'Sign in'}
+              {isReset ? 'Reset your password' : isRegister ? 'Create your account' : 'Welcome back'}
             </h1>
             <p>
               {isReset
                 ? "Enter your email and we'll send you a sign-in link."
                 : isRegister
-                ? 'First time here? Enter your email and choose a password to create your account.'
-                : 'Enter the email and password you use for this platform.'}
+                ? 'Enter your email and choose a password to set up your account.'
+                : 'Enter your email and password below.'}
             </p>
           </div>
 
           {isReset && resetSent ? (
             <div className="lp-success" role="status">
-              <strong>Check your inbox.</strong> We sent a sign-in link to <em>{email}</em>. Click it to access your account — the link expires in 1 hour.
+              <strong>Check your inbox.</strong> We sent a sign-in link to <em>{email}</em>. Open it to access your account. The link expires in 1 hour.
             </div>
           ) : (
             <form onSubmit={handleSubmit} noValidate>
@@ -388,24 +439,12 @@ export default function LoginScreen() {
             </div>
           )}
 
-          <div className="lp-toggle">
-            {isReset ? (
-              <>
-                Remember it?
-                <button type="button" onClick={() => switchMode('signin')} disabled={loading}>Sign in</button>
-              </>
-            ) : isRegister ? (
-              <>
-                Already have an account?
-                <button type="button" onClick={() => switchMode('signin')} disabled={loading}>Sign in</button>
-              </>
-            ) : (
-              <>
-                First time here?
-                <button type="button" onClick={() => switchMode('register')} disabled={loading}>Create your password</button>
-              </>
-            )}
-          </div>
+          {isReset && (
+            <div className="lp-toggle">
+              Remember it?
+              <button type="button" onClick={() => switchMode('signin')} disabled={loading}>Back to sign in</button>
+            </div>
+          )}
 
           <div className="lp-footer">
             MET Proficiency Mastery · Private platform<br />

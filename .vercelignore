@@ -1,0 +1,43 @@
+node_modules
+.pnpm-store
+npm-cache
+.vite-cache
+.vite-cache-v2
+dist-build
+supabase/.branches
+supabase/.temp
+
+# Extraneous workspace directories (not part of the app)
+product-audit
+education-agent-skills-main
+SupportAssist_Backups
+MicrosoftWindows.Client.CBS_cw5n1h2txyewy!InputApp
+.netlify
+archive
+audit-artifacts
+dialogue-practice-extracted
+docs
+frontend
+graphify-out
+remix_-dialogue-practice
+remix_-remix_-remix_-remix_-plataforma-principal
+speaking_pictures
+tests
+scripts
+Deployment
+# Exercises
+V.V. Method*
+Vocational English Series
+
+# Standalone HTML/image files (not index.html)
+mpv7s5*.png
+audit-*.html
+met-*.html
+"V.V. Method*"
+
+# Misc
+AGENTS.md
+DESIGN_SYSTEM_UPDATE.md
+PRODUCT.md
+500
+p.term

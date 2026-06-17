@@ -3,9 +3,10 @@
  * Each type renders the exercise as the student experiences it.
  */
 import { useState, useRef, useEffect } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { Icon, Card, Button, Pill } from './shared.jsx';
 import { getExType, parseBlankTemplate, shuffleArray, autoGrade } from '../lib/exercise-types.js';
-import { ExTypeBadge } from './exercise-editor.jsx';
+import { ExTypeBadge } from './exercise-badge.jsx';
 import Listening from './exercises/Listening.jsx';
 import { getDbContext, uploadSubmissionAudio, createSignedAudioUrl } from '../lib/supabase-db.js';
 import { DialoguePlayer, SwapPlayer, LevelUpPlayer } from './exercise-player-new-types.jsx';
@@ -38,6 +39,7 @@ export function ExercisePlayer({ exercise, response, onResponse, readOnly = fals
     case 'dialogue': return <DialoguePlayer ex={exercise} res={response} update={update} readOnly={readOnly} />;
     case 'swap':     return <SwapPlayer     ex={exercise} res={response} update={update} readOnly={readOnly} />;
     case 'levelup':  return <LevelUpPlayer  ex={exercise} res={response} update={update} readOnly={readOnly} />;
+    case 'read':     return <ReadPlayer     ex={exercise} res={response} update={update} readOnly={readOnly} />;
     default:
       return (
         <div style={{ padding: 14, fontSize: 'var(--text-sm)', color: 'var(--text-2)', lineHeight: 1.6 }}>
@@ -100,7 +102,7 @@ function MCQPlayer({ ex, res, update, readOnly }) {
               onClick={() => { if (!optionDisabled) update({ selected: i }); }}
               style={{
                 display: 'flex', alignItems: 'center', gap: 12,
-                padding: '14px 16px', borderRadius: 10, width: '100%', textAlign: 'left',
+                padding: '14px 16px', borderRadius: 0, width: '100%', textAlign: 'left',
                 border: `1.5px solid ${borderColor}`, background: bg,
                 cursor: optionDisabled ? 'default' : 'pointer',
                 opacity: isWrongTried && !showCorrect ? 0.7 : 1,
@@ -117,7 +119,7 @@ function MCQPlayer({ ex, res, update, readOnly }) {
               </div>
               <span style={{ fontSize: 'var(--text-sm)', color: 'var(--text)', flex: 1 }}>{opt}</span>
               {showCorrect && isRight && <><Icon.check size={16} color="var(--success)" /><span className="sr-only">Correct answer</span></>}
-              {isWrongTried && !showCorrect && <><span aria-hidden="true" style={{ color: 'var(--danger)', fontWeight: 700, fontSize: 'var(--text-sm)' }}>✗</span><span className="sr-only">Incorrect</span></>}
+              {isWrongTried && !showCorrect && <><Icon.close size={14} color="var(--danger)" /><span className="sr-only">Incorrect</span></>}
             </button>
           );
         })}
@@ -130,18 +132,30 @@ function MCQPlayer({ ex, res, update, readOnly }) {
       )}
 
       {solved && (
-        <div style={{ marginTop: 14, padding: '10px 14px', borderRadius: 10, background: 'var(--success-bg)', color: 'var(--success)', fontSize: 'var(--text-sm)' }}>
-          ✓ Correct!
+        <div style={{ marginTop: 14, padding: '10px 14px', borderRadius: 0, background: 'var(--success-bg)', color: 'var(--success)', fontSize: 'var(--text-sm)' }}>
+          <Icon.check size={14} /> Correct!
         </div>
       )}
       {!solved && revealed && (
-        <div style={{ marginTop: 14, padding: '10px 14px', borderRadius: 10, background: 'var(--success-bg)', color: 'var(--success)', fontSize: 'var(--text-sm)' }}>
+        <div style={{ marginTop: 14, padding: '10px 14px', borderRadius: 0, background: 'var(--success-bg)', color: 'var(--success)', fontSize: 'var(--text-sm)' }}>
           Answer shown after {wrongLimit} {wrongLimit === 1 ? 'try' : 'tries'} — the correct option is highlighted above.
         </div>
       )}
       {!done && wrongPicks.length > 0 && (
-        <div style={{ marginTop: 14, padding: '10px 14px', borderRadius: 10, background: 'var(--warning-bg)', color: 'var(--warning)', fontSize: 'var(--text-sm)' }}>
+        <div style={{ marginTop: 14, padding: '10px 14px', borderRadius: 0, background: 'var(--warning-bg)', color: 'var(--warning)', fontSize: 'var(--text-sm)' }}>
           Not quite — try another option. ({wrongPicks.length}/{wrongLimit})
+        </div>
+      )}
+      {!done && ex.hints && wrongPicks.length >= 2 && ex.hints[0] && (
+        <div style={{ marginTop: 8, padding: '9px 13px', borderRadius: 0, background: 'var(--accent-subtle)', color: 'var(--accent-deep)', fontSize: 'var(--text-sm)', borderLeft: '3px solid var(--accent)' }}>
+          <strong style={{ fontSize: 'var(--text-xs)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Hint</strong>
+          <p style={{ margin: '4px 0 0' }}>{ex.hints[0]}</p>
+        </div>
+      )}
+      {!done && ex.hints && wrongPicks.length >= 3 && ex.hints[1] && (
+        <div style={{ marginTop: 6, padding: '9px 13px', borderRadius: 0, background: 'var(--info-bg)', color: 'var(--accent-deep)', fontSize: 'var(--text-sm)', borderLeft: '3px solid var(--info)' }}>
+          <strong style={{ fontSize: 'var(--text-xs)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Another hint</strong>
+          <p style={{ margin: '4px 0 0' }}>{ex.hints[1]}</p>
         </div>
       )}
     </div>
@@ -224,7 +238,7 @@ function BlankPlayer({ ex, res, update, readOnly }) {
                   color, background: 'transparent',
                 }}
               />
-              {status === 'ok' && <span title="correct" style={{ color: 'var(--success)', fontWeight: 700, marginLeft: 3, fontSize: 'var(--text-sm)' }}>✓</span>}
+              {status === 'ok' && <Icon.check size={14} color="var(--success)" style={{ marginLeft: 3 }} />}
               {status === 'warn' && !revealed && (
                 <span title="check this" style={{ color: 'var(--warning)', fontWeight: 700, marginLeft: 3, fontSize: 'var(--text-xs)' }}>
                   !{used > 0 ? ` ${used}/${BLANK_MAX_TRIES}` : ''}
@@ -243,6 +257,18 @@ function BlankPlayer({ ex, res, update, readOnly }) {
         <div style={{ fontSize: 'var(--text-xs)', color: 'var(--success)', display: 'flex', alignItems: 'center', gap: 6 }}>
           <Icon.check size={12} />
           <span>Answer shown after {BLANK_MAX_TRIES} tries — type it in to finish the blank.</span>
+        </div>
+      )}
+      {!readOnly && ex.hints && Object.values(attempts).some(n => n >= 2) && ex.hints[0] && (
+        <div style={{ marginTop: 10, padding: '9px 13px', borderRadius: 0, background: 'var(--accent-subtle)', color: 'var(--accent-deep)', fontSize: 'var(--text-sm)', borderLeft: '3px solid var(--accent)' }}>
+          <strong style={{ fontSize: 'var(--text-xs)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Hint</strong>
+          <p style={{ margin: '4px 0 0' }}>{ex.hints[0]}</p>
+        </div>
+      )}
+      {!readOnly && ex.hints && Object.values(attempts).some(n => n >= 3) && ex.hints[1] && (
+        <div style={{ marginTop: 6, padding: '9px 13px', borderRadius: 0, background: 'var(--info-bg)', color: 'var(--accent-deep)', fontSize: 'var(--text-sm)', borderLeft: '3px solid var(--info)' }}>
+          <strong style={{ fontSize: 'var(--text-xs)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Another hint</strong>
+          <p style={{ margin: '4px 0 0' }}>{ex.hints[1]}</p>
         </div>
       )}
     </div>
@@ -277,7 +303,7 @@ function ShortPlayer({ ex, res, update, readOnly }) {
             <div style={{ marginBottom: 6 }}>
               <span style={{ fontWeight: 700, color: 'var(--accent-deep)', marginRight: 6 }}>Vocabulary:</span>
               {ex.scaffolding.vocabulary.map((word, i) => (
-                <span key={i} style={{ display: 'inline-block', background: 'var(--white)', padding: '2px 6px', borderRadius: 4, marginRight: 4, border: '1px solid var(--accent-soft)' }}>{word}</span>
+                <span key={i} style={{ display: 'inline-block', background: 'var(--white)', padding: '2px 6px', borderRadius: 0, marginRight: 4, border: '1px solid var(--accent-soft)' }}>{word}</span>
               ))}
             </div>
           )}
@@ -307,14 +333,14 @@ function ShortPlayer({ ex, res, update, readOnly }) {
             onClick={() => setChecklistOpen(v => !v)}
             style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--accent-deep)', fontFamily: 'var(--font-ui)' }}
           >
-            <span style={{ display: 'inline-flex', transform: checklistOpen ? 'rotate(90deg)' : 'none', transition: 'transform .15s', fontSize: 10 }}>▶</span>
+            <span style={{ display: 'inline-flex', transform: checklistOpen ? 'rotate(90deg)' : 'none', transition: 'transform .15s' }}><Icon.chevronRight size={10} /></span>
             Quality checklist — what good MET writing requires
           </button>
           {checklistOpen && (
             <div style={{ marginTop: 8, padding: '8px 12px', background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)' }}>
-              {WRITING_QUALITY_CHECKS.map((c) => (
-                <div key={c.label} style={{ display: 'flex', gap: 8, marginBottom: 6 }}>
-                  <span style={{ fontWeight: 700, color: 'var(--accent)', flexShrink: 0, fontSize: 'var(--text-xs)', marginTop: 1 }}>✓</span>
+              {WRITING_QUALITY_CHECKS.map((c, i) => (
+                <div key={i} style={{ display: 'flex', gap: 8, marginBottom: i < WRITING_QUALITY_CHECKS.length - 1 ? 6 : 0 }}>
+                  <Icon.check size={12} color="var(--accent)" style={{ marginTop: 2, flexShrink: 0 }} />
                   <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-2)', lineHeight: 1.55 }}>
                     <strong style={{ color: 'var(--text)' }}>{c.label}:</strong> {c.hint}
                   </span>
@@ -434,17 +460,43 @@ function SpeakPlayer({ ex, res, update, readOnly }) {
 
   return (
     <div>
-      {ex.imageUrl && (
-        <div style={{ marginBottom: 14, borderRadius: 10, overflow: 'hidden', border: '1px solid var(--border)', background: 'var(--bg)' }}>
+      {ex.imageUrl ? (
+        <div style={{ marginBottom: 14, borderRadius: 0, overflow: 'hidden', border: '1px solid var(--border)', background: 'var(--bg)' }}>
           <img
             src={ex.imageUrl}
-            alt={ex.imageAlt || 'Speaking prompt image'}
+            alt={ex.imageAlt || ex.imageDescription || 'Speaking prompt image'}
             style={{ width: '100%', maxHeight: 340, objectFit: 'cover', display: 'block' }}
           />
+          {ex.imageDescription && (
+            <p style={{ margin: 0, padding: '8px 12px', fontSize: 'var(--text-xs)', color: 'var(--muted)', fontStyle: 'italic' }}>{ex.imageDescription}</p>
+          )}
         </div>
-      )}
+      ) : ex.imageDescription ? (
+        <div style={{ marginBottom: 14, padding: '14px 16px', background: 'var(--accent-subtle)', borderRadius: 0, border: '1px solid var(--accent-border, var(--border))' }}>
+          <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>Picture to describe</div>
+          <p style={{ margin: 0, fontSize: 'var(--text-sm)', color: 'var(--text)', lineHeight: 1.6 }}>{ex.imageDescription}</p>
+        </div>
+      ) : null}
 
-      <div style={{ background: 'var(--bg)', borderRadius: 10, padding: '14px 16px', marginBottom: 14 }}>
+      {ex.metTask && (() => {
+        const MET_TASK_LABELS = {
+          Q1: 'Task 1 — Describe a picture · 60 s',
+          Q2: 'Task 2 — Personal experience · 60 s',
+          Q3: 'Task 3 — Give an opinion · 90 s',
+          Q4: 'Task 4 — Advantages & disadvantages · 90 s',
+          Q5: 'Task 5 — Persuade an authority · 90 s',
+        };
+        const label = MET_TASK_LABELS[ex.metTask];
+        if (!label) return null;
+        return (
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, marginBottom: 10, padding: '4px 10px', background: 'var(--accent-subtle)', border: '1px solid var(--accent-soft)', borderRadius: 'var(--radius-sm)' }}>
+            <span style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--accent-deep)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>MET</span>
+            <span style={{ fontSize: 'var(--text-xs)', color: 'var(--accent-deep)', fontWeight: 600 }}>{label}</span>
+          </div>
+        );
+      })()}
+
+      <div style={{ background: 'var(--bg)', borderRadius: 0, padding: '14px 16px', marginBottom: 14 }}>
         <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>Speaking prompt</div>
         <p style={{ margin: 0, fontSize: 'var(--text-md)', color: 'var(--text)', lineHeight: 1.55, fontWeight: 500 }}>
           {ex.prompt}
@@ -459,7 +511,7 @@ function SpeakPlayer({ ex, res, update, readOnly }) {
             <div style={{ marginBottom: 6 }}>
               <span style={{ fontWeight: 700, color: 'var(--accent-deep)', marginRight: 6 }}>Vocabulary:</span>
               {ex.scaffolding.vocabulary.map((word, i) => (
-                <span key={i} style={{ display: 'inline-block', background: 'var(--white)', padding: '2px 6px', borderRadius: 4, marginRight: 4, border: '1px solid var(--accent-soft)' }}>{word}</span>
+                <span key={i} style={{ display: 'inline-block', background: 'var(--white)', padding: '2px 6px', borderRadius: 0, marginRight: 4, border: '1px solid var(--accent-soft)' }}>{word}</span>
               ))}
             </div>
           )}
@@ -482,7 +534,7 @@ function SpeakPlayer({ ex, res, update, readOnly }) {
             onClick={() => setStrategyOpen(v => !v)}
             style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--accent-deep)', fontFamily: 'var(--font-ui)' }}
           >
-            <span style={{ display: 'inline-flex', transform: strategyOpen ? 'rotate(90deg)' : 'none', transition: 'transform .15s', fontSize: 10 }}>▶</span>
+            <span style={{ display: 'inline-flex', transform: strategyOpen ? 'rotate(90deg)' : 'none', transition: 'transform .15s' }}><Icon.chevronRight size={10} /></span>
             Strategy reminder — what good MET speaking requires
           </button>
           {strategyOpen && (
@@ -535,7 +587,7 @@ function SpeakPlayer({ ex, res, update, readOnly }) {
           </Button>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 'var(--text-sm)', color: 'var(--danger)' }}>
             <span style={{
-              width: 8, height: 8, borderRadius: 999, background: 'var(--danger)',
+              width: 8, height: 8, borderRadius: 0, background: 'var(--danger)',
               animation: 'vv-pulse 1s ease-in-out infinite',
             }} />
             Recording
@@ -546,7 +598,7 @@ function SpeakPlayer({ ex, res, update, readOnly }) {
             {Array.from({ length: 24 }).map((_, i) => (
               <span key={i} style={{
                 width: 2, height: 22,
-                background: 'var(--primary)', borderRadius: 999,
+                background: 'var(--primary)', borderRadius: 0,
                 transform: `scaleY(${(4 + Math.abs(Math.sin(seconds * 0.7 + i * 0.4)) * 18) / 22})`,
                 transformOrigin: 'bottom', transition: 'transform .2s',
               }} />
@@ -621,11 +673,11 @@ function OrderPlayer({ ex, res, update, readOnly }) {
         {order.map((idx, i) => (
           <div key={idx} style={{
             display: 'grid', gridTemplateColumns: 'auto 1fr auto', gap: 12, alignItems: 'center',
-            padding: '12px 14px', borderRadius: 10,
+            padding: '12px 14px', borderRadius: 0,
             background: 'var(--surface)', border: '1px solid var(--border)',
           }}>
             <span style={{
-              fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 'var(--text-lg)',
+              fontFamily: 'var(--font-ui)', fontWeight: 700, fontSize: 'var(--text-lg)',
               color: 'var(--accent)', width: 24, textAlign: 'center',
             }}>{i + 1}</span>
             <span style={{ fontSize: 'var(--text-sm)', color: 'var(--text)', lineHeight: 1.5 }}>{sentences[idx]}</span>
@@ -640,10 +692,10 @@ function OrderPlayer({ ex, res, update, readOnly }) {
       </div>
       {isCorrect && (
         <div style={{
-          marginTop: 12, padding: '10px 14px', borderRadius: 10,
+          marginTop: 12, padding: '10px 14px', borderRadius: 0,
           background: 'var(--success-bg)', color: 'var(--success)', fontSize: 'var(--text-sm)',
         }}>
-          ✓ Correct order!
+          <Icon.check size={14} /> Correct order!
         </div>
       )}
     </div>
@@ -653,7 +705,7 @@ function OrderPlayer({ ex, res, update, readOnly }) {
 function orderArrowStyle(disabled) {
   return {
     width: 24, height: 22, padding: 0, fontFamily: 'var(--font-ui)',
-    fontSize: 12, border: '1px solid var(--border)', borderRadius: 6,
+    fontSize: 12, border: '1px solid var(--border)', borderRadius: 0,
     background: 'var(--surface)', color: disabled ? 'var(--faint)' : 'var(--text)',
     cursor: disabled ? 'not-allowed' : 'pointer',
   };
@@ -690,7 +742,7 @@ function FixPlayer({ ex, res, update, readOnly }) {
         <div style={{
           display: 'inline-flex', alignItems: 'center', gap: 6,
           padding: '4px 10px', background: 'var(--warning-bg)',
-          color: 'var(--warning)', borderRadius: 999,
+          color: 'var(--warning)', borderRadius: 0,
           fontSize: 'var(--text-xs)', marginBottom: 12,
         }}>
           <Icon.spark size={11} /> {ex.hint}
@@ -714,7 +766,7 @@ function FixPlayer({ ex, res, update, readOnly }) {
         </span>
         {hasChanged && (
           <Pill tone={isFixed ? 'success' : 'warning'}>
-            {isFixed ? '✓ All errors fixed' : 'Keep going'}
+            {isFixed ? <><Icon.check size={12} /> All errors fixed</> : 'Keep going'}
           </Pill>
         )}
       </div>
@@ -797,7 +849,7 @@ function FlashPlayer({ ex, res, update, readOnly }) {
         {[{ id: 'cards', label: 'Flashcards' }, { id: 'match', label: 'Match Game' }].map(m => (
           <button key={m.id} onClick={m.id === 'match' ? startMatch : () => setMode('cards')}
             style={{
-              padding: '5px 14px', borderRadius: 99, border: '1.5px solid',
+              padding: '5px 14px', borderRadius: 0, border: '1.5px solid',
               fontSize: 'var(--text-xs)', fontWeight: 700, cursor: 'pointer',
               borderColor: mode === m.id ? 'var(--primary)' : 'var(--border)',
               background: mode === m.id ? 'var(--accent-subtle)' : 'var(--surface)',
@@ -810,8 +862,8 @@ function FlashPlayer({ ex, res, update, readOnly }) {
 
       {mode === 'match' && matchPairs ? (
         allMatched ? (
-          <div style={{ textAlign: 'center', padding: '32px 20px', background: 'rgba(34,139,34,.08)', borderRadius: 14, border: '1.5px solid #3CB371' }}>
-            <div style={{ fontSize: 32, marginBottom: 8 }}>🎉</div>
+          <div style={{ textAlign: 'center', padding: '32px 20px', background: 'rgba(34,139,34,.08)', borderRadius: 0, border: '1.5px solid #3CB371' }}>
+            <Icon.party size={32} style={{ marginBottom: 8 }} />
             <div style={{ fontWeight: 700, color: '#1A6B1A', fontSize: 'var(--text-lg)' }}>All matched!</div>
             <Button variant="ghost" size="sm" onClick={startMatch} style={{ marginTop: 12 }}>Play again</Button>
           </div>
@@ -821,13 +873,13 @@ function FlashPlayer({ ex, res, update, readOnly }) {
               <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 2 }}>Terms</div>
               {pairs.map((p, origIdx) => {
                 if (matched.has(origIdx)) {
-                  return <div key={origIdx} style={{ padding: '10px 14px', borderRadius: 8, background: 'rgba(34,139,34,.1)', border: '1.5px solid #3CB371', color: '#1A6B1A', fontWeight: 600, fontSize: 'var(--text-sm)' }}>{p.term}</div>;
+                  return <div key={origIdx} style={{ padding: '10px 14px', borderRadius: 0, background: 'rgba(34,139,34,.1)', border: '1.5px solid #3CB371', color: '#1A6B1A', fontWeight: 600, fontSize: 'var(--text-sm)' }}>{p.term}</div>;
                 }
                 const isSelected = selectedTerm === origIdx;
                 return (
                   <button key={origIdx} onClick={() => !readOnly && setSelectedTerm(isSelected ? null : origIdx)}
                     style={{
-                      padding: '10px 14px', borderRadius: 8, border: '1.5px solid',
+                      padding: '10px 14px', borderRadius: 0, border: '1.5px solid',
                       borderColor: isSelected ? 'var(--primary)' : 'var(--border)',
                       background: isSelected ? 'var(--accent-subtle)' : 'var(--surface)',
                       cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600,
@@ -844,13 +896,13 @@ function FlashPlayer({ ex, res, update, readOnly }) {
               {matchPairs.map((p) => {
                 const origIdx = p.origIdx;
                 if (matched.has(origIdx)) {
-                  return <div key={origIdx} style={{ padding: '10px 14px', borderRadius: 8, background: 'rgba(34,139,34,.1)', border: '1.5px solid #3CB371', color: '#1A6B1A', fontSize: 'var(--text-sm)' }}>{p.def}</div>;
+                  return <div key={origIdx} style={{ padding: '10px 14px', borderRadius: 0, background: 'rgba(34,139,34,.1)', border: '1.5px solid #3CB371', color: '#1A6B1A', fontSize: 'var(--text-sm)' }}>{p.def}</div>;
                 }
                 const isWrong = wrongFlash === origIdx;
                 return (
                   <button key={origIdx} onClick={() => !readOnly && handleMatchDef(origIdx)}
                     style={{
-                      padding: '10px 14px', borderRadius: 8, border: '1.5px solid',
+                      padding: '10px 14px', borderRadius: 0, border: '1.5px solid',
                       borderColor: isWrong ? '#C03030' : selectedTerm !== null ? 'var(--primary)' : 'var(--border)',
                       background: isWrong ? 'rgba(200,50,50,.08)' : selectedTerm !== null ? 'rgba(61,166,166,.06)' : 'var(--surface)',
                       cursor: selectedTerm !== null ? 'pointer' : 'default',
@@ -868,14 +920,14 @@ function FlashPlayer({ ex, res, update, readOnly }) {
         <>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
             <span style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)' }}>{idx + 1} of {pairs.length}</span>
-            <span style={{ fontSize: 'var(--text-sm)', color: 'var(--success)' }}>✓ {learned} learned</span>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 'var(--text-sm)', color: 'var(--success)' }}><Icon.check size={12} /> {learned} learned</span>
           </div>
           <div onClick={() => setFlipped(f => !f)}
             style={{
               background: flipped ? 'var(--accent-deep)' : 'var(--surface)',
               color: flipped ? '#F0F6FC' : 'var(--text)',
               border: `2px solid ${flipped ? 'var(--accent-deep)' : 'var(--border)'}`,
-              borderRadius: 14, padding: '40px 28px', textAlign: 'center',
+              borderRadius: 0, padding: '40px 28px', textAlign: 'center',
               minHeight: 160, cursor: 'pointer',
               display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
               transition: 'all .3s var(--ease)',
@@ -883,7 +935,7 @@ function FlashPlayer({ ex, res, update, readOnly }) {
             <div style={{ fontSize: 'var(--text-xs)', textTransform: 'uppercase', letterSpacing: '0.1em', color: flipped ? 'rgba(240,246,252,.55)' : 'var(--faint)', marginBottom: 14 }}>
               {flipped ? 'Definition' : 'Term'}
             </div>
-            <div style={{ fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: flipped ? 'var(--text-lg)' : 'var(--text-2xl)', lineHeight: 1.3, maxWidth: 480 }}>
+            <div style={{ fontFamily: 'var(--font-ui)', fontWeight: 600, fontSize: flipped ? 'var(--text-lg)' : 'var(--text-2xl)', lineHeight: 1.3, maxWidth: 480 }}>
               {flipped ? card.def : card.term}
             </div>
             <div style={{ marginTop: 16, fontSize: 'var(--text-xs)', color: flipped ? 'rgba(240,246,252,.4)' : 'var(--faint)', letterSpacing: '.1em', textTransform: 'uppercase' }}>
@@ -917,8 +969,133 @@ function FlashPlayer({ ex, res, update, readOnly }) {
  * HomeworkStepThrough — renders exercises one at a time with progress bar + navigation.
  * Used in the student dashboard to walk through a homework set.
  */
+/* ─── 12. READING ───────────────────────────────────────── */
+
+function ReadPlayer({ ex, res, update, readOnly }) {
+  const answers = res?.answers || {};
+  const questions = ex.questions || [];
+  const [checked, setChecked] = useState(false);
+  const [results, setResults] = useState(null);
+
+  function handleSelect(qId, optionIdx) {
+    if (readOnly || checked) return;
+    update({ answers: { ...answers, [qId]: optionIdx } });
+  }
+
+  function handleCheck() {
+    if (readOnly) return;
+    let hits = 0;
+    const perQ = questions.map(q => {
+      const correct = answers[q.id] === q.correct;
+      if (correct) hits++;
+      return { correct, selected: answers[q.id], expected: q.correct };
+    });
+    const total = questions.length || 1;
+    setResults({ hits, total, perQ });
+    setChecked(true);
+  }
+
+  return (
+    <div>
+      {/* Passage */}
+      <div style={{
+        background: 'var(--surface)', border: '1px solid var(--border)',
+        borderRadius: 'var(--radius-sm)', padding: '14px 16px', marginBottom: 14,
+        maxHeight: 260, overflowY: 'auto', lineHeight: 1.8,
+        fontSize: 'var(--text-sm)', fontFamily: 'var(--font-ui)',
+        color: 'var(--text)',
+      }}>
+        <p style={{ margin: 0, whiteSpace: 'pre-wrap' }}>{ex.passage || 'No passage provided.'}</p>
+        {ex.source && (
+          <p style={{ margin: '8px 0 0', fontSize: 'var(--text-xs)', color: 'var(--muted)', fontStyle: 'italic', fontFamily: 'var(--font-ui)' }}>
+            — {ex.source}
+          </p>
+        )}
+      </div>
+
+      {/* Questions */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        {questions.map((q, qi) => (
+          <div key={q.id} style={{
+            border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)',
+            padding: 12, background: 'var(--bg)',
+          }}>
+            <div style={{ fontWeight: 600, fontSize: 'var(--text-sm)', marginBottom: 8, color: 'var(--text)' }}>
+              {qi + 1}. {q.question}
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              {(q.options || []).map((opt, oi) => {
+                const isSelected = answers[q.id] === oi;
+                const isCorrect = results && oi === q.correct;
+                const isWrong = results && isSelected && oi !== q.correct;
+                let bg = 'var(--surface)';
+                let borderColor = 'var(--border)';
+                if (results && isCorrect) { bg = 'rgba(46,106,63,.08)'; borderColor = 'var(--success)'; }
+                if (results && isWrong) { bg = 'rgba(138,43,38,.08)'; borderColor = 'var(--danger)'; }
+                if (!results && isSelected) { bg = 'var(--accent-subtle)'; borderColor = 'var(--accent)'; }
+                return (
+                  <button
+                    key={oi}
+                    type="button"
+                    onClick={() => handleSelect(q.id, oi)}
+                    disabled={readOnly || checked}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: 10, cursor: (readOnly || checked) ? 'default' : 'pointer',
+                      padding: '8px 12px', borderRadius: 'var(--radius-sm)', border: `1px solid ${borderColor}`,
+                      background: bg, color: 'var(--text)', fontFamily: 'var(--font-ui)',
+                      fontSize: 'var(--text-sm)', textAlign: 'left', transition: 'border-color .15s, background .15s',
+                    }}
+                  >
+                    <span style={{
+                      width: 22, height: 22, borderRadius: '50%', display: 'flex', alignItems: 'center',
+                      justifyContent: 'center', fontWeight: 700, fontSize: 'var(--text-xs)', flexShrink: 0,
+                      background: results && isCorrect ? 'var(--success)' : (results && isWrong ? 'var(--danger)' : (isSelected ? 'var(--accent)' : 'var(--faint)')),
+                      color: 'white',
+                    }}>{String.fromCharCode(65 + oi)}</span>
+                    <span>{opt}</span>
+                    {results && isCorrect && <span style={{ marginLeft: 'auto', color: 'var(--success)' }}><Icon.check size={14} color="var(--success)" /></span>}
+                    {results && isWrong && <span style={{ marginLeft: 'auto', color: 'var(--danger)' }}><Icon.close size={14} color="var(--danger)" /></span>}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Check / Results */}
+      {!checked ? (
+        <div style={{ marginTop: 12, display: 'flex', justifyContent: 'flex-end' }}>
+          <Button variant="primary" size="sm" onClick={handleCheck} disabled={Object.keys(answers).length === 0}>
+            <Icon.check size={13} /> Check answers
+          </Button>
+        </div>
+      ) : (
+        <div style={{
+          marginTop: 12, padding: '10px 14px', borderRadius: 'var(--radius-sm)',
+          background: results && results.hits === results.total ? 'rgba(46,106,63,.1)' : 'rgba(184,118,26,.1)',
+          border: `1px solid ${results && results.hits === results.total ? 'var(--success)' : 'var(--warning)'}`,
+          fontSize: 'var(--text-sm)', fontWeight: 600, color: results && results.hits === results.total ? 'var(--success)' : 'var(--warning-text)',
+        }}>
+          {results.hits} / {results.total} correct
+          {results.hits === results.total ? ' — Great work!' : ''}
+        </div>
+      )}
+    </div>
+  );
+}
+
+const CONFIDENCE_LEVELS = [
+  { value: 0, label: 'Guess', desc: 'I was mostly guessing' },
+  { value: 1, label: 'Not sure', desc: 'I am unsure about my answers' },
+  { value: 2, label: 'Pretty sure', desc: 'I feel fairly confident' },
+  { value: 3, label: 'Very sure', desc: 'I am confident I did well' },
+];
+
 export function HomeworkStepThrough({ exercises, responses, onResponse, onSubmit, onSave, initialExerciseId, readOnly = false }) {
   const [currentIdx, setCurrentIdx] = useState(0);
+  const [confidence, setConfidence] = useState(null);
+  const [showConfidence, setShowConfidence] = useState(false);
 
   useEffect(() => {
     if (!initialExerciseId || !Array.isArray(exercises)) return;
@@ -937,6 +1114,73 @@ export function HomeworkStepThrough({ exercises, responses, onResponse, onSubmit
   const goNext = () => setCurrentIdx(i => Math.min(i + 1, total - 1));
   const isLast = currentIdx === total - 1;
 
+  function handleSubmitClick() {
+    if (isLast && !showConfidence) {
+      setShowConfidence(true);
+      return;
+    }
+    onSubmit?.(confidence);
+  }
+
+  if (showConfidence) {
+    return (
+      <div className="student-step-through">
+        <div className="student-step-progress">
+          <span style={{ fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--text-2)' }}>
+            Almost done! How confident are you?
+          </span>
+          <div style={{ flex: 1, height: 5, background: 'var(--divider)', borderRadius: 0, overflow: 'hidden' }}>
+            <div style={{ width: '100%', height: '100%', background: 'linear-gradient(90deg, var(--primary), var(--accent))', borderRadius: 999 }} />
+          </div>
+        </div>
+
+        <Card small className="student-exercise-mini-card" style={{ marginBottom: 10 }}>
+          <div style={{ padding: '8px 0' }}>
+            <h3 style={{ margin: '0 0 16px 0', fontSize: 'var(--text-md)', color: 'var(--text)' }}>How sure are you about your answers?</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {CONFIDENCE_LEVELS.map(level => (
+                <button
+                  key={level.value}
+                  type="button"
+                  onClick={() => setConfidence(level.value)}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer',
+                    padding: '12px 16px', borderRadius: 'var(--radius-sm)',
+                    border: `2px solid ${confidence === level.value ? 'var(--accent)' : 'var(--border)'}`,
+                    background: confidence === level.value ? 'var(--accent-subtle)' : 'var(--surface)',
+                    color: 'var(--text)', fontFamily: 'var(--font-ui)',
+                    fontSize: 'var(--text-sm)', textAlign: 'left', transition: 'border-color .15s, background .15s',
+                  }}
+                >
+                  <span style={{
+                    width: 32, height: 32, borderRadius: '50%', display: 'flex',
+                    alignItems: 'center', justifyContent: 'center', fontWeight: 700,
+                    fontSize: 'var(--text-xs)', flexShrink: 0,
+                    background: confidence === level.value ? 'var(--accent)' : 'var(--faint)',
+                    color: confidence === level.value ? 'white' : 'var(--text-2)',
+                  }}>{level.value + 1}</span>
+                  <div>
+                    <div style={{ fontWeight: 600 }}>{level.label}</div>
+                    <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-2)', marginTop: 2 }}>{level.desc}</div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        </Card>
+
+        <div className="student-step-actions">
+          <Button variant="ghost" size="sm" onClick={() => { setShowConfidence(false); setConfidence(null); }}>
+            <Icon.arrowL size={12} /> Back
+          </Button>
+          <Button variant="primary" onClick={handleSubmitClick} disabled={confidence === null}>
+            <Icon.check size={13} /> Submit Homework
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="student-step-through">
       {/* Progress bar */}
@@ -944,23 +1188,33 @@ export function HomeworkStepThrough({ exercises, responses, onResponse, onSubmit
         <span style={{ fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--text-2)', whiteSpace: 'nowrap' }}>
           Exercise {currentIdx + 1} / {total}
         </span>
-        <div style={{ flex: 1, height: 5, background: 'var(--divider)', borderRadius: 999, overflow: 'hidden' }}>
-          <div style={{ width: '100%', height: '100%', background: 'linear-gradient(90deg, var(--primary), var(--accent))', borderRadius: 999, transform: `scaleX(${progress / 100})`, transformOrigin: 'left', transition: 'transform 0.3s var(--ease)' }} />
+        <div style={{ flex: 1, height: 5, background: 'var(--divider)', borderRadius: 0, overflow: 'hidden' }}>
+          <div style={{ width: '100%', height: '100%', background: 'linear-gradient(90deg, var(--primary), var(--accent))', borderRadius: 0, transform: `scaleX(${progress / 100})`, transformOrigin: 'left', transition: 'transform 0.3s var(--ease)' }} />
         </div>
       </div>
 
-      {/* Current exercise */}
-      <Card small className="student-exercise-mini-card" style={{ marginBottom: 10 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-          <ExTypeBadge typeId={current.type} size="md" />
-        </div>
-        <ExercisePlayer
-          exercise={current}
-          response={currentRes}
-          onResponse={(updated) => onResponse?.(current.id, updated)}
-          readOnly={readOnly}
-        />
-      </Card>
+      {/* Current exercise — slower transition for cognitively demanding types */}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={currentIdx}
+          initial={{ opacity: 0, x: 10 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -10 }}
+          transition={{ duration: ['fix','short','speak','order'].includes(current?.type) ? 0.38 : 0.18, ease: 'easeOut' }}
+        >
+          <Card small className="student-exercise-mini-card" style={{ marginBottom: 10 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+              <ExTypeBadge typeId={current.type} size="md" />
+            </div>
+            <ExercisePlayer
+              exercise={current}
+              response={currentRes}
+              onResponse={(updated) => onResponse?.(current.id, updated)}
+              readOnly={readOnly}
+            />
+          </Card>
+        </motion.div>
+      </AnimatePresence>
 
       {/* Navigation */}
       <div className="student-step-actions">
@@ -972,7 +1226,7 @@ export function HomeworkStepThrough({ exercises, responses, onResponse, onSubmit
             <Icon.check size={12} /> Save progress
           </Button>
           {isLast ? (
-            <Button variant="primary" onClick={onSubmit} disabled={readOnly}>
+            <Button variant="primary" onClick={handleSubmitClick} disabled={readOnly}>
               <Icon.check size={13} /> Submit Homework
             </Button>
           ) : (
@@ -985,3 +1239,4 @@ export function HomeworkStepThrough({ exercises, responses, onResponse, onSubmit
     </div>
   );
 }
+

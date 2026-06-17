@@ -1,11 +1,11 @@
+import { shadeColor, softColor } from './lib/color-utils.js';
 import { useState, useEffect, lazy, Suspense } from 'react';
 import LoginScreen from './pages/login.jsx';
-import StudentDashboard from './pages/student-dashboard.jsx';
 import ErrorBoundary from './components/error-boundary.jsx';
-import { TweaksPanel, TweakSection, TweakRadio, TweakColor } from './components/tweaks-panel.jsx';
+import { TweaksPanel, TweakSection, TweakRadio, TweakColor, TweakToggle } from './components/tweaks-panel.jsx';
 import { Icon, Avatar, Button, Shell } from './components/shared.jsx';
 import { STUDENTS } from './data/students.jsx';
-import { seedStudentsIfEmpty, getStudents } from './lib/workflow.js';
+import { seedStudentsIfEmpty, getStudents } from './lib/workflow-roster.js';
 import {
   getSupabaseConfig,
   parseSupabaseHashFragment,
@@ -18,7 +18,8 @@ import {
 } from './lib/supabase-storage.js';
 import { claimStudentByEmail, ensureProfile, setSessionRole } from './lib/supabase-db.js';
 
-// Lazy-loaded teacher pages
+// Lazy-loaded pages
+const StudentDashboard  = lazy(() => import('./pages/student-dashboard.jsx'));
 const TeacherDashboard  = lazy(() => import('./pages/teacher-dashboard.jsx'));
 const StudentsPage      = lazy(() => import('./pages/students.jsx'));
 const StudentProfile    = lazy(() => import('./pages/student-profile.jsx'));
@@ -33,9 +34,9 @@ const SubmissionReview  = lazy(() => import('./pages/submission-review.jsx'));
 const ErrorBankPage     = lazy(() => import('./pages/error-bank.jsx'));
 const ReportsPage       = lazy(() => import('./pages/reports.jsx'));
 const SettingsPage      = lazy(() => import('./pages/settings.jsx'));
-const ExerciseDemo      = lazy(() => import('./pages/exercise-demo.jsx'));
+
 const InboxPage         = lazy(() => import('./tools/tool-inbox.jsx'));
-const PerspectiveDesigner = lazy(() => import('./tools/tool-perspective-designer.jsx'));
+const ExercisesPage     = lazy(() => import('./pages/exercises.jsx'));
 
 export default function App() {
   const [auth, setAuth] = useState(null);
@@ -44,7 +45,8 @@ export default function App() {
   const [viewParams, setViewParams] = useState({});
   const [tweaks, setTweaksState] = useState(() => ({
     cardStyle: 'bordered',
-    accent: '#2d8b8b',
+    accent: '#148891',
+    darkMode: false,
     ...window.TWEAK_DEFAULTS,
   }));
   const [students, setStudents] = useState([]);
@@ -97,6 +99,7 @@ export default function App() {
       history.replaceState(null, '', window.location.pathname);
       try {
         const session = await exchangePKCECode(url, anonKey, code);
+        if (!session?.access_token) { clearStoredSupabaseSession(); return true; }
         const sbUser = session.user || await fetchSupabaseUser(url, anonKey, session.access_token);
         storeSupabaseSession({
           access_token: session.access_token,
@@ -126,7 +129,7 @@ export default function App() {
         storeSupabaseSession({
           access_token: fragment.access_token,
           refresh_token: fragment.refresh_token,
-          expires_at: fragment.expires_at || Math.floor(Date.now() / 1000) + fragment.expires_in,
+          expires_at: fragment.expires_at || Math.floor(Date.now() / 1000) + (fragment.expires_in || 3600),
           user: sbUser,
         });
         const payload = await resolveAuth(fragment.access_token, sbUser);
@@ -153,7 +156,7 @@ export default function App() {
 
     handlePKCE().then(wasPKCE => {
       if (!wasPKCE) handleHash().then(wasHash => { if (!wasHash) restoreSession(); });
-    });
+    }).catch(() => { clearStoredSupabaseSession(); });
   }, []);
 
   // Seed students from hardcoded list on first run, then load live roster
@@ -172,6 +175,7 @@ export default function App() {
 
   useEffect(() => {
     document.documentElement.setAttribute('data-cards', tweaks.cardStyle);
+    document.documentElement.setAttribute('data-theme', tweaks.darkMode ? 'dark' : 'light');
     document.documentElement.style.setProperty('--accent', tweaks.accent);
     document.documentElement.style.setProperty('--accent-deep', shadeColor(tweaks.accent, -22));
     document.documentElement.style.setProperty('--accent-soft', softColor(tweaks.accent));
@@ -221,15 +225,21 @@ export default function App() {
     const student = students.find(s => s.id === auth.studentId);
     if (!student) return <PageLoader />;
     return (
-      <ErrorBoundary label="Dashboard unavailable">
-        <StudentDashboard student={student} onSignOut={handleSignOut} />
-      </ErrorBoundary>
+      <>
+        <OfflineBar />
+        <a href="#student-main" className="skip-nav">Skip to content</a>
+        <ErrorBoundary label="Dashboard unavailable">
+          <Suspense fallback={<PageLoader />}>
+            <StudentDashboard student={student} onSignOut={handleSignOut} />
+          </Suspense>
+        </ErrorBoundary>
+      </>
     );
   }
 
   // ── Teacher shell ──
   const teacherTabs = [
-    { id: 'dashboard',    label: 'Dashboard',    icon: <Icon.home size={16} /> },
+    { id: 'dashboard',    label: 'Today',        icon: <Icon.home size={16} /> },
     { id: 'students',     label: 'Students',     icon: <Icon.student size={16} /> },
     { id: 'calendar',     label: 'Calendar',     icon: <Icon.calendar size={16} /> },
     { id: 'diagnostics',  label: 'Diagnostics',  icon: <Icon.diagnose size={16} /> },
@@ -239,20 +249,30 @@ export default function App() {
     { id: 'error-bank',   label: 'Error Bank',   icon: <Icon.warning size={16} /> },
     { id: 'reports',      label: 'Reports',      icon: <Icon.progress size={16} /> },
     { id: 'exercises',    label: 'Exercises',    icon: <Icon.doc size={16} /> },
-    { id: 'perspective',  label: 'Perspectives', icon: <Icon.eye size={16} /> },
-    { id: 'settings',     label: 'Settings',     icon: <Icon.settings size={16} /> },
   ];
 
   const rightSlot = (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-<span style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)' }}>Teacher</span>
+    <div className="shell-topbar-right">
+      <span style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)' }}>Teacher</span>
       <Avatar name="Vini V" size={32} tone="ink" />
+      <button
+        type="button"
+        onClick={() => navigate('settings')}
+        aria-label="Settings"
+        title="Settings"
+        aria-current={view === 'settings' ? 'page' : undefined}
+        className={`shell-settings-btn${view === 'settings' ? ' active' : ''}`}
+      >
+        <Icon.settings size={16} />
+      </button>
       <Button variant="quiet" size="sm" onClick={handleSignOut}>Sign out</Button>
     </div>
   );
 
   return (
     <>
+      <OfflineBar />
+      <a href="#teacher-main" className="skip-nav">Skip to content</a>
       <Shell tabs={teacherTabs} active={view} onTab={(id) => navigate(id)} rightSlot={rightSlot}>
         <ErrorBoundary label="Page unavailable">
           <Suspense fallback={<PageLoader />}>
@@ -331,11 +351,7 @@ function renderTeacherPage(view, params, ctx) {
       return <SettingsPage onNavigate={navigate} />;
 
     case 'exercises':
-      return <HomeworkCreate
-        students={students}
-        onNavigate={navigate}
-        initialStep={2}
-      />;
+      return <ExercisesPage onNavigate={navigate} />;
 
     case 'perspective':
       return <PerspectiveDesigner students={students} onNavigate={navigate} />;
@@ -350,17 +366,16 @@ function getSafeOrigin() {
   try { if (document.referrer) return new URL(document.referrer).origin; } catch {}
   return window.location.origin;
 }
-function shadeColor(hex, percent) {
-  const f = parseInt(hex.slice(1), 16), t = percent < 0 ? 0 : 255, p = Math.abs(percent) / 100;
-  const R = f >> 16, G = (f >> 8) & 0x00ff, B = f & 0x0000ff;
-  return '#' + ((1 << 24) + (Math.round((t - R) * p) + R << 16) + (Math.round((t - G) * p) + G << 8) + Math.round((t - B) * p) + B).toString(16).slice(1);
-}
-function softColor(hex) { return shadeColor(hex, 65); }
+
+
 
 function PageLoader() {
   return (
-    <div style={{ padding: 40, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <span style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)' }}>Loading…</span>
+    <div style={{ padding: 40, display: 'flex', flexDirection: 'column', gap: 16 }}>
+      <div className="skeleton skeleton-card" />
+      <div className="skeleton skeleton-text" style={{ width: '80%' }} />
+      <div className="skeleton skeleton-text" />
+      <div className="skeleton skeleton-text-short" />
     </div>
   );
 }
@@ -378,13 +393,17 @@ function ToastHost() {
     return () => { window.removeEventListener('vv-toast', onToast); delete window.toast; };
   }, []);
   const TONES = {
-    ok:   { bg: 'var(--primary-ink)', fg: '#fff', g: '✓' },
+    ok:   { bg: 'var(--primary-ink)', fg: '#fff', g: '+' },
     info: { bg: 'var(--primary)',     fg: '#fff', g: 'i' },
     warn: { bg: 'var(--warning)',     fg: '#fff', g: '!' },
     go:   { bg: 'var(--accent)',      fg: '#fff', g: '→' },
   };
   return (
-    <div style={{ position: 'fixed', right: 22, bottom: 22, zIndex: 60, display: 'flex', flexDirection: 'column', gap: 10, pointerEvents: 'none' }}>
+    <div
+      aria-live="polite"
+      aria-atomic="true"
+      style={{ position: 'fixed', right: 22, bottom: 22, zIndex: 60, display: 'flex', flexDirection: 'column', gap: 10, pointerEvents: 'none' }}
+    >
       {toasts.map(t => {
         const tone = TONES[t.kind] || TONES.ok;
         return (
@@ -401,12 +420,43 @@ function ToastHost() {
 function TweaksUI({ tweaks, setTweak }) {
   return (
     <TweaksPanel title="Tweaks">
+      <TweakSection label="Theme">
+        <TweakToggle label="Dark mode" value={tweaks.darkMode} onChange={v => setTweak('darkMode', v)} />
+      </TweakSection>
       <TweakSection label="Card style">
         <TweakRadio options={[{ label: 'Flat', value: 'flat' }, { label: 'Bordered', value: 'bordered' }, { label: 'Shadowed', value: 'shadowed' }]} value={tweaks.cardStyle} onChange={v => setTweak('cardStyle', v)} />
       </TweakSection>
       <TweakSection label="Accent color">
-        <TweakColor value={tweaks.accent} onChange={v => setTweak('accent', v)} options={['#0B1F3A','#1E4E8C','#2563EB','#F97316','#FDBA74']} />
+        <TweakColor value={tweaks.accent} onChange={v => setTweak('accent', v)} options={['#0f1b2d','#0f6b73','#148891','#c86607','#5bbcb8']} />
       </TweakSection>
     </TweaksPanel>
   );
 }
+
+function OfflineBar() {
+  const [online, setOnline] = useState(navigator.onLine);
+  useEffect(() => {
+    const goOn  = () => setOnline(true);
+    const goOff = () => setOnline(false);
+    window.addEventListener('online',  goOn);
+    window.addEventListener('offline', goOff);
+    return () => {
+      window.removeEventListener('online',  goOn);
+      window.removeEventListener('offline', goOff);
+    };
+  }, []);
+  if (online) return null;
+  return (
+    <div role="status" aria-live="polite" style={{
+      position: 'fixed', top: 0, left: 0, right: 0, zIndex: 1000,
+      background: 'var(--warning)', color: '#fff',
+      padding: '9px 16px', textAlign: 'center',
+      fontSize: 'var(--text-sm)', fontWeight: 600,
+      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+    }}>
+      <span aria-hidden="true">⚠</span>
+      No internet connection — changes may not save until you're back online
+    </div>
+  );
+}
+

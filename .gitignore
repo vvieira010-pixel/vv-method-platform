@@ -12,6 +12,7 @@ dist-build/
 
 # vite / editor caches
 .vite-cache/
+.vite-cache-v2/
 .vite-dev.log
 .vite-dev.err.log
 .tmp-vv-method/
@@ -25,7 +26,7 @@ dist-build/
 graphify-out/
 .graphify_*
 .graphify_detect.json`
-product-audit/chrome-*/
+product-audit/
 
 # netlify build cache/state only — keep netlify/functions source committed
 .netlify/
@@ -34,3 +35,8 @@ product-audit/chrome-*/
 Thumbs.db
 .DS_Store
 .vercel
+.env*
+
+# Windows backup/system folders accidentally placed in project root
+SupportAssist_Backups/
+MicrosoftWindows.Client.CBS_cw5n1h2txyewy!InputApp/

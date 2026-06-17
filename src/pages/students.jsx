@@ -4,8 +4,10 @@
 import { useState, useEffect } from 'react';
 import { Icon, Card, SectionHeader, Pill, Button, Avatar } from '../components/shared.jsx';
 import { getStudents, saveStudent, deleteStudent, getDiagnoses, getHomework, getAllSubmissions, getClassEvents } from '../lib/workflow.js';
+import { sendMagicLink } from '../lib/supabase-storage.js';
+import { getDbContext } from '../lib/supabase-db.js';
 
-export default function StudentsPage({ students: propStudents, onNavigate }) {
+export default function StudentsPage({ onNavigate }) {
   const [students, setStudents] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [editStudent, setEditStudent] = useState(null);
@@ -13,6 +15,8 @@ export default function StudentsPage({ students: propStudents, onNavigate }) {
   const [search, setSearch] = useState('');
   const [saving, setSaving] = useState(false);
   const [studentActions, setStudentActions] = useState({});
+  const [inviteStatus, setInviteStatus] = useState({});
+  const [setup, setSetup] = useState(null); // { id, pwd, busy, result }
 
   useEffect(() => { load(); }, []);
 
@@ -61,6 +65,50 @@ export default function StudentsPage({ students: propStudents, onNavigate }) {
     window.toast?.(editStudent ? 'Student updated. Invite email is ready.' : 'Student added. Invite email is ready.', 'ok');
   }
 
+  async function handleInvite(student) {
+    if (!student.email) { window.toast?.('Add the student\'s email first.', 'warn'); return; }
+    setInviteStatus(s => ({ ...s, [student.id]: 'sending' }));
+    try {
+      const redirectTo = window.location.origin + window.location.pathname;
+      await sendMagicLink(student.email.trim(), redirectTo, { createUser: true });
+      setInviteStatus(s => ({ ...s, [student.id]: 'sent' }));
+      window.toast?.(`Login link sent to ${student.email}`, 'ok');
+      setTimeout(() => setInviteStatus(s => ({ ...s, [student.id]: null })), 8000);
+    } catch (err) {
+      setInviteStatus(s => ({ ...s, [student.id]: 'error' }));
+      window.toast?.(`Could not send invite: ${err.message}`, 'error');
+      setTimeout(() => setInviteStatus(s => ({ ...s, [student.id]: null })), 5000);
+    }
+  }
+
+  function openSetup(student) {
+    setSetup({ id: student.id, pwd: genPassword(), busy: false, result: null });
+  }
+
+  async function handleCreateAccount(student) {
+    if (!setup) return;
+    setSetup(s => ({ ...s, busy: true, result: null }));
+    try {
+      const ctx = getDbContext();
+      if (!ctx) throw new Error('Sign in as teacher first.');
+      const res = await fetch(`${ctx.url}/functions/v1/invite-student`, {
+        method: 'POST',
+        headers: {
+          apikey: ctx.anonKey,
+          Authorization: `Bearer ${ctx.token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email: student.email.trim(), name: student.name, firstName: student.firstName }),
+      });
+      const data = await res.json();
+      if (!res.ok || data.error) throw new Error(data.error || `Error ${res.status}`);
+      setSetup(s => ({ ...s, busy: false, result: { ok: true, email: student.email, password: data.password, emailSent: data.emailSent } }));
+      window.toast?.(`Account created for ${student.name}${data.emailSent ? ' — email sent!' : ''}`, 'ok');
+    } catch (err) {
+      setSetup(s => ({ ...s, busy: false, result: { ok: false, error: err.message } }));
+    }
+  }
+
   async function handleDelete(student) {
     if (!confirm(`Delete ${student.name} and all related classes, diagnoses, homework, submissions, feedback, messages, notes, and drafts? This cannot be undone. Export a backup first if needed.`)) return;
     await deleteStudent(student.id);
@@ -74,17 +122,12 @@ export default function StudentsPage({ students: propStudents, onNavigate }) {
   );
 
   return (
-    <div style={S.shell}>
-      {/* Header */}
-      <div style={S.pageHeader}>
-        <div>
-          <h1 style={S.headline}>Students</h1>
-          <p style={S.sub}>{students.length} student{students.length !== 1 ? 's' : ''} in your roster</p>
-        </div>
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-          <Button variant="primary" onClick={openAdd}><Icon.plus size={14} /> Add Student</Button>
-        </div>
-      </div>
+    <div className="page-shell">
+      <SectionHeader
+        title="Students"
+        sub={`${students.length} student${students.length !== 1 ? 's' : ''} in your roster`}
+        action={<Button variant="primary" onClick={openAdd}><Icon.plus size={14} /> Add Student</Button>}
+      />
 
       {/* Add/Edit form */}
       {showForm && (
@@ -128,19 +171,33 @@ export default function StudentsPage({ students: propStudents, onNavigate }) {
       )}
 
       {/* Search */}
-      <div style={{ marginBottom: 16 }}>
+      <div className="page-filters">
         <input className="input" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search students…" style={{ maxWidth: 320 }} />
       </div>
 
       {/* Student table */}
       {filtered.length === 0 ? (
-        <Card style={{ padding: 32, textAlign: 'center' }}>
+        <Card className="page-empty-state">
           <p style={{ color: 'var(--muted)' }}>{search ? 'No students match your search.' : 'No students yet. Add your first student above.'}</p>
         </Card>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <div className="page-list">
           {filtered.map(student => (
-            <StudentRow key={student.id} student={student} nextAction={studentActions[student.id]} onProfile={() => onNavigate('students:profile', { studentId: student.id })} onEdit={() => openEdit(student)} onDelete={() => handleDelete(student)} />
+            <StudentRow
+              key={student.id}
+              student={student}
+              nextAction={studentActions[student.id]}
+              inviteStatus={inviteStatus[student.id]}
+              setupState={setup?.id === student.id ? setup : null}
+              onProfile={() => onNavigate('students:profile', { studentId: student.id })}
+              onEdit={() => openEdit(student)}
+              onDelete={() => handleDelete(student)}
+              onInvite={() => handleInvite(student)}
+              onOpenSetup={() => openSetup(student)}
+              onCloseSetup={() => setSetup(null)}
+              onSetupPwd={pwd => setSetup(s => ({ ...s, pwd, result: null }))}
+              onCreateAccount={() => handleCreateAccount(student)}
+            />
           ))}
         </div>
       )}
@@ -148,10 +205,27 @@ export default function StudentsPage({ students: propStudents, onNavigate }) {
   );
 }
 
-function StudentRow({ student, nextAction, onProfile, onEdit, onDelete }) {
+function genPassword() {
+  const chars = 'abcdefghjkmnpqrstuvwxyz23456789';
+  let p = 'Met-';
+  for (let i = 0; i < 6; i++) p += chars[Math.floor(Math.random() * chars.length)];
+  return p;
+}
+
+function copyText(text) {
+  navigator.clipboard?.writeText(text).catch(() => {});
+}
+
+function StudentRow({ student, nextAction, inviteStatus, setupState, onProfile, onEdit, onDelete, onInvite, onOpenSetup, onCloseSetup, onSetupPwd, onCreateAccount }) {
   const action = nextAction || { label: 'Ready for next class', tone: 'success' };
+  const isSending = inviteStatus === 'sending';
+  const isSent = inviteStatus === 'sent';
+  const isSetupOpen = Boolean(setupState);
+  const result = setupState?.result;
+
   return (
     <Card style={{ padding: '12px 16px' }}>
+      {/* Main row */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
         <Avatar name={student.name} size={36} />
         <div style={{ flex: 1, minWidth: 160 }}>
@@ -162,15 +236,95 @@ function StudentRow({ student, nextAction, onProfile, onEdit, onDelete }) {
           </div>
         </div>
         <Pill tone="muted">{student.currentLevel}</Pill>
-        <Pill tone={student.email ? 'success' : 'warning'}>{student.email ? 'Invite ready' : 'Email needed'}</Pill>
         <Pill tone={action.tone}>{action.label}</Pill>
         <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>Session {student.session || 1}/{student.totalSessions || 24}</span>
-        <div style={{ display: 'flex', gap: 6 }}>
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
           <Button variant="primary" size="sm" onClick={onProfile}>View Profile</Button>
+          {student.email && (
+            <Button variant="ghost" size="sm" onClick={isSetupOpen ? onCloseSetup : onOpenSetup}
+              style={isSetupOpen ? { color: 'var(--accent)' } : {}}>
+              {isSetupOpen ? 'Cancel setup' : 'Set up account'}
+            </Button>
+          )}
+          {student.email && (
+            <Button variant="ghost" size="sm" onClick={onInvite} disabled={isSending || isSent}
+              title={`Send login link to ${student.email}`}
+              style={isSent ? { color: 'var(--success)' } : {}}>
+              {isSending ? 'Sending…' : isSent ? '✓ Link sent' : 'Send login link'}
+            </Button>
+          )}
           <Button variant="ghost" size="sm" onClick={onEdit}><Icon.edit size={13} /></Button>
           <Button variant="ghost" size="sm" onClick={onDelete} style={{ color: 'var(--danger)' }}><Icon.trash size={13} /></Button>
         </div>
       </div>
+
+      {/* Account setup panel */}
+      {isSetupOpen && (
+        <div style={{ marginTop: 14, paddingTop: 14, borderTop: '1px solid var(--border)' }}>
+          {result?.ok ? (
+            /* ── Success: show credentials ── */
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <p style={{ fontSize: 'var(--text-sm)', fontWeight: 700, color: 'var(--success)', margin: 0 }}>
+                ✓ Account created for {student.name}
+                {result.emailSent && ' — login email sent to their inbox!'}
+              </p>
+              <div style={{ background: 'var(--bg)', border: '1.5px solid var(--border)', borderRadius: 8, padding: '12px 16px', fontFamily: 'monospace', fontSize: 'var(--text-sm)', lineHeight: 2 }}>
+                <div><strong>Login (email):</strong> {result.email}</div>
+                <div><strong>Password:</strong> {result.password}</div>
+              </div>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                <Button variant="primary" size="sm" onClick={() => {
+                  copyText(`Login: ${result.email}\nPassword: ${result.password}`);
+                  window.toast?.('Credentials copied!', 'ok');
+                }}>
+                  Copy credentials
+                </Button>
+                <Button variant="ghost" size="sm" onClick={() => {
+                  const msg = `Hi ${student.firstName || student.name.split(' ')[0]}! Here are your login credentials for the MET Proficiency Mastery platform:\n\nWebsite: https://met-mastery.vercel.app\nEmail: ${result.email}\nPassword: ${result.password}\n\nAfter logging in, go to Settings to change your password if you'd like.`;
+                  copyText(msg);
+                  window.toast?.('WhatsApp message copied!', 'ok');
+                }}>
+                  Copy WhatsApp message
+                </Button>
+                <Button variant="ghost" size="sm" onClick={onCloseSetup}>Done</Button>
+              </div>
+            </div>
+          ) : (
+            /* ── Setup form ── */
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <p style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', margin: 0 }}>
+                Create a login for <strong>{student.name}</strong> ({student.email}). You can use the generated password or type your own.
+              </p>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                <input
+                  className="input"
+                  style={{ maxWidth: 240 }}
+                  value={setupState.pwd}
+                  onChange={e => onSetupPwd(e.target.value)}
+                  placeholder="Password (min. 6 chars)"
+                  disabled={setupState.busy}
+                />
+                <Button variant="ghost" size="sm" onClick={() => onSetupPwd(genPassword())} disabled={setupState.busy}>
+                  Regenerate
+                </Button>
+              </div>
+              {result?.error && (
+                <p style={{ fontSize: 'var(--text-sm)', color: 'var(--danger)', margin: 0 }}>
+                  {result.error.includes('email confirmation') ? (
+                    <>Email confirmation is ON in Supabase. Go to <strong>Supabase → Auth → Providers → Email</strong> and turn off "Confirm email", then try again.</>
+                  ) : result.error}
+                </p>
+              )}
+              <div style={{ display: 'flex', gap: 8 }}>
+                <Button variant="primary" size="sm" onClick={onCreateAccount} disabled={setupState.busy || !setupState.pwd}>
+                  {setupState.busy ? 'Creating…' : 'Create account'}
+                </Button>
+                <Button variant="ghost" size="sm" onClick={onCloseSetup} disabled={setupState.busy}>Cancel</Button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </Card>
   );
 }
@@ -214,9 +368,4 @@ function Field({ label, children, style }) {
 
 const LEVELS = ['A2', 'B1', 'B1+', 'B2', 'B2+', 'C1'];
 const EMPTY_FORM = { name: '', email: '', currentLevel: 'B1', targetLevel: 'B2', examGoal: 'Pass MET B2', professionalContext: '', notes: '', totalSessions: 24 };
-const S = {
-  shell: { maxWidth: 960, margin: '0 auto', padding: '28px 20px' },
-  pageHeader: { display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 24 },
-  headline: { fontFamily: 'var(--font-display)', fontSize: 'var(--text-2xl)', fontWeight: 700, color: 'var(--accent-deep)', margin: 0 },
-  sub: { fontSize: 'var(--text-sm)', color: 'var(--muted)', margin: '4px 0 0' },
-};
+

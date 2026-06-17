@@ -1,0 +1,42 @@
+# NOTE: Manual-only by design. A GitHub Pages build cannot run the Vercel
+# serverless functions in /api (ai.js, tts.js), so AI feedback and TTS are
+# non-functional on the Pages URL. Vercel is the production target. This
+# workflow is kept for static preview/archival builds via manual dispatch only.
+# Do NOT re-enable the push trigger without restoring server-side /api parity.
+name: Deploy Vite SPA to GitHub Pages (manual only)
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Build
+        run: npm run build
+      - name: Add SPA fallback for GitHub Pages
+        run: cp dist-build/index.html dist-build/404.html
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./dist-build
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5

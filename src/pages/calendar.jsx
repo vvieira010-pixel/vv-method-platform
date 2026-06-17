@@ -4,6 +4,7 @@
 import { useState, useEffect } from 'react';
 import { Icon, Card, SectionHeader, Pill, Button, Avatar } from '../components/shared.jsx';
 import { getClassEvents, saveClassEvent, deleteClassEvent, updateClassEventStatus, getStudents } from '../lib/workflow.js';
+import { MET_SKILLS } from '../lib/report-metrics.js';
 
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const STATUS_TONE = { scheduled: 'info', completed: 'success', canceled: 'danger' };
@@ -114,7 +115,7 @@ export default function CalendarPage({ students, onNavigate }) {
             <Field label="MET skill focus">
               <select className="input" value={form.metSkillFocus} onChange={e => setForm(f => ({ ...f, metSkillFocus: e.target.value }))}>
                 <option value="">Select skill…</option>
-                {['Speaking', 'Writing', 'Reading', 'Listening', 'Grammar', 'Vocabulary', 'Mixed'].map(s => <option key={s}>{s}</option>)}
+                {[...MET_SKILLS, 'Mixed'].map(s => <option key={s}>{s}</option>)}
               </select>
             </Field>
           </div>
@@ -247,6 +248,7 @@ function Field({ label, children }) {
 
 const EMPTY_FORM = { studentId: '', date: '', startTime: '', endTime: '', title: 'English Class', classFocus: '', metSkillFocus: '', status: 'scheduled', diagnosticStatus: 'not-started', homeworkStatus: 'not-generated' };
 const S = {
-  headline: { fontFamily: 'var(--font-display)', fontSize: 'var(--text-2xl)', fontWeight: 700, color: 'var(--accent-deep)', margin: 0 },
+  headline: { fontFamily: 'var(--font-ui)', fontSize: 'var(--text-2xl)', fontWeight: 700, color: 'var(--accent-deep)', margin: 0 },
   sub: { fontSize: 'var(--text-sm)', color: 'var(--muted)', margin: '4px 0 0' },
 };
+

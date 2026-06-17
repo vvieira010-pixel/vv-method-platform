@@ -6,7 +6,9 @@
 import { useState } from 'react';
 import { Icon, Card, Button } from './shared.jsx';
 import { EX_TYPES, getExType } from '../lib/exercise-types.js';
-import { DialogueEditor, SwapEditor, LevelUpEditor } from './exercise-editor-new-types.jsx';
+import { metTaskOptions } from '../lib/met-task-spec.js';
+import { DialogueEditor, SwapEditor, LevelUpEditor, ReadEditor } from './exercise-editor-new-types.jsx';
+export { ExTypeBadge } from './exercise-badge.jsx';
 
 /* ─── SHARED STYLES ─────────────────────────────────────────── */
 const fieldLabel = {
@@ -17,26 +19,6 @@ const fieldLabel = {
 const fieldWrap = { marginBottom: 12 };
 const hintText = { fontSize: 'var(--text-xs)', color: 'var(--faint)', marginTop: 4 };
 
-/* ─── TYPE BADGE ────────────────────────────────────────────── */
-export function ExTypeBadge({ typeId, size = 'sm' }) {
-  const meta = getExType(typeId);
-  if (!meta) return null;
-  const IconComp = Icon[meta.iconKey];
-  const iconSize = size === 'sm' ? 11 : 13;
-  const fontSize = size === 'sm' ? 'var(--text-xs)' : 'var(--text-sm)';
-  const padding = size === 'sm' ? '3px 8px' : '4px 10px';
-  return (
-    <span className="ex-type-badge" style={{
-      display: 'inline-flex', alignItems: 'center', gap: 5,
-      background: meta.bg, color: meta.color,
-      fontSize, padding, borderRadius: 999, fontWeight: 600,
-    }}>
-      {IconComp && <span style={{ display: 'inline-flex' }}><IconComp size={iconSize} /></span>}
-      {meta.label}
-    </span>
-  );
-}
-
 /* ─── EXERCISE TYPE PICKER ──────────────────────────────────── */
 export function ExerciseTypePicker({ onSelect, onClose }) {
   const [qty, setQty] = useState(1);
@@ -45,7 +27,7 @@ export function ExerciseTypePicker({ onSelect, onClose }) {
   const stepBtn = {
     width: 26, height: 26, display: 'grid', placeItems: 'center',
     border: '1px solid var(--border)', background: 'var(--surface)',
-    borderRadius: 6, cursor: 'pointer', fontSize: 16, lineHeight: 1, color: 'var(--text)',
+    borderRadius: 'var(--radius-sm)', cursor: 'pointer', fontSize: 16, lineHeight: 1, color: 'var(--text)',
   };
   return (
     <Card className="exercise-type-picker" style={{ padding: 20 }}>
@@ -60,7 +42,7 @@ export function ExerciseTypePicker({ onSelect, onClose }) {
             <select
               value={level}
               onChange={e => setLevel(e.target.value)}
-              style={{ padding: '4px 6px', border: '1px solid var(--border)', borderRadius: 6, fontSize: 'var(--text-sm)' }}
+              style={{ padding: '4px 6px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-sm)' }}
             >
               {['A1', 'A2', 'B1', 'B2', 'C1'].map(l => <option key={l} value={l}>{l}</option>)}
             </select>
@@ -76,7 +58,7 @@ export function ExerciseTypePicker({ onSelect, onClose }) {
               onChange={e => setQty(clamp(parseInt(e.target.value, 10)))}
               style={{
                 width: 48, textAlign: 'center', padding: '4px 6px',
-                border: '1px solid var(--border)', borderRadius: 6,
+                border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)',
                 fontFamily: 'var(--font-ui)', fontSize: 'var(--text-sm)', color: 'var(--text)',
               }}
             />
@@ -92,7 +74,7 @@ export function ExerciseTypePicker({ onSelect, onClose }) {
       <p style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', margin: '0 0 14px' }}>
         Pick a type to add {qty > 1 ? <strong>{qty} of them</strong> : 'one'} at <strong>{level} level</strong>.
       </p>
-      <div className="exercise-type-picker-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 8 }}>
+      <div className="exercise-type-picker-grid" style={{ display: 'grid', gap: 8, maxHeight: 360, overflowY: 'auto', alignItems: 'stretch', gridAutoRows: '1fr' }}>
         {EX_TYPES.map(t => {
           const IconComp = Icon[t.iconKey];
           return (
@@ -100,17 +82,17 @@ export function ExerciseTypePicker({ onSelect, onClose }) {
               key={t.id}
               onClick={() => onSelect(t.id, qty, level)} // Pass level here
               style={{
-                display: 'flex', alignItems: 'center', gap: 10,
+                display: 'flex', alignItems: 'flex-start', gap: 10,
                 padding: '12px 14px', borderRadius: 'var(--radius-md)',
                 border: '1px solid var(--border)', background: 'var(--surface)',
                 cursor: 'pointer', fontFamily: 'var(--font-ui)', textAlign: 'left',
-                transition: 'all 0.15s var(--ease)',
+                transition: 'all 0.15s var(--ease)', width: '100%', height: '100%',
               }}
               onMouseEnter={e => { e.currentTarget.style.borderColor = t.color; e.currentTarget.style.background = t.bg; }}
               onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.background = 'var(--surface)'; }}
             >
               <span style={{
-                width: 32, height: 32, borderRadius: 8,
+                width: 32, height: 32, borderRadius: 'var(--radius-sm)',
                 background: t.bg, color: t.color,
                 display: 'grid', placeItems: 'center', flexShrink: 0,
               }}>
@@ -138,6 +120,23 @@ export function ExerciseEditor({ exercise, onChange }) {
   if (!exercise) return null;
   const update = (patch) => onChange({ ...exercise, ...patch });
 
+  return (
+    <div>
+      <div style={fieldWrap}>
+        <label style={fieldLabel}>Instructions (optional)</label>
+        <input
+          className="input"
+          value={exercise.instruction || ''}
+          onChange={e => update({ instruction: e.target.value })}
+          placeholder="Tell the student what to do — e.g. 'Read the sentence carefully and choose the best word.'"
+        />
+      </div>
+      {renderSubEditor(exercise, update)}
+    </div>
+  );
+}
+
+function renderSubEditor(exercise, update) {
   switch (exercise.type) {
     case 'mcq':    return <MCQEditor    ex={exercise} update={update} />;
     case 'blank':  return <BlankEditor  ex={exercise} update={update} />;
@@ -150,6 +149,7 @@ export function ExerciseEditor({ exercise, onChange }) {
     case 'dialogue': return <DialogueEditor ex={exercise} update={update} />;
     case 'swap':     return <SwapEditor     ex={exercise} update={update} />;
     case 'levelup':  return <LevelUpEditor  ex={exercise} update={update} />;
+    case 'read':     return <ReadEditor     ex={exercise} update={update} />;
     default:
       return <p style={{ color: 'var(--muted)', fontSize: 'var(--text-sm)' }}>Unknown exercise type: {exercise.type}</p>;
   }
@@ -162,7 +162,7 @@ function MCQEditor({ ex, update }) {
       <div style={fieldWrap}>
         <label style={fieldLabel}>Question</label>
         <textarea
-          className="input" rows={2} value={ex.question}
+          className="input" rows={3} value={ex.question}
           onChange={e => update({ question: e.target.value })}
           placeholder="Which sentence uses the correct past simple tense?"
         />
@@ -194,10 +194,19 @@ function MCQEditor({ ex, update }) {
         ))}
       </div>
       {ex.correct !== null && (
-        <div style={{ fontSize: 'var(--text-xs)', color: 'var(--success)', fontWeight: 600 }}>
+        <div style={{ fontSize: 'var(--text-xs)', color: 'var(--success)', fontWeight: 600, marginBottom: 10 }}>
           Correct answer: {String.fromCharCode(65 + ex.correct)}
         </div>
       )}
+      <div style={fieldWrap}>
+        <label style={fieldLabel}>Explanation (optional)</label>
+        <textarea
+          className="input" rows={2} value={ex.explanation || ''}
+          onChange={e => update({ explanation: e.target.value })}
+          placeholder="Why is this the correct answer? Shown to students after submission."
+          style={{ resize: 'vertical' }}
+        />
+      </div>
     </div>
   );
 }
@@ -220,7 +229,7 @@ function BlankEditor({ ex, update }) {
       <div style={fieldWrap}>
         <label style={fieldLabel}>Sentence template</label>
         <textarea
-          className="input" rows={2} value={ex.template}
+          className="input" rows={3} value={ex.template}
           onChange={e => update({ template: e.target.value, blanks: syncBlanks(e.target.value) })}
           placeholder="I ___ at this hospital ___ March 2021."
         />
@@ -267,6 +276,13 @@ function ShortEditor({ ex, update }) {
           placeholder="Should night shifts in hospitals be capped at 10 hours? Argue for or against in ~120 words."
         />
       </div>
+      <div style={fieldWrap}>
+        <label style={fieldLabel}>MET task type (adds task-specific frames, checks & traps for the student)</label>
+        <select className="input" value={ex.metTaskType || ''} onChange={e => update({ metTaskType: e.target.value || undefined })}>
+          <option value="">— None (generic short answer) —</option>
+          {metTaskOptions('short').map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+        </select>
+      </div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 12 }}>
         <div style={fieldWrap}>
           <label style={fieldLabel}>Rubric hint (shown to student)</label>
@@ -303,14 +319,29 @@ function SpeakEditor({ ex, update }) {
         />
       </div>
       <div style={fieldWrap}>
-        <label style={fieldLabel}>Picture URL (optional — shown to student during speaking task)</label>
+        <label style={fieldLabel}>MET task type (adds task-specific frames, checks & traps for the student)</label>
+        <select className="input" value={ex.metTaskType || ''} onChange={e => update({ metTaskType: e.target.value || undefined })}>
+          <option value="">— None (generic speaking prompt) —</option>
+          {metTaskOptions('speak').map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+        </select>
+      </div>
+      <div style={fieldWrap}>
+        <label style={fieldLabel}>Picture description (shown to student as a scene to describe or react to)</label>
+        <textarea
+          className="input" rows={3} value={ex.imageDescription || ''}
+          onChange={e => update({ imageDescription: e.target.value })}
+          placeholder="A busy city street at rush hour. People are rushing past shops and cafés. A woman is checking her phone while holding a coffee cup."
+        />
+      </div>
+      <div style={fieldWrap}>
+        <label style={fieldLabel}>Picture URL (optional — replaces description with an actual image)</label>
         <input
           className="input" value={ex.imageUrl || ''}
           onChange={e => update({ imageUrl: e.target.value })}
           placeholder="https://…/images/speaking/speaking_picture_01_ski_resort.png"
         />
         {ex.imageUrl && (
-          <img src={ex.imageUrl} alt="preview" style={{ marginTop: 8, maxWidth: '100%', maxHeight: 160, borderRadius: 8, border: '1px solid var(--border)' }} />
+          <img src={ex.imageUrl} alt="preview" style={{ marginTop: 8, maxWidth: '100%', maxHeight: 160, borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)' }} />
         )}
       </div>
       <div style={fieldWrap}>
@@ -563,3 +594,4 @@ function ListenEditor({ ex, update }) {
     </div>
   );
 }
+

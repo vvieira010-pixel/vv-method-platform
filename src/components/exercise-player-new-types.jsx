@@ -2,7 +2,7 @@
  * exercise-player-new-types.jsx — Players for dialogue, swap, and levelup types.
  */
 import { useState, useEffect, useRef } from 'react';
-import { Button } from './shared.jsx';
+import { Button, Icon } from './shared.jsx';
 
 /* ─── DIALOGUE PLAYER ──────────────────────────────────────── */
 export function DialoguePlayer({ ex, res, update, readOnly }) {
@@ -80,7 +80,7 @@ export function DialoguePlayer({ ex, res, update, readOnly }) {
         {modeTabs.map(t => (
           <button key={t.id} onClick={() => changeMode(t.id)}
             style={{
-              padding: '5px 14px', borderRadius: 99, border: '1.5px solid',
+              padding: '5px 14px', borderRadius: 0, border: '1.5px solid',
               fontSize: 'var(--text-xs)', fontWeight: 700, cursor: 'pointer',
               borderColor: mode === t.id ? '#0E5F6B' : 'var(--border)',
               background: mode === t.id ? '#0E5F6B' : 'var(--surface)',
@@ -92,12 +92,12 @@ export function DialoguePlayer({ ex, res, update, readOnly }) {
         ))}
         <button onClick={playing ? stopTTS : playAll}
           style={{
-            marginLeft: 'auto', padding: '5px 14px', borderRadius: 99,
+            marginLeft: 'auto', padding: '5px 14px', borderRadius: 0,
             border: '1.5px solid var(--border)', fontSize: 'var(--text-xs)',
             fontWeight: 700, cursor: 'pointer', background: 'var(--surface)',
             color: 'var(--text-2)',
           }}>
-          {playing ? '⏹ Stop' : '▶ Play all'}
+          {playing ? <><Icon.stop size={12} /> Stop</> : <><Icon.play size={12} /> Play all</>}
         </button>
       </div>
 
@@ -114,7 +114,7 @@ export function DialoguePlayer({ ex, res, update, readOnly }) {
               flexDirection: isA ? 'row' : 'row-reverse',
               alignItems: 'flex-start',
               background: isActive ? 'rgba(14,95,107,0.06)' : 'transparent',
-              borderRadius: 10, padding: '4px 6px',
+              borderRadius: 0, padding: '4px 6px',
               transition: 'background .2s',
             }}>
               <div style={{
@@ -132,7 +132,7 @@ export function DialoguePlayer({ ex, res, update, readOnly }) {
                 {hidden ? (
                   <button onClick={() => reveal(line.id)}
                     style={{
-                      padding: '8px 16px', borderRadius: 8,
+                      padding: '8px 16px', borderRadius: 0,
                       border: '1.5px dashed var(--border)', background: 'var(--bg)',
                       cursor: 'pointer', fontSize: 'var(--text-sm)', color: 'var(--muted)',
                     }}>
@@ -141,7 +141,7 @@ export function DialoguePlayer({ ex, res, update, readOnly }) {
                 ) : (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                     <span style={{
-                      display: 'inline-block', padding: '9px 14px', borderRadius: 12,
+                      display: 'inline-block', padding: '9px 14px', borderRadius: 0,
                       background: isA ? 'rgba(14,95,107,.1)' : 'rgba(90,44,92,.1)',
                       color: 'var(--text)', fontSize: 'var(--text-sm)', lineHeight: 1.45,
                     }}>
@@ -150,7 +150,7 @@ export function DialoguePlayer({ ex, res, update, readOnly }) {
                     <button onClick={() => speakLine(line.text)}
                       title="Listen"
                       style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)', padding: 4, fontSize: 14 }}>
-                      🔊
+                      <Icon.volume size={16} />
                     </button>
                   </div>
                 )}
@@ -216,25 +216,25 @@ export function SwapPlayer({ ex, res, update, readOnly }) {
               <button
                 onClick={() => !readOnly && !result && setOpen(isOpen ? null : swap.id)}
                 style={{
-                  padding: '3px 10px', borderRadius: 6, cursor: result || readOnly ? 'default' : 'pointer',
+                  padding: '3px 10px', borderRadius: 0, cursor: result || readOnly ? 'default' : 'pointer',
                   border: chipBorder, background: chipBg, color: chipColor,
                   fontWeight: 600, fontSize: 'var(--text-sm)', fontFamily: 'inherit',
                   transition: 'all .15s',
                 }}>
-                {chosen || word} {result === 'correct' ? '✓' : result === 'wrong' ? '✗' : '▾'}
+                {chosen || word} {result === 'correct' ? <Icon.check size={12} color="var(--success)" /> : result === 'wrong' ? <Icon.close size={12} color="var(--danger)" /> : '▾'}
               </button>
               {isOpen && !readOnly && (
                 <div style={{
                   position: 'absolute', top: '110%', left: '50%', transform: 'translateX(-50%)',
                   background: 'var(--surface)', border: '1px solid var(--border)',
-                  borderRadius: 10, padding: 8, zIndex: 50, boxShadow: '0 8px 24px rgba(0,0,0,.15)',
+                  borderRadius: 0, padding: 8, zIndex: 50, boxShadow: '0 8px 24px rgba(0,0,0,.15)',
                   minWidth: 180,
                 }}>
                   {(swap.options || []).filter(Boolean).map((opt, j) => (
                     <button key={j} onClick={() => handleSelect(swap, j)}
                       style={{
                         display: 'block', width: '100%', textAlign: 'left',
-                        padding: '7px 12px', borderRadius: 6, border: 'none',
+                        padding: '7px 12px', borderRadius: 0, border: 'none',
                         background: 'none', cursor: 'pointer', fontSize: 'var(--text-sm)',
                         color: 'var(--text)', fontFamily: 'inherit',
                         transition: 'background .1s',
@@ -252,7 +252,7 @@ export function SwapPlayer({ ex, res, update, readOnly }) {
       </div>
 
       {allDone && swaps.every(s => getResult(s.id) === 'correct') && (
-        <div style={{ marginTop: 16, padding: '10px 16px', borderRadius: 10, background: 'rgba(34,139,34,.1)', border: '1px solid #3CB371', color: '#1A6B1A', fontWeight: 700, fontSize: 'var(--text-sm)', textAlign: 'center' }}>
+        <div style={{ marginTop: 16, padding: '10px 16px', borderRadius: 0, background: 'rgba(34,139,34,.1)', border: '1px solid #3CB371', color: '#1A6B1A', fontWeight: 700, fontSize: 'var(--text-sm)', textAlign: 'center' }}>
           Sentence upgraded to B2!
         </div>
       )}
@@ -298,7 +298,7 @@ export function LevelUpPlayer({ ex, res, update, readOnly }) {
           return (
             <button key={l} onClick={() => setLevelShown(l)}
               style={{
-                padding: '4px 14px', borderRadius: 99, border: '1.5px solid',
+                padding: '4px 14px', borderRadius: 0, border: '1.5px solid',
                 fontWeight: 700, fontSize: 'var(--text-xs)', cursor: 'pointer',
                 borderColor: active ? cfg.color : 'var(--border)',
                 background: active ? cfg.bg : 'var(--surface)',
@@ -310,7 +310,7 @@ export function LevelUpPlayer({ ex, res, update, readOnly }) {
           );
         })}
       </div>
-      <div style={{ padding: '12px 16px', borderRadius: 10, marginBottom: 16, background: levelConfig[levelShown].bg, border: '1px solid', borderColor: levelConfig[levelShown].color + '40', fontSize: 'var(--text-sm)', lineHeight: 1.6, color: 'var(--text)' }}>
+      <div style={{ padding: '12px 16px', borderRadius: 0, marginBottom: 16, background: levelConfig[levelShown].bg, border: '1px solid', borderColor: levelConfig[levelShown].color + '40', fontSize: 'var(--text-sm)', lineHeight: 1.6, color: 'var(--text)' }}>
         {levelConfig[levelShown].text || <em style={{ color: 'var(--muted)' }}>No {levelShown.toUpperCase()} sentence defined.</em>}
       </div>
 
@@ -332,11 +332,11 @@ export function LevelUpPlayer({ ex, res, update, readOnly }) {
             }
             return (
               <button key={i} onClick={() => pick(i)}
-                style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '10px 14px', borderRadius: 8, border, background: bg, cursor: submitted || readOnly ? 'default' : 'pointer', textAlign: 'left', fontFamily: 'inherit', color, transition: 'all .15s' }}>
+                style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '10px 14px', borderRadius: 0, border, background: bg, cursor: submitted || readOnly ? 'default' : 'pointer', textAlign: 'left', fontFamily: 'inherit', color, transition: 'all .15s' }}>
                 <span style={{ fontWeight: 700, flexShrink: 0, marginTop: 1 }}>{String.fromCharCode(65 + i)}.</span>
                 <span style={{ fontSize: 'var(--text-sm)', lineHeight: 1.45 }}>{opt}</span>
-                {submitted && isRight && <span style={{ marginLeft: 'auto', flexShrink: 0 }}>✓</span>}
-                {submitted && isSelected && !isRight && <span style={{ marginLeft: 'auto', flexShrink: 0 }}>✗</span>}
+                {submitted && isRight && <span style={{ marginLeft: 'auto', flexShrink: 0 }}><Icon.check size={12} color="var(--success)" /></span>}
+                {submitted && isSelected && !isRight && <span style={{ marginLeft: 'auto', flexShrink: 0 }}><Icon.close size={12} color="var(--danger)" /></span>}
               </button>
             );
           })}
@@ -345,7 +345,7 @@ export function LevelUpPlayer({ ex, res, update, readOnly }) {
           <Button variant="primary" size="sm" onClick={submit} style={{ marginTop: 10 }}>Check answer</Button>
         )}
         {submitted && ex.explanation && (
-          <div style={{ marginTop: 10, padding: '8px 12px', background: 'rgba(14,95,107,.07)', borderRadius: 8, fontSize: 'var(--text-sm)', color: 'var(--text-2)', lineHeight: 1.5 }}>
+          <div style={{ marginTop: 10, padding: '8px 12px', background: 'rgba(14,95,107,.07)', borderRadius: 0, fontSize: 'var(--text-sm)', color: 'var(--text-2)', lineHeight: 1.5 }}>
             {ex.explanation}
           </div>
         )}
@@ -369,13 +369,13 @@ export function LevelUpPlayer({ ex, res, update, readOnly }) {
               const found = sandbox.toLowerCase().includes(kw.toLowerCase());
               return (
                 <span key={kw} style={{
-                  padding: '3px 10px', borderRadius: 99, fontSize: 'var(--text-xs)', fontWeight: 600,
+                  padding: '3px 10px', borderRadius: 0, fontSize: 'var(--text-xs)', fontWeight: 600,
                   background: found ? 'rgba(34,139,34,.12)' : 'var(--bg)',
                   color: found ? '#226B22' : 'var(--muted)',
                   border: found ? '1px solid #3CB371' : '1px solid var(--border)',
                   transition: 'all .2s',
                 }}>
-                  {found ? '✓ ' : ''}{kw}
+                  {found ? <Icon.check size={10} color="var(--success)" /> : ''}{kw}
                 </span>
               );
             })}
@@ -385,3 +385,4 @@ export function LevelUpPlayer({ ex, res, update, readOnly }) {
     </div>
   );
 }
+

@@ -1,0 +1,10 @@
+{
+  "name": "Dialogue Practice in platform digital",
+  "description": "create a dialog: Script: Interviewer: You changed your morning routine last year. What was the biggest difference? Guest: I stopped checking my phone as soon as I woke up. At first, it felt strange because I was used to reading messages in bed. Interviewer: What do you do instead? Guest: I drink water, stretch for five minutes, and write down the three most important things I need to do. It sounds simple, but it helps me start the day calmly. Interviewer: Did it improve your productivity? Guest: Yes, but not magically. I still have busy days. The main benefit is that I feel more in control before other people’s messages enter my mind.",
+  "requestFramePermissions": [
+    "microphone"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

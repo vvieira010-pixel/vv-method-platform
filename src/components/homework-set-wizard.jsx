@@ -1,6 +1,6 @@
 /**
  * homework-set-wizard.jsx — Step 1 of homework creation.
- * Teacher picks a CEFR level and subject before entering the exercise builder.
+ * Teacher picks a CEFR level and kind before entering the exercise builder.
  */
 import { useState } from 'react';
 import { Button, Card, Icon } from './shared.jsx';
@@ -25,13 +25,13 @@ export default function HomeworkSetWizard({ onComplete, onSkip }) {
         Create a Homework Set
       </h2>
       <p style={{ color: 'var(--muted)', fontSize: 'var(--text-sm)', margin: '0 0 32px' }}>
-        Select a level and subject to load curated unit exercises alongside AI generation.
+        Select a level and kind to load curated unit exercises alongside AI generation.
       </p>
 
       {/* Level picker */}
       <section style={{ marginBottom: 28 }}>
         <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--muted)', marginBottom: 10 }}>
-          CEFR Level
+          Level
         </div>
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
           {UNIT_LEVELS.map(l => (
@@ -56,10 +56,10 @@ export default function HomeworkSetWizard({ onComplete, onSkip }) {
         </div>
       </section>
 
-      {/* Subject picker */}
+      {/* Kind picker */}
       <section style={{ marginBottom: 36 }}>
         <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--muted)', marginBottom: 10 }}>
-          Subject
+          Kind
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(190px, 1fr))', gap: 8 }}>
           {SUBJECT_OPTIONS.map(s => (

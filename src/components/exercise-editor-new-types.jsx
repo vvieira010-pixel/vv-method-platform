@@ -1,7 +1,7 @@
 /**
  * exercise-editor-new-types.jsx — Editors for dialogue, swap, and levelup types.
  */
-import { Button } from './shared.jsx';
+import { Button, Icon } from './shared.jsx';
 
 const fieldLabel = {
   display: 'block', fontSize: 'var(--text-xs)', fontWeight: 700,
@@ -46,10 +46,6 @@ export function DialogueEditor({ ex, update }) {
         </div>
       </div>
       <div style={fieldWrap}>
-        <label style={fieldLabel}>Context / instruction (optional)</label>
-        <input className="input" value={ex.instruction || ''} onChange={e => update({ instruction: e.target.value })} placeholder="e.g. A nurse greets a patient on admission…" />
-      </div>
-      <div style={fieldWrap}>
         <label style={fieldLabel}>Dialogue lines</label>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
           {lines.map((line, idx) => (
@@ -76,7 +72,7 @@ export function DialogueEditor({ ex, update }) {
               <button type="button" onClick={() => moveLine(idx, 1)} disabled={idx === lines.length - 1}
                 style={{ background: 'none', border: 'none', cursor: idx === lines.length - 1 ? 'not-allowed' : 'pointer', color: 'var(--muted)', padding: '4px' }}>↓</button>
               <button type="button" onClick={() => removeLine(line.id)}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--danger)', padding: '4px', fontSize: 16 }}>✕</button>
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--danger)', padding: '4px' }}><Icon.close size={16} /></button>
             </div>
           ))}
         </div>
@@ -115,10 +111,6 @@ export function SwapEditor({ ex, update }) {
   return (
     <div>
       <div style={fieldWrap}>
-        <label style={fieldLabel}>Context (optional)</label>
-        <input className="input" value={ex.instruction || ''} onChange={e => update({ instruction: e.target.value })} placeholder="e.g. Upgrade the underlined words to B2 level" />
-      </div>
-      <div style={fieldWrap}>
         <label style={fieldLabel}>Sentence — wrap words in [brackets] to make them swappable</label>
         <textarea className="input" rows={3}
           value={ex.sentence || ''}
@@ -128,7 +120,7 @@ export function SwapEditor({ ex, update }) {
         {ex.sentence && (
           <div style={{ marginTop: 8, padding: '8px 12px', background: 'var(--bg)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-sm)', lineHeight: 2 }}>
             {segments.map((seg, i) => /^\[.*\]$/.test(seg)
-              ? <span key={i} style={{ background: 'rgba(90,44,92,.15)', color: '#5A2C5C', padding: '2px 8px', borderRadius: 4, fontWeight: 600, margin: '0 2px' }}>{seg.slice(1,-1)}</span>
+              ? <span key={i} style={{ background: 'rgba(90,44,92,.15)', color: '#5A2C5C', padding: '2px 8px', borderRadius: 0, fontWeight: 600, margin: '0 2px' }}>{seg.slice(1,-1)}</span>
               : <span key={i}>{seg}</span>
             )}
           </div>
@@ -214,3 +206,76 @@ export function LevelUpEditor({ ex, update }) {
     </div>
   );
 }
+
+/* ─── READING EDITOR ────────────────────────────────────────── */
+export function ReadEditor({ ex, update }) {
+  const questions = ex.questions || [];
+
+  const updateQuestion = (id, patch) =>
+    update({ questions: questions.map(q => q.id === id ? { ...q, ...patch } : q) });
+  const removeQuestion = (id) =>
+    update({ questions: questions.filter(q => q.id !== id) });
+  const addQuestion = () =>
+    update({ questions: [...questions, { id: 'rq_' + Date.now().toString(36) + '_' + questions.length, question: '', options: ['', '', '', ''], correct: null }] });
+
+  return (
+    <div>
+      <div style={fieldWrap}>
+        <label style={fieldLabel}>Passage</label>
+        <textarea className="input" rows={6} value={ex.passage || ''} onChange={e => update({ passage: e.target.value })}
+          placeholder="Paste or type the reading passage here…" />
+        <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: 4 }}>
+          {(ex.passage || '').split(/\s+/).filter(Boolean).length} words
+        </div>
+      </div>
+      <div style={fieldWrap}>
+        <label style={fieldLabel}>Source (optional)</label>
+        <input className="input" value={ex.source || ''} onChange={e => update({ source: e.target.value })}
+          placeholder="e.g. Adapted from The Guardian, 2024" />
+      </div>
+      <div style={fieldWrap}>
+        <label style={fieldLabel}>
+          Comprehension questions ({questions.length})
+          <span style={{ fontWeight: 400, marginLeft: 8 }}>
+            <Button variant="ghost" size="sm" onClick={addQuestion}>+ Add question</Button>
+          </span>
+        </label>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {questions.map((q, qi) => (
+            <div key={q.id} style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: 12, background: 'var(--surface)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                <span style={{ fontWeight: 700, fontSize: 'var(--text-xs)', color: 'var(--accent)' }}>Q{qi + 1}</span>
+                <input className="input" style={{ flex: 1 }} value={q.question || ''}
+                  onChange={e => updateQuestion(q.id, { question: e.target.value })}
+                  placeholder={`Question ${qi + 1}`} />
+                <button type="button" onClick={() => removeQuestion(q.id)}
+                  style={{ background: 'none', border: 'none', color: 'var(--danger)', cursor: 'pointer' }}>
+                  <Icon.close size={14} />
+                </button>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                {[0, 1, 2, 3].map(i => (
+                  <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                    <input type="radio" name={`correct_${q.id}`} checked={q.correct === i}
+                      onChange={() => updateQuestion(q.id, { correct: i })}
+                      style={{ accentColor: 'var(--accent)', flexShrink: 0 }} />
+                    <input className="input" value={(q.options || [])[i] || ''}
+                      onChange={e => {
+                        const opts = [...(q.options || ['', '', '', ''])];
+                        opts[i] = e.target.value;
+                        updateQuestion(q.id, { options: opts });
+                      }}
+                      placeholder={`Option ${String.fromCharCode(65 + i)}`}
+                      style={{ flex: 1 }} />
+                    {q.correct === i && <span style={{ fontSize: 'var(--text-xs)', color: 'var(--success)', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 3 }}><Icon.check size={12} /> correct</span>}
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+

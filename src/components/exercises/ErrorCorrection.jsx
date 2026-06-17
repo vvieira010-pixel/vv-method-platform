@@ -1,18 +1,26 @@
 import { useState } from 'react';
 import { Icon } from '../shared.jsx';
 
-const TEAL = '#0D9488';
-const NAVY = '#0B1F3A';
+const TEAL = 'var(--accent)';
+const NAVY = 'var(--primary-ink)';
+
+const RUBRIC_CATEGORIES = [
+  { id: 'grammatical_accuracy', label: 'Grammatical Accuracy', description: 'Tense, agreement, sentence structure' },
+  { id: 'vocabulary', label: 'Vocabulary', description: 'Word choice, appropriacy, misuse' },
+  { id: 'mechanics', label: 'Mechanics', description: 'Spelling, punctuation, sentence boundaries' },
+  { id: 'cohesion', label: 'Cohesion & Organization', description: 'Linking, connectives, logical flow' },
+  { id: 'task_completion', label: 'Task Completion', description: 'Register, relevance, completing the task' },
+];
 
 function normalize(s) {
   return (s || '').toLowerCase().replace(/\s+/g, ' ').trim();
 }
 
 export default function ErrorCorrection({ exercise, onComplete }) {
-  const { errorText, correctedText, hint, context, imageUrl, image, imageSrc } = exercise;
-  const imgSrc = imageUrl || image || imageSrc || '';
+  const { errorText, correctedText, hint, context, instruction, rubricCategory, explanation } = exercise;
   const [answer, setAnswer] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const [categoryGuess, setCategoryGuess] = useState(null);
 
   function handleSubmit() {
     if (!answer.trim()) return;
@@ -22,25 +30,27 @@ export default function ErrorCorrection({ exercise, onComplete }) {
   }
 
   const isCorrect = submitted && normalize(answer) === normalize(correctedText);
+  const correctCategory = rubricCategory
+    ? RUBRIC_CATEGORIES.find(c => c.id === rubricCategory || c.label === rubricCategory)
+    : null;
+  const guessedCategory = categoryGuess
+    ? RUBRIC_CATEGORIES.find(c => c.id === categoryGuess)
+    : null;
+  const categoryCorrect = correctCategory && guessedCategory && correctCategory.id === guessedCategory.id;
 
   return (
     <div>
+      {instruction && (
+        <p style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', marginBottom: 10, lineHeight: 1.6 }}>{instruction}</p>
+      )}
       {context && (
-        <div style={{ padding: '10px 14px', background: 'var(--bg)', borderRadius: 8, marginBottom: 14, fontSize: 14, lineHeight: 1.7, color: 'var(--text-2)' }}>
+        <div style={{ padding: '10px 14px', background: 'var(--bg)', borderRadius: 'var(--radius-sm)', marginBottom: 14, fontSize: 14, lineHeight: 1.7, color: 'var(--text-2)' }}>
           {context}
         </div>
       )}
 
-      {/* Image */}
-      {imgSrc && (
-        <img
-          src={imgSrc} alt="Exercise visual"
-          style={{ width: '100%', borderRadius: 10, marginBottom: 14, maxHeight: 260, objectFit: 'cover', display: 'block' }}
-        />
-      )}
-
-      {/* Level Up challenge */}
-      <div style={{ padding: '14px 16px', background: '#FEF2F2', border: '1.5px solid #FECACA', borderRadius: 10, marginBottom: 14 }}>
+      {/* Incorrect sentence */}
+      <div style={{ padding: '14px 16px', background: '#FEF2F2', border: '1.5px solid #FECACA', borderRadius: 'var(--radius-sm)', marginBottom: 14 }}>
         <div style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--danger)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>
           Level Up — spot and fix the error
         </div>
@@ -49,8 +59,8 @@ export default function ErrorCorrection({ exercise, onComplete }) {
 
       {/* Hint */}
       {hint && (
-        <div style={{ padding: '10px 14px', background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: 8, marginBottom: 16, display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-          <Icon.info size={15} />
+        <div style={{ padding: '10px 14px', background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: 'var(--radius-sm)', marginBottom: 16, display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+          <Icon.bulb size={15} />
           <span style={{ fontSize: 13.5, color: '#92400E', lineHeight: 1.6 }}><strong>Hint:</strong> {hint}</span>
         </div>
       )}
@@ -67,7 +77,7 @@ export default function ErrorCorrection({ exercise, onComplete }) {
         placeholder="Type the corrected sentence…"
         aria-label="Corrected sentence"
         style={{
-          width: '100%', padding: '12px 14px', borderRadius: 10,
+          width: '100%', padding: '12px 14px', borderRadius: 'var(--radius-sm)',
           border: `1.5px solid ${submitted ? (isCorrect ? '#059669' : 'var(--danger)') : answer.trim() ? TEAL : 'var(--border)'}`,
           fontSize: 14.5, fontFamily: 'var(--font-ui)', outline: 'none',
           background: submitted ? (isCorrect ? '#ECFDF5' : '#FEF2F2') : '#fff',
@@ -82,7 +92,7 @@ export default function ErrorCorrection({ exercise, onComplete }) {
           onClick={handleSubmit}
           disabled={!answer.trim()}
           style={{
-            padding: '10px 24px', borderRadius: 10, border: 'none',
+            padding: '10px 24px', borderRadius: 'var(--radius-sm)', border: 'none',
             cursor: answer.trim() ? 'pointer' : 'not-allowed',
             background: answer.trim() ? `linear-gradient(120deg, ${TEAL} 0%, ${NAVY} 100%)` : 'var(--border)',
             color: '#fff', fontWeight: 600, fontSize: 14, fontFamily: 'var(--font-ui)',
@@ -94,7 +104,7 @@ export default function ErrorCorrection({ exercise, onComplete }) {
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           <div style={{
-            padding: '12px 16px', borderRadius: 10, fontSize: 14, fontWeight: 500,
+            padding: '12px 16px', borderRadius: 'var(--radius-sm)', fontSize: 14, fontWeight: 500,
             background: isCorrect ? '#ECFDF5' : '#FEF2F2',
             border: `1px solid ${isCorrect ? '#A7F3D0' : '#FECACA'}`,
             color: isCorrect ? '#065F46' : '#991B1B',
@@ -103,7 +113,7 @@ export default function ErrorCorrection({ exercise, onComplete }) {
           </div>
 
           {!isCorrect && (
-            <div style={{ padding: '12px 16px', background: '#ECFDF5', border: '1px solid #A7F3D0', borderRadius: 10 }}>
+            <div style={{ padding: '12px 16px', background: '#ECFDF5', border: '1px solid #A7F3D0', borderRadius: 0 }}>
               <div style={{ fontSize: 12, fontWeight: 700, color: TEAL, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>
                 Correct version
               </div>
@@ -118,11 +128,78 @@ export default function ErrorCorrection({ exercise, onComplete }) {
               )}
             </div>
           )}
-          {exercise.explanation && (
-            <div style={{ marginTop: 8, fontSize: 13.5, color: '#374151', lineHeight: 1.65, padding: '10px 14px', background: '#F8FAFC', borderRadius: 8, border: '1px solid #E2E8F0' }}>
-              {exercise.explanation}
+
+          {explanation && (
+            <div style={{ fontSize: 13.5, color: '#374151', lineHeight: 1.65, padding: '10px 14px', background: '#F8FAFC', borderRadius: 'var(--radius-sm)', border: '1px solid #E2E8F0' }}>
+              {explanation}
             </div>
           )}
+
+          {/* Rubric category labelling */}
+          <div style={{ padding: '14px 16px', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 0 }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: NAVY, marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+              Which MET scoring category does this error affect?
+            </div>
+            <div style={{ fontSize: 12.5, color: 'var(--muted)', marginBottom: 12 }}>
+              Name the rule — this is how examiners categorise errors.
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+              {RUBRIC_CATEGORIES.map(cat => {
+                const isSelected = categoryGuess === cat.id;
+                const isRevealed = categoryGuess !== null;
+                const isActualAnswer = correctCategory?.id === cat.id;
+                let bg = '#fff';
+                let border = 'var(--border)';
+                let labelColor = NAVY;
+                if (isRevealed && isActualAnswer) { bg = '#ECFDF5'; border = '#059669'; labelColor = '#065F46'; }
+                else if (isRevealed && isSelected && !isActualAnswer) { bg = '#FEF2F2'; border = 'var(--danger)'; labelColor = '#991B1B'; }
+                return (
+                  <button
+                    key={cat.id}
+                    onClick={() => !categoryGuess && setCategoryGuess(cat.id)}
+                    disabled={!!categoryGuess}
+                    style={{
+                      display: 'flex', alignItems: 'baseline', gap: 8,
+                      padding: '9px 12px', borderRadius: 'var(--radius-sm)',
+                      border: `1.5px solid ${isSelected || (isRevealed && isActualAnswer) ? border : 'var(--border)'}`,
+                      background: isRevealed && (isSelected || isActualAnswer) ? bg : isSelected ? '#F0FDFA' : '#fff',
+                      cursor: categoryGuess ? 'default' : 'pointer',
+                      textAlign: 'left', transition: 'all 0.15s',
+                    }}
+                  >
+                    <span style={{ fontWeight: 700, fontSize: 13.5, color: isRevealed && (isSelected || isActualAnswer) ? labelColor : NAVY, flexShrink: 0 }}>
+                      {cat.label}
+                    </span>
+                    <span style={{ fontSize: 12.5, color: 'var(--muted)', lineHeight: 1.4 }}>
+                      {cat.description}
+                    </span>
+                    {isRevealed && isActualAnswer && (
+                      <span style={{ marginLeft: 'auto', fontSize: 12, fontWeight: 700, color: '#059669', flexShrink: 0 }}>✓ correct</span>
+                    )}
+                    {isRevealed && isSelected && !isActualAnswer && (
+                      <span style={{ marginLeft: 'auto', fontSize: 12, fontWeight: 700, color: 'var(--danger)', flexShrink: 0 }}>✗</span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+            {categoryGuess && !correctCategory && (
+              <div style={{ marginTop: 10, fontSize: 13, color: 'var(--muted)', lineHeight: 1.5, padding: '8px 12px', background: '#F8FAFC', border: '1px solid var(--border)', borderRadius: 0 }}>
+                Good thinking — no single correct category is set for this exercise, but naming the rule is the key habit.
+              </div>
+            )}
+            {categoryGuess && correctCategory && (
+              <div style={{ marginTop: 10, fontSize: 13, lineHeight: 1.5, padding: '8px 12px', borderRadius: 'var(--radius-sm)',
+                background: categoryCorrect ? '#ECFDF5' : '#FFFBEB',
+                border: `1px solid ${categoryCorrect ? '#A7F3D0' : '#FDE68A'}`,
+                color: categoryCorrect ? '#065F46' : '#92400E',
+              }}>
+                {categoryCorrect
+                  ? `Correct — this error affects ${correctCategory.label}. Naming the category is what separates a learner from a thinker.`
+                  : `The examiner would score this under ${correctCategory.label} (${correctCategory.description}). Keep connecting errors to their categories.`}
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>

@@ -4,207 +4,48 @@
  * The most important page. Teacher must:
  * 1. Select target score profile (blocker)
  * 2. Confirm evaluated skills (blocker)
- * 3. Run AI diagnosis → data only (scores, errors, gaps, priorities)
- * 4. Write meaning from that data (class summary, feedback, next steps)
- * 5. Review and approve
- * 6. Save
+ * 3. Run AI diagnosis
+ * 4. Preview and approve each section
+ * 5. Save approved diagnosis
+ *
+ * Business logic lives in src/domain/assessment/:
+ *   constants.js, diagnosis-utils.js, hooks/useSectionApproval.js, components/SectionContent.jsx
  */
 import { useState, useEffect } from 'react';
-import { Icon, Card, SectionHeader, Pill, Button, Avatar, StudentFeedbackView } from '../components/shared.jsx';
+import { Icon, Card, SectionHeader, Pill, Button, Avatar } from '../components/shared.jsx';
 import { callAI } from '../components/shared.jsx';
 import { parseAiJson } from '../lib/ai-helpers.js';
-import { 
-  buildDiagnosticDataPrompt,
-  buildSkillDiagnosisPrompt, 
+import {
+  buildSkillDiagnosisPrompt,
   buildCompactSkillDiagnosisPrompt,
-  buildStudentFeedbackPrompt, 
-  buildHomeworkPrompt, 
-  buildErrorBankPrompt, 
-  buildSectionRegenPrompt 
+  buildStudentFeedbackPrompt,
+  buildHomeworkPrompt,
+  buildErrorBankPrompt,
+  buildSectionRegenPrompt,
 } from '../lib/prompts.js';
 import { TARGET_PROFILE_PRESETS } from '../lib/workflow.js';
 import { STUDENT_ERROR_PROFILES, buildErrorProfileContext } from '../lib/error-bank-profiles.js';
 import {
   getStudent, getStudents,
-  getTargetProfiles, saveTargetProfile, getActiveTargetProfile, setActiveTargetProfile,
+  getTargetProfiles, saveTargetProfile, setActiveTargetProfile,
   getClassEvent, getClassEvidence,
-  getDiagnoses, getDiagnosis, saveDiagnosis, updateDiagnosisCycleStage, updateClassEventStatus,
+  getDiagnosis, saveDiagnosis, updateClassEventStatus,
   promoteErrorToLongTerm, saveVocabularyEntry, saveProgressNote,
-  getHomework,
 } from '../lib/workflow.js';
 
-// Label styling migrated to CSS class .dx-label
+import {
+  SECTION_KEYS, REQUIRED_APPROVAL_KEYS, SECTION_LABELS,
+  DIAGNOSIS_DERIVED_KEYS, SECTION_GROUPS, SKILL_KEYS,
+} from '../domain/assessment/constants.js';
+import {
+  friendlyAiError, aiText,
+  generateDiagnosisJson, normalizeDiagnosisJson,
+  normalizeErrorTargets, normalizeEvidenceCounts, buildSnapshot,
+} from '../domain/assessment/diagnosis-utils.js';
+import { useSectionApproval } from '../domain/assessment/hooks/useSectionApproval.js';
+import { SectionContent, PrereqIcon, camelToLabel } from '../domain/assessment/components/SectionContent.jsx';
 
-const DIAGNOSIS_DERIVED_KEYS = new Set([
-  'skillDiagnosis',
-  'classSummary',
-  'targetScoreRelevance',
-  'estimatedOverallScore',
-  'priorityDiagnosis',
-  'nextClassFocus',
-  'profileUpdateSuggestions',
-]);
-
-// Review layout: two zones, with thin teacher sections merged into fuller cards.
-// A group with one key renders as its own card; multiple keys render together in
-// one card (each member keeps its own approve/edit/regen controls).
-function shouldRetryCompact(error) {
-  const msg = String(error?.message || error || '').toLowerCase();
-  return msg.includes('request too large')
-    || msg.includes('tokens per minute')
-    || msg.includes('tokens per day')
-    || msg.includes('rate limit')
-    || msg.includes('quota')
-    || msg.includes('limit reached');
-}
-
-function friendlyAiError(error) {
-  const msg = String(error?.message || error || '');
-  if (/quota|rate limit|tokens per day|limit reached/i.test(msg)) {
-    return 'Diagnosis failed because the available AI providers are out of quota or rate-limited. The app tried the full diagnosis and a smaller fallback. Wait for quota reset, use a different key, or shorten the transcript/notes.';
-  }
-  if (/request too large|tokens per minute|too many tokens/i.test(msg)) {
-    return 'Diagnosis failed because the class evidence is too long for the available fallback model. Shorten the transcript/notes and try again.';
-  }
-  if (/failed to fetch/i.test(msg)) {
-    return 'Diagnosis failed because one provider could not be reached from the browser. Check the key/provider setup and try again.';
-  }
-  return `Diagnosis failed: ${msg}`;
-}
-
-async function generateDiagnosisJson(promptData, setStatus = () => {}) {
-  let firstError = null;
-  try {
-    const raw = await callAI(buildSkillDiagnosisPrompt(promptData), { max_tokens: 6000, preferredProvider: 'gemini' });
-    const parsed = normalizeDiagnosisJson(parseAiJson(aiText(raw)), promptData.classEvidence);
-    if (hasUsefulDiagnosis(parsed)) return { raw, parsed };
-    firstError = new Error('Full diagnosis returned incomplete sections.');
-  } catch (e) {
-    firstError = e;
-  }
-
-  setStatus('Step 1/4 — Retrying with a smaller diagnosis prompt...');
-  try {
-    const raw = await callAI(buildCompactSkillDiagnosisPrompt(promptData), { max_tokens: 3200, preferredProvider: 'gemini' });
-    const parsed = normalizeDiagnosisJson(parseAiJson(aiText(raw)), promptData.classEvidence);
-    return { raw, parsed };
-  } catch (fallbackError) {
-    console.warn('Diagnosis generation failed; full prompt error:', firstError);
-    console.warn('Diagnosis compact fallback failed:', fallbackError);
-    return { raw: null, parsed: normalizeDiagnosisJson({}, promptData.classEvidence) };
-  }
-}
-
-function hasUsefulDiagnosis(parsed) {
-  return Boolean(
-    parsed?.skillDiagnosis && Object.keys(parsed.skillDiagnosis).length &&
-    parsed.classSummary &&
-    Array.isArray(parsed.priorityDiagnosis) &&
-    parsed.nextClassFocus && Object.keys(parsed.nextClassFocus).length
-  );
-}
-
-function normalizeDiagnosisJson(parsed, evidence = {}) {
-  const source = parsed?.diagnosis && typeof parsed.diagnosis === 'object' ? parsed.diagnosis : (parsed || {});
-  const skillDiagnosis = source.skillDiagnosis && typeof source.skillDiagnosis === 'object'
-    ? source.skillDiagnosis
-    : {};
-  const skillMeta = {
-    speaking: ['evaluatedSpeaking', 'speakingEvidenceCount'],
-    writing: ['evaluatedWriting', 'writingEvidenceCount'],
-    reading: ['evaluatedReading', 'readingEvidenceCount'],
-    listening: ['evaluatedListening', 'listeningEvidenceCount'],
-    grammar: ['evaluatedGrammar', 'grammarEvidenceCount'],
-    vocabulary: ['evaluatedVocabulary', 'vocabularyEvidenceCount'],
-    testStrategy: ['evaluatedTestStrategy', 'testStrategyEvidenceCount'],
-  };
-  const normalizedSkills = {};
-  Object.entries(skillMeta).forEach(([skill, [flagKey, countKey]]) => {
-    const existing = skillDiagnosis[skill] && typeof skillDiagnosis[skill] === 'object' ? skillDiagnosis[skill] : {};
-    const evaluated = Boolean(existing.evaluated ?? evidence?.[flagKey]);
-    const evidenceCount = Number(existing.evidenceCount ?? evidence?.[countKey] ?? 0) || 0;
-    normalizedSkills[skill] = {
-      evaluated,
-      evidenceCount,
-      score0to80: evaluated ? (existing.score0to80 ?? null) : null,
-      scoreConfidenceLevel: evaluated
-        ? (existing.scoreConfidenceLevel || 'Limited evidence')
-        : 'Not evaluated enough',
-      scoreProvisional: existing.scoreProvisional ?? evaluated,
-      transcriptOnly: existing.transcriptOnly ?? (skill === 'speaking'),
-      strengths: Array.isArray(existing.strengths) ? existing.strengths : [],
-      weaknesses: Array.isArray(existing.weaknesses) ? existing.weaknesses : (Array.isArray(existing.mainIssues) ? existing.mainIssues : []),
-      mainIssues: Array.isArray(existing.mainIssues) ? existing.mainIssues : [],
-      subskillsAssessed: Array.isArray(existing.subskillsAssessed) ? existing.subskillsAssessed : [],
-      readinessTowardTarget: existing.readinessTowardTarget || (evaluated ? 'Limited evidence gathered.' : 'Not evaluated yet.'),
-      whatToImproveNext: existing.whatToImproveNext || (evaluated ? 'Review the evidence and add a targeted practice step.' : 'Collect more evidence before assigning a focus.'),
-      ratingBreakdown: existing.ratingBreakdown,
-    };
-  });
-
-  const priorities = Array.isArray(source.priorityDiagnosis)
-    ? source.priorityDiagnosis
-    : Array.isArray(source.priorities)
-      ? source.priorities
-      : [];
-  const firstEvaluatedSkill = Object.entries(normalizedSkills).find(([, data]) => data.evaluated)?.[0] || 'MET skills';
-
-  return {
-    skillDiagnosis: normalizedSkills,
-    classSummary: source.classSummary || source.summary || `Limited diagnosis generated. The evaluated evidence is available, but the AI response did not produce a full class overview.`,
-    priorityDiagnosis: priorities.length ? priorities : [{
-      rank: 1,
-      urgency: 'Developing',
-      area: firstEvaluatedSkill,
-      evidence: evidence?.studentTranscript || evidence?.studentAnswer || 'limited evidence',
-      whatToImprove: 'Review the evaluated class evidence and choose one focused practice target.',
-      howToImprove: 'Use a short MET-style practice task and collect another sample before making a stronger estimate.',
-    }],
-    targetScoreRelevance: source.targetScoreRelevance && typeof source.targetScoreRelevance === 'object'
-      ? source.targetScoreRelevance
-      : { gapToTarget: 'Limited evidence.', prioritySkillForTarget: firstEvaluatedSkill, estimatedSessionsToTarget: 'Not enough evidence to estimate.', onTrack: 'Needs more samples.' },
-    estimatedOverallScore: source.estimatedOverallScore && typeof source.estimatedOverallScore === 'object'
-      ? source.estimatedOverallScore
-      : { estimate: 'Not evaluated enough', confidence: 'Limited evidence', note: 'The available response did not provide enough reliable scoring detail.' },
-    nextClassFocus: source.nextClassFocus && typeof source.nextClassFocus === 'object'
-      ? source.nextClassFocus
-      : { primaryFocus: `Collect stronger evidence for ${firstEvaluatedSkill}.`, suggestedActivities: ['Short MET-style production task', 'Error correction from today’s sample'], warmUp: 'Review one sentence or answer from the last class.', successCriteria: 'Student gives a clearer response with one specific example.' },
-    profileUpdateSuggestions: source.profileUpdateSuggestions && typeof source.profileUpdateSuggestions === 'object'
-      ? source.profileUpdateSuggestions
-      : { progressNote: 'More class evidence is needed before updating the profile.', suggestedLevelChange: 'No change yet.', recurringErrorsToTrack: [], masteredItems: [] },
-  };
-}
-
-function normalizeErrorTargets(parsed) {
-  const source = parsed && typeof parsed === 'object' ? parsed : {};
-  const targetSource = source.vocabGrammarTargets || source.targets || source.languageTargets || {};
-  const vocabularyTargets = pickFirstArray(
-    targetSource.vocabularyTargets,
-    targetSource.vocab,
-    targetSource.vocabulary,
-    source.vocabularyTargets,
-    source.vocab,
-    source.vocabulary,
-  );
-  const grammarTargets = pickFirstArray(
-    targetSource.grammarTargets,
-    targetSource.grammar,
-    targetSource.grammarPoints,
-    targetSource.structures,
-    source.grammarTargets,
-    source.grammar,
-    source.grammarPoints,
-    source.structures,
-  );
-  return {
-    errorBankSuggestions: pickFirstArray(source.errorBankSuggestions, source.errorBank, source.errors),
-    vocabGrammarTargets: { vocabularyTargets, grammarTargets },
-  };
-}
-
-function pickFirstArray(...values) {
-  return values.find(Array.isArray) || [];
-}
+const labelStyle = { display: 'block', fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 };
 
 export default function DiagnosticCreate({ studentId, classEventId, diagnosisId, students, onNavigate }) {
   const [step, setStep] = useState('prereq'); // prereq | analyzing | write | review | saved
@@ -213,41 +54,28 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
   const [classEvidence, setClassEvidence] = useState(null);
   const [targetProfile, setTargetProfile] = useState(null);
   const [profiles, setProfiles] = useState([]);
-
-  // AI data layer (generated by AI, read by teacher)
-  const [diagnosticData, setDiagnosticData] = useState(null);
-
-  // Teacher meaning layer (written by teacher, read by student)
-  const [teacherMeaning, setTeacherMeaning] = useState({
-    classSummary: '',
-    studentFeedback: { classFocus: '', whatYouDidWell: [], whatToImprove: [], finalNote: '' },
-    priorityDiagnosis: [],
-    nextClassFocus: { primaryFocus: '', suggestedActivities: [], warmUp: '', successCriteria: '' },
-    homeworkRecommendation: '',
-    progressNote: '',
-  });
-
-  // Optional AI drafts (never primary content)
-  const [aiDrafts, setAiDrafts] = useState({});
-
-  // Draft overlay state
-  const [draftOverlay, setDraftOverlay] = useState(null); // { section, draft }
-
-  // Legacy sections for backward compat
-  const [sections, setSections] = useState({});
+  const [aiResult, setAiResult] = useState(null);
   const [savedDiagnosis, setSavedDiagnosis] = useState(null);
   const [error, setError] = useState('');
-  const [editingSection, setEditingSection] = useState(null);
-  const [editText, setEditText] = useState('');
-  const [regenerating, setRegenerating] = useState(null);
   const [saving, setSaving] = useState(false);
-  const [generatingStatus, setGeneratingStatus] = useState('');
-  const [regeneratingAll, setRegeneratingAll] = useState(false);
+  const [generatingStatus, setGeneratingStatus] = useState('Initializing…');
 
   // Student selector (if no studentId passed)
   const [selectedStudentId, setSelectedStudentId] = useState(studentId || '');
   const [selectedClassEventId, setSelectedClassEventId] = useState(classEventId || '');
   const [allStudents, setAllStudents] = useState([]);
+
+  // Section approval state (extracted to domain hook)
+  const {
+    sections, setSections,
+    editingSection, setEditingSection,
+    editText, setEditText,
+    regenerating, setRegenerating,
+    startEdit, saveEdit,
+    toggleApprove, toggleHide, approveAll,
+    approvedCount, totalSections,
+    missingRequiredApprovals, canApproveDiagnosis,
+  } = useSectionApproval();
 
   useEffect(() => {
     getStudents().then(setAllStudents);
@@ -318,7 +146,6 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
 
   // ── Prereq validation ──
   const selectedStudent = student || allStudents.find(s => s.id === selectedStudentId);
-  // Use class evidence if available, otherwise build from inline inputs
   const noLinkedEvidence = !classEvidence;
   const inlineEvidenceObj = noLinkedEvidence ? {
     ...inlineSkills,
@@ -339,7 +166,6 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
     testStrategy: normalizedEvidence.evaluatedTestStrategy,
   }).filter(([, v]) => v).map(([k]) => k) : [];
 
-  // When no class linked: need transcript OR teacher notes + at least one skill
   const inlineReady = noLinkedEvidence
     ? (inlineTranscript.trim().length > 0 || inlineTeacherNotes.trim().length > 0) && evaluatedSkills.length > 0
     : evaluatedSkills.length > 0;
@@ -353,8 +179,8 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
   // ── Run AI diagnosis (data only) ──
   async function handleGenerate() {
     if (!prereqOk) return;
-    setStep('analyzing');
-    setGeneratingStatus('Analyzing class evidence...');
+    setStep('generating');
+    setGeneratingStatus('Analyzing class evidence…');
     setError('');
     if (!diagnosisId) setSavedDiagnosis(null);
 
@@ -362,23 +188,50 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
       const promptData = { student: selectedStudent, classEvent, classEvidence: normalizedEvidence, targetProfile };
       const getContent = (res) => (res?.content?.map(b => b.text || '').join('') || '');
 
-      // Single data-only AI call
-      setGeneratingStatus('Generating skill scores and error analysis…');
-      const dataRaw = await callAI(buildDiagnosticDataPrompt(promptData), { max_tokens: 5000, preferredProvider: 'gemini' });
-      const text = aiText(dataRaw);
-      const parsed = parseAiJson(text) || {};
-      if (!parsed.scores) throw new Error('AI returned incomplete data.');
+      setGeneratingStatus('Step 1/4 — Generating skill diagnosis…');
+      const diagnosisResult = await generateDiagnosisJson(promptData, (status) => setGeneratingStatus(status));
+      const diagnosisRaw = diagnosisResult.raw;
+      const parsedDiagnosis = diagnosisResult.parsed;
 
-      const data = normalizeDiagnosticData(parsed, normalizedEvidence);
-      setDiagnosticData(data);
+      setGeneratingStatus('Step 2/4 — Analysing errors and vocabulary targets…');
+      const errorBankRaw = await callAI(buildErrorBankPrompt({ ...promptData, diagnosis: parsedDiagnosis }), { max_tokens: 2500, preferredProvider: 'gemini' }).catch(() => null);
+      const parsedErrorBank = normalizeErrorTargets(errorBankRaw ? parseAiJson(getContent(errorBankRaw)) : {});
 
-      // Seed teacherMeaning with AI-recommended priorities
-      setTeacherMeaning(tm => ({
-        ...tm,
-        priorityDiagnosis: (data.priorityRecommendations || []).map(p => ({ ...p, confirmed: false })),
-      }));
+      setGeneratingStatus('Step 3/4 — Writing student feedback…');
+      const feedbackRaw = await callAI(buildStudentFeedbackPrompt({ ...promptData, diagnosis: parsedDiagnosis }), { max_tokens: 2500, preferredProvider: 'gemini' }).catch(() => null);
+      const parsedFeedback = feedbackRaw ? parseAiJson(getContent(feedbackRaw)) : {};
 
-      // Auto-save draft
+      setGeneratingStatus('Step 4/4 — Building homework recommendation…');
+      const homeworkRaw = await callAI(buildHomeworkPrompt({
+        ...promptData,
+        diagnosis: parsedDiagnosis,
+        errorBank: parsedErrorBank.errorBankSuggestions,
+        vocabTargets: parsedErrorBank.vocabGrammarTargets,
+      }), { max_tokens: 3000, preferredProvider: 'gemini' }).catch(() => null);
+      const parsedHomework = homeworkRaw ? parseAiJson(getContent(homeworkRaw)) : {};
+
+      setGeneratingStatus('Structuring results…');
+
+      const FAILED = { content: 'Failed to generate — click Regen to retry.', approved: false, hidden: false, edited: false };
+      const initSections = {
+        skillDiagnosis:           diagnosisRaw ? { content: parsedDiagnosis.skillDiagnosis ?? null,                                              approved: false, hidden: false, edited: false } : FAILED,
+        studentFeedback:          feedbackRaw  ? { content: parsedFeedback,                                                                      approved: false, hidden: false, edited: false } : FAILED,
+        homeworkRecommendation:   homeworkRaw  ? { content: parsedHomework,                                                                      approved: false, hidden: false, edited: false } : FAILED,
+        errorBankSuggestions:                  { content: parsedErrorBank.errorBankSuggestions ?? [],                                            approved: false, hidden: false, edited: false },
+        vocabGrammarTargets:                   { content: parsedErrorBank.vocabGrammarTargets ?? { vocabularyTargets: [], grammarTargets: [] },   approved: false, hidden: false, edited: false },
+        readinessCheck:                        { content: { targetProfileSelected: !!targetProfile, evaluatedSkills, notEvaluatedSkills: [], diagnosisAllowed: true }, approved: true, hidden: false, edited: false },
+        classSummary:                          { content: parsedDiagnosis.classSummary || '',                                                    approved: false, hidden: false, edited: false },
+        targetScoreRelevance:                  { content: parsedDiagnosis.targetScoreRelevance || {},                                            approved: false, hidden: false, edited: false },
+        estimatedOverallScore:                 { content: parsedDiagnosis.estimatedOverallScore || {},                                           approved: false, hidden: false, edited: false },
+        priorityDiagnosis:                     { content: parsedDiagnosis.priorityDiagnosis || [],                                               approved: false, hidden: false, edited: false },
+        nextClassFocus:                        { content: parsedDiagnosis.nextClassFocus || {},                                                  approved: false, hidden: false, edited: false },
+        profileUpdateSuggestions:              { content: parsedDiagnosis.profileUpdateSuggestions || {},                                        approved: false, hidden: false, edited: false },
+      };
+
+      setAiResult(parsedDiagnosis);
+      setSections(initSections);
+
+      // Auto-save draft immediately
       try {
         const draft = await saveDiagnosis({
           id: diagnosisId ? savedDiagnosis?.id : undefined,
@@ -399,8 +252,12 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
           teacherMeaning: teacherMeaning,
           status: 'draft',
           cycleStage: 'needs-diagnosis',
-          classSummary: '',
-          content: { overall_result: '', priorities: data.priorityRecommendations || [], error_bank: data.errors || [] },
+          classSummary: typeof parsedDiagnosis.classSummary === 'string' ? parsedDiagnosis.classSummary : '',
+          content: {
+            overall_result: typeof parsedDiagnosis.classSummary === 'string' ? parsedDiagnosis.classSummary : '',
+            priorities: parsedDiagnosis.priorityDiagnosis || [],
+            error_bank: parsedErrorBank.errorBankSuggestions || [],
+          },
         });
         if (draft) setSavedDiagnosis(draft);
       } catch (autoSaveErr) {
@@ -415,69 +272,35 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
     }
   }
 
-  function aiText(res) {
-    return res?.content?.map(b => b.text || '').join('') || '';
-  }
-
-  // ── Section actions ──
-  function startEdit(key) {
-    const content = sections[key]?.content;
-    setEditText(typeof content === 'string' ? content : JSON.stringify(content, null, 2));
-    setEditingSection(key);
-  }
-
-  function saveEdit(key) {
-    setSections(s => ({
-      ...s,
-      [key]: { ...s[key], content: tryParseOrString(editText), edited: true },
-    }));
-    setEditingSection(null);
-  }
-
-  function toggleApprove(key) {
-    setSections(s => ({ ...s, [key]: { ...s[key], approved: !s[key].approved } }));
-  }
-
-  function toggleHide(key) {
-    setSections(s => ({ ...s, [key]: { ...s[key], hidden: !s[key].hidden } }));
-  }
-
+  // ── Regenerate individual section ──
   async function regenerateSection(key) {
     setRegenerating(key);
     try {
-      const existingSections = Object.fromEntries(
-        Object.entries(sections).filter(([k]) => k !== key)
-      );
-      
+      const existingSections = Object.fromEntries(Object.entries(sections).filter(([k]) => k !== key));
       let prompt;
-      let promptData = { student: selectedStudent, classEvent, classEvidence: normalizedEvidence, targetProfile, existingSections };
+      const promptData = { student: selectedStudent, classEvent, classEvidence: normalizedEvidence, targetProfile, existingSections };
 
       switch (key) {
-        case 'skillDiagnosis':
-          prompt = buildSkillDiagnosisPrompt(promptData);
-          break;
-        case 'studentFeedback':
-          prompt = buildStudentFeedbackPrompt(promptData);
-          break;
-        case 'homeworkRecommendation':
-          prompt = buildHomeworkPrompt(promptData);
-          break;
+        case 'skillDiagnosis':       prompt = buildSkillDiagnosisPrompt(promptData);    break;
+        case 'studentFeedback':      prompt = buildStudentFeedbackPrompt(promptData);   break;
+        case 'homeworkRecommendation': prompt = buildHomeworkPrompt(promptData);        break;
         case 'errorBankSuggestions':
-        case 'vocabGrammarTargets':
-          prompt = buildErrorBankPrompt(promptData);
-          break;
+        case 'vocabGrammarTargets':  prompt = buildErrorBankPrompt(promptData);         break;
         default:
           prompt = DIAGNOSIS_DERIVED_KEYS.has(key)
             ? buildCompactSkillDiagnosisPrompt(promptData)
             : buildSectionRegenPrompt(key, promptData);
       }
 
-      // The skillDiagnosis prompt now also emits classSummary/priorityDiagnosis/nextClassFocus/
-      // targetScoreRelevance/profileUpdateSuggestions, and regen of any of those runs that full
-      // prompt (default case → buildSectionRegenPrompt → buildSkillDiagnosisPrompt), so they
-      // need the larger budget too.
-      const SECTION_BUDGETS = { studentFeedback: 3000, homeworkRecommendation: 3000, skillDiagnosis: 6000, priorityDiagnosis: 6000, classSummary: 6000, targetScoreRelevance: 6000, nextClassFocus: 6000, profileUpdateSuggestions: 6000, errorBankSuggestions: 2200 };
-      const data = await callAI(prompt, { max_tokens: DIAGNOSIS_DERIVED_KEYS.has(key) ? Math.min(SECTION_BUDGETS[key] || 2500, 3000) : SECTION_BUDGETS[key] || 2000, preferredProvider: 'gemini' });
+      const SECTION_BUDGETS = {
+        studentFeedback: 3000, homeworkRecommendation: 3000, skillDiagnosis: 6000,
+        priorityDiagnosis: 6000, classSummary: 6000, targetScoreRelevance: 6000,
+        nextClassFocus: 6000, profileUpdateSuggestions: 6000, errorBankSuggestions: 2200,
+      };
+      const data = await callAI(prompt, {
+        max_tokens: DIAGNOSIS_DERIVED_KEYS.has(key) ? Math.min(SECTION_BUDGETS[key] || 2500, 3000) : SECTION_BUDGETS[key] || 2000,
+        preferredProvider: 'gemini',
+      });
       const raw = data.content?.map(b => b.text || '').join('') || '';
       const parsed = DIAGNOSIS_DERIVED_KEYS.has(key)
         ? normalizeDiagnosisJson(parseAiJson(raw), normalizedEvidence)
@@ -491,19 +314,6 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
     setRegenerating(null);
   }
 
-  function approveAll() {
-    setSections(s => {
-      const next = { ...s };
-      Object.keys(next).forEach(k => { next[k] = { ...next[k], approved: true }; });
-      return next;
-    });
-  }
-
-  const canApproveDiagnosis = Boolean(
-    teacherMeaning.classSummary?.trim() &&
-    (teacherMeaning.studentFeedback?.classFocus?.trim() || teacherMeaning.studentFeedback?.whatYouDidWell?.length)
-  );
-
   // ── Save diagnosis ──
   async function handleSave(approve = false) {
     setSaving(true);
@@ -513,8 +323,11 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
         setSaving(false);
         return;
       }
-      // Build legacy sections from new data for backward compat
-      const legacySections = sections;
+      const studentFeedbackSection = sections.studentFeedback;
+      const homeworkSection = sections.homeworkRecommendation;
+      const visibleStudentFeedback = studentFeedbackSection?.approved && !studentFeedbackSection.hidden ? studentFeedbackSection.content : null;
+      const visibleHomework = homeworkSection?.approved && !homeworkSection.hidden ? homeworkSection.content : null;
+
       const dx = await saveDiagnosis({
         id: savedDiagnosis?.id,
         studentId: selectedStudentId || studentId,
@@ -536,7 +349,7 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
         status: approve ? 'approved' : 'draft',
         teacherApproved: approve,
         cycleStage: approve ? 'diagnosed' : 'needs-diagnosis',
-        classSummary: teacherMeaning.classSummary || '',
+        classSummary: typeof sections.classSummary?.content === 'string' ? sections.classSummary.content : '',
         content: {
           overall_result: teacherMeaning.classSummary || '',
           priorities: teacherMeaning.priorityDiagnosis || [],
@@ -623,185 +436,209 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
   // ── Render ──
   if (step === 'analyzing') {
     return (
-      <div style={{ maxWidth: 600, margin: '80px auto', textAlign: 'center', padding: '0 20px' }}>
-        <div style={{ fontSize: 'var(--text-xl)', fontWeight: 700, color: 'var(--accent-deep)', marginBottom: 12 }}>Analyzing Class Evidence…</div>
-        <p style={{ color: 'var(--muted)', marginBottom: 24 }}>{generatingStatus}</p>
-        <div style={{ height: 4, background: 'var(--bg-deep)', borderRadius: 99, overflow: 'hidden' }}>
-          <div role="progressbar" aria-label="Analyzing class evidence" aria-valuemin={0} aria-valuemax={100} style={{ height: '100%', background: 'var(--accent)', borderRadius: 99, animation: 'slideIn 2s ease-in-out infinite alternate' }} />
-        </div>
-        <style>{`@keyframes slideIn { from { width: 20%; margin-left: 0; } to { width: 60%; margin-left: 40%; } }`}</style>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: 280, gap: 16 }}>
+        <div className="spinner" style={{ width: 40, height: 40 }} />
+        <p style={{ color: 'var(--muted)', fontSize: 'var(--text-sm)', maxWidth: 340, textAlign: 'center' }}>{generatingStatus}</p>
       </div>
     );
   }
 
   if (step === 'saved') {
     return (
-      <div style={{ maxWidth: 600, margin: '80px auto', textAlign: 'center', padding: '0 20px' }}>
-        <div style={{ fontSize: 48, marginBottom: 16 }}>✓</div>
-        <div style={{ fontSize: 'var(--text-xl)', fontWeight: 700, color: 'var(--success)', marginBottom: 8 }}>Diagnosis Approved</div>
-        <p style={{ color: 'var(--muted)', marginBottom: 24 }}>The diagnosis for {selectedStudent?.name} has been saved and approved.</p>
-        <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
-          <Button variant="primary" onClick={() => onNavigate('homework:create', { diagnosisId: savedDiagnosis?.id, studentId: selectedStudentId || studentId })}>
-            <Icon.homework size={14} /> Generate Homework
-          </Button>
-          <Button variant="ghost" onClick={saveErrorsToBank}><Icon.warning size={14} /> Save Errors to Bank</Button>
-          <Button variant="ghost" onClick={saveVocabToBank}><Icon.doc size={14} /> Save Vocabulary</Button>
-          <Button variant="ghost" onClick={saveProgressNoteFromDx}><Icon.edit size={14} /> Save Progress Note</Button>
-          <Button variant="ghost" onClick={() => onNavigate('students:profile', { studentId: selectedStudentId || studentId })}>View Student Profile</Button>
-          <Button variant="ghost" onClick={() => onNavigate('diagnostics')}>All Diagnostics</Button>
-        </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 16, maxWidth: 680 }}>
+        <button style={backStyle} onClick={() => setStep('review')}><Icon.arrow size={14} /> Back to Review</button>
+        <SectionHeader title="Post-Approval Actions" subtitle="Sync this diagnosis to other parts of the platform." />
+        <Card style={{ padding: 20 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <Button variant="ghost" onClick={saveErrorsToBank}><Icon.error size={14} /> Save Errors to Error Bank</Button>
+            <Button variant="ghost" onClick={saveVocabToBank}><Icon.vocab size={14} /> Save Vocabulary to Vocab Bank</Button>
+            <Button variant="ghost" onClick={saveProgressNoteFromDx}><Icon.note size={14} /> Save Progress Note</Button>
+            <Button variant="ghost" onClick={() => onNavigate('homework:create', { studentId: selectedStudentId || studentId, diagnosisId: savedDiagnosis?.id })}>
+              <Icon.homework size={14} /> Create Homework from Diagnosis
+            </Button>
+          </div>
+        </Card>
+        <Button variant="primary" onClick={() => onNavigate('diagnostics:list', {})}>
+          <Icon.check size={14} /> Done — View All Diagnoses
+        </Button>
       </div>
     );
   }
 
   return (
-    <div style={{ maxWidth: 900, margin: '0 auto', padding: '28px 20px' }}>
-      <button onClick={() => onNavigate('diagnostics')} style={backStyle}>
-        <Icon.arrowL size={13} /> Back to diagnostics
-      </button>
-
-      <h1 style={S.headline}>{step === 'prereq' ? 'New Diagnosis' : step === 'write' ? 'Write Diagnosis' : step === 'review' ? 'Review Diagnosis' : ''}</h1>
-      {selectedStudent && <p style={S.sub}>{selectedStudent.name} · {selectedStudent.currentLevel} → {selectedStudent.targetLevel}</p>}
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 16, maxWidth: 780 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <div style={{ flex: 1 }}>
+          <h1 style={S.headline}>AI Diagnosis</h1>
+          <p style={S.sub}>
+            {selectedStudent
+              ? `Diagnosing ${selectedStudent.name || selectedStudent.firstName || 'Student'}`
+              : 'Select a student to begin'}
+          </p>
+        </div>
+        {savedDiagnosis && <Pill tone={savedDiagnosis.status === 'approved' ? 'success' : 'warning'}>{savedDiagnosis.status}</Pill>}
+      </div>
 
       {/* ── STEP: PREREQ ── */}
       {step === 'prereq' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginTop: 20 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
 
           {/* Student selector */}
-          <Card style={{ padding: 18 }}>
-            <SectionHeader title="1. Student" icon={<PrereqIcon ok={!!selectedStudent} />} />
-            <select className="input" style={{ marginTop: 10, maxWidth: 320 }} value={selectedStudentId} onChange={e => setSelectedStudentId(e.target.value)}>
-              <option value="">Select student…</option>
-              {allStudents.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-            </select>
-          </Card>
+          {!studentId && (
+            <Card style={{ padding: 16 }}>
+              <label style={labelStyle}>Student</label>
+              <select
+                className="input"
+                value={selectedStudentId}
+                onChange={e => { setSelectedStudentId(e.target.value); setSelectedClassEventId(''); setClassEvidence(null); setClassEvent(null); }}
+              >
+                <option value="">— Select student —</option>
+                {(students || allStudents).map(s => (
+                  <option key={s.id} value={s.id}>{s.name || s.firstName || s.id}</option>
+                ))}
+              </select>
+            </Card>
+          )}
 
           {/* Target profile */}
-          <Card style={{ padding: 18, border: !targetProfile ? '2px solid var(--danger)' : undefined }}>
-            <SectionHeader title="2. Target Score Profile" icon={<PrereqIcon ok={!!targetProfile} required />} />
-            {!targetProfile && <p style={{ color: 'var(--danger)', fontSize: 'var(--text-xs)', margin: '6px 0' }}>⚠ Required — select a target before running diagnosis.</p>}
-            <div style={{ display: 'flex', gap: 8, marginTop: 10, flexWrap: 'wrap' }}>
-              {Object.entries(TARGET_PROFILE_PRESETS).map(([key, preset]) => (
-                <button key={key} onClick={() => selectPreset(key)}
-                  aria-pressed={targetProfile?.profileName === preset.profileName}
-                  style={{ padding: '8px 14px', borderRadius: 'var(--radius-sm)', border: `2px solid ${targetProfile?.profileName === preset.profileName ? 'var(--accent)' : 'var(--border)'}`, background: targetProfile?.profileName === preset.profileName ? 'var(--accent-subtle)' : 'var(--surface)', cursor: 'pointer', fontFamily: 'var(--font-ui)', fontSize: 'var(--text-sm)', fontWeight: 600 }}>
-                  {preset.label}
-                  <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontWeight: 400 }}>Overall {preset.overallTarget} · Speaking {preset.speakingTarget}</div>
-                </button>
-              ))}
-            </div>
-            {targetProfile && (
-              <p style={{ fontSize: 'var(--text-xs)', color: 'var(--success)', marginTop: 8 }}>
-                ✓ Active: {targetProfile.label} — Overall {targetProfile.overallTarget}, Speaking {targetProfile.speakingTarget}
-              </p>
-            )}
-          </Card>
-
-          {/* Class & evidence */}
-          <Card style={{ padding: 18 }}>
-            <SectionHeader title="3. Class Evidence" icon={<PrereqIcon ok={inlineReady} required />} />
-
-            {/* If class event is linked, show its evidence summary */}
-            {classEvent && (
-              <div style={{ marginTop: 8, padding: 10, background: 'var(--bg)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-sm)' }}>
-                <strong>{classEvent.title}</strong> · {classEvent.date} · {classEvent.classFocus || 'No focus set'}
+          {selectedStudent && (
+            <Card style={{ padding: 16 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+                <PrereqIcon ok={!!targetProfile} required />
+                <label style={{ ...labelStyle, margin: 0 }}>Target Score Profile</label>
               </div>
-            )}
-
-            {/* If evidence from class record exists, show summary */}
-            {classEvidence && (
-              <div style={{ marginTop: 12 }}>
-                <div style={{ fontWeight: 600, fontSize: 'var(--text-sm)', marginBottom: 8 }}>Evaluated skills from class record:</div>
-                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                  {SKILL_KEYS.map(({ key, evalKey, countKey }) => {
-                    const evaluated = classEvidence[evalKey];
-                    const count = countKey ? classEvidence[countKey] : null;
-                    return (
-                      <Pill key={key} tone={evaluated ? (count === 0 ? 'warning' : 'success') : 'muted'}>
-                        {key}{evaluated && count !== null ? ` (${count})` : ''}
-                        {evaluated && count === 0 ? ' ⚠' : ''}
-                      </Pill>
-                    );
-                  })}
+              {profiles.length > 0 ? (
+                <select className="input" value={targetProfile?.id || ''} onChange={e => setTargetProfile(profiles.find(p => p.id === e.target.value) || null)}>
+                  <option value="">— Select profile —</option>
+                  {profiles.map(p => <option key={p.id} value={p.id}>{p.profileName || p.label}</option>)}
+                </select>
+              ) : (
+                <div>
+                  <p style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginBottom: 10 }}>No profiles — pick a preset to create one:</p>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                    {Object.entries(TARGET_PROFILE_PRESETS).map(([key, preset]) => (
+                      <Button key={key} variant="ghost" size="sm" onClick={() => selectPreset(key)}>{preset.label}</Button>
+                    ))}
+                  </div>
                 </div>
-                {classEventId && <Button variant="ghost" size="sm" style={{ marginTop: 10 }} onClick={() => onNavigate('calendar:class', { classEventId })}>Edit Class Record</Button>}
+              )}
+            </Card>
+          )}
+
+          {/* Class evidence */}
+          {selectedStudent && (
+            <Card style={{ padding: 16 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+                <PrereqIcon ok={evaluatedSkills.length > 0 && inlineReady} required />
+                <label style={{ ...labelStyle, margin: 0 }}>Class Evidence</label>
               </div>
-            )}
 
-            {/* No linked class — show inline input form */}
-            {noLinkedEvidence && (
-              <div style={{ marginTop: 14 }}>
-                <p style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginBottom: 12 }}>
-                  No class linked. Paste your transcript and select which skills were covered — the AI will only diagnose what you evaluated.
-                </p>
+              {/* Class event selector */}
+              {!classEventId && (
+                <div style={{ marginBottom: 12 }}>
+                  <label style={labelStyle}>Link a class record (optional)</label>
+                  <input
+                    className="input"
+                    placeholder="Class event ID (optional)"
+                    value={selectedClassEventId}
+                    onChange={e => setSelectedClassEventId(e.target.value)}
+                    style={{ marginBottom: 8 }}
+                  />
+                </div>
+              )}
 
-                {/* Transcript */}
-                <label className="dx-label">Class transcript / student answers *</label>
-                <textarea
-                  className="input"
-                  rows={8}
-                  value={inlineTranscript}
-                  onChange={e => setInlineTranscript(e.target.value)}
-                  placeholder="Paste the student's exact words, speaking answer, writing sample, or transcript here. Quote errors directly — this is what the AI will analyze..."
-                  style={{ marginBottom: 12 }}
-                />
+              {/* Linked class evidence pills */}
+              {classEvidence && (
+                <div style={{ marginBottom: 10 }}>
+                  <p style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginBottom: 8 }}>Skills evaluated in the linked class:</p>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                    {SKILL_KEYS.map(({ key, evalKey, countKey }) => {
+                      const evaluated = classEvidence[evalKey];
+                      const count = countKey ? classEvidence[countKey] : null;
+                      return (
+                        <Pill key={key} tone={evaluated ? (count === 0 ? 'warning' : 'success') : 'muted'}>
+                          {key}{evaluated && count !== null ? ` (${count})` : ''}
+                          {evaluated && count === 0 ? <Icon.warning size={12} /> : ''}
+                        </Pill>
+                      );
+                    })}
+                  </div>
+                  {classEventId && <Button variant="ghost" size="sm" style={{ marginTop: 10 }} onClick={() => onNavigate('calendar:class', { classEventId })}>Edit Class Record</Button>}
+                </div>
+              )}
 
-                {/* Teacher notes */}
-                <label className="dx-label">Teacher notes (optional)</label>
-                <textarea
-                  className="input"
-                  rows={2}
-                  value={inlineTeacherNotes}
-                  onChange={e => setInlineTeacherNotes(e.target.value)}
-                  placeholder="Observations, main difficulty, student mood..."
-                  style={{ marginBottom: 14 }}
-                />
+              {/* No linked class — inline input form */}
+              {noLinkedEvidence && (
+                <div style={{ marginTop: 14 }}>
+                  <p style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginBottom: 12 }}>
+                    No class linked. Paste your transcript and select which skills were covered — the AI will only diagnose what you evaluated.
+                  </p>
 
-                {/* Skills evaluated */}
-                <label className="dx-label" style={{ marginBottom: 8 }}>Skills evaluated in this class *</label>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(170px, 1fr))', gap: 8 }}>
-                  {SKILL_KEYS.map(({ key, evalKey, countKey }) => {
-                    const evaluated = inlineSkills[evalKey];
-                    return (
-                      <div
-                        key={key}
-                        style={{ padding: 10, borderRadius: 'var(--radius-sm)', border: `2px solid ${evaluated ? 'var(--accent)' : 'var(--border)'}`, background: evaluated ? 'var(--accent-subtle)' : 'var(--surface)', cursor: 'pointer', transition: 'all 0.15s' }}
-                        onClick={() => setInlineSkills(s => {
-                          const newVal = !s[evalKey];
-                          return {
-                            ...s,
-                            [evalKey]: newVal,
-                            ...(countKey ? { [countKey]: newVal ? Math.max(1, Number(s[countKey] || 0)) : 0 } : {}),
-                          };
-                        })}
-                      >
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                          <span style={{ width: 16, height: 16, borderRadius: 3, border: `2px solid ${evaluated ? 'var(--accent)' : 'var(--border)'}`, background: evaluated ? 'var(--accent)' : 'transparent', display: 'grid', placeItems: 'center', flexShrink: 0 }}>
-                            {evaluated && <Icon.check size={10} color="#fff" />}
-                          </span>
-                          <span style={{ fontWeight: 600, fontSize: 'var(--text-xs)', color: evaluated ? 'var(--accent-deep)' : 'var(--text)' }}>{key}</span>
-                        </div>
-                        {evaluated && countKey && (
-                          <div style={{ marginTop: 6, display: 'flex', alignItems: 'center', gap: 6 }} onClick={e => e.stopPropagation()}>
-                            <span style={{ fontSize: 10, color: 'var(--muted)' }}>Turns:</span>
-                            <input type="number" min={1} max={30} value={inlineSkills[countKey]}
-                              onChange={e => setInlineSkills(s => ({ ...s, [countKey]: Math.max(1, Number(e.target.value) || 1) }))}
-                              style={{ width: 48, padding: '2px 4px', border: '1px solid var(--border)', borderRadius: 4, fontSize: 11, textAlign: 'center' }} />
+                  <label style={labelStyle}>Class transcript / student answers *</label>
+                  <textarea
+                    className="input"
+                    rows={8}
+                    value={inlineTranscript}
+                    onChange={e => setInlineTranscript(e.target.value)}
+                    placeholder="Paste the student's exact words, speaking answer, writing sample, or transcript here. Quote errors directly — this is what the AI will analyze..."
+                    style={{ marginBottom: 12 }}
+                  />
+
+                  <label style={labelStyle}>Teacher notes (optional)</label>
+                  <textarea
+                    className="input"
+                    rows={2}
+                    value={inlineTeacherNotes}
+                    onChange={e => setInlineTeacherNotes(e.target.value)}
+                    placeholder="Observations, main difficulty, student mood..."
+                    style={{ marginBottom: 14 }}
+                  />
+
+                  <label style={{ ...labelStyle, marginBottom: 8 }}>Skills evaluated in this class *</label>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(170px, 1fr))', gap: 8 }}>
+                    {SKILL_KEYS.map(({ key, evalKey, countKey }) => {
+                      const evaluated = inlineSkills[evalKey];
+                      return (
+                        <div
+                          key={key}
+                          style={{ padding: 10, borderRadius: 'var(--radius-sm)', border: `2px solid ${evaluated ? 'var(--accent)' : 'var(--border)'}`, background: evaluated ? 'var(--accent-subtle)' : 'var(--surface)', cursor: 'pointer', transition: 'all 0.15s' }}
+                          onClick={() => setInlineSkills(s => {
+                            const newVal = !s[evalKey];
+                            return {
+                              ...s,
+                              [evalKey]: newVal,
+                              ...(countKey ? { [countKey]: newVal ? Math.max(1, Number(s[countKey] || 0)) : 0 } : {}),
+                            };
+                          })}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <span style={{ width: 16, height: 16, borderRadius: 3, border: `2px solid ${evaluated ? 'var(--accent)' : 'var(--border)'}`, background: evaluated ? 'var(--accent)' : 'transparent', display: 'grid', placeItems: 'center', flexShrink: 0 }}>
+                              {evaluated && <Icon.check size={10} color="#fff" />}
+                            </span>
+                            <span style={{ fontWeight: 600, fontSize: 'var(--text-xs)', color: evaluated ? 'var(--accent-deep)' : 'var(--text)' }}>{key}</span>
                           </div>
-                        )}
-                      </div>
-                    );
-                  })}
+                          {evaluated && countKey && (
+                            <div style={{ marginTop: 6, display: 'flex', alignItems: 'center', gap: 6 }} onClick={e => e.stopPropagation()}>
+                              <span style={{ fontSize: 10, color: 'var(--muted)' }}>Turns:</span>
+                              <input type="number" min={1} max={30} value={inlineSkills[countKey]}
+                                onChange={e => setInlineSkills(s => ({ ...s, [countKey]: Math.max(1, Number(e.target.value) || 1) }))}
+                                style={{ width: 48, padding: '2px 4px', border: '1px solid var(--border)', borderRadius: 0, fontSize: 11, textAlign: 'center' }} />
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                  {evaluatedSkills.length === 0 && (
+                    <p style={{ color: 'var(--danger)', fontSize: 'var(--text-xs)', marginTop: 8 }}><Icon.warning size={12} /> Select at least one skill that was covered in class.</p>
+                  )}
+                  {!inlineTranscript.trim() && !inlineTeacherNotes.trim() && evaluatedSkills.length > 0 && (
+                    <p style={{ color: 'var(--warning)', fontSize: 'var(--text-xs)', marginTop: 8 }}><Icon.warning size={12} /> Paste a transcript or add teacher notes — the AI needs evidence to diagnose.</p>
+                  )}
                 </div>
-                {evaluatedSkills.length === 0 && (
-                  <p style={{ color: 'var(--danger)', fontSize: 'var(--text-xs)', marginTop: 8 }}>⚠ Select at least one skill that was covered in class.</p>
-                )}
-                {!inlineTranscript.trim() && !inlineTeacherNotes.trim() && evaluatedSkills.length > 0 && (
-                  <p style={{ color: 'var(--warning)', fontSize: 'var(--text-xs)', marginTop: 8 }}>⚠ Paste a transcript or add teacher notes — the AI needs evidence to diagnose.</p>
-                )}
-              </div>
-            )}
-          </Card>
+              )}
+            </Card>
+          )}
 
           {error && (
             <div style={{ padding: 14, background: 'var(--danger-bg)', borderRadius: 'var(--radius-sm)', color: 'var(--danger)', fontSize: 'var(--text-sm)' }}>
@@ -809,7 +646,6 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
             </div>
           )}
 
-          {/* Run button */}
           <div>
             <Button variant="primary" style={{ fontSize: 'var(--text-md)', padding: '12px 24px' }} onClick={handleGenerate} disabled={!prereqOk}>
               <Icon.diagnose size={16} /> Run AI Diagnosis
@@ -874,54 +710,92 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
       {/* ── STEP: REVIEW (simple preview of teacher-written content) ── */}
       {step === 'review' && (
         <div style={{ marginTop: 20 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20, padding: '10px 14px', background: 'var(--bg)', borderRadius: 'var(--radius-md)', fontSize: 'var(--text-xs)' }}>
-            <Button variant="ghost" size="sm" onClick={() => setStep('write')}><Icon.arrowL size={13} /> Back to edit</Button>
-            <span style={{ flex: 1 }} />
+          {/* Approval status bar */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', background: 'var(--bg)', borderRadius: 'var(--radius-md)', marginBottom: 20 }}>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontWeight: 600, fontSize: 'var(--text-sm)' }}>{approvedCount} of {totalSections} sections approved</div>
+              {missingRequiredApprovals.length > 0 && (
+                <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: 4 }}>
+                  Required before final approval: {missingRequiredApprovals.map(key => SECTION_LABELS[key]).join(', ')}
+                </div>
+              )}
+              <div style={{ height: 6, background: 'var(--bg-deep)', borderRadius: 0, marginTop: 6, overflow: 'hidden' }}>
+                <div style={{ height: '100%', width: '100%', background: approvedCount === totalSections ? 'var(--success)' : 'var(--accent)', borderRadius: 0, transform: `scaleX(${approvedCount / totalSections})`, transformOrigin: 'left', transition: 'transform 0.3s' }} />
+              </div>
+            </div>
+            <Button variant="ghost" size="sm" onClick={approveAll}>Approve All</Button>
+            <Button variant="ghost" size="sm" onClick={() => handleSave(false)} disabled={saving}>Save Draft</Button>
             <Button variant="primary" onClick={() => handleSave(true)} disabled={saving || !canApproveDiagnosis}>
               <Icon.check size={14} /> Approve & Save
             </Button>
           </div>
 
-          <Card style={{ padding: 18 }}>
-            <SectionHeader title="Class Summary" />
-            <p style={{ lineHeight: 1.7, fontSize: 'var(--text-sm)', whiteSpace: 'pre-wrap' }}>
-              {teacherMeaning.classSummary || <span style={{ color: 'var(--muted)', fontStyle: 'italic' }}>Not written yet</span>}
-            </p>
-          </Card>
+          {/* Empty draft */}
+          {!SECTION_KEYS.some(({ key }) => sections[key]) && (
+            <Card style={{ padding: 28, textAlign: 'center' }}>
+              <p style={{ color: 'var(--muted)', fontSize: 'var(--text-sm)', marginBottom: 14 }}>
+                This diagnosis has no generated content — it was saved before the AI analysis completed.
+              </p>
+              <Button variant="primary" size="sm" onClick={() => onNavigate('diagnostics:create', { studentId: savedDiagnosis?.studentId || selectedStudentId || studentId })}>
+                <Icon.diagnose size={13} /> Start a new diagnosis
+              </Button>
+            </Card>
+          )}
 
-          <Card style={{ padding: 18, marginTop: 12 }}>
-            <SectionHeader title="Student Feedback" />
-            <ReviewFeedbackSection meaning={teacherMeaning.studentFeedback} />
-          </Card>
+          {/* Section cards — grouped by zone */}
+          {(() => {
+            const renderSection = (key, studentFacing, embedded) => {
+              const sec = sections[key];
+              if (!sec) return null;
+              const label = SECTION_LABELS[key] || key;
+              const isEditing = editingSection === key;
+              const isRegenning = regenerating === key;
 
-          <Card style={{ padding: 18, marginTop: 12 }}>
-            <SectionHeader title="Priority Diagnosis" />
-            {teacherMeaning.priorityDiagnosis.length > 0 ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {teacherMeaning.priorityDiagnosis.map((p, i) => (
-                  <div key={i} style={{ padding: 10, background: 'var(--bg)', borderRadius: 'var(--radius-sm)' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                      <Pill tone={p.urgency === 'Critical' ? 'danger' : p.urgency === 'Developing' ? 'warning' : 'info'}>{p.urgency}</Pill>
-                      <strong style={{ fontSize: 'var(--text-sm)' }}>{p.area}</strong>
+              const header = (
+                <div style={{ padding: '12px 16px', background: sec.approved ? 'var(--success-bg)' : (studentFacing ? 'var(--accent-soft)' : 'var(--bg)'), display: 'flex', alignItems: 'center', gap: 10, borderBottom: '1px solid var(--divider)' }}>
+                  <span style={{ fontWeight: 700, fontSize: 'var(--text-sm)', flex: 1 }}>{label}</span>
+                  {studentFacing && <Pill tone="info">Student-facing</Pill>}
+                  {sec.edited && <Pill tone="warning">Edited</Pill>}
+                  {sec.hidden && <Pill tone="muted">Hidden</Pill>}
+                  {sec.approved && <Pill tone="success"><Icon.check size={12} /> Approved</Pill>}
+                  <div style={{ display: 'flex', gap: 6 }}>
+                    <Button variant="ghost" size="sm" onClick={() => startEdit(key)} disabled={isRegenning}><Icon.edit size={12} /> Edit</Button>
+                    <Button variant="ghost" size="sm" onClick={() => regenerateSection(key)} disabled={isRegenning}><Icon.refresh size={12} /> {isRegenning ? '…' : 'Regen'}</Button>
+                    <Button variant="ghost" size="sm" onClick={() => toggleHide(key)} style={{ color: sec.hidden ? 'var(--muted)' : 'var(--text)' }}><Icon.eye size={12} /></Button>
+                    <Button variant={sec.approved ? 'ghost' : 'primary'} size="sm" onClick={() => toggleApprove(key)} style={sec.approved ? { color: 'var(--danger)' } : {}}>
+                      {sec.approved ? <><Icon.close size={12} /> Unapprove</> : <><Icon.check size={12} /> Approve</>}
+                    </Button>
+                  </div>
+                </div>
+              );
+
+              const body = (
+                <div style={{ padding: 16 }}>
+                  {isEditing ? (
+                    <div>
+                      <textarea value={editText} onChange={e => setEditText(e.target.value)} rows={10} style={{ width: '100%', fontFamily: 'var(--font-mono)', fontSize: 'var(--text-xs)', padding: 10, border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', resize: 'vertical' }} />
+                      <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+                        <Button variant="primary" size="sm" onClick={() => saveEdit(key)}>Save Edit</Button>
+                        <Button variant="ghost" size="sm" onClick={() => setEditingSection(null)}>Cancel</Button>
+                      </div>
                     </div>
                     {p.evidence && <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontStyle: 'italic', marginBottom: 4 }}>Evidence: {p.evidence}</div>}
                     <div style={{ fontSize: 'var(--text-sm)' }}>{p.whatToImprove}</div>
                   </div>
-                ))}
-              </div>
-            ) : (
-              <p style={{ color: 'var(--muted)', fontSize: 'var(--text-xs)', fontStyle: 'italic' }}>No priorities set</p>
-            )}
-          </Card>
-
-          <Card style={{ padding: 18, marginTop: 12 }}>
-            <SectionHeader title="Next Class Focus" />
-            {teacherMeaning.nextClassFocus?.primaryFocus ? (
-              <div style={{ fontSize: 'var(--text-sm)', lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>{teacherMeaning.nextClassFocus.primaryFocus}</div>
-            ) : (
-              <p style={{ color: 'var(--muted)', fontSize: 'var(--text-xs)', fontStyle: 'italic' }}>Not set</p>
-            )}
-          </Card>
+                  {groups.map(group => {
+                    const keys = group.keys.filter(k => sections[k]);
+                    if (keys.length === 1) return renderSection(keys[0], zone.studentFacing, false);
+                    return (
+                      <Card key={group.title} style={{ padding: 0, overflow: 'hidden', border: '1px solid var(--border)' }}>
+                        <div style={{ padding: '10px 16px', background: 'var(--surface)', fontSize: 'var(--text-xs)', fontWeight: 800, letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--text-2)' }}>{group.title}</div>
+                        {keys.map(k => renderSection(k, zone.studentFacing, true))}
+                      </Card>
+                    );
+                  })}
+                </div>
+              );
+            });
+          })()}
 
           <div style={{ display: 'flex', gap: 10, marginTop: 20, flexWrap: 'wrap' }}>
             <Button variant="ghost" size="sm" onClick={() => setStep('write')}><Icon.arrowL size={13} /> Back to edit</Button>
@@ -1255,407 +1129,8 @@ function DraftOverlay({ section, draft, onAccept, onDismiss }) {
   );
 }
 
-/* ── Section content renderer ── */
-function EmptySectionNote({ message }) {
-  return (
-    <div style={{ padding: 14, background: 'var(--warning-bg)', borderRadius: 'var(--radius-sm)', display: 'flex', alignItems: 'center', gap: 8 }}>
-      <Icon.refresh size={14} color="var(--warning)" />
-      <span style={{ fontSize: 'var(--text-sm)', color: 'var(--warning)' }}>{message}</span>
-    </div>
-  );
-}
-
-function KeyValueCards({ content }) {
-  if (!content || typeof content !== 'object') return null;
-  const entries = Array.isArray(content) ? content.map((v, i) => [`${i + 1}`, v]) : Object.entries(content);
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-      {entries.map(([k, v]) => (
-        <div key={k} style={{ padding: 10, background: 'var(--bg)', borderRadius: 'var(--radius-sm)' }}>
-          <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', marginBottom: 4 }}>{camelToLabel(String(k))}</div>
-          <div style={{ fontSize: 'var(--text-sm)', lineHeight: 1.6, color: Array.isArray(v) && v.length === 0 ? 'var(--muted)' : 'inherit', fontStyle: Array.isArray(v) && v.length === 0 ? 'italic' : 'normal' }}>
-            {typeof v === 'object' ? (Array.isArray(v) ? (v.length === 0 ? 'None identified' : v.map((item, j) => <div key={j}>• {typeof item === 'object' ? Object.values(item).join(' — ') : String(item)}</div>)) : Object.entries(v).map(([sk, sv]) => `${camelToLabel(sk)}: ${sv}`).join(' · ')) : String(v)}
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function SectionContent({ sectionKey, content }) {
-  if (!content) return <EmptySectionNote message="Not generated — click Regen to retry this section." />;
-
-  if (typeof content === 'object' && !Array.isArray(content) && Object.keys(content).length === 0) {
-    return <EmptySectionNote message="Not generated — click Regen to retry this section." />;
-  }
-
-  if (typeof content === 'string' && content.trim() === '') {
-    return <EmptySectionNote message="Not generated — click Regen to retry this section." />;
-  }
-
-  if (sectionKey === 'classSummary') {
-    return <p style={{ lineHeight: 1.7, fontSize: 'var(--text-sm)' }}>{String(content)}</p>;
-  }
-
-  if (sectionKey === 'studentFeedback' && typeof content === 'object') {
-    return <StudentFeedbackView feedback={content} />;
-  }
-
-  if (sectionKey === 'errorBankSuggestions' && Array.isArray(content)) {
-    return (
-      <div style={{ overflowX: 'auto' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 'var(--text-xs)' }}>
-          <thead><tr style={{ borderBottom: '1px solid var(--border)' }}>
-            {['Error', 'Correct', 'Category', 'Priority', 'Save?'].map(h => <th key={h} style={{ padding: '6px 8px', textAlign: 'left', fontWeight: 700, color: 'var(--muted)' }}>{h}</th>)}
-          </tr></thead>
-          <tbody>
-            {content.map((err, i) => (
-              <tr key={i} style={{ borderBottom: '1px solid var(--divider)' }}>
-                <td style={{ padding: '6px 8px', color: 'var(--danger)', fontWeight: 600 }}>{err.error}</td>
-                <td style={{ padding: '6px 8px', color: 'var(--success)', fontWeight: 600 }}>{err.correct}</td>
-                <td style={{ padding: '6px 8px', color: 'var(--muted)' }}>{err.category}</td>
-                <td style={{ padding: '6px 8px' }}><Pill tone={err.priority === 'high' ? 'danger' : err.priority === 'medium' ? 'warning' : 'muted'}>{err.priority}</Pill></td>
-                <td style={{ padding: '6px 8px' }}>{err.saveToProfile !== false ? '✓' : '—'}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    );
-  }
-
-  if (sectionKey === 'priorityDiagnosis' && Array.isArray(content)) {
-    if (content.length === 0) {
-      return <EmptySectionNote message="No priority items were generated — click Regen to retry this section." />;
-    }
-    return (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-        {content.map((p, i) => (
-          <div key={i} style={{ padding: 12, background: 'var(--bg)', borderRadius: 'var(--radius-sm)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-              <Pill tone={p.urgency === 'Critical' ? 'danger' : p.urgency === 'Developing' ? 'warning' : 'info'}>{p.urgency}</Pill>
-              <strong style={{ fontSize: 'var(--text-sm)' }}>{p.area}</strong>
-            </div>
-            {p.evidence && <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontStyle: 'italic', marginBottom: 4 }}>Evidence: {p.evidence}</div>}
-            <div style={{ fontSize: 'var(--text-sm)' }}>{p.whatToImprove}</div>
-            {p.howToImprove && <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-2)', marginTop: 4 }}>How: {p.howToImprove}</div>}
-          </div>
-        ))}
-      </div>
-    );
-  }
-
-  if (sectionKey === 'skillDiagnosis' && typeof content === 'object') {
-    return (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-        {Object.entries(content).map(([skill, data]) => {
-          const evidenceCount = data?.evidenceCount || 0;
-          const hasManyConclusions = (data?.strengths?.length || 0) + (data?.weaknesses?.length || 0) + (data?.mainIssues?.length || 0) > 3;
-          const thinEvidence = evidenceCount > 0 && evidenceCount <= 2 && hasManyConclusions;
-          return (
-          <div key={skill} style={{ padding: 14, background: thinEvidence ? 'var(--warning-bg)' : 'var(--bg)', borderRadius: 'var(--radius-sm)', border: thinEvidence ? '1px solid var(--warning-soft)' : 'none' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
-              <span style={{ fontWeight: 700, textTransform: 'capitalize', fontSize: 'var(--text-sm)' }}>{skill}</span>
-              {data?.evaluated === false ? (
-                <Pill tone="muted">Not evaluated</Pill>
-              ) : (
-                <>
-                  {data?.score0to80 != null && <Pill tone={data.score0to80 >= 55 ? 'success' : data.score0to80 >= 40 ? 'warning' : 'danger'}>{data.score0to80}/80</Pill>}
-                  {data?.scoreConfidenceLevel && <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>{data.scoreConfidenceLevel}</span>}
-                </>
-              )}
-            </div>
-            {data?.evaluated === false ? (
-              <p style={{ color: 'var(--muted)', fontSize: 'var(--text-xs)', fontStyle: 'italic', margin: 0 }}>{data.diagnosis || 'Not evaluated — no evidence.'}</p>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                {thinEvidence && (
-                  <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--warning)', marginBottom: 4 }}>
-                    ⚠ {evidenceCount} turn{evidenceCount !== 1 ? 's' : ''} of evidence — moderate number of conclusions for this evidence volume
-                  </div>
-                )}
-                {data?.evidenceNote && !thinEvidence && (
-                  <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontStyle: 'italic', marginBottom: 4 }}>{data.evidenceNote}</div>
-                )}
-                {data?.strengths?.length > 0 && data.strengths.map((s, j) => (
-                  <div key={j} style={{ fontSize: 'var(--text-xs)', color: 'var(--success)' }}>✓ {s}</div>
-                ))}
-                {data?.weaknesses?.length > 0 && data.weaknesses.map((w, j) => (
-                  <div key={j} style={{ fontSize: 'var(--text-xs)', color: 'var(--danger)' }}>✗ {w}</div>
-                ))}
-                {data?.mainIssues?.length > 0 && data.mainIssues.map((iss, j) => (
-                  <div key={j} style={{ fontSize: 'var(--text-xs)', color: 'var(--danger)' }}>✗ {iss}</div>
-                ))}
-                {data?.whatToImproveNext && <div style={{ fontSize: 'var(--text-xs)', color: 'var(--accent)', marginTop: 2 }}>Next: {data.whatToImproveNext}</div>}
-              </div>
-            )}
-          </div>
-          );
-        })}
-      </div>
-    );
-  }
-
-  if (sectionKey === 'homeworkRecommendation' && typeof content === 'object') {
-    return (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-        <div>
-          <div style={{ fontWeight: 700, fontSize: 'var(--text-md)', marginBottom: 4 }}>{content.title}</div>
-          <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-2)' }}>{content.objective}</div>
-        </div>
-        {content.instructions && (
-          <div style={{ padding: 12, background: 'var(--accent-subtle)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-sm)', lineHeight: 1.6 }}>{content.instructions}</div>
-        )}
-        {Array.isArray(content.tasks) && content.tasks.map((t, i) => (
-          <div key={t.taskNumber ?? i} style={{ padding: 14, background: 'var(--bg)', borderRadius: 'var(--radius-sm)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-              <span style={{ fontSize: 'var(--text-xs)', fontWeight: 800, color: 'var(--accent)' }}>Task {t.taskNumber || i + 1}</span>
-              {t.type && <Pill tone="accent">{t.type}</Pill>}
-            </div>
-            <div style={{ fontSize: 'var(--text-sm)', fontWeight: 600, marginBottom: 6 }}>{typeof t === 'string' ? t : t.description}</div>
-            {t.content && <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-2)', lineHeight: 1.7, whiteSpace: 'pre-wrap', marginBottom: 6 }}>{t.content}</div>}
-            {t.example && <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontStyle: 'italic' }}>Example: {t.example}</div>}
-          </div>
-        ))}
-        {content.teacherNotes && (
-          <div style={{ padding: 10, background: 'var(--warning-bg)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-xs)', color: 'var(--warning)' }}>
-            <strong>Teacher notes:</strong> {content.teacherNotes}
-          </div>
-        )}
-      </div>
-    );
-  }
-
-  if (sectionKey === 'nextClassFocus' && typeof content === 'object') {
-    return (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-        {Object.entries(content).map(([k, v]) => (
-          <div key={k} style={{ padding: 10, background: 'var(--bg)', borderRadius: 'var(--radius-sm)' }}>
-            <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--accent)', textTransform: 'uppercase', marginBottom: 4 }}>{camelToLabel(k)}</div>
-            <div style={{ fontSize: 'var(--text-sm)', lineHeight: 1.6, color: 'var(--text)' }}>{String(v)}</div>
-          </div>
-        ))}
-      </div>
-    );
-  }
-
-  if (sectionKey === 'profileUpdateSuggestions' && typeof content === 'object' && !Array.isArray(content)) {
-    return (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-        {Object.entries(content).map(([k, v]) => (
-          <div key={k} style={{ padding: 10, background: 'var(--bg)', borderRadius: 'var(--radius-sm)' }}>
-            <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--accent)', textTransform: 'uppercase', marginBottom: 6 }}>{camelToLabel(k)}</div>
-            {Array.isArray(v) ? (
-              <ul style={{ margin: 0, paddingLeft: 16, fontSize: 'var(--text-sm)', lineHeight: 1.7 }}>
-                {v.map((item, j) => <li key={j}>{String(item)}</li>)}
-              </ul>
-            ) : (
-              <div style={{ fontSize: 'var(--text-sm)', lineHeight: 1.6 }}>{String(v)}</div>
-            )}
-          </div>
-        ))}
-      </div>
-    );
-  }
-
-  if (sectionKey === 'vocabGrammarTargets' && typeof content === 'object') {
-    const vocab = Array.isArray(content.vocabularyTargets) ? content.vocabularyTargets : [];
-    const grammar = Array.isArray(content.grammarTargets) ? content.grammarTargets : [];
-    return (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-        {vocab.length > 0 && (
-          <div>
-            <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--accent)', textTransform: 'uppercase', marginBottom: 8 }}>Vocabulary Targets</div>
-            {vocab.map((v, i) => (
-              <div key={v.wordOrPhrase ?? i} style={{ padding: 10, background: 'var(--bg)', borderRadius: 'var(--radius-sm)', marginBottom: 6 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                  <strong style={{ fontSize: 'var(--text-sm)' }}>{v.wordOrPhrase}</strong>
-                  {v.category && <Pill tone="muted">{v.category}</Pill>}
-                </div>
-                {v.meaning && <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-2)', marginBottom: 2 }}>{v.meaning}</div>}
-                {v.exampleSentence && <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontStyle: 'italic' }}>"{v.exampleSentence}"</div>}
-              </div>
-            ))}
-          </div>
-        )}
-        {grammar.length > 0 && (
-          <div>
-            <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--warning)', textTransform: 'uppercase', marginBottom: 8 }}>Grammar Targets</div>
-            {grammar.map((g, i) => (
-              <div key={g.area ?? i} style={{ padding: 10, background: 'var(--bg)', borderRadius: 'var(--radius-sm)', marginBottom: 6 }}>
-                <strong style={{ fontSize: 'var(--text-sm)' }}>{g.area}</strong>
-                {g.issue && <div style={{ fontSize: 'var(--text-xs)', color: 'var(--danger)', marginTop: 4 }}>{g.issue}</div>}
-                {g.correction && <div style={{ fontSize: 'var(--text-xs)', color: 'var(--success)', marginTop: 2 }}>{g.correction}</div>}
-                {g.practiceDirection && <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: 2 }}>Practice: {g.practiceDirection}</div>}
-              </div>
-            ))}
-          </div>
-        )}
-        {vocab.length === 0 && grammar.length === 0 && (
-          <EmptySectionNote message="No vocabulary or grammar targets were generated — click Regen to retry this section." />
-        )}
-      </div>
-    );
-  }
-
-  if (sectionKey === 'readinessCheck' && typeof content === 'object') {
-    const fmt = (v) => {
-      if (v === true) return '✓ Yes';
-      if (v === false) return '✗ No';
-      return String(v);
-    };
-    return (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-        {Object.entries(content).map(([k, v]) => {
-          if (Array.isArray(v) && v.length === 0) return null;
-          return (
-            <div key={k} style={{ padding: 10, background: 'var(--bg)', borderRadius: 'var(--radius-sm)' }}>
-              <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', marginBottom: 4 }}>{camelToLabel(k)}</div>
-              <div style={{ fontSize: 'var(--text-sm)', lineHeight: 1.6, color: 'var(--text)' }}>
-                {Array.isArray(v)
-                  ? v.map((item, j) => <div key={j}>• {camelToLabel(String(item))}</div>)
-                  : fmt(v)}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    );
-  }
-
-  if (sectionKey === 'targetScoreRelevance' && typeof content === 'object') {
-    return (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-        {Object.entries(content).map(([k, v]) => (
-          <div key={k} style={{ padding: 10, background: 'var(--bg)', borderRadius: 'var(--radius-sm)' }}>
-            <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', marginBottom: 4 }}>{camelToLabel(k)}</div>
-            <div style={{ fontSize: 'var(--text-sm)', lineHeight: 1.6, color: 'var(--text)' }}>
-              {Array.isArray(v) ? v.map((item, j) => <div key={j}>• {typeof item === 'object' ? JSON.stringify(item) : String(item)}</div>) : String(v)}
-            </div>
-          </div>
-        ))}
-      </div>
-    );
-  }
-
-  if (typeof content === 'object') {
-    return <KeyValueCards content={content} />;
-  }
-
-  return <p style={{ lineHeight: 1.7, fontSize: 'var(--text-sm)' }}>{String(content)}</p>;
-}
-
-function PrereqIcon({ ok, required }) {
-  return (
-    <span style={{ width: 20, height: 20, borderRadius: '50%', background: ok ? 'var(--success)' : required ? 'var(--danger)' : 'var(--muted)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-      {ok ? <Icon.check size={11} color="#fff" /> : <span style={{ color: '#fff', fontSize: 11, fontWeight: 700 }}>{required ? '!' : '?'}</span>}
-    </span>
-  );
-}
-
-function camelToLabel(str) {
-  return str.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase());
-}
-
-// True when an AI section came back missing or with no usable content.
-function isSectionEmpty(content) {
-  if (content == null) return true;
-  if (typeof content === 'string') return content.trim().length === 0;
-  if (Array.isArray(content)) return content.length === 0;
-  if (typeof content === 'object') {
-    const vals = Object.values(content);
-    if (vals.length === 0) return true;
-    // Object of arrays (e.g. vocabGrammarTargets): empty if every array is empty.
-    if (vals.every(v => Array.isArray(v))) return vals.every(v => v.length === 0);
-  }
-  return false;
-}
-
-function tryParseOrString(text) {
-  try { return JSON.parse(text); } catch { return text; }
-}
-
-function normalizeEvidenceCounts(evidence) {
-  if (!evidence || typeof evidence !== 'object') return evidence;
-  const next = { ...evidence };
-  SKILL_KEYS.forEach(({ evalKey, countKey }) => {
-    if (!countKey) return;
-    if (next[evalKey]) next[countKey] = Math.max(1, Number(next[countKey] || 0));
-    else next[countKey] = 0;
-  });
-  return next;
-}
-
-function normalizeDiagnosticData(parsed, evidence = {}) {
-  if (!parsed || typeof parsed !== 'object') return { scores: {}, errors: [], vocabulary: [], gapVsTarget: {}, priorityRecommendations: [] };
-  const scores = parsed.scores || {};
-  const skillMeta = {
-    speaking: ['evaluatedSpeaking', 'speakingEvidenceCount'],
-    writing: ['evaluatedWriting', 'writingEvidenceCount'],
-    reading: ['evaluatedReading', 'readingEvidenceCount'],
-    listening: ['evaluatedListening', 'listeningEvidenceCount'],
-    grammar: ['evaluatedGrammar', 'grammarEvidenceCount'],
-    vocabulary: ['evaluatedVocabulary', 'vocabularyEvidenceCount'],
-    testStrategy: ['evaluatedTestStrategy', 'testStrategyEvidenceCount'],
-  };
-  Object.entries(skillMeta).forEach(([skill, [flagKey, countKey]]) => {
-    const existing = scores[skill] || {};
-    if (!scores[skill]) {
-      const evaluated = Boolean(existing.evaluated ?? evidence?.[flagKey]);
-      const evidenceCount = Number(existing.evidenceCount ?? evidence?.[countKey] ?? 0) || 0;
-      scores[skill] = {
-        evaluated,
-        evidenceCount,
-        score0to80: evaluated ? (existing.score0to80 ?? null) : null,
-        scoreConfidenceLevel: evaluated ? (existing.scoreConfidenceLevel || 'Limited evidence') : 'Not evaluated enough',
-        scoreProvisional: existing.scoreProvisional ?? evaluated,
-        transcriptOnly: existing.transcriptOnly ?? (skill === 'speaking'),
-        strengths: Array.isArray(existing.strengths) ? existing.strengths : [],
-        weaknesses: Array.isArray(existing.weaknesses) ? existing.weaknesses : [],
-        mainIssues: Array.isArray(existing.mainIssues) ? existing.mainIssues : [],
-        subskillsAssessed: Array.isArray(existing.subskillsAssessed) ? existing.subskillsAssessed : [],
-        readinessTowardTarget: existing.readinessTowardTarget || (evaluated ? 'Limited evidence gathered.' : 'Not evaluated yet.'),
-        whatToImproveNext: existing.whatToImproveNext || '',
-        evidenceNote: existing.evidenceNote || '',
-        ratingBreakdown: existing.ratingBreakdown,
-      };
-    }
-  });
-  return {
-    scores,
-    errors: Array.isArray(parsed.errors) ? parsed.errors : [],
-    vocabulary: Array.isArray(parsed.vocabulary) ? parsed.vocabulary : [],
-    gapVsTarget: parsed.gapVsTarget || {},
-    priorityRecommendations: Array.isArray(parsed.priorityRecommendations) ? parsed.priorityRecommendations : [],
-  };
-}
-
-function buildSnapshot(skillDiagnosis) {
-  if (!skillDiagnosis || typeof skillDiagnosis !== 'object') return [];
-  return Object.entries(skillDiagnosis).map(([skill, data]) => ({
-    section: skill.charAt(0).toUpperCase() + skill.slice(1),
-    score_0_80: data?.score0to80 ?? 0,
-    score_0_4: data?.score0to80 ? Math.round((data.score0to80 / 80) * 4 * 100) / 100 : 0,
-    confidence: data?.scoreProvisional ? 'low' : 'medium',
-    trend: 'stable',
-    strength: data?.strengths?.[0] || '',
-    gap: data?.weaknesses?.[0] || '',
-    next_step: data?.whatToImproveNext || '',
-  }));
-}
-
-const SKILL_KEYS = [
-  { key: 'Speaking',     evalKey: 'evaluatedSpeaking',     countKey: 'speakingEvidenceCount' },
-  { key: 'Writing',      evalKey: 'evaluatedWriting',      countKey: 'writingEvidenceCount' },
-  { key: 'Reading',      evalKey: 'evaluatedReading',      countKey: 'readingEvidenceCount' },
-  { key: 'Listening',    evalKey: 'evaluatedListening',    countKey: 'listeningEvidenceCount' },
-  { key: 'Grammar',      evalKey: 'evaluatedGrammar',      countKey: 'grammarEvidenceCount' },
-  { key: 'Vocabulary',   evalKey: 'evaluatedVocabulary',   countKey: 'vocabularyEvidenceCount' },
-  { key: 'Test Strategy',evalKey: 'evaluatedTestStrategy', countKey: 'testStrategyEvidenceCount' },
-];
-
 const backStyle = { background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)', fontSize: 'var(--text-sm)', display: 'flex', alignItems: 'center', gap: 4, marginBottom: 16, padding: 0, fontFamily: 'var(--font-ui)' };
 const S = {
-  headline: { fontFamily: 'var(--font-display)', fontSize: 'var(--text-2xl)', fontWeight: 700, color: 'var(--accent-deep)', margin: '0 0 4px' },
+  headline: { fontFamily: 'var(--font-ui)', fontSize: 'var(--text-2xl)', fontWeight: 700, color: 'var(--accent-deep)', margin: '0 0 4px' },
   sub: { fontSize: 'var(--text-sm)', color: 'var(--muted)', margin: '0 0 0' },
 };

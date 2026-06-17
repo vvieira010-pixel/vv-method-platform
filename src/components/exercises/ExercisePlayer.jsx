@@ -1,4 +1,6 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback } from 'react'; // ExercisePlayer
+import { motion } from 'motion/react';
+import { Icon } from '../shared.jsx';
 import { loadExercises } from './validateExercise.js';
 import MultipleChoice from './MultipleChoice.jsx';
 import FillBlank from './FillBlank.jsx';
@@ -6,11 +8,10 @@ import ShortAnswer from './ShortAnswer.jsx';
 import OrderSentences from './OrderSentences.jsx';
 import ErrorCorrection from './ErrorCorrection.jsx';
 import Listening from './Listening.jsx';
-import Reading from './Reading.jsx';
-import LevelUp from './LevelUp.jsx';
+import ReadExercise from './ReadExercise.jsx';
 
-const TEAL = '#0D9488';
-const NAVY = '#0B1F3A';
+const TEAL = 'var(--accent)';
+const NAVY = 'var(--primary-ink)';
 
 const TYPE_LABELS = {
   multiple_choice: 'Multiple Choice',
@@ -30,22 +31,72 @@ const TYPE_LABELS = {
   order: 'Ordering',
   fix: 'Level Up',
   listen: 'Listening',
-  reading: 'Reading',
-  levelup: 'Level Up',
+  read: 'Reading',
 };
 
 function InvalidExercise({ reason }) {
   return (
-    <div style={{ padding: '14px 16px', background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 10, color: '#991B1B', fontSize: 13.5, lineHeight: 1.6 }}>
+    <div style={{ padding: '14px 16px', background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 'var(--radius-sm, 6px)', color: '#991B1B', fontSize: 13.5, lineHeight: 1.6 }}>
       <strong>This exercise could not be loaded</strong> — {reason}
     </div>
   );
 }
 
-function ExerciseCard({ exercise, index, total, result, onComplete, onNext }) {
+function deriveHints(exercise) {
+  if (exercise.hints?.length > 0) return exercise.hints;
+  const type = exercise.type;
+  if (type === 'mcq' || type === 'multiple_choice' || type === 'multiple_choice_single' || type === 'multiple_choice_multiple') {
+    return [
+      'What key concept or rule does this question test?',
+      'Try eliminating options that are clearly wrong. What makes each remaining option plausible or not?',
+      'The correct answer addresses the main point — not just a familiar-sounding word.',
+    ];
+  }
+  if (type === 'blank' || type === 'fill_blank') {
+    const firstAnswer = exercise.blanks?.[0]?.answer || '';
+    return [
+      'What type of word fits here — verb, noun, adjective, or connector?',
+      'Think about the grammar structure around the blank. What form is needed?',
+      firstAnswer ? `The first missing word begins with: "${firstAnswer[0].toUpperCase()}…"` : 'Re-read the full sentence for context clues.',
+    ];
+  }
+  if (type === 'short' || type === 'short_answer' || type === 'speak') {
+    return [
+      'Start with one clear main point, then support it with a reason or example.',
+      'Use vocabulary that is specific and relevant to the topic.',
+      exercise.rubric ? `Key criteria: ${String(exercise.rubric).slice(0, 100)}` : 'Aim for 2–3 complete sentences with clear reasoning.',
+    ];
+  }
+  if (type === 'fix' || type === 'error_correction') {
+    return [
+      'Read each sentence aloud. Does anything sound unnatural?',
+      'Common error types: verb tense, missing or wrong article (a/an/the), wrong preposition.',
+      'Check subject–verb agreement and word form (noun vs. adjective vs. verb).',
+    ];
+  }
+  if (type === 'order' || type === 'order_sentences' || type === 'ordering_sequencing') {
+    return [
+      'Think about logical flow: introduction → main points → conclusion.',
+      'Look for connecting words (first, then, however, therefore) that signal position.',
+      'Which sentence introduces the overall topic? Start there.',
+    ];
+  }
+  return [
+    'What key concept or vocabulary does this exercise test?',
+    'Look for context clues in the question itself.',
+    'Think about grammar rules or vocabulary you have practised recently.',
+  ];
+}
+
+function ExerciseCard({ exercise, index, total, result, onComplete, onNext, onBack, onSkip, recallMode }) {
   const label = TYPE_LABELS[exercise.type] || exercise.type;
   const skill = exercise.skill || exercise.focus || null;
   const done = result != null;
+
+  const [recallText, setRecallText] = useState('');
+  const [recallDone, setRecallDone] = useState(!recallMode);
+  const [hintLevel, setHintLevel] = useState(0);
+  const hints = deriveHints(exercise);
 
   function renderExercise() {
     const props = { exercise, onComplete };
@@ -57,15 +108,15 @@ function ExerciseCard({ exercise, index, total, result, onComplete, onNext }) {
       case 'fill_blank':
       case 'blank':      return <FillBlank {...props} />;
       case 'short_answer':
-      case 'short':      return <ShortAnswer {...props} />;
+      case 'short':
+      case 'speak':      return <ShortAnswer {...props} />;
       case 'order_sentences':
       case 'ordering_sequencing':
       case 'order':      return <OrderSentences {...props} />;
       case 'error_correction':
       case 'fix':        return <ErrorCorrection {...props} />;
       case 'listen':     return <Listening {...props} />;
-      case 'reading':    return <Reading {...props} />;
-      case 'levelup':    return <LevelUp {...props} />;
+      case 'read':       return <ReadExercise {...props} />;
       // New types (stubs for now)
       case 'drag_and_drop_matching':
       case 'true_false_with_explanation':
@@ -78,19 +129,19 @@ function ExerciseCard({ exercise, index, total, result, onComplete, onNext }) {
 
   return (
     <div style={{
-      background: '#fff', borderRadius: 16, overflow: 'hidden',
-      border: '1px solid rgba(153,176,255,0.35)',
+      background: '#fff', borderRadius: 'var(--radius-md, 8px)', overflow: 'hidden',
+      border: '1px solid var(--border, #e5e7eb)',
       boxShadow: '0 4px 20px -8px rgba(14,31,92,0.18), 0 1px 4px rgba(18,40,121,0.06)',
     }}>
       {/* Card header */}
       <div style={{
         padding: '14px 20px', borderBottom: '1px solid var(--divider)',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
-        background: 'linear-gradient(135deg, #F0FDFA 0%, #F8FAFF 100%)',
+        background: 'var(--accent-subtle, #e3f5f4)',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <span style={{
-            padding: '3px 10px', borderRadius: 99,
+            padding: '3px 10px', borderRadius: 'var(--radius-sm, 6px)',
             background: TEAL, color: '#fff',
             fontSize: 11, fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase',
           }}>
@@ -98,7 +149,7 @@ function ExerciseCard({ exercise, index, total, result, onComplete, onNext }) {
           </span>
           {skill && (
             <span style={{
-              padding: '3px 10px', borderRadius: 99,
+              padding: '3px 10px', borderRadius: 'var(--radius-sm, 6px)',
               background: 'var(--accent-soft)', color: NAVY,
               fontSize: 11, fontWeight: 600,
             }}>
@@ -111,36 +162,102 @@ function ExerciseCard({ exercise, index, total, result, onComplete, onNext }) {
         </span>
       </div>
 
-      {/* Exercise body */}
-      <div style={{ padding: '20px 20px 24px' }}>
-        {/* Pre-exercise description (teacher-provided intro / instructions) */}
-        {exercise.description && (
-          <div style={{
-            padding: '10px 14px', marginBottom: 16, borderRadius: 8,
-            background: 'var(--accent-subtle)', border: '1px solid var(--accent-soft)',
-            fontSize: 13.5, lineHeight: 1.65, color: 'var(--text-2)',
-          }}>
-            {exercise.description}
+      {/* Recall gate — shown before exercise when recallMode is on */}
+      {!recallDone && (
+        <div style={{ padding: '20px 20px 24px', borderBottom: '1px solid var(--divider)' }}>
+          <div style={{ fontSize: 'var(--text-sm)', fontWeight: 600, color: NAVY, marginBottom: 6 }}>
+            Before you begin — what do you already know?
           </div>
-        )}
-        {renderExercise()}
-      </div>
-
-      {/* Next / Finish button */}
-      {done && (
-        <div style={{ padding: '0 20px 20px' }}>
-          <button
-            onClick={onNext}
-            style={{
-              padding: '10px 24px', borderRadius: 10, border: 'none', cursor: 'pointer',
-              background: `linear-gradient(120deg, ${TEAL} 0%, ${NAVY} 100%)`,
-              color: '#fff', fontWeight: 600, fontSize: 14, fontFamily: 'var(--font-ui)',
-            }}
-          >
-            {index < total - 1 ? 'Next exercise →' : 'Finish session →'}
-          </button>
+          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginBottom: 10, lineHeight: 1.5 }}>
+            Try to recall what you know about this topic before seeing the question. Even partial ideas are useful.
+          </div>
+          <textarea
+            value={recallText}
+            onChange={e => setRecallText(e.target.value)}
+            placeholder="Write anything you remember — words, rules, examples…"
+            rows={3}
+            style={{ width: '100%', padding: '8px 10px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm, 6px)', fontSize: 'var(--text-sm)', lineHeight: 1.6, resize: 'vertical', fontFamily: 'var(--font-ui)', boxSizing: 'border-box' }}
+          />
+          <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+            <button
+              onClick={() => setRecallDone(true)}
+              style={{ padding: '8px 18px', borderRadius: 'var(--radius-sm, 6px)', border: 'none', cursor: 'pointer', background: `linear-gradient(120deg, ${TEAL} 0%, ${NAVY} 100%)`, color: '#fff', fontWeight: 600, fontSize: 13, fontFamily: 'var(--font-ui)' }}
+            >
+              {recallText.trim() ? "I'm ready — show the exercise" : 'Skip recall — show the exercise'}
+            </button>
+          </div>
         </div>
       )}
+
+      {/* Exercise body */}
+      {recallDone && (
+        <div style={{ padding: '20px 20px 24px' }}>
+          {renderExercise()}
+        </div>
+      )}
+
+      {/* Progressive hint ladder */}
+      {recallDone && !done && (
+        <div style={{ padding: '0 20px 16px' }}>
+          {hintLevel > 0 && (
+            <div style={{ marginBottom: 8, padding: '8px 12px', background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: 'var(--radius-sm, 6px)', fontSize: 'var(--text-xs)', color: '#92400E', lineHeight: 1.5 }}>
+              <strong>Hint {hintLevel}:</strong> {hints[hintLevel - 1]}
+            </div>
+          )}
+          {hintLevel < hints.length && (
+            <button
+              onClick={() => setHintLevel(l => l + 1)}
+              style={{ padding: '5px 14px', borderRadius: 'var(--radius-sm, 6px)', border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text-2)', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-ui)' }}
+            >
+              {hintLevel === 0 ? 'Need a hint?' : 'Next hint →'}
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* Navigation footer */}
+      <div style={{ padding: '0 20px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+        <button
+          onClick={onBack}
+          disabled={index === 0}
+          style={{
+            padding: '8px 16px', borderRadius: 'var(--radius-sm, 6px)',
+            border: '1px solid var(--border, #e5e7eb)', background: 'none',
+            color: 'var(--text-2, #374151)', fontSize: 13, fontWeight: 600,
+            cursor: index === 0 ? 'default' : 'pointer', fontFamily: 'var(--font-ui)',
+            opacity: index === 0 ? 0.5 : 1,
+          }}
+        >
+          ← Back
+        </button>
+        <div style={{ display: 'flex', gap: 8 }}>
+          {!done && (
+            <button
+              onClick={onSkip}
+              style={{
+                padding: '8px 16px', borderRadius: 'var(--radius-sm, 6px)',
+                border: '1px solid var(--border, #e5e7eb)', background: 'none',
+                color: 'var(--muted, #9ca3af)', fontSize: 13, fontWeight: 500,
+                cursor: 'pointer', fontFamily: 'var(--font-ui)',
+              }}
+            >
+              Skip →
+            </button>
+          )}
+          {done && (
+            <button
+              onClick={onNext}
+              style={{
+                padding: '8px 22px', borderRadius: 'var(--radius-sm, 6px)', border: 'none',
+                cursor: 'pointer', background: `linear-gradient(120deg, ${TEAL} 0%, ${NAVY} 100%)`,
+                color: '#fff', fontWeight: 600, fontSize: 13, fontFamily: 'var(--font-ui)',
+              }}
+            >
+              {index < total - 1 ? 'Next exercise →' : 'Finish session →'}
+            </button>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
@@ -149,7 +266,7 @@ function ProgressBar({ current, total }) {
   const pct = total > 0 ? Math.round((current / total) * 100) : 0;
   return (
     <div style={{ marginBottom: 20 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6, fontSize: 12.5, color: 'var(--muted)', fontWeight: 500 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6, fontSize: 'var(--text-xs)', color: 'var(--muted)', fontWeight: 500 }}>
         <span>Progress</span>
         <span>{current} of {total} completed</span>
       </div>
@@ -174,7 +291,7 @@ function ScoreSummary({ results, total }) {
 
   return (
     <div style={{
-      padding: '24px', borderRadius: 16, background: '#F0FDFA',
+      padding: '24px', borderRadius: 'var(--radius-md, 8px)', background: '#F0FDFA',
       border: `2px solid ${TEAL}`, textAlign: 'center',
     }}>
       <div style={{ fontSize: 13, fontWeight: 700, color: TEAL, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 12 }}>
@@ -205,7 +322,7 @@ function ScoreSummary({ results, total }) {
  *   title — optional session title
  *   onSessionComplete — called with { results, score } when all done
  */
-export default function ExercisePlayer({ exercises: raw, title, onSessionComplete }) {
+export default function ExercisePlayer({ exercises: raw, title, onSessionComplete, recallMode = false }) {
   const { exercises, errors } = loadExercises(Array.isArray(raw) ? raw : (raw || []));
 
   const [current, setCurrent] = useState(0);
@@ -236,11 +353,24 @@ export default function ExercisePlayer({ exercises: raw, title, onSessionComplet
     }
   }, [current, exercises.length, onSessionComplete]);
 
+  const handleBack = useCallback(() => {
+    if (current > 0) setCurrent(c => c - 1);
+  }, [current]);
+
+  const handleSkip = useCallback(() => {
+    const nextIdx = current + 1;
+    if (nextIdx >= exercises.length) {
+      setDone(true);
+    } else {
+      setCurrent(nextIdx);
+    }
+  }, [current, exercises.length]);
+
   // Errors only (nothing valid loaded)
   if (errors.length > 0 && exercises.length === 0) {
     return (
       <div style={{ maxWidth: 640, margin: '0 auto', padding: '20px 16px' }}>
-        {title && <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-xl)', fontWeight: 700, color: NAVY, marginBottom: 16 }}>{title}</h2>}
+        {title && <h2 style={{ fontFamily: 'var(--font-ui)', fontSize: 'var(--text-xl)', fontWeight: 700, color: NAVY, marginBottom: 16 }}>{title}</h2>}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {errors.map((e, i) => <InvalidExercise key={i} reason={e} />)}
         </div>
@@ -253,15 +383,15 @@ export default function ExercisePlayer({ exercises: raw, title, onSessionComplet
   return (
     <div style={{ maxWidth: 640, margin: '0 auto', padding: '20px 16px' }}>
       {title && (
-        <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-xl)', fontWeight: 700, color: NAVY, marginBottom: 6 }}>{title}</h2>
+        <h2 style={{ fontFamily: 'var(--font-ui)', fontSize: 'var(--text-xl)', fontWeight: 700, color: NAVY, marginBottom: 6 }}>{title}</h2>
       )}
 
       {/* Load errors (partial — some valid exercises exist) */}
       {errors.length > 0 && (
         <div style={{ marginBottom: 16, display: 'flex', flexDirection: 'column', gap: 6 }}>
           {errors.map((e, i) => (
-            <div key={i} style={{ padding: '8px 12px', background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: 8, fontSize: 13, color: '#92400E' }}>
-              ⚠ {e}
+            <div key={i} style={{ padding: '8px 12px', background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: 'var(--radius-sm, 6px)', fontSize: 13, color: '#92400E' }}>
+              <Icon.warning size={12} /> {e}
             </div>
           ))}
         </div>
@@ -270,31 +400,45 @@ export default function ExercisePlayer({ exercises: raw, title, onSessionComplet
       <ProgressBar current={completedCount} total={exercises.length} />
 
       {!done ? (
-        <ExerciseCard
+        <motion.div
           key={current}
-          exercise={exercises[current]}
-          index={current}
-          total={exercises.length}
-          result={results[current]}
-          onComplete={handleComplete}
-          onNext={handleNext}
-        />
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+        >
+          <ExerciseCard
+            exercise={exercises[current]}
+            index={current}
+            total={exercises.length}
+            result={results[current]}
+            onComplete={handleComplete}
+            onNext={handleNext}
+            onBack={handleBack}
+            onSkip={handleSkip}
+            recallMode={recallMode}
+          />
+        </motion.div>
       ) : (
-        <>
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
+        >
           <ScoreSummary results={results.filter(Boolean)} total={exercises.length} />
           <button
             onClick={() => { setCurrent(0); setResults([]); setDone(false); }}
             style={{
-              marginTop: 16, padding: '10px 24px', borderRadius: 10,
+              marginTop: 16, padding: '10px 24px', borderRadius: 'var(--radius-sm, 6px)',
               border: '1.5px solid var(--border)', background: 'var(--surface)',
-              color: 'var(--text-2)', fontWeight: 600, fontSize: 14, cursor: 'pointer',
+              color: 'var(--text-2)', fontWeight: 600, fontSize: 'var(--text-sm)', cursor: 'pointer',
               fontFamily: 'var(--font-ui)',
             }}
           >
             Restart exercises
           </button>
-        </>
+        </motion.div>
       )}
     </div>
   );
 }
+
