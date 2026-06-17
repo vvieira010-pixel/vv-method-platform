@@ -1,0 +1,24 @@
+# Quality gate — runs on every push and PR, independent of deployment.
+# Added per platform audit (2026-06-17, finding F1): the repo previously had
+# no test runner wired and CI only built/deployed.
+name: CI
+on:
+  push:
+    branches: ["master"]
+  pull_request:
+  workflow_dispatch:
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Lint
+        run: npm run lint
+      - name: Test
+        run: npm test

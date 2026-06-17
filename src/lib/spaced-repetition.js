@@ -1,5 +1,7 @@
 /* spaced-repetition.js — Error bank items scheduled for review at increasing intervals */
 
+import { shuffleArray } from './exercise-types.js';
+
 const REVIEW_INTERVALS = [1, 3, 7, 14, 30];
 
 // Optional Supabase sync — enabled when dbUpsert is provided.
@@ -144,7 +146,9 @@ export function toMCQ(scheduleEntry, allEntries) {
   }
 
   const options = [scheduleEntry.correctText, ...distractors];
-  const shuffled = options.map((v, i) => ({ v, i })).sort(() => Math.random() - 0.5);
+  // Seeded, unbiased Fisher-Yates (deterministic per item) instead of the
+  // statistically biased `.sort(() => Math.random() - 0.5)`.
+  const shuffled = shuffleArray(options.map((v, i) => ({ v, i })), scheduleEntry.id);
   const correctIdx = shuffled.findIndex(s => s.i === 0);
 
   return {

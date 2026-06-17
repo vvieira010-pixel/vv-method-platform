@@ -8,10 +8,13 @@
 
 export const ANA_PAULA_PROFILE = {
   student_profile: {
-    student_name: "Ana Paula Silva",
+    // De-identified per audit finding E3 — do not ship real learner PII in
+    // committed source. Real per-student profiles belong in the database
+    // (gitignored/anonymized), not here. This remains a generic sample template.
+    student_name: "Sample Learner",
     target_exam: "MET",
     target_level: "B2+",
-    professional_context: "Registered Nurse seeking English proficiency for nursing license reactivation in Massachusetts",
+    professional_context: "Healthcare professional preparing English for professional licensing",
     main_needs: [
       "structured speaking under pressure",
       "writing support and evidence",

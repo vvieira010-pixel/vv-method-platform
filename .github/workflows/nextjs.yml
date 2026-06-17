@@ -1,7 +1,10 @@
-name: Deploy Vite SPA to GitHub Pages
+# NOTE: Manual-only by design. A GitHub Pages build cannot run the Vercel
+# serverless functions in /api (ai.js, tts.js), so AI feedback and TTS are
+# non-functional on the Pages URL. Vercel is the production target. This
+# workflow is kept for static preview/archival builds via manual dispatch only.
+# Do NOT re-enable the push trigger without restoring server-side /api parity.
+name: Deploy Vite SPA to GitHub Pages (manual only)
 on:
-  push:
-    branches: ["master"]
   workflow_dispatch:
 permissions:
   contents: read
