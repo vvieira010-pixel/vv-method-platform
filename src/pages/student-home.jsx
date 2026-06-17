@@ -207,10 +207,19 @@ export default function StudentHome({ student, onTab }) {
   }
 
   const pendingTitle = pendingHw[0]?.title || 'No homework pending';
-  const evaluatedSkills = snapshot.filter(s => s.evaluated || Number(s.score_0_80) > 0);
+  // Include transcript-only evaluated skills (evaluated:true, score may be null)
+  // so the Readiness Snapshot stays honest, and fall back to approved history
+  // when the latest snapshot has nothing evaluated yet.
+  const snapshotEvaluatedSkills = snapshot.filter(s => s.evaluated || Number(s.score_0_80) > 0);
+  const evaluatedSkills = snapshotEvaluatedSkills.length > 0
+    ? snapshotEvaluatedSkills
+    : approvedHistory
+        .flatMap(dx => asArray(dx?.content?.section_snapshot))
+        .filter(s => s.evaluated || Number(s.score_0_80) > 0)
+        .filter((skill, index, list) => index === list.findIndex(item => item.section === skill.section));
   const fallbackFocus = nextClass?.metSkillFocus || nextClass?.classFocus || student.focusSkill || 'MET speaking organization';
-  const focusSkill = evaluatedSkills[0]?.section || fallbackFocus;
-  const focusTrend = evaluatedSkills[0] ? getSkillTrend(focusSkill, approvedHistory) : { dir: 'none' };
+  const focusSkill = snapshotEvaluatedSkills[0]?.section || fallbackFocus;
+  const focusTrend = snapshotEvaluatedSkills[0] ? getSkillTrend(focusSkill, approvedHistory) : { dir: 'none' };
   const feedbackFocus = latestFeedback && typeof latestFeedback === 'object'
     ? latestFeedback.nextStep || latestFeedback.focusArea?.area || latestFeedback.focusArea?.explanation || latestFeedback.finalNote
     : '';
@@ -434,7 +443,7 @@ export default function StudentHome({ student, onTab }) {
         </div>
 
         <aside className="student-home-side">
-          <article className="student-panel">
+          <article className="student-panel" style={{ borderRadius: 0 }}>
             <div className="student-panel-head">
               <div>
                 <span className="student-panel-kicker">Readiness Snapshot</span>
@@ -446,7 +455,7 @@ export default function StudentHome({ student, onTab }) {
                 {evaluatedSkills.slice(0, 5).map(s => <SkillRow key={s.section} skill={s} trend={getSkillTrend(s.section, approvedHistory)} />)}
               </div>
             ) : (
-              <div className="student-empty-card">
+              <div className="student-empty-card" style={{ borderRadius: 0 }}>
                 No skills evaluated yet — your first result appears after your next class.
               </div>
             )}
