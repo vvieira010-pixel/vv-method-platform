@@ -88,7 +88,7 @@ export default function OrderSentences({ exercise, onComplete }) {
   const sectionConfig = metSection ? MET_ORDER_CONFIG[metSection] : null;
 
   return (
-    <div>
+    <div onKeyDown={e => { if (e.key === 'Enter' && !submitted) { e.preventDefault(); handleSubmit(); } }}>
       {/* MET section banner */}
       {sectionConfig && (
         <div style={{ padding: '10px 14px', background: 'var(--ex-cat-blue-bg)', border: '1px solid var(--ex-cat-blue-border)', borderRadius: 'var(--radius-sm)', marginBottom: 14 }}>
@@ -139,9 +139,9 @@ export default function OrderSentences({ exercise, onComplete }) {
                     disabled={pos === 0}
                     aria-label="Move up"
                     style={{
-                      width: 28, height: 24, border: '1px solid var(--border)', borderRadius: 5,
+                      width: 44, height: 36, border: '1px solid var(--border)', borderRadius: 5,
                       background: pos === 0 ? 'var(--divider)' : 'var(--surface)', cursor: pos === 0 ? 'not-allowed' : 'pointer',
-                      display: 'grid', placeItems: 'center', fontSize: 11, color: 'var(--muted)',
+                      display: 'grid', placeItems: 'center', fontSize: 13, color: 'var(--muted)',
                       opacity: pos === 0 ? 0.4 : 1,
                     }}
                   >▲</button>
@@ -150,10 +150,10 @@ export default function OrderSentences({ exercise, onComplete }) {
                     disabled={pos === order.length - 1}
                     aria-label="Move down"
                     style={{
-                      width: 28, height: 24, border: '1px solid var(--border)', borderRadius: 5,
+                      width: 44, height: 36, border: '1px solid var(--border)', borderRadius: 5,
                       background: pos === order.length - 1 ? 'var(--divider)' : 'var(--surface)',
                       cursor: pos === order.length - 1 ? 'not-allowed' : 'pointer',
-                      display: 'grid', placeItems: 'center', fontSize: 11, color: 'var(--muted)',
+                      display: 'grid', placeItems: 'center', fontSize: 13, color: 'var(--muted)',
                       opacity: pos === order.length - 1 ? 0.4 : 1,
                     }}
                   >▼</button>
@@ -184,7 +184,7 @@ export default function OrderSentences({ exercise, onComplete }) {
         </button>
       ) : (
         <div>
-          <div style={{
+          <div role="status" aria-live="polite" style={{
             padding: '12px 16px', borderRadius: 'var(--radius-sm)', fontSize: 14, fontWeight: 500, marginBottom: 12,
             background: allCorrect ? 'var(--ex-correct-bg)' : 'var(--ex-hint-bg)',
             border: `1px solid ${allCorrect ? 'var(--ex-correct-border)' : 'var(--ex-hint-border)'}`,

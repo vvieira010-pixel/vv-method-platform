@@ -93,7 +93,7 @@ export default function MultipleChoice({ exercise, onComplete }) {
   }
 
   return (
-    <div>
+    <div onKeyDown={e => { if (e.key === 'Enter' && !submitted && selected != null) { e.preventDefault(); handleSubmit(); } }}>
       {sectionConfig && (
         <div style={{ padding: '10px 14px', background: sectionConfig.bg, border: `1px solid ${sectionConfig.border}`, borderRadius: 'var(--radius-sm, 6px)', marginBottom: 14 }}>
           <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: sectionConfig.color, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 5 }}>
@@ -177,7 +177,7 @@ export default function MultipleChoice({ exercise, onComplete }) {
         </button>
       ) : (
         <>
-          <div style={{
+          <div role="status" aria-live="polite" style={{
             borderRadius: 'var(--radius-sm, 6px)', overflow: 'hidden',
             border: `1px solid ${isCorrect ? 'var(--ex-correct-border)' : 'var(--ex-wrong-border)'}`,
             animation: 'fadeUp 0.22s ease-out both',

@@ -83,7 +83,7 @@ export default function FillBlank({ exercise, onComplete }) {
                 onClick={() => setValue(i, choice)}
                 disabled={submitted}
                 style={{
-                  padding: '2px 10px',
+                  padding: '6px 12px',
                   borderRadius: 'var(--radius-sm, 6px)',
                   border: `2px solid ${selected || (isResult && isCorrectChoice) ? border : 'var(--border)'}`,
                   background: selected || (isResult && isCorrectChoice) ? bg : 'var(--surface)',
@@ -113,7 +113,7 @@ export default function FillBlank({ exercise, onComplete }) {
   }
 
   return (
-    <div>
+    <div onKeyDown={e => { if (e.key === 'Enter' && !submitted && allFilled) { e.preventDefault(); handleSubmit(); } }}>
       {instruction && (
         <p style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', marginBottom: 8, lineHeight: 1.6 }}>{instruction}</p>
       )}
@@ -147,7 +147,7 @@ export default function FillBlank({ exercise, onComplete }) {
           Check answers
         </button>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, animation: 'fadeUp 0.22s ease-out both' }}>
+        <div role="status" aria-live="polite" style={{ display: 'flex', flexDirection: 'column', gap: 8, animation: 'fadeUp 0.22s ease-out both' }}>
           {results.map((r, i) => (
             <div key={i} style={{ borderRadius: 'var(--radius-sm, 6px)', overflow: 'hidden' }}>
               <div style={{

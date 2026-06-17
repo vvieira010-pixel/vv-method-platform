@@ -200,14 +200,14 @@ function ExerciseCard({ exercise, index, total, result, onComplete, onNext, onBa
       {recallDone && !done && (
         <div style={{ padding: '0 20px 16px' }}>
           {hintLevel > 0 && (
-            <div style={{ marginBottom: 8, padding: '8px 12px', background: 'var(--ex-hint-bg)', border: '1px solid var(--ex-hint-border)', borderRadius: 'var(--radius-sm, 6px)', fontSize: 'var(--text-xs)', color: 'var(--ex-hint-text)', lineHeight: 1.5 }}>
+            <div role="status" aria-live="polite" style={{ marginBottom: 8, padding: '8px 12px', background: 'var(--ex-hint-bg)', border: '1px solid var(--ex-hint-border)', borderRadius: 'var(--radius-sm, 6px)', fontSize: 'var(--text-xs)', color: 'var(--ex-hint-text)', lineHeight: 1.5 }}>
               <strong>Hint {hintLevel}:</strong> {hints[hintLevel - 1]}
             </div>
           )}
           {hintLevel < hints.length && (
             <button
               onClick={() => setHintLevel(l => l + 1)}
-              style={{ padding: '5px 14px', borderRadius: 'var(--radius-sm, 6px)', border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text-2)', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-ui)' }}
+              style={{ minHeight: 44, padding: '8px 16px', borderRadius: 'var(--radius-sm, 6px)', border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text-2)', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-ui)' }}
             >
               {hintLevel === 0 ? 'Need a hint?' : 'Next hint →'}
             </button>

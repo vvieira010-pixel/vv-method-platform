@@ -288,7 +288,7 @@ export default function Listening({ exercise, onComplete }) {
   const partConfig = metPart ? MET_LISTENING_CONFIG[metPart] : null;
 
   return (
-    <div style={{ padding: '16px 20px' }}>
+    <div style={{ padding: '16px 20px' }} onKeyDown={e => { if (e.key === 'Enter' && !submitted && selected != null) { e.preventDefault(); handleSubmit(); } }}>
 
       {/* MET part banner */}
       {partConfig && (
@@ -443,7 +443,7 @@ export default function Listening({ exercise, onComplete }) {
               Submit answer
             </button>
           ) : (
-            <div style={{
+            <div role="status" aria-live="polite" style={{
               padding: '12px 16px', borderRadius: 'var(--radius-sm)',
               background: isCorrect ? 'var(--ex-correct-bg)' : 'var(--ex-wrong-bg)',
               border: `1px solid ${isCorrect ? 'var(--ex-correct-border)' : 'var(--ex-wrong-border)'}`,

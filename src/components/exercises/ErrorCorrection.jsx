@@ -102,7 +102,7 @@ export default function ErrorCorrection({ exercise, onComplete }) {
           Submit correction
         </button>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <div role="status" aria-live="polite" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           <div style={{
             padding: '12px 16px', borderRadius: 'var(--radius-sm)', fontSize: 14, fontWeight: 500,
             background: isCorrect ? 'var(--ex-correct-bg)' : 'var(--ex-wrong-bg)',

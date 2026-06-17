@@ -376,7 +376,7 @@ export default function ShortAnswer({ exercise, onComplete }) {
           Submit response
         </button>
       ) : (
-        <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 12, animation: 'fadeUp 0.22s ease-out both' }}>
+        <div role="status" aria-live="polite" style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 12, animation: 'fadeUp 0.22s ease-out both' }}>
           <div style={{
             borderRadius: 'var(--radius-sm, 6px)', overflow: 'hidden',
             border: '1px solid var(--border)',

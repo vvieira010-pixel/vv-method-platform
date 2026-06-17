@@ -60,7 +60,7 @@ export default function ReadExercise({ exercise, onComplete }) {
   const partConfig = metPart ? MET_READING_CONFIG[metPart] : null;
 
   return (
-    <div>
+    <div onKeyDown={e => { if (e.key === 'Enter' && !submitted && allAnswered) { e.preventDefault(); handleSubmit(); } }}>
       {/* MET part banner */}
       {partConfig && (
         <div style={{ padding: '10px 14px', background: 'var(--ex-selected-bg)', border: '1px solid var(--ex-selected-border)', borderRadius: 'var(--radius-sm)', marginBottom: 14 }}>
@@ -120,7 +120,7 @@ export default function ReadExercise({ exercise, onComplete }) {
           Check answers
         </button>
       ) : (
-        <div style={{ padding: '12px 16px', borderRadius: 'var(--radius-sm)', background: hits === total ? 'var(--ex-correct-bg)' : 'var(--ex-hint-bg)', border: `1px solid ${hits === total ? 'var(--ex-correct-border)' : 'var(--ex-hint-border)'}`, color: hits === total ? 'var(--ex-correct-text)' : 'var(--ex-hint-text)', fontSize: 14, fontWeight: 500 }}>
+        <div role="status" aria-live="polite" style={{ padding: '12px 16px', borderRadius: 'var(--radius-sm)', background: hits === total ? 'var(--ex-correct-bg)' : 'var(--ex-hint-bg)', border: `1px solid ${hits === total ? 'var(--ex-correct-border)' : 'var(--ex-hint-border)'}`, color: hits === total ? 'var(--ex-correct-text)' : 'var(--ex-hint-text)', fontSize: 14, fontWeight: 500 }}>
           {hits === total ? 'All answers correct!' : `${hits} of ${total} correct.`}
         </div>
       )}
