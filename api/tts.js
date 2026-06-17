@@ -124,6 +124,31 @@ async function deepgramTts(text) {
   return { bytes: Buffer.from(await r.arrayBuffer()), contentType: r.headers.get('content-type') || 'audio/mpeg' };
 }
 
+async function geminiTts(text) {
+  const key = env('GEMINI_API_KEY');
+  if (!key) throw new Error('GEMINI_API_KEY is not configured.');
+
+  // Note: This endpoint is placeholder logic for a custom Gemini-based audio generation service
+  const r = await fetchT('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview:generateContent', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-goog-api-key': key,
+    },
+    body: JSON.stringify({
+      contents: [{ parts: [{ text: `Generate audio for this text: ${text}` }] }]
+    }),
+  });
+
+  if (!r.ok) {
+    const e = await r.json().catch(() => ({}));
+    throw new Error(e.error?.message || `Gemini TTS error ${r.status}`);
+  }
+  
+  // This assumes the API returns audio data directly, which may need adjustment based on the actual endpoint response format
+  return { bytes: Buffer.from(await r.arrayBuffer()), contentType: 'audio/mpeg' };
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: { message: 'Method not allowed' } });
@@ -144,7 +169,9 @@ export default async function handler(req, res) {
       ? [elevenLabs]
     : provider === 'aivoov'
       ? [aivoovTts]
-      : [aivoovTts, elevenLabs, deepgramTts, openAiTts];
+    : provider === 'gemini'
+      ? [geminiTts]
+      : [aivoovTts, elevenLabs, deepgramTts, openAiTts, geminiTts];
 
   for (const run of attempts) {
     try {
