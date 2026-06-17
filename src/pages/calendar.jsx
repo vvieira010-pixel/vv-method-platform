@@ -6,7 +6,6 @@ import { Icon, Card, SectionHeader, Pill, Button, Avatar } from '../components/s
 import { getClassEvents, saveClassEvent, deleteClassEvent, updateClassEventStatus, getStudents } from '../lib/workflow.js';
 import { sendClassInvite, getZoomUrl } from '../lib/send-invite.js';
 import { MET_SKILLS } from '../lib/report-metrics.js';
-import { sendClassInvite, getZoomUrl } from '../lib/send-invite.js';
 
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const STATUS_TONE = { scheduled: 'info', completed: 'success', canceled: 'danger' };
