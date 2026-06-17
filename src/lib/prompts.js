@@ -564,8 +564,9 @@ export const buildTaskGeneratorPrompt = ({ student, diagnosis, taskBlueprint, ta
   const vocab = pickArray(diagnosis?.vocabTargets?.vocabularyTargets, diagnosis?.sections?.vocabGrammarTargets?.content?.vocabularyTargets);
   const grammar = pickArray(diagnosis?.vocabTargets?.grammarTargets, diagnosis?.sections?.vocabGrammarTargets?.content?.grammarTargets);
 
-  return `Generate one complete, fully written ${taskType} exercise for ${student?.name || 'the student'}.
-Target: ${taskBlueprint.objective}.
+  return `You are a MET English Instructional Designer. Generate exactly one complete, fully written ${taskType} exercise for ${student?.name || 'the student'}.
+
+CRITICAL: The exercise MUST strictly adhere to the official MET scoring rubric for this type. If it is a speaking task, it MUST have the required metTask (Q1-Q5) and structure. If writing, it MUST follow the T1/T2 structure.
 
 Student: ${student?.currentLevel || 'B1'} -> ${student?.targetLevel || 'B2'}
 Priorities: ${priorities.slice(0, 3).map(p => `${p.area}: ${p.whatToImprove || ''}`).join(' | ') || 'MET readiness'}
@@ -575,15 +576,13 @@ Grammar: ${grammar.slice(0, 3).map(g => `${g.area}: ${g.issue}`).join(' | ') || 
 
 ${EXERCISE_COMPLETENESS_RULES}
 
-MET focus:
-- Speaking: organize a timed answer with example and clear conclusion.
-- Writing: give a clear opinion, support, transitions, and grammar control.
-- Listening/reading: test main idea, detail, inference, purpose, attitude, or distractor recognition.
-- Grammar/vocabulary: practice the exact language needed to perform better on MET tasks.
-- Test strategy: help the student notice evidence, distractors, timing, or answer organization.
-- ${GENERAL_MET_TOPIC_RULES}
+MET-STRICT GENERATION RULES:
+- Speaking: If type is 'speak', you MUST include a "metTask" field (Q1-Q5). If Q1, MUST include "imageDescription".
+- Writing: If type is 'short', you MUST include "rubric" field guiding the student on structure (e.g., "Answer all 3 questions", "Use 4 paragraphs").
+- Distractors: For MCQ/Listening/Reading, distractors MUST be plausible errors based on typical B1/B2 student misconceptions or evidence-based traps.
+- Context: Use general MET topics, NOT healthcare/nursing. ${GENERAL_MET_TOPIC_RULES}
 
-Return ONLY one valid JSON object for type "${taskType}".`;
+Return ONLY one valid JSON object.`;
 };
 
 export const buildFinalRefinementPrompt = ({ student, blueprint, tasks }) => {
