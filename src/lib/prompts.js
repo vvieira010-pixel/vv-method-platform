@@ -569,11 +569,11 @@ CRITICAL: The exercise MUST strictly adhere to the official MET scoring rubric f
 If taskType is 'speak':
 - You MUST include a "metTask" field (Q1, Q2, Q3, Q4, or Q5).
 - If metTask is "Q1", you MUST include a "imageDescription" field (a vivid 1-2 sentence description of a scene/picture). 
-  - STYLE MANDATE: The description must reflect a realistic, professional, and clear photographic style. Focus on:
+  - STYLE MANDATE: The description must reflect a realistic, professional, and clear BLACK AND WHITE photographic style. Focus on:
+    - High contrast, focus on texture, light, and shadow.
     - Clear spatial organization (foreground, background, center).
     - Diverse, everyday professional or community settings.
-    - High-quality, balanced detail without cluttered/chaotic elements.
-    - Realistic people engaged in everyday activities.
+    - Realistic people engaged in everyday activities, rendered in monochrome.
 - Use the structure defined by the MET rubric for the selected task.
 
 If taskType is 'short' (writing):
