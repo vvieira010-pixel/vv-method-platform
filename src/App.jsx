@@ -75,7 +75,8 @@ export default function App() {
         return { role: 'student', studentId: claimed.local_id || claimed.id, email };
       }
       // No roster row claimed → only known teacher email(s) may be a teacher.
-      const teacherEmails = String(import.meta.env.VITE_TEACHER_EMAIL || 'vvieira010x@gmail.com')
+      const rawTeacherEmail = import.meta.env.VITE_TEACHER_EMAIL;
+      const teacherEmails = (rawTeacherEmail || 'vvieira010x@gmail.com')
         .split(',').map(e => e.trim().toLowerCase()).filter(Boolean);
       if (teacherEmails.includes(email.trim().toLowerCase())) {
         setSessionRole('teacher');

@@ -611,25 +611,34 @@ function getPriorityItems(dx) {
     if (!resolvedStudentId) { window.toast?.('Select or link a student before assigning homework.', 'warn'); return; }
     const resolvedStudent = student || students.find(s => s.id === resolvedStudentId);
     setSaving(true);
-    await saveHomework({
-      studentId: resolvedStudentId,
-      studentName: resolvedStudent?.name || '',
-      diagnosisId,
-      title: form.title,
-      objective: form.objective,
-      description: form.description,
-      workflowTemplate: 'prebuilt-retrieval-build-revision',
-      workflowStages: ['prebuilt', 'retrieval', 'build_revision'],
-      activities: form.exercises,
-      selfCheck: form.selfCheck.filter(Boolean),
-      skillType: form.skillType,
-      type: form.skillType,
-      dueDate: form.dueDate,
-      teacherNotes: form.teacherNotes,
-      status: 'not-started',
-    });
-    if (diagnosis?.classEventId) {
-      await updateClassEventStatus(diagnosis.classEventId, { homeworkStatus: 'assigned' });
+    try {
+      await saveHomework({
+        studentId: resolvedStudentId,
+        studentName: resolvedStudent?.name || '',
+        diagnosisId,
+        title: form.title,
+        objective: form.objective,
+        description: form.description,
+        workflowTemplate: 'prebuilt-retrieval-build-revision',
+        workflowStages: ['prebuilt', 'retrieval', 'build_revision'],
+        activities: form.exercises,
+        selfCheck: form.selfCheck.filter(Boolean),
+        skillType: form.skillType,
+        type: form.skillType,
+        dueDate: form.dueDate,
+        teacherNotes: form.teacherNotes,
+        status: 'not-started',
+      });
+      if (diagnosis?.classEventId) {
+        await updateClassEventStatus(diagnosis.classEventId, { homeworkStatus: 'assigned' }).catch(e =>
+          console.warn('[HomeworkCreate] updateClassEventStatus failed:', e)
+        );
+      }
+    } catch (e) {
+      console.error('[HomeworkCreate] Save failed:', e);
+      window.toast?.(`Save failed: ${e.message}`, 'error');
+      setSaving(false);
+      return;
     }
     setSaving(false);
     window.toast?.('Homework assigned to student!', 'ok');
