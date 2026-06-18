@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-const TEAL = '#0D9488';
+const TEAL = 'var(--accent)';
 const NAVY = '#0B1F3A';
 const GREEN = '#1A5C2A';
 
@@ -75,10 +75,10 @@ export default function LevelUp({ exercise, onComplete }) {
         {options.map((opt, i) => {
           let borderColor = 'var(--border)', bg = 'var(--surface)', color = 'var(--text)';
           if (!submitted) {
-            if (selected === i) { borderColor = TEAL; bg = '#F0FDFA'; color = NAVY; }
+            if (selected === i) { borderColor = TEAL; bg = 'var(--ex-selected-bg)'; color = NAVY; }
           } else {
-            if (i === correct)                         { borderColor = '#059669'; bg = '#ECFDF5'; color = '#065F46'; }
-            else if (i === selected && i !== correct)  { borderColor = 'var(--danger)'; bg = '#FEF2F2'; color = '#991B1B'; }
+            if (i === correct)                         { borderColor = 'var(--ex-correct-strong)'; bg = 'var(--ex-correct-bg)'; color = 'var(--ex-correct-text)'; }
+            else if (i === selected && i !== correct)  { borderColor = 'var(--danger)'; bg = 'var(--ex-wrong-bg)'; color = 'var(--ex-wrong-text)'; }
             else                                        { borderColor = 'var(--divider)'; color = 'var(--muted)'; }
           }
           return (
@@ -100,7 +100,7 @@ export default function LevelUp({ exercise, onComplete }) {
                 width: 22, height: 22, borderRadius: '50%', flexShrink: 0, marginTop: 1,
                 display: 'grid', placeItems: 'center',
                 fontSize: 12, fontWeight: 700,
-                background: submitted && i === correct ? '#059669'
+                background: submitted && i === correct ? 'var(--ex-correct-strong)'
                   : submitted && i === selected && i !== correct ? 'var(--danger)'
                   : 'transparent',
                 color: submitted && (i === correct || (i === selected && i !== correct)) ? '#fff' : 'inherit',
@@ -137,9 +137,9 @@ export default function LevelUp({ exercise, onComplete }) {
           {/* Feedback */}
           <div style={{
             padding: '12px 16px', borderRadius: 10,
-            background: isCorrect ? '#ECFDF5' : '#FEF2F2',
-            border: `1px solid ${isCorrect ? '#A7F3D0' : '#FECACA'}`,
-            fontSize: 14, color: isCorrect ? '#065F46' : '#991B1B', fontWeight: 600,
+            background: isCorrect ? 'var(--ex-correct-bg)' : 'var(--ex-wrong-bg)',
+            border: `1px solid ${isCorrect ? 'var(--ex-correct-border)' : 'var(--ex-wrong-border)'}`,
+            fontSize: 14, color: isCorrect ? 'var(--ex-correct-text)' : 'var(--ex-wrong-text)', fontWeight: 600,
           }}>
             {isCorrect ? '✓ Correct — well done.' : '✗ Not quite. See the correct B2 version below.'}
           </div>
@@ -161,7 +161,7 @@ export default function LevelUp({ exercise, onComplete }) {
 
           {/* Explanation */}
           {explanation && (
-            <div style={{ padding: '10px 14px', background: '#F8FAFC', borderRadius: 8, border: '1px solid #E2E8F0', fontSize: 13.5, color: '#374151', lineHeight: 1.65 }}>
+            <div style={{ padding: '10px 14px', background: 'var(--ex-panel-bg)', borderRadius: 8, border: '1px solid var(--ex-panel-border)', fontSize: 13.5, color: 'var(--ex-panel-text)', lineHeight: 1.65 }}>
               {explanation}
             </div>
           )}

@@ -78,8 +78,8 @@ export default function OrderSentences({ exercise, onComplete }) {
     return {
       display: 'flex', alignItems: 'center', gap: 12,
       padding: '12px 14px', borderRadius: 'var(--radius-sm)',
-      border: `1.5px solid ${correct ? '#A7F3D0' : '#FECACA'}`,
-      background: correct ? '#ECFDF5' : '#FEF2F2',
+      border: `1.5px solid ${correct ? 'var(--ex-correct-border)' : 'var(--ex-wrong-border)'}`,
+      background: correct ? 'var(--ex-correct-bg)' : 'var(--ex-wrong-bg)',
       transition: 'all 0.15s',
     };
   }
@@ -88,15 +88,15 @@ export default function OrderSentences({ exercise, onComplete }) {
   const sectionConfig = metSection ? MET_ORDER_CONFIG[metSection] : null;
 
   return (
-    <div>
+    <div onKeyDown={e => { if (e.key === 'Enter' && !submitted) { e.preventDefault(); handleSubmit(); } }}>
       {/* MET section banner */}
       {sectionConfig && (
-        <div style={{ padding: '10px 14px', background: '#EFF6FF', border: '1px solid #BFDBFE', borderRadius: 'var(--radius-sm)', marginBottom: 14 }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: '#1D4ED8', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>
+        <div style={{ padding: '10px 14px', background: 'var(--ex-cat-blue-bg)', border: '1px solid var(--ex-cat-blue-border)', borderRadius: 'var(--radius-sm)', marginBottom: 14 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--ex-cat-blue-text)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>
             {sectionConfig.label}
           </div>
-          <div style={{ fontSize: 13, fontWeight: 600, color: '#1E3A5F', marginBottom: 4 }}>{sectionConfig.structure}</div>
-          <div style={{ fontSize: 13, color: '#1E3A5F', lineHeight: 1.55 }}>{sectionConfig.tip}</div>
+          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--ex-cat-blue-strong)', marginBottom: 4 }}>{sectionConfig.structure}</div>
+          <div style={{ fontSize: 13, color: 'var(--ex-cat-blue-strong)', lineHeight: 1.55 }}>{sectionConfig.tip}</div>
         </div>
       )}
 
@@ -121,13 +121,13 @@ export default function OrderSentences({ exercise, onComplete }) {
               <span style={{
                 width: 26, height: 26, borderRadius: '50%', display: 'grid', placeItems: 'center',
                 fontSize: 12, fontWeight: 700, flexShrink: 0,
-                background: isCorrect ? '#059669' : isWrong ? 'var(--danger)' : 'var(--bg-deep)',
+                background: isCorrect ? 'var(--ex-correct-strong)' : isWrong ? 'var(--danger)' : 'var(--bg-deep)',
                 color: isCorrect || isWrong ? '#fff' : 'var(--muted)',
               }}>
                 {pos + 1}
               </span>
 
-              <span style={{ flex: 1, fontSize: 14.5, lineHeight: 1.6, color: isCorrect ? '#065F46' : isWrong ? '#991B1B' : NAVY }}>
+              <span style={{ flex: 1, fontSize: 14.5, lineHeight: 1.6, color: isCorrect ? 'var(--ex-correct-text)' : isWrong ? 'var(--ex-wrong-text)' : NAVY }}>
                 {sentences[origIdx]}
               </span>
 
@@ -139,9 +139,9 @@ export default function OrderSentences({ exercise, onComplete }) {
                     disabled={pos === 0}
                     aria-label="Move up"
                     style={{
-                      width: 28, height: 24, border: '1px solid var(--border)', borderRadius: 5,
-                      background: pos === 0 ? 'var(--divider)' : '#fff', cursor: pos === 0 ? 'not-allowed' : 'pointer',
-                      display: 'grid', placeItems: 'center', fontSize: 11, color: 'var(--muted)',
+                      width: 44, height: 36, border: '1px solid var(--border)', borderRadius: 5,
+                      background: pos === 0 ? 'var(--divider)' : 'var(--surface)', cursor: pos === 0 ? 'not-allowed' : 'pointer',
+                      display: 'grid', placeItems: 'center', fontSize: 13, color: 'var(--muted)',
                       opacity: pos === 0 ? 0.4 : 1,
                     }}
                   >▲</button>
@@ -150,10 +150,10 @@ export default function OrderSentences({ exercise, onComplete }) {
                     disabled={pos === order.length - 1}
                     aria-label="Move down"
                     style={{
-                      width: 28, height: 24, border: '1px solid var(--border)', borderRadius: 5,
-                      background: pos === order.length - 1 ? 'var(--divider)' : '#fff',
+                      width: 44, height: 36, border: '1px solid var(--border)', borderRadius: 5,
+                      background: pos === order.length - 1 ? 'var(--divider)' : 'var(--surface)',
                       cursor: pos === order.length - 1 ? 'not-allowed' : 'pointer',
-                      display: 'grid', placeItems: 'center', fontSize: 11, color: 'var(--muted)',
+                      display: 'grid', placeItems: 'center', fontSize: 13, color: 'var(--muted)',
                       opacity: pos === order.length - 1 ? 0.4 : 1,
                     }}
                   >▼</button>
@@ -184,11 +184,11 @@ export default function OrderSentences({ exercise, onComplete }) {
         </button>
       ) : (
         <div>
-          <div style={{
+          <div role="status" aria-live="polite" style={{
             padding: '12px 16px', borderRadius: 'var(--radius-sm)', fontSize: 14, fontWeight: 500, marginBottom: 12,
-            background: allCorrect ? '#ECFDF5' : '#FFFBEB',
-            border: `1px solid ${allCorrect ? '#A7F3D0' : '#FDE68A'}`,
-            color: allCorrect ? '#065F46' : '#92400E',
+            background: allCorrect ? 'var(--ex-correct-bg)' : 'var(--ex-hint-bg)',
+            border: `1px solid ${allCorrect ? 'var(--ex-correct-border)' : 'var(--ex-hint-border)'}`,
+            color: allCorrect ? 'var(--ex-correct-text)' : 'var(--ex-hint-text)',
           }}>
             {allCorrect
               ? 'Correct — well done. The order is perfect.'

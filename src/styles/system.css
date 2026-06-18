@@ -137,6 +137,40 @@
   /* ── Student dashboard theme ─────────────────────────────────── */
   --student-bg: #f5fafc;
   --teal-soft: rgba(20,136,145,0.08);
+
+  /* ── Exercise feedback tokens ────────────────────────────────────
+     Used by src/components/exercises/*. Light values preserve the
+     original hand-picked palette; dark overrides live in the
+     [data-theme="dark"] block so the practice surface themes correctly. */
+  --ex-correct-bg: #ECFDF5;
+  --ex-correct-border: #A7F3D0;
+  --ex-correct-text: #065F46;
+  --ex-correct-strong: #059669;
+  --ex-wrong-bg: #FEF2F2;
+  --ex-wrong-border: #FECACA;
+  --ex-wrong-text: #991B1B;
+  --ex-hint-bg: #FFFBEB;
+  --ex-hint-border: #FDE68A;
+  --ex-hint-text: #92400E;
+  --ex-panel-bg: #F8FAFC;
+  --ex-panel-border: #E2E8F0;
+  --ex-panel-text: #374151;
+  --ex-selected-bg: #F0FDFA;
+  --ex-selected-border: #99F6E4;
+  /* MET section / task category hues */
+  --ex-cat-blue-bg: #EFF6FF;
+  --ex-cat-blue-border: #BFDBFE;
+  --ex-cat-blue-text: #1D4ED8;
+  --ex-cat-blue-chip: #DBEAFE;
+  --ex-cat-blue-strong: #1E3A5F;
+  --ex-cat-sky-bg: #F0F9FF;
+  --ex-cat-sky-border: #BAE6FD;
+  --ex-cat-sky-text: #0369A1;
+  --ex-cat-sky-strong: #0C4A6E;
+  --ex-cat-purple-bg: #F5F3FF;
+  --ex-cat-purple-border: #DDD6FE;
+  --ex-cat-purple-text: #7C3AED;
+  --ex-cat-purple-strong: #4C1D95;
 }
 
 /* ── Card style variants (set via [data-cards] on <html>) ─────── */
@@ -271,7 +305,7 @@ p {
 }
 
 .btn:focus-visible {
-  outline: 2px solid var(--primary);
+  outline: 2px solid var(--accent);
   outline-offset: 3px;
 }
 
@@ -1478,6 +1512,21 @@ p {
 .student-metric--urgent .student-metric-icon { background: #fef2f2; color: #b91c1c; }
 .student-metric--urgent .student-metric-copy strong { color: #b91c1c; }
 
+/* Secondary (ambient) metric tier — calmer, more compact than the action row */
+.student-metrics-secondary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px;
+  margin-top: 12px;
+  position: relative;
+  z-index: 1;
+}
+
+.student-metric--compact { padding: var(--space-4); }
+.student-metric--compact .student-metric-copy strong { font-size: var(--text-lg); }
+.student-metric--compact .student-metric-copy small { font-size: 0.8rem; }
+.student-metric--compact .student-metric-icon { width: 38px; height: 38px; }
+
 /* ── Practice Studio ───────────────────────────────────────────── */
 .student-practice-studio {
   display: grid;
@@ -2638,7 +2687,7 @@ p {
 
 .modal-card {
   width: 100%;
-  border-radius: 20px;
+  border-radius: var(--radius-lg);
   overflow: hidden;
   background: var(--surface);
   box-shadow: 0 24px 64px rgba(0,0,0,0.35);
@@ -2678,7 +2727,7 @@ p {
 .modal-close {
   background: rgba(255,255,255,0.15);
   border: none;
-  border-radius: 10px;
+  border-radius: var(--radius-sm);
   color: white;
   cursor: pointer;
   padding: 8px 12px;
@@ -3593,6 +3642,37 @@ textarea:focus, .textarea:focus {
   --teal-soft: rgba(20,136,145,0.10);
   --shadow-card: 0 16px 35px -20px rgba(0,0,0,0.5), 0 3px 8px rgba(0,0,0,0.2);
   --shadow-modal: 0 24px 58px -24px rgba(0,0,0,0.6), 0 8px 20px rgba(0,0,0,0.3);
+
+  /* Exercise feedback tokens — dark variants (translucent overlays sit
+     naturally on dark surfaces; text lightened for contrast) */
+  --ex-correct-bg: rgba(52,211,153,0.13);
+  --ex-correct-border: rgba(52,211,153,0.32);
+  --ex-correct-text: #6ee7b7;
+  --ex-correct-strong: #34d399;
+  --ex-wrong-bg: rgba(248,113,113,0.13);
+  --ex-wrong-border: rgba(248,113,113,0.32);
+  --ex-wrong-text: #fca5a5;
+  --ex-hint-bg: rgba(251,191,36,0.12);
+  --ex-hint-border: rgba(251,191,36,0.30);
+  --ex-hint-text: #fcd34d;
+  --ex-panel-bg: rgba(255,255,255,0.04);
+  --ex-panel-border: #253548;
+  --ex-panel-text: #c4d6e8;
+  --ex-selected-bg: rgba(20,136,145,0.16);
+  --ex-selected-border: rgba(20,136,145,0.42);
+  --ex-cat-blue-bg: rgba(59,130,246,0.13);
+  --ex-cat-blue-border: rgba(59,130,246,0.32);
+  --ex-cat-blue-text: #93c5fd;
+  --ex-cat-blue-chip: rgba(59,130,246,0.20);
+  --ex-cat-blue-strong: #bfdbfe;
+  --ex-cat-sky-bg: rgba(56,189,248,0.12);
+  --ex-cat-sky-border: rgba(56,189,248,0.30);
+  --ex-cat-sky-text: #7dd3fc;
+  --ex-cat-sky-strong: #bae6fd;
+  --ex-cat-purple-bg: rgba(167,139,250,0.13);
+  --ex-cat-purple-border: rgba(167,139,250,0.32);
+  --ex-cat-purple-text: #c4b5fd;
+  --ex-cat-purple-strong: #ddd6fe;
 }
 
 [data-theme="dark"] body {

@@ -1075,7 +1075,7 @@ function getPriorityItems(dx) {
                   </div>
                 )}
                   
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <div ref={exerciseListRef} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   {form.exercises.map((ex, i) => (
                     <ExerciseCard
                       key={ex.id}
@@ -1177,7 +1177,7 @@ function getPriorityItems(dx) {
                     {languageDemand.teacher_note && (
                       <p style={{ fontSize: 'var(--text-xs)', color: 'var(--text-2)', lineHeight: 1.5, marginBottom: 10 }}>{languageDemand.teacher_note}</p>
                     )}
-                <div ref={exerciseListRef} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                       {(languageDemand.priority_actions || []).map((action, i) => (
                         <div key={i} style={{ padding: '8px 10px', background: 'var(--bg)', borderRadius: 'var(--radius-sm)', borderLeft: '3px solid var(--accent)' }}>
                           <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--accent)', textTransform: 'uppercase', marginBottom: 2 }}>{action.demand_type}</div>
@@ -1236,40 +1236,7 @@ function getPriorityItems(dx) {
               </div>
             </Card>
           )}
-          {false && (
-            <Card style={{ padding: 18 }}>
-              <SectionHeader title="Step 4: Assign Homework" />
-              <div style={{ marginTop: 16 }}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                  {studentId || diagnosis?.studentId ? null : (
-                    <Field label="Student">
-                      <select
-                        className="input"
-                        value={selectedStudentId}
-                        onChange={e => setSelectedStudentId(e.target.value)}
-                      >
-                        <option value="">Choose student</option>
-                        {students.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-                      </select>
-                    </Field>
-                  )}
-                  <Field label="Homework Title">
-                      <input className="input" value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} />
-                  </Field>
-                  <Field label="Due Date">
-                      <input className="input" type="date" value={form.dueDate} onChange={e => setForm(f => ({ ...f, dueDate: e.target.value }))} />
-                  </Field>
-                </div>
-                
-                <div className="homework-create-actions" style={{ marginTop: 24, display: 'flex', gap: 10 }}>
-                  <Button variant="ghost" onClick={() => setCurrentStep(3)}>Back</Button>
-                  <Button variant="primary" onClick={handleAssign} disabled={saving}>
-                    {saving ? 'Assigning…' : 'Assign Homework'}
-                  </Button>
-                </div>
-              </div>
-            </Card>
-          )}
+
         </div>
 
         {/* Persistent Summary Side Panel */}

@@ -97,7 +97,7 @@ export default function StudentDashboard({ student, onSignOut }) {
         <div className="dash-topbar-right">
           <span className="dash-topbar-name">{student.firstName}</span>
           <Avatar name={student.name} size={30} tone="auto" />
-          <button onClick={onSignOut} style={{ background: 'none', border: '1px solid rgba(72,199,199,0.28)', borderRadius: 'var(--radius-sm)', padding: '5px 10px', fontSize: 11.5, fontWeight: 500, color: 'rgba(241,250,238,0.65)', cursor: 'pointer', fontFamily: 'inherit', position: 'relative' }}>
+          <button onClick={onSignOut} style={{ background: 'none', border: '1px solid var(--dark-accent-border)', borderRadius: 'var(--radius-sm)', padding: '5px 10px', fontSize: 11.5, fontWeight: 500, color: 'var(--on-dark-muted)', cursor: 'pointer', fontFamily: 'inherit', position: 'relative' }}>
             Sign out
           </button>
         </div>

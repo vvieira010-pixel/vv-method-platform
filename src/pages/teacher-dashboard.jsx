@@ -132,6 +132,18 @@ export default function TeacherDashboard({ students, onNavigate, teacherName = '
       </div>
 
       <div className="teacher-dashboard-stack">
+        {/* Quick actions — top of stack for immediate access */}
+        <Card style={{ padding: 14 }}>
+          <SectionHeader title="Quick Actions" icon={<Icon.spark size={15} />} />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 8 }}>
+            <QuickAction icon={<Icon.student size={16} />} label="Add new student" onClick={() => onNavigate('students')} />
+            <QuickAction icon={<Icon.calendar size={16} />} label="Schedule a class" onClick={() => onNavigate('calendar')} />
+            <QuickAction icon={<Icon.diagnose size={16} />} label="Run a diagnosis" onClick={() => onNavigate('diagnostics')} />
+            <QuickAction icon={<Icon.homework size={16} />} label="Create homework" onClick={() => onNavigate('homework')} />
+            <QuickAction icon={<Icon.warning size={16} />} label="View error bank" onClick={() => onNavigate('error-bank')} />
+          </div>
+        </Card>
+
         {/* Today's classes */}
         <Card style={{ padding: 14 }}>
           <SectionHeader title="Today's Classes" icon={<Icon.calendar size={15} />} action={<Button variant="ghost" size="sm" onClick={() => onNavigate('calendar')}>View calendar</Button>} />
@@ -161,16 +173,16 @@ export default function TeacherDashboard({ students, onNavigate, teacherName = '
 
         {/* Needs your attention */}
         {needsAttention.length > 0 && (
-          <Card style={{ padding: 14, border: '1.5px solid rgba(245,158,11,0.3)', background: 'rgba(255,251,235,0.7)' }}>
+          <Card style={{ padding: 14, border: '1.5px solid var(--warning-soft)', background: 'var(--warning-bg)' }}>
             <SectionHeader title="Needs Your Attention" icon={<Icon.spark size={15} />} />
             <div style={{ marginTop: 8 }}>
               {needsAttention.slice(0, 5).map((s, i) => {
                 const config = STAGE_CONFIG[s.cycle.cycleStage] || STAGE_CONFIG['needs-diagnosis'];
                 const staleNote = s.cycle.daysSinceLastDiagnosis > 14 ? ` — ${s.cycle.daysSinceLastDiagnosis}d since last diagnosis` : '';
                 return (
-                  <div key={s.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 0', borderTop: i > 0 ? '1px solid rgba(0,0,0,0.06)' : 'none' }}>
+                  <div key={s.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 0', borderTop: i > 0 ? '1px solid var(--divider)' : 'none' }}>
                     <Avatar name={s.name} size={28} />
-                    <span style={{ fontSize: 'var(--text-sm)', fontWeight: 600, flex: 1 }}>{s.firstName}</span>
+                    <span style={{ fontSize: 'var(--text-sm)', fontWeight: 'var(--weight-semibold)', flex: 1 }}>{s.firstName}</span>
                     <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>{config.label}{staleNote}</span>
                     <Button variant="primary" size="sm" onClick={() => handleAction(s)}>{config.action}</Button>
                   </div>
@@ -204,18 +216,6 @@ export default function TeacherDashboard({ students, onNavigate, teacherName = '
               ))}
             </div>
           )}
-        </Card>
-
-        {/* Quick actions */}
-        <Card style={{ padding: 14 }}>
-          <SectionHeader title="Quick Actions" icon={<Icon.spark size={15} />} />
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 8 }}>
-            <QuickAction icon={<Icon.student size={16} />} label="Add new student" onClick={() => onNavigate('students')} />
-            <QuickAction icon={<Icon.calendar size={16} />} label="Schedule a class" onClick={() => onNavigate('calendar')} />
-            <QuickAction icon={<Icon.diagnose size={16} />} label="Run a diagnosis" onClick={() => onNavigate('diagnostics')} />
-            <QuickAction icon={<Icon.homework size={16} />} label="Create homework" onClick={() => onNavigate('homework')} />
-            <QuickAction icon={<Icon.warning size={16} />} label="View error bank" onClick={() => onNavigate('error-bank')} />
-          </div>
         </Card>
       </div>
     </div>
@@ -301,7 +301,7 @@ function StudentRow({ student: s, onNavigate, onAction }) {
         >
           <Avatar name={s.name} size={34} />
           <div>
-            <div style={{ fontWeight: 600, fontSize: 'var(--text-md)', color: 'var(--text-1)' }}>{s.name}</div>
+            <div style={{ fontWeight: 'var(--weight-semibold)', fontSize: 'var(--text-md)', color: 'var(--text-1)' }}>{s.name}</div>
             <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: 2 }}>
               {currentBand} → {targetBand} · Session {s.session}/{s.totalSessions} · Last diagnosis: {diagDate}
             </div>
@@ -317,10 +317,10 @@ function StudentRow({ student: s, onNavigate, onAction }) {
         {!isStale21 && isStale14 && <Pill tone="warning">{days}d stale</Pill>}
 
         {s.cycle.pendingHomework.length > 0 && (
-          <span style={{ fontSize: 'var(--text-xs)', color: 'var(--warning)', fontWeight: 600 }}>{s.cycle.pendingHomework.length} homework pending</span>
+          <span style={{ fontSize: 'var(--text-xs)', color: 'var(--warning)', fontWeight: 'var(--weight-semibold)' }}>{s.cycle.pendingHomework.length} homework pending</span>
         )}
         {s.cycle.pendingSubmissions.length > 0 && (
-          <span style={{ fontSize: 'var(--text-xs)', color: 'var(--success, #16a34a)', fontWeight: 600 }}>{s.cycle.pendingSubmissions.length} to review</span>
+          <span style={{ fontSize: 'var(--text-xs)', color: 'var(--success)', fontWeight: 'var(--weight-semibold)' }}>{s.cycle.pendingSubmissions.length} to review</span>
         )}
 
         <Pill tone={config.tone}>{config.label}</Pill>
@@ -339,7 +339,7 @@ function FilterChip({ label, count, active, onClick }) {
         display: 'inline-flex', alignItems: 'center', gap: 4, padding: '4px 10px',
         borderRadius: 'var(--radius-pill)', border: active ? '1.5px solid var(--accent)' : '1px solid var(--border)',
         background: active ? 'var(--accent-soft, rgba(37,99,235,0.1))' : 'var(--surface)',
-        color: active ? 'var(--accent)' : 'var(--muted)', fontSize: 'var(--text-xs)', fontWeight: 600,
+        color: active ? 'var(--accent)' : 'var(--muted)', fontSize: 'var(--text-xs)', fontWeight: 'var(--weight-semibold)',
         cursor: 'pointer', fontFamily: 'var(--font-ui)',
       }}
     >
