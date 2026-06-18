@@ -19,9 +19,9 @@ function daysUntilExam() {
   } catch { return null; }
 }
 
-function MetricCard({ icon, label, value, sub, tone, textValue }) {
+function MetricCard({ icon, label, value, sub, tone, textValue, compact }) {
   return (
-    <article className={`student-metric student-metric--${tone}${textValue ? ' student-metric--text' : ''}`}>
+    <article className={`student-metric student-metric--${tone}${textValue ? ' student-metric--text' : ''}${compact ? ' student-metric--compact' : ''}`}>
       <div className="student-metric-copy">
         <span>{label}</span>
         <strong>{value}</strong>
@@ -290,9 +290,9 @@ export default function StudentHome({ student, onTab }) {
         const daysLeft = daysUntilExam();
         const examDateStr = (() => { try { return localStorage.getItem('vv:met_exam_date') || ''; } catch { return ''; } })();
         return (
-          <section className="student-metrics fade-up" aria-label="Student summary" style={{ '--delay': '0.1s' }}>
-            <MetricCard icon={<Icon.calendar size={19} />} label="Next class" value={nextDate} sub={nextTime} tone="teal" />
-            <MetricCard icon={<Icon.homework size={19} />} label="Homework" value={pendingHw.length} sub={pendingHw.length === 1 ? 'task pending' : 'tasks pending'} tone="teal" />
+          <>
+          {/* Primary metrics — things to act on / time-critical */}
+          <section className="student-metrics fade-up" aria-label="Action items" style={{ '--delay': '0.1s' }}>
             {reviewCount > 0 && (
               <button className="student-metric student-metric--urgent student-metric-btn" onClick={handleOpenReview} aria-label="Review due items">
                 <div className="student-metric-copy">
@@ -305,8 +305,7 @@ export default function StudentHome({ student, onTab }) {
                 </div>
               </button>
             )}
-            <MetricCard icon={<Icon.progress size={19} />} label="Current focus" value={focusSkill} sub={focusTrend.dir !== 'none' ? `Progress: ${focusTrend.label}` : 'next useful practice'} tone="navy" textValue />
-            <MetricCard icon={<Icon.inbox size={19} />} label="Feedback" value={latestFeedback ? 'Ready' : 'Waiting'} sub={latestFeedback ? 'teacher approved' : 'after diagnosis'} tone="teal" />
+            <MetricCard icon={<Icon.homework size={19} />} label="Homework" value={pendingHw.length} sub={pendingHw.length === 1 ? 'task pending' : 'tasks pending'} tone="teal" />
             {daysLeft !== null && (
               <MetricCard
                 icon={<Icon.calendar size={19} />}
@@ -319,6 +318,14 @@ export default function StudentHome({ student, onTab }) {
               />
             )}
           </section>
+
+          {/* Secondary metrics — ambient status */}
+          <section className="student-metrics-secondary fade-up" aria-label="Status summary" style={{ '--delay': '0.15s' }}>
+            <MetricCard compact icon={<Icon.calendar size={19} />} label="Next class" value={nextDate} sub={nextTime} tone="teal" />
+            <MetricCard compact icon={<Icon.progress size={19} />} label="Current focus" value={focusSkill} sub={focusTrend.dir !== 'none' ? `Progress: ${focusTrend.label}` : 'next useful practice'} tone="navy" textValue />
+            <MetricCard compact icon={<Icon.inbox size={19} />} label="Feedback" value={latestFeedback ? 'Ready' : 'Waiting'} sub={latestFeedback ? 'teacher approved' : 'after diagnosis'} tone="teal" />
+          </section>
+          </>
         );
       })()}
 

@@ -6,6 +6,7 @@ import { TweaksPanel, TweakSection, TweakRadio, TweakColor, TweakToggle } from '
 import { Icon, Avatar, Button, Shell } from './components/shared.jsx';
 import { STUDENTS } from './data/students.jsx';
 import { seedStudentsIfEmpty, getStudents } from './lib/workflow-roster.js';
+import { getAllSubmissions } from './lib/workflow.js';
 import {
   getSupabaseConfig,
   parseSupabaseHashFragment,
@@ -252,6 +253,14 @@ export default function App() {
     );
   }
 
+  // ── Pending submissions badge ──
+  const [pendingSubmissions, setPendingSubmissions] = useState(0);
+  useEffect(() => {
+    getAllSubmissions().then(list => {
+      setPendingSubmissions((list || []).filter(s => s.status === 'submitted').length);
+    }).catch(() => {});
+  }, []);
+
   // ── Teacher shell ──
   const teacherTabs = [
     { id: 'dashboard',    label: 'Today',        icon: <Icon.home size={16} /> },
@@ -259,11 +268,11 @@ export default function App() {
     { id: 'calendar',     label: 'Calendar',     icon: <Icon.calendar size={16} /> },
     { id: 'diagnostics',  label: 'Diagnostics',  icon: <Icon.diagnose size={16} /> },
     { id: 'homework',     label: 'Homework',     icon: <Icon.homework size={16} /> },
-    { id: 'submissions',  label: 'Submissions',  icon: <Icon.doc size={16} /> },
+    { id: 'submissions',  label: 'Submissions',  icon: <Icon.doc size={16} />,     badge: pendingSubmissions || 0 },
     { id: 'inbox',        label: 'Inbox',        icon: <Icon.inbox size={16} /> },
     { id: 'error-bank',   label: 'Error Bank',   icon: <Icon.warning size={16} /> },
     { id: 'reports',      label: 'Reports',      icon: <Icon.progress size={16} /> },
-    { id: 'exercises',    label: 'Exercises',    icon: <Icon.doc size={16} /> },
+    { id: 'exercises',    label: 'Exercises',    icon: <Icon.book size={16} /> },
   ];
 
   const rightSlot = (
