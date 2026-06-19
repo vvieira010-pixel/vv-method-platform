@@ -65,6 +65,14 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
   const [selectedClassEventId, setSelectedClassEventId] = useState(classEventId || '');
   const [allStudents, setAllStudents] = useState([]);
 
+  // Teacher's own words (step 3 — write)
+  const [teacherMeaning, setTeacherMeaning] = useState({ classSummary: '', studentFeedback: '', homeworkRecommendation: '' });
+
+  // Inquiry fields (optional, for teacher inquiry cycles)
+  const [isBaseline, setIsBaseline] = useState(false);
+  const [interventionNote, setInterventionNote] = useState('');
+  const [inquiryHypothesis, setInquiryHypothesis] = useState('');
+
   // Section approval state (extracted to domain hook)
   const {
     sections, setSections,
@@ -120,6 +128,14 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
         setSections(dx.sections);
         setAiResult(dx.aiRaw || null);
       }
+      setTeacherMeaning({
+        classSummary: dx.content?.overall_result || dx.classSummary || '',
+        studentFeedback: dx.content?.student_friendly_feedback || dx.sections?.studentFeedback?.content || '',
+        homeworkRecommendation: dx.content?.homework || '',
+      });
+      setIsBaseline(dx.isBaseline || false);
+      setInterventionNote(dx.interventionNote || '');
+      setInquiryHypothesis(dx.inquiryHypothesis || '');
       setStep('review');
     } else {
       setError('Could not load that diagnosis — it may have been deleted.');
@@ -245,6 +261,9 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
           status: 'draft',
           cycleStage: 'needs-diagnosis',
           classSummary: typeof parsedDiagnosis.classSummary === 'string' ? parsedDiagnosis.classSummary : '',
+          isBaseline: false,
+          interventionNote: '',
+          inquiryHypothesis: '',
           content: {
             overall_result: typeof parsedDiagnosis.classSummary === 'string' ? parsedDiagnosis.classSummary : '',
             priorities: parsedDiagnosis.priorityDiagnosis || [],
@@ -260,7 +279,7 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
         window.toast?.('Some sections failed to generate — please Regen them.', 'warn');
       }
 
-      setStep('review');
+      setStep('write');
     } catch (e) {
       console.error(e);
       setError(friendlyAiError(e));
@@ -360,6 +379,9 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
         teacherApproved: approve,
         cycleStage: approve ? 'diagnosed' : 'needs-diagnosis',
         classSummary: typeof sections.classSummary?.content === 'string' ? sections.classSummary.content : '',
+        isBaseline,
+        interventionNote,
+        inquiryHypothesis,
         content: {
           overall_result: (typeof sections.classSummary?.content === 'string' ? sections.classSummary.content : '') || '',
           priorities: sections.priorityDiagnosis?.content || [],
@@ -661,6 +683,105 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
                 {evaluatedSkills.length === 0 ? ' • At least one skill must be evaluated' : ''}
               </p>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* ── STEP: WRITE (Teacher writes in own words) ── */}
+      {step === 'write' && (
+        <div style={{ marginTop: 20 }}>
+          <div style={{ display: 'grid', gap: 18, gridTemplateColumns: '1fr 1fr' }}>
+            {/* Left: AI data summary */}
+            <div>
+              <SectionHeader title="AI Diagnosis Data" icon={<Icon.diagnose size={14} />} />
+              <Card style={{ padding: 16, marginTop: 8 }}>
+                {sections.skillDiagnosis?.content && (() => {
+                  const skills = buildSnapshot(sections.skillDiagnosis.content);
+                  return (
+                    <div style={{ display: 'grid', gap: 6, gridTemplateColumns: 'repeat(auto-fill, minmax(140px,1fr))' }}>
+                      {skills.map(s => (
+                        <div key={s.section} style={{ padding: '8px 10px', border: '1px solid var(--divider)', background: 'var(--surface)' }}>
+                          <div style={{ fontSize: 10, color: 'var(--muted)', textTransform: 'uppercase' }}>{s.section}</div>
+                          <div style={{ fontSize: 18, fontWeight: 700 }}>{s.score_0_80 ?? '—'}</div>
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })()}
+                {sections.priorityDiagnosis?.content?.length > 0 && (
+                  <div style={{ marginTop: 12 }}>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>AI Priorities</div>
+                    {sections.priorityDiagnosis.content.slice(0, 3).map((p, i) => (
+                      <div key={i} style={{ fontSize: 'var(--text-xs)', padding: '4px 0', borderBottom: '1px solid var(--divider)' }}>{p.skill ? <strong>{p.skill}: </strong> : ''}{p.focus || p.reason || p}</div>
+                    ))}
+                  </div>
+                )}
+              </Card>
+            </div>
+
+            {/* Right: Teacher writes */}
+            <div>
+              <SectionHeader title="Your Analysis" icon={<Icon.edit size={14} />} />
+              <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 14 }}>
+                <div>
+                  <label style={labelStyle}>Class Summary</label>
+                  <textarea value={teacherMeaning.classSummary} onChange={e => setTeacherMeaning(t => ({ ...t, classSummary: e.target.value }))}
+                    rows={3} placeholder="What happened in class today? Summarize the lesson and the student's general performance…"
+                    style={{ width: '100%', padding: 10, border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-xs)', fontFamily: 'var(--font-ui)', resize: 'vertical' }} />
+                </div>
+                <div>
+                  <label style={labelStyle}>Student Feedback</label>
+                  <textarea value={teacherMeaning.studentFeedback} onChange={e => setTeacherMeaning(t => ({ ...t, studentFeedback: e.target.value }))}
+                    rows={4} placeholder="What will you tell the student? One strength, one improvement focus, one next step…"
+                    style={{ width: '100%', padding: 10, border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-xs)', fontFamily: 'var(--font-ui)', resize: 'vertical' }} />
+                </div>
+                <div>
+                  <label style={labelStyle}>Homework Recommendation</label>
+                  <textarea value={teacherMeaning.homeworkRecommendation} onChange={e => setTeacherMeaning(t => ({ ...t, homeworkRecommendation: e.target.value }))}
+                    rows={2} placeholder="Brief description of what the student should practice next…"
+                    style={{ width: '100%', padding: 10, border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-xs)', fontFamily: 'var(--font-ui)', resize: 'vertical' }} />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* ── Inquiry fields ── */}
+          <div style={{ marginTop: 24 }}>
+            <SectionHeader title="Teacher Inquiry" icon={<Icon.progress size={14} />} />
+            <p style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', margin: '4px 0 12px' }}>
+              Optional. Use when tracking teaching impact across a cycle of diagnosis → intervention → re-diagnosis.
+            </p>
+            <Card style={{ padding: 16 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <input type="checkbox" id="isBaseline" checked={isBaseline} onChange={e => setIsBaseline(e.target.checked)}
+                    style={{ width: 18, height: 18, accentColor: '#14536b' }} />
+                  <label htmlFor="isBaseline" style={{ fontSize: 'var(--text-sm)', fontWeight: 600 }}>Mark as baseline diagnosis (first measurement before intervention)</label>
+                </div>
+                {isBaseline && (
+                  <div>
+                    <label style={labelStyle}>Inquiry Hypothesis</label>
+                    <textarea value={inquiryHypothesis} onChange={e => setInquiryHypothesis(e.target.value)}
+                      rows={2} placeholder="What do you think will improve? E.g. Focused vocabulary work will improve task completion score by 10+ points…"
+                      style={{ width: '100%', padding: 10, border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-xs)', fontFamily: 'var(--font-ui)', resize: 'vertical' }} />
+                  </div>
+                )}
+                <div>
+                  <label style={labelStyle}>Intervention Note</label>
+                  <textarea value={interventionNote} onChange={e => setInterventionNote(e.target.value)}
+                    rows={2} placeholder="What did you do between the baseline and this diagnosis? E.g. 3 sessions focused on organizing speaking answers using PEEL structure…"
+                    style={{ width: '100%', padding: 10, border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-xs)', fontFamily: 'var(--font-ui)', resize: 'vertical' }} />
+                </div>
+              </div>
+            </Card>
+          </div>
+
+          {/* ── Actions ── */}
+          <div style={{ display: 'flex', gap: 10, marginTop: 24 }}>
+            <Button variant="ghost" size="sm" onClick={() => handleSave(false)} disabled={saving}>Save Draft</Button>
+            <Button variant="primary" onClick={() => setStep('review')}>
+              <Icon.forward size={14} /> Review & Approve
+            </Button>
           </div>
         </div>
       )}

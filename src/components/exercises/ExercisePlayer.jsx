@@ -36,7 +36,7 @@ const TYPE_LABELS = {
 
 function InvalidExercise({ reason }) {
   return (
-    <div style={{ padding: '14px 16px', background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 'var(--radius-sm, 6px)', color: '#991B1B', fontSize: 13.5, lineHeight: 1.6 }}>
+    <div style={{ padding: '14px 16px', background: 'var(--ex-wrong-bg)', border: '1px solid var(--ex-wrong-border)', borderRadius: 'var(--radius-sm, 6px)', color: 'var(--ex-wrong-text)', fontSize: 13.5, lineHeight: 1.6 }}>
       <strong>This exercise could not be loaded</strong> — {reason}
     </div>
   );
@@ -129,7 +129,7 @@ function ExerciseCard({ exercise, index, total, result, onComplete, onNext, onBa
 
   return (
     <div style={{
-      background: '#fff', borderRadius: 'var(--radius-md, 8px)', overflow: 'hidden',
+      background: 'var(--surface)', borderRadius: 'var(--radius-md, 8px)', overflow: 'hidden',
       border: '1px solid var(--border, #e5e7eb)',
       boxShadow: '0 4px 20px -8px rgba(14,31,92,0.18), 0 1px 4px rgba(18,40,121,0.06)',
     }}>
@@ -200,14 +200,14 @@ function ExerciseCard({ exercise, index, total, result, onComplete, onNext, onBa
       {recallDone && !done && (
         <div style={{ padding: '0 20px 16px' }}>
           {hintLevel > 0 && (
-            <div style={{ marginBottom: 8, padding: '8px 12px', background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: 'var(--radius-sm, 6px)', fontSize: 'var(--text-xs)', color: '#92400E', lineHeight: 1.5 }}>
+            <div role="status" aria-live="polite" style={{ marginBottom: 8, padding: '8px 12px', background: 'var(--ex-hint-bg)', border: '1px solid var(--ex-hint-border)', borderRadius: 'var(--radius-sm, 6px)', fontSize: 'var(--text-xs)', color: 'var(--ex-hint-text)', lineHeight: 1.5 }}>
               <strong>Hint {hintLevel}:</strong> {hints[hintLevel - 1]}
             </div>
           )}
           {hintLevel < hints.length && (
             <button
               onClick={() => setHintLevel(l => l + 1)}
-              style={{ padding: '5px 14px', borderRadius: 'var(--radius-sm, 6px)', border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text-2)', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-ui)' }}
+              style={{ minHeight: 44, padding: '8px 16px', borderRadius: 'var(--radius-sm, 6px)', border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text-2)', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-ui)' }}
             >
               {hintLevel === 0 ? 'Need a hint?' : 'Next hint →'}
             </button>
@@ -223,7 +223,7 @@ function ExerciseCard({ exercise, index, total, result, onComplete, onNext, onBa
           style={{
             padding: '8px 16px', borderRadius: 'var(--radius-sm, 6px)',
             border: '1px solid var(--border, #e5e7eb)', background: 'none',
-            color: 'var(--text-2, #374151)', fontSize: 13, fontWeight: 600,
+            color: 'var(--text-2, var(--ex-panel-text))', fontSize: 13, fontWeight: 600,
             cursor: index === 0 ? 'default' : 'pointer', fontFamily: 'var(--font-ui)',
             opacity: index === 0 ? 0.5 : 1,
           }}
@@ -291,7 +291,7 @@ function ScoreSummary({ results, total }) {
 
   return (
     <div style={{
-      padding: '24px', borderRadius: 'var(--radius-md, 8px)', background: '#F0FDFA',
+      padding: '24px', borderRadius: 'var(--radius-md, 8px)', background: 'var(--ex-selected-bg)',
       border: `2px solid ${TEAL}`, textAlign: 'center',
     }}>
       <div style={{ fontSize: 13, fontWeight: 700, color: TEAL, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 12 }}>
@@ -307,7 +307,7 @@ function ScoreSummary({ results, total }) {
         {open > 0 && closed.length > 0 && <span> · </span>}
         {open > 0 && <span>{open} open-response {open === 1 ? 'task' : 'tasks'} submitted for review</span>}
       </div>
-      <div style={{ fontSize: 14, color: '#065F46', fontWeight: 500 }}>
+      <div style={{ fontSize: 14, color: 'var(--ex-correct-text)', fontWeight: 500 }}>
         {pct === 100 ? 'Perfect score — excellent work!' : pct >= 70 ? 'Good work. Review any missed answers above.' : 'Keep practising — consistency builds confidence.'}
       </div>
     </div>
@@ -390,7 +390,7 @@ export default function ExercisePlayer({ exercises: raw, title, onSessionComplet
       {errors.length > 0 && (
         <div style={{ marginBottom: 16, display: 'flex', flexDirection: 'column', gap: 6 }}>
           {errors.map((e, i) => (
-            <div key={i} style={{ padding: '8px 12px', background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: 'var(--radius-sm, 6px)', fontSize: 13, color: '#92400E' }}>
+            <div key={i} style={{ padding: '8px 12px', background: 'var(--ex-hint-bg)', border: '1px solid var(--ex-hint-border)', borderRadius: 'var(--radius-sm, 6px)', fontSize: 13, color: 'var(--ex-hint-text)' }}>
               <Icon.warning size={12} /> {e}
             </div>
           ))}

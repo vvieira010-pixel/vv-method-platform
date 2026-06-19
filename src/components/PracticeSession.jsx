@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Icon, Modal } from './shared.jsx';
+import { Icon, Modal, Button } from './shared.jsx';
 import ExercisePlayer from './exercises/ExercisePlayer.jsx';
 import {
   getGrammarExercises,
@@ -85,7 +85,7 @@ export default function PracticeSession({ mode, onClose, onSessionComplete }) {
             }}
             style={{
               padding: '8px 14px',
-              borderRadius: 0,
+              borderRadius: 'var(--radius-sm)',
               border: selectedKind === k.id ? '1.5px solid var(--accent)' : '1.5px solid var(--border)',
               background: selectedKind === k.id ? 'var(--accent-subtle)' : 'var(--surface)',
               color: selectedKind === k.id ? 'var(--accent-deep)' : 'var(--text)',
@@ -111,24 +111,7 @@ export default function PracticeSession({ mode, onClose, onSessionComplete }) {
           <ExercisePlayer exercises={exercises} onSessionComplete={handleSessionComplete} />
           {selectedKind !== 'grammar' && (
             <div style={{ marginTop: 16, textAlign: 'center' }}>
-              <button
-                onClick={handleTryAnother}
-                style={{
-                  background: 'none',
-                  border: '1.5px solid var(--accent, #148891)',
-                  color: 'var(--accent, #148891)',
-                  borderRadius: 0,
-                  padding: '8px 20px',
-                  fontSize: '0.875rem',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  transition: 'all 0.15s ease',
-                }}
-                onMouseEnter={e => { e.currentTarget.style.background = 'var(--accent, #148891)'; e.currentTarget.style.color = 'white'; }}
-                onMouseLeave={e => { e.currentTarget.style.background = 'none'; e.currentTarget.style.color = 'var(--accent, #148891)'; }}
-              >
-                ← Try another topic
-              </button>
+              <Button variant="ghost" onClick={handleTryAnother}>← Try another topic</Button>
             </div>
           )}
         </div>
