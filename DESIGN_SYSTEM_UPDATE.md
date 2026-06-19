@@ -1,5 +1,24 @@
 # Design System Update — VV Method Platform
 
+> ⚠️ **Status note (current as of this audit).** This document records an earlier
+> redesign and is partly out of date. The **single source of truth is
+> [`src/styles/system.css`](src/styles/system.css)** — the `design-system.css` and
+> `logbook.css` files referenced below were consolidated into it and no longer exist.
+> Corrections to the sections below:
+> - **Palette is navy + teal + amber, defined in hex** (`--primary: #0f1b2d`,
+>   `--accent: #148891`, `--interaction: #c86607`) — not the "teal + orange / OKLch"
+>   system described under *Color System* below. Only a couple of status colors
+>   remain in OKLch; the rest are hex.
+> - **Fonts are DM Sans (body/UI) + Sora (display)**, loaded from Google Fonts — not
+>   the system-font stack listed under *Typography*.
+> - **Dark mode** is supported via `[data-theme="dark"]` on `<html>`. Note: tokens
+>   used as *foreground* colors must be flipped there — see the dark-mode block in
+>   `system.css`.
+> - Accessibility: `--muted` and the `--success` family are tuned to the WCAG AAA
+>   (7:1) target stated in `PRODUCT.md`.
+>
+> Treat the per-token values below as historical; read `system.css` for live values.
+
 ## Overview
 
 Complete visual redesign of the VV Method Platform to match the teal + orange style system from the provided reference screenshots. This update introduces a cohesive, modern design language with improved accessibility, better responsive behavior, and consistent interactive states across all pages.
