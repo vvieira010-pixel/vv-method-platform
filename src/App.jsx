@@ -52,6 +52,7 @@ export default function App() {
     ...window.TWEAK_DEFAULTS,
   }));
   const [students, setStudents] = useState([]);
+  const [pendingSubmissions, setPendingSubmissions] = useState(0);
 
   // ── Supabase auth: handle implicit-flow hash redirect + restore stored session ──
   useEffect(() => {
@@ -182,6 +183,16 @@ export default function App() {
     });
   }, []);
 
+  // Pending submissions badge (teacher shell). Declared here — above the
+  // role-based early returns — so the hook order stays stable across the
+  // logged-out → logged-in transition (otherwise React throws "Rendered more
+  // hooks than during the previous render" and blanks the app on sign in).
+  useEffect(() => {
+    getAllSubmissions().then(list => {
+      setPendingSubmissions((list || []).filter(s => s.status === 'submitted').length);
+    }).catch(() => {});
+  }, []);
+
   // Re-load students on updates
   useEffect(() => {
     const reload = () => getStudents().then(setStudents);
@@ -252,14 +263,6 @@ export default function App() {
       </>
     );
   }
-
-  // ── Pending submissions badge ──
-  const [pendingSubmissions, setPendingSubmissions] = useState(0);
-  useEffect(() => {
-    getAllSubmissions().then(list => {
-      setPendingSubmissions((list || []).filter(s => s.status === 'submitted').length);
-    }).catch(() => {});
-  }, []);
 
   // ── Teacher shell ──
   const teacherTabs = [
