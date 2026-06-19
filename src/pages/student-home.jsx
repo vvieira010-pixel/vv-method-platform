@@ -1,8 +1,9 @@
 import { useState, useEffect, lazy, Suspense } from 'react';
-import { Icon, Avatar, Button } from '../components/shared.jsx';
-import { getHomework, getDiagnoses, getClassEvents, getReviews } from '../lib/workflow.js';
+import { Icon, Avatar, Button, Skeleton, SkeletonText, SkeletonCard, EmptyState } from '../components/shared.jsx';
+import { getHomework, getDiagnoses, getClassEvents, getReviews, getStudentSeedsStage } from '../lib/workflow.js';
 import { recordPractice, getDueCount, getDueItems, toMCQ, getAllEntries } from '../lib/spaced-repetition.js';
 import { readStoredSupabaseSession, updateUserPassword } from '../lib/supabase-storage.js';
+import { SEEDS_STAGES, SEEDS_STAGE_ORDER } from '../domain/seeds/constants.js';
 
 const PracticeSession = lazy(() => import('../components/PracticeSession.jsx'));
 const ReviewSession   = lazy(() => import('../components/ReviewSession.jsx'));
@@ -88,7 +89,10 @@ function SkillRow({ skill, trend }) {
     <div className="student-skill-row">
       <div className="student-skill-top">
         <strong style={{ textTransform: 'capitalize' }}>{skill.section}</strong>
-        <span className="student-skill-stage">{stage.label}</span>
+        <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          {score > 0 && <span className="student-skill-score">{score}/80</span>}
+          <span className="student-skill-stage">{stage.label}</span>
+        </span>
       </div>
       <div style={{ display: 'flex', gap: 4, margin: '6px 0' }} aria-label={`${skill.section}: ${stage.label}`}>
         {PROGRESS_STAGES.map(st => (
@@ -126,6 +130,9 @@ export default function StudentHome({ student, onTab }) {
   const [reviewCount, setReviewCount] = useState(0);
   const [reviewMode, setReviewMode] = useState(false);
   const [reviewExercises, setReviewExercises] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(null);
+  const [seedsStage, setSeedsStage] = useState(null);
   const [generalMemoText, setGeneralMemoText] = useState(() => localStorage.getItem('vv:student_general_memo') || '');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -134,6 +141,7 @@ export default function StudentHome({ student, onTab }) {
   const activeSession = readStoredSupabaseSession();
 
   useEffect(() => {
+    getStudentSeedsStage(student.id).then(setSeedsStage);
     getTeacherSetting('general_memo').then(val => {
       if (val !== null) {
         setGeneralMemoText(val);
@@ -141,6 +149,7 @@ export default function StudentHome({ student, onTab }) {
         else localStorage.removeItem('vv:student_general_memo');
       }
     });
+    window.addEventListener('vv:seeds-updated', () => getStudentSeedsStage(student.id).then(setSeedsStage));
     function syncMemo() {
       getTeacherSetting('general_memo').then(val => {
         setGeneralMemoText(val ?? localStorage.getItem('vv:student_general_memo') ?? '');
@@ -156,6 +165,7 @@ export default function StudentHome({ student, onTab }) {
 
   useEffect(() => {
     (async () => {
+      try {
       const [hw, diagnoses, classEvents, reviews] = await Promise.all([
         getHomework(student.id),
         getDiagnoses(student.id),
@@ -198,6 +208,11 @@ export default function StudentHome({ student, onTab }) {
         setSnapshot(asArray(allApprovedDx[0].content?.section_snapshot));
         setApprovedHistory(allApprovedDx);
       }
+      } catch (e) {
+        console.error('[StudentHome] failed to load:', e);
+        setLoadError(e.message);
+      }
+      setLoading(false);
     })();
   }, [student.id]);
 
@@ -259,6 +274,26 @@ export default function StudentHome({ student, onTab }) {
       setPasswordMsg({ ok: false, text: err.message });
     }
     setPasswordSaving(false);
+  }
+
+  if (loadError) {
+    return (
+      <div className="student-home">
+        <section className="student-hero bg-grain fade-up" style={{ '--delay': '0s' }}>
+          <div>
+            <p className="student-hero-kicker">MET preparation dashboard</p>
+            <h1>Could not load dashboard</h1>
+            <p>Something went wrong. Please try refreshing the page.</p>
+          </div>
+        </section>
+        <EmptyState
+          title="Loading error"
+          text={loadError}
+          action="Reload page"
+          onAction={() => window.location.reload()}
+        />
+      </div>
+    );
   }
 
   const heroAction = pendingHw.length > 0
@@ -373,6 +408,22 @@ export default function StudentHome({ student, onTab }) {
         )}
       </Suspense>
 
+      {loading ? (
+        <section className="student-grid fade-up" style={{ '--delay': '0.3s' }} aria-busy="true" aria-label="Loading dashboard">
+          <div className="student-home-main">
+            <SkeletonCard height={160} lines={4} />
+            <div className="student-home-columns">
+              <SkeletonCard height={140} lines={3} />
+              <SkeletonCard height={140} lines={3} />
+            </div>
+          </div>
+          <aside className="student-home-side">
+            <SkeletonCard height={200} lines={6} />
+            <SkeletonCard height={100} lines={3} />
+            <SkeletonCard height={200} lines={5} />
+          </aside>
+        </section>
+      ) : (
       <section className="student-grid fade-up" style={{ '--delay': '0.3s' }}>
         <div className="student-home-main">
           <article className="student-panel student-panel--primary">
@@ -468,6 +519,63 @@ export default function StudentHome({ student, onTab }) {
             )}
           </article>
 
+          {/* Focus area callout */}
+          {evaluatedSkills.length > 1 && (() => {
+            const lowest = [...evaluatedSkills].sort((a, b) => (Number(a.score_0_80) || 80) - (Number(b.score_0_80) || 80))[0];
+            if (!lowest || !Number(lowest.score_0_80)) return null;
+            return (
+              <article className="student-panel" style={{ borderLeft: '3px solid var(--warning)' }}>
+                <div className="student-panel-head">
+                  <div>
+                    <span className="student-panel-kicker">Focus Area</span>
+                    <h2>{lowest.section.replace(/_/g, ' ')}</h2>
+                  </div>
+                </div>
+                <p style={{ fontSize: 'var(--text-sm)', lineHeight: 1.6, color: 'var(--text)', margin: '8px 0 0' }}>
+                  This skill needs the most attention ({Number(lowest.score_0_80) || 0}/80). Focus on it in your next class or practice session.
+                </p>
+                {lowest.next_step && (
+                  <p style={{ fontSize: 'var(--text-sm)', lineHeight: 1.6, color: 'var(--text-2)', margin: '6px 0 0' }}>
+                    <strong>Next step:</strong> {lowest.next_step}
+                  </p>
+                )}
+              </article>
+            );
+          })()}
+
+          {(() => {
+            const s = seedsStage && SEEDS_STAGES[seedsStage.stage];
+            if (!s) return null;
+            return (
+              <article className="student-panel" style={{ borderLeft: `3px solid ${s.color}` }}>
+                <div className="student-panel-head">
+                  <div>
+                    <span className="student-panel-kicker">Your SEEDS Cycle</span>
+                    <h2 style={{ color: s.color }}>{s.label}: {s.subtitle}</h2>
+                  </div>
+                </div>
+                <p style={{ fontSize: 'var(--text-sm)', lineHeight: 1.6, color: 'var(--text)', margin: '8px 0 0' }}>
+                  {s.studentDescription}
+                </p>
+                <div style={{ display: 'flex', gap: 4, marginTop: 10 }}>
+                  {SEEDS_STAGE_ORDER.map(stageId => {
+                    const st = SEEDS_STAGES[stageId];
+                    const isActive = stageId === seedsStage.stage;
+                    const isPast = SEEDS_STAGE_ORDER.indexOf(stageId) < SEEDS_STAGE_ORDER.indexOf(seedsStage.stage);
+                    return (
+                      <span key={stageId} style={{
+                        flex: 1, height: 4, borderRadius: 2,
+                        background: isActive ? st.color : isPast ? st.color : 'var(--border)',
+                        opacity: isActive ? 1 : isPast ? 0.5 : 0.3,
+                        transition: 'all 0.3s',
+                      }} title={`${st.label}: ${st.subtitle}`} />
+                    );
+                  })}
+                </div>
+              </article>
+            );
+          })()}
+
           <section className="student-memo-board">
             <MemoCard kicker="General memo" title="Memo Board" text={generalMemoText || 'No general memo posted yet.'} />
           </section>
@@ -526,6 +634,7 @@ export default function StudentHome({ student, onTab }) {
           </article>
         </aside>
       </section>
+      )}
 
     </div>
   );

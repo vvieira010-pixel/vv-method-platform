@@ -81,7 +81,7 @@ export default function CalendarPage({ students, onNavigate }) {
         endTime: ev.endTime || '',
         zoomUrl,
         classFocus: ev.classFocus || '',
-        timezone: student.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone,
+        timezone: ev.timezone || student.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone,
       });
       window.toast?.(`Invite emailed to ${student.firstName}.`, 'ok');
     } catch (e) {
@@ -138,6 +138,18 @@ export default function CalendarPage({ students, onNavigate }) {
             </Field>
             <Field label="End time">
               <input className="input" type="time" value={form.endTime} onChange={e => setForm(f => ({ ...f, endTime: e.target.value }))} />
+            </Field>
+            <Field label="Timezone">
+              <select className="input" value={form.timezone} onChange={e => setForm(f => ({ ...f, timezone: e.target.value }))}>
+                <option value="America/Sao_Paulo">São Paulo (BRT)</option>
+                <option value="America/New_York">New York (EST/EDT)</option>
+                <option value="America/Chicago">Chicago (CST/CDT)</option>
+                <option value="America/Denver">Denver (MST/MDT)</option>
+                <option value="America/Los_Angeles">Los Angeles (PST/PDT)</option>
+                <option value="Europe/London">London (GMT/BST)</option>
+                <option value="Europe/Lisbon">Lisbon (WET/WEST)</option>
+                <option value="UTC">UTC</option>
+              </select>
             </Field>
             <Field label="Class title">
               <input className="input" value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} placeholder="e.g. Speaking Practice #3" />
@@ -237,7 +249,7 @@ export default function CalendarPage({ students, onNavigate }) {
                   <div key={ev.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 0', borderBottom: '1px solid var(--divider)' }}>
                     <div style={{ flex: 1 }}>
                       <div style={{ fontSize: 'var(--text-xs)', fontWeight: 600 }}>{student?.firstName}</div>
-                      <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>{ev.date} · {ev.startTime || '—'}</div>
+                      <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>{ev.date} · {ev.startTime ? `${ev.startTime} ${ev.timezone || 'BRT'}` : '—'}</div>
                     </div>
                     <Button variant="ghost" size="sm" onClick={() => onNavigate('calendar:class', { classEventId: ev.id })}>Open</Button>
                   </div>
@@ -257,7 +269,7 @@ function EventCard({ ev, students, onNavigate, onMarkComplete, onDelete, onSendI
       <Avatar name={student?.name || '?'} size={28} />
       <div style={{ flex: 1 }}>
         <div style={{ fontWeight: 600, fontSize: 'var(--text-sm)' }}>{student?.firstName} — {ev.title}</div>
-        <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>{ev.startTime || '—'} · {ev.classFocus || 'No focus'}</div>
+        <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>{ev.startTime ? `${ev.startTime} ${ev.timezone || 'BRT'}` : '—'} · {ev.classFocus || 'No focus'}</div>
       </div>
       <Pill tone={STATUS_TONE[ev.status] || 'muted'}>{ev.status}</Pill>
       {ev.status === 'scheduled' && onSendInvite && (
@@ -282,7 +294,7 @@ function Field({ label, children }) {
   );
 }
 
-const EMPTY_FORM = { studentId: '', date: '', startTime: '', endTime: '', title: 'English Class', classFocus: '', metSkillFocus: '', status: 'scheduled', diagnosticStatus: 'not-started', homeworkStatus: 'not-generated' };
+const EMPTY_FORM = { studentId: '', date: '', startTime: '', endTime: '', title: 'English Class', classFocus: '', metSkillFocus: '', timezone: 'America/Sao_Paulo', status: 'scheduled', diagnosticStatus: 'not-started', homeworkStatus: 'not-generated' };
 const S = {
   headline: { fontFamily: 'var(--font-ui)', fontSize: 'var(--text-2xl)', fontWeight: 700, color: 'var(--accent-deep)', margin: 0 },
   sub: { fontSize: 'var(--text-sm)', color: 'var(--muted)', margin: '4px 0 0' },

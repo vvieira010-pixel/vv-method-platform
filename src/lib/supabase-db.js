@@ -350,6 +350,21 @@ const ENTITIES = {
   progressNotes: contentEntity('progress_notes'),
   /* error bank — per-student long-term error store (object-keyed in localStorage) */
   errorBank: contentEntity('error_bank_entries'),
+
+  /* seeds stages — one row per student tracking SEEDS cycle stage */
+  seedsStages: {
+    ...contentEntity('seeds_stages'),
+    async toRow(record, ctx) {
+      return {
+        teacher_id: ctx.teacherId,
+        student_id: await studentUuid(ctx, record.studentId),
+        stage: record.stage || '',
+        note: record.note || '',
+        started_at: record.startedAt || null,
+        content: record,
+      };
+    },
+  },
 };
 
 export function dbHasEntity(key) { return Boolean(ENTITIES[key]); }
@@ -658,4 +673,64 @@ export async function claimStudentByEmail(email) {
     console.warn('[supabase-db] claimStudentByEmail select failed:', e.message);
     return null;
   }
+}
+
+/* ─── Storage: teacher resources (public bucket) ────────────── */
+
+const RESOURCE_BUCKET = 'teacher-resources';
+
+/**
+ * Upload a file (image or audio) to the public teacher-resources bucket.
+ * Path: {folder}/{timestamp}-{filename}
+ */
+export async function uploadTeacherResource(file, folder = 'images') {
+  const ctx = getDbContext();
+  if (!ctx) throw new Error('Not signed in.');
+  const ext = file.name.split('.').pop() || 'bin';
+  const path = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2, 6)}.${ext}`;
+  const res = await fetch(`${ctx.url}/storage/v1/object/${RESOURCE_BUCKET}/${path}`, {
+    method: 'POST',
+    headers: {
+      apikey: ctx.anonKey,
+      Authorization: `Bearer ${ctx.token}`,
+      'Content-Type': file.type || 'application/octet-stream',
+      'x-upsert': 'true',
+    },
+    body: file,
+  });
+  if (!res.ok) throw new Error(`upload → ${res.status} ${await res.text().catch(() => '')}`);
+  return `${ctx.url}/storage/v1/object/public/${RESOURCE_BUCKET}/${path}`;
+}
+
+/**
+ * List all objects in a folder (e.g. 'images' or 'audio').
+ * Returns an array of { name, created_at, updated_at, id, ... } or null.
+ */
+export async function listTeacherResources(folder = 'images') {
+  const ctx = getDbContext();
+  if (!ctx) return null;
+  try {
+    const res = await fetch(`${ctx.url}/storage/v1/object/list/${RESOURCE_BUCKET}`, {
+      method: 'POST',
+      headers: { apikey: ctx.anonKey, Authorization: `Bearer ${ctx.token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prefix: `${folder}/`, sortBy: { column: 'created_at', order: 'desc' } }),
+    });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Delete a resource by its full path (e.g. 'images/abc123.jpg').
+ */
+export async function deleteTeacherResource(path) {
+  const ctx = getDbContext();
+  if (!ctx) throw new Error('Not signed in.');
+  const res = await fetch(`${ctx.url}/storage/v1/object/${RESOURCE_BUCKET}/${path}`, {
+    method: 'DELETE',
+    headers: { apikey: ctx.anonKey, Authorization: `Bearer ${ctx.token}` },
+  });
+  if (!res.ok) throw new Error(`delete → ${res.status}`);
 }

@@ -9,6 +9,8 @@ import { EX_TYPES, getExType } from '../lib/exercise-types.js';
 import { metTaskOptions } from '../lib/met-task-spec.js';
 import { dbEnabled, uploadExerciseImage } from '../lib/supabase-db.js';
 import { DialogueEditor, SwapEditor, LevelUpEditor, ReadEditor } from './exercise-editor-new-types.jsx';
+import { generateExerciseImage } from '../lib/image-generation.js';
+import ResourcePicker from './resource-picker.jsx';
 export { ExTypeBadge } from './exercise-badge.jsx';
 
 /* ─── SHARED STYLES ─────────────────────────────────────────── */
@@ -21,23 +23,26 @@ const fieldWrap = { marginBottom: 12 };
 const hintText = { fontSize: 'var(--text-xs)', color: 'var(--faint)', marginTop: 4 };
 
 /* ─── EXERCISE TYPE PICKER ──────────────────────────────────── */
-export function ExerciseTypePicker({ onSelect, onClose }) {
+export function ExerciseTypePicker({ onSelect, onClose, onAiGenerate, exerciseOptions, onAddAiSuggestion }) {
   const [qty, setQty] = useState(1);
-  const [level, setLevel] = useState('B1'); // New state for level
+  const [level, setLevel] = useState('B1');
   const clamp = n => Math.max(1, Math.min(20, Number.isFinite(n) ? n : 1));
   const stepBtn = {
     width: 26, height: 26, display: 'grid', placeItems: 'center',
     border: '1px solid var(--border)', background: 'var(--surface)',
     borderRadius: 'var(--radius-sm)', cursor: 'pointer', fontSize: 16, lineHeight: 1, color: 'var(--text)',
   };
+  const actionBtn = {
+    padding: '4px 8px', borderRadius: 'var(--radius-sm)', fontFamily: 'var(--font-ui)',
+    cursor: 'pointer', whiteSpace: 'nowrap',
+  };
   return (
     <Card className="exercise-type-picker" style={{ padding: 20 }}>
       <div className="exercise-type-picker-head" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6, gap: 12, flexWrap: 'wrap' }}>
         <span style={{ fontWeight: 700, fontSize: 'var(--text-sm)', color: 'var(--accent-deep)' }}>
-          Choose exercise type
+          Add Exercise
         </span>
         <div className="exercise-type-picker-controls" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          {/* Level selector */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             <span style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Level</span>
             <select
@@ -48,7 +53,6 @@ export function ExerciseTypePicker({ onSelect, onClose }) {
               {['A1', 'A2', 'B1', 'B2', 'C1'].map(l => <option key={l} value={l}>{l}</option>)}
             </select>
           </div>
-          {/* Quantity stepper */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             <span style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
               How many
@@ -63,35 +67,28 @@ export function ExerciseTypePicker({ onSelect, onClose }) {
                 fontFamily: 'var(--font-ui)', fontSize: 'var(--text-sm)', color: 'var(--text)',
               }}
             />
-            <button type="button" aria-label="More" style={stepBtn} onClick={() => setQty(q => clamp(q + 1))}>+</button>
+            <button type="button" aria-label="More" style={stepBtn} onClick={() => qty < 20 ? setQty(q => clamp(q + 1)) : null}>+</button>
           </div>
           {onClose && (
             <Button variant="ghost" size="sm" onClick={onClose}>
-              <Icon.close size={12} /> Cancel
+              <Icon.close size={12} /> Close
             </Button>
           )}
         </div>
       </div>
       <p style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', margin: '0 0 14px' }}>
-        Pick a type to add {qty > 1 ? <strong>{qty} of them</strong> : 'one'} at <strong>{level} level</strong>.
+        Click <strong>Add</strong> for an empty exercise, or <strong>AI</strong> to generate one with content.
       </p>
       <div className="exercise-type-picker-grid" style={{ display: 'grid', gap: 8, maxHeight: 360, overflowY: 'auto', alignItems: 'stretch', gridAutoRows: '1fr' }}>
         {EX_TYPES.map(t => {
           const IconComp = Icon[t.iconKey];
           return (
-            <button
-              key={t.id}
-              onClick={() => onSelect(t.id, qty, level)} // Pass level here
-              style={{
-                display: 'flex', alignItems: 'flex-start', gap: 10,
-                padding: '12px 14px', borderRadius: 'var(--radius-md)',
-                border: '1px solid var(--border)', background: 'var(--surface)',
-                cursor: 'pointer', fontFamily: 'var(--font-ui)', textAlign: 'left',
-                transition: 'all 0.15s var(--ease)', width: '100%', height: '100%',
-              }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = t.color; e.currentTarget.style.background = t.bg; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.background = 'var(--surface)'; }}
-            >
+            <div key={t.id} style={{
+              display: 'flex', alignItems: 'center', gap: 10,
+              padding: '10px 12px', borderRadius: 'var(--radius-md)',
+              border: '1px solid var(--border)', background: 'var(--surface)',
+              transition: 'all 0.15s var(--ease)',
+            }}>
               <span style={{
                 width: 32, height: 32, borderRadius: 'var(--radius-sm)',
                 background: t.bg, color: t.color,
@@ -99,14 +96,53 @@ export function ExerciseTypePicker({ onSelect, onClose }) {
               }}>
                 {IconComp && <IconComp size={15} />}
               </span>
-              <div>
+              <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--text)' }}>{t.label}</div>
                 <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>{t.hint}</div>
               </div>
-            </button>
+              <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
+                <button onClick={() => onSelect(t.id, qty, level)}
+                  style={{ ...actionBtn, background: 'var(--accent)', color: '#fff', border: 'none', fontWeight: 600, fontSize: 'var(--text-xs)' }}>
+                  Add
+                </button>
+                {onAiGenerate && (
+                  <button onClick={() => onAiGenerate(t.id, level)}
+                    style={{ ...actionBtn, border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--accent)', fontWeight: 600, fontSize: 'var(--text-xs)' }}>
+                    <Icon.spark size={10} /> AI
+                  </button>
+                )}
+              </div>
+            </div>
           );
         })}
       </div>
+
+      {/* AI suggestions inside the panel */}
+      {Array.isArray(exerciseOptions) && exerciseOptions.length > 0 && (
+        <div style={{ marginTop: 14, padding: 12, border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', background: 'var(--bg)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 8 }}>
+            <div>
+              <div style={{ fontWeight: 700, fontSize: 'var(--text-sm)' }}>AI exercise suggestions</div>
+              <div style={{ color: 'var(--muted)', fontSize: 'var(--text-xs)' }}>Click <strong>Add</strong> to include one.</div>
+            </div>
+          </div>
+          <div style={{ display: 'grid', gap: 6 }}>
+            {exerciseOptions.map((ex, i) => {
+              const preview = ex.title || getExType(ex.type)?.label || ex.type;
+              return (
+                <div key={ex.id || i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', border: '1px solid var(--divider)', borderRadius: 'var(--radius-sm)', background: 'var(--surface)' }}>
+                  <ExTypeBadge typeId={ex.type} />
+                  <span style={{ flex: 1, fontSize: 'var(--text-xs)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: 'var(--text-2)' }}>{preview}</span>
+                  <button onClick={() => onAddAiSuggestion?.(ex)}
+                    style={{ padding: '4px 10px', borderRadius: 'var(--radius-sm)', border: 'none', background: 'var(--accent)', color: '#fff', cursor: 'pointer', fontWeight: 600, fontSize: 'var(--text-xs)', fontFamily: 'var(--font-ui)' }}>
+                    Add
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </Card>
   );
 }
@@ -314,7 +350,7 @@ function SpeakEditor({ ex, update }) {
 
   async function handleImageFile(e) {
     const file = e.target.files?.[0];
-    e.target.value = ''; // allow re-selecting the same file
+    e.target.value = '';
     if (!file) return;
     if (!file.type.startsWith('image/')) {
       setUploadErr('Please choose an image file.');
@@ -339,7 +375,6 @@ function SpeakEditor({ ex, update }) {
   }
 
   return (
-    <div>
       <div style={fieldWrap}>
         <label style={fieldLabel}>Speaking prompt</label>
         <textarea
@@ -575,15 +610,23 @@ function FlashEditor({ ex, update }) {
 
 /* ─── 8. LISTENING ───────────────────────────────────────────── */
 function ListenEditor({ ex, update }) {
+  const [picker, setPicker] = useState(false);
+  const [genImg, setGenImg] = useState(false);
   return (
     <div>
+      <ResourcePicker open={picker} onClose={() => setPicker(false)} onSelect={u => { update({ audioSrc: u }); setPicker(false); }} tab="audio" />
       <div style={fieldWrap}>
         <label style={fieldLabel}>Pre-recorded audio URL (optional — overrides TTS)</label>
-        <input
-          className="input" value={ex.audioSrc || ''}
-          onChange={e => update({ audioSrc: e.target.value })}
-          placeholder="https://…/audio/listening/asking-for-directions-pt1.mp3"
-        />
+        <div style={{ display: 'flex', gap: 6 }}>
+          <input className="input" value={ex.audioSrc || ''}
+            onChange={e => update({ audioSrc: e.target.value })}
+            placeholder="https://…/audio/listening/asking-for-directions-pt1.mp3"
+            style={{ flex: 1 }} />
+          <button onClick={() => setPicker(true)}
+            style={{ padding: '4px 10px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)', background: 'var(--surface)', cursor: 'pointer', fontFamily: 'var(--font-ui)', fontSize: 'var(--text-xs)', fontWeight: 600, whiteSpace: 'nowrap', color: 'var(--text)' }}>
+            Browse
+          </button>
+        </div>
         <div style={hintText}>Paste a direct MP3/WAV URL. When set, this plays instead of generating speech below.</div>
       </div>
 
@@ -601,11 +644,26 @@ function ListenEditor({ ex, update }) {
 
       <div style={fieldWrap}>
         <label style={fieldLabel}>Picture hint (optional — context clue shown before listening)</label>
-        <input
-          className="input" value={ex.pictureHint || ''}
-          onChange={e => update({ pictureHint: e.target.value })}
-          placeholder="A student sitting at a desk with books open, looking tired. A phone is next to the books."
-        />
+        <div style={{ display: 'flex', gap: 6 }}>
+          <input
+            className="input" value={ex.pictureHint || ''}
+            onChange={e => update({ pictureHint: e.target.value })}
+            placeholder="A student sitting at a desk with books open, looking tired. A phone is next to the books."
+            style={{ flex: 1 }}
+          />
+          {!/^https?:\/\//i.test(ex.pictureHint || '') && (
+            <Button variant="ghost" size="sm" onClick={async () => {
+              if (!ex.pictureHint || genImg) return;
+              setGenImg(true);
+              try {
+                const url = await generateExerciseImage(ex.pictureHint);
+                if (url) update({ pictureHint: url });
+              } finally { setGenImg(false); }
+            }} disabled={!ex.pictureHint || genImg} style={{ whiteSpace: 'nowrap' }}>
+              {genImg ? <><Icon.spark size={12} /> Gen…</> : <><Icon.image size={12} /> Generate</>}
+            </Button>
+          )}
+        </div>
       </div>
 
       <div style={fieldWrap}>

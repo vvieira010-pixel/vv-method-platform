@@ -200,6 +200,7 @@ export default function Listening({ exercise, onComplete }) {
     pictureHint = '',
     metPart = '',    // 'P1' | 'P2' | 'P3' — optional MET context
     instruction = '',
+    vocabulary = [],
   } = exercise;
 
   const [playCount, setPlayCount] = useState(0);
@@ -210,6 +211,7 @@ export default function Listening({ exercise, onComplete }) {
   const [revealed, setRevealed]   = useState(false);
   const [selected, setSelected]   = useState(null);
   const [submitted, setSubmitted] = useState(false);
+  const [playbackRate, setPlaybackRate] = useState(1);
   const audioRef = useRef(null);
 
   const maxPlays = plays === 0 ? Infinity : plays;
@@ -236,6 +238,7 @@ export default function Listening({ exercise, onComplete }) {
       if (url) {
         const audio = new Audio(url);
         audioRef.current = audio;
+        audio.playbackRate = playbackRate;
         audio.onended = () => { setPlaying(false); setRevealed(true); };
         audio.onerror = () => { setPlaying(false); setError('Playback failed — try again.'); };
         await audio.play();
@@ -322,6 +325,25 @@ export default function Listening({ exercise, onComplete }) {
         <p style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', marginBottom: 12, lineHeight: 1.6 }}>{instruction}</p>
       )}
 
+      {/* Vocabulary preview */}
+      {vocabulary.length > 0 && (
+        <div style={{
+          padding: '8px 12px', marginBottom: 14,
+          background: 'var(--accent-subtle)', borderRadius: 'var(--radius-sm)',
+          fontSize: 'var(--text-xs)', border: '1px solid var(--accent-soft)',
+        }}>
+          <strong style={{ color: 'var(--accent-deep)', marginRight: 6 }}>Key vocabulary:</strong>
+          {vocabulary.map((word, i) => (
+            <span key={i} style={{
+              display: 'inline-block', background: 'var(--white)', padding: '2px 8px',
+              borderRadius: 0, marginRight: 4, marginBottom: 2,
+              border: '1px solid var(--accent-soft)', fontWeight: 600,
+              color: 'var(--text)',
+            }}>{typeof word === 'string' ? word : word.word || word.term || ''}</span>
+          ))}
+        </div>
+      )}
+
       {/* Picture hint (context clue before listening) */}
       {pictureHint && (
         <div style={{
@@ -382,6 +404,32 @@ export default function Listening({ exercise, onComplete }) {
         {error && (
           <div style={{ fontSize: 12.5, color: 'var(--danger)', textAlign: 'center' }}>
             <Icon.warning size={12} /> {error} You can read the transcript below to answer.
+          </div>
+        )}
+
+        {/* Speed control */}
+        {!submitted && !error && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--muted)' }}>
+            <span>Speed:</span>
+            {[0.75, 1, 1.25, 1.5].map(s => (
+              <button
+                key={s}
+                onClick={() => {
+                  setPlaybackRate(s);
+                  if (audioRef.current) audioRef.current.playbackRate = s;
+                }}
+                aria-pressed={playbackRate === s}
+                style={{
+                  padding: '2px 8px', borderRadius: 'var(--radius-sm)',
+                  border: `1px solid ${playbackRate === s ? 'var(--accent)' : 'var(--border)'}`,
+                  background: playbackRate === s ? 'var(--accent-subtle)' : 'transparent',
+                  color: playbackRate === s ? 'var(--accent-deep)' : 'var(--muted)',
+                  cursor: 'pointer', fontWeight: playbackRate === s ? 700 : 400,
+                  fontFamily: 'var(--font-ui)', fontSize: 11,
+                  transition: 'all 0.12s',
+                }}
+              >{s}x</button>
+            ))}
           </div>
         )}
       </div>

@@ -606,7 +606,7 @@ const EXERCISE_COMPLETENESS_RULES = `Complete exercise JSON requirements:
 - order: type, title, sentences array in correct order with at least 3 sentences.
 - fix: type, title, errorText, correctedText, hint.
 - flash: type, title, pairs array with at least 10 { "term", "def" } items.
-- listen: type, title, audioText, question, options with exactly 4 choices, correct as 0-3, explanation, plays.
+- listen: type, title, audioText, question, options with exactly 4 choices, correct as 0-3, explanation, plays, pictureHint (1–2 sentence visual description of a scene related to the audio topic — used to generate an image shown before the student listens).
 - read: type, title, passage (full reading text, 150–250 words, authentic MET-style), questions array of at least 3 items each with {question, options[4], correct as 0-3, explanation}.
 Do not return placeholder text. Do not omit answer keys.`;
 
@@ -1024,7 +1024,8 @@ Vocab: ${vocab.slice(0, 4).map(v => v.wordOrPhrase).join(', ') || 'general MET v
 4. QUESTIONS: The 'question' must be clear. The 'options' must have exactly 4 choices.
 5. DISTRACTORS: At least one distractor must be a "plausible mistake" (e.g., a detail mentioned in the audio that is NOT the answer to the question).
 6. EXPLANATION: Provide a clear, supportive explanation of WHY the correct answer is right.
-7. FORMAT: Use the following structure.
+7. PICTURE HINT: Include a pictureHint that describes a concrete visual scene related to the audio topic. Use specific, visible details (people, setting, objects, actions) that can be turned into an illustration. Avoid abstract concepts — describe what someone would see.
+8. FORMAT: Use the following structure.
 
 ${EXERCISE_COMPLETENESS_RULES}
 
@@ -1038,6 +1039,7 @@ RETURN ONLY VALID JSON:
   "correct": 0,
   "explanation": "why it's correct",
   "plays": 2,
+  "pictureHint": "1–2 sentence visual description of a scene related to the audio topic. Describe specific, concrete visual details that can be turned into an illustration — e.g. 'A nurse checking a patient's blood pressure in a bright hospital room. The patient is sitting on the bed, smiling.'",
   "teacherNote": "what to look for in the student's response"
 }`;
 };
@@ -1076,6 +1078,7 @@ ${vocab.slice(0, 6).map(v => v.wordOrPhrase).join(', ') || 'general MET academic
    - Distractors should be plausible — paraphrased details or reasonable inferences from the passage.
 3. CORRECT: Use integer index (0–3) to mark the correct option.
 4. COMPLETENESS: Every question must have all 4 options filled. No empty strings.
+5. VOCABULARY: Include 3–5 key vocabulary words from the passage at ${level}–${targetLevel} level. These should be useful academic or topic-specific words the student should learn.
 
 RETURN ONLY VALID JSON:
 {
@@ -1083,6 +1086,7 @@ RETURN ONLY VALID JSON:
   "title": "short title",
   "passage": "the full reading passage here",
   "source": "Adapted from [source] (optional, or empty string)",
+  "vocabulary": ["word1", "word2", "word3"],
   "questions": [
     {
       "question": "Q1 text",

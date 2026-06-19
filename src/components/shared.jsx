@@ -77,6 +77,41 @@ export const Icon = {
   diamond:  (p) => <SvgIcon d="M12 2L2 12l10 10 10-10L12 2z M2 12h20" fill="currentColor" {...p} />,
 };
 
+/* ─── SKELETON LOADING ───────────────────────────────────────── */
+export function Skeleton({ className = '', style, as = 'div' }) {
+  const El = as;
+  return <El className={`skeleton ${className}`.trim()} style={style} aria-hidden="true" />;
+}
+
+export function SkeletonText({ lines = 3, lastShort = true }) {
+  const items = Array.from({ length: lines }, (_, i) => (
+    <Skeleton key={i} className={`skeleton-text${lastShort && i === lines - 1 ? ' skeleton-text--short' : ''}`} />
+  ));
+  return <div aria-hidden="true">{items}</div>;
+}
+
+export function SkeletonCard({ height, lines = 2 }) {
+  return (
+    <div className="skeleton-card" style={height ? { height } : undefined} aria-hidden="true">
+      <SkeletonText lines={lines} />
+    </div>
+  );
+}
+
+/* ─── EMPTY STATE ────────────────────────────────────────────── */
+export function EmptyState({ icon, title, text, action, onAction }) {
+  return (
+    <div className="empty-state">
+      {icon && <div className="empty-state-icon" aria-hidden="true">{icon}</div>}
+      <div className="empty-state-title">{title}</div>
+      {text && <div className="empty-state-text">{text}</div>}
+      {action && onAction && (
+        <Button variant="ghost" size="sm" onClick={onAction}>{action}</Button>
+      )}
+    </div>
+  );
+}
+
 /* ─── AVATAR ─────────────────────────────────────────────────── */
 const AVATAR_PALETTES = {
   auto:  ['#0f1b2d','#148891','#c86607','#0f6b73','#5bbcb8'],

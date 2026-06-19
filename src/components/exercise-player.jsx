@@ -146,13 +146,13 @@ function MCQPlayer({ ex, res, update, readOnly }) {
           Not quite — try another option. ({wrongPicks.length}/{wrongLimit})
         </div>
       )}
-      {!done && ex.hints && wrongPicks.length >= 2 && ex.hints[0] && (
+      {!done && ex.hints && wrongPicks.length >= 1 && ex.hints[0] && (
         <div style={{ marginTop: 8, padding: '9px 13px', borderRadius: 0, background: 'var(--accent-subtle)', color: 'var(--accent-deep)', fontSize: 'var(--text-sm)', borderLeft: '3px solid var(--accent)' }}>
           <strong style={{ fontSize: 'var(--text-xs)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Hint</strong>
           <p style={{ margin: '4px 0 0' }}>{ex.hints[0]}</p>
         </div>
       )}
-      {!done && ex.hints && wrongPicks.length >= 3 && ex.hints[1] && (
+      {!done && ex.hints && wrongPicks.length >= 2 && ex.hints[1] && (
         <div style={{ marginTop: 6, padding: '9px 13px', borderRadius: 0, background: 'var(--info-bg)', color: 'var(--accent-deep)', fontSize: 'var(--text-sm)', borderLeft: '3px solid var(--info)' }}>
           <strong style={{ fontSize: 'var(--text-xs)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Another hint</strong>
           <p style={{ margin: '4px 0 0' }}>{ex.hints[1]}</p>
@@ -995,8 +995,29 @@ function ReadPlayer({ ex, res, update, readOnly }) {
     setChecked(true);
   }
 
+  const vocab = ex.vocabulary || ex.scaffolding?.vocabulary || [];
+
   return (
     <div>
+      {/* Vocabulary preview */}
+      {vocab.length > 0 && (
+        <div style={{
+          padding: '8px 12px', marginBottom: 14,
+          background: 'var(--accent-subtle)', borderRadius: 'var(--radius-sm)',
+          fontSize: 'var(--text-xs)', border: '1px solid var(--accent-soft)',
+        }}>
+          <strong style={{ color: 'var(--accent-deep)', marginRight: 6 }}>Key vocabulary:</strong>
+          {vocab.map((word, i) => (
+            <span key={i} style={{
+              display: 'inline-block', background: 'var(--white)', padding: '2px 8px',
+              borderRadius: 0, marginRight: 4, marginBottom: 2,
+              border: '1px solid var(--accent-soft)', fontWeight: 600,
+              color: 'var(--text)',
+            }}>{typeof word === 'string' ? word : word.word || word.term || ''}</span>
+          ))}
+        </div>
+      )}
+
       {/* Passage */}
       <div style={{
         background: 'var(--surface)', border: '1px solid var(--border)',

@@ -8,6 +8,7 @@ import { ExTypeBadge } from '../components/exercise-badge.jsx';
 import { recordPractice } from '../lib/spaced-repetition.js';
 import { printHomework } from '../lib/print-homework.js';
 import { asArray, exerciseSearchText } from './student-helpers.js';
+import { TopicContentRenderer } from '../components/topic-explanations.jsx';
 
 function CorrectionNote({ c }) {
   return (
@@ -247,6 +248,19 @@ export default function StudentHomework({ student }) {
                   </div>
                 )}
 
+                {Array.isArray(h.topicExplanations) && h.topicExplanations.length > 0 && (
+                  <div style={{ marginBottom: 18, padding: 14, background: 'var(--surface)', border: '1px solid var(--accent-soft)', borderRadius: 'var(--radius-md)' }}>
+                    <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 10 }}>
+                      Topic Background
+                    </div>
+                    {h.topicExplanations.map(topic => (
+                      <div key={topic.id} style={{ marginBottom: 14 }}>
+                        <div style={{ fontWeight: 700, fontSize: 'var(--text-sm)', marginBottom: 6, color: 'var(--accent-deep)' }}>{topic.title}</div>
+                        <TopicContentRenderer content={topic.content} />
+                      </div>
+                    ))}
+                  </div>
+                )}
                 {isStructured && !submitted && !review && (
                   <HomeworkStepThrough
                     exercises={structuredExercises}

@@ -18,7 +18,7 @@ import {
   buildLanguageDemandPrompt,
 } from '../lib/prompts.js';
 import { getDiagnoses, getStudent, saveHomework, updateClassEventStatus, getErrorBank } from '../lib/workflow.js';
-import { EX_TYPES, createExercise, exercisePreview, getExType, isStructuredExercise } from '../lib/exercise-types.js';
+import { EX_TYPES, createExercise, getExType, isStructuredExercise } from '../lib/exercise-types.js';
 import { getDueItems, getDueCount, toMCQ, getAllEntries } from '../lib/spaced-repetition.js';
 import { ExerciseEditor, ExerciseTypePicker, ExTypeBadge } from '../components/exercise-editor.jsx';
 import ExerciseCard from '../components/exercises/ExerciseCard.jsx';
@@ -32,8 +32,11 @@ import { getB2Modules, getB2ModuleExercises, b2BankMeta } from '../lib/met-b2-ba
 import { getLifestyleModules, getLifestyleModuleExercises, lifestylePackMeta } from '../lib/lifestyle-pack.js';
 import { getDeepResearchModules, getDeepResearchModuleExercises, deepResearchMeta } from '../lib/met-b2-exercises.js';
 import { getLibraryExercises, saveExerciseToLibrary, deleteLibraryExercise, incrementUsage } from '../lib/exercise-library.js';
+import { generateExerciseImage } from '../lib/image-generation.js';
 import HomeworkSetWizard from '../components/homework-set-wizard.jsx';
 import { getUnitsByLevel, getSkillExercises, SUBJECT_OPTIONS } from '../lib/unit-bank.js';
+import { TopicExplanationsEditor } from '../components/topic-explanations.jsx';
+import ResourcePicker from '../components/resource-picker.jsx';
 
 const EMPTY_FORM = {
   title: '', objective: '', description: '',
@@ -73,6 +76,7 @@ export default function HomeworkCreate({ diagnosisId, studentId, students, onNav
   const [selectedLevel, setSelectedLevel] = useState('B1');
   const [wizardDone, setWizardDone] = useState(false);
   const [selectedSkill, setSelectedSkill] = useState(null);
+  const [packFilter, setPackFilter] = useState('all'); // skill filter for prebuilt browser
   const [showUnitBank, setShowUnitBank] = useState(false);
   const [unitBankExercises, setUnitBankExercises] = useState([]);
   const [expandedEx, setExpandedEx] = useState(null);
@@ -92,7 +96,7 @@ export default function HomeworkCreate({ diagnosisId, studentId, students, onNav
   // Saved-exercise library (Supabase or localStorage). Reloaded when libVersion bumps.
   const [libVersion, setLibVersion] = useState(0);
   const [libraryExercises, setLibraryExercises] = useState([]);
-  const [currentStep, setCurrentStep] = useState(initialStep); // 1: Prebuilt, 2: Retrieval, 3: Build & Revision
+  const [currentStep, setCurrentStep] = useState(initialStep); // 1: Prebuilt, 2: Retrieval, 3: Build
   // Spaced repetition review items
   const [reviewDueCount, setReviewDueCount] = useState(0);
   const [includeReview, setIncludeReview] = useState(false);
@@ -103,6 +107,8 @@ export default function HomeworkCreate({ diagnosisId, studentId, students, onNav
   // "Preview as student" — ephemeral walkthrough of the full set; nothing persisted.
   const [studentPreview, setStudentPreview] = useState(false);
   const [previewResponses, setPreviewResponses] = useState({});
+  const [topicExplanations, setTopicExplanations] = useState([]);
+  const [showResourcePicker, setShowResourcePicker] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -303,6 +309,20 @@ function getPriorityItems(dx) {
       setExpandedEx(listeningEx.id);
       setTimeout(() => scrollToExercises(), 100);
       window.toast?.(`Listening task generated successfully!`, 'ok');
+
+      if (listeningEx.pictureHint) {
+        window.toast?.('Generating image for listening task…', 'info');
+        generateExerciseImage(listeningEx.pictureHint).then(url => {
+          if (url) {
+            setForm(f => ({
+              ...f,
+              exercises: f.exercises.map(ex =>
+                ex.id === listeningEx.id ? { ...ex, pictureHint: url } : ex
+              )
+            }));
+          }
+        });
+      }
     } catch (e) {
       window.toast?.(`Listening generation failed: ${e.message}`, 'warn');
     }
@@ -483,6 +503,7 @@ function getPriorityItems(dx) {
       window.toast?.('That suggestion is incomplete, so it was not added.', 'warn');
       return;
     }
+    newEx.aiGenerated = true;
     setForm(f => ({ ...f, exercises: [...f.exercises, newEx] }));
     setExpandedEx(newEx.id);
     window.toast?.(`"${newEx.title || 'Exercise'}" added.`, 'ok');
@@ -622,6 +643,7 @@ function getPriorityItems(dx) {
         workflowTemplate: 'prebuilt-retrieval-build-revision',
         workflowStages: ['prebuilt', 'retrieval', 'build_revision'],
         activities: form.exercises,
+        topicExplanations,
         selfCheck: form.selfCheck.filter(Boolean),
         skillType: form.skillType,
         type: form.skillType,
@@ -661,6 +683,141 @@ function getPriorityItems(dx) {
     }
   }
 
+  async function handleTopicAiGenerate(topic) {
+    if (!topic?.title) { window.toast?.('Add a title first.', 'warn'); return; }
+    const level = selectedLevel || 'B1';
+    const defaultPrompt = `You are a qualified English teacher creating a topic explanation for a MET student at ${level}.
+
+Topic: "${topic.title}"
+
+Requirements:
+- Include at least one common error or misconception students make with this topic, and how to avoid it
+- Include a usage note about when NOT to use this form, or a common exception to the rule
+- Keep vocabulary at ${level} or below; define any new terms in simpler language
+- Average max 18 words per sentence
+- Language must be natural and teacher-like, not textbook
+
+Format:
+- 2-4 short paragraphs with **bold** for key terms
+- Use - for bullet points where helpful`;
+    const prompt = topic.aiPrompt?.trim() || defaultPrompt;
+    try {
+      const data = await callAI(prompt, { ...HOMEWORK_AI_BASE_OPTIONS, max_tokens: 800 });
+      const text = data?.content?.map(b => b.text || '').join('') || '';
+      const content = text.replace(/^["']|["']$/g, '').trim();
+      setTopicExplanations(prev => prev.map(t => t.id === topic.id ? { ...t, content } : t));
+      window.toast?.('Topic explanation generated.', 'ok');
+    } catch (e) {
+      window.toast?.(`Generation failed: ${e.message}`, 'warn');
+    }
+  }
+
+  const AI_EXERCISE_PROMPTS = {
+    mcq: `Create one B1-level multiple choice question for an MET student.
+Requirements:
+- Use only B1-level vocabulary. Max 15 words per sentence in the question
+- For healthcare/medical content, verify collocations are natural English
+- The correct answer must be definitively correct — no ambiguous options where another could also work
+- Distractors must be plausible but clearly wrong
+- Match the MET exam style: inference, purpose, or attitude questions preferred over surface detail
+Return JSON only with fields: type "mcq", question, options (array of 4 strings), correct (0-3 index), explanation.`,
+    blank: `Create one B1-level fill-the-blank exercise for an MET student.
+Requirements:
+- Use only B1-level vocabulary. Max 15 words per sentence in the template
+- The blank must have exactly one clearly correct answer (or acceptable alternatives separated by |)
+- Avoid blanks that could accept multiple different correct answers
+Return JSON only with fields: type "blank", template (use ___ for each blank), blanks (array of correct answers in order, use | to separate alternatives).`,
+    short: `Create one B1-level short answer question for an MET student.
+Requirements:
+- The prompt should be specific enough that two students would produce similar content
+- Use only B1-level vocabulary in the prompt
+- Align with the MET writing task format (opinion, explanation, or experience-based prompt)
+Return JSON only with fields: type "short", prompt, rubric, targetWords (number).`,
+    speak: `Create one B1-level speaking prompt for an MET student.
+Requirements:
+- Use only B1-level vocabulary in the prompt
+- For healthcare/medical scenarios, use natural, idiomatic medical English
+- The imageDescription should describe a realistic everyday or healthcare scene
+- Align with the MET speaking task format (describe, explain, or give opinion)
+Return JSON only with fields: type "speak", prompt, imageDescription, targetSeconds (number 30-90).`,
+    order: `Create one B1-level sentence-ordering exercise for an MET student.
+Requirements:
+- Each sentence must be a complete, grammatically correct English sentence at B1 level
+- The ordered sequence should tell a clear, logical story or procedure
+- Avoid ambiguous orderings where two sequences could both make sense
+Return JSON only with fields: type "order", sentences (array of 4-6 strings in correct order).`,
+    fix: `Create one B1-level error correction exercise for an MET student.
+Requirements:
+- The error must be a genuine, unambiguous grammar mistake at B1 level
+- The correctedText must be the only natural correction
+- Use common B1 learner errors (e.g., tense, preposition, subject-verb agreement, word order)
+- For healthcare sentences, ensure the correction produces natural medical English
+Return JSON only with fields: type "fix", errorText, correctedText, hint.`,
+    flash: `Create a set of 6 B1-level flashcards for an MET student.
+Requirements:
+- All terms must be genuinely useful at B1 level, not obscure
+- Definitions must be in simpler English than the term itself
+- Group by a common topic (e.g., healthcare, education, travel, work)
+Return JSON only with fields: type "flash", pairs (array of {term, def} objects).`,
+    listen: `Create one B1-level listening exercise for an MET student.
+Requirements:
+- Write the audioText as a realistic short conversation using natural B1-level English
+- The question should test inference, speaker attitude, or purpose — NOT surface detail
+- All options must use B1-level vocabulary
+- For healthcare conversations, use natural, accurate medical language
+- Average max 15 words per turn in the dialogue
+Return JSON only with fields: type "listen", audioText, question, options (array of 4 strings), correct (0-3 index), explanation, plays (2).`,
+    dialogue: `Create one B1-level dialogue exercise for an MET student.
+Requirements:
+- Write natural conversational English at B1 level
+- For healthcare scenarios, use accurate and natural medical communication
+- Each line should be a complete utterance — avoid fragments
+- The dialogue should feel like a realistic interaction, not a scripted textbook example
+Return JSON only with fields: type "dialogue", speakerA "Nurse", speakerB "Patient", lines (array of {id: random string, speaker: "A" or "B", text} objects, 4-6 lines).`,
+    swap: `Create one B1-to-B2 synonym swap exercise.
+Requirements:
+- The B1 words in brackets must be genuinely replaceable with a B2 equivalent
+- The B2 options must be real synonyms that fit the same context
+- One correct synonym per word; distractors should be wrong part of speech or wrong register
+Return JSON only with fields: type "swap", sentence (with [bracketed] B1 words), swaps (array of {word: "bracketed word", options: ["B2 option","B2 option","B2 option","B2 option"], correct: 0-3 index}).`,
+    levelup: `Create one B1-to-B2-to-C1 sentence upgrade exercise.
+Requirements:
+- The B1 sentence must be natural, not artificially simple
+- The B2 upgrade must be a genuine improvement in formality and vocabulary range
+- The C1 upgrade should show sophisticated structure without being unnatural
+- All three options at the end must be clearly different levels, not subtly different
+Return JSON only with fields: type "levelup", b1 (B1 sentence), b2 (B2 version), c1 (C1 version), options (array of 3 strings, index 0 is B1, 1 is B2, 2 is C1), correct (1), keywords (array of target vocab), explanation.`,
+    read: `Create one B1-level reading exercise for an MET student.
+Requirements:
+- Write the passage using B1-level vocabulary. Average max 18 words per sentence
+- The passage should cover an MET-relevant topic (healthcare, education, work, technology, community)
+- Questions should test main idea, inference, and purpose — NOT surface detail
+- Each correct answer must be unambiguously supported by the passage text
+- Source is optional but if provided, must be plausible
+Return JSON only with fields: type "read", passage (2-3 paragraphs), source, questions (array of {question, options: [4 strings], correct: 0-3 index}).`,
+  };
+
+  async function handleAiGenerateByType(typeId, level) {
+    const prompt = AI_EXERCISE_PROMPTS[typeId];
+    if (!prompt) { window.toast?.('No AI prompt for this type.', 'warn'); return; }
+    const context = form.objective ? ` The student's homework goal is: ${form.objective}.` : '';
+    const fullPrompt = prompt + context + ` Level: ${level || selectedLevel || 'B1'}.`;
+    try {
+      const data = await callAI(fullPrompt, { ...HOMEWORK_AI_BASE_OPTIONS, max_tokens: 1500, temperature: 0.7 });
+      const raw = data?.content?.map(b => b.text || '').join('') || '';
+      const parsed = parseAiJson(raw);
+      if (!parsed || !parsed.type) throw new Error('AI returned invalid exercise');
+      const exercise = createCompleteExercise(parsed, { defaultSkillGroup: typeId });
+      if (!exercise) throw new Error('AI output was incomplete');
+      exercise.aiGenerated = true;
+      setForm(f => ({ ...f, exercises: [...f.exercises, exercise] }));
+      setExpandedEx(exercise.id);
+      window.toast?.(`${getExType(typeId)?.label || typeId} generated.`, 'ok');
+    } catch (e) {
+      window.toast?.(`AI generate failed: ${e.message}`, 'warn');
+    }
+  }
+
   if (!wizardDone) return <HomeworkSetWizard onComplete={handleWizardComplete} onSkip={() => setWizardDone(true)} />;
   const subjectLabel = SUBJECT_OPTIONS.find(s => s.id === selectedSkill)?.label;
 
@@ -685,12 +842,13 @@ function getPriorityItems(dx) {
         </div>
       )}
       <div className="homework-create-steps" style={{ display: 'flex', flexDirection: 'row', gap: 8, marginBottom: 20 }}>
-        {['Prebuilt', 'Retrieval', 'Build', 'Revision & Assign'].map((step, i) => (
-          <div key={step} style={{
-            fontSize: 'var(--text-xs)', fontWeight: 600,
-            color: currentStep === i + 1 ? 'var(--accent)' : 'var(--muted)',
-            paddingBottom: 4, borderBottom: currentStep === i + 1 ? '2px solid var(--accent)' : 'none'
-          }}>
+        {['Prebuilt', 'Retrieval', 'Build'].map((step, i) => (
+          <div key={step} onClick={() => setCurrentStep(i + 1)}
+            style={{
+              fontSize: 'var(--text-xs)', fontWeight: 600, cursor: 'pointer',
+              color: currentStep === i + 1 ? 'var(--accent)' : 'var(--muted)',
+              paddingBottom: 4, borderBottom: currentStep === i + 1 ? '2px solid var(--accent)' : 'none'
+            }}>
             {i + 1}. {step}
           </div>
         ))}
@@ -755,32 +913,87 @@ function getPriorityItems(dx) {
                     ))}
                   </div>
                 )}
-                <div style={{ marginTop: 18, padding: 14, background: 'var(--surface)', border: '1px solid var(--accent-soft)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-sm)' }}>
-                  <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>
-                    Step 1. Prebuilt homework
-                  </div>
-                  <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-2)', lineHeight: 1.5, marginBottom: 12 }}>
-                    Start with a ready-made pack. You can add a full prebuilt set now, then move into retrieval and your own selected exercises.
-                  </div>
-                  <div style={{ display: 'grid', gap: 8 }}>
-                    <button className="student-text-action" onClick={addB2Pack} style={{ justifyContent: 'space-between' }}>
-                      <span>MET B2 Pack</span>
-                      <span>{getB2Modules().length} modules</span>
-                    </button>
-                    <button className="student-text-action" onClick={addLifestylePack} style={{ justifyContent: 'space-between' }}>
-                      <span>Lifestyle Pack</span>
-                      <span>{getLifestyleModules().length} modules</span>
-                    </button>
-                    <button className="student-text-action" onClick={addDeepResearchPack} style={{ justifyContent: 'space-between' }}>
-                      <span>Deep Research Pack</span>
-                      <span>{getDeepResearchModules().length} modules</span>
-                    </button>
-                    <button className="student-text-action" onClick={addUnitBankPack} style={{ justifyContent: 'space-between' }}>
-                      <span>Unit Bank</span>
-                      <span>{unitBankExercises.length} exercises</span>
-                    </button>
-                  </div>
+                <TopicExplanationsEditor topics={topicExplanations} onChange={setTopicExplanations} onAiGenerate={handleTopicAiGenerate} />
+                <div style={{ marginTop: 12, display: 'flex', gap: 8, alignItems: 'center' }}>
+                  <Button variant="ghost" size="sm" onClick={() => setShowResourcePicker(true)}>
+                    <Icon.image size={12} /> Resource Library
+                  </Button>
                 </div>
+                {showResourcePicker && (
+                  <ResourcePicker open={true} onClose={() => setShowResourcePicker(false)} onSelect={() => setShowResourcePicker(false)} tab="images" />
+                )}
+                {(() => {
+                  const SKILLS = ['all','speaking','writing','grammar','vocabulary','reading','listening'];
+                  const SKILL_LABELS = { all:'All', speaking:'Speaking', writing:'Writing', grammar:'Grammar', vocabulary:'Vocabulary', reading:'Reading', listening:'Listening' };
+                  const b2Mods = getB2Modules().map(m => ({ ...m, pack:'MET B2', packLevel:'B2', level:'B2' }));
+                  const lifeMods = getLifestyleModules().map(m => ({ ...m, pack:'Lifestyle', packLevel:'B1-B2', level:'B1-B2' }));
+                  const drMods = getDeepResearchModules().map(m => ({ ...m, pack:'Deep Research', packLevel:'B2', level:'B2' }));
+                  const allPrebuilt = [...b2Mods, ...lifeMods, ...drMods];
+                  const filtered = packFilter === 'all' ? allPrebuilt : allPrebuilt.filter(m => m.skill === packFilter);
+                  return (
+                    <div style={{ marginTop: 18, padding: 14, background: 'var(--surface)', border: '1px solid var(--accent-soft)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-sm)' }}>
+                      <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>
+                        Prebuilt Exercises
+                      </div>
+                      <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-2)', lineHeight: 1.5, marginBottom: 12 }}>
+                        Browse all packs by skill. Click <strong>Add</strong> on any module to add its exercises to this homework.
+                      </div>
+                      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 12 }}>
+                        {SKILLS.map(s => (
+                          <button key={s} onClick={() => setPackFilter(s)}
+                            style={{
+                              padding: '4px 12px', borderRadius: 'var(--radius-pill)', border: 'none', cursor: 'pointer',
+                              fontSize: 'var(--text-xs)', fontWeight: 600, fontFamily: 'var(--font-ui)',
+                              background: packFilter === s ? 'var(--accent)' : 'var(--bg)',
+                              color: packFilter === s ? '#fff' : 'var(--text-2)',
+                              transition: 'background .12s',
+                            }}>
+                            {SKILL_LABELS[s]}
+                          </button>
+                        ))}
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 4, maxHeight: 340, overflowY: 'auto' }}>
+                        {filtered.length === 0 && (
+                          <div style={{ padding: '12px 0', color: 'var(--muted)', fontSize: 'var(--text-sm)' }}>No prebuilt packs match this skill.</div>
+                        )}
+                        {filtered.map(mod => (
+                          <div key={mod.id} style={{
+                            display: 'flex', alignItems: 'center', gap: 10,
+                            padding: '8px 12px', borderRadius: 'var(--radius-sm)',
+                            background: 'var(--bg)', border: '1px solid var(--divider)',
+                          }}>
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <div style={{ fontWeight: 600, fontSize: 'var(--text-sm)' }}>{mod.label}</div>
+                              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', display: 'flex', gap: 6, alignItems: 'center' }}>
+                                <span>{mod.pack}</span>
+                                <span style={{ opacity: 0.4 }}>·</span>
+                                <span style={{ textTransform: 'capitalize' }}>{mod.skill}</span>
+                                <span style={{ opacity: 0.4 }}>·</span>
+                                <span>{mod.exercises?.length || mod.exerciseCount || 0} exercises</span>
+                              </div>
+                            </div>
+                            <Button variant="ghost" size="sm" onClick={() => {
+                              if (mod.pack === 'Lifestyle') addModuleFromLifestylePack(mod);
+                              else if (mod.pack === 'Deep Research') addModuleFromDeepResearch(mod);
+                              else addModuleFromB2Bank(mod);
+                            }}>Add</Button>
+                          </div>
+                        ))}
+                      </div>
+                      {unitBankExercises.length > 0 && (
+                        <div style={{ marginTop: 10, padding: '10px 12px', background: 'var(--bg)', border: '1px solid var(--accent-soft)', borderRadius: 'var(--radius-sm)' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+                            <div>
+                              <div style={{ fontWeight: 600, fontSize: 'var(--text-sm)' }}>Unit Bank — {subjectLabel}</div>
+                              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>{selectedLevel} · {unitBankExercises.length} exercises available</div>
+                            </div>
+                            <Button variant="ghost" size="sm" onClick={addUnitBankPack}>Add all</Button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
                 <div style={{ marginTop: 24 }}>
                   <Button variant="primary" onClick={() => setCurrentStep(2)}>
                     Next: Retrieval
@@ -791,19 +1004,17 @@ function getPriorityItems(dx) {
           )}
           {currentStep === 2 && (
             <Card style={{ padding: 18 }}>
-              <SectionHeader title="Step 2: MET Retrieval" />
-              <div style={{ marginTop: 16 }}>
+              <SectionHeader title="Step 2: Retrieval & MET Focus" />
+              <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 16 }}>
+                {/* ── Retrieval Practice ── */}
                 <div style={{ padding: 16, background: 'var(--surface)', border: '1px solid var(--accent-soft)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-sm)' }}>
-                  <div style={{ fontWeight: 700, fontSize: 'var(--text-sm)', marginBottom: 6 }}>Add recall before the build stage</div>
+                  <div style={{ fontWeight: 700, fontSize: 'var(--text-sm)', marginBottom: 6 }}>Retrieval Practice</div>
                   <div style={{ color: 'var(--text-2)', fontSize: 'var(--text-sm)', lineHeight: 1.6, marginBottom: 12 }}>
-                    Generate retrieval questions from the homework objective so the student practices remembering the target language before the rest of the homework is built.
+                    Generate recall questions from the homework objective so the student practices remembering the target language.
                   </div>
                   <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 12 }}>
                     <span style={{ padding: '4px 10px', borderRadius: 'var(--radius-pill)', background: 'var(--bg)', border: '1px solid var(--border)', fontSize: 'var(--text-xs)', color: 'var(--text-2)' }}>
                       {retrievalCount} retrieval exercise{retrievalCount === 1 ? '' : 's'} added
-                    </span>
-                    <span style={{ padding: '4px 10px', borderRadius: 'var(--radius-pill)', background: 'var(--bg)', border: '1px solid var(--border)', fontSize: 'var(--text-xs)', color: 'var(--text-2)' }}>
-                      {exerciseCount} total exercise{exerciseCount === 1 ? '' : 's'}
                     </span>
                   </div>
                   <Button variant="primary" size="sm" onClick={handleGenerateRetrieval} disabled={generatingRetrieval || generating}>
@@ -811,21 +1022,30 @@ function getPriorityItems(dx) {
                   </Button>
                 </div>
 
-                <div className="homework-create-actions" style={{ display: 'flex', gap: 10, marginTop: 24 }}>
-                  <Button variant="ghost" onClick={() => setCurrentStep(1)}>Back</Button>
-                  <Button variant="primary" onClick={() => setCurrentStep(3)}>Next: Build & Revision</Button>
-                </div>
-              </div>
-            </Card>
-          )}
-          {currentStep === 3 && (
-            <Card style={{ padding: 18 }}>
-              <SectionHeader title="Step 3: Build & Revision" />
-              <div style={{ marginTop: 16 }}>
-                {/* ── Toolbar: two rows — Generate | Browse & Add ── */}
-                <div className="homework-create-toolbar" style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 16 }}>
-                  {/* Row 1: AI generation */}
-                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                {/* ── MET Focus: AI generation per skill ── */}
+                <div style={{ padding: 16, background: 'var(--surface)', border: '1px solid var(--accent-soft)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-sm)' }}>
+                  <div style={{ fontWeight: 700, fontSize: 'var(--text-sm)', marginBottom: 6 }}>MET Focus — Generate by Skill</div>
+                  <div style={{ color: 'var(--text-2)', fontSize: 'var(--text-xs)', lineHeight: 1.5, marginBottom: 12 }}>
+                    Choose the MET skills this homework should target. Each generated item is checked for complete student-ready fields before being added.
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 8 }}>
+                    {SKILL_GROUPS.map(group => (
+                      <label key={group.key} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', background: 'var(--bg)' }}>
+                        <span aria-hidden="true">{group.icon}</span>
+                        <span style={{ flex: 1, fontSize: 'var(--text-sm)', fontWeight: 600 }}>{group.label}</span>
+                        <input
+                          type="number" min="0" max="6"
+                          value={groupGenConfig[group.key] || 0}
+                          onChange={e => setGroupGenConfig(cfg => ({ ...cfg, [group.key]: Math.max(0, Math.min(6, Number(e.target.value) || 0)) }))}
+                          style={{ width: 48, padding: '4px 6px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-sm)' }}
+                        />
+                      </label>
+                    ))}
+                  </div>
+                  <div style={{ display: 'flex', gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
+                    <Button variant="primary" size="sm" onClick={handleGenerateByGroups} disabled={generating}>
+                      <Icon.spark size={12} /> Generate Selected Skills
+                    </Button>
                     <Button variant="primary" size="sm" onClick={handleAiGenerate} disabled={!diagnosis || generating}>
                       <Icon.spark size={12} /> {generating ? 'Generating…' : 'Generate MET Homework'}
                     </Button>
@@ -838,199 +1058,48 @@ function getPriorityItems(dx) {
                     <Button variant="ghost" size="sm" onClick={handleGenerateOptions} disabled={!diagnosis || loadingOptions}>
                       <Icon.refresh size={12} /> {loadingOptions ? 'Suggesting…' : 'Suggest from Diagnosis'}
                     </Button>
-                    <Button variant="ghost" size="sm" onClick={() => togglePanel('group-gen')} disabled={!diagnosis || generating}
-                      style={activePanel === 'group-gen' ? { borderColor: 'var(--accent)', color: 'var(--accent)' } : {}}>
-                      <Icon.check size={12} /> Build by Skill
-                    </Button>
                   </div>
-                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                    <Button variant="primary" size="sm" onClick={() => togglePanel('type-picker')}
-                      style={activePanel === 'type-picker' ? { opacity: 0.75 } : {}}>
-                      <Icon.plus size={12} /> Add Exercise
-                    </Button>
-                  </div>
+                  {groupGenStatus && (
+                    <div style={{ marginTop: 12, padding: '8px 12px', border: '1.5px solid var(--accent-soft)', borderRadius: 'var(--radius-sm)', background: 'var(--surface)', color: 'var(--accent-deep)', fontSize: 'var(--text-xs)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span style={{ width: 12, height: 12, borderRadius: '50%', border: '2px solid var(--accent)', borderTopColor: 'transparent', animation: 'spin .7s linear infinite' }} />
+                      {groupGenStatus}
+                    </div>
+                  )}
                 </div>
 
-                {groupGenStatus && (
-                  <div style={{ marginBottom: 12, padding: '12px 14px', border: '1.5px solid var(--accent-soft)', borderRadius: 'var(--radius-sm)', background: 'var(--surface)', color: 'var(--accent-deep)', fontSize: 'var(--text-sm)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 10, boxShadow: 'var(--shadow-sm)' }}>
-                    <span style={{ width: 14, height: 14, borderRadius: '50%', border: '2px solid var(--accent)', borderTopColor: 'transparent', animation: 'spin .7s linear infinite' }} />
-                    {groupGenStatus}
-                  </div>
-                )}
+                <div className="homework-create-actions" style={{ display: 'flex', gap: 10 }}>
+                  <Button variant="ghost" onClick={() => setCurrentStep(1)}>Back</Button>
+                  <Button variant="primary" onClick={() => setCurrentStep(3)}>Next: Build</Button>
+                </div>
+              </div>
+            </Card>
+          )}
+          {currentStep === 3 && (
+            <Card style={{ padding: 18 }}>
+              <SectionHeader title="Step 3: Build" />
+              <div style={{ marginTop: 16 }}>
+                {/* ── Toolbar ── */}
+                <div className="homework-create-toolbar" style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 16 }}>
+                  <Button variant="primary" size="sm" onClick={() => togglePanel('type-picker')}
+                    style={activePanel === 'type-picker' ? { opacity: 0.75 } : {}}>
+                    <Icon.plus size={12} /> Add Exercise
+                  </Button>
+                  <Button variant="secondary" size="sm" onClick={() => { setPreviewResponses({}); setStudentPreview(true); }} disabled={!form.exercises.some(isStructuredExercise)} title="Step through the whole homework exactly as the student will receive it">
+                    <Icon.play size={12} /> Preview as student
+                  </Button>
+                  <Button variant="ghost" size="sm" onClick={handleAnalyzeLanguageDemand} disabled={generatingLangDemand || !form.exercises.length} title="Check vocabulary load and get pre-teaching suggestions">
+                    <Icon.search size={12} /> {generatingLangDemand ? 'Analysing…' : 'Check Language Demands'}
+                  </Button>
+                </div>
 
-                {activePanel === 'group-gen' && (
-                  <div style={{ marginBottom: 16, padding: 14, border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', background: 'var(--surface)' }}>
-                    <div style={{ fontWeight: 700, fontSize: 'var(--text-sm)', marginBottom: 4 }}>Generate by MET skill</div>
-                    <div style={{ color: 'var(--muted)', fontSize: 'var(--text-xs)', lineHeight: 1.5, marginBottom: 12 }}>
-                      Choose the skills this homework should cover. Each generated item is checked for complete student-ready fields before it is added.
-                    </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 8 }}>
-                      {SKILL_GROUPS.map(group => (
-                        <label key={group.key} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', background: 'var(--bg)' }}>
-                          <span aria-hidden="true">{group.icon}</span>
-                          <span style={{ flex: 1, fontSize: 'var(--text-sm)', fontWeight: 600 }}>{group.label}</span>
-                          <input
-                            type="number"
-                            min="0"
-                            max="6"
-                            value={groupGenConfig[group.key] || 0}
-                            onChange={e => setGroupGenConfig(cfg => ({ ...cfg, [group.key]: Math.max(0, Math.min(6, Number(e.target.value) || 0)) }))}
-                            style={{ width: 48, padding: '4px 6px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-sm)' }}
-                          />
-                        </label>
-                      ))}
-                    </div>
-                    <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-                      <Button variant="primary" size="sm" onClick={handleGenerateByGroups} disabled={generating}>
-                        <Icon.spark size={12} /> Generate Selected Skills
-                      </Button>
-                      <Button variant="ghost" size="sm" onClick={() => setActivePanel(null)} disabled={generating}>
-                        Close
-                      </Button>
-                    </div>
-                  </div>
-                )}
-
-                {activePanel === 'type-picker' && <ExerciseTypePicker onSelect={addExercise} onClose={() => setActivePanel(null)} />}
-
-                {activePanel === 'b2-bank' && (
-                  <div style={{ marginBottom: 16, border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: 'var(--surface)', borderBottom: '1px solid var(--border)' }}>
-                      <span style={{ fontWeight: 600, fontSize: 'var(--text-sm)' }}>{b2BankMeta.title}</span>
-                      <button onClick={() => setActivePanel(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)' }}><Icon.close size={16} /></button>
-                    </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 0, maxHeight: 340, overflowY: 'auto' }}>
-                      {getB2Modules().map(mod => (
-                        <div key={mod.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', borderBottom: '1px solid var(--divider)', gap: 10 }}>
-                          <div>
-                            <div style={{ fontWeight: 500, fontSize: 'var(--text-sm)' }}>{mod.label}</div>
-                            <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', textTransform: 'capitalize' }}>{mod.skill} · {mod.exercises.length} exercises</div>
-                          </div>
-                          <Button variant="ghost" size="sm" onClick={() => addModuleFromB2Bank(mod)}>Add</Button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {activePanel === 'lifestyle' && (
-                  <div style={{ marginBottom: 16, border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: 'var(--surface)', borderBottom: '1px solid var(--border)' }}>
-                      <div>
-                        <span style={{ fontWeight: 700, fontSize: 'var(--text-sm)' }}>{lifestylePackMeta.title}</span>
-                        <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: 2 }}>{lifestylePackMeta.level} · {lifestylePackMeta.subtitle}</div>
-                      </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <Button variant="ghost" size="sm" onClick={copyLifestylePrintablePack}>Copy printable</Button>
-                        <button onClick={() => setActivePanel(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)' }}><Icon.close size={16} /></button>
-                      </div>
-                    </div>
-                    <div style={{ padding: '10px 14px', borderBottom: '1px solid var(--divider)', background: 'var(--surface)', fontSize: 'var(--text-xs)', color: 'var(--muted)', lineHeight: 1.5 }}>
-                      Converted from the bundled JSON pack in <strong>src/components/exercises</strong>. Use the Markdown file as the printable teacher copy.
-                    </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 0, maxHeight: 360, overflowY: 'auto' }}>
-                      {getLifestyleModules().map(mod => (
-                        <div key={mod.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', borderBottom: '1px solid var(--divider)', gap: 10 }}>
-                          <div style={{ minWidth: 0 }}>
-                            <div style={{ fontWeight: 600, fontSize: 'var(--text-sm)' }}>{mod.label}</div>
-                            <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', textTransform: 'capitalize' }}>
-                              {mod.skill} · {mod.sourceCount} source tasks · {mod.exerciseCount} platform exercises
-                            </div>
-                            {mod.note && (
-                              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 560 }}>
-                                {mod.note}
-                              </div>
-                            )}
-                          </div>
-                          <Button variant="ghost" size="sm" onClick={() => addModuleFromLifestylePack(mod)}>Add</Button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {activePanel === 'deep-research' && (
-                  <div style={{ marginBottom: 16, border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: 'var(--surface)', borderBottom: '1px solid var(--border)' }}>
-                      <div>
-                        <span style={{ fontWeight: 700, fontSize: 'var(--text-sm)' }}>{deepResearchMeta.title}</span>
-                        <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: 2 }}>{deepResearchMeta.level} · {deepResearchMeta.exerciseCount} exercises across {deepResearchMeta.moduleCount} skills</div>
-                      </div>
-                      <button onClick={() => setActivePanel(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)' }}><Icon.close size={16} /></button>
-                    </div>
-                    <div style={{ padding: '10px 14px', borderBottom: '1px solid var(--divider)', background: 'var(--surface)', fontSize: 'var(--text-xs)', color: 'var(--muted)', lineHeight: 1.5 }}>
-                      Sourced from the Deep Research Report spec. Covers all 5 MET skills with auto-graded and open-response formats.
-                    </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 0, maxHeight: 360, overflowY: 'auto' }}>
-                      {getDeepResearchModules().map(mod => (
-                        <div key={mod.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', borderBottom: '1px solid var(--divider)', gap: 10 }}>
-                          <div>
-                            <div style={{ fontWeight: 600, fontSize: 'var(--text-sm)' }}>{mod.label}</div>
-                            <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', textTransform: 'capitalize' }}>{mod.skill} · {mod.exercises.length} exercises</div>
-                          </div>
-                          <Button variant="ghost" size="sm" onClick={() => addModuleFromDeepResearch(mod)}>Add</Button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {unitBankExercises.length > 0 && (
-                  <div style={{ marginBottom: 16, border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
-                    <button
-                      onClick={() => setShowUnitBank(v => !v)}
-                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', padding: '10px 14px', background: 'var(--surface)', border: 'none', cursor: 'pointer', borderBottom: showUnitBank ? '1px solid var(--border)' : 'none' }}
-                    >
-                      <span style={{ fontWeight: 600, fontSize: 'var(--text-sm)' }}>
-                        <Icon.book size={14} /> Unit Bank — {subjectLabel || 'exercises'} from {selectedLevel} units ({unitBankExercises.length})
-                      </span>
-                      <Icon.chevronDown size={14} style={{ transform: showUnitBank ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s' }} />
-                    </button>
-                    {showUnitBank && (
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 0, maxHeight: 360, overflowY: 'auto' }}>
-                        {unitBankExercises.map((ex, i) => (
-                          <div key={ex.id || i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '10px 14px', borderBottom: '1px solid var(--divider)' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0, flex: 1 }}>
-                              <ExTypeBadge typeId={ex.type} />
-                              <span style={{ fontSize: 'var(--text-sm)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>
-                                {ex.question || ex.prompt || ex.errorText || (ex.pairs?.[0] ? `${ex.pairs[0].term} — ${ex.pairs[0].def}` : '')}
-                              </span>
-                            </div>
-                            <Button variant="ghost" size="sm" style={{ flexShrink: 0 }} onClick={() => addUnitBankExercise(ex)}>Add</Button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {exerciseOptions.length > 0 && (
-                  <div className="homework-create-ai-suggestions" style={{ marginBottom: 16, padding: 14, border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', background: 'var(--surface)', boxShadow: 'var(--shadow-sm)' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 10 }}>
-                      <div>
-                        <div style={{ fontWeight: 700, fontSize: 'var(--text-sm)' }}>AI exercise suggestions</div>
-                        <div style={{ color: 'var(--muted)', fontSize: 'var(--text-xs)' }}>Reviewed for complete fields. Click <strong>Add</strong> to include one in your homework.</div>
-                      </div>
-                      <Button variant="ghost" size="sm" onClick={() => setExerciseOptions([])}>Clear</Button>
-                    </div>
-                    <div style={{ display: 'grid', gap: 6 }}>
-                      {exerciseOptions.map((ex, i) => {
-                        const preview = exercisePreview(ex);
-                        const title = ex.title || getExType(ex.type)?.label || ex.type;
-                        const subtitle = preview.length > 90 ? preview.slice(0, 87) + '…' : preview;
-                        return (
-                          <div key={ex.id || i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', border: '1px solid var(--divider)', borderRadius: 'var(--radius-sm)', background: 'var(--bg)', overflow: 'hidden' }}>
-                            <ExTypeBadge typeId={ex.type} />
-                            <div style={{ flex: 1, minWidth: 0 }}>
-                              <div style={{ fontSize: 'var(--text-sm)', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{title}</div>
-                              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{subtitle}</div>
-                            </div>
-                            <Button variant="ghost" size="sm" onClick={() => addAiExerciseToList(ex)}>Add</Button>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
+                {activePanel === 'type-picker' && (
+                  <ExerciseTypePicker
+                    onSelect={addExercise}
+                    onClose={() => setActivePanel(null)}
+                    onAiGenerate={handleAiGenerateByType}
+                    exerciseOptions={exerciseOptions}
+                    onAddAiSuggestion={(ex) => { addAiExerciseToList(ex); setExerciseOptions(prev => prev.filter(e => e.id !== ex.id)); }}
+                  />
                 )}
 
                 {/* ── SPACED REPETITION REVIEW ITEMS ── */}
@@ -1084,6 +1153,7 @@ function getPriorityItems(dx) {
                   </div>
                 )}
                   
+                {/* ── Exercise list ── */}
                 <div ref={exerciseListRef} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   {form.exercises.map((ex, i) => (
                     <ExerciseCard
@@ -1101,77 +1171,18 @@ function getPriorityItems(dx) {
                   ))}
                 </div>
 
-                <div className="homework-create-actions" style={{ display: 'flex', gap: 10, marginTop: 24 }}>
-                  <Button variant="ghost" onClick={() => setCurrentStep(2)}>Back</Button>
-                  <Button variant="primary" onClick={() => setCurrentStep(4)}>Go to Revision & Assign</Button>
-                </div>
-              </div>
-            </Card>
-          )}
-          {currentStep === 4 && (
-            <Card style={{ padding: 18 }}>
-              <SectionHeader title="Revision & Assign" />
-              <div ref={revisionRef} style={{ marginTop: 16 }}>
+                {/* ── Cognitive sufficiency ── */}
                 {(() => {
                   const warn = getHomeworkCognitiveSufficiencyWarning(form.exercises, diagnosis);
                   return warn ? (
-                    <div style={{ marginBottom: 14, padding: '8px 12px', background: 'var(--warning-bg)', border: '1px solid var(--warning)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-xs)', color: 'var(--warning)', display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+                    <div style={{ marginTop: 16, marginBottom: 14, padding: '8px 12px', background: 'var(--warning-bg)', border: '1px solid var(--warning)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-xs)', color: 'var(--warning)', display: 'flex', gap: 8, alignItems: 'flex-start' }}>
                       <Icon.spark size={13} style={{ flexShrink: 0, marginTop: 1 }} />
                       <span><strong>Cognitive sufficiency note:</strong> {warn}</span>
                     </div>
                   ) : null;
                 })()}
-                <div style={{ padding: 24, background: 'var(--bg)', borderRadius: 'var(--radius-md)' }}>
-                  <div style={{ fontWeight: 700, fontSize: 'var(--text-xl)', marginBottom: 4 }}>{form.title || 'Untitled Homework'}</div>
-                  {form.description && <p style={{ color: 'var(--text-2)', lineHeight: 1.7, marginBottom: 16 }}>{form.description}</p>}
-                  
-                  {form.exercises.map((ex, i) => (
-                    <div key={ex.id} style={{ marginBottom: 18 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-                        <span style={{ fontWeight: 700, color: 'var(--accent)' }}>{i + 1}.</span>
-                        <ExTypeBadge typeId={ex.type} />
-                      </div>
-                      <ExercisePlayer exercise={ex} readOnly />
-                    </div>
-                  ))}
-                </div>
 
-                <div className="homework-create-actions" style={{ display: 'flex', gap: 10, marginTop: 24, flexWrap: 'wrap', alignItems: 'center' }}>
-                  <Button variant="ghost" onClick={() => setCurrentStep(3)}>Back to Build</Button>
-                  <Button variant="secondary" size="sm" onClick={() => { setPreviewResponses({}); setStudentPreview(true); }} disabled={!form.exercises.some(isStructuredExercise)} title="Step through the whole homework exactly as the student will receive it">
-                    <Icon.play size={12} /> Preview as student
-                  </Button>
-                  <Button variant="ghost" size="sm" onClick={handleAnalyzeLanguageDemand} disabled={generatingLangDemand || !form.exercises.length} title="Check vocabulary load and get pre-teaching suggestions">
-                    <Icon.search size={12} /> {generatingLangDemand ? 'Analysing…' : 'Check Language Demands'}
-                  </Button>
-                </div>
-
-                <Modal
-                  open={studentPreview}
-                  onClose={() => setStudentPreview(false)}
-                  kicker="Student view"
-                  title="Preview as student"
-                  subtitle="Exactly what your student receives. Nothing here is saved or sent."
-                  maxWidth={760}
-                >
-                  {(() => {
-                    const previewExercises = form.exercises.filter(isStructuredExercise);
-                    if (!previewExercises.length) {
-                      return <p style={{ color: 'var(--muted)' }}>No previewable exercises yet. Add structured exercises to preview the student experience.</p>;
-                    }
-                    return (
-                      <HomeworkStepThrough
-                        exercises={previewExercises}
-                        responses={previewResponses}
-                        onResponse={(id, updated) => setPreviewResponses(r => ({ ...r, [id]: updated }))}
-                        onSave={() => {}}
-                        onSubmit={() => { window.toast?.('Preview only — nothing was sent to the student.', 'ok'); setStudentPreview(false); }}
-                        readOnly={false}
-                      />
-                    );
-                  })()}
-                </Modal>
-
+                {/* ── Language Demand ── */}
                 {languageDemand && (
                   <div style={{ marginTop: 16, padding: 14, border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', background: 'var(--surface)' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
@@ -1186,7 +1197,7 @@ function getPriorityItems(dx) {
                     {languageDemand.teacher_note && (
                       <p style={{ fontSize: 'var(--text-xs)', color: 'var(--text-2)', lineHeight: 1.5, marginBottom: 10 }}>{languageDemand.teacher_note}</p>
                     )}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                       {(languageDemand.priority_actions || []).map((action, i) => (
                         <div key={i} style={{ padding: '8px 10px', background: 'var(--bg)', borderRadius: 'var(--radius-sm)', borderLeft: '3px solid var(--accent)' }}>
                           <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--accent)', textTransform: 'uppercase', marginBottom: 2 }}>{action.demand_type}</div>
@@ -1213,30 +1224,29 @@ function getPriorityItems(dx) {
                     )}
                   </div>
                 )}
-                <div ref={assignRef} style={{ marginTop: 16, padding: 16, border: '1px solid var(--accent-soft)', borderRadius: 'var(--radius-md)', background: 'var(--surface)' }}>
-                  <div style={{ fontWeight: 700, fontSize: 'var(--text-sm)', marginBottom: 12 }}>Assign homework</div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+
+                {/* ── Assign ── */}
+                <div ref={assignRef} style={{ marginTop: 16, padding: 20, border: '2px solid var(--accent-soft)', borderRadius: 'var(--radius-md)', background: 'var(--surface)' }}>
+                  <div style={{ fontWeight: 700, fontSize: 'var(--text-md)', marginBottom: 16, color: 'var(--accent-deep)' }}>Assign homework</div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                     {studentId || diagnosis?.studentId ? null : (
                       <Field label="Student">
-                        <select
-                          className="input"
-                          value={selectedStudentId}
-                          onChange={e => setSelectedStudentId(e.target.value)}
-                        >
+                        <select className="input" value={selectedStudentId} onChange={e => setSelectedStudentId(e.target.value)}>
                           <option value="">Choose student</option>
                           {students.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                         </select>
                       </Field>
                     )}
-                    <Field label="Homework Title">
-                      <input className="input" value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} />
-                    </Field>
-                    <Field label="Due Date">
-                      <input className="input" type="date" value={form.dueDate} onChange={e => setForm(f => ({ ...f, dueDate: e.target.value }))} />
-                    </Field>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                      <Field label="Homework Title">
+                        <input className="input" value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} />
+                      </Field>
+                      <Field label="Due Date">
+                        <input className="input" type="date" value={form.dueDate} onChange={e => setForm(f => ({ ...f, dueDate: e.target.value }))} />
+                      </Field>
+                    </div>
                   </div>
-                  <div className="homework-create-actions" style={{ marginTop: 24, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                    <Button variant="ghost" onClick={() => setCurrentStep(3)}>Back to Build</Button>
+                  <div style={{ marginTop: 20, display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
                     <Button variant="primary" onClick={handleAssign} disabled={saving}>
                       {saving ? 'Assigning…' : 'Assign Homework'}
                     </Button>
@@ -1245,6 +1255,8 @@ function getPriorityItems(dx) {
               </div>
             </Card>
           )}
+
+          {currentStep === 4 && null}
 
         </div>
 

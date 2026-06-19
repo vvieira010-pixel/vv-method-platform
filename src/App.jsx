@@ -244,6 +244,15 @@ export default function App() {
     setViewParams({});
   };
 
+  // ── Pending submissions badge (must be before conditional returns for hooks rule) ──
+  const [pendingSubmissions, setPendingSubmissions] = useState(0);
+  useEffect(() => {
+    if (auth?.role !== 'teacher') return;
+    getAllSubmissions().then(list => {
+      setPendingSubmissions((list || []).filter(s => s.status === 'submitted').length);
+    }).catch(() => {});
+  }, [auth]);
+
   if (!auth) {
     return <LoginScreen onSignIn={handleSignIn} initialMode="choose" />;
   }
