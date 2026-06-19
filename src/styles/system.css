@@ -34,13 +34,13 @@
   --text: #071527;
   --text-muted: #3d5365;
   --text-2: #1a2b38;
-  --muted: #4a5f70;
+  --muted: #445567;                          /* darkened from #4a5f70 to clear WCAG AAA 7:1 on --bg */
   --on-dark: #f1faee;                        /* Login's warm white on dark — rgba(241,250,238,1) */
   --on-dark-muted: rgba(241,250,238,0.78);   /* Login's warm white muted */
 
   /* Status colors — semantic, kept for clarity */
-  --success: oklch(55% 0.14 150);
-  --success-light: oklch(95% 0.05 150);
+  --success: #1a8c5f;                        /* was oklch(55% 0.14 150) — hex for compat + consistency */
+  --success-light: #e7f7ef;                  /* was oklch(95% 0.05 150) */
   --success-bg: #ecfdf5;
   --success-soft: #d1fae5;
   --warning: #c86607;
@@ -3710,6 +3710,33 @@ textarea:focus, .textarea:focus {
 [data-theme="dark"] .student-prep-box {
   background: var(--faint);
   border-color: var(--border);
+}
+
+/* ── Dark mode: --primary used as a FOREGROUND color ──────────────
+   --primary (#0f1b2d navy) is not flipped in dark mode because it is also
+   used for backgrounds and borders. Where it was used as a text/icon color it
+   rendered ~1.1:1 on dark surfaces (invisible). Remap those to readable text. */
+[data-theme="dark"] .student-hero h1,
+[data-theme="dark"] .student-panel h2,
+[data-theme="dark"] .student-homework-title h2,
+[data-theme="dark"] .student-metric-copy strong,
+[data-theme="dark"] .student-metric--navy .student-metric-copy strong,
+[data-theme="dark"] .student-prep-box strong,
+[data-theme="dark"] .student-upcoming-date,
+[data-theme="dark"] .student-wide-action,
+[data-theme="dark"] .student-stage-legend-toggle,
+[data-theme="dark"] .student-stage-legend-name,
+[data-theme="dark"] .badge-primary,
+[data-theme="dark"] .text-primary,
+[data-theme="dark"] .hw-filter-btn:hover {
+  color: var(--text);
+}
+
+/* Default metric icon sits on a translucent teal tint that goes dark in dark
+   mode — use bright teal so the glyph stays legible (the --navy/--teal variants
+   keep their own hardcoded light chips and are left untouched). */
+[data-theme="dark"] .student-metric:not(.student-metric--navy):not(.student-metric--teal) .student-metric-icon {
+  color: var(--accent-soft);
 }
 
 [data-theme="dark"] .paper,
