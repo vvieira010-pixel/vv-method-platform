@@ -3733,9 +3733,12 @@ textarea:focus, .textarea:focus {
 }
 
 /* Default metric icon sits on a translucent teal tint that goes dark in dark
-   mode — use bright teal so the glyph stays legible (the --navy/--teal variants
-   keep their own hardcoded light chips and are left untouched). */
-[data-theme="dark"] .student-metric:not(.student-metric--navy):not(.student-metric--teal) .student-metric-icon {
+   mode — use bright teal so the glyph stays legible. Every tone variant
+   (--navy/--teal/--amber/--exam/--urgent) keeps its own hardcoded LIGHT icon
+   chip and its own glyph color, so they must be excluded — forcing bright teal
+   onto a light chip would drop them to ~1.9:1. (--compact/--text don't recolor
+   the icon, so they correctly keep this fix.) */
+[data-theme="dark"] .student-metric:not(.student-metric--navy):not(.student-metric--teal):not(.student-metric--amber):not(.student-metric--exam):not(.student-metric--urgent) .student-metric-icon {
   color: var(--accent-soft);
 }
 
