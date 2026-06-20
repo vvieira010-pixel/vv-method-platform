@@ -780,7 +780,7 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
           <div style={{ display: 'flex', gap: 10, marginTop: 24 }}>
             <Button variant="ghost" size="sm" onClick={() => handleSave(false)} disabled={saving}>Save Draft</Button>
             <Button variant="primary" onClick={() => setStep('review')}>
-              <Icon.forward size={14} /> Review & Approve
+              <Icon.arrowR size={14} /> Review & Approve
             </Button>
           </div>
         </div>
@@ -920,6 +920,7 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
 const DIAGNOSIS_STEPS = [
   { id: 'prereq',     label: 'Set up' },
   { id: 'generating', label: 'Analyzing' },
+  { id: 'write',      label: 'Write' },
   { id: 'review',     label: 'Review' },
   { id: 'saved',      label: 'Done' },
 ];
