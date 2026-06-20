@@ -465,6 +465,32 @@ export async function createSignedAudioUrl(path, expiresIn = 3600) {
   }
 }
 
+/* ─── Storage (exercise images) ──────────────────────────────── */
+
+const IMAGE_BUCKET = 'exercise-images';
+
+/**
+ * Upload a teacher-supplied image to the public exercise-images bucket.
+ * Returns a stable public URL suitable for storing in exercise.imageUrl and
+ * rendering directly in an <img src>. Throws on failure.
+ */
+export async function uploadExerciseImage(file, path) {
+  const ctx = getDbContext();
+  if (!ctx) throw new Error('Not signed in.');
+  const res = await fetch(`${ctx.url}/storage/v1/object/${IMAGE_BUCKET}/${path}`, {
+    method: 'POST',
+    headers: {
+      apikey: ctx.anonKey,
+      Authorization: `Bearer ${ctx.token}`,
+      'Content-Type': file.type || 'image/png',
+      'x-upsert': 'true',
+    },
+    body: file,
+  });
+  if (!res.ok) throw new Error(`image upload → ${res.status} ${await res.text().catch(() => '')}`);
+  return `${ctx.url}/storage/v1/object/public/${IMAGE_BUCKET}/${path}`;
+}
+
 /* ─── teacher settings ───────────────────────────────────────── */
 
 /**

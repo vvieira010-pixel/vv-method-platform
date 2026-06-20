@@ -469,13 +469,13 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
   if (step === 'saved') {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16, maxWidth: 680 }}>
-        <button style={backStyle} onClick={() => setStep('review')}><Icon.arrow size={14} /> Back to Review</button>
+        <button style={backStyle} onClick={() => setStep('review')}><Icon.arrowL size={14} /> Back to Review</button>
         <SectionHeader title="Post-Approval Actions" subtitle="Sync this diagnosis to other parts of the platform." />
         <Card style={{ padding: 20 }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            <Button variant="ghost" onClick={saveErrorsToBank}><Icon.error size={14} /> Save Errors to Error Bank</Button>
-            <Button variant="ghost" onClick={saveVocabToBank}><Icon.vocab size={14} /> Save Vocabulary to Vocab Bank</Button>
-            <Button variant="ghost" onClick={saveProgressNoteFromDx}><Icon.note size={14} /> Save Progress Note</Button>
+            <Button variant="ghost" onClick={saveErrorsToBank}><Icon.warning size={14} /> Save Errors to Error Bank</Button>
+            <Button variant="ghost" onClick={saveVocabToBank}><Icon.book size={14} /> Save Vocabulary to Vocab Bank</Button>
+            <Button variant="ghost" onClick={saveProgressNoteFromDx}><Icon.doc size={14} /> Save Progress Note</Button>
             <Button variant="ghost" onClick={() => onNavigate('homework:create', { studentId: selectedStudentId || studentId, diagnosisId: savedDiagnosis?.id })}>
               <Icon.homework size={14} /> Create Homework from Diagnosis
             </Button>

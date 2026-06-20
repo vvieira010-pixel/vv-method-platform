@@ -7,6 +7,7 @@ import { useState } from 'react';
 import { Icon, Card, Button } from './shared.jsx';
 import { EX_TYPES, getExType } from '../lib/exercise-types.js';
 import { metTaskOptions } from '../lib/met-task-spec.js';
+import { dbEnabled, uploadExerciseImage } from '../lib/supabase-db.js';
 import { DialogueEditor, SwapEditor, LevelUpEditor, ReadEditor } from './exercise-editor-new-types.jsx';
 export { ExTypeBadge } from './exercise-badge.jsx';
 
@@ -308,6 +309,35 @@ function ShortEditor({ ex, update }) {
 
 /* ─── 4. SPEAKING PROMPT ─────────────────────────────────────── */
 function SpeakEditor({ ex, update }) {
+  const [uploading, setUploading] = useState(false);
+  const [uploadErr, setUploadErr] = useState('');
+
+  async function handleImageFile(e) {
+    const file = e.target.files?.[0];
+    e.target.value = ''; // allow re-selecting the same file
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      setUploadErr('Please choose an image file.');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setUploadErr('Image is larger than 5 MB. Please pick a smaller file.');
+      return;
+    }
+    setUploadErr('');
+    setUploading(true);
+    try {
+      const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+      const path = `${ex.id || 'speak'}/${Date.now()}_${safeName}`;
+      const url = await uploadExerciseImage(file, path);
+      update({ imageUrl: url, imageAlt: ex.imageAlt || file.name.replace(/\.[^.]+$/, '') });
+    } catch (err) {
+      setUploadErr(err.message || 'Upload failed.');
+    } finally {
+      setUploading(false);
+    }
+  }
+
   return (
     <div>
       <div style={fieldWrap}>
@@ -334,16 +364,64 @@ function SpeakEditor({ ex, update }) {
         />
       </div>
       <div style={fieldWrap}>
-        <label style={fieldLabel}>Picture URL (optional — replaces description with an actual image)</label>
+        <label style={fieldLabel}>Picture (optional — replaces description with an actual image)</label>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+          <label style={{
+            display: 'inline-flex', alignItems: 'center', gap: 6, padding: '7px 14px',
+            border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)',
+            background: 'var(--surface)', cursor: uploading ? 'wait' : 'pointer',
+            fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--text)',
+            opacity: uploading ? 0.6 : 1,
+          }}>
+            <Icon name="inbox" size={15} />
+            {uploading ? 'Uploading…' : ex.imageUrl ? 'Replace image' : 'Upload image'}
+            <input
+              type="file" accept="image/*" disabled={uploading}
+              onChange={handleImageFile}
+              style={{ display: 'none' }}
+            />
+          </label>
+          {ex.imageUrl && !uploading && (
+            <button
+              type="button"
+              onClick={() => update({ imageUrl: '', imageAlt: '' })}
+              style={{
+                padding: '7px 12px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)',
+                background: 'none', cursor: 'pointer', fontSize: 'var(--text-sm)', color: 'var(--muted)',
+              }}
+            >
+              Remove
+            </button>
+          )}
+        </div>
+        {!dbEnabled() && (
+          <div style={hintText}>
+            Sign in with Supabase to upload — or paste an image URL below.
+          </div>
+        )}
+        {uploadErr && (
+          <div style={{ ...hintText, color: 'var(--danger, #DC2626)' }}>{uploadErr}</div>
+        )}
         <input
           className="input" value={ex.imageUrl || ''}
           onChange={e => update({ imageUrl: e.target.value })}
-          placeholder="https://…/images/speaking/speaking_picture_01_ski_resort.png"
+          placeholder="…or paste an image URL"
+          style={{ marginTop: 8 }}
         />
         {ex.imageUrl && (
-          <img src={ex.imageUrl} alt="preview" style={{ marginTop: 8, maxWidth: '100%', maxHeight: 160, borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)' }} />
+          <img src={ex.imageUrl} alt={ex.imageAlt || 'preview'} style={{ marginTop: 8, maxWidth: '100%', maxHeight: 160, borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)' }} />
         )}
       </div>
+      {ex.imageUrl && (
+        <div style={fieldWrap}>
+          <label style={fieldLabel}>Image alt text (described for screen readers)</label>
+          <input
+            className="input" value={ex.imageAlt || ''}
+            onChange={e => update({ imageAlt: e.target.value })}
+            placeholder="A busy city street at rush hour"
+          />
+        </div>
+      )}
       <div style={fieldWrap}>
         <label style={fieldLabel}>Target duration (seconds)</label>
         <input
