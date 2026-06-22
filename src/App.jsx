@@ -4,7 +4,7 @@ import LoginScreen from './pages/login.jsx';
 import ErrorBoundary from './components/error-boundary.jsx';
 import { TweaksPanel, TweakSection, TweakRadio, TweakColor, TweakToggle } from './components/tweaks-panel.jsx';
 import { Icon, Avatar, Button, Shell } from './components/shared.jsx';
-import { STUDENTS } from './data/students.jsx';
+const getStudentsData = () => import('./data/students.jsx').then(m => m.STUDENTS);
 import { seedStudentsIfEmpty, getStudents } from './lib/workflow-roster.js';
 import { getAllSubmissions } from './lib/workflow.js';
 import {
@@ -178,8 +178,8 @@ export default function App() {
 
   // Seed students from hardcoded list on first run, then load live roster
   useEffect(() => {
-    seedStudentsIfEmpty(STUDENTS).then(() => {
-      getStudents().then(setStudents);
+    getStudentsData().then(data => {
+      seedStudentsIfEmpty(data).then(() => getStudents().then(setStudents));
     });
   }, []);
 
