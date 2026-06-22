@@ -374,7 +374,7 @@ function SpeakEditor({ ex, update }) {
     }
   }
 
-  return (
+  return (<>
       <div style={fieldWrap}>
         <label style={fieldLabel}>Speaking prompt</label>
         <textarea
@@ -469,8 +469,7 @@ function SpeakEditor({ ex, update }) {
           Student sees: "Target: {ex.targetSeconds || 60} seconds"
         </div>
       </div>
-    </div>
-  );
+  </>);
 }
 
 /* ─── 5. ORDER SENTENCES ─────────────────────────────────────── */

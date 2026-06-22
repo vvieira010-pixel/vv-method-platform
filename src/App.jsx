@@ -245,7 +245,6 @@ export default function App() {
   };
 
   // ── Pending submissions badge (must be before conditional returns for hooks rule) ──
-  const [pendingSubmissions, setPendingSubmissions] = useState(0);
   useEffect(() => {
     if (auth?.role !== 'teacher') return;
     getAllSubmissions().then(list => {
