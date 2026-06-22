@@ -246,10 +246,9 @@ export function Shell({ tabs = [], active, onTab, children, rightSlot, workflowA
 
   return (
     <div className="shell">
-      <aside className="shell-sidebar">
+      <header className="shell-topbar">
         <div className="shell-brand">
-          <span className="shell-brand-name">MET Proficiency Mastery</span>
-          <span className="shell-brand-sub">Michigan English Test Prep</span>
+          <span className="shell-brand-name">MET</span>
         </div>
         <nav className="shell-nav" aria-label="Main navigation">
           {NAV_SECTIONS.map(sec => {
@@ -257,7 +256,7 @@ export function Shell({ tabs = [], active, onTab, children, rightSlot, workflowA
             if (!items.length) return null;
             return (
               <div key={sec.label} className="shell-nav-section">
-                <div className="shell-nav-section-label">{sec.label}</div>
+                <span className="shell-nav-section-label">{sec.label}</span>
                 {items.map(tab => (
                   <button key={tab.id}
                     className={`shell-nav-btn ${active === tab.id ? 'active' : ''}`}
@@ -267,7 +266,7 @@ export function Shell({ tabs = [], active, onTab, children, rightSlot, workflowA
                     {tab.label}
                     {tab.badge > 0 && (
                       <span style={{
-                        marginLeft:'auto', background:'var(--danger)', color:'#fff',
+                        marginLeft:4, background:'var(--danger)', color:'#fff',
                         borderRadius:'var(--radius-pill)', padding:'1px 6px',
                         fontSize:10, fontWeight:700, minWidth:18, textAlign:'center',
                       }}>{tab.badge}</span>
@@ -278,20 +277,14 @@ export function Shell({ tabs = [], active, onTab, children, rightSlot, workflowA
             );
           })}
         </nav>
-      </aside>
-      <div className="shell-content">
-        <header className="shell-topbar">
-          <div style={{ flex:1 }}>
-            <div className="shell-mobile-title">
-              <strong>{activeTab?.label || 'Workspace'}</strong>
-              <span>MET Teacher</span>
-            </div>
-            {workflowActive && <WorkflowStageStrip active={workflowActive} onStage={onWorkflowStage} />}
-          </div>
-          {rightSlot && <div style={{ display:'flex', alignItems:'center', gap:10 }}>{rightSlot}</div>}
-        </header>
-        <main className="shell-main">{children}</main>
-      </div>
+        <div className="shell-mobile-title">
+          <strong>{activeTab?.label || 'Workspace'}</strong>
+          <span>MET Teacher</span>
+        </div>
+        {workflowActive && <WorkflowStageStrip active={workflowActive} onStage={onWorkflowStage} />}
+        {rightSlot && <div style={{ display:'flex', alignItems:'center', gap:10 }}>{rightSlot}</div>}
+      </header>
+      <main className="shell-main">{children}</main>
       <nav className="shell-mobile-nav" aria-label="Mobile navigation">
         {tabs.filter(t => t.mobile !== false && ['dashboard','students','diagnostics','homework','submissions'].includes(t.id)).map(tab => (
           <button key={tab.id}

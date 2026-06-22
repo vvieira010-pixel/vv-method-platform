@@ -29,7 +29,7 @@ export function StudentFeedbackView({ feedback }) {
   const wins = (Array.isArray(feedback.whatYouDidWell) ? feedback.whatYouDidWell : [])
     .filter(w => w && (w.strength || w.explanation));
   const fixes = (Array.isArray(feedback.whatToImprove) ? feedback.whatToImprove : [])
-    .filter(f => f && (f.area || f.howToImprove || f.insteadOf));
+    .filter(f => f && (f.area || f.howToImprove || f.insteadOf || f.sayInstead));
   const card = {
     border: '1px solid var(--border)', borderRadius: 'var(--radius-md)',
     padding: 16, background: 'var(--surface)',
@@ -48,10 +48,10 @@ export function StudentFeedbackView({ feedback }) {
       )}
       {wins.length > 0 && (
         <div style={card}>
-          <div style={{ ...cardTitle, color: 'var(--success)' }}><Icon.check size={13} /> What's working</div>
+          <div style={{ ...cardTitle, color: 'var(--accent-text)' }}><Icon.check size={13} /> What's working</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             {wins.map((w, i) => (
-              <div key={i} style={{ padding: 12, background: 'var(--success-bg)', borderRadius: 'var(--radius-sm)' }}>
+              <div key={i} style={{ padding: 12, background: 'var(--accent-subtle)', borderRadius: 'var(--radius-sm)' }}>
                 {w.strength && <div style={{ fontSize: 'var(--text-md)', fontWeight: 700, color: 'var(--text)', marginBottom: 4 }}>{w.strength}</div>}
                 {w.explanation && <p style={{ fontSize: 'var(--text-md)', lineHeight: 1.7, margin: 0, color: 'var(--text)' }}>{w.explanation}</p>}
                 {w.example && <p style={{ fontSize: 'var(--text-md)', lineHeight: 1.7, margin: '4px 0 0', color: 'var(--text-2)', fontStyle: 'italic' }}>"{w.example}"</p>}
@@ -62,18 +62,16 @@ export function StudentFeedbackView({ feedback }) {
       )}
       {fixes.length > 0 && (
         <div style={card}>
-          <div style={{ ...cardTitle, color: 'var(--warning-text)' }}>Your next focus</div>
+          <div style={{ ...cardTitle, color: 'var(--accent-deep)' }}>Focus for next time</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             {fixes.map((f, i) => (
-              <div key={i} style={{ padding: 12, background: 'var(--warning-bg)', borderRadius: 'var(--radius-sm)' }}>
+              <div key={i} style={{ padding: 12, background: 'var(--teal-soft)', borderRadius: 'var(--radius-sm)' }}>
                 {f.area && <div style={{ fontSize: 'var(--text-md)', fontWeight: 700, color: 'var(--text)', marginBottom: 4 }}>{f.area}</div>}
                 {(f.insteadOf || f.sayInstead) && (
-                  <p style={{ fontSize: 'var(--text-md)', lineHeight: 1.7, margin: '0 0 4px', color: 'var(--text)' }}>
-                    {f.insteadOf && <>You said <em style={{ color: 'var(--danger)' }}>"{f.insteadOf}"</em></>}
-                    {f.insteadOf && f.sayInstead && <> — try </>}
-                    {!f.insteadOf && f.sayInstead && <>Try </>}
-                    {f.sayInstead && <em style={{ color: 'var(--success)', fontWeight: 600 }}>"{f.sayInstead}"</em>}
-                    {(f.insteadOf || f.sayInstead) && '.'}
+                  <p style={{ fontSize: 'var(--text-md)', lineHeight: 1.7, margin: '0 0 4px', color: 'var(--text-2)' }}>
+                    {f.insteadOf && <>{f.insteadOf}</>}
+                    {f.insteadOf && f.sayInstead && <> → </>}
+                    {f.sayInstead && <span style={{ color: 'var(--accent-text)', fontWeight: 600 }}>{f.sayInstead}</span>}
                   </p>
                 )}
                 {f.howToImprove && <p style={{ fontSize: 'var(--text-md)', lineHeight: 1.7, margin: 0, color: 'var(--text)' }}>{f.howToImprove}</p>}
@@ -84,7 +82,7 @@ export function StudentFeedbackView({ feedback }) {
       )}
       {feedback.finalNote && (
         <div style={card}>
-          <div style={{ ...cardTitle, color: 'var(--muted)' }}>A note from your teacher</div>
+          <div style={{ ...cardTitle, color: 'var(--muted)' }}>From your teacher</div>
           <p style={{ fontSize: 'var(--text-md)', lineHeight: 1.75, margin: 0, color: 'var(--text-2)' }}>{feedback.finalNote}</p>
         </div>
       )}
