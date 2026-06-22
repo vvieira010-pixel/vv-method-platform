@@ -408,6 +408,9 @@ export default function StudentHome({ student, onTab }) {
         )}
       </Suspense>
 
+      <div aria-live="polite" aria-atomic="true" style={{ position: 'fixed', left: '-9999px' }}>
+        {loading ? 'Loading dashboard data' : 'Dashboard loaded'}
+      </div>
       {loading ? (
         <section className="student-grid fade-up" style={{ '--delay': '0.3s' }} aria-busy="true" aria-label="Loading dashboard">
           <div className="student-home-main">
@@ -492,9 +495,7 @@ export default function StudentHome({ student, onTab }) {
                   <button className="student-wide-action" onClick={() => onTab('feedback')}>Read feedback <Icon.arrowR size={14} /></button>
                 </div>
               ) : (
-                <div className="student-empty-card">
-                  Your teacher will add notes here after reviewing your next class.
-                </div>
+                <EmptyState title="Waiting for feedback" text="Your teacher will add notes here after reviewing your next class." />
               )}
             </article>
           </div>
@@ -513,9 +514,7 @@ export default function StudentHome({ student, onTab }) {
                 {evaluatedSkills.slice(0, 5).map(s => <SkillRow key={s.section} skill={s} trend={getSkillTrend(s.section, approvedHistory)} />)}
               </div>
             ) : (
-              <div className="student-empty-card" style={{ borderRadius: 0 }}>
-                No skills evaluated yet — your first result appears after your next class.
-              </div>
+              <EmptyState title="No skills evaluated yet" text="Your first skill result will appear after your next class diagnosis." />
             )}
           </article>
 

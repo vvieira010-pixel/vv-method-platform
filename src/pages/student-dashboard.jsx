@@ -8,7 +8,6 @@ import { StudentInbox, MessageTeacherDock } from '../components/message-center.j
 const StudentHomework = lazy(() => import('./student-homework.jsx'));
 const StudentFeedback = lazy(() => import('./student-feedback.jsx'));
 const StudentProgress = lazy(() => import('./student-progress.jsx'));
-import '../styles/system.css';
 
 const TABS = [
   { id: 'home',     label: 'Home',     icon: <Icon.home size={16} /> },

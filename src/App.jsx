@@ -3,7 +3,7 @@ import { useState, useEffect, lazy, Suspense } from 'react';
 import LoginScreen from './pages/login.jsx';
 import ErrorBoundary from './components/error-boundary.jsx';
 import { TweaksPanel, TweakSection, TweakRadio, TweakColor, TweakToggle } from './components/tweaks-panel.jsx';
-import { Icon, Avatar, Button, Shell } from './components/shared.jsx';
+import { Icon, Shell } from './components/shared.jsx';
 const getStudentsData = () => import('./data/students.jsx').then(m => m.STUDENTS);
 import { seedStudentsIfEmpty, getStudents } from './lib/workflow-roster.js';
 import { getAllSubmissions } from './lib/workflow.js';
@@ -289,8 +289,6 @@ export default function App() {
 
   const rightSlot = (
     <div className="shell-topbar-right">
-      <span style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)' }}>Teacher</span>
-      <Avatar name="Vini V" size={32} tone="ink" />
       <button
         type="button"
         onClick={() => navigate('settings')}
@@ -299,9 +297,11 @@ export default function App() {
         aria-current={view === 'settings' ? 'page' : undefined}
         className={`shell-settings-btn${view === 'settings' ? ' active' : ''}`}
       >
-        <Icon.settings size={16} />
+        <Icon.settings size={15} />
       </button>
-      <Button variant="quiet" size="sm" onClick={handleSignOut}>Sign out</Button>
+      <button type="button" onClick={handleSignOut} className="shell-settings-btn" aria-label="Sign out" title="Sign out">
+        <Icon.close size={14} />
+      </button>
     </div>
   );
 

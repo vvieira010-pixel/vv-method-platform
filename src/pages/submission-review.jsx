@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import { Icon, Card, SectionHeader, Pill, Button, Avatar } from '../components/shared.jsx';
 import { callAI } from '../components/shared.jsx';
 import { parseAiJson } from '../lib/ai-helpers.js';
+import { withSkills } from '../education-skills/active-skills.js';
 import {
   getAllSubmissions, getHomework, getReviews, saveReview, deleteReview,
   getDiagnoses, getErrorBank, promoteErrorToLongTerm, markErrorSolved, saveProgressNote,
@@ -132,7 +133,7 @@ Return JSON:
 }`;
 
     try {
-      const data = await callAI(prompt, { max_tokens: 2500, temperature: 0.7 });
+      const data = await callAI(prompt, withSkills('feedback', { max_tokens: 2500, temperature: 0.7 }));
       const raw = data.content?.map(b => b.text || '').join('') || '';
       const parsed = parseAiJson(raw);
       setAiComparison(parsed);
@@ -201,9 +202,8 @@ Return JSON:
 }`;
 
     try {
-      const data = await callAI(prompt, { max_tokens: 900, temperature: 0.65 });
+      const data = await callAI(prompt, withSkills('feedback', { max_tokens: 900, temperature: 0.65 }));
       const raw = data.content?.map(b => b.text || '').join('') || '';
-      const parsed = parseAiJson(raw);
       setQuestionEvals(q => ({
         ...q,
         [exId]: {

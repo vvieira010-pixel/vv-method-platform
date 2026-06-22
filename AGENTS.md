@@ -421,3 +421,67 @@ The student should feel: *"I know what I need to do next."*
 The teacher should feel: *"This saves me time without reducing my quality."*
 
 That is the standard.
+
+---
+
+## Education Agent Skills Integration
+
+The platform integrates a curated subset of ~15 education-agent-skills (from ~165 total) to augment AI behaviour. Skills are parsed from SKILL.md files at import time (via Vite `?raw`) and injected into `callAI` system prompts.
+
+### Architecture
+
+- **`src/education-skills/parser.js`** — `parseSkillMd(rawMd)` → extracts YAML frontmatter + prompt section
+- **`src/education-skills/registry.js`** — imports 16 curated SKILL.md files, parses them, exports `getAllSkills()`, `getSkillById(id)`
+- **`src/education-skills/selectors.js`** — maps 5 task types (diagnosis, feedback, homework, exercise, progress) to skill sets; `buildSkillAugmentation()` creates system prompt append
+- **`src/education-skills/active-skills.js`** — `withSkills(taskType, options)` reads enabled toggles from localStorage, injects skills array into callAI options
+- **`src/education-skills/index.js`** — public API barrel export
+
+### Flow
+
+1. Teacher toggles skill categories in Settings → "AI Skill Augmentations" section
+2. Toggles saved to Supabase `teacher_settings` + localStorage (`vv:skills_enabled`)
+3. AI flows call `withSkills(taskType, options)` instead of passing options directly
+4. `callAI` appends skill prompt content to the system message
+5. AI response improves with pedagogical best practices from the enabled skills
+
+### Wired Flows
+
+| Flow | File | Task Type |
+|---|---|---|
+| Full skill diagnosis | `diagnosis-utils.js:40` | diagnosis |
+| Compact diagnosis fallback | `diagnosis-utils.js:50` | diagnosis |
+| Error bank analysis | `diagnostic-create.jsx:205` | diagnosis |
+| Student feedback generation | `diagnostic-create.jsx:209` | feedback |
+| Homework recommendation | `diagnostic-create.jsx:213` | homework |
+| Section regeneration | `diagnostic-create.jsx:316` | per-key |
+| Theme group generation | `homework-create.jsx:263` | exercise |
+| Listening exercise gen | `homework-create.jsx:297` | exercise |
+| Reading exercise gen | `homework-create.jsx:340` | exercise |
+| Cascade: blueprint | `homework-create.jsx:378` | homework |
+| Cascade: tasks | `homework-create.jsx:386` | homework |
+| Cascade: refinement | `homework-create.jsx:394` | homework |
+| Exercise list gen | `homework-create.jsx:424` | exercise |
+| Retrieval practice gen | `homework-create.jsx:451` | exercise |
+| Single exercise gen | `homework-create.jsx:807` | exercise |
+| Submission full review | `submission-review.jsx:135` | feedback |
+| Single question eval | `submission-review.jsx:204` | feedback |
+
+### Curated Skills (Phase 1)
+
+**Diagnosis (3):** gap-analysis-from-student-work, error-analysis-protocol, feedback-quality-analyser
+**Feedback (4):** ai-feedback-design-principles, metacognitive-prompt-library, self-regulation-scaffold-generator, teach-back-evaluator
+**Homework (6):** differentiation-adapter, scaffolded-task-modifier, practice-problem-sequence-designer, worked-example-fading-designer, retrieval-practice-generator, criterion-referenced-rubric-generator
+**Exercise (3):** scaffolded-task-modifier, practice-problem-sequence-designer, worked-example-fading-designer
+**Progress (3):** learning-progression-builder, goal-setting-protocol-designer, elaborative-interrogation-generator
+
+### Settings
+
+Settings page renders toggle switches for each task type. Default state = all enabled. Saving writes to both Supabase (`teacher_settings` key `skills_enabled`) and localStorage (`vv:skills_enabled`). AI flows read from localStorage at runtime.
+
+### Adding a New Skill
+
+1. Place SKILL.md in `education-agent-skills-main/skills/{domain}/{name}/SKILL.md`
+2. Add `?raw` import in `src/education-skills/registry.js`
+3. Add skill ID to the appropriate task type in `selectors.js`
+4. Build passes automatically (Vite resolves dynamic imports via `?raw`)
+

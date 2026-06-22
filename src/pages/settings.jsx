@@ -1,8 +1,9 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { Icon, Card, SectionHeader, Button } from '../components/shared.jsx';
 import { clearWorkflowData, syncLocalToCloud } from '../lib/workflow.js';
-import { getDbContext, setTeacherSetting } from '../lib/supabase-db.js';
+import { getDbContext, getTeacherSetting, setTeacherSetting } from '../lib/supabase-db.js';
 import { getSupabaseConfig, readStoredSupabaseSession, updateUserPassword } from '../lib/supabase-storage.js';
+import { getAllTaskTypes } from '../education-skills/index.js';
 
 const SENSITIVE_LOCAL_KEYS = new Set([
   'vv:groq_api_key',
@@ -65,10 +66,49 @@ export default function SettingsPage({ onNavigate }) {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [passwordSaving, setPasswordSaving] = useState(false);
   const [passwordMsg, setPasswordMsg] = useState(null); // { ok, text }
+  const [skillToggles, setSkillToggles] = useState({});
+  const [skillTogglesLoaded, setSkillTogglesLoaded] = useState(false);
   const importInputRef = useRef(null);
 
   const supabaseConfigured = getSupabaseConfig().isConfigured;
   const activeSession = readStoredSupabaseSession();
+
+  useEffect(() => {
+    (async () => {
+      let toggles = null;
+      const stored = await getTeacherSetting('skills_enabled');
+      if (stored) {
+        try { toggles = JSON.parse(stored); } catch { /* ignore */ }
+      }
+      if (!toggles) {
+        try {
+          const ls = localStorage.getItem('vv:skills_enabled');
+          if (ls) toggles = JSON.parse(ls);
+        } catch { /* ignore */ }
+      }
+      if (toggles) setSkillToggles(toggles);
+      setSkillTogglesLoaded(true);
+    })();
+  }, []);
+
+  async function handleSaveSkillToggles() {
+    const toggles = { ...skillToggles };
+    const success = await setTeacherSetting('skills_enabled', JSON.stringify(toggles));
+    try { localStorage.setItem('vv:skills_enabled', JSON.stringify(toggles)); } catch { /* ignore */ }
+    if (!success) { window.toast?.('Saved locally only (Supabase unavailable).', 'warn'); return; }
+    window.toast?.('Skill preferences saved.', 'ok');
+  }
+
+  function handleToggleSkill(taskId, enabled) {
+    setSkillToggles(prev => {
+      if (enabled) {
+        const next = { ...prev };
+        delete next[taskId];
+        return next;
+      }
+      return { ...prev, [taskId]: false };
+    });
+  }
 
   async function handleSetPassword(e) {
     e.preventDefault();
@@ -489,6 +529,50 @@ export default function SettingsPage({ onNavigate }) {
           {syncResult && (
             <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-2)', marginTop: 12 }}>{syncResult}</p>
           )}
+        </Card>
+      )}
+      {supabaseConfigured && skillTogglesLoaded && (
+        <Card style={{ padding: 20, marginTop: 14 }}>
+          <SectionHeader title="AI Skill Augmentations" icon={<Icon.settings size={15} />} />
+          <p style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', margin: '8px 0 14px' }}>
+            Enable pedagogical skill prompts that augment AI behaviour. Each task type uses specific skills
+            to improve diagnosis quality, feedback structure, exercise scaffolding, and student guidance.
+          </p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {getAllTaskTypes().map(task => {
+              const enabled = skillToggles[task.id] !== false;
+              return (
+                <div key={task.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
+                  <div>
+                    <div style={{ fontWeight: 600, fontSize: 'var(--text-sm)', color: 'var(--text-1)' }}>{task.label}</div>
+                    <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: 2 }}>{task.description}</div>
+                  </div>
+                  <label style={{ flexShrink: 0, cursor: 'pointer', position: 'relative', width: 40, height: 22 }} aria-label={`Toggle ${task.label}`}>
+                    <input
+                      type="checkbox"
+                      checked={enabled}
+                      onChange={() => handleToggleSkill(task.id, enabled)}
+                      style={{ position: 'absolute', opacity: 0, width: 0, height: 0 }}
+                    />
+                    <span style={{
+                      position: 'absolute', inset: 0, borderRadius: 11,
+                      backgroundColor: enabled ? 'var(--accent-1)' : 'var(--border)',
+                      transition: 'background-color 0.2s',
+                    }}>
+                      <span style={{
+                        position: 'absolute', top: 2, left: enabled ? 20 : 2,
+                        width: 18, height: 18, borderRadius: '50%', backgroundColor: '#fff',
+                        transition: 'left 0.2s', boxShadow: '0 1px 2px rgba(0,0,0,0.15)',
+                      }} />
+                    </span>
+                  </label>
+                </div>
+              );
+            })}
+          </div>
+          <div style={{ marginTop: 16 }}>
+            <Button variant="primary" onClick={handleSaveSkillToggles}>Save Skill Preferences</Button>
+          </div>
         </Card>
       )}
 

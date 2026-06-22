@@ -113,6 +113,9 @@ export default function TeacherDashboard({ students, onNavigate, teacherName = '
   return (
     <div className="td-shell">
       {/* Header */}
+      <div aria-live="polite" aria-atomic="true" style={{ position: 'fixed', left: '-9999px' }}>
+        {loading ? 'Loading dashboard' : `${students.length} students, ${classesToday} classes today`}
+      </div>
       <div style={{ marginBottom: 16 }}>
         <h1 className="td-headline">Good {timeOfDay()}, {teacherName}.</h1>
         <p className="td-sub">{today} — your teaching cycle at a glance.</p>
@@ -162,10 +165,13 @@ export default function TeacherDashboard({ students, onNavigate, teacherName = '
         <Card style={{ padding: 14 }}>
           <SectionHeader title="Today's Classes" icon={<Icon.calendar size={15} />} action={<Button variant="ghost" size="sm" onClick={() => onNavigate('calendar')}>View calendar</Button>} />
           {todayClasses.length === 0 ? (
-            <div className="td-empty-state">
-              <p className="td-empty">No classes scheduled today.</p>
-              <Button variant="ghost" size="sm" onClick={() => onNavigate('calendar')}>Schedule a class →</Button>
-            </div>
+            <EmptyState
+              icon={<Icon.calendar size={20} />}
+              title="No classes today"
+              text="Use this time to catch up on diagnoses, review homework, or plan ahead."
+              action="Schedule a class"
+              onAction={() => onNavigate('calendar')}
+            />
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 8 }}>
               {todayClasses.map(ev => {
@@ -226,7 +232,7 @@ export default function TeacherDashboard({ students, onNavigate, teacherName = '
               <SkeletonCard height={60} lines={1} />
             </div>
           ) : urgencySorted.length === 0 ? (
-            <p style={{ color: 'var(--muted)', padding: 16 }}>No students match this filter.</p>
+            <EmptyState icon={<Icon.student size={20} />} title="No students match this filter" text="Try selecting a different filter above or check the Students page." action="View all students" onAction={() => setStageFilter('all')} />
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {urgencySorted.map(s => (

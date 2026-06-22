@@ -15,6 +15,7 @@ import { useState, useEffect } from 'react';
 import { Icon, Card, SectionHeader, Pill, Button, Avatar } from '../components/shared.jsx';
 import { callAI } from '../components/shared.jsx';
 import { parseAiJson } from '../lib/ai-helpers.js';
+import { withSkills } from '../education-skills/active-skills.js';
 import {
   buildSkillDiagnosisPrompt,
   buildCompactSkillDiagnosisPrompt,
@@ -202,11 +203,11 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
       const parsedDiagnosis = diagnosisResult.parsed;
 
       setGeneratingStatus('Step 2/4 — Analysing errors and vocabulary targets…');
-      const errorBankRaw = await callAI(buildErrorBankPrompt({ ...promptData, diagnosis: parsedDiagnosis }), { max_tokens: 2500, preferredProvider: 'gemini' }).catch(() => null);
+      const errorBankRaw = await callAI(buildErrorBankPrompt({ ...promptData, diagnosis: parsedDiagnosis }), withSkills('diagnosis', { max_tokens: 2500, preferredProvider: 'gemini' })).catch(() => null);
       const parsedErrorBank = normalizeErrorTargets(errorBankRaw ? parseAiJson(getContent(errorBankRaw)) : {});
 
       setGeneratingStatus('Step 3/4 — Writing student feedback…');
-      const feedbackRaw = await callAI(buildStudentFeedbackPrompt({ ...promptData, diagnosis: parsedDiagnosis }), { max_tokens: 2500, preferredProvider: 'gemini' }).catch(() => null);
+      const feedbackRaw = await callAI(buildStudentFeedbackPrompt({ ...promptData, diagnosis: parsedDiagnosis }), withSkills('feedback', { max_tokens: 2500, preferredProvider: 'gemini' })).catch(() => null);
       const parsedFeedback = feedbackRaw ? parseAiJson(getContent(feedbackRaw)) : {};
 
       setGeneratingStatus('Step 4/4 — Building homework recommendation…');
@@ -215,7 +216,7 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
         diagnosis: parsedDiagnosis,
         errorBank: parsedErrorBank.errorBankSuggestions,
         vocabTargets: parsedErrorBank.vocabGrammarTargets,
-      }), { max_tokens: 3000, preferredProvider: 'gemini' }).catch(() => null);
+      }), withSkills('homework', { max_tokens: 3000, preferredProvider: 'gemini' })).catch(() => null);
       const parsedHomework = homeworkRaw ? parseAiJson(getContent(homeworkRaw)) : {};
 
       setGeneratingStatus('Structuring results…');
@@ -312,10 +313,11 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
         priorityDiagnosis: 6000, classSummary: 6000, targetScoreRelevance: 6000,
         nextClassFocus: 6000, profileUpdateSuggestions: 6000, errorBankSuggestions: 2200,
       };
-      const data = await callAI(prompt, {
+      const skillMap = { skillDiagnosis:'diagnosis', studentFeedback:'feedback', homeworkRecommendation:'homework', errorBankSuggestions:'diagnosis', vocabGrammarTargets:'diagnosis' };
+      const data = await callAI(prompt, withSkills(skillMap[key] || 'diagnosis', {
         max_tokens: DIAGNOSIS_DERIVED_KEYS.has(key) ? Math.min(SECTION_BUDGETS[key] || 2500, 3000) : SECTION_BUDGETS[key] || 2000,
         preferredProvider: 'gemini',
-      });
+      }));
       const raw = data.content?.map(b => b.text || '').join('') || '';
       const parsed = DIAGNOSIS_DERIVED_KEYS.has(key)
         ? normalizeDiagnosisJson(parseAiJson(raw), normalizedEvidence)

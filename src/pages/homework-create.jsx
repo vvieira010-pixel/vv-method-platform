@@ -6,6 +6,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Icon, Card, SectionHeader, Button, Pill, Modal } from '../components/shared.jsx';
 import { callAI } from '../components/shared.jsx';
 import { parseAiJson } from '../lib/ai-helpers.js';
+import { withSkills } from '../education-skills/active-skills.js';
 import {
   buildExerciseListPrompt,
   buildFinalRefinementPrompt,
@@ -259,7 +260,7 @@ function getPriorityItems(dx) {
       setGroupGenStatus(`Generating ${group} exercises (${index + 1}/${selectedGroups.length})…`);
       try {
         const prompt = buildHomeworkGroupPrompt({ student, diagnosis, group, count: Number(count) });
-        const data = await callAI(prompt, { ...HOMEWORK_AI_BASE_OPTIONS, max_tokens: 3500, temperature: 0.8 });
+        const data = await callAI(prompt, withSkills('exercise', { ...HOMEWORK_AI_BASE_OPTIONS, max_tokens: 3500, temperature: 0.8 }));
         const raw = data?.content?.map(b => b.text || '').join('') || '';
         const parsed = parseAiJson(raw);
         const items = Array.isArray(parsed) ? parsed : (Array.isArray(parsed?.exercises) ? parsed.exercises : []);
@@ -293,7 +294,7 @@ function getPriorityItems(dx) {
     
     try {
       const prompt = buildListeningGeneratorPrompt({ student, diagnosis });
-      const data = await callAI(prompt, { ...HOMEWORK_AI_BASE_OPTIONS, max_tokens: 2500, temperature: 0.8 });
+      const data = await callAI(prompt, withSkills('exercise', { ...HOMEWORK_AI_BASE_OPTIONS, max_tokens: 2500, temperature: 0.8 }));
       const parsed = parseAiJson(data.content?.map(b => b.text || '').join('') || '');
       
       if (!parsed || parsed.type !== 'listen') throw new Error('AI returned invalid listening task.');
@@ -336,7 +337,7 @@ function getPriorityItems(dx) {
     setGroupGenStatus('Creating reading passage…');
     try {
       const prompt = buildReadingGeneratorPrompt({ student, diagnosis, questionCount: 3 });
-      const data = await callAI(prompt, { ...HOMEWORK_AI_BASE_OPTIONS, max_tokens: 2500, temperature: 0.8 });
+      const data = await callAI(prompt, withSkills('exercise', { ...HOMEWORK_AI_BASE_OPTIONS, max_tokens: 2500, temperature: 0.8 }));
       const parsed = parseAiJson(data.content?.map(b => b.text || '').join('') || '');
       if (!parsed || parsed.type !== 'read') throw new Error('AI returned invalid reading task.');
       const fresh = createExercise('read');
@@ -374,7 +375,7 @@ function getPriorityItems(dx) {
     
     try {
       // 1. Generate Blueprint
-      const bpData = await callAI(buildHomeworkBlueprintPrompt({ student, diagnosis }), { ...HOMEWORK_AI_BASE_OPTIONS, max_tokens: 1200, temperature: 0.7 });
+      const bpData = await callAI(buildHomeworkBlueprintPrompt({ student, diagnosis }), withSkills('homework', { ...HOMEWORK_AI_BASE_OPTIONS, max_tokens: 1200, temperature: 0.7 }));
       const blueprint = parseAiJson(bpData.content?.map(b => b.text || '').join('') || '');
       const taskTypes = normalizeTaskTypes(blueprint?.taskTypes);
       
@@ -382,7 +383,7 @@ function getPriorityItems(dx) {
       // 2. Generate Tasks
       const tasks = [];
       for (const taskType of taskTypes) {
-        const tData = await callAI(buildTaskGeneratorPrompt({ student, diagnosis, taskBlueprint: blueprint, taskType }), { ...HOMEWORK_AI_BASE_OPTIONS, max_tokens: 2500, temperature: 0.8 });
+        const tData = await callAI(buildTaskGeneratorPrompt({ student, diagnosis, taskBlueprint: blueprint, taskType }), withSkills('homework', { ...HOMEWORK_AI_BASE_OPTIONS, max_tokens: 2500, temperature: 0.8 }));
         tasks.push(parseAiJson(tData.content?.map(b => b.text || '').join('') || ''));
       }
       const { exercises, skipped } = buildCompleteExercises(tasks);
@@ -390,7 +391,7 @@ function getPriorityItems(dx) {
       
       setGroupGenStatus('Refining and finalising…');
       // 3. Final Refinement
-      const refData = await callAI(buildFinalRefinementPrompt({ student, blueprint, tasks }), { ...HOMEWORK_AI_BASE_OPTIONS, max_tokens: 1800, temperature: 0.7 });
+      const refData = await callAI(buildFinalRefinementPrompt({ student, blueprint, tasks }), withSkills('homework', { ...HOMEWORK_AI_BASE_OPTIONS, max_tokens: 1800, temperature: 0.7 }));
       const refinement = parseAiJson(refData.content?.map(b => b.text || '').join('') || '');
 
       setForm(f => ({
@@ -420,7 +421,7 @@ function getPriorityItems(dx) {
     setExerciseOptions([]);
     try {
       const prompt = buildExerciseListPrompt({ student, diagnosis, level: selectedLevel, skill: selectedSkill });
-      const data = await callAI(prompt, { ...HOMEWORK_AI_BASE_OPTIONS, max_tokens: 5000, temperature: 0.8 });
+      const data = await callAI(prompt, withSkills('exercise', { ...HOMEWORK_AI_BASE_OPTIONS, max_tokens: 5000, temperature: 0.8 }));
       const raw = data.content?.map(b => b.text || '').join('') || '';
       const parsed = parseAiJson(raw);
       const list = Array.isArray(parsed) ? parsed : parsed.exercises || [];
@@ -447,7 +448,7 @@ function getPriorityItems(dx) {
     const level = selectedLevel || student?.currentLevel || 'B1';
     const prompt = buildRetrievalPracticePrompt({ topic, studentLevel: level, questionCount: 5 });
     try {
-      const data = await callAI(prompt, { ...HOMEWORK_AI_BASE_OPTIONS, max_tokens: 2000 });
+      const data = await callAI(prompt, withSkills('exercise', { ...HOMEWORK_AI_BASE_OPTIONS, max_tokens: 2000 }));
       const raw = data.content?.map(b => b.text || '').join('') || '';
       const parsed = parseAiJson(raw);
       if (!parsed?.questions?.length) throw new Error('No questions returned');
@@ -803,7 +804,7 @@ Return JSON only with fields: type "read", passage (2-3 paragraphs), source, que
     const context = form.objective ? ` The student's homework goal is: ${form.objective}.` : '';
     const fullPrompt = prompt + context + ` Level: ${level || selectedLevel || 'B1'}.`;
     try {
-      const data = await callAI(fullPrompt, { ...HOMEWORK_AI_BASE_OPTIONS, max_tokens: 1500, temperature: 0.7 });
+      const data = await callAI(fullPrompt, withSkills('exercise', { ...HOMEWORK_AI_BASE_OPTIONS, max_tokens: 1500, temperature: 0.7 }));
       const raw = data?.content?.map(b => b.text || '').join('') || '';
       const parsed = parseAiJson(raw);
       if (!parsed || !parsed.type) throw new Error('AI returned invalid exercise');
