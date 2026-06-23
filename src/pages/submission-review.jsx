@@ -335,7 +335,7 @@ Return JSON:
           <div style={{ background: 'var(--surface)', borderRadius: 'var(--radius)', maxWidth: 560, width: '100%', maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 16px 48px rgba(0,0,0,0.28)', padding: 28 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
               <div>
-                <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--accent-deep)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 3 }}>Preview — student will see</div>
+                <div className="section-label" style={{ color: 'var(--accent-deep)', marginBottom: 3 }}>Preview — student will see</div>
                 <div style={{ fontWeight: 700, fontSize: 'var(--text-lg)', color: 'var(--text)' }}>Homework Review: {homework?.title || 'Homework'}</div>
               </div>
               <Button variant="ghost" size="sm" onClick={() => setShowPreview(false)}>✕ Edit</Button>
@@ -354,7 +354,7 @@ Return JSON:
 
             {previewQuestions.length > 0 && (
               <div style={{ marginBottom: 14 }}>
-                <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>Per-question feedback</div>
+                <div className="section-label" style={{ marginBottom: 8 }}>Per-question feedback</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   {previewQuestions.map(({ entry, qe, activity }, i) => (
                     <div key={entry.id} style={{ padding: '10px 12px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', background: 'var(--bg)' }}>
@@ -363,10 +363,10 @@ Return JSON:
                       </div>
                       {qe.note && <p style={{ margin: '0 0 6px', fontSize: 'var(--text-sm)', color: 'var(--text-2)', lineHeight: 1.5 }}>{qe.note}</p>}
                       {(qe.corrections || []).filter(c => c.original || c.improved).map((c, ci) => (
-                        <div key={ci} style={{ fontSize: 'var(--text-xs)', display: 'flex', gap: 6, marginTop: 4, alignItems: 'baseline' }}>
-                          <span style={{ color: 'var(--danger)', textDecoration: 'line-through' }}>{c.original}</span>
-                          <span style={{ color: 'var(--muted)' }}>→</span>
-                          <span style={{ color: 'var(--success, var(--accent))' }}>{c.improved}</span>
+                        <div key={ci} className="correction-pair" style={{ fontSize: 'var(--text-xs)', marginTop: 4 }}>
+                          <span className="correction-original">{c.original}</span>
+                          <span className="correction-arrow">→</span>
+                          <span className="correction-improved">{c.improved}</span>
                         </div>
                       ))}
                     </div>
@@ -377,12 +377,12 @@ Return JSON:
 
             {previewCorrections.length > 0 && previewQuestions.length === 0 && (
               <div style={{ marginBottom: 14 }}>
-                <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>Corrections</div>
+                <div className="section-label" style={{ marginBottom: 6 }}>Corrections</div>
                 {previewCorrections.map((c, i) => (
-                  <div key={i} style={{ fontSize: 'var(--text-sm)', display: 'flex', gap: 8, alignItems: 'baseline', marginBottom: 4 }}>
-                    <span style={{ color: 'var(--danger)', textDecoration: 'line-through' }}>{c.original}</span>
-                    <span style={{ color: 'var(--muted)' }}>→</span>
-                    <span style={{ color: 'var(--success, var(--accent))' }}>{c.improved}</span>
+                  <div key={i} className="correction-pair" style={{ fontSize: 'var(--text-sm)', marginBottom: 4 }}>
+                    <span className="correction-original">{c.original}</span>
+                    <span className="correction-arrow">→</span>
+                    <span className="correction-improved">{c.improved}</span>
                   </div>
                 ))}
               </div>
@@ -464,7 +464,7 @@ Return JSON:
             {/* ── Per-question evaluation ── */}
             {submissionEvidence.entries.length > 0 && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                <div style={{ fontSize: 'var(--text-xs)', fontWeight: 800, color: 'var(--accent-deep)', textTransform: 'uppercase', letterSpacing: '0.06em', display: 'flex', alignItems: 'center', gap: 5 }}>
+                <div className="section-label" style={{ color: 'var(--accent-deep)', fontWeight: 800, display: 'flex', alignItems: 'center', gap: 5 }}>
                   <Icon.check size={12} /> Per-question review
                 </div>
                 {submissionEvidence.entries.map((entry, idx) => {
@@ -545,7 +545,7 @@ Return JSON:
                       {/* Per-question corrections */}
                       {((qe.corrections || []).length > 0) && (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                          <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Corrections</span>
+                          <span className="section-label">Corrections</span>
                           {(qe.corrections || []).map((c, ci) => (
                             <div key={c.id || ci} style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
                               <input className="input" value={c.original} placeholder="Original" style={{ flex: 1, fontSize: 'var(--text-xs)' }}
@@ -845,7 +845,7 @@ Return JSON:
 
 function Field({ label, children }) {
   return (
-    <label style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+    <label className="field">
       <span className="field-label">{label}</span>
       {children}
     </label>

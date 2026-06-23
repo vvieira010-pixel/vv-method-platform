@@ -859,7 +859,7 @@ Return JSON only with fields: type "read", passage (2-3 paragraphs), source, que
       <div className="homework-create-grid" style={{ display: 'grid', gap: 24, alignItems: 'start' }}>
         <div>
           {currentStep === 1 && (
-            <Card style={{ padding: 18 }}>
+            <Card style={{ padding: 'var(--space-5)' }}>
               <SectionHeader title="Step 1: Prebuilt Homework" />
               <div style={{ marginTop: 16 }}>
                 {studentId || diagnosis?.studentId ? (
@@ -891,8 +891,8 @@ Return JSON only with fields: type "read", passage (2-3 paragraphs), source, que
                   <input className="input" value={form.objective} onChange={e => setForm(f => ({ ...f, objective: e.target.value }))} placeholder="What this homework targets..." />
                 </Field>
                 {errorBankItems.filter(e => e.status !== 'solved').length > 0 && (
-                  <div style={{ marginTop: 16, padding: 12, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)' }}>
-                    <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>
+                  <div className="info-panel" style={{ marginTop: 'var(--space-4)' }}>
+                    <div className="section-label" style={{ marginBottom: 8 }}>
                       Error Bank — Active Patterns
                     </div>
                     {errorBankItems.filter(e => e.status !== 'solved').slice(0, 3).map(entry => (
@@ -1004,7 +1004,7 @@ Return JSON only with fields: type "read", passage (2-3 paragraphs), source, que
             </Card>
           )}
           {currentStep === 2 && (
-            <Card style={{ padding: 18 }}>
+            <Card style={{ padding: 'var(--space-5)' }}>
               <SectionHeader title="Step 2: Retrieval & MET Focus" />
               <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 16 }}>
                 {/* ── Retrieval Practice ── */}
@@ -1211,13 +1211,13 @@ Return JSON only with fields: type "read", passage (2-3 paragraphs), source, que
                       <div style={{ marginTop: 10, display: 'flex', gap: 16, flexWrap: 'wrap' }}>
                         {languageDemand.tier2_vocabulary?.length > 0 && (
                           <div>
-                            <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', marginBottom: 4 }}>Tier 2 to pre-teach</div>
+                            <div className="section-label" style={{ marginBottom: 4 }}>Tier 2 to pre-teach</div>
                             <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-2)' }}>{languageDemand.tier2_vocabulary.join(' · ')}</div>
                           </div>
                         )}
                         {languageDemand.tier3_vocabulary?.length > 0 && (
                           <div>
-                            <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', marginBottom: 4 }}>Tier 3 to pre-teach</div>
+                            <div className="section-label" style={{ marginBottom: 4 }}>Tier 3 to pre-teach</div>
                             <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-2)' }}>{languageDemand.tier3_vocabulary.join(' · ')}</div>
                           </div>
                         )}
@@ -1262,7 +1262,7 @@ Return JSON only with fields: type "read", passage (2-3 paragraphs), source, que
         </div>
 
         {/* Persistent Summary Side Panel */}
-        <Card className="homework-create-summary" style={{ padding: 18, position: 'sticky', top: 20 }}>
+        <Card className="homework-create-summary" style={{ padding: 'var(--space-5)', position: 'sticky', top: 20 }}>
           <SectionHeader title="Homework Summary" />
           <div style={{ marginTop: 12, fontSize: 'var(--text-sm)' }}>
             <p>Exercises: <strong style={exerciseCount > 10 ? { color: 'var(--danger)' } : {}}>{exerciseCount} / 10</strong></p>
@@ -1277,8 +1277,8 @@ Return JSON only with fields: type "read", passage (2-3 paragraphs), source, que
 
 function Field({ label, children, style }) {
   return (
-    <label style={{ display: 'flex', flexDirection: 'column', gap: 4, ...style }}>
-      <span style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</span>
+    <label className="field" style={style}>
+      <span className="section-label">{label}</span>
       {children}
     </label>
   );
