@@ -662,12 +662,12 @@ function getPriorityItems(dx) {
 
   return (
     <div className="homework-create-page" style={{ maxWidth: 1120, width: '100%', margin: '0 auto', padding: '22px 24px 14px' }}>
-      <button onClick={() => onNavigate('homework')} style={backStyle}>
+      <button className="back-link" onClick={() => onNavigate('homework')}>
         <Icon.arrowL size={13} /> Back
       </button>
 
       {/* Wizard Header */}
-      <h1 style={S.headline}>Create Homework</h1>
+      <SectionHeader title="Create Homework" />
       {(selectedLevel || subjectLabel) && (
         <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 12 }}>
           {selectedLevel && <Pill tone="info">{selectedLevel}</Pill>}
@@ -784,7 +784,7 @@ function getPriorityItems(dx) {
             <Card style={{ padding: 18 }}>
               <SectionHeader title="Step 2: MET Retrieval" />
               <div style={{ marginTop: 16 }}>
-                <div style={{ padding: 16, background: 'var(--surface)', border: '1px solid var(--accent-soft)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-sm)' }}>
+                <div style={{ padding: 'var(--space-4)', background: 'var(--surface)', border: '1px solid var(--accent-soft)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-sm)' }}>
                   <div style={{ fontWeight: 700, fontSize: 'var(--text-sm)', marginBottom: 6 }}>Add recall before the build stage</div>
                   <div style={{ color: 'var(--text-2)', fontSize: 'var(--text-sm)', lineHeight: 1.6, marginBottom: 12 }}>
                     Generate retrieval questions from the homework objective so the student practices remembering the target language before the rest of the homework is built.
@@ -1204,7 +1204,7 @@ function getPriorityItems(dx) {
                     )}
                   </div>
                 )}
-                <div ref={assignRef} style={{ marginTop: 16, padding: 16, border: '1px solid var(--accent-soft)', borderRadius: 'var(--radius-md)', background: 'var(--surface)' }}>
+                <div ref={assignRef} style={{ marginTop: 16, padding: 'var(--space-4)', border: '1px solid var(--accent-soft)', borderRadius: 'var(--radius-md)', background: 'var(--surface)' }}>
                   <div style={{ fontWeight: 700, fontSize: 'var(--text-sm)', marginBottom: 12 }}>Assign homework</div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                     {studentId || diagnosis?.studentId ? null : (
@@ -1262,14 +1262,4 @@ function Field({ label, children, style }) {
   );
 }
 
-const backStyle = {
-  background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)',
-  fontSize: 'var(--text-sm)', display: 'flex', alignItems: 'center', gap: 4,
-  marginBottom: 16, padding: 0, fontFamily: 'var(--font-ui)',
-};
-
-const S = {
-  headline: { fontFamily: 'var(--font-ui)', fontSize: 'var(--text-2xl)', fontWeight: 700, color: 'var(--accent-deep)', margin: '0 0 4px' },
-  sub: { fontSize: 'var(--text-sm)', color: 'var(--muted)' },
-};
 

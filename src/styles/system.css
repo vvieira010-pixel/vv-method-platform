@@ -28,6 +28,7 @@
   --bg: #f4f9fc;
   --bg-deep: #e3f5f4;
   --surface: #ffffff;
+  --surface-glass: rgba(255,255,255,0.96);
   --surface-hover: #f7fbfc;
   --border: #d0e2e8;
   --border-strong: #b0ccd4;
@@ -3866,6 +3867,7 @@ textarea:focus, .textarea:focus {
   --bg: #0f1823;
   --bg-deep: #0a1118;
   --surface: #192130;
+  --surface-glass: rgba(25,33,48,0.96);
   --surface-hover: #1e2a3d;
   --border: #253548;
   --border-strong: #344d63;
