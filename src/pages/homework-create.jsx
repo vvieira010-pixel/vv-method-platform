@@ -691,7 +691,7 @@ function getPriorityItems(dx) {
       <div className="homework-create-grid" style={{ display: 'grid', gap: 24, alignItems: 'start' }}>
         <div>
           {currentStep === 1 && (
-            <Card style={{ padding: 18 }}>
+            <Card style={{ padding: 'var(--space-5)' }}>
               <SectionHeader title="Step 1: Prebuilt Homework" />
               <div style={{ marginTop: 16 }}>
                 {studentId || diagnosis?.studentId ? (
@@ -723,8 +723,8 @@ function getPriorityItems(dx) {
                   <input className="input" value={form.objective} onChange={e => setForm(f => ({ ...f, objective: e.target.value }))} placeholder="What this homework targets..." />
                 </Field>
                 {errorBankItems.filter(e => e.status !== 'solved').length > 0 && (
-                  <div style={{ marginTop: 16, padding: 12, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)' }}>
-                    <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>
+                  <div className="info-panel" style={{ marginTop: 'var(--space-4)' }}>
+                    <div className="section-label" style={{ marginBottom: 8 }}>
                       Error Bank — Active Patterns
                     </div>
                     {errorBankItems.filter(e => e.status !== 'solved').slice(0, 3).map(entry => (
@@ -746,8 +746,8 @@ function getPriorityItems(dx) {
                     ))}
                   </div>
                 )}
-                <div style={{ marginTop: 18, padding: 14, background: 'var(--surface)', border: '1px solid var(--accent-soft)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-sm)' }}>
-                  <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>
+                <div className="info-panel accent" style={{ marginTop: 'var(--space-5)' }}>
+                  <div className="section-label" style={{ marginBottom: 8 }}>
                     Step 1. Prebuilt homework
                   </div>
                   <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-2)', lineHeight: 1.5, marginBottom: 12 }}>
@@ -781,7 +781,7 @@ function getPriorityItems(dx) {
             </Card>
           )}
           {currentStep === 2 && (
-            <Card style={{ padding: 18 }}>
+            <Card style={{ padding: 'var(--space-5)' }}>
               <SectionHeader title="Step 2: MET Retrieval" />
               <div style={{ marginTop: 16 }}>
                 <div style={{ padding: 'var(--space-4)', background: 'var(--surface)', border: '1px solid var(--accent-soft)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-sm)' }}>
@@ -810,7 +810,7 @@ function getPriorityItems(dx) {
             </Card>
           )}
           {currentStep === 3 && (
-            <Card style={{ padding: 18 }}>
+            <Card style={{ padding: 'var(--space-5)' }}>
               <SectionHeader title="Step 3: Build & Revision" />
               <div style={{ marginTop: 16 }}>
                 {/* ── Toolbar: two rows — Generate | Browse & Add ── */}
@@ -885,17 +885,17 @@ function getPriorityItems(dx) {
                 {activePanel === 'type-picker' && <ExerciseTypePicker onSelect={addExercise} onClose={() => setActivePanel(null)} />}
 
                 {activePanel === 'b2-bank' && (
-                  <div style={{ marginBottom: 16, border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: 'var(--surface)', borderBottom: '1px solid var(--border)' }}>
-                      <span style={{ fontWeight: 600, fontSize: 'var(--text-sm)' }}>{b2BankMeta.title}</span>
-                      <button onClick={() => setActivePanel(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)' }}><Icon.close size={16} /></button>
+                  <div className="bank-panel">
+                    <div className="bank-panel-header">
+                      <span className="bank-panel-title">{b2BankMeta.title}</span>
+                      <button className="btn-icon-close" onClick={() => setActivePanel(null)}><Icon.close size={16} /></button>
                     </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 0, maxHeight: 340, overflowY: 'auto' }}>
+                    <div className="bank-panel-body" style={{ maxHeight: 340 }}>
                       {getB2Modules().map(mod => (
-                        <div key={mod.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', borderBottom: '1px solid var(--divider)', gap: 10 }}>
+                        <div key={mod.id} className="bank-panel-row">
                           <div>
                             <div style={{ fontWeight: 500, fontSize: 'var(--text-sm)' }}>{mod.label}</div>
-                            <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', textTransform: 'capitalize' }}>{mod.skill} · {mod.exercises.length} exercises</div>
+                            <div className="bank-panel-meta">{mod.skill} · {mod.exercises.length} exercises</div>
                           </div>
                           <Button variant="ghost" size="sm" onClick={() => addModuleFromB2Bank(mod)}>Add</Button>
                         </div>
@@ -905,30 +905,30 @@ function getPriorityItems(dx) {
                 )}
 
                 {activePanel === 'lifestyle' && (
-                  <div style={{ marginBottom: 16, border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: 'var(--surface)', borderBottom: '1px solid var(--border)' }}>
+                  <div className="bank-panel">
+                    <div className="bank-panel-header">
                       <div>
-                        <span style={{ fontWeight: 700, fontSize: 'var(--text-sm)' }}>{lifestylePackMeta.title}</span>
-                        <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: 2 }}>{lifestylePackMeta.level} · {lifestylePackMeta.subtitle}</div>
+                        <span className="bank-panel-title" style={{ fontWeight: 700 }}>{lifestylePackMeta.title}</span>
+                        <div className="bank-panel-meta" style={{ marginTop: 2 }}>{lifestylePackMeta.level} · {lifestylePackMeta.subtitle}</div>
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                         <Button variant="ghost" size="sm" onClick={copyLifestylePrintablePack}>Copy printable</Button>
-                        <button onClick={() => setActivePanel(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)' }}><Icon.close size={16} /></button>
+                        <button className="btn-icon-close" onClick={() => setActivePanel(null)}><Icon.close size={16} /></button>
                       </div>
                     </div>
-                    <div style={{ padding: '10px 14px', borderBottom: '1px solid var(--divider)', background: 'var(--surface)', fontSize: 'var(--text-xs)', color: 'var(--muted)', lineHeight: 1.5 }}>
+                    <div className="bank-panel-note">
                       Converted from the bundled JSON pack in <strong>src/components/exercises</strong>. Use the Markdown file as the printable teacher copy.
                     </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 0, maxHeight: 360, overflowY: 'auto' }}>
+                    <div className="bank-panel-body">
                       {getLifestyleModules().map(mod => (
-                        <div key={mod.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', borderBottom: '1px solid var(--divider)', gap: 10 }}>
+                        <div key={mod.id} className="bank-panel-row">
                           <div style={{ minWidth: 0 }}>
                             <div style={{ fontWeight: 600, fontSize: 'var(--text-sm)' }}>{mod.label}</div>
-                            <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', textTransform: 'capitalize' }}>
+                            <div className="bank-panel-meta">
                               {mod.skill} · {mod.sourceCount} source tasks · {mod.exerciseCount} platform exercises
                             </div>
                             {mod.note && (
-                              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 560 }}>
+                              <div className="bank-panel-meta" style={{ marginTop: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 560 }}>
                                 {mod.note}
                               </div>
                             )}
@@ -941,23 +941,23 @@ function getPriorityItems(dx) {
                 )}
 
                 {activePanel === 'deep-research' && (
-                  <div style={{ marginBottom: 16, border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: 'var(--surface)', borderBottom: '1px solid var(--border)' }}>
+                  <div className="bank-panel">
+                    <div className="bank-panel-header">
                       <div>
-                        <span style={{ fontWeight: 700, fontSize: 'var(--text-sm)' }}>{deepResearchMeta.title}</span>
-                        <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: 2 }}>{deepResearchMeta.level} · {deepResearchMeta.exerciseCount} exercises across {deepResearchMeta.moduleCount} skills</div>
+                        <span className="bank-panel-title" style={{ fontWeight: 700 }}>{deepResearchMeta.title}</span>
+                        <div className="bank-panel-meta" style={{ marginTop: 2 }}>{deepResearchMeta.level} · {deepResearchMeta.exerciseCount} exercises across {deepResearchMeta.moduleCount} skills</div>
                       </div>
-                      <button onClick={() => setActivePanel(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)' }}><Icon.close size={16} /></button>
+                      <button className="btn-icon-close" onClick={() => setActivePanel(null)}><Icon.close size={16} /></button>
                     </div>
-                    <div style={{ padding: '10px 14px', borderBottom: '1px solid var(--divider)', background: 'var(--surface)', fontSize: 'var(--text-xs)', color: 'var(--muted)', lineHeight: 1.5 }}>
+                    <div className="bank-panel-note">
                       Sourced from the Deep Research Report spec. Covers all 5 MET skills with auto-graded and open-response formats.
                     </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 0, maxHeight: 360, overflowY: 'auto' }}>
+                    <div className="bank-panel-body">
                       {getDeepResearchModules().map(mod => (
-                        <div key={mod.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', borderBottom: '1px solid var(--divider)', gap: 10 }}>
+                        <div key={mod.id} className="bank-panel-row">
                           <div>
                             <div style={{ fontWeight: 600, fontSize: 'var(--text-sm)' }}>{mod.label}</div>
-                            <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', textTransform: 'capitalize' }}>{mod.skill} · {mod.exercises.length} exercises</div>
+                            <div className="bank-panel-meta">{mod.skill} · {mod.exercises.length} exercises</div>
                           </div>
                           <Button variant="ghost" size="sm" onClick={() => addModuleFromDeepResearch(mod)}>Add</Button>
                         </div>
@@ -967,20 +967,21 @@ function getPriorityItems(dx) {
                 )}
 
                 {unitBankExercises.length > 0 && (
-                  <div style={{ marginBottom: 16, border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
+                  <div className="bank-panel">
                     <button
+                      className="bank-panel-header"
                       onClick={() => setShowUnitBank(v => !v)}
-                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', padding: '10px 14px', background: 'var(--surface)', border: 'none', cursor: 'pointer', borderBottom: showUnitBank ? '1px solid var(--border)' : 'none' }}
+                      style={{ width: '100%', border: 'none', cursor: 'pointer', borderBottom: showUnitBank ? '1px solid var(--border)' : 'none' }}
                     >
-                      <span style={{ fontWeight: 600, fontSize: 'var(--text-sm)' }}>
+                      <span className="bank-panel-title">
                         <Icon.book size={14} /> Unit Bank — {subjectLabel || 'exercises'} from {selectedLevel} units ({unitBankExercises.length})
                       </span>
-                      <Icon.chevronDown size={14} style={{ transform: showUnitBank ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s' }} />
+                      <Icon.chevronDown size={14} style={{ transform: showUnitBank ? 'rotate(180deg)' : 'none', transition: 'var(--transition-fast)' }} />
                     </button>
                     {showUnitBank && (
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 0, maxHeight: 360, overflowY: 'auto' }}>
+                      <div className="bank-panel-body">
                         {unitBankExercises.map((ex, i) => (
-                          <div key={ex.id || i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '10px 14px', borderBottom: '1px solid var(--divider)' }}>
+                          <div key={ex.id || i} className="bank-panel-row">
                             <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0, flex: 1 }}>
                               <ExTypeBadge typeId={ex.type} />
                               <span style={{ fontSize: 'var(--text-sm)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>
@@ -1100,7 +1101,7 @@ function getPriorityItems(dx) {
             </Card>
           )}
           {currentStep === 4 && (
-            <Card style={{ padding: 18 }}>
+            <Card style={{ padding: 'var(--space-5)' }}>
               <SectionHeader title="Revision & Assign" />
               <div ref={revisionRef} style={{ marginTop: 16 }}>
                 {(() => {
@@ -1190,13 +1191,13 @@ function getPriorityItems(dx) {
                       <div style={{ marginTop: 10, display: 'flex', gap: 16, flexWrap: 'wrap' }}>
                         {languageDemand.tier2_vocabulary?.length > 0 && (
                           <div>
-                            <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', marginBottom: 4 }}>Tier 2 to pre-teach</div>
+                            <div className="section-label" style={{ marginBottom: 4 }}>Tier 2 to pre-teach</div>
                             <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-2)' }}>{languageDemand.tier2_vocabulary.join(' · ')}</div>
                           </div>
                         )}
                         {languageDemand.tier3_vocabulary?.length > 0 && (
                           <div>
-                            <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', marginBottom: 4 }}>Tier 3 to pre-teach</div>
+                            <div className="section-label" style={{ marginBottom: 4 }}>Tier 3 to pre-teach</div>
                             <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-2)' }}>{languageDemand.tier3_vocabulary.join(' · ')}</div>
                           </div>
                         )}
@@ -1240,7 +1241,7 @@ function getPriorityItems(dx) {
         </div>
 
         {/* Persistent Summary Side Panel */}
-        <Card className="homework-create-summary" style={{ padding: 18, position: 'sticky', top: 20 }}>
+        <Card className="homework-create-summary" style={{ padding: 'var(--space-5)', position: 'sticky', top: 20 }}>
           <SectionHeader title="Homework Summary" />
           <div style={{ marginTop: 12, fontSize: 'var(--text-sm)' }}>
             <p>Exercises: <strong style={exerciseCount > 10 ? { color: 'var(--danger)' } : {}}>{exerciseCount} / 10</strong></p>
@@ -1255,8 +1256,8 @@ function getPriorityItems(dx) {
 
 function Field({ label, children, style }) {
   return (
-    <label style={{ display: 'flex', flexDirection: 'column', gap: 4, ...style }}>
-      <span style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</span>
+    <label className="field" style={style}>
+      <span className="section-label">{label}</span>
       {children}
     </label>
   );
