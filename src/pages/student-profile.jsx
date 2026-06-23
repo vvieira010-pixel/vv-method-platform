@@ -62,34 +62,32 @@ export default function StudentProfile({ studentId, students, onNavigate }) {
     setNotes(pn || []);
   }
 
-  if (!student) return <div style={{ padding: 40, color: 'var(--muted)' }}>Student not found.</div>;
+  if (!student) return <div style={{ padding: 'var(--space-10)', color: 'var(--muted)' }}>Student not found.</div>;
 
   const activeProfile = profiles.find(p => p.isActive) || profiles[0];
 
   return (
-    <div style={{ maxWidth: 960, margin: '0 auto', padding: '28px 20px' }}>
-      {/* Back + header */}
-      <button onClick={() => onNavigate('students')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)', fontSize: 'var(--text-sm)', display: 'flex', alignItems: 'center', gap: 4, marginBottom: 16, padding: 0, fontFamily: 'var(--font-ui)' }}>
+    <div className="page-shell-lg">
+      <button className="back-link" onClick={() => onNavigate('students')}>
         <Icon.arrowL size={13} /> Back to students
       </button>
 
-      {/* Student header */}
-      <Card style={{ padding: 20, marginBottom: 20 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
+      <Card style={{ padding: 'var(--space-5)', marginBottom: 'var(--space-5)' }}>
+        <div className="card-row" style={{ gap: 'var(--space-4)' }}>
           <Avatar name={student.name} size={52} />
-          <div style={{ flex: 1 }}>
+          <div className="card-row-body">
             <h2 style={{ fontSize: 'var(--text-xl)', fontWeight: 700, margin: 0, color: 'var(--accent-deep)' }}>{student.name}</h2>
-            <p style={{ margin: '4px 0 0', fontSize: 'var(--text-sm)', color: 'var(--muted)' }}>
+            <p className="card-row-meta">
               {student.currentLevel} → {student.targetLevel} · {student.examGoal}
               {student.professionalContext ? ` · ${student.professionalContext}` : ''}
             </p>
             {activeProfile && (
-              <p style={{ margin: '4px 0 0', fontSize: 'var(--text-xs)', color: 'var(--info)' }}>
+              <p className="card-row-meta" style={{ color: 'var(--info)' }}>
                 Target: {activeProfile.label} — Overall {activeProfile.overallTarget}, Speaking {activeProfile.speakingTarget}
               </p>
             )}
           </div>
-          <div style={{ display: 'flex', gap: 8 }}>
+          <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
             <Button variant="primary" size="sm" onClick={() => onNavigate('diagnostics:create', { studentId })}>
               <Icon.diagnose size={13} /> New Diagnosis
             </Button>
@@ -100,10 +98,9 @@ export default function StudentProfile({ studentId, students, onNavigate }) {
         </div>
       </Card>
 
-      {/* Tabs */}
       <PillNav tabs={TABS} active={tab} onChange={setTab} />
 
-      <div style={{ marginTop: 20 }}>
+      <div style={{ marginTop: 'var(--space-5)' }}>
         {tab === 'overview' && <OverviewTab student={student} profiles={profiles} diagnoses={diagnoses} errors={errors} classes={classes} homework={homework} onNavigate={onNavigate} onRefresh={load} />}
         {tab === 'classes' && <ClassesTab classes={classes} students={[student]} onNavigate={onNavigate} />}
         {tab === 'diagnostics' && <DiagnosticsTab diagnoses={diagnoses} onNavigate={onNavigate} studentId={studentId} />}
@@ -137,55 +134,52 @@ function OverviewTab({ student, profiles, diagnoses, errors, classes, homework, 
   }
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-      {/* Stats */}
-      <Card style={{ padding: 16 }}>
+    <div className="stat-grid" style={{ gap: 'var(--space-4)' }}>
+      <Card style={{ padding: 'var(--space-4)' }}>
         <SectionHeader title="Progress Summary" />
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 12 }}>
+        <div className="stat-grid" style={{ marginTop: 'var(--space-3)' }}>
           {[
             { label: 'Classes completed', value: completedClasses },
             { label: 'Diagnoses', value: diagnoses.length },
             { label: 'Homework done', value: `${completedHw}/${homework.length}` },
             { label: 'Active errors', value: activeErrors },
           ].map(({ label, value }) => (
-            <div key={label} style={{ textAlign: 'center', padding: '12px 8px', background: 'var(--bg)', borderRadius: 'var(--radius-sm)' }}>
-              <div style={{ fontSize: 'var(--text-xl)', fontWeight: 700, color: 'var(--accent-deep)' }}>{value}</div>
-              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>{label}</div>
+            <div key={label} className="stat-cell">
+              <div className="stat-value">{value}</div>
+              <div className="stat-label">{label}</div>
             </div>
           ))}
         </div>
       </Card>
 
-      {/* Target profile */}
-      <Card style={{ padding: 16 }}>
+      <Card style={{ padding: 'var(--space-4)' }}>
         <SectionHeader title="Target Score Profile" />
         {activeProfile ? (
-          <div style={{ marginTop: 10 }}>
+          <div style={{ marginTop: 'var(--space-3)' }}>
             <Pill tone="info">{activeProfile.label}</Pill>
-            <div style={{ marginTop: 8, fontSize: 'var(--text-sm)' }}>
+            <div style={{ marginTop: 'var(--space-2)', fontSize: 'var(--text-sm)' }}>
               <p style={{ margin: '4px 0' }}>Overall target: <strong>{activeProfile.overallTarget ?? '—'}</strong></p>
               <p style={{ margin: '4px 0' }}>Speaking target: <strong>{activeProfile.speakingTarget ?? '—'}</strong></p>
               {activeProfile.writingTarget && <p style={{ margin: '4px 0' }}>Writing: <strong>{activeProfile.writingTarget}</strong></p>}
             </div>
           </div>
         ) : (
-          <p style={{ color: 'var(--muted)', fontSize: 'var(--text-sm)', marginTop: 10 }}>No target profile selected.</p>
+          <p className="card-row-meta" style={{ marginTop: 'var(--space-3)' }}>No target profile selected.</p>
         )}
-        <div style={{ display: 'flex', gap: 6, marginTop: 12, flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: 'var(--space-2)', marginTop: 'var(--space-3)', flexWrap: 'wrap' }}>
           <Button variant="ghost" size="sm" onClick={() => addPreset('endorsement')}>Endorsement (55/55)</Button>
           <Button variant="ghost" size="sm" onClick={() => addPreset('visascreen')}>VisaScreen (58/59)</Button>
         </div>
       </Card>
 
-      {/* Latest diagnosis summary */}
       {latestDx && (
-        <Card style={{ padding: 16, gridColumn: '1 / -1' }}>
+        <Card style={{ padding: 'var(--space-4)', gridColumn: '1 / -1' }}>
           <SectionHeader title="Latest Diagnosis" action={<Button variant="ghost" size="sm" onClick={() => onNavigate('diagnostics:create', { studentId: student.id, diagnosisId: latestDx.id })}>View</Button>} />
-          <p style={{ marginTop: 8, fontSize: 'var(--text-sm)', color: 'var(--text-2)', lineHeight: 1.6 }}>
+          <p style={{ marginTop: 'var(--space-2)', fontSize: 'var(--text-sm)', color: 'var(--text-2)', lineHeight: 1.6 }}>
             {latestDx.classSummary || latestDx.content?.overall_result || 'No summary available.'}
           </p>
           {latestDx.content?.priorityDiagnosis?.[0] && (
-            <div style={{ marginTop: 8, padding: 10, background: 'var(--warning-bg)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-sm)' }}>
+            <div className="alert-box warning" style={{ marginTop: 'var(--space-2)' }}>
               <strong>Priority:</strong> {latestDx.content.priorityDiagnosis[0].area} — {latestDx.content.priorityDiagnosis[0].whatToImprove}
             </div>
           )}
@@ -197,14 +191,14 @@ function OverviewTab({ student, profiles, diagnoses, errors, classes, homework, 
 
 function ClassesTab({ classes, students, onNavigate }) {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-      {classes.length === 0 && <Card><p style={{ padding: 16, color: 'var(--muted)' }}>No classes yet.</p></Card>}
+    <div className="stack-list">
+      {classes.length === 0 && <Card className="page-empty-state"><p className="card-row-meta">No classes yet.</p></Card>}
       {classes.map(ev => (
-        <Card key={ev.id} style={{ padding: '12px 16px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontWeight: 600 }}>{ev.title}</div>
-              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: 2 }}>
+        <Card key={ev.id} style={{ padding: 'var(--space-3) var(--space-4)' }}>
+          <div className="card-row">
+            <div className="card-row-body">
+              <div className="card-row-title">{ev.title}</div>
+              <div className="card-row-meta">
                 {new Date(ev.date).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })} · {ev.classFocus || 'No focus set'}
               </div>
             </div>
@@ -220,19 +214,19 @@ function ClassesTab({ classes, students, onNavigate }) {
 
 function DiagnosticsTab({ diagnoses, onNavigate, studentId }) {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 4 }}>
+    <div className="stack-list">
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 'var(--space-1)' }}>
         <Button variant="primary" size="sm" onClick={() => onNavigate('diagnostics:create', { studentId })}>
           <Icon.plus size={13} /> New Diagnosis
         </Button>
       </div>
-      {diagnoses.length === 0 && <Card><p style={{ padding: 16, color: 'var(--muted)' }}>No diagnoses yet.</p></Card>}
+      {diagnoses.length === 0 && <Card className="page-empty-state"><p className="card-row-meta">No diagnoses yet.</p></Card>}
       {diagnoses.map(dx => (
-        <Card key={dx.id} style={{ padding: '12px 16px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontWeight: 600 }}>{new Date(dx.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</div>
-              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: 2 }}>
+        <Card key={dx.id} style={{ padding: 'var(--space-3) var(--space-4)' }}>
+          <div className="card-row">
+            <div className="card-row-body">
+              <div className="card-row-title">{new Date(dx.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</div>
+              <div className="card-row-meta">
                 {dx.classSummary?.slice(0, 80) || 'No summary'}
               </div>
             </div>
@@ -247,16 +241,16 @@ function DiagnosticsTab({ diagnoses, onNavigate, studentId }) {
 
 function HomeworkTab({ homework, submissions }) {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-      {homework.length === 0 && <Card><p style={{ padding: 16, color: 'var(--muted)' }}>No homework assigned yet.</p></Card>}
+    <div className="stack-list">
+      {homework.length === 0 && <Card className="page-empty-state"><p className="card-row-meta">No homework assigned yet.</p></Card>}
       {homework.map(h => {
         const sub = submissions.find(s => s.homeworkId === h.id);
         return (
-          <Card key={h.id} style={{ padding: '12px 16px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontWeight: 600 }}>{h.title}</div>
-                <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: 2 }}>
+          <Card key={h.id} style={{ padding: 'var(--space-3) var(--space-4)' }}>
+            <div className="card-row">
+              <div className="card-row-body">
+                <div className="card-row-title">{h.title}</div>
+                <div className="card-row-meta">
                   Assigned {new Date(h.assignedAt || h.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
                   {h.dueDate ? ` · Due ${new Date(h.dueDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}` : ''}
                 </div>
@@ -272,16 +266,16 @@ function HomeworkTab({ homework, submissions }) {
 
 function SubmissionsTab({ submissions, homework, onNavigate }) {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-      {submissions.length === 0 && <Card><p style={{ padding: 16, color: 'var(--muted)' }}>No submissions yet.</p></Card>}
+    <div className="stack-list">
+      {submissions.length === 0 && <Card className="page-empty-state"><p className="card-row-meta">No submissions yet.</p></Card>}
       {submissions.map(sub => {
         const hw = homework.find(h => h.id === sub.homeworkId);
         return (
-          <Card key={sub.id} style={{ padding: '12px 16px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontWeight: 600 }}>{hw?.title || 'Submission'}</div>
-                <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: 2 }}>
+          <Card key={sub.id} style={{ padding: 'var(--space-3) var(--space-4)' }}>
+            <div className="card-row">
+              <div className="card-row-body">
+                <div className="card-row-title">{hw?.title || 'Submission'}</div>
+                <div className="card-row-meta">
                   {new Date(sub.submittedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
                 </div>
               </div>
@@ -298,16 +292,16 @@ function SubmissionsTab({ submissions, homework, onNavigate }) {
 function ErrorBankTab({ errors, studentId, onRefresh }) {
   return (
     <div>
-      {errors.length === 0 && <Card><p style={{ padding: 16, color: 'var(--muted)' }}>No errors in the bank yet. They'll appear after running a diagnosis.</p></Card>}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      {errors.length === 0 && <Card className="page-empty-state"><p className="card-row-meta">No errors in the bank yet. They'll appear after running a diagnosis.</p></Card>}
+      <div className="stack-list">
         {errors.map(err => (
-          <Card key={err.id} style={{ padding: '12px 16px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-              <div style={{ flex: 1 }}>
+          <Card key={err.id} style={{ padding: 'var(--space-3) var(--space-4)' }}>
+            <div className="card-row">
+              <div className="card-row-body">
                 <span style={{ color: 'var(--danger)', fontWeight: 600 }}>{err.error}</span>
                 <span style={{ color: 'var(--muted)', margin: '0 6px' }}>→</span>
                 <span style={{ color: 'var(--success)', fontWeight: 600 }}>{err.correct}</span>
-                <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: 3 }}>{err.explanation}</div>
+                <div className="card-row-meta" style={{ marginTop: 3 }}>{err.explanation}</div>
               </div>
               <Pill tone="muted">{err.type}</Pill>
               <Pill tone={err.status === 'solved' ? 'success' : err.status === 'practicing' ? 'info' : 'warning'}>{err.status}</Pill>
@@ -325,15 +319,15 @@ function ErrorBankTab({ errors, studentId, onRefresh }) {
 function VocabTab({ vocab, studentId, onRefresh }) {
   return (
     <div>
-      {vocab.length === 0 && <Card><p style={{ padding: 16, color: 'var(--muted)' }}>No vocabulary saved yet. Diagnoses will populate this bank.</p></Card>}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      {vocab.length === 0 && <Card className="page-empty-state"><p className="card-row-meta">No vocabulary saved yet. Diagnoses will populate this bank.</p></Card>}
+      <div className="stack-list">
         {vocab.map(v => (
-          <Card key={v.id} style={{ padding: '12px 16px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <div style={{ flex: 1 }}>
+          <Card key={v.id} style={{ padding: 'var(--space-3) var(--space-4)' }}>
+            <div className="card-row">
+              <div className="card-row-body">
                 <strong>{v.wordOrPhrase}</strong>
-                <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginLeft: 8 }}>{v.category}</span>
-                {v.meaning && <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-2)', marginTop: 2 }}>{v.meaning}</div>}
+                <span className="card-row-meta" style={{ marginLeft: 'var(--space-2)', marginTop: 0, display: 'inline' }}>{v.category}</span>
+                {v.meaning && <div className="card-row-meta">{v.meaning}</div>}
               </div>
               <Pill tone={v.status === 'learned' ? 'success' : v.status === 'reviewing' ? 'info' : 'muted'}>{v.status}</Pill>
               <Button variant="ghost" size="sm" onClick={async () => { await updateVocabularyEntry(v.id, { status: 'learned' }); onRefresh(); }}>Mark learned</Button>
@@ -356,23 +350,21 @@ function ProgressTab({ notes, diagnoses, studentId, newNote, setNewNote, onRefre
 
   return (
     <div>
-      {/* Add note */}
-      <Card style={{ padding: 16, marginBottom: 14 }}>
+      <Card style={{ padding: 'var(--space-4)', marginBottom: 'var(--space-4)' }}>
         <SectionHeader title="Add Progress Note" />
-        <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+        <div style={{ display: 'flex', gap: 'var(--space-2)', marginTop: 'var(--space-3)' }}>
           <input className="input" style={{ flex: 1 }} value={newNote} onChange={e => setNewNote(e.target.value)} placeholder="Write a progress note…" onKeyDown={e => e.key === 'Enter' && addNote()} />
           <Button variant="primary" size="sm" onClick={addNote}>Add</Button>
         </div>
       </Card>
 
-      {/* Notes timeline */}
       {notes.length === 0 ? (
-        <Card><p style={{ padding: 16, color: 'var(--muted)' }}>No progress notes yet.</p></Card>
+        <Card className="page-empty-state"><p className="card-row-meta">No progress notes yet.</p></Card>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <div className="stack-list">
           {notes.map(n => (
-            <Card key={n.id} style={{ padding: '12px 16px' }}>
-              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginBottom: 4 }}>
+            <Card key={n.id} style={{ padding: 'var(--space-3) var(--space-4)' }}>
+              <div className="card-row-meta" style={{ marginBottom: 'var(--space-1)' }}>
                 {new Date(n.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })} · {n.sourceType}
               </div>
               <div style={{ fontSize: 'var(--text-sm)', lineHeight: 1.6 }}>{n.note}</div>
