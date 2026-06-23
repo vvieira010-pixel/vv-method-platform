@@ -15,30 +15,23 @@ const SENSITIVE_LOCAL_KEYS = new Set([
   'vv:deepgram_api_key',
 ]);
 
-/** Password-style input with an eye toggle to reveal/hide the value. */
 function SecretInput({ value, onChange, placeholder }) {
   const [show, setShow] = useState(false);
   return (
-    <div style={{ position: 'relative' }}>
+    <div className="secret-input">
       <input
         className="input"
         type={show ? 'text' : 'password'}
         value={value}
         onChange={onChange}
         placeholder={placeholder}
-        style={{ width: '100%', paddingRight: 40 }}
       />
       <button
         type="button"
         onClick={() => setShow(s => !s)}
         aria-label={show ? 'Hide key' : 'Show key'}
         title={show ? 'Hide' : 'Show'}
-        style={{
-          position: 'absolute', right: 6, top: '50%', transform: 'translateY(-50%)',
-          background: 'none', border: 'none', cursor: 'pointer', padding: 6,
-          display: 'grid', placeItems: 'center',
-          color: show ? 'var(--primary)' : 'var(--muted)',
-        }}
+        className={`secret-toggle${show ? ' active' : ''}`}
       >
         <Icon.eye size={16} />
       </button>
@@ -278,17 +271,17 @@ export default function SettingsPage({ onNavigate }) {
   }
 
   return (
-    <div style={{ maxWidth: 640, margin: '0 auto', padding: '28px 20px' }}>
-      <h1 style={S.headline}>Settings</h1>
+    <div className="page-shell-narrow">
+      <SectionHeader title="Settings" />
 
       {/* API Keys */}
-      <Card style={{ padding: 20, marginTop: 20 }}>
+      <Card style={{ marginTop: 'var(--space-5)' }}>
         <SectionHeader title="AI Provider Keys" icon={<Icon.spark size={15} />} />
-        <p style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', margin: '8px 0 16px', lineHeight: 1.6 }}>
+        <p className="card-row-meta" style={{ margin: 'var(--space-2) 0 var(--space-4)', lineHeight: 1.6 }}>
           Keys are stored in your browser only. Priority: Gemini (free) → OpenRouter (free models, auto-cascade) → Groq (free, fast) → Anthropic → OpenAI.
           Any one key is enough. <strong>Tip:</strong> paste several keys in a field (comma-separated) and the app rotates to the next one when a key hits its limit. Keys are not included in platform backups.
         </p>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
           <Field label="Groq API Key (recommended — free)">
             <SecretInput value={groqKey} onChange={e => setGroqKey(e.target.value)} placeholder="gsk_…" />
             <a href="https://console.groq.com/keys" target="_blank" rel="noopener noreferrer" style={{ fontSize: 'var(--text-xs)', color: 'var(--accent)', marginTop: 3 }}>Get a free Groq key →</a>
@@ -313,7 +306,7 @@ export default function SettingsPage({ onNavigate }) {
           <Field label="OpenAI API Key (fallback)">
             <SecretInput value={openaiKey} onChange={e => setOpenaiKey(e.target.value)} placeholder="sk-…" />
           </Field>
-          <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 4 }}>
+          <div style={{ display: 'flex', gap: 'var(--space-2)', alignItems: 'center', marginTop: 'var(--space-1)' }}>
             <Button variant="primary" onClick={saveKeys}>Save Keys</Button>
             {saved && <span style={{ color: 'var(--success)', fontSize: 'var(--text-sm)' }}>{saved}</span>}
           </div>
@@ -321,9 +314,9 @@ export default function SettingsPage({ onNavigate }) {
       </Card>
 
       {/* TTS Keys */}
-      <Card style={{ padding: 20, marginTop: 14 }}>
+      <Card style={{ marginTop: 'var(--space-4)' }}>
         <SectionHeader title="TTS — Listening Exercise Audio" icon={<Icon.mic size={15} />} />
-        <p style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', margin: '8px 0 4px', lineHeight: 1.6 }}>
+        <p className="card-row-meta" style={{ margin: 'var(--space-2) 0 var(--space-1)', lineHeight: 1.6 }}>
           Audio for listening exercises is generated in this order:
         </p>
         <ol style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', margin: '4px 0 16px', paddingLeft: 18, lineHeight: 1.8 }}>
@@ -334,7 +327,7 @@ export default function SettingsPage({ onNavigate }) {
           <li><strong>Piper</strong> — offline/local, if server URL is set below</li>
           <li><strong>Browser speech</strong> — always available, no key needed</li>
         </ol>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
           <Field label="ElevenLabs API Key (priority)">
             <SecretInput value={elevenlabsKey} onChange={e => setElevenlabsKey(e.target.value)} placeholder="sk_…" />
             <a href="https://elevenlabs.io/app/settings/api-keys" target="_blank" rel="noopener noreferrer" style={{ fontSize: 'var(--text-xs)', color: 'var(--accent)', marginTop: 3 }}>Get your ElevenLabs key →</a>
@@ -343,18 +336,10 @@ export default function SettingsPage({ onNavigate }) {
             <SecretInput value={deepgramKey} onChange={e => setDeepgramKey(e.target.value)} placeholder="dg_… or Deepgram key" />
             <a href="https://console.deepgram.com/" target="_blank" rel="noopener noreferrer" style={{ fontSize: 'var(--text-xs)', color: 'var(--accent)', marginTop: 3 }}>Get your Deepgram key →</a>
           </Field>
-          <div style={{
-            padding: '10px 14px', borderRadius: 0, fontSize: 'var(--text-xs)',
-            background: 'var(--accent-subtle)', color: 'var(--muted)', lineHeight: 1.6,
-            border: '1px solid var(--accent-soft)',
-          }}>
+          <div className="note-box">
             <strong>Voice note</strong> — use one woman voice and one man voice for listening variety. The default server setup uses an ElevenLabs woman voice first, Deepgram's Aura fallback, then OpenAI <em>nova</em>. You can change voices with <code>ELEVENLABS_VOICE_ID</code>, <code>DEEPGRAM_TTS_MODEL</code>, or <code>OPENAI_TTS_VOICE</code> in the server environment.
           </div>
-          <div style={{
-            padding: '10px 14px', borderRadius: 0, fontSize: 'var(--text-xs)',
-            background: 'var(--accent-subtle)', color: 'var(--muted)', lineHeight: 1.6,
-            border: '1px solid var(--accent-soft)',
-          }}>
+          <div className="note-box">
             <strong>OpenAI TTS</strong> — uses your OpenAI key from the AI section above. No extra key needed.
             Voices: <em>alloy</em> (neutral), <em>nova</em> (female), <em>onyx</em> (male). Active automatically if ElevenLabs and Deepgram are not set or fail.
           </div>
@@ -372,7 +357,7 @@ export default function SettingsPage({ onNavigate }) {
               Listen to samples at <a href="https://rhasspy.github.io/piper-samples" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)' }}>Piper samples</a> and download models from <a href="https://huggingface.co/rhasspy/piper-voices/tree/main" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)' }}>Piper voices</a>. Used only when ElevenLabs, Deepgram, OpenAI, and Gemini are not configured.
             </span>
           </Field>
-          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: 'var(--space-2)', alignItems: 'center' }}>
             <Button variant="primary" onClick={saveKeys}>Save TTS Keys</Button>
             {saved && <span style={{ color: 'var(--success)', fontSize: 'var(--text-sm)' }}>{saved}</span>}
           </div>
@@ -380,9 +365,9 @@ export default function SettingsPage({ onNavigate }) {
       </Card>
 
       {/* Student dashboard memo */}
-      <Card style={{ padding: 20, marginTop: 14 }}>
+      <Card style={{ marginTop: 'var(--space-4)' }}>
         <SectionHeader title="Student Dashboard Memo" icon={<Icon.inbox size={15} />} />
-        <p style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', margin: '8px 0 12px', lineHeight: 1.6 }}>
+        <p className="card-row-meta" style={{ margin: 'var(--space-2) 0 var(--space-3)', lineHeight: 1.6 }}>
           This general memo appears for every student on the Memo Board.
         </p>
         <Field label="General memo for all students">
@@ -400,9 +385,9 @@ export default function SettingsPage({ onNavigate }) {
       </Card>
 
       {/* Class & Exam Settings */}
-      <Card style={{ padding: 20, marginTop: 14 }}>
+      <Card style={{ marginTop: 'var(--space-4)' }}>
         <SectionHeader title="Class & Exam Date" icon={<Icon.calendar size={15} />} />
-        <p style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', margin: '8px 0 14px', lineHeight: 1.6 }}>
+        <p className="card-row-meta" style={{ margin: 'var(--space-2) 0 var(--space-4)', lineHeight: 1.6 }}>
           Set the MET exam date for your students. It appears as a live countdown on their Home dashboard.
           Leave blank to hide the countdown.
         </p>
@@ -472,9 +457,9 @@ export default function SettingsPage({ onNavigate }) {
 
       {/* Set / change password */}
       {activeSession && (
-        <Card style={{ padding: 20, marginTop: 14 }}>
+        <Card style={{ marginTop: 'var(--space-4)' }}>
           <SectionHeader title="Account Password" icon={<Icon.lock size={15} />} />
-          <p style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', margin: '8px 0 16px', lineHeight: 1.6 }}>
+          <p className="card-row-meta" style={{ margin: 'var(--space-2) 0 var(--space-4)', lineHeight: 1.6 }}>
             Set a password so you can sign in with your email and password next time — no login link needed.
           </p>
           <form onSubmit={handleSetPassword} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -516,7 +501,7 @@ export default function SettingsPage({ onNavigate }) {
 
       {/* Cloud sync */}
       {supabaseConfigured && (
-        <Card style={{ padding: 20, marginTop: 14 }}>
+        <Card style={{ marginTop: 'var(--space-4)' }}>
           <SectionHeader title="Cloud Sync" icon={<Icon.upload size={15} />} />
           <p style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', margin: '8px 0 14px' }}>
             Push the data stored in this browser (students, diagnoses, homework, submissions, reviews…)
@@ -577,7 +562,7 @@ export default function SettingsPage({ onNavigate }) {
       )}
 
       {/* Platform info */}
-      <Card style={{ padding: 20, marginTop: 14 }}>
+      <Card style={{ marginTop: 'var(--space-4)' }}>
         <SectionHeader title="Platform" />
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 12, fontSize: 'var(--text-sm)', color: 'var(--muted)' }}>
           <p>MET Proficiency Mastery — Michigan English Test Preparation for Nurses</p>
@@ -605,14 +590,10 @@ export default function SettingsPage({ onNavigate }) {
 
 function Field({ label, children }) {
   return (
-    <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-      <span style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</span>
+    <label className="field">
+      <span className="field-label">{label}</span>
       {children}
     </label>
   );
 }
-
-const S = {
-  headline: { fontFamily: 'var(--font-ui)', fontSize: 'var(--text-2xl)', fontWeight: 700, color: 'var(--accent-deep)', margin: 0 },
-};
 

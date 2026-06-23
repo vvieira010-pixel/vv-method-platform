@@ -28,9 +28,9 @@ function groupBy(items, keyFn) {
 
 function GroupHeader({ label, count }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 0 6px', marginTop: 8, borderBottom: '1px solid var(--divider)' }}>
-      <span style={{ fontWeight: 700, fontSize: 'var(--text-xs)', textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--muted)' }}>{label}</span>
-      <span style={{ fontSize: 'var(--text-xs)', color: 'var(--faint)', background: 'var(--bg)', borderRadius: 99, padding: '1px 7px', border: '1px solid var(--divider)' }}>{count}</span>
+    <div className="group-header">
+      <span className="group-header-label">{label}</span>
+      <span className="group-header-count">{count}</span>
     </div>
   );
 }
@@ -50,33 +50,19 @@ export default function ExercisesPage({ onNavigate }) {
   }
 
   return (
-    <div style={{ maxWidth: 900, margin: '0 auto', padding: '24px 16px' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
-        <div>
-          <h1 style={{ fontFamily: 'var(--font-ui)', fontSize: 'var(--text-2xl)', fontWeight: 700, color: 'var(--accent-deep)', margin: 0 }}>
-            Exercise Library
-          </h1>
-          <p style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', margin: '4px 0 0' }}>
-            Browse packs and saved exercises. Assign via Create Homework.
-          </p>
-        </div>
-        <Button variant="primary" onClick={() => onNavigate('homework-create')}>
-          <Icon.plus size={14} /> Create Homework
-        </Button>
-      </div>
+    <div className="page-shell">
+      <SectionHeader
+        title="Exercise Library"
+        sub="Browse packs and saved exercises. Assign via Create Homework."
+        action={<Button variant="primary" onClick={() => onNavigate('homework-create')}><Icon.plus size={14} /> Create Homework</Button>}
+      />
 
-      <nav style={{ display: 'flex', gap: 4, marginBottom: 20, borderBottom: '1px solid var(--border)', paddingBottom: 0 }}>
+      <nav className="tabs-line">
         {PACK_TABS.map(t => (
           <button
             key={t.id}
             onClick={() => setTab(t.id)}
-            style={{
-              padding: '8px 14px', border: 'none', background: 'none', cursor: 'pointer',
-              fontFamily: 'var(--font-ui)', fontSize: 'var(--text-sm)', fontWeight: tab === t.id ? 700 : 400,
-              color: tab === t.id ? 'var(--accent)' : 'var(--muted)',
-              borderBottom: tab === t.id ? '2px solid var(--accent)' : '2px solid transparent',
-              marginBottom: -1,
-            }}
+            className={`tab-line${tab === t.id ? ' active' : ''}`}
           >
             {t.label}
           </button>
@@ -84,39 +70,36 @@ export default function ExercisesPage({ onNavigate }) {
       </nav>
 
       {tab === 'library' && (
-        <Card style={{ padding: 16 }}>
+        <Card>
           {library.length === 0 ? (
-            <p style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', textAlign: 'center', padding: '32px 0' }}>
-              No saved exercises. In the homework builder, tap ☆ on any exercise to save it here.
-            </p>
+            <Card className="page-empty-state">
+              <p className="card-row-meta">No saved exercises. In the homework builder, tap ☆ on any exercise to save it here.</p>
+            </Card>
           ) : (() => {
             const typeOrder = EX_TYPES.map(t => t.id);
             const grouped = groupBy(library, ex => ex.type);
             const sortedKeys = [...grouped.keys()].sort((a, b) => typeOrder.indexOf(a) - typeOrder.indexOf(b));
             return (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+              <div>
                 {sortedKeys.map(typeId => {
                   const exType = EX_TYPES.find(t => t.id === typeId);
                   const items = grouped.get(typeId);
                   return (
                     <div key={typeId}>
                       <GroupHeader label={exType?.label || typeId} count={items.length} />
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 8 }}>
+                      <div className="page-list" style={{ marginTop: 'var(--space-2)' }}>
                         {items.map(ex => (
-                          <div key={ex.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', background: 'var(--surface)' }}>
+                          <div key={ex.id} className="exercise-item">
                             <ExTypeBadge typeId={ex.type} />
                             <span style={{ flex: 1, fontSize: 'var(--text-sm)', color: 'var(--text-2)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                               {exercisePreview(ex)}
                             </span>
                             {ex.usageCount > 0 && (
-                              <span style={{ fontSize: 'var(--text-xs)', color: 'var(--faint)' }}>Used {ex.usageCount}×</span>
+                              <span className="card-row-meta">Used {ex.usageCount}×</span>
                             )}
-                            <button
-                              onClick={() => handleDelete(ex.id)}
-                              style={{ padding: '3px 8px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', background: 'none', cursor: 'pointer', fontSize: 'var(--text-xs)', color: 'var(--danger)' }}
-                            >
+                            <Button variant="ghost" size="sm" style={{ color: 'var(--danger)' }} onClick={() => handleDelete(ex.id)}>
                               Remove
-                            </button>
+                            </Button>
                           </div>
                         ))}
                       </div>
@@ -149,24 +132,21 @@ function PackTab({ title, modules, onNavigate }) {
   const totalExercises = modules.reduce((sum, m) => sum + (m.exercises?.length || 0), 0);
 
   return (
-    <Card style={{ padding: 16 }}>
-      <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 4 }}>
-        <SectionHeader title={title} />
-        <span style={{ fontSize: 'var(--text-xs)', color: 'var(--faint)' }}>{modules.length} modules · {totalExercises} exercises</span>
-      </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+    <Card>
+      <SectionHeader title={title} sub={`${modules.length} modules · ${totalExercises} exercises`} />
+      <div>
         {sortedKeys.map(skill => {
           const items = grouped.get(skill);
           const skillExerciseCount = items.reduce((sum, m) => sum + (m.exercises?.length || 0), 0);
           return (
             <div key={skill}>
               <GroupHeader label={skill} count={`${items.length} modules · ${skillExerciseCount} exercises`} />
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 0, marginBottom: 4 }}>
+              <div className="page-list">
                 {items.map(mod => (
-                  <div key={mod.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 4px', borderBottom: '1px solid var(--divider)' }}>
-                    <div>
+                  <div key={mod.id} className="card-row" style={{ padding: 'var(--space-3) var(--space-1)', borderBottom: '1px solid var(--divider)' }}>
+                    <div className="card-row-body">
                       <div style={{ fontWeight: 500, fontSize: 'var(--text-sm)' }}>{mod.label}</div>
-                      <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>{mod.exercises?.length || 0} exercises</div>
+                      <div className="card-row-meta">{mod.exercises?.length || 0} exercises</div>
                     </div>
                     <Button variant="ghost" size="sm" onClick={() => onNavigate('homework-create')}>
                       Add to Homework

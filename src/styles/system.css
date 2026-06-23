@@ -991,6 +991,174 @@ p {
   text-align: center;
 }
 
+.page-shell-narrow {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: var(--space-7) var(--space-5);
+}
+
+/* ── Card row — standard flex layout for list items ───────────── */
+.card-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.card-row-body {
+  flex: 1;
+  min-width: 160px;
+}
+
+.card-row-title {
+  font-weight: var(--weight-bold);
+}
+
+.card-row-meta {
+  font-size: var(--text-xs);
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+/* ── Evidence chips (diagnostics) ─────────────────────────────── */
+.evidence-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: var(--space-2);
+}
+
+.evidence-chip {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 2px 6px;
+  font-size: 11px;
+  font-weight: var(--weight-bold);
+  color: var(--muted);
+  background: var(--bg);
+}
+
+/* ── Field — form field wrapper with label ────────────────────── */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* ── Underline tabs ───────────────────────────────────────────── */
+.tabs-line {
+  display: flex;
+  gap: var(--space-1);
+  border-bottom: 1px solid var(--border);
+  margin-bottom: var(--space-5);
+}
+
+.tab-line {
+  padding: var(--space-2) var(--space-4);
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-normal);
+  color: var(--muted);
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+}
+
+.tab-line:hover { color: var(--text); }
+
+.tab-line.active {
+  font-weight: var(--weight-bold);
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+/* ── Group header — section dividers in lists ─────────────────── */
+.group-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) 0 var(--space-2);
+  margin-top: var(--space-2);
+  border-bottom: 1px solid var(--divider);
+}
+
+.group-header-label {
+  font-weight: var(--weight-bold);
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+
+.group-header-count {
+  font-size: var(--text-xs);
+  color: var(--faint);
+  background: var(--bg);
+  border-radius: 99px;
+  padding: 1px 7px;
+  border: 1px solid var(--divider);
+}
+
+/* ── Exercise list item ───────────────────────────────────────── */
+.exercise-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+}
+
+/* ── Note / tip box ───────────────────────────────────────────── */
+.note-box {
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--text-xs);
+  background: var(--accent-subtle);
+  color: var(--muted);
+  line-height: 1.6;
+  border: 1px solid var(--accent-soft);
+}
+
+/* ── Card accent form ─────────────────────────────────────────── */
+.card-form {
+  margin-bottom: var(--space-5);
+  padding: var(--space-5);
+  border: 2px solid var(--accent);
+}
+
+/* ── Secret input wrapper ─────────────────────────────────────── */
+.secret-input {
+  position: relative;
+}
+
+.secret-input .input {
+  width: 100%;
+  padding-right: 40px;
+}
+
+.secret-toggle {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 6px;
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+}
+
+.secret-toggle.active {
+  color: var(--primary);
+}
+
 /* ══════════════════════════════════════════════════════════════════
    6. TEACHER DASHBOARD (td-* classes)
    ══════════════════════════════════════════════════════════════════ */
@@ -4091,6 +4259,11 @@ textarea:focus, .textarea:focus {
   border-color: var(--border);
 }
 
+[data-theme="dark"] .evidence-chip {
+  background: var(--faint);
+  border-color: var(--border);
+}
+
 [data-theme="dark"] .student-upcoming-row {
   border-bottom-color: var(--divider);
 }
@@ -4229,8 +4402,23 @@ textarea:focus, .textarea:focus {
   border-color: var(--border);
 }
 
+[data-theme="dark"] .exercise-item {
+  background: var(--surface);
+  border-color: var(--border);
+}
+
 [data-theme="dark"] .student-confidence-list .student-upcoming-row {
   border-bottom-color: var(--divider);
+}
+
+[data-theme="dark"] .note-box {
+  background: rgba(20,136,145,0.08);
+  border-color: rgba(72,199,199,0.15);
+}
+
+[data-theme="dark"] .tab-line.active {
+  color: var(--accent-soft);
+  border-bottom-color: var(--accent-soft);
 }
 
 /* ══════════════════════════════════════════════════════════════════
