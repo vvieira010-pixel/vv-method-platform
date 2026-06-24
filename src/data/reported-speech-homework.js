@@ -12,7 +12,7 @@ export async function seedReportedSpeech(studentId) {
       ...REPORTED_SPEECH_HOMEWORK,
       studentId: sid,
       activities: REPORTED_SPEECH_HOMEWORK.activities.map(a => ({ ...a })),
-      topicExplanations: REPORTED_SPEECH_HOMEWORK.topicExplanations.map(t => ({ ...t, content: [...t.content] })),
+      topicExplanations: REPORTED_SPEECH_HOMEWORK.topicExplanations.map(t => ({ ...t, content: t.content })),
     });
     results.push(hw);
   }

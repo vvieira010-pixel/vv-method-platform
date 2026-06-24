@@ -371,28 +371,52 @@ function getPriorityItems(dx) {
     }
     
     setGenerating(true);
-    setGroupGenStatus('Creating blueprint…');
+    const errors = [];
     
     try {
-      // 1. Generate Blueprint
-      const bpData = await callAI(buildHomeworkBlueprintPrompt({ student, diagnosis }), withSkills('homework', { ...HOMEWORK_AI_BASE_OPTIONS, max_tokens: 1200, temperature: 0.7 }));
+      setGroupGenStatus('Creating blueprint…');
+      const bpData = await callAI(
+        buildHomeworkBlueprintPrompt({ student, diagnosis }),
+        withSkills('homework', { ...HOMEWORK_AI_BASE_OPTIONS, max_tokens: 1200, temperature: 0.7 })
+      );
       const blueprint = parseAiJson(bpData.content?.map(b => b.text || '').join('') || '');
       const taskTypes = normalizeTaskTypes(blueprint?.taskTypes);
       
-      setGroupGenStatus('Generating tasks…');
-      // 2. Generate Tasks
+      setGroupGenStatus(`Generating ${taskTypes.length} tasks…`);
       const tasks = [];
+      let taskNum = 0;
       for (const taskType of taskTypes) {
-        const tData = await callAI(buildTaskGeneratorPrompt({ student, diagnosis, taskBlueprint: blueprint, taskType }), withSkills('homework', { ...HOMEWORK_AI_BASE_OPTIONS, max_tokens: 2500, temperature: 0.8 }));
-        tasks.push(parseAiJson(tData.content?.map(b => b.text || '').join('') || ''));
+        taskNum++;
+        setGroupGenStatus(`Generating task ${taskNum}/${taskTypes.length} (${taskType})…`);
+        try {
+          const tData = await callAI(
+            buildTaskGeneratorPrompt({ student, diagnosis, taskBlueprint: blueprint, taskType }),
+            withSkills('homework', { ...HOMEWORK_AI_BASE_OPTIONS, max_tokens: 2500, temperature: 0.8 })
+          );
+          const parsed = parseAiJson(tData.content?.map(b => b.text || '').join('') || '');
+          tasks.push(parsed);
+        } catch (e) {
+          errors.push(`${taskType}: ${e.message}`);
+        }
       }
+      
       const { exercises, skipped } = buildCompleteExercises(tasks);
-      if (!exercises.length) throw new Error('AI returned tasks, but none were complete enough to add.');
+      if (!exercises.length) {
+        const detail = errors.length ? ` (${errors.join('; ')})` : '';
+        throw new Error(`No valid exercises generated${detail}`);
+      }
       
       setGroupGenStatus('Refining and finalising…');
-      // 3. Final Refinement
-      const refData = await callAI(buildFinalRefinementPrompt({ student, blueprint, tasks }), withSkills('homework', { ...HOMEWORK_AI_BASE_OPTIONS, max_tokens: 1800, temperature: 0.7 }));
-      const refinement = parseAiJson(refData.content?.map(b => b.text || '').join('') || '');
+      let refinement = {};
+      try {
+        const refData = await callAI(
+          buildFinalRefinementPrompt({ student, blueprint, tasks }),
+          withSkills('homework', { ...HOMEWORK_AI_BASE_OPTIONS, max_tokens: 1800, temperature: 0.7 })
+        );
+        refinement = parseAiJson(refData.content?.map(b => b.text || '').join('') || '');
+      } catch (e) {
+        errors.push(`refinement: ${e.message}`);
+      }
 
       setForm(f => ({
         ...f,
@@ -406,7 +430,7 @@ function getPriorityItems(dx) {
       }));
       setExpandedEx(exercises[0]?.id);
       setTimeout(() => scrollToExercises(), 100);
-      window.toast?.(`Homework generated successfully: ${exercises.length} complete exercises${skipped ? `, ${skipped} skipped` : ''}.`, 'ok');
+      window.toast?.(`Homework generated: ${exercises.length} exercises${skipped ? `, ${skipped} skipped` : ''}${errors.length ? ` (${errors.length} warnings)` : ''}.`, errors.length ? 'warn' : 'ok');
     } catch (e) {
       window.toast?.(`Cascade generation failed: ${e.message}`, 'warn');
     }

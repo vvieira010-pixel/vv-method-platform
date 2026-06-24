@@ -21,7 +21,7 @@ function loadToggleState() {
 }
 
 export function getSkillsForTask(taskType) {
-  const activeIds = loadToggleState();
+  const activeIds = loadToggleState() || [];
   return getEnabledSkillsForTask(taskType, activeIds);
 }
 
