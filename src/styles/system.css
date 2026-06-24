@@ -1433,6 +1433,109 @@ p {
 }
 .info-panel.accent { border-color: var(--accent-soft); box-shadow: var(--shadow-sm); }
 
+/* ── Modal ── */
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 50;
+  background: rgba(0,0,0,0.45);
+  display: flex; align-items: center; justify-content: center;
+  padding: var(--space-6);
+}
+.modal-body {
+  background: var(--surface);
+  border-radius: var(--radius);
+  max-width: 560px; width: 100%;
+  max-height: 90vh; overflow-y: auto;
+  box-shadow: 0 16px 48px rgba(0,0,0,0.28);
+  padding: var(--space-7);
+}
+
+/* ── Sticky context bar ── */
+.sticky-bar {
+  position: sticky; top: 0; z-index: 20;
+  background: var(--surface-glass);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+}
+.sticky-bar-inner {
+  max-width: 960px; margin: 0 auto;
+  padding: 0 20px; height: 54px;
+  display: flex; align-items: center; gap: 10px;
+}
+
+/* ── Response box (student text, prompts, etc.) ── */
+.response-box {
+  padding: 8px 10px;
+  background: var(--bg);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+  line-height: 1.6;
+  color: var(--text-2);
+  white-space: pre-wrap;
+}
+
+/* ── AI result highlight ── */
+.ai-result-box {
+  padding: 10px 12px;
+  background: rgba(var(--accent-rgb, 56,111,249), 0.06);
+  border: 1px solid var(--accent-light);
+  border-radius: var(--radius-sm);
+}
+
+/* ── Status alerts ── */
+.status-alert {
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  display: flex; align-items: center; gap: 8px;
+}
+.status-alert.success {
+  background: rgba(46,106,63,.08);
+  border: 1px solid var(--success);
+  color: var(--success);
+}
+.status-alert.warning {
+  background: var(--warning-bg);
+  border: 1px solid var(--warning-soft);
+  color: var(--warning-text);
+}
+
+/* ── Reply bubble ── */
+.reply-bubble {
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--accent-subtle);
+  border: 1px solid var(--accent-soft);
+  font-size: var(--text-sm);
+  line-height: 1.5;
+}
+
+/* ── Toggle row ── */
+.toggle-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer; gap: 16px;
+  background: var(--bg);
+  transition: background 0.15s, border-color 0.15s;
+}
+.toggle-row.active-accent {
+  background: var(--accent-subtle);
+  border-color: var(--accent-light);
+}
+.toggle-row.active-warning {
+  background: var(--warning-bg);
+  border-color: var(--warning-soft);
+}
+
+/* ── Divider line ── */
+.divider-v { width: 1px; height: 18px; background: var(--border); flex-shrink: 0; }
+
+/* ── Truncate ── */
+.truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
 /* ══════════════════════════════════════════════════════════════════
    6. TEACHER DASHBOARD (td-* classes)
    ══════════════════════════════════════════════════════════════════ */
@@ -3487,10 +3590,13 @@ textarea:focus, .textarea:focus {
 .mb-8 { margin-bottom: 32px; }
 
 /* Text utilities */
+.text-xs { font-size: var(--text-xs); }
 .text-sm { font-size: var(--text-sm); }
 .text-md { font-size: var(--text-md); }
 .text-13 { font-size: 13px; }
+.text-2 { color: var(--text-2); }
 .fw-600 { font-weight: 600; }
+.lh-snug { line-height: 1.5; }
 
 /* Layout utilities */
 .flex-between {
@@ -3498,6 +3604,10 @@ textarea:focus, .textarea:focus {
   align-items: center;
   justify-content: space-between;
 }
+.flex-wrap { flex-wrap: wrap; }
+.flex-1 { flex: 1; min-width: 0; }
+.flex-shrink-0 { flex-shrink: 0; }
+.w-full { width: 100%; }
 .pointer { cursor: pointer; }
 .eyebrow {
   font-size: var(--text-xs);
