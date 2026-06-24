@@ -281,7 +281,7 @@ export default function SettingsPage({ onNavigate }) {
           Keys are stored in your browser only. Priority: Gemini (free) → OpenRouter (free models, auto-cascade) → Groq (free, fast) → Anthropic → OpenAI.
           Any one key is enough. <strong>Tip:</strong> paste several keys in a field (comma-separated) and the app rotates to the next one when a key hits its limit. Keys are not included in platform backups.
         </p>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+        <div className="flex flex-col gap-3">
           <Field label="Groq API Key (recommended — free)">
             <SecretInput value={groqKey} onChange={e => setGroqKey(e.target.value)} placeholder="gsk_…" />
             <a href="https://console.groq.com/keys" target="_blank" rel="noopener noreferrer" style={{ fontSize: 'var(--text-xs)', color: 'var(--accent)', marginTop: 3 }}>Get a free Groq key →</a>
@@ -306,7 +306,7 @@ export default function SettingsPage({ onNavigate }) {
           <Field label="OpenAI API Key (fallback)">
             <SecretInput value={openaiKey} onChange={e => setOpenaiKey(e.target.value)} placeholder="sk-…" />
           </Field>
-          <div style={{ display: 'flex', gap: 'var(--space-2)', alignItems: 'center', marginTop: 'var(--space-1)' }}>
+          <div className="flex items-center gap-2" style={{ marginTop: 'var(--space-1)' }}>
             <Button variant="primary" onClick={saveKeys}>Save Keys</Button>
             {saved && <span style={{ color: 'var(--success)', fontSize: 'var(--text-sm)' }}>{saved}</span>}
           </div>
@@ -327,7 +327,7 @@ export default function SettingsPage({ onNavigate }) {
           <li><strong>Piper</strong> — offline/local, if server URL is set below</li>
           <li><strong>Browser speech</strong> — always available, no key needed</li>
         </ol>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+        <div className="flex flex-col gap-3">
           <Field label="ElevenLabs API Key (priority)">
             <SecretInput value={elevenlabsKey} onChange={e => setElevenlabsKey(e.target.value)} placeholder="sk_…" />
             <a href="https://elevenlabs.io/app/settings/api-keys" target="_blank" rel="noopener noreferrer" style={{ fontSize: 'var(--text-xs)', color: 'var(--accent)', marginTop: 3 }}>Get your ElevenLabs key →</a>
@@ -357,7 +357,7 @@ export default function SettingsPage({ onNavigate }) {
               Listen to samples at <a href="https://rhasspy.github.io/piper-samples" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)' }}>Piper samples</a> and download models from <a href="https://huggingface.co/rhasspy/piper-voices/tree/main" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)' }}>Piper voices</a>. Used only when ElevenLabs, Deepgram, OpenAI, and Gemini are not configured.
             </span>
           </Field>
-          <div style={{ display: 'flex', gap: 'var(--space-2)', alignItems: 'center' }}>
+          <div className="flex items-center gap-2">
             <Button variant="primary" onClick={saveKeys}>Save TTS Keys</Button>
             {saved && <span style={{ color: 'var(--success)', fontSize: 'var(--text-sm)' }}>{saved}</span>}
           </div>
@@ -420,7 +420,7 @@ export default function SettingsPage({ onNavigate }) {
           Paste your Zoom Personal Meeting Room link. Every calendar invite you send from a class
           will include this link and an <code>.ics</code> calendar attachment for the student.
         </p>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div className="flex flex-col gap-3">
           <Field label="Zoom meeting link">
             <input
               className="input"
@@ -462,7 +462,7 @@ export default function SettingsPage({ onNavigate }) {
           <p className="card-row-meta" style={{ margin: 'var(--space-2) 0 var(--space-4)', lineHeight: 1.6 }}>
             Set a password so you can sign in with your email and password next time — no login link needed.
           </p>
-          <form onSubmit={handleSetPassword} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <form onSubmit={handleSetPassword} className="flex flex-col gap-3">
             <Field label="New password (min. 6 characters)">
               <input
                 className="input"
@@ -523,7 +523,7 @@ export default function SettingsPage({ onNavigate }) {
             Enable pedagogical skill prompts that augment AI behaviour. Each task type uses specific skills
             to improve diagnosis quality, feedback structure, exercise scaffolding, and student guidance.
           </p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <div className="flex flex-col gap-3">
             {getAllTaskTypes().map(task => {
               const enabled = skillToggles[task.id] !== false;
               return (
@@ -564,12 +564,12 @@ export default function SettingsPage({ onNavigate }) {
       {/* Platform info */}
       <Card style={{ marginTop: 'var(--space-4)' }}>
         <SectionHeader title="Platform" />
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 12, fontSize: 'var(--text-sm)', color: 'var(--muted)' }}>
+        <div className="flex flex-col gap-2 text-sm text-muted" style={{ marginTop: 12 }}>
           <p>MET Proficiency Mastery — Michigan English Test Preparation for Nurses</p>
           <p>Diagnosis-first teaching workflow</p>
           <p>All data stored locally in your browser (localStorage).</p>
         </div>
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 16 }}>
+        <div className="flex flex-wrap gap-2" style={{ marginTop: 16 }}>
           <Button variant="primary" onClick={handleExportData}><Icon.download size={14} /> Export Backup</Button>
           <Button variant="ghost" onClick={handleImportClick}><Icon.upload size={14} /> Import Backup</Button>
           <input ref={importInputRef} type="file" accept="application/json,.json" onChange={handleImportData} style={{ display: 'none' }} />

@@ -526,7 +526,7 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
           {/* Target profile */}
           {selectedStudent && (
             <Card style={{ padding: 'var(--space-4)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+              <div className="flex items-center" style={{ gap: 10, marginBottom: 10 }}>
                 <PrereqIcon ok={!!targetProfile} required />
                 <label className="field-label" style={{ margin: 0 }}>Target Score Profile</label>
               </div>
@@ -538,7 +538,7 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
               ) : (
                 <div>
                   <p className="card-row-meta" style={{ marginBottom: 'var(--space-3)' }}>No profiles — pick a preset to create one:</p>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-2)' }}>
+                  <div className="flex flex-wrap gap-2">
                     {Object.entries(TARGET_PROFILE_PRESETS).map(([key, preset]) => (
                       <Button key={key} variant="ghost" size="sm" onClick={() => selectPreset(key)}>{preset.label}</Button>
                     ))}
@@ -551,7 +551,7 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
           {/* Class evidence */}
           {selectedStudent && (
             <Card style={{ padding: 'var(--space-4)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+              <div className="flex items-center" style={{ gap: 10, marginBottom: 10 }}>
                 <PrereqIcon ok={evaluatedSkills.length > 0 && inlineReady} required />
                 <label className="field-label" style={{ margin: 0 }}>Class Evidence</label>
               </div>
@@ -574,7 +574,7 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
               {classEvidence && (
                 <div style={{ marginBottom: 10 }}>
                   <p className="card-row-meta" style={{ marginBottom: 'var(--space-2)' }}>Skills evaluated in the linked class:</p>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-2)' }}>
+                  <div className="flex flex-wrap gap-2">
                     {SKILL_KEYS.map(({ key, evalKey, countKey }) => {
                       const evaluated = classEvidence[evalKey];
                       const count = countKey ? classEvidence[countKey] : null;
@@ -634,14 +634,14 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
                             };
                           })}
                         >
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+                          <div className="flex items-center gap-2">
                             <span className="skill-chip-check">
                               {evaluated && <Icon.check size={10} color="#fff" />}
                             </span>
                             <span style={{ fontWeight: 600, fontSize: 'var(--text-xs)', color: evaluated ? 'var(--accent-deep)' : 'var(--text)' }}>{key}</span>
                           </div>
                           {evaluated && countKey && (
-                            <div style={{ marginTop: 6, display: 'flex', alignItems: 'center', gap: 6 }} onClick={e => e.stopPropagation()}>
+                            <div className="flex items-center" style={{ marginTop: 6, gap: 6 }} onClick={e => e.stopPropagation()}>
                               <span style={{ fontSize: 10, color: 'var(--muted)' }}>Turns:</span>
                               <input type="number" min={1} max={30} value={inlineSkills[countKey]}
                                 onChange={e => setInlineSkills(s => ({ ...s, [countKey]: Math.max(1, Number(e.target.value) || 1) }))}
@@ -719,7 +719,7 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
             {/* Right: Teacher writes */}
             <div>
               <SectionHeader title="Your Analysis" icon={<Icon.edit size={14} />} />
-              <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div className="flex flex-col" style={{ marginTop: 8, gap: 14 }}>
                 <div>
                   <label style={labelStyle}>Class Summary</label>
                   <textarea value={teacherMeaning.classSummary} onChange={e => setTeacherMeaning(t => ({ ...t, classSummary: e.target.value }))}
@@ -749,8 +749,8 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
               Optional. Use when tracking teaching impact across a cycle of diagnosis → intervention → re-diagnosis.
             </p>
             <Card style={{ padding: 16 }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div className="flex flex-col" style={{ gap: 14 }}>
+                <div className="flex items-center" style={{ gap: 10 }}>
                   <input type="checkbox" id="isBaseline" checked={isBaseline} onChange={e => setIsBaseline(e.target.checked)}
                     style={{ width: 18, height: 18, accentColor: '#14536b' }} />
                   <label htmlFor="isBaseline" style={{ fontSize: 'var(--text-sm)', fontWeight: 600 }}>Mark as baseline diagnosis (first measurement before intervention)</label>
@@ -774,7 +774,7 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
           </div>
 
           {/* ── Actions ── */}
-          <div style={{ display: 'flex', gap: 10, marginTop: 24 }}>
+          <div className="flex" style={{ gap: 10, marginTop: 24 }}>
             <Button variant="ghost" size="sm" onClick={() => handleSave(false)} disabled={saving}>Save Draft</Button>
             <Button variant="primary" onClick={() => setStep('review')}>
               <Icon.arrowR size={14} /> Review & Approve
@@ -834,7 +834,7 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
                   {sec.edited && <Pill tone="warning">Edited</Pill>}
                   {sec.hidden && <Pill tone="muted">Hidden</Pill>}
                   {sec.approved && <Pill tone="success"><Icon.check size={12} /> Approved</Pill>}
-                  <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
+                  <div className="flex gap-2">
                     <Button variant="ghost" size="sm" onClick={() => startEdit(key)} disabled={isRegenning}><Icon.edit size={12} /> Edit</Button>
                     <Button variant="ghost" size="sm" onClick={() => regenerateSection(key)} disabled={isRegenning}><Icon.refresh size={12} /> {isRegenning ? '…' : 'Regen'}</Button>
                     <Button variant="ghost" size="sm" onClick={() => toggleHide(key)} style={{ color: sec.hidden ? 'var(--muted)' : 'var(--text)' }}><Icon.eye size={12} /></Button>
@@ -850,7 +850,7 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
                   {isEditing ? (
                     <div>
                       <textarea value={editText} onChange={e => setEditText(e.target.value)} rows={10} style={{ width: '100%', fontFamily: 'var(--font-mono)', fontSize: 'var(--text-xs)', padding: 10, border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', resize: 'vertical' }} />
-                      <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+                      <div className="flex gap-2" style={{ marginTop: 8 }}>
                         <Button variant="primary" size="sm" onClick={() => saveEdit(key)}>Save Edit</Button>
                         <Button variant="ghost" size="sm" onClick={() => setEditingSection(null)}>Cancel</Button>
                       </div>
@@ -896,7 +896,7 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
           })()}
 
           {/* Bottom actions */}
-          <div style={{ display: 'flex', gap: 'var(--space-3)', marginTop: 'var(--space-5)', flexWrap: 'wrap' }}>
+          <div className="flex flex-wrap gap-3" style={{ marginTop: 'var(--space-5)' }}>
             <Button variant="ghost" size="sm" onClick={() => handleSave(false)} disabled={saving}>Save Draft</Button>
             <Button variant="primary" onClick={() => handleSave(true)} disabled={saving || !canApproveDiagnosis}>
               <Icon.check size={14} /> Approve & Save ({approvedCount}/{totalSections})
