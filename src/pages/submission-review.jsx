@@ -285,7 +285,7 @@ Return JSON:
     doSave();
   }
 
-  if (!submission) return <div style={{ padding: 40, color: 'var(--muted)' }}>Submission not found.</div>;
+  if (!submission) return <div style={{ padding: 'var(--space-10)', color: 'var(--muted)' }}>Submission not found.</div>;
 
   const activeErrorBank = errors.filter(e => e.status === 'active');
   const activityById = Object.fromEntries((homework?.activities || []).map(a => [a.id, a]));
@@ -335,7 +335,7 @@ Return JSON:
           <div style={{ background: 'var(--surface)', borderRadius: 'var(--radius)', maxWidth: 560, width: '100%', maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 16px 48px rgba(0,0,0,0.28)', padding: 28 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
               <div>
-                <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--accent-deep)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 3 }}>Preview — student will see</div>
+                <div className="section-label" style={{ color: 'var(--accent-deep)', marginBottom: 3 }}>Preview — student will see</div>
                 <div style={{ fontWeight: 700, fontSize: 'var(--text-lg)', color: 'var(--text)' }}>Homework Review: {homework?.title || 'Homework'}</div>
               </div>
               <Button variant="ghost" size="sm" onClick={() => setShowPreview(false)}>✕ Edit</Button>
@@ -354,7 +354,7 @@ Return JSON:
 
             {previewQuestions.length > 0 && (
               <div style={{ marginBottom: 14 }}>
-                <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>Per-question feedback</div>
+                <div className="section-label" style={{ marginBottom: 8 }}>Per-question feedback</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   {previewQuestions.map(({ entry, qe, activity }, i) => (
                     <div key={entry.id} style={{ padding: '10px 12px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', background: 'var(--bg)' }}>
@@ -363,10 +363,10 @@ Return JSON:
                       </div>
                       {qe.note && <p style={{ margin: '0 0 6px', fontSize: 'var(--text-sm)', color: 'var(--text-2)', lineHeight: 1.5 }}>{qe.note}</p>}
                       {(qe.corrections || []).filter(c => c.original || c.improved).map((c, ci) => (
-                        <div key={ci} style={{ fontSize: 'var(--text-xs)', display: 'flex', gap: 6, marginTop: 4, alignItems: 'baseline' }}>
-                          <span style={{ color: 'var(--danger)', textDecoration: 'line-through' }}>{c.original}</span>
-                          <span style={{ color: 'var(--muted)' }}>→</span>
-                          <span style={{ color: 'var(--success, var(--accent))' }}>{c.improved}</span>
+                        <div key={ci} className="correction-pair" style={{ fontSize: 'var(--text-xs)', marginTop: 4 }}>
+                          <span className="correction-original">{c.original}</span>
+                          <span className="correction-arrow">→</span>
+                          <span className="correction-improved">{c.improved}</span>
                         </div>
                       ))}
                     </div>
@@ -377,12 +377,12 @@ Return JSON:
 
             {previewCorrections.length > 0 && previewQuestions.length === 0 && (
               <div style={{ marginBottom: 14 }}>
-                <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>Corrections</div>
+                <div className="section-label" style={{ marginBottom: 6 }}>Corrections</div>
                 {previewCorrections.map((c, i) => (
-                  <div key={i} style={{ fontSize: 'var(--text-sm)', display: 'flex', gap: 8, alignItems: 'baseline', marginBottom: 4 }}>
-                    <span style={{ color: 'var(--danger)', textDecoration: 'line-through' }}>{c.original}</span>
-                    <span style={{ color: 'var(--muted)' }}>→</span>
-                    <span style={{ color: 'var(--success, var(--accent))' }}>{c.improved}</span>
+                  <div key={i} className="correction-pair" style={{ fontSize: 'var(--text-sm)', marginBottom: 4 }}>
+                    <span className="correction-original">{c.original}</span>
+                    <span className="correction-arrow">→</span>
+                    <span className="correction-improved">{c.improved}</span>
                   </div>
                 ))}
               </div>
@@ -407,13 +407,13 @@ Return JSON:
       {/* ── Sticky context + action bar ──────────────────────────── */}
       <div style={{
         position: 'sticky', top: 0, zIndex: 20,
-        background: 'rgba(255,255,255,0.96)',
+        background: 'var(--surface-glass)',
         backdropFilter: 'blur(12px)',
         WebkitBackdropFilter: 'blur(12px)',
         borderBottom: '1px solid var(--border)',
       }}>
         <div style={{ maxWidth: 960, margin: '0 auto', padding: '0 20px', height: 54, display: 'flex', alignItems: 'center', gap: 10 }}>
-          <button onClick={() => onNavigate('submissions')} style={backBtnStyle}>
+          <button className="back-link" style={{ marginBottom: 0, fontSize: 'var(--text-xs)', fontWeight: 600, flexShrink: 0 }} onClick={() => onNavigate('submissions')}>
             <Icon.arrowL size={13} /> Submissions
           </button>
           <div style={{ width: 1, height: 18, background: 'var(--border)', flexShrink: 0 }} />
@@ -442,14 +442,14 @@ Return JSON:
       </div>
 
       {/* ── Page body ─────────────────────────────────────────────── */}
-      <div style={{ maxWidth: 960, margin: '0 auto', padding: '24px 20px 48px' }}>
+      <div className="page-shell-lg" style={{ paddingBottom: 'var(--space-12)' }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 20 }}>
 
           {/* ── Left: submission + context ───────────────────────── */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
 
             {/* Student submission */}
-            <Card style={{ padding: 18 }}>
+            <Card style={{ padding: 'var(--space-5)' }}>
               <SectionHeader title="Student Submission" right={
                 <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>
                   {new Date(submission.submittedAt).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}
@@ -464,7 +464,7 @@ Return JSON:
             {/* ── Per-question evaluation ── */}
             {submissionEvidence.entries.length > 0 && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                <div style={{ fontSize: 'var(--text-xs)', fontWeight: 800, color: 'var(--accent-deep)', textTransform: 'uppercase', letterSpacing: '0.06em', display: 'flex', alignItems: 'center', gap: 5 }}>
+                <div className="section-label" style={{ color: 'var(--accent-deep)', fontWeight: 800, display: 'flex', alignItems: 'center', gap: 5 }}>
                   <Icon.check size={12} /> Per-question review
                 </div>
                 {submissionEvidence.entries.map((entry, idx) => {
@@ -473,7 +473,7 @@ Return JSON:
                   const qe = questionEvals[entry.id] || {};
                   const audioUrl = audioUrls[entry.id];
                   return (
-                    <Card key={entry.id} style={{ padding: 16 }}>
+                    <Card key={entry.id} style={{ padding: 'var(--space-4)' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
                         <span style={{ fontWeight: 700, fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>Q{idx + 1}</span>
                         <span style={{ padding: '2px 8px', borderRadius: 'var(--radius-pill)', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', background: 'var(--accent-subtle)', color: 'var(--accent-deep)', letterSpacing: '0.04em' }}>
@@ -545,7 +545,7 @@ Return JSON:
                       {/* Per-question corrections */}
                       {((qe.corrections || []).length > 0) && (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                          <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Corrections</span>
+                          <span className="section-label">Corrections</span>
                           {(qe.corrections || []).map((c, ci) => (
                             <div key={c.id || ci} style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
                               <input className="input" value={c.original} placeholder="Original" style={{ flex: 1, fontSize: 'var(--text-xs)' }}
@@ -587,7 +587,7 @@ Return JSON:
 
             {/* Homework instructions */}
             {homework && (
-              <Card style={{ padding: 18 }}>
+              <Card style={{ padding: 'var(--space-5)' }}>
                 <SectionHeader title="Homework Instructions" />
                 <div style={{ marginTop: 8, fontSize: 'var(--text-sm)', lineHeight: 1.7 }}>
                   <strong>Objective:</strong> {homework.objective || '—'}
@@ -598,7 +598,7 @@ Return JSON:
 
             {/* Diagnosis priorities */}
             {Array.isArray(diagnosis?.sections?.priorityDiagnosis?.content) && diagnosis.sections.priorityDiagnosis.content.length > 0 && (
-              <Card style={{ padding: 18 }}>
+              <Card style={{ padding: 'var(--space-5)' }}>
                 <SectionHeader title="Diagnosis Priorities" right={<Icon.diagnose size={15} color="var(--muted)" />} />
                 <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 8 }}>
                   {diagnosis.sections.priorityDiagnosis.content.map((p, i) => (
@@ -616,7 +616,7 @@ Return JSON:
 
             {/* Active error bank */}
             {activeErrorBank.length > 0 && (
-              <Card style={{ padding: 18 }}>
+              <Card style={{ padding: 'var(--space-5)' }}>
                 <SectionHeader title="Active Error Bank" right={<span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>Click to add to corrections</span>} />
                 <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 6 }}>
                   {activeErrorBank.slice(0, 5).map(err => {
@@ -652,7 +652,7 @@ Return JSON:
 
             {/* AI comparison result */}
             {aiComparison && (
-              <Card style={{ padding: 18, borderLeft: '3px solid var(--accent)' }}>
+              <Card style={{ padding: 'var(--space-5)', borderLeft: '3px solid var(--accent)' }}>
                 <SectionHeader title="AI Assessment" right={<Icon.spark size={15} color="var(--accent)" />} />
                 <p style={{ marginTop: 8, fontSize: 'var(--text-sm)', lineHeight: 1.6, color: 'var(--text-2)', marginBottom: 0 }}>
                   {aiComparison.didStudentImprove}
@@ -666,7 +666,7 @@ Return JSON:
             )}
 
             {/* Teacher review form */}
-            <Card style={{ padding: 18 }}>
+            <Card style={{ padding: 'var(--space-5)' }}>
               <SectionHeader title="Teacher Review" />
               <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginTop: 14 }}>
 
@@ -698,7 +698,7 @@ Return JSON:
                 {/* Corrections */}
                 <div>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-                    <span style={labelStyle}>Corrections</span>
+                    <span className="field-label">Corrections</span>
                     <Button variant="ghost" size="sm" onClick={addCorrectionRow}>
                       <Icon.plus size={12} /> Add
                     </Button>
@@ -759,7 +759,7 @@ Return JSON:
               };
               const c = toneColors[formativeRec.band];
               return (
-                <Card style={{ padding: 18, borderLeft: `3px solid ${c.border}` }}>
+                <Card style={{ padding: 'var(--space-5)', borderLeft: `3px solid ${c.border}` }}>
                   <SectionHeader title="Next Teaching Action" right={<Icon.diagnose size={15} color="var(--muted)" />} />
                   <div style={{ marginTop: 10 }}>
                     <span style={{ display: 'inline-block', padding: '2px 10px', borderRadius: 'var(--radius-pill)', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', background: c.bg, color: c.label, border: `1px solid ${c.border}`, marginBottom: 10 }}>
@@ -778,7 +778,7 @@ Return JSON:
 
             {/* Student feedback replies */}
             {(feedbackReplies.length > 0 || feedbackUnderstood) && (
-              <Card style={{ padding: 18, borderLeft: '3px solid var(--accent)' }}>
+              <Card style={{ padding: 'var(--space-5)', borderLeft: '3px solid var(--accent)' }}>
                 <SectionHeader title={feedbackUnderstood ? 'Student feedback status' : 'Student replies'} />
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 8 }}>
                   {feedbackUnderstood && (
@@ -845,8 +845,8 @@ Return JSON:
 
 function Field({ label, children }) {
   return (
-    <label style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
-      <span style={labelStyle}>{label}</span>
+    <label className="field">
+      <span className="field-label">{label}</span>
       {children}
     </label>
   );
@@ -973,14 +973,3 @@ const EMPTY_FORM = {
   sendFeedback: true,
 };
 
-const backBtnStyle = {
-  background: 'none', border: 'none', cursor: 'pointer',
-  color: 'var(--muted)', fontSize: 'var(--text-xs)', fontWeight: 600,
-  display: 'flex', alignItems: 'center', gap: 4,
-  padding: 0, fontFamily: 'var(--font-ui)', flexShrink: 0,
-};
-
-const labelStyle = {
-  fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)',
-  textTransform: 'uppercase', letterSpacing: '0.06em',
-};
