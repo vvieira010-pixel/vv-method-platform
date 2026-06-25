@@ -38,6 +38,7 @@ const ReportsPage       = lazy(() => import('./pages/reports.jsx'));
 const SettingsPage      = lazy(() => import('./pages/settings.jsx'));
 
 const InboxPage         = lazy(() => import('./tools/tool-inbox.jsx'));
+const PerspectiveDesigner = lazy(() => import('./tools/tool-perspective-designer.jsx'));
 const ExercisesPage     = lazy(() => import('./pages/exercises.jsx'));
 
 export default function App() {
@@ -428,7 +429,7 @@ function ToastHost() {
     return () => { window.removeEventListener('vv-toast', onToast); delete window.toast; };
   }, []);
   const TONES = {
-    ok:   { bg: 'var(--primary-ink)', fg: '#fff', g: '+' },
+    ok:   { bg: 'var(--accent-text)', fg: '#fff', g: '+' },
     info: { bg: 'var(--primary)',     fg: '#fff', g: 'i' },
     warn: { bg: 'var(--warning)',     fg: '#fff', g: '!' },
     go:   { bg: 'var(--accent)',      fg: '#fff', g: '→' },
