@@ -3,7 +3,6 @@
  * Core UI primitives, icons, layout shell, and AI utilities.
  */
 
-import { useState, useRef, useEffect } from 'react';
 
 /* ─── CSS CUSTOM PROPERTIES (injected once) ─────────────────── */
 
@@ -98,50 +97,11 @@ export function SkeletonCard({ height, lines = 2 }) {
   );
 }
 
-/* ─── EMPTY STATE ────────────────────────────────────────────── */
-export function EmptyState({ icon, title, text, action, onAction }) {
-  return (
-    <div className="empty-state">
-      {icon && <div className="empty-state-icon" aria-hidden="true">{icon}</div>}
-      <div className="empty-state-title">{title}</div>
-      {text && <div className="empty-state-text">{text}</div>}
-      {action && onAction && (
-        <Button variant="ghost" size="sm" onClick={onAction}>{action}</Button>
-      )}
-    </div>
-  );
-}
+/* ─── EMPTY STATE (canonical: ui/EmptyState.jsx) ────────────── */
+export { EmptyState } from './ui/EmptyState.jsx';
 
-/* ─── AVATAR ─────────────────────────────────────────────────── */
-const AVATAR_PALETTES = {
-  auto:  ['#0f1b2d','#148891','#c86607','#0f6b73','#5bbcb8'],
-  ink:   ['#0F172A'],
-  blue:  ['#0F172A'],
-  sky:   ['#0369A1'],
-  rose:  ['#E11D48'],
-};
-function pickColor(name, palette) {
-  const arr = AVATAR_PALETTES[palette] || AVATAR_PALETTES.blue;
-  let h = 0;
-  for (let i = 0; i < (name || '').length; i++) h += name.charCodeAt(i);
-  return arr[h % arr.length];
-}
-
-export function Avatar({ name = '?', size = 36, tone = 'auto' }) {
-  const bg = pickColor(name, tone);
-  const initials = (name || '?').split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
-  return (
-    <div role="img" aria-label={name} style={{
-      width: size, height: size, borderRadius: '50%',
-      background: bg, color: '#fff',
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      fontSize: size * 0.36, fontWeight: 700, flexShrink: 0,
-      fontFamily: 'var(--font-ui)', userSelect: 'none', letterSpacing: '0.02em',
-    }}>
-      {initials}
-    </div>
-  );
-}
+/* ─── AVATAR (canonical: ui/Avatar.jsx) ─────────────────────── */
+export { Avatar } from './ui/Avatar.jsx';
 
 /* ─── BUTTON ─────────────────────────────────────────────────── */
 const BTN_CLS = { primary: 'btn-primary', ghost: 'btn-ghost', quiet: 'btn-quiet', danger: 'btn-danger', accent: 'btn-accent' };
@@ -207,20 +167,8 @@ export function SectionHeader({ title, sub, action, right }) {
   );
 }
 
-/* ─── PILL NAV ───────────────────────────────────────────────── */
-export function PillNav({ tabs, active, onChange, label = 'Tabs' }) {
-  return (
-    <div className="pill-nav" role="tablist" aria-label={label}>
-      {tabs.map(t => (
-        <button key={t.id} role="tab" aria-selected={active === t.id}
-          className={`pill-nav-btn ${active === t.id ? 'active' : ''}`}
-          onClick={() => onChange(t.id)}>
-          {t.label}
-        </button>
-      ))}
-    </div>
-  );
-}
+/* ─── PILL NAV / TABS (canonical: ui/Tabs.jsx) ──────────────── */
+export { Tabs, Tabs as PillNav } from './ui/Tabs.jsx';
 
 /* ─── SHELL ──────────────────────────────────────────────────── */
 // Legacy section map for old tool:* IDs
@@ -301,82 +249,8 @@ export function Shell({ tabs = [], active, onTab, children, rightSlot, workflowA
 }
 
 
-/* ─── Modal ──────────────────────────────────────────────────── */
-const FOCUSABLE = 'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
-
-export function Modal({ open, onClose, kicker, title, subtitle, maxWidth = 680, children }) {
-  const dialogRef = useRef(null);
-
-  useEffect(() => {
-    if (!open) return;
-    const previouslyFocused = document.activeElement;
-
-    // Focus first focusable element after paint
-    const timer = setTimeout(() => {
-      const els = dialogRef.current?.querySelectorAll(FOCUSABLE);
-      els?.[0]?.focus();
-    }, 0);
-
-    function handleKey(e) {
-      if (e.key === 'Escape') { onClose(); return; }
-      if (e.key !== 'Tab' || !dialogRef.current) return;
-      const els = Array.from(dialogRef.current.querySelectorAll(FOCUSABLE));
-      if (!els.length) return;
-      if (e.shiftKey && document.activeElement === els[0]) {
-        e.preventDefault(); els[els.length - 1].focus();
-      } else if (!e.shiftKey && document.activeElement === els[els.length - 1]) {
-        e.preventDefault(); els[0].focus();
-      }
-    }
-
-    document.addEventListener('keydown', handleKey);
-    return () => {
-      clearTimeout(timer);
-      document.removeEventListener('keydown', handleKey);
-      previouslyFocused?.focus?.();
-    };
-  }, [open, onClose]);
-
-  if (!open) return null;
-  function handleBackdrop(e) {
-    if (e.target === e.currentTarget) onClose();
-  }
-  return (
-    <div
-      className="modal-overlay-enter modal-overlay"
-      onClick={handleBackdrop}
-    >
-      <div
-        ref={dialogRef}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="modal-title"
-        className="modal-card-enter modal-card"
-        style={{ maxWidth }}
-      >
-        <div className="modal-header">
-          <div style={{ flex: 1, minWidth: 0 }}>
-            {kicker && (
-              <div className="modal-kicker">{kicker}</div>
-            )}
-            <div id="modal-title" className="modal-title">{title}</div>
-            {subtitle && (
-              <div className="modal-subtitle">{subtitle}</div>
-            )}
-          </div>
-          <button
-            onClick={onClose}
-            aria-label="Close dialog"
-            className="modal-close"
-          >
-            <Icon.close size={14} />
-          </button>
-        </div>
-        <div className="modal-body">{children}</div>
-      </div>
-    </div>
-  );
-}
+/* ─── Modal (canonical: ui/Modal.jsx) ────────────────────────── */
+export { Modal } from './ui/Modal.jsx';
 
 /* ─── callAI (see src/lib/callAI.js) ────────────────────────── */
 export { callAI, summarizeTranscript } from '../lib/callAI.js';
