@@ -7,4 +7,5 @@ export { Kpi } from './Kpi.jsx';
 export { Modal } from './Modal.jsx';
 export { Pill } from './Pill.jsx';
 export { SectionHeader } from './SectionHeader.jsx';
+export { Skeleton, SkeletonText, SkeletonCard } from './Skeleton.jsx';
 export { Tabs } from './Tabs.jsx';

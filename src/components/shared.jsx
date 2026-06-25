@@ -76,26 +76,8 @@ export const Icon = {
   diamond:  (p) => <SvgIcon d="M12 2L2 12l10 10 10-10L12 2z M2 12h20" fill="currentColor" {...p} />,
 };
 
-/* ─── SKELETON LOADING ───────────────────────────────────────── */
-export function Skeleton({ className = '', style, as = 'div' }) {
-  const El = as;
-  return <El className={`skeleton ${className}`.trim()} style={style} aria-hidden="true" />;
-}
-
-export function SkeletonText({ lines = 3, lastShort = true }) {
-  const items = Array.from({ length: lines }, (_, i) => (
-    <Skeleton key={i} className={`skeleton-text${lastShort && i === lines - 1 ? ' skeleton-text--short' : ''}`} />
-  ));
-  return <div aria-hidden="true">{items}</div>;
-}
-
-export function SkeletonCard({ height, lines = 2 }) {
-  return (
-    <div className="skeleton-card" style={height ? { height } : undefined} aria-hidden="true">
-      <SkeletonText lines={lines} />
-    </div>
-  );
-}
+/* ─── SKELETON (canonical: ui/Skeleton.jsx) ─────────────────── */
+export { Skeleton, SkeletonText, SkeletonCard } from './ui/Skeleton.jsx';
 
 /* ─── EMPTY STATE (canonical: ui/EmptyState.jsx) ────────────── */
 export { EmptyState } from './ui/EmptyState.jsx';
@@ -103,69 +85,20 @@ export { EmptyState } from './ui/EmptyState.jsx';
 /* ─── AVATAR (canonical: ui/Avatar.jsx) ─────────────────────── */
 export { Avatar } from './ui/Avatar.jsx';
 
-/* ─── BUTTON ─────────────────────────────────────────────────── */
-const BTN_CLS = { primary: 'btn-primary', ghost: 'btn-ghost', quiet: 'btn-quiet', danger: 'btn-danger', accent: 'btn-accent' };
-const BTN_SIZES = { sm: 'btn-sm', lg: 'btn-lg' };
-export function Button({ variant, size, children, style, className = '', disabled, onClick }) {
-  return (
-    <button type="button" className={`btn ${BTN_CLS[variant] || ''} ${BTN_SIZES[size] || ''} ${className}`.trim()} style={style} disabled={disabled} onClick={onClick}>{children}</button>
-  );
-}
+/* ─── BUTTON (canonical: ui/Button.jsx) ─────────────────────── */
+export { Button } from './ui/Button.jsx';
 
-/* ─── CARD ───────────────────────────────────────────────────── */
-export function Card({ children, style, className = '', small, onClick }) {
-  const cls = `card ${small ? 'card-sm' : ''} ${className}`;
-  if (onClick) {
-    return (
-      <button type="button" className={cls} style={style} onClick={onClick}>
-        {children}
-      </button>
-    );
-  }
-  return <div className={cls} style={style}>{children}</div>;
-}
+/* ─── CARD (canonical: ui/Card.jsx) ─────────────────────────── */
+export { Card } from './ui/Card.jsx';
 
-/* ─── PILL ───────────────────────────────────────────────────── */
-const PILL_TONE = {
-  default:'pill-default', accent:'pill-accent', success:'pill-success',
-  warning:'pill-warning', danger:'pill-danger', muted:'pill-muted', info:'pill-info',
-  ok:'pill-success', error:'pill-danger', draft:'pill-muted', queued:'pill-info',
-  reviewed:'pill-success', overdue:'pill-danger', pending:'pill-warning',
-};
-export function Pill({ children, tone = 'default', icon, style }) {
-  return (
-    <span className={`pill ${PILL_TONE[tone] || 'pill-default'}`} style={style}>
-      {icon}{children}
-    </span>
-  );
-}
+/* ─── PILL (canonical: ui/Pill.jsx) ─────────────────────────── */
+export { Pill } from './ui/Pill.jsx';
 
-/* ─── KPI ────────────────────────────────────────────────────── */
-export function Kpi({ label, eyebrow, value, sub, trend, trendDir }) {
-  const finalLabel = label || eyebrow || '';
-  return (
-    <div className="kpi">
-      <div className="kpi-label">{finalLabel}</div>
-      <div className="kpi-value">{value}</div>
-      {trend && <div className={`kpi-trend ${trendDir || ''}`}>{trend}</div>}
-      {sub && <div className="kpi-sub">{sub}</div>}
-    </div>
-  );
-}
+/* ─── KPI (canonical: ui/Kpi.jsx) ───────────────────────────── */
+export { Kpi } from './ui/Kpi.jsx';
 
-/* ─── SECTION HEADER ─────────────────────────────────────────── */
-export function SectionHeader({ title, sub, action, right }) {
-  const finalAction = action || right || null;
-  return (
-    <div className="section-header">
-      <div>
-        <div className="section-title">{title}</div>
-        {sub && <div className="section-sub">{sub}</div>}
-      </div>
-      {finalAction && <div>{finalAction}</div>}
-    </div>
-  );
-}
+/* ─── SECTION HEADER (canonical: ui/SectionHeader.jsx) ──────── */
+export { SectionHeader } from './ui/SectionHeader.jsx';
 
 /* ─── PILL NAV / TABS (canonical: ui/Tabs.jsx) ──────────────── */
 export { Tabs, Tabs as PillNav } from './ui/Tabs.jsx';
