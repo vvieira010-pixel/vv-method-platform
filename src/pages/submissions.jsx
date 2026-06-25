@@ -34,7 +34,9 @@ export default function SubmissionsPage({ students, onNavigate }) {
 
       <div className="page-filters">
         {['pending', 'reviewed', 'all'].map(f => (
-          <button key={f} onClick={() => setFilter(f)} aria-pressed={filter === f} style={{ padding: '8px 14px', borderRadius: 'var(--radius-pill)', border: `1.5px solid ${filter === f ? 'var(--accent)' : 'var(--border)'}`, background: filter === f ? 'var(--accent-subtle)' : 'var(--surface)', color: filter === f ? 'var(--accent)' : 'var(--muted)', fontFamily: 'var(--font-ui)', fontSize: 'var(--text-xs)', fontWeight: 600, cursor: 'pointer', textTransform: 'capitalize' }}>
+          <button key={f} onClick={() => setFilter(f)} aria-pressed={filter === f}
+            className={`hw-filter-btn${filter === f ? ' active' : ''}`}
+            style={{ textTransform: 'capitalize' }}>
             {f} {f === 'pending' ? `(${pendingCount})` : ''}
           </button>
         ))}
@@ -52,12 +54,12 @@ export default function SubmissionsPage({ students, onNavigate }) {
             const review = reviews.find(r => r.submissionId === sub.id);
             const reviewed = !!review;
             return (
-              <Card key={sub.id} style={{ padding: '14px 18px', border: !reviewed ? '1px solid var(--warning-soft)' : undefined }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+              <Card key={sub.id} style={!reviewed ? { border: '1px solid var(--warning-soft)' } : undefined}>
+                <div className="card-row">
                   <Avatar name={student?.name || '?'} size={32} />
-                  <div style={{ flex: 1, minWidth: 160 }}>
-                    <div style={{ fontWeight: 700 }}>{student?.name || 'Unknown'}</div>
-                    <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: 2 }}>
+                  <div className="card-row-body">
+                    <div className="card-row-title">{student?.name || 'Unknown'}</div>
+                    <div className="card-row-meta">
                       {hw?.title || 'Homework submission'} · Submitted {new Date(sub.submittedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
                     </div>
                   </div>

@@ -853,12 +853,12 @@ Return JSON only with fields: type "read", passage (2-3 paragraphs), source, que
 
   return (
     <div className="homework-create-page" style={{ maxWidth: 1120, width: '100%', margin: '0 auto', padding: '22px 24px 14px' }}>
-      <button onClick={() => onNavigate('homework')} style={backStyle}>
+      <button className="back-link" onClick={() => onNavigate('homework')}>
         <Icon.arrowL size={13} /> Back
       </button>
 
       {/* Wizard Header */}
-      <h1 style={S.headline}>Create Homework</h1>
+      <SectionHeader title="Create Homework" />
       {(selectedLevel || subjectLabel) && (
         <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 12 }}>
           {selectedLevel && <Pill tone="info">{selectedLevel}</Pill>}
@@ -883,7 +883,7 @@ Return JSON only with fields: type "read", passage (2-3 paragraphs), source, que
       <div className="homework-create-grid" style={{ display: 'grid', gap: 24, alignItems: 'start' }}>
         <div>
           {currentStep === 1 && (
-            <Card style={{ padding: 18 }}>
+            <Card style={{ padding: 'var(--space-5)' }}>
               <SectionHeader title="Step 1: Prebuilt Homework" />
               <div style={{ marginTop: 16 }}>
                 {studentId || diagnosis?.studentId ? (
@@ -915,8 +915,8 @@ Return JSON only with fields: type "read", passage (2-3 paragraphs), source, que
                   <input className="input" value={form.objective} onChange={e => setForm(f => ({ ...f, objective: e.target.value }))} placeholder="What this homework targets..." />
                 </Field>
                 {errorBankItems.filter(e => e.status !== 'solved').length > 0 && (
-                  <div style={{ marginTop: 16, padding: 12, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)' }}>
-                    <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>
+                  <div className="info-panel" style={{ marginTop: 'var(--space-4)' }}>
+                    <div className="section-label" style={{ marginBottom: 8 }}>
                       Error Bank — Active Patterns
                     </div>
                     {errorBankItems.filter(e => e.status !== 'solved').slice(0, 3).map(entry => (
@@ -1028,11 +1028,11 @@ Return JSON only with fields: type "read", passage (2-3 paragraphs), source, que
             </Card>
           )}
           {currentStep === 2 && (
-            <Card style={{ padding: 18 }}>
+            <Card style={{ padding: 'var(--space-5)' }}>
               <SectionHeader title="Step 2: Retrieval & MET Focus" />
               <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 16 }}>
                 {/* ── Retrieval Practice ── */}
-                <div style={{ padding: 16, background: 'var(--surface)', border: '1px solid var(--accent-soft)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-sm)' }}>
+                <div style={{ padding: 'var(--space-4)', background: 'var(--surface)', border: '1px solid var(--accent-soft)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-sm)' }}>
                   <div style={{ fontWeight: 700, fontSize: 'var(--text-sm)', marginBottom: 6 }}>Retrieval Practice</div>
                   <div style={{ color: 'var(--text-2)', fontSize: 'var(--text-sm)', lineHeight: 1.6, marginBottom: 12 }}>
                     Generate recall questions from the homework objective so the student practices remembering the target language.
@@ -1235,13 +1235,13 @@ Return JSON only with fields: type "read", passage (2-3 paragraphs), source, que
                       <div style={{ marginTop: 10, display: 'flex', gap: 16, flexWrap: 'wrap' }}>
                         {languageDemand.tier2_vocabulary?.length > 0 && (
                           <div>
-                            <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', marginBottom: 4 }}>Tier 2 to pre-teach</div>
+                            <div className="section-label" style={{ marginBottom: 4 }}>Tier 2 to pre-teach</div>
                             <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-2)' }}>{languageDemand.tier2_vocabulary.join(' · ')}</div>
                           </div>
                         )}
                         {languageDemand.tier3_vocabulary?.length > 0 && (
                           <div>
-                            <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', marginBottom: 4 }}>Tier 3 to pre-teach</div>
+                            <div className="section-label" style={{ marginBottom: 4 }}>Tier 3 to pre-teach</div>
                             <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-2)' }}>{languageDemand.tier3_vocabulary.join(' · ')}</div>
                           </div>
                         )}
@@ -1251,8 +1251,8 @@ Return JSON only with fields: type "read", passage (2-3 paragraphs), source, que
                 )}
 
                 {/* ── Assign ── */}
-                <div ref={assignRef} style={{ marginTop: 16, padding: 20, border: '2px solid var(--accent-soft)', borderRadius: 'var(--radius-md)', background: 'var(--surface)' }}>
-                  <div style={{ fontWeight: 700, fontSize: 'var(--text-md)', marginBottom: 16, color: 'var(--accent-deep)' }}>Assign homework</div>
+                <div ref={assignRef} style={{ marginTop: 'var(--space-4)', padding: 'var(--space-5)', border: '2px solid var(--accent-soft)', borderRadius: 'var(--radius-md)', background: 'var(--surface)' }}>
+                  <div style={{ fontWeight: 700, fontSize: 'var(--text-md)', marginBottom: 'var(--space-4)', color: 'var(--accent-deep)' }}>Assign homework</div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                     {studentId || diagnosis?.studentId ? null : (
                       <Field label="Student">
@@ -1286,7 +1286,7 @@ Return JSON only with fields: type "read", passage (2-3 paragraphs), source, que
         </div>
 
         {/* Persistent Summary Side Panel */}
-        <Card className="homework-create-summary" style={{ padding: 18, position: 'sticky', top: 20 }}>
+        <Card className="homework-create-summary" style={{ padding: 'var(--space-5)', position: 'sticky', top: 20 }}>
           <SectionHeader title="Homework Summary" />
           <div style={{ marginTop: 12, fontSize: 'var(--text-sm)' }}>
             <p>Exercises: <strong style={exerciseCount > 10 ? { color: 'var(--danger)' } : {}}>{exerciseCount} / 10</strong></p>
@@ -1301,21 +1301,11 @@ Return JSON only with fields: type "read", passage (2-3 paragraphs), source, que
 
 function Field({ label, children, style }) {
   return (
-    <label style={{ display: 'flex', flexDirection: 'column', gap: 4, ...style }}>
-      <span style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</span>
+    <label className="field" style={style}>
+      <span className="section-label">{label}</span>
       {children}
     </label>
   );
 }
 
-const backStyle = {
-  background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)',
-  fontSize: 'var(--text-sm)', display: 'flex', alignItems: 'center', gap: 4,
-  marginBottom: 16, padding: 0, fontFamily: 'var(--font-ui)',
-};
-
-const S = {
-  headline: { fontFamily: 'var(--font-ui)', fontSize: 'var(--text-2xl)', fontWeight: 700, color: 'var(--accent-deep)', margin: '0 0 4px' },
-  sub: { fontSize: 'var(--text-sm)', color: 'var(--muted)' },
-};
 

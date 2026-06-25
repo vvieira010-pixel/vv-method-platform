@@ -131,9 +131,9 @@ export default function StudentsPage({ onNavigate }) {
 
       {/* Add/Edit form */}
       {showForm && (
-        <Card style={{ marginBottom: 20, padding: 20, border: '2px solid var(--accent)' }}>
+        <Card className="card-form">
           <SectionHeader title={editStudent ? 'Edit Student' : 'New Student'} />
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12, marginTop: 14 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 'var(--space-3)', marginTop: 'var(--space-4)' }}>
             <Field label="Full name *">
               <input className="input" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value, firstName: e.target.value.split(' ')[0] }))} placeholder="e.g. Ana Paula" autoFocus />
             </Field>
@@ -163,7 +163,7 @@ export default function StudentsPage({ onNavigate }) {
               <textarea className="input" rows={2} value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} placeholder="Any additional notes..." />
             </Field>
           </div>
-          <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
+          <div style={{ display: 'flex', gap: 'var(--space-2)', marginTop: 'var(--space-4)' }}>
             <Button variant="primary" onClick={handleSave} disabled={saving}>{saving ? 'Saving…' : (editStudent ? 'Save Changes' : 'Add Student')}</Button>
             <Button variant="ghost" onClick={() => setShowForm(false)}>Cancel</Button>
           </div>
@@ -224,21 +224,20 @@ function StudentRow({ student, nextAction, inviteStatus, setupState, onProfile, 
   const result = setupState?.result;
 
   return (
-    <Card style={{ padding: '12px 16px' }}>
-      {/* Main row */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+    <Card>
+      <div className="card-row">
         <Avatar name={student.name} size={36} />
-        <div style={{ flex: 1, minWidth: 160 }}>
-          <div style={{ fontWeight: 700, fontSize: 'var(--text-md)' }}>{student.name}</div>
-          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: 2 }}>
+        <div className="card-row-body">
+          <div className="card-row-title">{student.name}</div>
+          <div className="card-row-meta">
             {student.currentLevel} → {student.targetLevel} · {student.examGoal}
             {student.email && ` · ${student.email}`}
           </div>
         </div>
         <Pill tone="muted">{student.currentLevel}</Pill>
         <Pill tone={action.tone}>{action.label}</Pill>
-        <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>Session {student.session || 1}/{student.totalSessions || 24}</span>
-        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+        <span className="card-row-meta">Session {student.session || 1}/{student.totalSessions || 24}</span>
+        <div style={{ display: 'flex', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
           <Button variant="primary" size="sm" onClick={onProfile}>View Profile</Button>
           {student.email && (
             <Button variant="ghost" size="sm" onClick={isSetupOpen ? onCloseSetup : onOpenSetup}
@@ -260,19 +259,18 @@ function StudentRow({ student, nextAction, inviteStatus, setupState, onProfile, 
 
       {/* Account setup panel */}
       {isSetupOpen && (
-        <div style={{ marginTop: 14, paddingTop: 14, borderTop: '1px solid var(--border)' }}>
+        <div style={{ marginTop: 'var(--space-4)', paddingTop: 'var(--space-4)', borderTop: '1px solid var(--border)' }}>
           {result?.ok ? (
-            /* ── Success: show credentials ── */
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
               <p style={{ fontSize: 'var(--text-sm)', fontWeight: 700, color: 'var(--success)', margin: 0 }}>
                 ✓ Account created for {student.name}
                 {result.emailSent && ' — login email sent to their inbox!'}
               </p>
-              <div style={{ background: 'var(--bg)', border: '1.5px solid var(--border)', borderRadius: 8, padding: '12px 16px', fontFamily: 'monospace', fontSize: 'var(--text-sm)', lineHeight: 2 }}>
+              <div style={{ background: 'var(--bg)', border: '1.5px solid var(--border)', borderRadius: 'var(--radius-md)', padding: 'var(--space-3) var(--space-4)', fontFamily: 'var(--font-mono)', fontSize: 'var(--text-sm)', lineHeight: 2 }}>
                 <div><strong>Login (email):</strong> {result.email}</div>
                 <div><strong>Password:</strong> {result.password}</div>
               </div>
-              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
                 <Button variant="primary" size="sm" onClick={() => {
                   copyText(`Login: ${result.email}\nPassword: ${result.password}`);
                   window.toast?.('Credentials copied!', 'ok');
@@ -290,12 +288,11 @@ function StudentRow({ student, nextAction, inviteStatus, setupState, onProfile, 
               </div>
             </div>
           ) : (
-            /* ── Setup form ── */
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
               <p style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', margin: 0 }}>
                 Create a login for <strong>{student.name}</strong> ({student.email}). You can use the generated password or type your own.
               </p>
-              <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', gap: 'var(--space-2)', alignItems: 'center', flexWrap: 'wrap' }}>
                 <input
                   className="input"
                   style={{ maxWidth: 240 }}
@@ -315,7 +312,7 @@ function StudentRow({ student, nextAction, inviteStatus, setupState, onProfile, 
                   ) : result.error}
                 </p>
               )}
-              <div style={{ display: 'flex', gap: 8 }}>
+              <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
                 <Button variant="primary" size="sm" onClick={onCreateAccount} disabled={setupState.busy || !setupState.pwd}>
                   {setupState.busy ? 'Creating…' : 'Create account'}
                 </Button>
@@ -359,8 +356,8 @@ function buildStudentActions(students, { diagnoses = [], homework = [], submissi
 
 function Field({ label, children, style }) {
   return (
-    <label style={{ display: 'flex', flexDirection: 'column', gap: 4, ...style }}>
-      <span style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</span>
+    <label className="field" style={style}>
+      <span className="field-label">{label}</span>
       {children}
     </label>
   );

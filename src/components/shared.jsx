@@ -3,7 +3,6 @@
  * Core UI primitives, icons, layout shell, and AI utilities.
  */
 
-import { useState, useRef, useEffect } from 'react';
 
 /* ─── CSS CUSTOM PROPERTIES (injected once) ─────────────────── */
 
@@ -77,150 +76,32 @@ export const Icon = {
   diamond:  (p) => <SvgIcon d="M12 2L2 12l10 10 10-10L12 2z M2 12h20" fill="currentColor" {...p} />,
 };
 
-/* ─── SKELETON LOADING ───────────────────────────────────────── */
-export function Skeleton({ className = '', style, as = 'div' }) {
-  const El = as;
-  return <El className={`skeleton ${className}`.trim()} style={style} aria-hidden="true" />;
-}
+/* ─── SKELETON (canonical: ui/Skeleton.jsx) ─────────────────── */
+export { Skeleton, SkeletonText, SkeletonCard } from './ui/Skeleton.jsx';
 
-export function SkeletonText({ lines = 3, lastShort = true }) {
-  const items = Array.from({ length: lines }, (_, i) => (
-    <Skeleton key={i} className={`skeleton-text${lastShort && i === lines - 1 ? ' skeleton-text--short' : ''}`} />
-  ));
-  return <div aria-hidden="true">{items}</div>;
-}
+/* ─── EMPTY STATE (canonical: ui/EmptyState.jsx) ────────────── */
+export { EmptyState } from './ui/EmptyState.jsx';
 
-export function SkeletonCard({ height, lines = 2 }) {
-  return (
-    <div className="skeleton-card" style={height ? { height } : undefined} aria-hidden="true">
-      <SkeletonText lines={lines} />
-    </div>
-  );
-}
+/* ─── AVATAR (canonical: ui/Avatar.jsx) ─────────────────────── */
+export { Avatar } from './ui/Avatar.jsx';
 
-/* ─── EMPTY STATE ────────────────────────────────────────────── */
-export function EmptyState({ icon, title, text, action, onAction }) {
-  return (
-    <div className="empty-state">
-      {icon && <div className="empty-state-icon" aria-hidden="true">{icon}</div>}
-      <div className="empty-state-title">{title}</div>
-      {text && <div className="empty-state-text">{text}</div>}
-      {action && onAction && (
-        <Button variant="ghost" size="sm" onClick={onAction}>{action}</Button>
-      )}
-    </div>
-  );
-}
+/* ─── BUTTON (canonical: ui/Button.jsx) ─────────────────────── */
+export { Button } from './ui/Button.jsx';
 
-/* ─── AVATAR ─────────────────────────────────────────────────── */
-const AVATAR_PALETTES = {
-  auto:  ['#0f1b2d','#148891','#c86607','#0f6b73','#5bbcb8'],
-  ink:   ['#0F172A'],
-  blue:  ['#0F172A'],
-  sky:   ['#0369A1'],
-  rose:  ['#E11D48'],
-};
-function pickColor(name, palette) {
-  const arr = AVATAR_PALETTES[palette] || AVATAR_PALETTES.blue;
-  let h = 0;
-  for (let i = 0; i < (name || '').length; i++) h += name.charCodeAt(i);
-  return arr[h % arr.length];
-}
+/* ─── CARD (canonical: ui/Card.jsx) ─────────────────────────── */
+export { Card } from './ui/Card.jsx';
 
-export function Avatar({ name = '?', size = 36, tone = 'auto' }) {
-  const bg = pickColor(name, tone);
-  const initials = (name || '?').split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
-  return (
-    <div role="img" aria-label={name} style={{
-      width: size, height: size, borderRadius: '50%',
-      background: bg, color: '#fff',
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      fontSize: size * 0.36, fontWeight: 700, flexShrink: 0,
-      fontFamily: 'var(--font-ui)', userSelect: 'none', letterSpacing: '0.02em',
-    }}>
-      {initials}
-    </div>
-  );
-}
+/* ─── PILL (canonical: ui/Pill.jsx) ─────────────────────────── */
+export { Pill } from './ui/Pill.jsx';
 
-/* ─── BUTTON ─────────────────────────────────────────────────── */
-const BTN_CLS = { primary: 'btn-primary', ghost: 'btn-ghost', quiet: 'btn-quiet', danger: 'btn-danger', accent: 'btn-accent' };
-const BTN_SIZES = { sm: 'btn-sm', lg: 'btn-lg' };
-export function Button({ variant, size, children, style, className = '', disabled, onClick }) {
-  return (
-    <button type="button" className={`btn ${BTN_CLS[variant] || ''} ${BTN_SIZES[size] || ''} ${className}`.trim()} style={style} disabled={disabled} onClick={onClick}>{children}</button>
-  );
-}
+/* ─── KPI (canonical: ui/Kpi.jsx) ───────────────────────────── */
+export { Kpi } from './ui/Kpi.jsx';
 
-/* ─── CARD ───────────────────────────────────────────────────── */
-export function Card({ children, style, className = '', small, onClick }) {
-  const cls = `card ${small ? 'card-sm' : ''} ${className}`;
-  if (onClick) {
-    return (
-      <button type="button" className={cls} style={style} onClick={onClick}>
-        {children}
-      </button>
-    );
-  }
-  return <div className={cls} style={style}>{children}</div>;
-}
+/* ─── SECTION HEADER (canonical: ui/SectionHeader.jsx) ──────── */
+export { SectionHeader } from './ui/SectionHeader.jsx';
 
-/* ─── PILL ───────────────────────────────────────────────────── */
-const PILL_TONE = {
-  default:'pill-default', accent:'pill-accent', success:'pill-success',
-  warning:'pill-warning', danger:'pill-danger', muted:'pill-muted', info:'pill-info',
-  ok:'pill-success', error:'pill-danger', draft:'pill-muted', queued:'pill-info',
-  reviewed:'pill-success', overdue:'pill-danger', pending:'pill-warning',
-};
-export function Pill({ children, tone = 'default', icon, style }) {
-  return (
-    <span className={`pill ${PILL_TONE[tone] || 'pill-default'}`} style={style}>
-      {icon}{children}
-    </span>
-  );
-}
-
-/* ─── KPI ────────────────────────────────────────────────────── */
-export function Kpi({ label, eyebrow, value, sub, trend, trendDir }) {
-  const finalLabel = label || eyebrow || '';
-  return (
-    <div className="kpi">
-      <div className="kpi-label">{finalLabel}</div>
-      <div className="kpi-value">{value}</div>
-      {trend && <div className={`kpi-trend ${trendDir || ''}`}>{trend}</div>}
-      {sub && <div className="kpi-sub">{sub}</div>}
-    </div>
-  );
-}
-
-/* ─── SECTION HEADER ─────────────────────────────────────────── */
-export function SectionHeader({ title, sub, action, right }) {
-  const finalAction = action || right || null;
-  return (
-    <div className="section-header">
-      <div>
-        <div className="section-title">{title}</div>
-        {sub && <div className="section-sub">{sub}</div>}
-      </div>
-      {finalAction && <div>{finalAction}</div>}
-    </div>
-  );
-}
-
-/* ─── PILL NAV ───────────────────────────────────────────────── */
-export function PillNav({ tabs, active, onChange, label = 'Tabs' }) {
-  return (
-    <div className="pill-nav" role="tablist" aria-label={label}>
-      {tabs.map(t => (
-        <button key={t.id} role="tab" aria-selected={active === t.id}
-          className={`pill-nav-btn ${active === t.id ? 'active' : ''}`}
-          onClick={() => onChange(t.id)}>
-          {t.label}
-        </button>
-      ))}
-    </div>
-  );
-}
+/* ─── PILL NAV / TABS (canonical: ui/Tabs.jsx) ──────────────── */
+export { Tabs, Tabs as PillNav } from './ui/Tabs.jsx';
 
 /* ─── SHELL ──────────────────────────────────────────────────── */
 // Legacy section map for old tool:* IDs
@@ -246,6 +127,7 @@ export function Shell({ tabs = [], active, onTab, children, rightSlot, workflowA
 
   return (
     <div className="shell">
+      <a href="#main-content" className="skip-nav">Skip to content</a>
       <header className="shell-topbar">
         <div className="shell-brand">
           <span className="shell-brand-name">MET</span>
@@ -284,7 +166,7 @@ export function Shell({ tabs = [], active, onTab, children, rightSlot, workflowA
         {workflowActive && <WorkflowStageStrip active={workflowActive} onStage={onWorkflowStage} />}
         {rightSlot && <div style={{ display:'flex', alignItems:'center', gap:10 }}>{rightSlot}</div>}
       </header>
-      <main className="shell-main">{children}</main>
+      <main id="main-content" className="shell-main">{children}</main>
       <nav className="shell-mobile-nav" aria-label="Mobile navigation">
         {tabs.filter(t => t.mobile !== false && ['dashboard','students','diagnostics','homework','submissions'].includes(t.id)).map(tab => (
           <button key={tab.id}
@@ -301,82 +183,8 @@ export function Shell({ tabs = [], active, onTab, children, rightSlot, workflowA
 }
 
 
-/* ─── Modal ──────────────────────────────────────────────────── */
-const FOCUSABLE = 'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
-
-export function Modal({ open, onClose, kicker, title, subtitle, maxWidth = 680, children }) {
-  const dialogRef = useRef(null);
-
-  useEffect(() => {
-    if (!open) return;
-    const previouslyFocused = document.activeElement;
-
-    // Focus first focusable element after paint
-    const timer = setTimeout(() => {
-      const els = dialogRef.current?.querySelectorAll(FOCUSABLE);
-      els?.[0]?.focus();
-    }, 0);
-
-    function handleKey(e) {
-      if (e.key === 'Escape') { onClose(); return; }
-      if (e.key !== 'Tab' || !dialogRef.current) return;
-      const els = Array.from(dialogRef.current.querySelectorAll(FOCUSABLE));
-      if (!els.length) return;
-      if (e.shiftKey && document.activeElement === els[0]) {
-        e.preventDefault(); els[els.length - 1].focus();
-      } else if (!e.shiftKey && document.activeElement === els[els.length - 1]) {
-        e.preventDefault(); els[0].focus();
-      }
-    }
-
-    document.addEventListener('keydown', handleKey);
-    return () => {
-      clearTimeout(timer);
-      document.removeEventListener('keydown', handleKey);
-      previouslyFocused?.focus?.();
-    };
-  }, [open, onClose]);
-
-  if (!open) return null;
-  function handleBackdrop(e) {
-    if (e.target === e.currentTarget) onClose();
-  }
-  return (
-    <div
-      className="modal-overlay-enter modal-overlay"
-      onClick={handleBackdrop}
-    >
-      <div
-        ref={dialogRef}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="modal-title"
-        className="modal-card-enter modal-card"
-        style={{ maxWidth }}
-      >
-        <div className="modal-header">
-          <div style={{ flex: 1, minWidth: 0 }}>
-            {kicker && (
-              <div className="modal-kicker">{kicker}</div>
-            )}
-            <div id="modal-title" className="modal-title">{title}</div>
-            {subtitle && (
-              <div className="modal-subtitle">{subtitle}</div>
-            )}
-          </div>
-          <button
-            onClick={onClose}
-            aria-label="Close dialog"
-            className="modal-close"
-          >
-            <Icon.close size={14} />
-          </button>
-        </div>
-        <div className="modal-body">{children}</div>
-      </div>
-    </div>
-  );
-}
+/* ─── Modal (canonical: ui/Modal.jsx) ────────────────────────── */
+export { Modal } from './ui/Modal.jsx';
 
 /* ─── callAI (see src/lib/callAI.js) ────────────────────────── */
 export { callAI, summarizeTranscript } from '../lib/callAI.js';

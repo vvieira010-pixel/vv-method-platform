@@ -52,6 +52,7 @@
   --bg: #f4f9fc;
   --bg-deep: #e3f5f4;
   --surface: #ffffff;
+  --surface-glass: rgba(255,255,255,0.96);
   --surface-hover: #f7fbfc;
   --border: #d0e2e8;
   --border-strong: #b0ccd4;
@@ -1019,6 +1020,447 @@ p {
   padding: var(--space-8);
   text-align: center;
 }
+
+.page-shell-narrow {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: var(--space-7) var(--space-5);
+}
+
+/* ── Card row — standard flex layout for list items ───────────── */
+.card-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.card-row-body {
+  flex: 1;
+  min-width: 160px;
+}
+
+.card-row-title {
+  font-weight: var(--weight-bold);
+}
+
+.card-row-meta {
+  font-size: var(--text-xs);
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+/* ── Evidence chips (diagnostics) ─────────────────────────────── */
+.evidence-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: var(--space-2);
+}
+
+.evidence-chip {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 2px 6px;
+  font-size: 11px;
+  font-weight: var(--weight-bold);
+  color: var(--muted);
+  background: var(--bg);
+}
+
+/* ── Field — form field wrapper with label ────────────────────── */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* ── Underline tabs ───────────────────────────────────────────── */
+.tabs-line {
+  display: flex;
+  gap: var(--space-1);
+  border-bottom: 1px solid var(--border);
+  margin-bottom: var(--space-5);
+}
+
+.tab-line {
+  padding: var(--space-2) var(--space-4);
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-normal);
+  color: var(--muted);
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+}
+
+.tab-line:hover { color: var(--text); }
+
+.tab-line.active {
+  font-weight: var(--weight-bold);
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+/* ── Group header — section dividers in lists ─────────────────── */
+.group-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) 0 var(--space-2);
+  margin-top: var(--space-2);
+  border-bottom: 1px solid var(--divider);
+}
+
+.group-header-label {
+  font-weight: var(--weight-bold);
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+
+.group-header-count {
+  font-size: var(--text-xs);
+  color: var(--faint);
+  background: var(--bg);
+  border-radius: 99px;
+  padding: 1px 7px;
+  border: 1px solid var(--divider);
+}
+
+/* ── Exercise list item ───────────────────────────────────────── */
+.exercise-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+}
+
+/* ── Note / tip box ───────────────────────────────────────────── */
+.note-box {
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--text-xs);
+  background: var(--accent-subtle);
+  color: var(--muted);
+  line-height: 1.6;
+  border: 1px solid var(--accent-soft);
+}
+
+/* ── Card accent form ─────────────────────────────────────────── */
+.card-form {
+  margin-bottom: var(--space-5);
+  padding: var(--space-5);
+  border: 2px solid var(--accent);
+}
+
+/* ── Secret input wrapper ─────────────────────────────────────── */
+.secret-input {
+  position: relative;
+}
+
+.secret-input .input {
+  width: 100%;
+  padding-right: 40px;
+}
+
+.secret-toggle {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 6px;
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+}
+
+.secret-toggle.active {
+  color: var(--primary);
+}
+
+/* ── Back link — ghost button that looks like a text link ──────── */
+.back-link {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--muted);
+  font-size: var(--text-sm);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: var(--space-4);
+  padding: 0;
+  font-family: var(--font-ui);
+}
+.back-link:hover { color: var(--text); }
+
+/* ── Page shell variants ──────────────────────────────────────── */
+.page-shell-md {
+  max-width: 780px;
+  margin: 0 auto;
+  padding: var(--space-7) var(--space-5);
+}
+.page-shell-lg {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: var(--space-7) var(--space-5);
+}
+
+/* ── Stack list — vertical flex column with gap ───────────────── */
+.stack-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.stack-list-lg {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+/* ── Stat grid — 2-col layout for KPIs ────────────────────────── */
+.stat-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2);
+}
+.stat-cell {
+  text-align: center;
+  padding: var(--space-3) var(--space-2);
+  background: var(--bg);
+  border-radius: var(--radius-sm);
+}
+.stat-value {
+  font-size: var(--text-xl);
+  font-weight: var(--weight-bold);
+  color: var(--accent-deep);
+}
+.stat-label {
+  font-size: var(--text-xs);
+  color: var(--muted);
+}
+
+/* ── Approval bar — review step status bar ────────────────────── */
+.approval-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background: var(--bg);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-5);
+}
+
+/* ── Progress track — thin bar with animated fill ─────────────── */
+.progress-track {
+  height: 6px;
+  background: var(--bg-deep);
+  border-radius: 0;
+  margin-top: var(--space-2);
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  border-radius: 0;
+  transform-origin: left;
+  transition: transform 0.3s;
+}
+
+/* ── Section card — diagnosis review section ──────────────────── */
+.section-header-bar {
+  padding: var(--space-3) var(--space-4);
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  border-bottom: 1px solid var(--divider);
+}
+.section-body { padding: var(--space-4); }
+
+/* ── Zone header — grouped section label ──────────────────────── */
+.zone-header {
+  font-size: var(--text-xs);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: var(--space-1) 2px 0;
+}
+.zone-caption {
+  font-size: var(--text-xs);
+  color: var(--muted);
+  margin: 2px 2px 0;
+}
+
+/* ── Skill chip — toggle button for skill selection ───────────── */
+.skill-chip {
+  padding: var(--space-3);
+  border-radius: var(--radius-sm);
+  border: 2px solid var(--border);
+  background: var(--surface);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.skill-chip.active {
+  border-color: var(--accent);
+  background: var(--accent-subtle);
+}
+.skill-chip-check {
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+  border: 2px solid var(--border);
+  background: transparent;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+.skill-chip.active .skill-chip-check {
+  border-color: var(--accent);
+  background: var(--accent);
+}
+
+/* ── Alert box — inline error/warning message ─────────────────── */
+.alert-box {
+  padding: var(--space-4);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+}
+.alert-box.danger {
+  background: var(--danger-bg);
+  color: var(--danger);
+}
+.alert-box.warning {
+  background: var(--warning-bg);
+  color: var(--text);
+}
+
+/* ── Step bar — horizontal multi-step indicator ───────────────── */
+.step-bar {
+  display: flex;
+  align-items: flex-start;
+  gap: 0;
+  margin-bottom: var(--space-1);
+}
+.step-bar-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  position: relative;
+}
+.step-bar-connector {
+  position: absolute;
+  top: 9px;
+  right: 50%;
+  left: -50%;
+  height: 2px;
+  transition: background 0.3s;
+}
+.step-bar-dot {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  transition: background 0.3s;
+}
+.step-bar-label {
+  font-size: var(--text-xs);
+  white-space: nowrap;
+}
+
+/* Section label — uppercase mini heading */
+.section-label {
+  font-size: var(--text-xs);
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/* Unstyled icon-only close button */
+.btn-icon-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--muted);
+  padding: 0;
+  display: flex;
+}
+.btn-icon-close:hover { color: var(--text); }
+
+/* Bank panel — exercise bank picker panels */
+.bank-panel {
+  margin-bottom: var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+.bank-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+.bank-panel-title { font-weight: 600; font-size: var(--text-sm); }
+.bank-panel-note {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--divider);
+  background: var(--surface);
+  font-size: var(--text-xs);
+  color: var(--muted);
+  line-height: 1.5;
+}
+.bank-panel-body {
+  display: flex;
+  flex-direction: column;
+  max-height: 360px;
+  overflow-y: auto;
+}
+.bank-panel-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--divider);
+  gap: 10px;
+}
+.bank-panel-meta {
+  font-size: var(--text-xs);
+  color: var(--muted);
+  text-transform: capitalize;
+}
+
+/* Correction pair — error → fix display */
+.correction-pair { display: flex; gap: 6px; align-items: baseline; }
+.correction-original { color: var(--danger); text-decoration: line-through; }
+.correction-arrow { color: var(--muted); flex-shrink: 0; }
+.correction-improved { color: var(--success); }
+
+/* Info panel — bordered content box */
+.info-panel {
+  padding: var(--space-4);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+.info-panel.accent { border-color: var(--accent-soft); box-shadow: var(--shadow-sm); }
 
 /* ══════════════════════════════════════════════════════════════════
    6. TEACHER DASHBOARD (td-* classes)
@@ -3064,6 +3506,73 @@ textarea:focus, .textarea:focus {
   outline-offset: 1px;
 }
 
+.field-hint {
+  font-size: var(--text-xs);
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+.field-error {
+  font-size: var(--text-xs);
+  color: var(--error);
+  font-weight: var(--weight-medium);
+  line-height: 1.4;
+}
+
+.field-error input,
+.field-error select,
+.field-error textarea {
+  border-color: var(--error);
+}
+
+/* Toast system */
+.toast-host {
+  position: fixed;
+  right: 22px;
+  bottom: 22px;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: none;
+}
+
+.toast {
+  padding: 12px 18px;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-toast);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 280px;
+  max-width: 380px;
+  pointer-events: auto;
+  animation: fadeUp var(--transition-fast) ease-out;
+}
+
+.toast-ok   { background: var(--primary-ink); color: #fff; }
+.toast-info { background: var(--primary);     color: #fff; }
+.toast-warn { background: var(--warning);     color: #fff; }
+.toast-go   { background: var(--accent);      color: #fff; }
+
+.toast-glyph {
+  width: 22px;
+  height: 22px;
+  border-radius: var(--radius-pill);
+  background: rgba(255,255,255,.18);
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.toast-msg {
+  font-size: 13.5px;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
 /* Spacing utilities */
 .m-0 { margin: 0; }
 .mt-3 { margin-top: var(--space-3); }
@@ -3848,6 +4357,7 @@ textarea:focus, .textarea:focus {
   --bg: #0f1823;
   --bg-deep: #0a1118;
   --surface: #192130;
+  --surface-glass: rgba(25,33,48,0.96);
   --surface-hover: #1e2a3d;
   --border: #253548;
   --border-strong: #344d63;
@@ -4210,6 +4720,11 @@ textarea:focus, .textarea:focus {
   border-color: var(--border);
 }
 
+[data-theme="dark"] .evidence-chip {
+  background: var(--faint);
+  border-color: var(--border);
+}
+
 [data-theme="dark"] .student-upcoming-row {
   border-bottom-color: var(--divider);
 }
@@ -4371,9 +4886,29 @@ textarea:focus, .textarea:focus {
   outline-color: var(--accent-light);
 }
 
+[data-theme="dark"] .exercise-item {
+  background: var(--surface);
+  border-color: var(--border);
+}
+
 [data-theme="dark"] .student-confidence-list .student-upcoming-row {
   border-bottom-color: var(--divider);
 }
+
+[data-theme="dark"] .note-box {
+  background: rgba(20,136,145,0.08);
+  border-color: rgba(72,199,199,0.15);
+}
+
+[data-theme="dark"] .tab-line.active {
+  color: var(--accent-soft);
+  border-bottom-color: var(--accent-soft);
+}
+[data-theme="dark"] .stat-cell { background: var(--surface); }
+[data-theme="dark"] .approval-bar { background: var(--surface); }
+[data-theme="dark"] .skill-chip { background: var(--surface); border-color: var(--border); }
+[data-theme="dark"] .skill-chip.active { background: rgba(20,136,145,0.12); }
+[data-theme="dark"] .alert-box.warning { background: rgba(255,167,38,0.08); }
 
 /* ══════════════════════════════════════════════════════════════════
    13. LOGIN
