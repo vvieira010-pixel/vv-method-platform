@@ -32,6 +32,15 @@ Michigan Language Assessment also offers a 2-skill version for some institutiona
 | Writing | Two writing tasks | Clear communication, organization, support, accuracy |
 | Speaking | Five structured onscreen tasks | Real-world spoken communication |
 
+> **Competency model:** The MET assesses **4 core competencies**. Grammar and Vocabulary are tested within the Reading section as integrated sub-systems. Test strategy skills apply across all competencies.
+>
+> | Competency | Skills |
+> |---|---|
+> | I — Listening | Listening |
+> | II — Reading | Reading + Grammar + Vocabulary |
+> | III — Writing | Writing |
+> | IV — Speaking | Speaking |
+
 ---
 
 # 3. Listening Skills
@@ -70,6 +79,17 @@ The main skills are:
 3. Take short notes with key words only.
 4. Listen for contrast words: **but, however, actually, instead, although**.
 5. After listening, choose the answer that matches the full idea.
+
+## Strategic interventions
+
+These are the most common obstacles in listening and how to overcome them:
+
+| Obstacle | What happens | Strategy |
+|---|---|---|
+| Mid-stream information shifts | The speaker says one option, then changes it. | Listen to the entire exchange before choosing. Trace the logical flow. |
+| Lexical distractors | Wrong answers reuse exact words from the audio. | Focus on semantic equivalence (paraphrased meaning), not verbatim matching. |
+| Note-taking overload | Writing too much causes you to miss the next part. | Use lean symbolic notes: abbreviations + arrows + slashes (e.g., `meeting Tues -> Fri / manager travel`). |
+| Discourse signposts | The real answer follows a contrast word. | Listen for **but, however, actually, instead, although** — the key information often comes after these words. |
 
 ## Listening note-taking model
 
@@ -118,7 +138,10 @@ The main reading skills are:
 
 For inference questions, use this formula:
 
-**Text clue + logical conclusion = inference**
+> **Text clue + Logical conclusion = Inference**
+>
+> A valid inference is supported by evidence in the text + a reasonable step of logic.
+> A bad inference is too extreme, unsupported, or contradicted by the text.
 
 Example:
 
@@ -129,6 +152,8 @@ Example:
 ---
 
 # 5. Grammar / Use of English Skills
+
+> **Note:** Grammar is assessed within the MET Reading section as an integrated sub-system (Competency II). It is tracked separately for diagnosis but contributes to Reading performance.
 
 ## What Grammar measures
 
@@ -161,6 +186,8 @@ Ask five quick questions:
 ---
 
 # 6. Vocabulary Skills
+
+> **Note:** Vocabulary is assessed within the MET Reading section as an integrated sub-system (Competency II). It is tracked separately for diagnosis but contributes to Reading performance.
 
 ## What Vocabulary measures
 
@@ -210,9 +237,23 @@ The official time is 45 minutes.
 | Coherence | Your ideas connect logically. |
 | Register | Your tone fits the task, especially in formal writing. |
 
+## Key assessment standards
+
+Written output is assessed against seven qualitative criteria:
+
+| Standard | What it means |
+|---|---|
+| Task Completion | Addressing every component of the prompt fully. |
+| Organization | Structuring ideas logically across clear paragraph boundaries. |
+| Development | Providing adequate depth through reasoning, examples, and details. |
+| Grammar Accuracy | Maintaining control over sentence structures so that meaning is clear. |
+| Vocabulary Range | Deploying precise, varied, and topic-appropriate terminology. |
+| Coherence | Connecting sentences and ideas in a logical, readable flow using B2 connectors. |
+| Register | Matching the tone of the written response to the formal requirements of the task. |
+
 ## Writing Task 1 strategy
 
-For short response questions:
+For short response questions, follow the response model: **direct answer + reason + concrete personal detail**.
 
 1. Answer each question directly.
 2. Add a reason.
@@ -270,10 +311,12 @@ The MET Speaking section is a structured onscreen speaking test with five tasks.
 
 ### Task 1 - Picture description
 
+**Execution formula:** General situation (who, where, what) → key details (actions, objects, relationships) → logical inferences
+
 Use this order:
 
 1. General situation: who, where, what.
-2. Key details: actions, objects, relationship.
+2. Key details: actions, objects, relationships.
 3. Inference: what may be happening and why.
 
 Useful phrases:
@@ -285,13 +328,15 @@ Useful phrases:
 
 ### Task 2 - Personal experience
 
+**Execution formula:** Situation → Problem/Main Event → Action Taken → Result → Reflection/Lesson
+
 Use a simple story structure:
 
-1. Situation
-2. Problem or main event
-3. Action
-4. Result
-5. Reflection
+1. Situation: set the scene (when, where, who).
+2. Problem or main event: what happened.
+3. Action taken: what you did about it.
+4. Result: what was the outcome.
+5. Reflection/Lesson: what you learned or felt.
 
 Useful phrases:
 
@@ -303,9 +348,9 @@ Useful phrases:
 
 ### Task 3 - Opinion
 
-Use this structure:
+**Execution formula:** Opinion → Reason 1 → Example → Reason 2 → Conclusion
 
-**Opinion -> Reason 1 -> Example -> Reason 2 -> Conclusion**
+Use this structure:
 
 Useful phrases:
 
@@ -315,14 +360,16 @@ Useful phrases:
 - Another point is...
 - That is why I believe...
 
-### Task 4 - Advantages and disadvantages
+### Task 4 - Advantages and disadvantages (Comparison)
+
+**Execution formula:** Introduce both sides → advantage with support → drawback with support → balanced concluding synthesis
 
 Use this structure:
 
-1. Introduce both sides.
-2. Advantage 1 + support.
-3. Disadvantage 1 + support.
-4. Final balanced conclusion.
+1. Introduce both sides of the situation.
+2. Present one major advantage with support.
+3. Contrast with one major drawback with support.
+4. Deliver a balanced concluding synthesis.
 
 Useful phrases:
 
@@ -333,13 +380,15 @@ Useful phrases:
 
 ### Task 5 - Persuasion
 
+**Execution formula:** Address authority → State problem → Present reasons → Offer practical solution → Formal request
+
 Use this structure:
 
-1. Address the authority respectfully.
-2. State the problem.
-3. Give strong reasons.
-4. Offer a practical solution.
-5. End with a clear request.
+1. Respectfully address the authority figure.
+2. State the core problem clearly.
+3. Present strong supporting reasons.
+4. Offer a highly practical solution.
+5. Close with a direct, formal request.
 
 Useful phrases:
 
@@ -363,6 +412,15 @@ A strong B2 student can usually:
 | Vocabulary | Use topic vocabulary and common collocations naturally. |
 | Writing | Write organized paragraphs with reasons and examples. |
 | Speaking | Speak for 60-90 seconds with clear organization and enough detail. |
+
+### B2 Competency Profile Summary
+
+To reach a consistent B2 profile across all four MET competencies, a candidate must be able to:
+
+* **Listening:** Follow spoken discourse on familiar topics while extracting implied meaning.
+* **Reading:** Read and connect arguments across disparate, complex texts.
+* **Writing:** Write highly organized paragraphs using cohesive transition markers and explicit supporting evidence.
+* **Speaking:** Speak with sustained organization for 60 to 90 seconds while managing complex structures like tenses, modals, and conditionals under timed conditions.
 
 A student moving from B1 to B2 often needs more work on:
 
@@ -489,3 +547,18 @@ After a mock test, complete this reflection:
   https://michiganassessment.org/which-test-is-right-for-me/met/met-preparation/
 
 This guide is original classroom support material created for MET preparation. It should not be presented as an official MET test, official rating scale, or official score predictor.
+
+---
+
+# 14. MET Competency Map
+
+| Competency | Label | Skills Assessed | Sub-Systems |
+|---|---|---|---|
+| I | Listening | Listening | 5 sub-skills + 4 strategic interventions |
+| II | Reading | Reading + Grammar + Vocabulary | 6 reading sub-skills + grammar sub-system + vocabulary sub-system |
+| III | Writing | Writing | 2 tasks + 7 assessment standards |
+| IV | Speaking | Speaking | 5 tasks with execution formulas |
+
+**Cross-cutting:** Test Strategy (time management, distractor management, question type recognition) applies across all competencies.
+
+For detailed elaboration of each competency, see `MET_Framework_Core_Competencies_Elaboration.md`.
