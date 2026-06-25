@@ -194,6 +194,7 @@ export function Shell({ tabs = [], active, onTab, children, rightSlot, workflowA
 
   return (
     <div className="shell">
+      <a href="#main-content" className="skip-nav">Skip to content</a>
       <header className="shell-topbar">
         <div className="shell-brand">
           <span className="shell-brand-name">MET</span>
@@ -232,7 +233,7 @@ export function Shell({ tabs = [], active, onTab, children, rightSlot, workflowA
         {workflowActive && <WorkflowStageStrip active={workflowActive} onStage={onWorkflowStage} />}
         {rightSlot && <div style={{ display:'flex', alignItems:'center', gap:10 }}>{rightSlot}</div>}
       </header>
-      <main className="shell-main">{children}</main>
+      <main id="main-content" className="shell-main">{children}</main>
       <nav className="shell-mobile-nav" aria-label="Mobile navigation">
         {tabs.filter(t => t.mobile !== false && ['dashboard','students','diagnostics','homework','submissions'].includes(t.id)).map(tab => (
           <button key={tab.id}
