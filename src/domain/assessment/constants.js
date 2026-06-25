@@ -58,3 +58,46 @@ export const SKILL_KEYS = [
   { key: 'Vocabulary',    evalKey: 'evaluatedVocabulary',   countKey: 'vocabularyEvidenceCount' },
   { key: 'Test Strategy', evalKey: 'evaluatedTestStrategy', countKey: 'testStrategyEvidenceCount' },
 ];
+
+export const COMPETENCY_GROUPS = [
+  {
+    id: 'listening',
+    label: 'Listening',
+    competency: 'I',
+    skills: ['Listening'],
+    description: 'Comprehension of spoken discourse: main idea, detail, inference, attitude, function',
+  },
+  {
+    id: 'reading',
+    label: 'Reading',
+    competency: 'II',
+    skills: ['Reading', 'Grammar', 'Vocabulary'],
+    description: 'Reading comprehension with integrated grammar and vocabulary sub-systems',
+  },
+  {
+    id: 'writing',
+    label: 'Writing',
+    competency: 'III',
+    skills: ['Writing'],
+    description: 'Personal responses and formal essay with 7 assessment standards',
+  },
+  {
+    id: 'speaking',
+    label: 'Speaking',
+    competency: 'IV',
+    skills: ['Speaking'],
+    description: '5 structured tasks with execution formulas under timed conditions',
+  },
+];
+
+export const CROSS_CUTTING_SKILLS = ['Test Strategy'];
+
+export function getCompetencyForSkill(skillKey) {
+  for (const group of COMPETENCY_GROUPS) {
+    if (group.skills.includes(skillKey)) return group;
+  }
+  if (CROSS_CUTTING_SKILLS.includes(skillKey)) {
+    return { id: 'cross-cutting', label: 'Cross-Cutting', competency: null, skills: CROSS_CUTTING_SKILLS };
+  }
+  return null;
+}
