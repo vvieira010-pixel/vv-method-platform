@@ -25,16 +25,16 @@ export function getUnitsByLevel(level) {
 
 /** All 10 subject options shown in the wizard */
 export const SUBJECT_OPTIONS = [
-  { id: 'reading',             label: 'Reading',            icon: '📖', desc: 'Passage comprehension MCQ' },
-  { id: 'listening',           label: 'Listening',          icon: '🎧', desc: 'Dialogue comprehension MCQ' },
-  { id: 'vocabulary',          label: 'Vocabulary',         icon: '📚', desc: 'Flashcard sets' },
-  { id: 'grammar',             label: 'Grammar Drills',     icon: '✏️', desc: 'Sentence completion MCQ' },
-  { id: 'speaking',            label: 'Speaking',           icon: '🎙️', desc: 'Situational roleplay prompt' },
-  { id: 'writing',             label: 'Writing',            icon: '📝', desc: 'Essay composition prompt' },
-  { id: 'levelup',             label: 'Level-Up',           icon: '🚀', desc: 'B1 → B2 sentence upgrade MCQ' },
-  { id: 'grammar-doctor',      label: 'Grammar Doctor',     icon: '🩺', desc: 'Error correction challenges' },
-  { id: 'vocab-swapper',       label: 'Vocab Swapper',      icon: '🔄', desc: 'Replace simple words with B2 vocab' },
-  { id: 'interactive-dialogue',label: 'Interactive Dialogue',icon: '💬', desc: 'Speech roleplay with dialogue script' },
+  { id: 'reading',             label: 'Reading',            icon: '📖', desc: 'Passage comprehension MCQ',            competency: 'II' },
+  { id: 'listening',           label: 'Listening',          icon: '🎧', desc: 'Dialogue comprehension MCQ',           competency: 'I' },
+  { id: 'vocabulary',          label: 'Vocabulary',         icon: '📚', desc: 'Flashcard sets',                       competency: 'II' },
+  { id: 'grammar',             label: 'Grammar Drills',     icon: '✏️', desc: 'Sentence completion MCQ',              competency: 'II' },
+  { id: 'speaking',            label: 'Speaking',           icon: '🎙️', desc: 'Situational roleplay prompt',          competency: 'IV' },
+  { id: 'writing',             label: 'Writing',            icon: '📝', desc: 'Essay composition prompt',             competency: 'III' },
+  { id: 'levelup',             label: 'Level-Up',           icon: '🚀', desc: 'B1 → B2 sentence upgrade MCQ',         competency: 'II' },
+  { id: 'grammar-doctor',      label: 'Grammar Doctor',     icon: '🩺', desc: 'Error correction challenges',          competency: 'II' },
+  { id: 'vocab-swapper',       label: 'Vocab Swapper',      icon: '🔄', desc: 'Replace simple words with B2 vocab',   competency: 'II' },
+  { id: 'interactive-dialogue',label: 'Interactive Dialogue',icon: '💬', desc: 'Speech roleplay with dialogue script', competency: 'IV' },
 ];
 
 /* ── converters ── */

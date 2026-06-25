@@ -121,7 +121,49 @@ Grammar: articles, quantifiers, verb_tenses, prepositions, subject_verb_agreemen
 
 Vocabulary: general_met_vocabulary, healthcare_vocabulary, academic_vocabulary, topic_vocabulary, word_choice, collocation, paraphrasing, inference_language, connector_phrases
 
-Test Strategy: time_management, question_type_recognition, distractor_management, evidence_selection, self_correction, exam_anxiety_control`;
+Test Strategy: time_management, question_type_recognition, distractor_management, evidence_selection, self_correction, exam_anxiety_control
+
+━━━ STRATEGIC INTERVENTIONS ━━━
+
+Listening Strategic Interventions (use when diagnosing listening weaknesses or generating listening exercises):
+  1. Mid-Stream Information Shifts — speakers often state an initial option then change it. Listen to the entire exchange before concluding.
+  2. Lexical Distractors — wrong options reuse exact words from the audio. Prioritize semantic equivalence over verbatim matching.
+  3. Note-Taking Overload — full transcription causes cognitive overload. Use lean symbolic notes: abbreviations + logical relationships (e.g., "meeting Tues -> Fri / manager travel").
+  4. Discourse Signposts — real answers often follow contrast markers: but, however, actually, instead, although.
+
+Reading Inference Formula:
+  Text clue + Logical conclusion = Inference
+  A valid inference is supported by evidence in the text + a reasonable step of logic.
+  A bad inference is too extreme, unsupported, or contradicted by the text.
+
+B2 Grammar Sub-System (tested within the MET Reading section):
+  Core areas: Verb Tenses & Perfect Forms, Conditionals, Passive Voice & Reported Speech, Modals, Relative Clauses, Articles, Prepositions
+  Diagnostic note: Grammar scores contribute to overall MET Reading performance. Track as a separate skill for diagnosis but understand it is assessed within the Reading competency.
+
+B2 Vocabulary Sub-System (tested within the MET Reading section):
+  Core areas: Collocations, Phrasal Verbs & Word Formation, Register
+  Diagnostic note: Vocabulary scores contribute to overall MET Reading performance. Track as a separate skill for diagnosis but understand it is assessed within the Reading competency.
+
+Writing Pedagogical Assessment Standards (guide diagnosis alongside the official 5-category rating above):
+  Task Completion, Organization, Development, Grammar Accuracy, Vocabulary Range, Coherence, Register
+  B2 Connectors for Writing: In addition, Furthermore, This is because, For instance, However, Overall, In conclusion
+
+Speaking Execution Formulas (use when generating speaking exercises or diagnosing speaking structure):
+  Q1: General situation (who/where/what) → key details (actions/objects/relationships) → logical inferences
+  Q2: Situation → Problem/Main Event → Action Taken → Result → Reflection/Lesson
+  Q3: Opinion → Reason 1 → Example → Reason 2 → Conclusion
+  Q4: Introduce both sides → advantage with support → drawback with support → balanced concluding synthesis
+  Q5: Address authority → State problem → Present reasons → Offer practical solution → Formal request
+
+━━━ MET COMPETENCY MODEL ━━━
+The MET assesses 4 core competencies. Grammar and Vocabulary are sub-systems of the Reading competency.
+Test Strategy is a cross-cutting skill that applies to all competencies.
+  Competency I:  Listening (5 sub-skills + 4 strategic interventions)
+  Competency II: Reading + Grammar + Vocabulary (6 reading sub-skills + grammar sub-system + vocabulary sub-system)
+  Competency III: Writing (2 tasks + 7 assessment standards)
+  Competency IV:  Speaking (5 tasks with execution formulas)
+For diagnosis JSON, continue using the 7-skill keys (speaking, writing, reading, listening, grammar, vocabulary, testStrategy).
+The competency model is the pedagogical lens; the 7-skill keys are the data layer.`;
 
 
 // ━━━ PROMPT MODULES ━━━
@@ -777,6 +819,13 @@ ${typeRule}
 - Use general MET topics by default. ${GENERAL_MET_TOPIC_RULES}
 - B1–B2 level. Each exercise should take 3–5 minutes.
 - Keep every item connected to MET skills: speaking organization, writing support, reading/listening evidence, grammar control, vocabulary range, or test strategy.
+- MET focus by skill group:
+  Listening: test for lexical distractors and mid-stream information shifts; use discourse signposts (but, however, actually, instead, although).
+  Reading: use the inference formula (Text clue + Logical conclusion = Inference); test paraphrase recognition and distractor resistance.
+  Speaking: follow the execution formula for the specific MET task type (Q1–Q5). Q2 = 5-stage narrative; Q4 = balanced both sides; Q5 = formal persuasion.
+  Writing: target the 7 assessment standards (Task Completion, Organization, Development, Grammar Accuracy, Vocabulary Range, Coherence, Register); encourage B2 connectors.
+  Grammar: focus on B2 sub-system areas (verb tenses, conditionals, passive voice, modals, relative clauses, articles, prepositions).
+  Vocabulary: focus on collocations, phrasal verbs, word formation, and register awareness.
 
 ${EXERCISE_COMPLETENESS_RULES}
 
@@ -834,7 +883,7 @@ Q1 | metTask:"Q1" | targetSeconds:60  | Picture description
   imageDescription: required — write a 1–2 sentence vivid scene description the student will describe.
 
 Q2 | metTask:"Q2" | targetSeconds:60  | Personal experience / narrative
-  Structure: setup → event → outcome → brief reflection. Use past tenses consistently.
+  Structure: Situation → Problem/Main Event → Action Taken → Result → Reflection/Lesson. Use past tenses consistently.
   Register: informal, narrative. Include sequence connectors (first, then, in the end).
   imageDescription: omit (no picture needed).
 
@@ -849,7 +898,7 @@ Q4 | metTask:"Q4" | targetSeconds:90  | Advantages and disadvantages
   imageDescription: omit.
 
 Q5 | metTask:"Q5" | targetSeconds:90  | Persuade an authority figure
-  Structure: address authority respectfully → state problem → give 2–3 strong reasons → propose solution → clear request.
+  Structure: address authority respectfully → state core problem → present strong supporting reasons → offer a highly practical solution → close with a direct, formal request.
   Register: formal throughout ("I strongly believe…", "I would like to suggest…"). ONE committed side only.
   imageDescription: omit.`;
 
@@ -867,7 +916,9 @@ T2 | metTask:"T2" | targetWords:250 | type:"short"
   Format: a formal opinion essay prompt on a real-world topic.
   Student writes intro (opinion) + body 1 (reason + example) + body 2 (reason or counterpoint) + conclusion.
   Rubric hint: "4 paragraphs: opinion → reason + example → second point → conclusion. Use connectors."
-  Prompt should invite a genuine opinion, not just describe something.`;
+  Prompt should invite a genuine opinion, not just describe something.
+  Assessment standards: Task Completion, Organization, Development, Grammar Accuracy, Vocabulary Range, Coherence, Register.
+  B2 connectors to encourage: In addition, Furthermore, This is because, For instance, However, Overall, In conclusion.`;
 
   const skillNote = isSpeaking ? MET_SPEAKING_BRIEF
                   : isWriting  ? MET_WRITING_BRIEF
