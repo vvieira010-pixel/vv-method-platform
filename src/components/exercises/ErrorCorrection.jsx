@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Icon } from '../shared.jsx';
 
 const TEAL = 'var(--accent)';
-const NAVY = 'var(--primary-ink)';
+const NAVY = 'var(--accent-text)';
 
 const RUBRIC_CATEGORIES = [
   { id: 'grammatical_accuracy', label: 'Grammatical Accuracy', description: 'Tense, agreement, sentence structure' },

@@ -2,8 +2,9 @@
  * submission-review.jsx — Teacher reviews student submission vs. diagnosis
  */
 import { useState, useEffect } from 'react';
-import { Icon, Card, SectionHeader, Pill, Button, Avatar } from '../components/shared.jsx';
-import { callAI } from '../components/shared.jsx';
+import { Icon, SectionHeader, Pill, Avatar, callAI } from '../components/shared.jsx';
+import { Card } from '../components/ui/Card.jsx';
+import { Button } from '../components/ui/Button.jsx';
 import { parseAiJson } from '../lib/ai-helpers.js';
 import { withSkills } from '../education-skills/active-skills.js';
 import {

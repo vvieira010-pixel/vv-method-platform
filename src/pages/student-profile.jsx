@@ -2,7 +2,9 @@
  * student-profile.jsx — Deep-dive student profile with tabs
  */
 import { useState, useEffect } from 'react';
-import { Icon, Card, SectionHeader, Pill, Button, Avatar, PillNav } from '../components/shared.jsx';
+import { Icon, SectionHeader, Pill, Avatar, PillNav } from '../components/shared.jsx';
+import { Button } from '../components/ui/Button.jsx';
+import { Card } from '../components/ui/Card.jsx';
 import {
   getStudent, saveStudent,
   getTargetProfiles, saveTargetProfile, setActiveTargetProfile, deleteTargetProfile, TARGET_PROFILE_PRESETS,

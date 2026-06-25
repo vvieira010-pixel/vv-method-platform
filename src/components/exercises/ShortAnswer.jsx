@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { MET_TASK_CONFIG } from '../../lib/met-task-spec.js';
 
 const TEAL = 'var(--accent)';
-const NAVY = 'var(--primary-ink)';
+const NAVY = 'var(--accent-text)';
 
 const SCORE_DESCRIPTORS = [
   { score: 4, label: 'Fully relevant — extensive supporting detail' },

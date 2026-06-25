@@ -4,7 +4,9 @@
  * with the old Class Prep cycle board (per-student stage + next action).
  */
 import { useState, useEffect } from 'react';
-import { Icon, Card, SectionHeader, Pill, Button, Avatar, Skeleton, SkeletonCard, SkeletonText, EmptyState } from '../components/shared.jsx';
+import { Icon, SectionHeader, Pill, Avatar, Skeleton, SkeletonCard, SkeletonText, EmptyState } from '../components/shared.jsx';
+import { Button } from '../components/ui/Button.jsx';
+import { Card } from '../components/ui/Card.jsx';
 import {
   getClassEvents, getAllSubmissions, getReviews,
   getStudentCycleState, requestInboxNotificationPermission,
@@ -327,7 +329,7 @@ function StudentRow({ student: s, onNavigate, onAction, seedsStages, onSetSeedsS
         >
           <Avatar name={s.name} size={34} />
           <div>
-            <div style={{ fontWeight: 'var(--weight-semibold)', fontSize: 'var(--text-md)', color: 'var(--text-1)' }}>{s.name}</div>
+            <div style={{ fontWeight: 'var(--weight-semibold)', fontSize: 'var(--text-base)', color: 'var(--text-1)' }}>{s.name}</div>
             <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: 2 }}>
               {currentBand} → {targetBand} · Session {s.session}/{s.totalSessions} · Last diagnosis: {diagDate}
             </div>

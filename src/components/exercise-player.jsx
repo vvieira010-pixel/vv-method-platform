@@ -4,7 +4,9 @@
  */
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Icon, Card, Button, Pill } from './shared.jsx';
+import { Icon, Pill } from './shared.jsx';
+import { Card } from './ui/Card.jsx';
+import { Button } from './ui/Button.jsx';
 import { getExType, parseBlankTemplate, shuffleArray, autoGrade } from '../lib/exercise-types.js';
 import { ExTypeBadge } from './exercise-badge.jsx';
 import Listening from './exercises/Listening.jsx';
@@ -71,7 +73,7 @@ function MCQPlayer({ ex, res, update, readOnly }) {
 
   return (
     <div>
-      <p style={{ margin: '0 0 14px', fontSize: 'var(--text-md)', fontWeight: 600, color: 'var(--text)', lineHeight: 1.55 }}>
+      <p style={{ margin: '0 0 14px', fontSize: 'var(--text-base)', fontWeight: 600, color: 'var(--text)', lineHeight: 1.55 }}>
         {ex.question}
       </p>
       {!readOnly && !done && (
@@ -209,7 +211,7 @@ function BlankPlayer({ ex, res, update, readOnly }) {
           <span>Keep trying — if a blank is tricky, its answer appears after {BLANK_MAX_TRIES} attempts.</span>
         </div>
       )}
-      <p style={{ margin: '0 0 14px', fontSize: 'var(--text-md)', lineHeight: 2.4, color: 'var(--text)' }}>
+      <p style={{ margin: '0 0 14px', fontSize: 'var(--text-base)', lineHeight: 2.4, color: 'var(--text)' }}>
         {segments.map((seg, i) => {
           if (seg.type === 'text') return <span key={i}>{seg.value}</span>;
           const idx = seg.index;
@@ -232,7 +234,7 @@ function BlankPlayer({ ex, res, update, readOnly }) {
                 aria-label={status === 'ok' ? 'Blank, correct' : status === 'warn' ? 'Blank, check your answer' : 'Blank'}
                 style={{
                   border: 'none', borderBottom: `2px solid ${color}`,
-                  outline: 'none', fontSize: 'var(--text-md)', width: 130,
+                  outline: 'none', fontSize: 'var(--text-base)', width: 130,
                   padding: '2px 6px', textAlign: 'center',
                   fontFamily: 'var(--font-ui)', fontWeight: 600,
                   color, background: 'transparent',
@@ -292,7 +294,7 @@ function ShortPlayer({ ex, res, update, readOnly }) {
 
   return (
     <div>
-      <p style={{ margin: '0 0 6px', fontSize: 'var(--text-md)', fontWeight: 600, color: 'var(--text)', lineHeight: 1.55 }}>
+      <p style={{ margin: '0 0 6px', fontSize: 'var(--text-base)', fontWeight: 600, color: 'var(--text)', lineHeight: 1.55 }}>
         {ex.prompt}
       </p>
 
@@ -498,7 +500,7 @@ function SpeakPlayer({ ex, res, update, readOnly }) {
 
       <div style={{ background: 'var(--bg)', borderRadius: 0, padding: '14px 16px', marginBottom: 14 }}>
         <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>Speaking prompt</div>
-        <p style={{ margin: 0, fontSize: 'var(--text-md)', color: 'var(--text)', lineHeight: 1.55, fontWeight: 500 }}>
+        <p style={{ margin: 0, fontSize: 'var(--text-base)', color: 'var(--text)', lineHeight: 1.55, fontWeight: 500 }}>
           {ex.prompt}
           <span style={{ color: 'var(--muted)', fontWeight: 600 }}> Target: {target} seconds.</span>
         </p>
@@ -1157,7 +1159,7 @@ export function HomeworkStepThrough({ exercises, responses, onResponse, onSubmit
 
         <Card small className="student-exercise-mini-card" style={{ marginBottom: 10 }}>
           <div style={{ padding: '8px 0' }}>
-            <h3 style={{ margin: '0 0 16px 0', fontSize: 'var(--text-md)', color: 'var(--text)' }}>How sure are you about your answers?</h3>
+            <h3 style={{ margin: '0 0 16px 0', fontSize: 'var(--text-base)', color: 'var(--text)' }}>How sure are you about your answers?</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {CONFIDENCE_LEVELS.map(level => (
                 <button

@@ -1,4 +1,5 @@
-import { Icon, Button } from '../shared.jsx';
+import { Icon } from '../shared.jsx';
+import { Button } from '../../components/ui/Button.jsx';
 import { exercisePreview } from '../../lib/exercise-types.js';
 
 export default function PreviewExercise({ exercise }) {
@@ -24,7 +25,7 @@ export default function PreviewExercise({ exercise }) {
     case 'blank':
       return (
         <div>
-          <p style={{ fontSize: 'var(--text-md)', lineHeight: 2 }}>
+          <p style={{ fontSize: 'var(--text-base)', lineHeight: 2 }}>
             {(exercise.template || 'Sentence with ___ blanks…').split(/(_{3,})/).map((part, i) =>
               /^_{3,}$/.test(part)
                 ? <span key={i} style={{ display: 'inline-block', width: 100, borderBottom: '2px solid var(--primary)', textAlign: 'center', margin: '0 4px', color: 'var(--muted)' }}>______</span>

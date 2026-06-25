@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { Button } from '../components/shared.jsx';
+import { Button } from '../components/ui/Button.jsx';
 import { getHomework, submitHomework, getReviews, getDraft, saveDraft } from '../lib/workflow.js';
 import { isStructuredExercise, autoGrade } from '../lib/exercise-types.js';
 import { ExercisePlayer, HomeworkStepThrough } from '../components/exercise-player.jsx';

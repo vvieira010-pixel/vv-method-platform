@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Icon, Card, SectionHeader, Button } from '../components/shared.jsx';
+import { Icon, SectionHeader } from '../components/shared.jsx';
+import { Button } from '../components/ui/Button.jsx';
+import { Card } from '../components/ui/Card.jsx';
 import { getLibraryExercises, deleteLibraryExercise } from '../lib/exercise-library.js';
 import { getB2Modules } from '../lib/met-b2-bank.js';
 import { getLifestyleModules } from '../lib/lifestyle-pack.js';

@@ -1,5 +1,6 @@
 import { useState, useEffect, lazy, Suspense } from 'react';
-import { Icon, Avatar, Button, Skeleton, SkeletonText, SkeletonCard, EmptyState } from '../components/shared.jsx';
+import { Icon, Avatar, Skeleton, SkeletonText, SkeletonCard, EmptyState } from '../components/shared.jsx';
+import { Button } from '../components/ui/Button.jsx';
 import { getHomework, getDiagnoses, getClassEvents, getReviews, getStudentSeedsStage } from '../lib/workflow.js';
 import { recordPractice, getDueCount, getDueItems, toMCQ, getAllEntries } from '../lib/spaced-repetition.js';
 import { readStoredSupabaseSession, updateUserPassword } from '../lib/supabase-storage.js';

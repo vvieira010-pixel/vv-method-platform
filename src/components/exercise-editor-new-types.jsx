@@ -1,7 +1,8 @@
 /**
  * exercise-editor-new-types.jsx — Editors for dialogue, swap, and levelup types.
  */
-import { Button, Icon } from './shared.jsx';
+import { Icon } from './shared.jsx';
+import { Button } from './ui/Button.jsx';
 
 const fieldLabel = {
   display: 'block', fontSize: 'var(--text-xs)', fontWeight: 700,

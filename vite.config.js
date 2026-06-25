@@ -26,7 +26,9 @@ export default defineConfig({
     port: 5173,
     hmr: true,
     proxy: {
-      '/api': 'http://localhost:3000',
+      '/api': process.env.USE_PROD_API === 'true'
+        ? { target: 'https://met-mastery.vercel.app', changeOrigin: true }
+        : 'http://localhost:3000',
     },
   },
   resolve: {

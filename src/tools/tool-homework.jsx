@@ -2,7 +2,9 @@
  * tool-homework.jsx — Assign homework from diagnosis + review student submissions
  */
 import { useState, useEffect } from 'react';
-import { Icon, Card, SectionHeader, Pill, Button, PillNav, Avatar } from '../components/shared.jsx';
+import { Icon, SectionHeader, Pill, PillNav, Avatar } from '../components/shared.jsx';
+import { Button } from '../components/ui/Button.jsx';
+import { Card } from '../components/ui/Card.jsx';
 import { getHomework, saveHomework, deleteHomework, getSubmissions, getDiagnoses, getReviews, saveReview, updateDiagnosisCycleStage, getStudentCycleState } from '../lib/workflow.js';
 import { isStructuredExercise, autoGrade, exercisePreview } from '../lib/exercise-types.js';
 import { ExTypeBadge } from '../components/exercise-editor.jsx';

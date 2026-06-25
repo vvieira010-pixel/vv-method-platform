@@ -4,7 +4,9 @@
  * Also exports ExerciseTypePicker for adding new exercises.
  */
 import { useState } from 'react';
-import { Icon, Card, Button } from './shared.jsx';
+import { Icon } from './shared.jsx';
+import { Button } from '../components/ui/Button.jsx';
+import { Card } from '../components/ui/Card.jsx';
 import { EX_TYPES, getExType } from '../lib/exercise-types.js';
 import { metTaskOptions } from '../lib/met-task-spec.js';
 import { dbEnabled, uploadExerciseImage } from '../lib/supabase-db.js';

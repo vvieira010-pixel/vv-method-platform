@@ -1,5 +1,7 @@
 import { useState } from 'react';
-import { Icon, Card, SectionHeader, Button, Pill } from '../components/shared.jsx';
+import { Icon, SectionHeader, Pill } from '../components/shared.jsx';
+import { Button } from '../components/ui/Button.jsx';
+import { Card } from '../components/ui/Card.jsx';
 import { callAI } from '../components/shared.jsx';
 import { parseAiJson } from '../lib/ai-helpers.js';
 

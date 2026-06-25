@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Icon, Button } from '../components/shared.jsx';
+import { Icon } from '../components/shared.jsx';
+import { Button } from '../components/ui/Button.jsx';
 import { StudentFeedbackView } from '../components/domain-ui.jsx';
 import { getDiagnoses, getSubmissions, getReviews, getInbox, sendMessage } from '../lib/workflow.js';
 import { asArray, getRelevantGlossaryTerms, hasVisibleApprovedStudentFeedback } from './student-helpers.js';

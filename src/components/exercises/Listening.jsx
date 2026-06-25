@@ -17,7 +17,7 @@ import { useState, useRef, useCallback } from 'react';
 import { Icon } from '../shared.jsx';
 
 const TEAL = 'var(--accent)';
-const NAVY = 'var(--primary-ink)';
+const NAVY = 'var(--accent-text)';
 const EL_VOICE    = '21m00Tcm4TlvDq8ikWAM'; // ElevenLabs — Rachel, natural American English
 const DEEPGRAM_MODEL = 'aura-2-thalia-en';    // Deepgram Aura-2 — clear American English
 const OPENAI_VOICE = 'nova';                  // OpenAI TTS — nova (female, clear, neutral)

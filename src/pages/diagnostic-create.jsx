@@ -12,7 +12,9 @@
  *   constants.js, diagnosis-utils.js, hooks/useSectionApproval.js, components/SectionContent.jsx
  */
 import { useState, useEffect } from 'react';
-import { Icon, Card, SectionHeader, Pill, Button, Avatar } from '../components/shared.jsx';
+import { Icon, SectionHeader, Pill, Avatar } from '../components/shared.jsx';
+import { Button } from '../components/ui/Button.jsx';
+import { Card } from '../components/ui/Card.jsx';
 import { callAI } from '../components/shared.jsx';
 import { parseAiJson } from '../lib/ai-helpers.js';
 import { withSkills } from '../education-skills/active-skills.js';
@@ -48,6 +50,7 @@ import { SectionContent, PrereqIcon, camelToLabel } from '../domain/assessment/c
 
 
 export default function DiagnosticCreate({ studentId, classEventId, diagnosisId, students, onNavigate }) {
+  const labelStyle = { display: 'block', fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 };
   const [step, setStep] = useState('prereq'); // prereq | generating | review | saved
   const [student, setStudent] = useState(null);
   const [classEvent, setClassEvent] = useState(null);
@@ -84,6 +87,12 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
     approvedCount, totalSections,
     missingRequiredApprovals, canApproveDiagnosis,
   } = useSectionApproval();
+
+  const backStyle = { background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)', fontSize: 'var(--text-sm)', display: 'flex', alignItems: 'center', gap: 4, marginBottom: 16, padding: 0, fontFamily: 'var(--font-ui)' };
+  const S = {
+    headline: { fontFamily: 'var(--font-ui)', fontSize: 'var(--text-2xl)', fontWeight: 700, color: 'var(--accent-deep)', margin: '0 0 4px' },
+    sub: { fontSize: 'var(--text-sm)', color: 'var(--muted)', margin: '0 0 0' },
+  };
 
   useEffect(() => {
     getStudents().then(setAllStudents);
@@ -670,7 +679,7 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
           )}
 
           <div>
-            <Button variant="primary" style={{ fontSize: 'var(--text-md)', padding: '12px 24px' }} onClick={handleGenerate} disabled={!prereqOk}>
+            <Button variant="primary" style={{ fontSize: 'var(--text-base)', padding: '12px 24px' }} onClick={handleGenerate} disabled={!prereqOk}>
               <Icon.diagnose size={16} /> Run AI Diagnosis
             </Button>
             {!prereqOk && (
@@ -947,3 +956,4 @@ function DiagnosisStepBar({ step }) {
     </div>
   );
 }
+

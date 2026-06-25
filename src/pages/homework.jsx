@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Icon, Card, SectionHeader, Pill, Button, Avatar } from '../components/shared.jsx';
+import { Icon, SectionHeader, Pill, Avatar } from '../components/shared.jsx';
+import { Button } from '../components/ui/Button.jsx';
+import { Card } from '../components/ui/Card.jsx';
 import { getHomework, deleteHomework } from '../lib/workflow.js';
 import { printHomework } from '../lib/print-homework.js';
 

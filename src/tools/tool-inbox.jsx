@@ -2,7 +2,9 @@
  * tool-inbox.jsx — Teacher inbox workspace
  */
 import { useMemo, useState, useEffect } from 'react';
-import { Card, SectionHeader, Avatar, Button, Icon } from '../components/shared.jsx';
+import { SectionHeader, Avatar, Icon } from '../components/shared.jsx';
+import { Button } from '../components/ui/Button.jsx';
+import { Card } from '../components/ui/Card.jsx';
 import { getInbox, sendMessage, markRead } from '../lib/workflow.js';
 
 function fmtTime(iso) {

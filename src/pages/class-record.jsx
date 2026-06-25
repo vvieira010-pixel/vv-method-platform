@@ -2,7 +2,9 @@
  * class-record.jsx — Record class evidence after a class
  */
 import { useState, useEffect } from 'react';
-import { Icon, Card, SectionHeader, Button, Pill } from '../components/shared.jsx';
+import { Icon, SectionHeader, Pill } from '../components/shared.jsx';
+import { Button } from '../components/ui/Button.jsx';
+import { Card } from '../components/ui/Card.jsx';
 import { getClassEvent, getClassEvidence, saveClassEvidence, updateClassEventStatus, getStudent } from '../lib/workflow.js';
 
 const SKILLS = [

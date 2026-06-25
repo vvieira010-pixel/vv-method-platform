@@ -3,8 +3,9 @@
  * Teacher picks exercise types, fills type-specific fields, previews as student.
  */
 import { useState, useEffect, useRef } from 'react';
-import { Icon, Card, SectionHeader, Button, Pill, Modal } from '../components/shared.jsx';
-import { callAI } from '../components/shared.jsx';
+import { Icon, SectionHeader, Pill, Modal, callAI } from '../components/shared.jsx';
+import { Card } from '../components/ui/Card.jsx';
+import { Button } from '../components/ui/Button.jsx';
 import { parseAiJson } from '../lib/ai-helpers.js';
 import { withSkills } from '../education-skills/active-skills.js';
 import {
@@ -274,6 +275,10 @@ function getPriorityItems(dx) {
     if (allGenerated.length > 0) {
       setForm(f => ({ ...f, exercises: [...f.exercises, ...allGenerated] }));
       setExpandedEx(allGenerated[0].id);
+      for (const ex of allGenerated) {
+        try { await saveExerciseToLibrary(ex); } catch {}
+      }
+      setLibVersion(v => v + 1);
       setTimeout(() => scrollToExercises(), 100);
     }
     setGroupGenStatus('');
@@ -308,6 +313,7 @@ function getPriorityItems(dx) {
 
       setForm(f => ({ ...f, exercises: [...f.exercises, listeningEx] }));
       setExpandedEx(listeningEx.id);
+      try { await saveExerciseToLibrary(listeningEx); setLibVersion(v => v + 1); } catch {}
       setTimeout(() => scrollToExercises(), 100);
       window.toast?.(`Listening task generated successfully!`, 'ok');
 
@@ -355,6 +361,7 @@ function getPriorityItems(dx) {
       };
       setForm(f => ({ ...f, exercises: [...f.exercises, readEx] }));
       setExpandedEx(readEx.id);
+      try { await saveExerciseToLibrary(readEx); setLibVersion(v => v + 1); } catch {}
       setTimeout(() => scrollToExercises(), 100);
       window.toast?.('Reading exercise generated!', 'ok');
     } catch (e) {
@@ -429,6 +436,10 @@ function getPriorityItems(dx) {
         skillType: inferSkillType(getPriorityItems(diagnosis)),
       }));
       setExpandedEx(exercises[0]?.id);
+      for (const ex of exercises) {
+        try { await saveExerciseToLibrary(ex); } catch {}
+      }
+      setLibVersion(v => v + 1);
       setTimeout(() => scrollToExercises(), 100);
       window.toast?.(`Homework generated: ${exercises.length} exercises${skipped ? `, ${skipped} skipped` : ''}${errors.length ? ` (${errors.length} warnings)` : ''}.`, errors.length ? 'warn' : 'ok');
     } catch (e) {
@@ -494,6 +505,10 @@ function getPriorityItems(dx) {
         exercises: [...f.exercises, ...exercises],
         teacherNotes: (f.teacherNotes || '') + spacingNote,
       }));
+      for (const ex of exercises) {
+        try { await saveExerciseToLibrary(ex); } catch {}
+      }
+      setLibVersion(v => v + 1);
       window.toast?.(`Added ${exercises.length} retrieval practice question${exercises.length !== 1 ? 's' : ''}.`, 'ok');
     } catch (e) {
       window.toast?.(`Retrieval generation failed: ${e.message}`, 'warn');
@@ -522,7 +537,7 @@ function getPriorityItems(dx) {
     setGeneratingLangDemand(false);
   }
 
-  function addAiExerciseToList(ex) {
+  async function addAiExerciseToList(ex) {
     const newEx = createCompleteExercise(ex);
     if (!newEx) {
       window.toast?.('That suggestion is incomplete, so it was not added.', 'warn');
@@ -531,6 +546,7 @@ function getPriorityItems(dx) {
     newEx.aiGenerated = true;
     setForm(f => ({ ...f, exercises: [...f.exercises, newEx] }));
     setExpandedEx(newEx.id);
+    try { await saveExerciseToLibrary(newEx); setLibVersion(v => v + 1); } catch {}
     window.toast?.(`"${newEx.title || 'Exercise'}" added.`, 'ok');
   }
 
@@ -649,6 +665,24 @@ function getPriorityItems(dx) {
     }
   }
 
+  /* ── Auto-save all current exercises to the teacher's library ── */
+  async function autoSaveExercises() {
+    const saved = [];
+    for (const ex of form.exercises) {
+      if (!ex.type) continue;
+      try {
+        const rec = await saveExerciseToLibrary(ex);
+        if (rec) saved.push(rec.title);
+      } catch (e) {
+        console.warn('[HomeworkCreate] auto-save exercise failed:', e.message);
+      }
+    }
+    if (saved.length) {
+      setLibVersion(v => v + 1);
+      window.toast?.(`${saved.length} exercise${saved.length === 1 ? '' : 's'} saved to your library.`, 'ok');
+    }
+  }
+
   /* ── Assign ── */
   async function handleAssign() {
     if (!form.title.trim()) { window.toast?.('Title is required.', 'warn'); return; }
@@ -681,6 +715,7 @@ function getPriorityItems(dx) {
           console.warn('[HomeworkCreate] updateClassEventStatus failed:', e)
         );
       }
+      await autoSaveExercises();
     } catch (e) {
       console.error('[HomeworkCreate] Save failed:', e);
       window.toast?.(`Save failed: ${e.message}`, 'error');
@@ -887,7 +922,7 @@ Return JSON only with fields: type "read", passage (2-3 paragraphs), source, que
               <SectionHeader title="Step 1: Prebuilt Homework" />
               <div style={{ marginTop: 16 }}>
                 {studentId || diagnosis?.studentId ? (
-                  <p style={{ fontSize: 'var(--text-md)', marginBottom: 8 }}>Student: <strong>{student?.name || 'Loading…'}</strong></p>
+                  <p style={{ fontSize: 'var(--text-base)', marginBottom: 8 }}>Student: <strong>{student?.name || 'Loading…'}</strong></p>
                 ) : (
                   <Field label="Student">
                     <select
@@ -1251,8 +1286,8 @@ Return JSON only with fields: type "read", passage (2-3 paragraphs), source, que
                 )}
 
                 {/* ── Assign ── */}
-                <div ref={assignRef} style={{ marginTop: 'var(--space-4)', padding: 'var(--space-5)', border: '2px solid var(--accent-soft)', borderRadius: 'var(--radius-md)', background: 'var(--surface)' }}>
-                  <div style={{ fontWeight: 700, fontSize: 'var(--text-md)', marginBottom: 'var(--space-4)', color: 'var(--accent-deep)' }}>Assign homework</div>
+                <div ref={assignRef} style={{ marginTop: 16, padding: 20, border: '2px solid var(--accent-soft)', borderRadius: 'var(--radius-md)', background: 'var(--surface)' }}>
+                  <div style={{ fontWeight: 700, fontSize: 'var(--text-base)', marginBottom: 16, color: 'var(--accent-deep)' }}>Assign homework</div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                     {studentId || diagnosis?.studentId ? null : (
                       <Field label="Student">

@@ -144,7 +144,7 @@ export function SectionContent({ sectionKey, content }) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
         <div>
-          <div style={{ fontWeight: 700, fontSize: 'var(--text-md)', marginBottom: 4 }}>{content.title}</div>
+          <div style={{ fontWeight: 700, fontSize: 'var(--text-base)', marginBottom: 4 }}>{content.title}</div>
           <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-2)' }}>{content.objective}</div>
         </div>
         {content.instructions && (

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 
 const TEAL = 'var(--accent)';
-const NAVY = 'var(--primary-ink)';
+const NAVY = 'var(--accent-text)';
 
 // MET Reading part banners — from met_test_basics_task_breakdown.md
 const MET_READING_CONFIG = {

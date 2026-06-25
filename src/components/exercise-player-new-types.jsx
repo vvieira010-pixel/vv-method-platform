@@ -2,7 +2,8 @@
  * exercise-player-new-types.jsx — Players for dialogue, swap, and levelup types.
  */
 import { useState, useEffect, useRef } from 'react';
-import { Button, Icon } from './shared.jsx';
+import { Icon } from './shared.jsx';
+import { Button } from './ui/Button.jsx';
 
 /* ─── DIALOGUE PLAYER ──────────────────────────────────────── */
 export function DialoguePlayer({ ex, res, update, readOnly }) {
@@ -196,7 +197,7 @@ export function SwapPlayer({ ex, res, update, readOnly }) {
       {ex.instruction && (
         <p style={{ margin: '0 0 12px', fontSize: 'var(--text-sm)', color: 'var(--text-2)', fontStyle: 'italic' }}>{ex.instruction}</p>
       )}
-      <div style={{ fontSize: 'var(--text-md)', lineHeight: 2.2, position: 'relative' }}>
+      <div style={{ fontSize: 'var(--text-base)', lineHeight: 2.2, position: 'relative' }}>
         {segments.map((seg, i) => {
           if (!/^\[.*\]$/.test(seg)) return <span key={i}>{seg}</span>;
           const word = seg.slice(1, -1);

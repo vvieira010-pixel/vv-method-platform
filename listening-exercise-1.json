@@ -1,0 +1,19 @@
+{
+  "type": "listen",
+  "level": "B2",
+  "title": "Nurse Handoff: Post-Op Patient",
+  "instruction": "Listen to the nurse handoff and answer the question.",
+  "audioText": "Nurse Maria: Good morning, I'm handing over Mrs. Chen in bed 4. She's 68, post-op day two from a total hip replacement. Vital signs have been stable — BP 128 over 78, heart rate 82, temp 37.1, sats 97 on room air. She's on regular paracetamol and celecoxib for pain, with PRN oxycodone for breakthrough. She mobilized twice yesterday with the physiotherapist using a frame, but she's reporting increased hip discomfort this morning, especially on weight-bearing. The wound looks clean, dressing intact, no signs of infection. Bowels haven't opened since surgery — I've charted PRN laxatives. Plan is to continue current analgesia, encourage mobilization, and monitor bowels. Any concerns, page me.",
+  "plays": 2,
+  "question": "What is the main reason Nurse Maria is highlighting Mrs. Chen's increased hip discomfort?",
+  "options": [
+    "To request an immediate medication review",
+    "To flag a potential complication requiring monitoring",
+    "To suggest delaying physiotherapy sessions",
+    "To document a wound infection concern"
+  ],
+  "correct": 1,
+  "explanation": "Nurse Maria reports the increased discomfort as a change from yesterday's status ('reporting increased hip discomfort this morning') within the context of stable vitals and a clean wound. She's flagging it for monitoring ('monitor bowels... Any concerns, page me'), not requesting immediate action, delaying therapy, or suggesting infection. The correct answer identifies this as a monitoring flag for a potential complication.",
+  "pictureHint": "A nurse in blue scrubs standing at a hospital bedside, speaking to a colleague while looking at a patient chart. The patient, an elderly woman, sits propped up in bed with a walking frame nearby. Morning light through the window.",
+  "teacherNote": "This exercise targets the MET listening subskill 'speaker_purpose' — identifying why the speaker is communicating specific information. The handoff format mirrors real nursing communication and MET Part 3 short talks."
+}
