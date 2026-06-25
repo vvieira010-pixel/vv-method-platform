@@ -415,6 +415,8 @@ function PageLoader() {
   );
 }
 
+const TOAST_GLYPHS = { ok: '+', info: 'i', warn: '!', go: '→' };
+
 function ToastHost() {
   const [toasts, setToasts] = useState([]);
   useEffect(() => {
@@ -427,27 +429,14 @@ function ToastHost() {
     window.toast = (msg, kind) => window.dispatchEvent(new CustomEvent('vv-toast', { detail: { msg, kind } }));
     return () => { window.removeEventListener('vv-toast', onToast); delete window.toast; };
   }, []);
-  const TONES = {
-    ok:   { bg: 'var(--primary-ink)', fg: '#fff', g: '+' },
-    info: { bg: 'var(--primary)',     fg: '#fff', g: 'i' },
-    warn: { bg: 'var(--warning)',     fg: '#fff', g: '!' },
-    go:   { bg: 'var(--accent)',      fg: '#fff', g: '→' },
-  };
   return (
-    <div
-      aria-live="polite"
-      aria-atomic="true"
-      style={{ position: 'fixed', right: 22, bottom: 22, zIndex: 60, display: 'flex', flexDirection: 'column', gap: 10, pointerEvents: 'none' }}
-    >
-      {toasts.map(t => {
-        const tone = TONES[t.kind] || TONES.ok;
-        return (
-          <div key={t.id} style={{ background: tone.bg, color: tone.fg, padding: '12px 18px', borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-toast)', display: 'flex', alignItems: 'center', gap: 12, minWidth: 280, maxWidth: 380, pointerEvents: 'auto' }}>
-            <span style={{ width: 22, height: 22, borderRadius: 'var(--radius-pill)', background: 'rgba(255,255,255,.18)', display: 'grid', placeItems: 'center', fontSize: 12, fontWeight: 700 }}>{tone.g}</span>
-            <span style={{ fontSize: 13.5, fontWeight: 500, lineHeight: 1.4 }}>{t.msg}</span>
-          </div>
-        );
-      })}
+    <div className="toast-host" aria-live="polite" aria-atomic="true">
+      {toasts.map(t => (
+        <div key={t.id} className={`toast toast-${t.kind || 'ok'}`}>
+          <span className="toast-glyph">{TOAST_GLYPHS[t.kind] || '+'}</span>
+          <span className="toast-msg">{t.msg}</span>
+        </div>
+      ))}
     </div>
   );
 }
