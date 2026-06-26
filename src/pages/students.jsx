@@ -2,7 +2,9 @@
  * students.jsx — Student roster with add/edit/profile navigation
  */
 import { useState, useEffect } from 'react';
-import { Icon, Card, SectionHeader, Pill, Button, Avatar } from '../components/shared.jsx';
+import { Icon, SectionHeader, Pill, Avatar } from '../components/shared.jsx';
+import { Button } from '../components/ui/Button.jsx';
+import { Card } from '../components/ui/Card.jsx';
 import { getStudents, saveStudent, deleteStudent, getDiagnoses, getHomework, getAllSubmissions, getClassEvents } from '../lib/workflow.js';
 import { sendMagicLink } from '../lib/supabase-storage.js';
 import { getDbContext } from '../lib/supabase-db.js';

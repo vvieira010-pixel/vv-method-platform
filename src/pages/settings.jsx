@@ -1,5 +1,7 @@
 import { useRef, useState, useEffect } from 'react';
-import { Icon, Card, SectionHeader, Button } from '../components/shared.jsx';
+import { Icon, SectionHeader } from '../components/shared.jsx';
+import { Button } from '../components/ui/Button.jsx';
+import { Card } from '../components/ui/Card.jsx';
 import { clearWorkflowData, syncLocalToCloud } from '../lib/workflow.js';
 import { getDbContext, getTeacherSetting, setTeacherSetting } from '../lib/supabase-db.js';
 import { getSupabaseConfig, readStoredSupabaseSession, updateUserPassword } from '../lib/supabase-storage.js';

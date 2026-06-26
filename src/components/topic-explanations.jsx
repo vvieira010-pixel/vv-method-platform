@@ -1,5 +1,7 @@
 import { useState, useRef, useCallback } from 'react';
-import { Icon, Button, Card, SectionHeader } from './shared.jsx';
+import { Icon, SectionHeader } from './shared.jsx';
+import { Button } from '../components/ui/Button.jsx';
+import { Card } from '../components/ui/Card.jsx';
 import { exercisePreview } from '../lib/exercise-types.js';
 
 /* ── TopicContentRenderer — renders a topic explanation for the student ── */

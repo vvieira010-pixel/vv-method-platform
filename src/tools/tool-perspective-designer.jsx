@@ -1,5 +1,7 @@
 import { useState } from 'react';
-import { Icon, Card, SectionHeader, Button, Pill } from '../components/shared.jsx';
+import { Icon, SectionHeader, Pill } from '../components/shared.jsx';
+import { Button } from '../components/ui/Button.jsx';
+import { Card } from '../components/ui/Card.jsx';
 import { callAI } from '../components/shared.jsx';
 import { parseAiJson } from '../lib/ai-helpers.js';
 
@@ -336,7 +338,7 @@ function PhaseCard({ number, title, data, fields, extra }) {
 }
 
 const SPIN_CSS = `@keyframes spin { to { transform: rotate(360deg); } }`;
-const headline = { fontFamily: 'var(--font-display)', fontSize: 'var(--text-2xl)', fontWeight: 700, color: 'var(--accent-deep)', margin: '0 0 4px' };
+const headline = { fontFamily: 'var(--font-display)', fontSize: 'var(--text-2xl)', fontWeight: 700, color: 'var(--primary)', margin: '0 0 4px' };
 const sub = { fontSize: 'var(--text-sm)', color: 'var(--muted)', marginBottom: 20, lineHeight: 1.55 };
 const label = { display: 'flex', flexDirection: 'column', gap: 4 };
 const labelText = { fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em' };

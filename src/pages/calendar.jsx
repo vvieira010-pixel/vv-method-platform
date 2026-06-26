@@ -2,7 +2,9 @@
  * calendar.jsx — Class scheduling and calendar view
  */
 import { useState, useEffect } from 'react';
-import { Icon, Card, SectionHeader, Pill, Button, Avatar } from '../components/shared.jsx';
+import { Icon, SectionHeader, Pill, Avatar } from '../components/shared.jsx';
+import { Card } from '../components/ui/Card.jsx';
+import { Button } from '../components/ui/Button.jsx';
 import { getClassEvents, saveClassEvent, deleteClassEvent, updateClassEventStatus, getStudents } from '../lib/workflow.js';
 import { sendClassInvite, getZoomUrl } from '../lib/send-invite.js';
 import { MET_SKILLS } from '../lib/report-metrics.js';
@@ -176,11 +178,11 @@ export default function CalendarPage({ students, onNavigate }) {
         <div>
           <Card style={{ padding: 16 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
-              <Button variant="ghost" size="sm" aria-label="Previous month" onClick={() => setViewMonth(v => { const d = new Date(v.year, v.month - 1); return { year: d.getFullYear(), month: d.getMonth() }; })}><span aria-hidden="true">‹</span></Button>
+              <Button variant="ghost" size="sm" aria-label="Previous month" onClick={() => setViewMonth(v => { const d = new Date(v.year, v.month - 1); return { year: d.getFullYear(), month: d.getMonth() }; })}><span aria-hidden="true"><Icon.chevronLeft size={14} /></span></Button>
               <span style={{ fontWeight: 700, flex: 1, textAlign: 'center' }}>
                 {new Date(year, month).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })}
               </span>
-              <Button variant="ghost" size="sm" aria-label="Next month" onClick={() => setViewMonth(v => { const d = new Date(v.year, v.month + 1); return { year: d.getFullYear(), month: d.getMonth() }; })}><span aria-hidden="true">›</span></Button>
+              <Button variant="ghost" size="sm" aria-label="Next month" onClick={() => setViewMonth(v => { const d = new Date(v.year, v.month + 1); return { year: d.getFullYear(), month: d.getMonth() }; })}><span aria-hidden="true"><Icon.chevronRight size={14} /></span></Button>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 2 }}>
               {DAYS.map(d => <div key={d} style={{ textAlign: 'center', fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)', padding: '4px 0' }}>{d}</div>)}
@@ -296,7 +298,7 @@ function Field({ label, children }) {
 
 const EMPTY_FORM = { studentId: '', date: '', startTime: '', endTime: '', title: 'English Class', classFocus: '', metSkillFocus: '', timezone: 'America/Sao_Paulo', status: 'scheduled', diagnosticStatus: 'not-started', homeworkStatus: 'not-generated' };
 const S = {
-  headline: { fontFamily: 'var(--font-ui)', fontSize: 'var(--text-2xl)', fontWeight: 700, color: 'var(--accent-deep)', margin: 0 },
+  headline: { fontFamily: 'var(--font-ui)', fontSize: 'var(--text-2xl)', fontWeight: 700, color: 'var(--primary)', margin: 0 },
   sub: { fontSize: 'var(--text-sm)', color: 'var(--muted)', margin: '4px 0 0' },
 };
 

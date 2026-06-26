@@ -1,8 +1,8 @@
 import { useState, useEffect, lazy, Suspense } from 'react';
-import { Icon, Avatar, Button, Skeleton, SkeletonText, SkeletonCard, EmptyState } from '../components/shared.jsx';
+import { Icon, Avatar, Skeleton, SkeletonText, SkeletonCard, EmptyState } from '../components/shared.jsx';
 import { getHomework, getDiagnoses, getClassEvents, getReviews, getStudentSeedsStage } from '../lib/workflow.js';
 import { recordPractice, getDueCount, getDueItems, toMCQ, getAllEntries } from '../lib/spaced-repetition.js';
-import { readStoredSupabaseSession, updateUserPassword } from '../lib/supabase-storage.js';
+
 import { SEEDS_STAGES, SEEDS_STAGE_ORDER } from '../domain/seeds/constants.js';
 
 const PracticeSession = lazy(() => import('../components/PracticeSession.jsx'));
@@ -20,9 +20,22 @@ function daysUntilExam() {
   } catch { return null; }
 }
 
-function MetricCard({ icon, label, value, sub, tone, textValue, compact }) {
+function MetricCard({ icon, label, value, sub, tone, textValue, compact, onClick }) {
+  const cls = `student-metric student-metric--${tone}${textValue ? ' student-metric--text' : ''}${compact ? ' student-metric--compact' : ''}${onClick ? ' student-metric--clickable' : ''}`;
+  if (onClick) {
+    return (
+      <button type="button" className={cls} onClick={onClick}>
+        <div className="student-metric-copy">
+          <span>{label}</span>
+          <strong>{value}</strong>
+          <small>{sub}</small>
+        </div>
+        <div className="student-metric-icon">{icon}</div>
+      </button>
+    );
+  }
   return (
-    <article className={`student-metric student-metric--${tone}${textValue ? ' student-metric--text' : ''}${compact ? ' student-metric--compact' : ''}`}>
+    <article className={cls}>
       <div className="student-metric-copy">
         <span>{label}</span>
         <strong>{value}</strong>
@@ -40,7 +53,7 @@ function MemoCard({ kicker, title, text }) {
   const lines = text.split(/\n+/).filter(Boolean);
   const needsClamp = lines.length > MEMO_CLAMP || text.length > 320;
   return (
-    <article className="student-panel student-panel-mb">
+    <article className="student-panel student-panel--primary student-panel-mb">
       <span className="student-panel-kicker">{kicker}</span>
       <h2>{title}</h2>
       <p style={{
@@ -82,11 +95,11 @@ function TodoRow({ done, label, meta }) {
   );
 }
 
-function SkillRow({ skill, trend }) {
+function SkillRow({ skill, trend, onClick }) {
   const score = Number(skill.score_0_80) || 0;
   const stage = score > 0 ? getProgressStage(score) : PROGRESS_STAGES[0];
   return (
-    <div className="student-skill-row">
+    <button type="button" className="student-skill-row" onClick={onClick}>
       <div className="student-skill-top">
         <strong style={{ textTransform: 'capitalize' }}>{skill.section}</strong>
         <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -104,7 +117,7 @@ function SkillRow({ skill, trend }) {
         ))}
       </div>
       <TrendChip trend={trend} />
-    </div>
+    </button>
   );
 }
 
@@ -134,11 +147,6 @@ export default function StudentHome({ student, onTab }) {
   const [loadError, setLoadError] = useState(null);
   const [seedsStage, setSeedsStage] = useState(null);
   const [generalMemoText, setGeneralMemoText] = useState(() => localStorage.getItem('vv:student_general_memo') || '');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [passwordSaving, setPasswordSaving] = useState(false);
-  const [passwordMsg, setPasswordMsg] = useState(null);
-  const activeSession = readStoredSupabaseSession();
 
   useEffect(() => {
     getStudentSeedsStage(student.id).then(setSeedsStage);
@@ -248,34 +256,6 @@ export default function StudentHome({ student, onTab }) {
     setReviewMode(true);
   }
 
-  async function handleSetPassword(e) {
-    e.preventDefault();
-    if (!activeSession?.access_token) {
-      setPasswordMsg({ ok: false, text: 'Sign in with your email link first, then set a password.' });
-      return;
-    }
-    if (newPassword.length < 6) {
-      setPasswordMsg({ ok: false, text: 'Password must be at least 6 characters.' });
-      return;
-    }
-    if (newPassword !== confirmPassword) {
-      setPasswordMsg({ ok: false, text: 'Passwords do not match.' });
-      return;
-    }
-    setPasswordSaving(true);
-    setPasswordMsg(null);
-    try {
-      await updateUserPassword(newPassword, activeSession.access_token);
-      setNewPassword('');
-      setConfirmPassword('');
-      setPasswordMsg({ ok: true, text: 'Password updated. You can now use email and password next time.' });
-      window.toast?.('Password updated.', 'ok');
-    } catch (err) {
-      setPasswordMsg({ ok: false, text: err.message });
-    }
-    setPasswordSaving(false);
-  }
-
   if (loadError) {
     return (
       <div className="student-home">
@@ -325,9 +305,7 @@ export default function StudentHome({ student, onTab }) {
         const daysLeft = daysUntilExam();
         const examDateStr = (() => { try { return localStorage.getItem('vv:met_exam_date') || ''; } catch { return ''; } })();
         return (
-          <>
-          {/* Primary metrics — things to act on / time-critical */}
-          <section className="student-metrics fade-up" aria-label="Action items" style={{ '--delay': '0.1s' }}>
+          <section className="student-metrics fade-up" aria-label="Status at a glance" style={{ '--delay': '0.1s' }}>
             {reviewCount > 0 && (
               <button className="student-metric student-metric--urgent student-metric-btn" onClick={handleOpenReview} aria-label="Review due items">
                 <div className="student-metric-copy">
@@ -340,7 +318,10 @@ export default function StudentHome({ student, onTab }) {
                 </div>
               </button>
             )}
-            <MetricCard icon={<Icon.homework size={19} />} label="Homework" value={pendingHw.length} sub={pendingHw.length === 1 ? 'task pending' : 'tasks pending'} tone="teal" />
+            <MetricCard icon={<Icon.homework size={19} />} label="Homework" value={pendingHw.length} sub={pendingHw.length === 1 ? 'task pending' : 'tasks pending'} tone="teal" onClick={() => onTab('homework')} />
+            <MetricCard compact icon={<Icon.calendar size={19} />} label="Next class" value={nextDate} sub={nextTime} tone="teal" onClick={() => onTab('schedule')} />
+            <MetricCard compact icon={<Icon.progress size={19} />} label="Current focus" value={focusSkill} sub={focusTrend.dir !== 'none' ? `Progress: ${focusTrend.label}` : 'next useful practice'} tone="navy" textValue onClick={() => onTab('progress')} />
+            <MetricCard compact icon={<Icon.inbox size={19} />} label="Feedback" value={latestFeedback ? 'Ready' : 'Waiting'} sub={latestFeedback ? 'teacher approved' : 'after diagnosis'} tone="teal" onClick={() => latestFeedback && onTab('feedback')} />
             {daysLeft !== null && (
               <MetricCard
                 icon={<Icon.calendar size={19} />}
@@ -353,48 +334,17 @@ export default function StudentHome({ student, onTab }) {
               />
             )}
           </section>
-
-          {/* Secondary metrics — ambient status */}
-          <section className="student-metrics-secondary fade-up" aria-label="Status summary" style={{ '--delay': '0.15s' }}>
-            <MetricCard compact icon={<Icon.calendar size={19} />} label="Next class" value={nextDate} sub={nextTime} tone="teal" />
-            <MetricCard compact icon={<Icon.progress size={19} />} label="Current focus" value={focusSkill} sub={focusTrend.dir !== 'none' ? `Progress: ${focusTrend.label}` : 'next useful practice'} tone="navy" textValue />
-            <MetricCard compact icon={<Icon.inbox size={19} />} label="Feedback" value={latestFeedback ? 'Ready' : 'Waiting'} sub={latestFeedback ? 'teacher approved' : 'after diagnosis'} tone="teal" />
-          </section>
-          </>
         );
       })()}
 
-      <section className="student-practice-studio fade-up" style={{ '--delay': '0.2s' }}>
-        <div className="student-practice-studio-copy">
-          <span className="student-practice-studio-kicker">Independent MET practice</span>
-          <h2>Practice Studio</h2>
-          <p>Choose one focused skill and build exam confidence between classes.</p>
-          <div className="student-practice-studio-actions">
-            {reviewCount > 0 && (
-              <button className="student-wide-action student-wide-action-mb" onClick={handleOpenReview} aria-label={`Review ${reviewCount} spaced repetition item${reviewCount !== 1 ? 's' : ''}`}>
-                <Icon.refresh size={14} /> Review {reviewCount} item{reviewCount !== 1 ? 's' : ''} due
-              </button>
-            )}
-            <button className="student-practice-primary" onClick={() => setPracticeMode('speaking')}>
-              <Icon.mic size={15} /> Start speaking practice
-            </button>
-          </div>
-        </div>
-        <div className="studio-orbs">
-          <button className="studio-orb" onClick={() => setPracticeMode('grammar')} aria-label="Grammar Sprint">
-            <span className="studio-orb-icon" aria-hidden="true"><Icon.edit size={24} /></span>
-            <span className="studio-orb-label">Grammar Sprint</span>
-          </button>
-          <button className="studio-orb" onClick={() => setPracticeMode('vocab')} aria-label="Vocab Deep-Dive">
-            <span className="studio-orb-icon" aria-hidden="true"><Icon.star size={24} /></span>
-            <span className="studio-orb-label">Vocab Deep-Dive</span>
-          </button>
-          <button className="studio-orb" onClick={() => setPracticeMode('speaking')} aria-label="Speaking Mirror">
-            <span className="studio-orb-icon" aria-hidden="true"><Icon.mic size={24} /></span>
-            <span className="studio-orb-label">Speaking Mirror</span>
-          </button>
-        </div>
-      </section>
+      <div className="student-practice-row fade-up" style={{ '--delay': '0.2s' }}>
+        <button className="student-practice-btn" onClick={() => setPracticeMode('speaking')}><Icon.mic size={15} /> Speaking</button>
+        <button className="student-practice-btn" onClick={() => setPracticeMode('grammar')}><Icon.edit size={15} /> Grammar</button>
+        <button className="student-practice-btn" onClick={() => setPracticeMode('vocab')}><Icon.star size={15} /> Vocab</button>
+        {reviewCount > 0 && (
+          <button className="student-practice-btn student-practice-btn--urgent" onClick={handleOpenReview}><Icon.refresh size={15} /> Review</button>
+        )}
+      </div>
       <Suspense fallback={null}>
         {practiceMode && (
           <PracticeSession mode={practiceMode} onClose={() => setPracticeMode(null)} />
@@ -429,6 +379,9 @@ export default function StudentHome({ student, onTab }) {
       ) : (
       <section className="student-grid fade-up" style={{ '--delay': '0.3s' }}>
         <div className="student-home-main">
+          <section className="student-memo-board">
+            <MemoCard kicker="General memo" title="Memo Board" text={generalMemoText || 'No general memo posted yet.'} />
+          </section>
           <article className="student-panel student-panel--primary">
             <div className="student-panel-head">
               <div>
@@ -511,7 +464,7 @@ export default function StudentHome({ student, onTab }) {
             </div>
             {evaluatedSkills.length > 0 ? (
               <div className="student-skill-list">
-                {evaluatedSkills.slice(0, 5).map(s => <SkillRow key={s.section} skill={s} trend={getSkillTrend(s.section, approvedHistory)} />)}
+                {evaluatedSkills.slice(0, 5).map(s => <SkillRow key={s.section} skill={s} trend={getSkillTrend(s.section, approvedHistory)} onClick={() => onTab('progress')} />)}
               </div>
             ) : (
               <EmptyState title="No skills evaluated yet" text="Your first skill result will appear after your next class diagnosis." />
@@ -523,7 +476,7 @@ export default function StudentHome({ student, onTab }) {
             const lowest = [...evaluatedSkills].sort((a, b) => (Number(a.score_0_80) || 80) - (Number(b.score_0_80) || 80))[0];
             if (!lowest || !Number(lowest.score_0_80)) return null;
             return (
-              <article className="student-panel" style={{ borderLeft: '3px solid var(--warning)' }}>
+              <button type="button" className="student-panel student-panel--clickable" style={{ borderLeft: '3px solid var(--warning)', textAlign: 'left', width: '100%', fontFamily: 'var(--font-ui)' }} onClick={() => onTab('progress')}>
                 <div className="student-panel-head">
                   <div>
                     <span className="student-panel-kicker">Focus Area</span>
@@ -538,7 +491,7 @@ export default function StudentHome({ student, onTab }) {
                     <strong>Next step:</strong> {lowest.next_step}
                   </p>
                 )}
-              </article>
+              </button>
             );
           })()}
 
@@ -546,7 +499,7 @@ export default function StudentHome({ student, onTab }) {
             const s = seedsStage && SEEDS_STAGES[seedsStage.stage];
             if (!s) return null;
             return (
-              <article className="student-panel" style={{ borderLeft: `3px solid ${s.color}` }}>
+              <button type="button" className="student-panel student-panel--clickable" style={{ borderLeft: `3px solid ${s.color}`, textAlign: 'left', width: '100%', fontFamily: 'var(--font-ui)' }} onClick={() => onTab('progress')}>
                 <div className="student-panel-head">
                   <div>
                     <span className="student-panel-kicker">Your SEEDS Cycle</span>
@@ -571,66 +524,10 @@ export default function StudentHome({ student, onTab }) {
                     );
                   })}
                 </div>
-              </article>
+              </button>
             );
           })()}
 
-          <section className="student-memo-board">
-            <MemoCard kicker="General memo" title="Memo Board" text={generalMemoText || 'No general memo posted yet.'} />
-          </section>
-
-          <article className="student-panel">
-            <div className="student-panel-head">
-              <div>
-                <span className="student-panel-kicker">Account</span>
-                <h2>Change password</h2>
-              </div>
-              <span className="student-pill">{activeSession?.access_token ? 'Signed in' : 'Needs sign in link'}</span>
-            </div>
-            <p style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', lineHeight: 1.6, marginBottom: 14 }}>
-              Keep your account secure by choosing a password you can use next time instead of the login link.
-            </p>
-            {activeSession?.access_token ? (
-              <form onSubmit={handleSetPassword} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                  <span style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>New password</span>
-                  <input
-                    className="input"
-                    type="password"
-                    autoComplete="new-password"
-                    placeholder="Choose a password"
-                    value={newPassword}
-                    onChange={e => setNewPassword(e.target.value)}
-                    disabled={passwordSaving}
-                  />
-                </label>
-                <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                  <span style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Confirm password</span>
-                  <input
-                    className="input"
-                    type="password"
-                    autoComplete="new-password"
-                    placeholder="Repeat the password"
-                    value={confirmPassword}
-                    onChange={e => setConfirmPassword(e.target.value)}
-                    disabled={passwordSaving}
-                  />
-                </label>
-                {passwordMsg && (
-                  <p style={{ fontSize: 'var(--text-sm)', color: passwordMsg.ok ? 'var(--success)' : 'var(--danger)', margin: 0, lineHeight: 1.5 }}>
-                    {passwordMsg.text}
-                  </p>
-                )}
-                <Button type="submit" variant="primary" disabled={passwordSaving || !newPassword || !confirmPassword}>
-                  {passwordSaving ? 'Saving…' : 'Set password'}
-                </Button>
-              </form>
-            ) : (
-              <div className="student-empty-card" style={{ marginTop: 8 }}>
-                Sign in with your email link first, then you can set a password here.
-              </div>
-            )}
-          </article>
         </aside>
       </section>
       )}

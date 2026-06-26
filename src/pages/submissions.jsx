@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Icon, Card, SectionHeader, Pill, Button, Avatar } from '../components/shared.jsx';
+import { Icon, SectionHeader, Pill, Avatar } from '../components/shared.jsx';
+import { Button } from '../components/ui/Button.jsx';
+import { Card } from '../components/ui/Card.jsx';
 import { getAllSubmissions, getHomework, getReviews, deleteSubmission, deleteReview } from '../lib/workflow.js';
 
 export default function SubmissionsPage({ students, onNavigate }) {
@@ -72,7 +74,7 @@ export default function SubmissionsPage({ students, onNavigate }) {
                       Delete review
                     </Button>
                   )}
-                  <Button variant="ghost" size="sm" style={{ color: 'var(--danger)' }} onClick={async () => { if (confirm('Delete this submission and its review?')) { await deleteSubmission(sub.id); load(); } }}>
+                  <Button variant="ghost" size="sm" aria-label="Delete submission" style={{ color: 'var(--danger)' }} onClick={async () => { if (confirm('Delete this submission and its review?')) { await deleteSubmission(sub.id); load(); } }}>
                     <Icon.trash size={12} />
                   </Button>
                 </div>

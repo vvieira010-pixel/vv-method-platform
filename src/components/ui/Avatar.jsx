@@ -1,7 +1,3 @@
-/**
- * Avatar.jsx
- */
-
 const AVATAR_PALETTES = {
   auto:  ['#1a2332','#2d8b8b','#247070','#3da6a6','#5a7a7a'],
   ink:   ['#1a2332'],
@@ -17,17 +13,22 @@ function pickColor(name, palette) {
   return arr[h % arr.length];
 }
 
+const SIZE_MAP = [
+  { max: 28, cls: 'avatar-sm' },
+  { max: 36, cls: 'avatar' },
+  { max: Infinity, cls: 'avatar-lg' },
+];
+
 export function Avatar({ name = '?', size = 36, tone = 'auto' }) {
   const bg = pickColor(name, tone);
   const initials = (name || '?').split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
+  const sizeCls = SIZE_MAP.find(s => size <= s.max)?.cls || 'avatar';
   return (
-    <div role="img" aria-label={name} style={{
-      width: size, height: size, borderRadius: '50%',
-      background: bg, color: '#fff',
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      fontSize: size * 0.36, fontWeight: 700, flexShrink: 0,
-      fontFamily: 'var(--font-ui)', userSelect: 'none', letterSpacing: '0.02em',
-    }}>
+    <div
+      role="img" aria-label={name}
+      className={sizeCls}
+      style={{ width: size, height: size, fontSize: size * 0.36, background: bg }}
+    >
       {initials}
     </div>
   );

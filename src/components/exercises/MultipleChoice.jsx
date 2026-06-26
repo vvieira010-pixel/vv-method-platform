@@ -1,7 +1,7 @@
 import { useState } from 'react';
 
 const TEAL = 'var(--accent)';
-const NAVY = 'var(--primary-ink)';
+const NAVY = 'var(--accent-text)';
 
 const MET_SECTION_CONFIG = {
   grammar: {

@@ -1,0 +1,297 @@
+let _seq = 0;
+function gId() {
+  return 'gm_' + Date.now().toString(36) + '_' + (++_seq).toString(36);
+}
+
+const CONDITIONALS = [
+  { id: gId(), type: 'mcq', level: 'B2', skill: 'Grammar',
+    question: 'If you ________ earlier, we wouldn\'t have missed the train.',
+    options: ['had left', 'have left', 'left', 'would leave'], correct: 0,
+    explanation: 'Type 3 conditional. "Had left" (past perfect) pairs with "wouldn\'t have missed." The event is in the past and didn\'t happen.' },
+  { id: gId(), type: 'mcq', level: 'B2', skill: 'Grammar',
+    question: 'If Mark ________ harder, he might pass the exam next week.',
+    options: ['studies', 'studied', 'had studied', 'will study'], correct: 1,
+    explanation: 'Type 2 conditional. "Studied" (simple past) with "might pass" expresses a hypothetical present/future possibility.' },
+  { id: gId(), type: 'mcq', level: 'B2', skill: 'Grammar',
+    question: 'I wouldn\'t have applied for the job if I ________ about the long hours.',
+    options: ['knew', 'know', 'had known', 'would know'], correct: 2,
+    explanation: 'Type 3 conditional. The regret is in the past, so "had known" is correct.' },
+];
+
+const PASSIVE_VOICE = [
+  { id: gId(), type: 'mcq', level: 'B2', skill: 'Grammar',
+    question: 'The Himalayan mountains are believed ________ about 50 million years ago.',
+    options: ['to have been formed', 'that were formed', 'forming', 'to form'], correct: 0,
+    explanation: '"Are believed to have been formed" is the correct passive infinitive structure for reporting beliefs about past events.' },
+  { id: gId(), type: 'mcq', level: 'B2', skill: 'Grammar',
+    question: 'The new bridge ________ by the end of next year.',
+    options: ['will complete', 'will have been completed', 'has completed', 'is completing'], correct: 1,
+    explanation: 'Future perfect passive. The bridge receives the action, and it will be finished before a future deadline.' },
+  { id: gId(), type: 'mcq', level: 'B2', skill: 'Grammar',
+    question: 'The suspect ________ by police before the trial began.',
+    options: ['arrested', 'was arrested', 'has arrested', 'is arresting'], correct: 1,
+    explanation: 'Simple past passive. The suspect is the object of the action "arrest."' },
+];
+
+const MODAL_VERBS = [
+  { id: gId(), type: 'mcq', level: 'B2', skill: 'Grammar',
+    question: 'If you hadn\'t helped with the assignment, I ________ working on it for hours.',
+    options: ['could be', 'might have been', 'ought to have been', 'might be'], correct: 1,
+    explanation: 'Type 3 conditional with modal. "Might have been" expresses a past possibility that was avoided.' },
+  { id: gId(), type: 'mcq', level: 'B2', skill: 'Grammar',
+    question: 'She ________ the meeting — she knew about it weeks ago!',
+    options: ['should attend', 'must attend', 'should have attended', 'could attend'], correct: 2,
+    explanation: '"Should have attended" = past advice not followed. The speaker regrets her absence.' },
+  { id: gId(), type: 'mcq', level: 'B2', skill: 'Grammar',
+    question: 'He looks exhausted. He ________ been working all night.',
+    options: ['must have', 'should have', 'could', 'might'], correct: 0,
+    explanation: '"Must have been" = strong logical deduction about the past based on present evidence.' },
+];
+
+const INVERSION = [
+  { id: gId(), type: 'mcq', level: 'B2', skill: 'Grammar',
+    question: 'Seldom ________ ever strike in the same place twice.',
+    options: ['for lightning to', 'lightning did', 'that lightning will', 'does lightning'], correct: 3,
+    explanation: 'After "Seldom," inversion requires: auxiliary (does) + subject (lightning).' },
+  { id: gId(), type: 'mcq', level: 'B2', skill: 'Grammar',
+    question: 'Not only ________ late, but he also forgot his presentation.',
+    options: ['he arrived', 'did he arrive', 'he did arrive', 'arrived he'], correct: 1,
+    explanation: '"Not only" triggers inversion: auxiliary (did) + subject (he) + verb (arrive).' },
+  { id: gId(), type: 'mcq', level: 'B2', skill: 'Grammar',
+    question: 'Under no circumstances ________ leave the exam room early.',
+    options: ['students should', 'should students', 'students must', 'must students not'], correct: 1,
+    explanation: '"Under no circumstances" is a negative fronted adverbial, requiring inversion: should + students.' },
+  { id: gId(), type: 'mcq', level: 'B2', skill: 'Grammar',
+    question: 'Hardly ________ sat down when the phone rang.',
+    options: ['she had', 'had she', 'she has', 'has she'], correct: 1,
+    explanation: '"Hardly" triggers inversion with past perfect: had + she.' },
+];
+
+const RELATIVE_CLAUSES = [
+  { id: gId(), type: 'mcq', level: 'B2', skill: 'Grammar',
+    question: 'Students ________ study daily achieve high levels of academic success.',
+    options: ['are capable of achieving', 'who study', 'studying for', 'that studied'], correct: 1,
+    explanation: 'A defining relative clause with "who" refers to the subject (students).' },
+  { id: gId(), type: 'mcq', level: 'B2', skill: 'Grammar',
+    question: 'The class is difficult, but those ________ will learn a lot.',
+    options: ['which make it out', 'who take it over', 'who see it through', 'that save it up'], correct: 2,
+    explanation: '"See it through" = complete something difficult. "Who" introduces the relative clause.' },
+  { id: gId(), type: 'mcq', level: 'B2', skill: 'Grammar',
+    question: 'The scientist ________ research changed medicine won the Nobel Prize.',
+    options: ['who', 'whose', 'which', 'that'], correct: 1,
+    explanation: '"Whose" shows possession: the scientist\'s research changed medicine.' },
+];
+
+const ARTICLES = [
+  { id: gId(), type: 'mcq', level: 'B2', skill: 'Grammar',
+    question: 'It is very appropriate that Mary won the award for ________ student paper.',
+    options: ['a better', 'better', 'the best', 'best of'], correct: 2,
+    explanation: 'Superlatives require "the": "the best student paper."' },
+  { id: gId(), type: 'mcq', level: 'B2', skill: 'Grammar',
+    question: 'She wants to become ________ engineer after she graduates.',
+    options: ['the', 'a', 'an', '—'], correct: 2,
+    explanation: 'Use "an" before vowel sounds. "Engineer" starts with a vowel sound, and it\'s a non-specific first mention.' },
+  { id: gId(), type: 'mcq', level: 'B2', skill: 'Grammar',
+    question: '________ information you gave me was really helpful.',
+    options: ['A', 'An', 'The', '—'], correct: 2,
+    explanation: '"The" is used because the information is specific (the listener knows which information).' },
+];
+
+const PRONOUNS = [
+  { id: gId(), type: 'mcq', level: 'B2', skill: 'Grammar',
+    question: 'I\'ll put the box on the seat between you and ________.',
+    options: ['I', 'me', 'my', 'mine'], correct: 1,
+    explanation: 'After the preposition "between," use an object pronoun: "me."' },
+  { id: gId(), type: 'mcq', level: 'B2', skill: 'Grammar',
+    question: 'It was ________ who reported the accident to the police.',
+    options: ['them', 'their', 'they', 'theirs'], correct: 2,
+    explanation: 'Subject pronoun ("they") is needed after "it was," as it functions as the subject of the relative clause.' },
+  { id: gId(), type: 'mcq', level: 'B2', skill: 'Grammar',
+    question: 'The results are ________, not yours.',
+    options: ['my', 'mine', 'me', 'I'], correct: 1,
+    explanation: '"Mine" is a possessive pronoun (no noun after it). "My" requires a noun ("my results").' },
+];
+
+const COMPARATIVES = [
+  { id: gId(), type: 'mcq', level: 'B2', skill: 'Grammar',
+    question: 'Some people are more concerned about the budget cuts ________.',
+    options: ['they are than others', 'other than', 'than others', 'other than them'], correct: 2,
+    explanation: '"More … than others" is the correct comparative structure.' },
+  { id: gId(), type: 'mcq', level: 'B2', skill: 'Grammar',
+    question: 'The test was ________ we expected.',
+    options: ['more difficult than', 'more difficult as', 'difficult more than', 'the most difficult than'], correct: 0,
+    explanation: '"More difficult than" is the correct comparative structure for two-syllable+ adjectives.' },
+  { id: gId(), type: 'mcq', level: 'B2', skill: 'Grammar',
+    question: 'Of all the candidates, Laura is by far ________.',
+    options: ['more qualified', 'the most qualified', 'qualified most', 'the more qualified'], correct: 1,
+    explanation: 'Superlative form with "the" and "most" for three-syllable adjectives.' },
+];
+
+const PHRASAL_VERBS = [
+  { id: gId(), type: 'mcq', level: 'B2', skill: 'Grammar',
+    question: 'Mike enjoys ________ his coworkers on Monday mornings.',
+    options: ['catching up', 'catching up with', 'with catching up', 'catching him up'], correct: 1,
+    explanation: '"Catch up with someone" is the correct phrasal verb structure requiring "with" + object.' },
+  { id: gId(), type: 'mcq', level: 'B2', skill: 'Grammar',
+    question: 'Javier told his group to ________ the project while he was away.',
+    options: ['keep him company for', 'get him in touch with', 'keep him posted on', 'get hold of him to'], correct: 2,
+    explanation: '"Keep someone posted on something" = give regular updates about something.' },
+  { id: gId(), type: 'mcq', level: 'B2', skill: 'Grammar',
+    question: 'I can\'t ________ why she turned down such a great offer.',
+    options: ['figure out', 'figure in', 'make over', 'come up at'], correct: 0,
+    explanation: '"Figure out" = understand or solve. The others are either incorrect or don\'t fit the context.' },
+];
+
+const SUBJECT_VERB_AGREEMENT = [
+  { id: gId(), type: 'mcq', level: 'B2', skill: 'Grammar',
+    question: 'All ________ access to clean, safe drinking water.',
+    options: ['people should', 'people should have', 'should have people', 'should people have'], correct: 1,
+    explanation: 'Normal subject-verb order: "All people should have." The subject is "all people" (plural).' },
+  { id: gId(), type: 'mcq', level: 'B2', skill: 'Grammar',
+    question: 'Neither of the candidates ________ fully qualified for the position.',
+    options: ['are', 'were', 'is', 'have been'], correct: 2,
+    explanation: '"Neither of" takes a singular verb: "is."' },
+  { id: gId(), type: 'mcq', level: 'B2', skill: 'Grammar',
+    question: 'Everyone in the office ________ the new software by Friday.',
+    options: ['have to learn', 'has to learn', 'are learning', 'were learning'], correct: 1,
+    explanation: '"Everyone" is singular, so "has to learn" is correct.' },
+];
+
+const REPORTED_SPEECH = [
+  { id: gId(), type: 'mcq', level: 'B2', skill: 'Grammar',
+    question: 'She said she ________ the report by the end of the week.',
+    options: ['will finish', 'would finish', 'finishes', 'has finished'], correct: 1,
+    explanation: 'In reported speech, "will" backshifts to "would."' },
+  { id: gId(), type: 'mcq', level: 'B2', skill: 'Grammar',
+    question: 'He told me he ________ the answer at the time.',
+    options: ['doesn\'t know', 'hadn\'t known', 'didn\'t know', 'hasn\'t known'], correct: 2,
+    explanation: 'In reported speech, present simple backshifts to past simple ("didn\'t know").' },
+  { id: gId(), type: 'mcq', level: 'B2', skill: 'Grammar',
+    question: 'The teacher asked the students ________ during the exam.',
+    options: ['to not talk', 'not to talk', 'that they not talking', 'not talking'], correct: 1,
+    explanation: 'After "ask + object," use "not to + infinitive."' },
+];
+
+const GERUNDS_INFINITIVES = [
+  { id: gId(), type: 'mcq', level: 'B2', skill: 'Grammar',
+    question: 'She is very interested in ________ abroad next year.',
+    options: ['to study', 'study', 'studying', 'the studying'], correct: 2,
+    explanation: 'After the preposition "in," use a gerund ("studying").' },
+  { id: gId(), type: 'mcq', level: 'B2', skill: 'Grammar',
+    question: 'He decided ________ a new career after retirement.',
+    options: ['pursuing', 'to pursue', 'pursue', 'having pursued'], correct: 1,
+    explanation: '"Decide" is followed by an infinitive: "to pursue."' },
+  { id: gId(), type: 'mcq', level: 'B2', skill: 'Grammar',
+    question: 'She avoided ________ difficult questions during the interview.',
+    options: ['to answer', 'answer', 'answered', 'answering'], correct: 3,
+    explanation: '"Avoid" is always followed by a gerund.' },
+];
+
+const QUANTIFIERS = [
+  { id: gId(), type: 'mcq', level: 'B2', skill: 'Grammar',
+    question: 'Matthew owns two computers, but he wants to buy ________.',
+    options: ['another', 'other one', 'some more of', 'other'], correct: 0,
+    explanation: '"Another" = one more (singular). You can\'t say "other one" without "an."' },
+  { id: gId(), type: 'mcq', level: 'B2', skill: 'Grammar',
+    question: 'There was ________ traffic this morning — I was two hours late!',
+    options: ['many', 'a few', 'a lot of', 'several'], correct: 2,
+    explanation: '"Traffic" is uncountable, so "a lot of" is correct. "Many/a few/several" are for countable nouns.' },
+  { id: gId(), type: 'mcq', level: 'B2', skill: 'Grammar',
+    question: 'She has very ________ time to prepare — the exam is tomorrow.',
+    options: ['few', 'little', 'small', 'less'], correct: 1,
+    explanation: '"Time" is uncountable, so "little" (not "few") is used. "Little" = almost none.' },
+];
+
+const CONNECTORS = [
+  { id: gId(), type: 'mcq', level: 'B2', skill: 'Grammar',
+    question: 'The company is not doing poorly — ________, profits actually rose last year.',
+    options: ['under no circumstances', 'apart from this', 'on the contrary', 'despite this'], correct: 2,
+    explanation: '"On the contrary" contradicts the previous negative statement and introduces a positive fact.' },
+  { id: gId(), type: 'mcq', level: 'B2', skill: 'Grammar',
+    question: '________ being tired, she continued to work until midnight.',
+    options: ['Although', 'Despite', 'However', 'Even though'], correct: 1,
+    explanation: '"Despite" is followed by a noun/gerund phrase ("being tired"). "Although/Even though" require a full clause.' },
+  { id: gId(), type: 'mcq', level: 'B2', skill: 'Grammar',
+    question: 'He studied for months; ________, he still failed the test.',
+    options: ['moreover', 'therefore', 'nevertheless', 'furthermore'], correct: 2,
+    explanation: '"Nevertheless" = despite what was previously said (concessive contrast).' },
+];
+
+const DEMONSTRATIVES = [
+  { id: gId(), type: 'mcq', level: 'B2', skill: 'Grammar',
+    question: '________ movie is my favorite.',
+    options: ['This', 'Those', 'These', 'Theirs'], correct: 0,
+    explanation: '"Movie" is singular, so "This" (singular, near) is correct.' },
+  { id: gId(), type: 'mcq', level: 'B2', skill: 'Grammar',
+    question: '________ are the documents you asked for last week.',
+    options: ['This', 'That', 'These', 'It'], correct: 2,
+    explanation: '"Documents" is plural, so "These" is correct.' },
+];
+
+const ADVERBS = [
+  { id: gId(), type: 'mcq', level: 'B2', skill: 'Grammar',
+    question: 'The costumes for the upcoming theater performance are ________ complete.',
+    options: ['almost', 'soon', 'yet', 'far'], correct: 0,
+    explanation: '"Almost complete" = nearly finished. "Yet" is used in negative sentences or questions.' },
+  { id: gId(), type: 'mcq', level: 'B2', skill: 'Grammar',
+    question: 'She hasn\'t submitted her assignment ________.',
+    options: ['still', 'already', 'yet', 'soon'], correct: 2,
+    explanation: '"Yet" is used in negative sentences to mean "up to now."' },
+];
+
+const INFINITIVES = [
+  { id: gId(), type: 'mcq', level: 'B2', skill: 'Grammar',
+    question: 'Students who study daily ________ high levels of academic success.',
+    options: ['are capable of achieving', 'are capable to achieve', 'capability of achieving', 'capability to achieve'], correct: 0,
+    explanation: '"Capable" is always followed by "of + gerund": "capable of achieving."' },
+  { id: gId(), type: 'mcq', level: 'B2', skill: 'Grammar',
+    question: 'Jonathan chose City University because they have an excellent engineering program ________.',
+    options: ['he studied at', 'to study at', 'studying', 'studying for'], correct: 1,
+    explanation: '"To study at" is an infinitive of purpose explaining why he chose it.' },
+];
+
+const SOMEWHERE = [
+  { id: gId(), type: 'mcq', level: 'B2', skill: 'Grammar',
+    question: 'There\'s a huge convention in Chicago this weekend, so I\'d rather visit ________.',
+    options: ['anyplace', 'where else', 'somewhere else', 'other place'], correct: 2,
+    explanation: '"Somewhere else" = another place (affirmative context). "Anyplace" is informal; "where else" and "other place" are grammatically incorrect here.' },
+];
+
+const MODULES = [
+  { id: 'gm_conditionals', label: 'Conditionals (Types 1, 2 & 3)', skill: 'Grammar', level: 'B2', note: 'If-clauses for real, hypothetical, and unreal past situations. Type 3 = had + pp → would have + pp.', exercises: CONDITIONALS },
+  { id: 'gm_passive', label: 'Passive Voice', skill: 'Grammar', level: 'B2', note: 'Shift focus from doer to receiver. Structure: be + past participle. Common with reporting verbs (believe, report, say).', exercises: PASSIVE_VOICE },
+  { id: 'gm_modals', label: 'Modal Verbs', skill: 'Grammar', level: 'B2', note: 'Ability (can/could), obligation (must/should), deduction (must have). Modal + have + pp for past meanings.', exercises: MODAL_VERBS },
+  { id: 'gm_inversion', label: 'Inversion', skill: 'Grammar', level: 'B2', note: 'Reverse subject-verb order after negative adverbs (Never, Seldom, Not only, Hardly). Structure: adverb + auxiliary + subject + verb.', exercises: INVERSION },
+  { id: 'gm_relatives', label: 'Relative Clauses', skill: 'Grammar', level: 'B2', note: 'Extra information using who (people), which/that (things), whose (possession). Defining vs non-defining clauses.', exercises: RELATIVE_CLAUSES },
+  { id: 'gm_articles', label: 'Articles (a, an, the, zero article)', skill: 'Grammar', level: 'B2', note: 'A/an = indefinite first mention. The = specific/unique/superlative. Zero article for general plural/uncountable.', exercises: ARTICLES },
+  { id: 'gm_pronouns', label: 'Pronouns & Pronoun Cases', skill: 'Grammar', level: 'B2', note: 'Subject (I, they) vs object (me, them) vs possessive (mine, theirs). Object pronouns after prepositions.', exercises: PRONOUNS },
+  { id: 'gm_comparatives', label: 'Comparatives & Superlatives', skill: 'Grammar', level: 'B2', note: 'More … than for comparatives. The most for superlatives. Irregular: good → better → best.', exercises: COMPARATIVES },
+  { id: 'gm_phrasal', label: 'Prepositions & Phrasal Verbs', skill: 'Grammar', level: 'B2', note: 'Verb + particle with idiomatic meaning. Learn as chunks: catch up with, keep posted on, figure out.', exercises: PHRASAL_VERBS },
+  { id: 'gm_agreement', label: 'Subject-Verb Agreement', skill: 'Grammar', level: 'B2', note: 'Verb agrees with subject number. Everyone/nobody/each/neither → singular verb. Tricky with collective nouns.', exercises: SUBJECT_VERB_AGREEMENT },
+  { id: 'gm_reported', label: 'Reported Speech', skill: 'Grammar', level: 'B2', note: 'Shift original speech into reporting structure. Tenses backshift: present → past, will → would. Ask + not to + infinitive.', exercises: REPORTED_SPEECH },
+  { id: 'gm_gerunds', label: 'Gerunds vs Infinitives', skill: 'Grammar', level: 'B2', note: 'After prepositions → gerund (interested in studying). Some verbs take gerund (avoid, suggest), others infinitive (decide, want).', exercises: GERUNDS_INFINITIVES },
+  { id: 'gm_quantifiers', label: 'Quantifiers', skill: 'Grammar', level: 'B2', note: 'Another = one more (singular). A lot of for uncountable. Little = almost none (uncountable). Few = almost none (countable).', exercises: QUANTIFIERS },
+  { id: 'gm_connectors', label: 'Conjunctions & Connectors', skill: 'Grammar', level: 'B2', note: 'On the contrary = contradicts. Despite + noun/gerund. Nevertheless = concessive contrast.', exercises: CONNECTORS },
+  { id: 'gm_demonstratives', label: 'Demonstrative Pronouns', skill: 'Grammar', level: 'B2', note: 'This/these = near. That/those = far. Must agree in number with the noun.', exercises: DEMONSTRATIVES },
+  { id: 'gm_adverbs', label: 'Adverbs of Degree', skill: 'Grammar', level: 'B2', note: 'Almost = nearly. Yet = not until now (negative). Still = continuing. Position affects meaning.', exercises: ADVERBS },
+  { id: 'gm_infinitives', label: 'Infinitives of Purpose', skill: 'Grammar', level: 'B2', note: 'Infinitives express purpose (to study). Follow adjectives: capable of + gerund, likely to + infinitive.', exercises: INFINITIVES },
+  { id: 'gm_somewhere', label: 'Somewhere / Anywhere', skill: 'Grammar', level: 'B2', note: 'Somewhere in affirmative. Anywhere in negative/question. Somewhere else = a different place.', exercises: SOMEWHERE },
+];
+
+export const grammarBankMeta = {
+  id: 'met_grammar_bank',
+  title: 'MET Grammar Drill Bank',
+  subtitle: '50 exam-style grammar questions with explanations across 18 topics',
+  level: 'B2',
+  moduleCount: MODULES.length,
+  exerciseCount: MODULES.reduce((n, m) => n + m.exercises.length, 0),
+};
+
+export function getGrammarModules() {
+  return MODULES;
+}
+
+export function getGrammarModuleExercises(moduleId) {
+  const mod = MODULES.find(m => m.id === moduleId);
+  return mod ? mod.exercises : [];
+}

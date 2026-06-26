@@ -3,6 +3,8 @@
  * Core UI primitives, icons, layout shell, and AI utilities.
  */
 
+import { useState, useRef, useEffect } from 'react';
+import { Button } from './ui/Button.jsx';
 
 /* ─── CSS CUSTOM PROPERTIES (injected once) ─────────────────── */
 
@@ -39,6 +41,7 @@ export const Icon = {
   edit:     (p) => <SvgIcon {...p}><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></SvgIcon>,
   trash:    (p) => <SvgIcon d="M3 6h18 M8 6V4h8v2 M19 6l-1 14H6L5 6" {...p} />,
   chevronRight: (p) => <SvgIcon d="M9 18l6-6-6-6" {...p} />,
+  chevronLeft:  (p) => <SvgIcon d="M15 18l-6-6 6-6" {...p} />,
   chevronDown:  (p) => <SvgIcon d="M6 9l6 6 6-6" {...p} />,
   search:   (p) => <SvgIcon {...p}><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></SvgIcon>,
   filter:   (p) => <SvgIcon d="M22 3H2l8 9.46V19l4 2v-8.54L22 3" {...p} />,

@@ -3,6 +3,7 @@ import { Icon, Avatar } from '../components/shared.jsx';
 import { getDiagnoses, getReviews } from '../lib/workflow.js';
 import { hasVisibleApprovedStudentFeedback, asArray } from './student-helpers.js';
 import StudentHome from './student-home.jsx';
+import StudentSettings from './student-settings.jsx';
 import { StudentInbox, MessageTeacherDock } from '../components/message-center.jsx';
 
 const StudentHomework = lazy(() => import('./student-homework.jsx'));
@@ -15,6 +16,7 @@ const TABS = [
   { id: 'feedback', label: 'Feedback', icon: <Icon.inbox size={16} /> },
   { id: 'progress', label: 'Progress', icon: <Icon.progress size={16} /> },
   { id: 'messages', label: 'Messages', icon: <Icon.feedback size={16} /> },
+  { id: 'settings', label: 'Settings', icon: <Icon.settings size={16} /> },
 ];
 
 export default function StudentDashboard({ student, onSignOut }) {
@@ -109,6 +111,7 @@ export default function StudentDashboard({ student, onSignOut }) {
           {tab === 'feedback' && <StudentFeedback student={student} onTab={setTab} />}
           {tab === 'progress' && <StudentProgress student={student} />}
           {tab === 'messages' && <StudentInbox student={student} />}
+          {tab === 'settings' && <StudentSettings student={student} onSignOut={onSignOut} />}
         </Suspense>
       </div>
       <MessageTeacherDock student={student} onSent={() => setTab('messages')} />

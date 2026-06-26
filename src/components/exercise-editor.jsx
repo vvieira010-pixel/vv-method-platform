@@ -4,7 +4,9 @@
  * Also exports ExerciseTypePicker for adding new exercises.
  */
 import { useState } from 'react';
-import { Icon, Card, Button } from './shared.jsx';
+import { Icon } from './shared.jsx';
+import { Button } from '../components/ui/Button.jsx';
+import { Card } from '../components/ui/Card.jsx';
 import { EX_TYPES, getExType } from '../lib/exercise-types.js';
 import { metTaskOptions } from '../lib/met-task-spec.js';
 import { dbEnabled, uploadExerciseImage } from '../lib/supabase-db.js';
@@ -39,7 +41,7 @@ export function ExerciseTypePicker({ onSelect, onClose, onAiGenerate, exerciseOp
   return (
     <Card className="exercise-type-picker" style={{ padding: 20 }}>
       <div className="exercise-type-picker-head" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6, gap: 12, flexWrap: 'wrap' }}>
-        <span style={{ fontWeight: 700, fontSize: 'var(--text-sm)', color: 'var(--accent-deep)' }}>
+        <span style={{ fontWeight: 700, fontSize: 'var(--text-sm)', color: 'var(--primary)' }}>
           Add Exercise
         </span>
         <div className="exercise-type-picker-controls" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>

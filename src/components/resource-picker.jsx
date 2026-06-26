@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
-import { Icon, Button } from './shared.jsx';
+import { Icon } from './shared.jsx';
+import { Button } from './ui/Button.jsx';
 import { getDbContext, listTeacherResources, uploadTeacherResource, deleteTeacherResource } from '../lib/supabase-db.js';
 
 const RESOURCE_BUCKET = 'teacher-resources';
@@ -87,7 +88,7 @@ export default function ResourcePicker({ open, onClose, onSelect, tab: initialTa
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '16px 20px', borderBottom: '1px solid var(--border)' }}>
           <div style={{ flex: 1 }}>
-            <div style={{ fontWeight: 700, fontSize: 'var(--text-md)' }}>Resource Library</div>
+            <div style={{ fontWeight: 700, fontSize: 'var(--text-base)' }}>Resource Library</div>
             <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>Browse or upload images and audio for your exercises</div>
           </div>
           <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)', fontSize: 20, fontFamily: 'var(--font-ui)' }}>×</button>

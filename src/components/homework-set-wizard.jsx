@@ -3,7 +3,9 @@
  * Teacher picks a CEFR level and kind before entering the exercise builder.
  */
 import { useState } from 'react';
-import { Button, Card, Icon } from './shared.jsx';
+import { Icon } from './shared.jsx';
+import { Button } from './ui/Button.jsx';
+import { Card } from './ui/Card.jsx';
 import { UNIT_LEVELS, SUBJECT_OPTIONS } from '../lib/unit-bank.js';
 
 export default function HomeworkSetWizard({ onComplete, onSkip }) {
@@ -43,7 +45,7 @@ export default function HomeworkSetWizard({ onComplete, onSkip }) {
                 borderRadius: 'var(--radius-md)',
                 border: level === l.id ? '2px solid var(--accent)' : '1.5px solid var(--border)',
                 background: level === l.id ? 'var(--accent-subtle)' : 'var(--surface)',
-                color: level === l.id ? 'var(--accent-deep)' : 'var(--text-body)',
+                color: level === l.id ? 'var(--primary)' : 'var(--text-body)',
                 fontWeight: level === l.id ? 700 : 500,
                 fontSize: 'var(--text-sm)',
                 cursor: 'pointer',
@@ -84,7 +86,7 @@ export default function HomeworkSetWizard({ onComplete, onSkip }) {
                 <div style={{
                   fontSize: 'var(--text-sm)',
                   fontWeight: skill === s.id ? 700 : 600,
-                  color: skill === s.id ? 'var(--accent-deep)' : 'var(--text-body)',
+                  color: skill === s.id ? 'var(--primary)' : 'var(--text-body)',
                   lineHeight: 1.3,
                 }}>
                   {s.label}

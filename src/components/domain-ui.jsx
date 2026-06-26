@@ -43,7 +43,7 @@ export function StudentFeedbackView({ feedback }) {
       {feedback.classFocus && (
         <div style={card}>
           <div style={{ ...cardTitle, color: 'var(--primary)' }}>Current focus</div>
-          <p style={{ fontSize: 'var(--text-md)', lineHeight: 1.75, color: 'var(--text)', margin: 0 }}>{feedback.classFocus}</p>
+          <p style={{ fontSize: 'var(--text-base)', lineHeight: 1.75, color: 'var(--text)', margin: 0 }}>{feedback.classFocus}</p>
         </div>
       )}
       {wins.length > 0 && (
@@ -52,9 +52,9 @@ export function StudentFeedbackView({ feedback }) {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             {wins.map((w, i) => (
               <div key={i} style={{ padding: 12, background: 'var(--accent-subtle)', borderRadius: 'var(--radius-sm)' }}>
-                {w.strength && <div style={{ fontSize: 'var(--text-md)', fontWeight: 700, color: 'var(--text)', marginBottom: 4 }}>{w.strength}</div>}
-                {w.explanation && <p style={{ fontSize: 'var(--text-md)', lineHeight: 1.7, margin: 0, color: 'var(--text)' }}>{w.explanation}</p>}
-                {w.example && <p style={{ fontSize: 'var(--text-md)', lineHeight: 1.7, margin: '4px 0 0', color: 'var(--text-2)', fontStyle: 'italic' }}>"{w.example}"</p>}
+                {w.strength && <div style={{ fontSize: 'var(--text-base)', fontWeight: 700, color: 'var(--text)', marginBottom: 4 }}>{w.strength}</div>}
+                {w.explanation && <p style={{ fontSize: 'var(--text-base)', lineHeight: 1.7, margin: 0, color: 'var(--text)' }}>{w.explanation}</p>}
+                {w.example && <p style={{ fontSize: 'var(--text-base)', lineHeight: 1.7, margin: '4px 0 0', color: 'var(--text-2)', fontStyle: 'italic' }}>"{w.example}"</p>}
               </div>
             ))}
           </div>
@@ -62,19 +62,19 @@ export function StudentFeedbackView({ feedback }) {
       )}
       {fixes.length > 0 && (
         <div style={card}>
-          <div style={{ ...cardTitle, color: 'var(--accent-deep)' }}>Focus for next time</div>
+          <div style={{ ...cardTitle, color: 'var(--primary)' }}>Focus for next time</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             {fixes.map((f, i) => (
               <div key={i} style={{ padding: 12, background: 'var(--teal-soft)', borderRadius: 'var(--radius-sm)' }}>
-                {f.area && <div style={{ fontSize: 'var(--text-md)', fontWeight: 700, color: 'var(--text)', marginBottom: 4 }}>{f.area}</div>}
+                {f.area && <div style={{ fontSize: 'var(--text-base)', fontWeight: 700, color: 'var(--text)', marginBottom: 4 }}>{f.area}</div>}
                 {(f.insteadOf || f.sayInstead) && (
-                  <p style={{ fontSize: 'var(--text-md)', lineHeight: 1.7, margin: '0 0 4px', color: 'var(--text-2)' }}>
+                  <p style={{ fontSize: 'var(--text-base)', lineHeight: 1.7, margin: '0 0 4px', color: 'var(--text-2)' }}>
                     {f.insteadOf && <>{f.insteadOf}</>}
                     {f.insteadOf && f.sayInstead && <> → </>}
                     {f.sayInstead && <span style={{ color: 'var(--accent-text)', fontWeight: 600 }}>{f.sayInstead}</span>}
                   </p>
                 )}
-                {f.howToImprove && <p style={{ fontSize: 'var(--text-md)', lineHeight: 1.7, margin: 0, color: 'var(--text)' }}>{f.howToImprove}</p>}
+                {f.howToImprove && <p style={{ fontSize: 'var(--text-base)', lineHeight: 1.7, margin: 0, color: 'var(--text)' }}>{f.howToImprove}</p>}
               </div>
             ))}
           </div>
@@ -83,7 +83,7 @@ export function StudentFeedbackView({ feedback }) {
       {feedback.finalNote && (
         <div style={card}>
           <div style={{ ...cardTitle, color: 'var(--muted)' }}>From your teacher</div>
-          <p style={{ fontSize: 'var(--text-md)', lineHeight: 1.75, margin: 0, color: 'var(--text-2)' }}>{feedback.finalNote}</p>
+          <p style={{ fontSize: 'var(--text-base)', lineHeight: 1.75, margin: 0, color: 'var(--text-2)' }}>{feedback.finalNote}</p>
         </div>
       )}
     </div>
@@ -164,14 +164,14 @@ export function StudentNextTask({ task, onAction, onStart, onSecondary }) {
   };
   return (
     <div style={{
-      background:'var(--accent-deep)', color:'#fff', borderRadius:'var(--radius-lg)',
+      background:'var(--primary)', color:'#fff', borderRadius:'var(--radius-lg)',
       padding:'16px 20px', display:'flex', alignItems:'center',
       justifyContent:'space-between', gap:12,
     }}>
       <div>
         <div style={{ fontSize:'var(--text-xs)', color:'var(--on-dark-muted)', fontWeight:600,
           textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:4 }}>Up next</div>
-        <div style={{ fontWeight:700, fontSize:'var(--text-md)' }}>{task.title}</div>
+        <div style={{ fontWeight:700, fontSize:'var(--text-base)' }}>{task.title}</div>
         {(task.sub || task.description) && <div style={{ fontSize:'var(--text-sm)', color:'var(--on-dark-muted)', marginTop:2 }}>{task.sub || task.description}</div>}
       </div>
       <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>

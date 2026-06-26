@@ -1,4 +1,4 @@
-﻿/**
+/**
  * diagnostic-create.jsx — Multi-step diagnosis: prereqs → AI → preview/approve → save
  *
  * The most important page. Teacher must:
@@ -12,7 +12,9 @@
  *   constants.js, diagnosis-utils.js, hooks/useSectionApproval.js, components/SectionContent.jsx
  */
 import { useState, useEffect } from 'react';
-import { Icon, Card, SectionHeader, Pill, Button, Avatar } from '../components/shared.jsx';
+import { Icon, SectionHeader, Pill, Avatar } from '../components/shared.jsx';
+import { Button } from '../components/ui/Button.jsx';
+import { Card } from '../components/ui/Card.jsx';
 import { callAI } from '../components/shared.jsx';
 import { parseAiJson } from '../lib/ai-helpers.js';
 import { withSkills } from '../education-skills/active-skills.js';
@@ -48,6 +50,7 @@ import { SectionContent, PrereqIcon, camelToLabel } from '../domain/assessment/c
 
 
 export default function DiagnosticCreate({ studentId, classEventId, diagnosisId, students, onNavigate }) {
+  const labelStyle = { display: 'block', fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 };
   const [step, setStep] = useState('prereq'); // prereq | generating | review | saved
   const [student, setStudent] = useState(null);
   const [classEvent, setClassEvent] = useState(null);
@@ -84,6 +87,12 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
     approvedCount, totalSections,
     missingRequiredApprovals, canApproveDiagnosis,
   } = useSectionApproval();
+
+  const backStyle = { background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)', fontSize: 'var(--text-sm)', display: 'flex', alignItems: 'center', gap: 4, marginBottom: 16, padding: 0, fontFamily: 'var(--font-ui)' };
+  const S = {
+    headline: { fontFamily: 'var(--font-ui)', fontSize: 'var(--text-2xl)', fontWeight: 700, color: 'var(--primary)', margin: '0 0 4px' },
+    sub: { fontSize: 'var(--text-sm)', color: 'var(--muted)', margin: '0 0 0' },
+  };
 
   useEffect(() => {
     getStudents().then(setAllStudents);
@@ -201,18 +210,26 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
       const diagnosisRaw = diagnosisResult.raw;
       const parsedDiagnosis = diagnosisResult.parsed;
 
+      // Strip unevaluated skills from diagnosis before passing to downstream prompts to prevent cascade amplification
+      const evaluatedOnlyDx = {
+        ...parsedDiagnosis,
+        skillDiagnosis: Object.fromEntries(
+          Object.entries(parsedDiagnosis.skillDiagnosis || {}).filter(([, v]) => v?.evaluated === true)
+        ),
+      };
+
       setGeneratingStatus('Step 2/4 — Analysing errors and vocabulary targets…');
-      const errorBankRaw = await callAI(buildErrorBankPrompt({ ...promptData, diagnosis: parsedDiagnosis }), withSkills('diagnosis', { max_tokens: 2500, preferredProvider: 'gemini' })).catch(() => null);
+      const errorBankRaw = await callAI(buildErrorBankPrompt({ ...promptData, diagnosis: evaluatedOnlyDx }), withSkills('diagnosis', { max_tokens: 2500, preferredProvider: 'gemini' })).catch(() => null);
       const parsedErrorBank = normalizeErrorTargets(errorBankRaw ? parseAiJson(getContent(errorBankRaw)) : {});
 
       setGeneratingStatus('Step 3/4 — Writing student feedback…');
-      const feedbackRaw = await callAI(buildStudentFeedbackPrompt({ ...promptData, diagnosis: parsedDiagnosis }), withSkills('feedback', { max_tokens: 2500, preferredProvider: 'gemini' })).catch(() => null);
+      const feedbackRaw = await callAI(buildStudentFeedbackPrompt({ ...promptData, diagnosis: evaluatedOnlyDx }), withSkills('feedback', { max_tokens: 2500, preferredProvider: 'gemini' })).catch(() => null);
       const parsedFeedback = feedbackRaw ? parseAiJson(getContent(feedbackRaw)) : {};
 
       setGeneratingStatus('Step 4/4 — Building homework recommendation…');
       const homeworkRaw = await callAI(buildHomeworkPrompt({
         ...promptData,
-        diagnosis: parsedDiagnosis,
+        diagnosis: evaluatedOnlyDx,
         errorBank: parsedErrorBank.errorBankSuggestions,
         vocabTargets: parsedErrorBank.vocabGrammarTargets,
       }), withSkills('homework', { max_tokens: 3000, preferredProvider: 'gemini' })).catch(() => null);
@@ -638,7 +655,7 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
                             <span className="skill-chip-check">
                               {evaluated && <Icon.check size={10} color="#fff" />}
                             </span>
-                            <span style={{ fontWeight: 600, fontSize: 'var(--text-xs)', color: evaluated ? 'var(--accent-deep)' : 'var(--text)' }}>{key}</span>
+                            <span style={{ fontWeight: 600, fontSize: 'var(--text-xs)', color: evaluated ? 'var(--primary)' : 'var(--text)' }}>{key}</span>
                           </div>
                           {evaluated && countKey && (
                             <div style={{ marginTop: 6, display: 'flex', alignItems: 'center', gap: 6 }} onClick={e => e.stopPropagation()}>
@@ -670,7 +687,7 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
           )}
 
           <div>
-            <Button variant="primary" style={{ fontSize: 'var(--text-md)', padding: '12px 24px' }} onClick={handleGenerate} disabled={!prereqOk}>
+            <Button variant="primary" style={{ fontSize: 'var(--text-base)', padding: '12px 24px' }} onClick={handleGenerate} disabled={!prereqOk}>
               <Icon.diagnose size={16} /> Run AI Diagnosis
             </Button>
             {!prereqOk && (
@@ -696,12 +713,18 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
                   const skills = buildSnapshot(sections.skillDiagnosis.content);
                   return (
                     <div style={{ display: 'grid', gap: 6, gridTemplateColumns: 'repeat(auto-fill, minmax(140px,1fr))' }}>
-                      {skills.map(s => (
-                        <div key={s.section} style={{ padding: '8px 10px', border: '1px solid var(--divider)', background: 'var(--surface)' }}>
-                          <div style={{ fontSize: 10, color: 'var(--muted)', textTransform: 'uppercase' }}>{s.section}</div>
-                          <div style={{ fontSize: 18, fontWeight: 700 }}>{s.score_0_80 ?? '—'}</div>
-                        </div>
-                      ))}
+                      {skills.map(s => {
+                        const isLowConf = s.confidenceLabel && !['Diagnostic estimate', 'Mock-test estimate', 'Official score imported manually'].includes(s.confidenceLabel);
+                        return (
+                          <div key={s.section} style={{ padding: '8px 10px', border: '1px solid ' + (isLowConf ? 'var(--warning)' : 'var(--divider)'), background: 'var(--surface)' }}>
+                            <div style={{ fontSize: 10, color: 'var(--muted)', textTransform: 'uppercase' }}>{s.section}</div>
+                            <div style={{ fontSize: 18, fontWeight: 700 }}>{s.score_0_80 ?? '—'}</div>
+                            {s.confidenceLabel && (
+                              <div style={{ fontSize: 10, color: isLowConf ? 'var(--warning)' : 'var(--muted)', fontStyle: isLowConf ? 'italic' : 'normal', marginTop: 2 }}>{s.confidenceLabel}</div>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
                   );
                 })()}
@@ -932,13 +955,13 @@ function DiagnosisStepBar({ step }) {
             )}
             <div className="step-bar-dot" style={{
               background: (active || done) ? 'var(--accent)' : 'var(--divider)',
-              border: active ? '2px solid var(--accent-deep)' : 'none',
+              border: active ? '2px solid var(--primary)' : 'none',
             }}>
               {done && <Icon.check size={10} color="#fff" />}
               {active && <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#fff' }} />}
             </div>
             <span className="step-bar-label" style={{
-              color: active ? 'var(--accent-deep)' : done ? 'var(--accent)' : 'var(--muted)',
+              color: active ? 'var(--primary)' : done ? 'var(--accent)' : 'var(--muted)',
               fontWeight: active ? 700 : 400,
             }}>{s.label}</span>
           </div>
@@ -947,3 +970,4 @@ function DiagnosisStepBar({ step }) {
     </div>
   );
 }
+

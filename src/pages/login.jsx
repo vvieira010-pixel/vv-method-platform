@@ -1,257 +1,33 @@
 /**
  * login.jsx — MET Proficiency Mastery Login Screen
  *
- * Three modes:
- *  - "signin"   — existing users (incl. the teacher) sign in with password.
- *  - "register" — first-time students set their OWN password (self-register).
- *  - "reset"    — sends a password-reset link via Supabase Recovery API.
+ * Two modes:
+ *  - "signin" — existing users (incl. the teacher) sign in with password.
+ *  - "reset"  — sends a password-reset link via Supabase Recovery API.
+ * Access is by invitation only — no self-registration.
  */
 
 import { useState, useEffect } from 'react';
 import {
-  signInWithPassword, signUpWithPassword,
+  signInWithPassword,
   storeSupabaseSession, getSupabaseConfig,
   resetPasswordForEmail,
 } from '../lib/supabase-storage.js';
 import { Icon } from '../components/shared.jsx';
 
-const CSS = `
-  .lp-root {
-    min-height: 100vh; min-height: 100dvh;
-    display: grid; grid-template-columns: 420px 1fr;
-    font-family: var(--font-ui); background: #fff;
-    overflow-x: hidden;
-  }
 
-  /* ── Brand panel ── */
-  .lp-brand {
-    background: linear-gradient(180deg, #0f1b2d 0%, #172437 100%);
-    display: flex; flex-direction: column; justify-content: space-between;
-    padding: 48px 44px; min-height: 100dvh; position: sticky; top: 0;
-    overflow: hidden;
-  }
-  .lp-brand::before {
-    content: ''; position: absolute; inset: 0;
-    background: radial-gradient(ellipse at 20% 80%, rgba(72,199,199,.18) 0%, transparent 60%),
-                radial-gradient(ellipse at 80% 10%, rgba(255,255,255,.06) 0%, transparent 50%);
-    pointer-events: none;
-  }
-  .lp-brand-logo { display: flex; align-items: center; gap: 12px; position: relative; }
-  .lp-brand-logo-name { font-size: 15px; font-weight: 800; color: #fff; letter-spacing: .01em; line-height: 1.2; }
-  .lp-brand-logo-sub  { font-size: 11px; color: rgba(241,250,238,.7); letter-spacing: .06em; text-transform: uppercase; }
-
-  .lp-brand-hero { position: relative; }
-  .lp-brand-tag {
-    display: inline-block; margin-bottom: 18px;
-    padding: 4px 10px; border-radius: 4px;
-    background: rgba(72,199,199,.22); border: 1px solid rgba(72,199,199,.4);
-    font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #a8dce0;
-  }
-  .lp-brand-b2-badge {
-    display: inline-block; margin-left: 8px; vertical-align: middle;
-    padding: 3px 8px; border-radius: 4px;
-    background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.25);
-    font-size: 11px; font-weight: 800; letter-spacing: .08em; color: #fff;
-  }
-  .lp-invite-notice {
-    display: flex; align-items: center; gap: 8px;
-    margin-bottom: 22px; padding: 9px 12px;
-    border-radius: var(--radius-sm);
-    background: var(--accent-subtle); border: 1px solid var(--accent-soft);
-    font-size: 12px; color: var(--accent-deep); line-height: 1.4;
-  }
-  .lp-mode-switch {
-    display: flex; gap: 4px; margin-bottom: 28px;
-    padding: 4px; background: var(--bg); border: 1.5px solid var(--border);
-    border-radius: var(--radius-md);
-  }
-  .lp-mode-switch button {
-    flex: 1; padding: 9px 12px;
-    border: none; border-radius: 6px;
-    font-size: var(--text-sm); font-weight: 600; font-family: var(--font-ui);
-    cursor: pointer; color: var(--muted);
-    background: transparent; transition: all .15s;
-  }
-  .lp-mode-switch button.active {
-    background: var(--accent); color: #fff;
-    box-shadow: 0 1px 4px rgba(20,136,145,.3);
-  }
-  .lp-mode-switch button:hover:not(.active):not(:disabled) {
-    color: var(--accent-deep); background: var(--accent-subtle);
-  }
-  .lp-mode-switch button:disabled { opacity: .5; cursor: default; }
-  .lp-brand-headline {
-    font-size: clamp(26px, 3vw, 34px); font-weight: 800; color: #fff;
-    line-height: 1.2; margin: 0 0 16px; letter-spacing: -.02em;
-  }
-  .lp-brand-copy { font-size: 14px; color: rgba(241,250,238,.8); line-height: 1.75; margin: 0; }
-
-  .lp-brand-features { position: relative; display: flex; flex-direction: column; gap: 10px; }
-  .lp-brand-feature { display: flex; align-items: center; gap: 10px; font-size: 13px; color: rgba(241,250,238,.75); }
-  .lp-brand-feature-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; background: rgba(72,199,199,.7); }
-
-  /* ── Sign-in panel ── */
-  .lp-signin {
-    display: flex; align-items: center; justify-content: center;
-    min-height: 100dvh; padding: 56px clamp(24px, 6vw, 64px);
-    overflow-y: auto; overflow-x: hidden; background: #fff;
-    width: 100%; min-width: 0; box-sizing: border-box;
-  }
-  .lp-signin-inner { width: min(100%, 420px); max-width: calc(100vw - 48px); min-width: 0; }
-
-  /* Mobile brand header — hidden on desktop, replaces the left panel on mobile */
-  .lp-mobile-brand {
-    display: none;
-    margin-bottom: 28px;
-    padding: 16px 18px;
-    border-radius: 10px;
-    background: linear-gradient(135deg, #0f1b2d 0%, #172437 100%);
-  }
-  .lp-mobile-brand-name {
-    display: block;
-    font-size: 16px;
-    font-weight: 800;
-    color: #fff;
-    line-height: 1.2;
-  }
-  .lp-mobile-brand-sub {
-    display: block;
-    margin-top: 4px;
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: .06em;
-    text-transform: uppercase;
-    color: rgba(168,218,220,.85);
-  }
-
-  .lp-greeting { margin-bottom: 36px; }
-  .lp-greeting h1 {
-    font-size: clamp(22px, 3vw, 28px); font-weight: 800;
-    color: var(--text); margin: 0 0 8px; letter-spacing: -.02em;
-  }
-  .lp-greeting p { font-size: 14px; color: var(--muted); margin: 0; line-height: 1.55; }
-
-  /* Form fields */
-  .lp-field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
-  .lp-label {
-    font-size: 12px; font-weight: 700; color: var(--text);
-    letter-spacing: .04em; text-transform: uppercase;
-  }
-  .lp-input {
-    width: 100%; padding: 12px 14px; box-sizing: border-box;
-    border: 1.5px solid var(--border); border-radius: var(--radius-md);
-    font-size: var(--text-base); font-family: var(--font-ui); color: var(--text);
-    background: var(--surface); outline: none;
-    transition: border-color .15s, box-shadow .15s;
-  }
-  .lp-input:focus {
-    border-color: var(--accent);
-    box-shadow: 0 0 0 4px rgba(72,199,199,0.22);
-    background: var(--surface);
-  }
-  .lp-input::placeholder { color: var(--muted); }
-
-  .lp-submit {
-    width: 100%; padding: 13px; margin-top: 8px;
-    background: var(--accent); color: #fff;
-    border: none; border-radius: var(--radius-md); cursor: pointer;
-    font-size: var(--text-lg); font-weight: 700; font-family: var(--font-ui);
-    letter-spacing: .01em;
-    transition: opacity .15s, box-shadow .15s, transform .1s;
-    display: flex; align-items: center; justify-content: center; gap: var(--space-2);
-    box-sizing: border-box; max-width: 100%;
-  }
-  .lp-submit:hover:not(:disabled) {
-    box-shadow: 0 4px 16px rgba(20,136,145,.4);
-    transform: translateY(-1px);
-  }
-  .lp-submit:active:not(:disabled) { transform: translateY(0); }
-  .lp-submit:disabled { opacity: .6; cursor: default; }
-
-  /* Spinner */
-  @keyframes lp-spin { to { transform: rotate(360deg); } }
-  .lp-spinner {
-    width: 16px; height: 16px; border-radius: 50%; flex-shrink: 0;
-    border: 2px solid rgba(255,255,255,.35); border-top-color: #fff;
-    animation: lp-spin .7s linear infinite;
-  }
-
-  .lp-error {
-    margin-top: 16px; padding: 12px 16px; border-radius: var(--radius-md);
-    background: var(--danger-bg); border: 1px solid var(--danger-soft);
-    font-size: var(--text-sm); color: var(--danger); line-height: 1.5;
-  }
-
-  .lp-success {
-    margin-top: 16px; padding: 14px 16px; border-radius: var(--radius-md);
-    background: var(--success-bg); border: 1px solid var(--success-soft);
-    font-size: var(--text-sm); color: var(--success); line-height: 1.6;
-  }
-
-  .lp-footer {
-    margin-top: 32px; padding-top: 20px; border-top: 1px solid var(--border);
-    font-size: 11.5px; color: var(--muted); text-align: center; line-height: 1.6;
-  }
-
-  .lp-toggle {
-    margin-top: 18px; padding: 12px 16px;
-    border-radius: var(--radius-md); border: 1px solid var(--border);
-    background: var(--bg);
-    font-size: 13px; color: var(--muted); text-align: center;
-  }
-  .lp-toggle button {
-    background: none; border: none; padding: 0 4px; margin-left: var(--space-1);
-    font-size: 13px; font-weight: 700; color: var(--accent);
-    cursor: pointer; font-family: var(--font-ui);
-  }
-  .lp-toggle button:disabled { opacity: .5; cursor: default; }
-
-  .lp-forgot {
-    margin-top: 12px; text-align: center;
-    font-size: 12px; color: var(--muted);
-  }
-  .lp-forgot button {
-    background: none; border: none; padding: 0;
-    font-size: 12px; color: var(--muted); text-decoration: underline;
-    cursor: pointer; font-family: var(--font-ui);
-  }
-  .lp-forgot button:hover { color: var(--accent-deep); }
-
-  @media (max-width: 768px) {
-    .lp-root { grid-template-columns: 1fr; }
-    .lp-brand { display: none; }
-    .lp-signin { align-items: flex-start; justify-content: flex-start; padding: 36px 24px; }
-    .lp-signin-inner { width: 100%; max-width: 100%; }
-    .lp-mobile-brand { display: block; }
-    .lp-greeting { margin-bottom: 28px; }
-  }
-  @media (max-width: 480px) {
-    .lp-signin { padding: 32px 20px; }
-  }
-`;
-
-let cssInjected = false;
-function injectCSS() {
-  if (cssInjected || typeof document === 'undefined') return;
-  const s = document.createElement('style');
-  s.textContent = CSS;
-  document.head.appendChild(s);
-  cssInjected = true;
-}
 
 export default function LoginScreen() {
-  const [mode, setMode] = useState('signin'); // 'signin' | 'register' | 'reset'
+  const [mode, setMode] = useState('signin'); // 'signin' | 'reset'
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [resetSent, setResetSent] = useState(false);
   const supabaseReady = getSupabaseConfig().isConfigured;
-  const isRegister = mode === 'register';
   const isReset = mode === 'reset';
 
   useEffect(() => {
-    injectCSS();
     try {
       const notice = localStorage.getItem('vv:auth_notice');
       if (notice) { setError(notice); localStorage.removeItem('vv:auth_notice'); }
@@ -292,24 +68,13 @@ export default function LoginScreen() {
       setError("Access isn't set up yet. Contact your teacher to get started.");
       return;
     }
-    if (isRegister && password.length < 6) {
-      setError('Choose a password with at least 6 characters.');
-      return;
-    }
-
     setLoading(true);
     try {
-      const session = isRegister
-        ? await signUpWithPassword(email.trim(), password)
-        : await signInWithPassword(email.trim(), password);
+      const session = await signInWithPassword(email.trim(), password);
       storeSupabaseSession(session);
       window.location.reload();
     } catch (err) {
-      setError(
-        isRegister
-          ? (err.message || 'Could not create your account. Try again or contact your teacher.')
-          : 'Incorrect email or password. Try again or contact your teacher.'
-      );
+      setError('Incorrect email or password. Try again or contact your teacher.');
       setLoading(false);
     }
   };
@@ -319,6 +84,20 @@ export default function LoginScreen() {
 
       {/* ── Brand panel ── */}
       <div className="lp-brand">
+        <svg className="lp-brand-hero-illo" width="320" height="280" viewBox="0 0 320 280" fill="none" aria-hidden="true">
+          <path d="M40 200 Q80 60 160 80 Q240 100 280 60" stroke="rgba(20,136,145,0.2)" strokeWidth="2" fill="none" strokeLinecap="round" />
+          <path d="M40 220 Q100 120 180 140 Q260 160 300 120" stroke="rgba(72,199,199,0.12)" strokeWidth="2" fill="none" strokeLinecap="round" />
+          <circle cx="160" cy="80" r="6" fill="rgba(20,136,145,0.25)" />
+          <circle cx="240" cy="100" r="4" fill="rgba(72,199,199,0.2)" />
+          <circle cx="100" cy="120" r="3" fill="rgba(255,255,255,0.1)" />
+          <rect x="255" y="50" width="32" height="22" rx="4" stroke="rgba(200,102,7,0.3)" strokeWidth="1.5" fill="rgba(200,102,7,0.08)" />
+          <text x="263" y="65" fill="rgba(200,102,7,0.5)" fontSize="10" fontWeight="700" fontFamily="sans-serif">B2</text>
+          <path d="M280 45 L290 55 M290 45 L280 55" stroke="rgba(200,102,7,0.25)" strokeWidth="1.5" strokeLinecap="round" />
+          <circle cx="80" cy="180" r="2" fill="rgba(255,255,255,0.08)" />
+          <circle cx="200" cy="160" r="2.5" fill="rgba(255,255,255,0.06)" />
+          <circle cx="270" cy="180" r="1.5" fill="rgba(255,255,255,0.05)" />
+        </svg>
+
         <div className="lp-brand-logo">
           <div>
             <div className="lp-brand-logo-name">MET Proficiency Mastery</div>
@@ -356,13 +135,6 @@ export default function LoginScreen() {
           </div>
 
           {!isReset && (
-            <div className="lp-mode-switch" role="tablist" aria-label="Account mode">
-              <button type="button" role="tab" aria-selected={!isRegister} className={!isRegister ? 'active' : ''} onClick={() => switchMode('signin')} disabled={loading}>Sign in</button>
-              <button type="button" role="tab" aria-selected={isRegister} className={isRegister ? 'active' : ''} onClick={() => switchMode('register')} disabled={loading}>New student</button>
-            </div>
-          )}
-
-          {!isRegister && !isReset && (
             <div className="lp-invite-notice" role="note">
               <Icon.lock size={14} />
               Private platform · Contact Teacher Vinicius to get access
@@ -371,13 +143,11 @@ export default function LoginScreen() {
 
           <div className="lp-greeting">
             <h1>
-              {isReset ? 'Reset your password' : isRegister ? 'Create your account' : 'Welcome back'}
+              {isReset ? 'Reset your password' : 'Welcome back'}
             </h1>
             <p>
               {isReset
                 ? "Enter your email and we'll send you a sign-in link."
-                : isRegister
-                ? 'Enter your email and choose a password to set up your account.'
                 : 'Enter your email and password below.'}
             </p>
           </div>
@@ -410,8 +180,8 @@ export default function LoginScreen() {
                     id="lp-password"
                     className="lp-input"
                     type="password"
-                    autoComplete={isRegister ? 'new-password' : 'current-password'}
-                    placeholder={isRegister ? 'Choose a password (min. 6 characters)' : '••••••••••••••'}
+                    autoComplete="current-password"
+                    placeholder="••••••••••••••"
                     value={password}
                     onChange={e => setPassword(e.target.value)}
                     disabled={loading}
@@ -421,8 +191,8 @@ export default function LoginScreen() {
 
               <button type="submit" className="lp-submit" disabled={loading}>
                 {loading
-                  ? <><span className="lp-spinner" />{isReset ? 'Sending…' : isRegister ? 'Creating account…' : 'Signing in…'}</>
-                  : isReset ? 'Send link' : isRegister ? 'Create account' : 'Sign in'}
+                  ? <><span className="lp-spinner" />{isReset ? 'Sending…' : 'Signing in…'}</>
+                  : isReset ? 'Send link' : 'Sign in'}
               </button>
             </form>
           )}
@@ -431,7 +201,7 @@ export default function LoginScreen() {
             <div className="lp-error" role="alert" aria-live="polite">{error}</div>
           )}
 
-          {!isReset && !isRegister && (
+          {!isReset && (
             <div className="lp-forgot">
               <button type="button" onClick={() => switchMode('reset')} disabled={loading}>
                 Forgot password?

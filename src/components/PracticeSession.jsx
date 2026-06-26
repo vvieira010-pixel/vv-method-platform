@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Icon, Modal, Button } from './shared.jsx';
+import { Icon, Modal } from './shared.jsx';
+import { Button } from '../components/ui/Button.jsx';
 import ExercisePlayer from './exercises/ExercisePlayer.jsx';
 import {
   getGrammarExercises,
@@ -88,7 +89,7 @@ export default function PracticeSession({ mode, onClose, onSessionComplete }) {
               borderRadius: 'var(--radius-sm)',
               border: selectedKind === k.id ? '1.5px solid var(--accent)' : '1.5px solid var(--border)',
               background: selectedKind === k.id ? 'var(--accent-subtle)' : 'var(--surface)',
-              color: selectedKind === k.id ? 'var(--accent-deep)' : 'var(--text)',
+              color: selectedKind === k.id ? 'var(--primary)' : 'var(--text)',
               fontSize: 'var(--text-xs)',
               fontWeight: 700,
               cursor: 'pointer',

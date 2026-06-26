@@ -2,7 +2,9 @@
  * reports.jsx — Progress and performance repository
  */
 import { useState, useEffect, useMemo } from 'react';
-import { Icon, Card, SectionHeader, Button, Avatar, Pill } from '../components/shared.jsx';
+import { Icon, SectionHeader, Avatar, Pill } from '../components/shared.jsx';
+import { Button } from '../components/ui/Button.jsx';
+import { Card } from '../components/ui/Card.jsx';
 import { getDiagnoses, getHomework, getErrorBank, getAllSubmissions, getProgressNotes } from '../lib/workflow.js';
 import { buildExerciseMix } from '../lib/report-metrics.js';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
@@ -204,7 +206,7 @@ export default function ReportsPage({ students, onNavigate, workspaceQuery = '' 
                         <div style={S.rowSub}>{row.count} assignments · {row.submitted} submitted · {row.reviewed} reviewed</div>
                       </div>
                       <ExerciseStatusBars row={row} />
-                      <strong style={{ fontSize: 'var(--text-xs)', color: 'var(--accent-deep)', textAlign: 'right' }}>{row.reviewedRate}% reviewed</strong>
+                      <strong style={{ fontSize: 'var(--text-xs)', color: 'var(--primary)', textAlign: 'right' }}>{row.reviewedRate}% reviewed</strong>
                     </div>
                   ))}
                 </div>
@@ -262,7 +264,7 @@ function StatCard({ label, value, tone }) {
   return (
     <Card style={{ padding: 14, background: bg }}>
       <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</div>
-      <div style={{ marginTop: 8, fontSize: 'var(--text-2xl)', fontWeight: 800, color: 'var(--accent-deep)' }}>{value}</div>
+      <div style={{ marginTop: 8, fontSize: 'var(--text-2xl)', fontWeight: 800, color: 'var(--primary)' }}>{value}</div>
     </Card>
   );
 }
@@ -350,7 +352,7 @@ const S = {
     flexWrap: 'wrap',
     marginBottom: 18,
     padding: '22px 24px',
-    borderRadius: 0,
+    borderRadius: 'var(--radius-sm)',
     border: '1px solid rgba(168, 218, 220, 0.18)',
     background: 'linear-gradient(135deg, #101a28 0%, #172537 50%, #1f4e58 100%)',
     boxShadow: '0 18px 44px -30px rgba(16, 26, 40, 0.8)',
@@ -373,36 +375,36 @@ const S = {
     alignItems: 'center',
     gap: 10,
     border: '1px solid var(--divider)',
-    borderRadius: 0,
+    borderRadius: 'var(--radius-sm)',
     padding: '11px 12px',
     background: 'linear-gradient(180deg, #ffffff 0%, #f9fcfc 100%)',
   },
   statusBars: { display: 'grid', gap: 5, minWidth: 0 },
   statusLine: { display: 'grid', gridTemplateColumns: '62px minmax(60px, 1fr) 34px', alignItems: 'center', gap: 7, fontSize: 'var(--text-xs)', color: 'var(--muted)' },
-  progressTrack: { height: 8, borderRadius: 0, background: 'var(--bg-deep)', overflow: 'hidden', boxShadow: 'inset 0 0 0 1px rgba(26,35,50,0.04)' },
-  progressFillSubmitted: { height: '100%', borderRadius: 0, background: 'var(--accent-soft)' },
-  progressFillReviewed: { height: '100%', borderRadius: 0, background: 'var(--accent)' },
+  progressTrack: { height: 8, borderRadius: 'var(--radius-sm)', background: 'var(--bg-deep)', overflow: 'hidden', boxShadow: 'inset 0 0 0 1px rgba(26,35,50,0.04)' },
+  progressFillSubmitted: { height: '100%', borderRadius: 'var(--radius-sm)', background: 'var(--accent-soft)' },
+  progressFillReviewed: { height: '100%', borderRadius: 'var(--radius-sm)', background: 'var(--accent)' },
   timelineRow: {
     display: 'grid',
     gridTemplateColumns: '28px minmax(0, 1fr)',
     gap: 10,
     border: '1px solid var(--divider)',
-    borderRadius: 0,
+    borderRadius: 'var(--radius-sm)',
     padding: '10px 12px',
     background: 'linear-gradient(180deg, #ffffff 0%, #f9fcfc 100%)',
   },
   timelineIdx: {
     width: 24,
     height: 24,
-    borderRadius: 0,
+    borderRadius: 'var(--radius-sm)',
     background: 'var(--accent-subtle)',
-    color: 'var(--accent-deep)',
+    color: 'var(--primary)',
     display: 'grid',
     placeItems: 'center',
     fontSize: 'var(--text-xs)',
     fontWeight: 700,
   },
-  noteRow: { display: 'grid', gridTemplateColumns: '72px minmax(0, 1fr)', gap: 8, alignItems: 'start', padding: '9px 11px', borderRadius: 0, background: 'var(--bg)' },
+  noteRow: { display: 'grid', gridTemplateColumns: '72px minmax(0, 1fr)', gap: 8, alignItems: 'start', padding: '9px 11px', borderRadius: 'var(--radius-sm)', background: 'var(--bg)' },
   noteDate: { color: 'var(--muted)', fontSize: 'var(--text-xs)' },
   empty: { fontSize: 'var(--text-sm)', color: 'var(--muted)', margin: '8px 0 0' },
 };

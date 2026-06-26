@@ -2,7 +2,9 @@
  * student-profile.jsx — Deep-dive student profile with tabs
  */
 import { useState, useEffect } from 'react';
-import { Icon, Card, SectionHeader, Pill, Button, Avatar, PillNav } from '../components/shared.jsx';
+import { Icon, SectionHeader, Pill, Avatar, PillNav } from '../components/shared.jsx';
+import { Button } from '../components/ui/Button.jsx';
+import { Card } from '../components/ui/Card.jsx';
 import {
   getStudent, saveStudent,
   getTargetProfiles, saveTargetProfile, setActiveTargetProfile, deleteTargetProfile, TARGET_PROFILE_PRESETS,
@@ -76,7 +78,7 @@ export default function StudentProfile({ studentId, students, onNavigate }) {
         <div className="card-row" style={{ gap: 'var(--space-4)' }}>
           <Avatar name={student.name} size={52} />
           <div className="card-row-body">
-            <h2 style={{ fontSize: 'var(--text-xl)', fontWeight: 700, margin: 0, color: 'var(--accent-deep)' }}>{student.name}</h2>
+            <h2 style={{ fontSize: 'var(--text-xl)', fontWeight: 700, margin: 0, color: 'var(--primary)' }}>{student.name}</h2>
             <p className="card-row-meta">
               {student.currentLevel} → {student.targetLevel} · {student.examGoal}
               {student.professionalContext ? ` · ${student.professionalContext}` : ''}

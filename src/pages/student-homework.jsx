@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { Button } from '../components/shared.jsx';
+import { Button } from '../components/ui/Button.jsx';
 import { getHomework, submitHomework, getReviews, getDraft, saveDraft } from '../lib/workflow.js';
 import { isStructuredExercise, autoGrade } from '../lib/exercise-types.js';
 import { ExercisePlayer, HomeworkStepThrough } from '../components/exercise-player.jsx';
@@ -263,10 +263,39 @@ export default function StudentHomework({ student }) {
                     </div>
                     {h.topicExplanations.map(topic => (
                       <div key={topic.id} style={{ marginBottom: 14 }}>
-                        <div style={{ fontWeight: 700, fontSize: 'var(--text-sm)', marginBottom: 6, color: 'var(--accent-deep)' }}>{topic.title}</div>
+                        <div style={{ fontWeight: 700, fontSize: 'var(--text-sm)', marginBottom: 6, color: 'var(--primary)' }}>{topic.title}</div>
                         <TopicContentRenderer content={topic.content} />
                       </div>
-                    ))}
+                        ))}
+                  </div>
+                )}
+                {isStructured && !submitted && !review && (
+                  <div style={{
+                    marginBottom: 18,
+                    padding: '14px 16px',
+                    background: 'var(--surface)',
+                    border: '1px solid var(--accent-soft)',
+                    borderRadius: 'var(--radius-md)',
+                  }}>
+                    <div style={{ fontWeight: 700, fontSize: 'var(--text-sm)', color: 'var(--primary)', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span style={{ fontSize: 16 }}>&#9679;</span> Practice Session
+                    </div>
+                    <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-2)', lineHeight: 1.7 }}>
+                      <strong>How it works:</strong>
+                      <ol style={{ margin: '4px 0 10px', paddingLeft: 18 }}>
+                        <li>Work through each exercise one at a time</li>
+                        <li>Progress saves automatically — leave and come back anytime</li>
+                        <li>After the last exercise, rate your confidence before submitting</li>
+                        <li>Your teacher reviews and returns feedback</li>
+                      </ol>
+                      <strong>Why this format:</strong>
+                      <ul style={{ margin: '4px 0 0', paddingLeft: 18 }}>
+                        <li>Matches the MET exam structure to build familiarity</li>
+                        <li>Targets skills identified from your progress</li>
+                        <li>Reinforces past errors at the right time for long-term retention</li>
+                        <li>The confidence check helps you track what you really know</li>
+                      </ul>
+                    </div>
                   </div>
                 )}
                 {isStructured && !submitted && !review && (

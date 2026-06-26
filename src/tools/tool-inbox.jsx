@@ -2,7 +2,9 @@
  * tool-inbox.jsx — Teacher inbox workspace
  */
 import { useMemo, useState, useEffect } from 'react';
-import { Card, SectionHeader, Avatar, Button, Icon } from '../components/shared.jsx';
+import { SectionHeader, Avatar, Icon } from '../components/shared.jsx';
+import { Button } from '../components/ui/Button.jsx';
+import { Card } from '../components/ui/Card.jsx';
 import { getInbox, sendMessage, markRead } from '../lib/workflow.js';
 
 function fmtTime(iso) {
@@ -246,7 +248,7 @@ function RepoKpi({ label, value, icon, tone }) {
         <span style={{ color: 'var(--accent)' }}>{icon}</span>
         <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</span>
       </div>
-      <div style={{ marginTop: 8, fontSize: 'var(--text-2xl)', fontWeight: 800, color: 'var(--accent-deep)' }}>{value}</div>
+      <div style={{ marginTop: 8, fontSize: 'var(--text-2xl)', fontWeight: 800, color: 'var(--primary)' }}>{value}</div>
     </Card>
   );
 }
@@ -284,7 +286,7 @@ const S = {
     fontWeight: 600,
     cursor: 'pointer',
   },
-  tabBtnActive: { border: '1px solid var(--accent)', background: 'var(--accent-subtle)', color: 'var(--accent-deep)' },
+  tabBtnActive: { border: '1px solid var(--accent)', background: 'var(--accent-subtle)', color: 'var(--primary)' },
   mainGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 12 },
   messageItem: {
     display: 'block',

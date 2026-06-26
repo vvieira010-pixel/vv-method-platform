@@ -66,7 +66,7 @@ const CSS = `
     display: flex; align-items: center; justify-content: center;
     transition: background 0.15s; flex-shrink: 0;
   }
-  .mc-compose-send:hover { background: var(--accent-deep); }
+  .mc-compose-send:hover { background: var(--primary); }
   .mc-empty { padding: 24px; text-align: center; color: var(--muted); font-size: 13px; }
 
   /* Student inbox tab */

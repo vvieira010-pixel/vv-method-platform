@@ -8,7 +8,7 @@ const CSS = `
   .tweaks-toggle {
     position: fixed; bottom: 20px; right: 20px; z-index: 50;
     width: 40px; height: 40px; border-radius: 50%;
-    background: var(--accent-deep); color: #fff;
+    background: var(--primary); color: #fff;
     border: none; cursor: pointer; display: flex; align-items: center;
     justify-content: center; box-shadow: 0 4px 14px rgba(0,0,0,0.25);
     font-size: 18px; transition: transform 0.2s;

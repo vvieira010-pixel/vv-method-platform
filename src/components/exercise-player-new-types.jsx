@@ -2,7 +2,8 @@
  * exercise-player-new-types.jsx — Players for dialogue, swap, and levelup types.
  */
 import { useState, useEffect, useRef } from 'react';
-import { Button, Icon } from './shared.jsx';
+import { Icon } from './shared.jsx';
+import { Button } from './ui/Button.jsx';
 
 /* ─── DIALOGUE PLAYER ──────────────────────────────────────── */
 export function DialoguePlayer({ ex, res, update, readOnly }) {
@@ -196,7 +197,7 @@ export function SwapPlayer({ ex, res, update, readOnly }) {
       {ex.instruction && (
         <p style={{ margin: '0 0 12px', fontSize: 'var(--text-sm)', color: 'var(--text-2)', fontStyle: 'italic' }}>{ex.instruction}</p>
       )}
-      <div style={{ fontSize: 'var(--text-md)', lineHeight: 2.2, position: 'relative' }}>
+      <div style={{ fontSize: 'var(--text-base)', lineHeight: 2.2, position: 'relative' }}>
         {segments.map((seg, i) => {
           if (!/^\[.*\]$/.test(seg)) return <span key={i}>{seg}</span>;
           const word = seg.slice(1, -1);
@@ -328,7 +329,7 @@ export function LevelUpPlayer({ ex, res, update, readOnly }) {
               if (isRight) { bg = 'rgba(34,139,34,.1)'; border = '1.5px solid #3CB371'; color = '#226B22'; }
               else if (isSelected) { bg = 'rgba(200,50,50,.08)'; border = '1.5px solid #C03030'; color = '#C03030'; }
             } else if (isSelected) {
-              bg = 'var(--accent-subtle)'; border = '1.5px solid var(--primary)'; color = 'var(--accent-deep)';
+              bg = 'var(--accent-subtle)'; border = '1.5px solid var(--primary)'; color = 'var(--primary)';
             }
             return (
               <button key={i} onClick={() => pick(i)}

@@ -11,7 +11,7 @@ import Listening from './Listening.jsx';
 import ReadExercise from './ReadExercise.jsx';
 
 const TEAL = 'var(--accent)';
-const NAVY = 'var(--primary-ink)';
+const NAVY = 'var(--accent-text)';
 
 const TYPE_LABELS = {
   multiple_choice: 'Multiple Choice',
