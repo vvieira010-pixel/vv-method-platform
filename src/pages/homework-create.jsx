@@ -44,6 +44,7 @@ const EMPTY_FORM = {
   exercises: [],
   selfCheck: [''],
   skillType: 'grammar', dueDate: '', teacherNotes: '',
+  thinkingScaffold: '',
 };
 
 const SKILL_TYPES = ['writing', 'speaking', 'grammar', 'vocabulary', 'reading', 'listening', 'mixed'];
@@ -187,6 +188,7 @@ export default function HomeworkCreate({ diagnosisId, studentId, students, onNav
       skillType: type,
       dueDate: '',
       teacherNotes: '',
+      thinkingScaffold: hwRec?.thinkingScaffold || '',
     });
   }
 
@@ -426,6 +428,7 @@ function getPriorityItems(dx) {
         exercises,
         selfCheck: Array.isArray(refinement?.selfCheck) && refinement.selfCheck.length ? refinement.selfCheck : ['I checked my answers before submitting.'],
         teacherNotes: skipped ? `${refinement?.teacherNotes || ''}\n\n${skipped} incomplete AI exercise(s) were skipped.`.trim() : (refinement?.teacherNotes || ''),
+        thinkingScaffold: refinement?.thinkingScaffold || '',
         skillType: inferSkillType(getPriorityItems(diagnosis)),
       }));
       setExpandedEx(exercises[0]?.id);
@@ -670,6 +673,7 @@ function getPriorityItems(dx) {
         activities: form.exercises,
         topicExplanations,
         selfCheck: form.selfCheck.filter(Boolean),
+        thinkingScaffold: form.thinkingScaffold,
         skillType: form.skillType,
         type: form.skillType,
         dueDate: form.dueDate,
@@ -913,6 +917,12 @@ Return JSON only with fields: type "read", passage (2-3 paragraphs), source, que
                 )}
                 <Field label="Homework Goal" style={{ marginTop: 16 }}>
                   <input className="input" value={form.objective} onChange={e => setForm(f => ({ ...f, objective: e.target.value }))} placeholder="What this homework targets..." />
+                </Field>
+                <Field label="Thinking Scaffold" style={{ marginTop: 12 }}>
+                  <textarea className="input" rows={2} value={form.thinkingScaffold} onChange={e => setForm(f => ({ ...f, thinkingScaffold: e.target.value }))} placeholder="Before you start, ask yourself: …" />
+                  <small style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: 4, display: 'block' }}>
+                    A thinking prompt students see before starting. Helps them reason, not just answer.
+                  </small>
                 </Field>
                 {errorBankItems.filter(e => e.status !== 'solved').length > 0 && (
                   <div className="info-panel" style={{ marginTop: 'var(--space-4)' }}>

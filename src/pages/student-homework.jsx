@@ -247,11 +247,17 @@ export default function StudentHomework({ student }) {
                   </div>
                 )}
 
-                {(h.objective || h.description || h.estimatedTime || h.metSkillConnection) && (
+                {(h.objective || h.description || h.estimatedTime || h.metSkillConnection || h.thinkingScaffold) && (
                   <div className="student-homework-brief">
                     {h.objective && (<div><strong>Goal</strong><p>{h.objective}</p></div>)}
                     {h.estimatedTime && (<div><strong>Time</strong><p>{h.estimatedTime}</p></div>)}
                     {h.metSkillConnection && (<div><strong>MET skill</strong><p>{h.metSkillConnection}</p></div>)}
+                    {h.thinkingScaffold && (
+                      <div className="student-homework-brief-wide hw-thinking-scaffold">
+                        <strong>Before you start</strong>
+                        <p>{h.thinkingScaffold}</p>
+                      </div>
+                    )}
                     {h.description && (<div className="student-homework-brief-wide"><strong>Instructions</strong><p>{h.description}</p></div>)}
                   </div>
                 )}

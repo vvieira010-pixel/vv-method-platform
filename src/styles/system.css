@@ -3076,6 +3076,18 @@ p {
   margin-bottom: var(--space-2);
 }
 
+/* Thinking scaffold — teal-tinted prompt before exercises */
+.hw-thinking-scaffold {
+  background: var(--accent-subtle);
+  border: 1px solid var(--accent-soft);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3);
+}
+
+.hw-thinking-scaffold strong {
+  color: var(--accent-text);
+}
+
 /* Self-check panel */
 .hw-self-check {
   margin-top: var(--space-3);
@@ -4591,6 +4603,11 @@ textarea:focus, .textarea:focus {
 [data-theme="dark"] .hw-error-panel {
   background: var(--faint);
   border-color: var(--border);
+}
+
+[data-theme="dark"] .hw-thinking-scaffold {
+  background: var(--accent-subtle);
+  border-color: var(--dark-accent-border);
 }
 
 [data-theme="dark"] .review-option {
