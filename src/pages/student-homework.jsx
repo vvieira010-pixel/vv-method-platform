@@ -12,11 +12,11 @@ import { TopicContentRenderer } from '../components/topic-explanations.jsx';
 
 function CorrectionNote({ c }) {
   return (
-    <div style={{ fontSize: 'var(--text-sm)', padding: 8, marginTop: 8, background: 'var(--success-bg)', borderRadius: 'var(--radius-sm)', borderLeft: '3px solid var(--success)' }}>
-      {c.original && <span style={{ color: 'var(--danger)', textDecoration: 'line-through' }}>{c.original}</span>}
+    <div className="hw-correction-note">
+      {c.original && <span className="hw-correction-original">{c.original}</span>}
       {c.original && c.improved && ' → '}
-      {c.improved && <span style={{ color: 'var(--success)', fontWeight: 600 }}>{c.improved}</span>}
-      {c.note && <span style={{ color: 'var(--muted)', marginLeft: 6 }}>({c.note})</span>}
+      {c.improved && <span className="hw-correction-improved">{c.improved}</span>}
+      {c.note && <span className="hw-correction-note-text">({c.note})</span>}
     </div>
   );
 }
@@ -224,26 +224,26 @@ export default function StudentHomework({ student }) {
 
             {isExpanded && (
               <div className="student-homework-content">
-                <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 4 }}>
+                <div className="hw-print-row">
                   <Button variant="ghost" size="sm" onClick={() => printHomework(h, { studentName: student?.name })}>
                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><Icon_print /> Print</span>
                   </Button>
                 </div>
 
                 {review && (
-                  <div style={{ marginBottom: 12, padding: 12, background: 'var(--success-bg)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--success-soft)' }}>
-                    <div style={{ fontWeight: 700, color: 'var(--success)', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <div className="hw-teacher-review">
+                    <div className="hw-teacher-review-title">
                       <span>Teacher Review</span>
                       {review.redoRequired && (
-                        <span style={{ fontSize: 'var(--text-xs)', fontWeight: 700, padding: '2px 8px', borderRadius: 0, background: 'var(--warning-bg)', color: 'var(--warning)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Redo requested</span>
+                        <span className="hw-redo-badge">Redo requested</span>
                       )}
                     </div>
                     {review.whatImproved && (
-                      <div style={{ marginBottom: 8, fontSize: 'var(--text-sm)', lineHeight: 1.6 }}>
-                        <strong style={{ color: 'var(--success)' }}>What improved: </strong>{review.whatImproved}
+                      <div className="hw-teacher-review-detail">
+                        <strong>What improved: </strong>{review.whatImproved}
                       </div>
                     )}
-                    {review.overallNote && <p style={{ fontSize: 'var(--text-sm)', lineHeight: 1.7, margin: 0 }}>{review.overallNote}</p>}
+                    {review.overallNote && <p className="hw-teacher-review-note">{review.overallNote}</p>}
                   </div>
                 )}
 
@@ -321,9 +321,9 @@ export default function StudentHomework({ student }) {
                   return (
                     <div>
                       {structuredExercises.map((ex, i) => (
-                        <div key={ex.id} style={{ borderTop: i > 0 ? '1px solid var(--divider)' : 'none', paddingTop: i > 0 ? 14 : 0, marginBottom: 14 }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                            <span style={{ fontWeight: 700, fontSize: 'var(--text-sm)', color: 'var(--accent)' }}>{i + 1}.</span>
+                        <div key={ex.id} className="hw-exercise-row">
+                          <div className="hw-exercise-row-head">
+                            <span className="hw-exercise-num">{i + 1}.</span>
                             <ExTypeBadge typeId={ex.type} />
                           </div>
                           <ExercisePlayer exercise={ex} response={{}} onResponse={() => {}} readOnly={true} />
@@ -331,8 +331,8 @@ export default function StudentHomework({ student }) {
                         </div>
                       ))}
                       {unmatched.length > 0 && (
-                        <div style={{ marginTop: 4, marginBottom: 6 }}>
-                          <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>More corrections</div>
+                        <div className="hw-unmatched-corrections">
+                          <div className="hw-section-kicker hw-section-kicker--muted">More corrections</div>
                           {unmatched.map((c, ci) => <CorrectionNote key={ci} c={c} />)}
                         </div>
                       )}
@@ -349,16 +349,14 @@ export default function StudentHomework({ student }) {
                 )}
 
                 {h.selfCheck?.filter(Boolean).length > 0 && (
-                  <div style={{ marginTop: 12, padding: 12, background: 'var(--bg)', borderRadius: 'var(--radius-sm)' }}>
-                    <div style={{ fontWeight: 600, fontSize: 'var(--text-sm)', marginBottom: 8 }}>Self-check:</div>
+                  <div className="hw-self-check">
+                    <div className="hw-self-check-title">Self-check:</div>
                     {h.selfCheck.filter(Boolean).map((c, i) => (
-                      <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: 6 }}>
-                        <label style={{ display: 'flex', alignItems: 'flex-start', gap: 8, cursor: 'pointer' }}>
-                          <input type="checkbox" style={{ marginTop: 3, flexShrink: 0 }} aria-label={c}
-                            checked={!!getSelfChecks(h.id)[i]} onChange={() => toggleSelfCheck(h.id, i)} />
-                          <span style={{ fontSize: 'var(--text-sm)' }}>{c}</span>
-                        </label>
-                      </div>
+                      <label key={i} className="hw-self-check-item">
+                        <input type="checkbox" aria-label={c}
+                          checked={!!getSelfChecks(h.id)[i]} onChange={() => toggleSelfCheck(h.id, i)} />
+                        <span>{c}</span>
+                      </label>
                     ))}
                   </div>
                 )}
@@ -379,17 +377,17 @@ export default function StudentHomework({ student }) {
                 )}
 
                 {review && ((Array.isArray(review.activeErrors) && review.activeErrors.length > 0) || (Array.isArray(review.newErrors) && review.newErrors.length > 0)) && (
-                  <div style={{ marginTop: 12, padding: 12, background: 'var(--bg)', borderRadius: 'var(--radius-sm)' }}>
+                  <div className="hw-error-panel">
                     {Array.isArray(review.activeErrors) && review.activeErrors.length > 0 && (
-                      <div style={{ marginBottom: 8 }}>
-                        <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--warning)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4 }}>Still working on</div>
-                        {review.activeErrors.map((e, i) => (<div key={i} style={{ fontSize: 'var(--text-sm)', color: 'var(--text-2)', marginLeft: 8 }}>• {e}</div>))}
+                      <div className="hw-error-section">
+                        <div className="hw-section-kicker hw-section-kicker--warning">Still working on</div>
+                        {review.activeErrors.map((e, i) => (<div key={i} className="hw-error-item">• {e}</div>))}
                       </div>
                     )}
                     {Array.isArray(review.newErrors) && review.newErrors.length > 0 && (
-                      <div>
-                        <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--danger)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4 }}>New to work on</div>
-                        {review.newErrors.map((e, i) => (<div key={i} style={{ fontSize: 'var(--text-sm)', color: 'var(--text-2)', marginLeft: 8 }}>• {e}</div>))}
+                      <div className="hw-error-section">
+                        <div className="hw-section-kicker hw-section-kicker--danger">New to work on</div>
+                        {review.newErrors.map((e, i) => (<div key={i} className="hw-error-item">• {e}</div>))}
                       </div>
                     )}
                   </div>
