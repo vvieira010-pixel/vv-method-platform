@@ -13,7 +13,7 @@
  */
 import { useState, useEffect } from 'react';
 import { Icon, Card, SectionHeader, Pill, Button, Avatar } from '../components/shared.jsx';
-import { callAI } from '../components/shared.jsx';
+import { callAI } from '../lib/callAI.js';
 import { parseAiJson } from '../lib/ai-helpers.js';
 import {
   buildSkillDiagnosisPrompt,

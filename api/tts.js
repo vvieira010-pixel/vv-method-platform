@@ -7,6 +7,25 @@
 
 const env = (name) => process.env[name] || process.env[`VITE_${name}`] || '';
 
+// ── Rate limit + origin guard (mirrors api/ai.js) ────────────────────────────
+const _rl = new Map();
+function checkRateLimit(ip, max = 60, windowMs = 60_000) {
+  const now = Date.now();
+  const e = _rl.get(ip) || { n: 0, t: now + windowMs };
+  if (now > e.t) { e.n = 0; e.t = now + windowMs; }
+  e.n++;
+  _rl.set(ip, e);
+  if (_rl.size > 500) for (const [k, v] of _rl) if (now > v.t) _rl.delete(k);
+  return e.n <= max;
+}
+function allowedOrigin(req) {
+  const origin = req.headers['origin'] || '';
+  if (!origin) return true;
+  const allowed = env('APP_ORIGIN');
+  if (allowed) return origin === allowed || /^https?:\/\/localhost(:\d+)?$/.test(origin);
+  return true;
+}
+
 const ELEVENLABS_VOICE = env('ELEVENLABS_VOICE_ID') || '21m00Tcm4TlvDq8ikWAM';
 const ELEVENLABS_MODEL = env('ELEVENLABS_MODEL') || 'eleven_multilingual_v2';
 const DEEPGRAM_MODEL = env('DEEPGRAM_TTS_MODEL') || 'aura-2-thalia-en';
@@ -128,6 +147,13 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: { message: 'Method not allowed' } });
   }
+  if (!allowedOrigin(req)) {
+    return res.status(403).json({ error: { message: 'Forbidden' } });
+  }
+  const ip = String(req.headers['x-forwarded-for'] || '').split(',')[0].trim() || 'unknown';
+  if (!checkRateLimit(ip)) {
+    return res.status(429).json({ error: { message: 'Too many requests. Please slow down.' } });
+  }
 
   const body = await readBody(req);
   const text = String(body?.text || '').trim();
@@ -144,7 +170,14 @@ export default async function handler(req, res) {
       ? [elevenLabs]
     : provider === 'aivoov'
       ? [aivoovTts]
-      : [aivoovTts, elevenLabs, deepgramTts, openAiTts];
+      : [
+          // Only include providers whose keys are actually set, to avoid
+          // wasting timeout budget on unconfigured services.
+          ...(env('ELEVENLABS_API_KEY') ? [elevenLabs]   : []),
+          ...(env('DEEPGRAM_API_KEY')   ? [deepgramTts]  : []),
+          ...(env('OPENAI_API_KEY')     ? [openAiTts]    : []),
+          ...(env('AIVOOV_API_KEY')     ? [aivoovTts]    : []),
+        ];
 
   for (const run of attempts) {
     try {

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Modal } from './shared.jsx';
+import { Modal, Icon } from './shared.jsx';
 import { recordPractice } from '../lib/spaced-repetition.js';
 
 export default function ReviewSession({ exercises, studentId, onClose }) {
@@ -52,7 +52,7 @@ export default function ReviewSession({ exercises, studentId, onClose }) {
     >
       {finished ? (
         <div className="review-finished">
-          <div className="review-finished-icon">✓</div>
+          <div className="review-finished-icon"><Icon.check size={24} /></div>
           <h3>All reviews done</h3>
           <p>
             You reviewed {exercises.length} item{exercises.length !== 1 ? 's' : ''}.

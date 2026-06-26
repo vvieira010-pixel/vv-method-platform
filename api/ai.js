@@ -25,6 +25,25 @@ const multiKeys = (name) =>
   String(env(name) || '').split(/[,\n]/).map((s) => s.trim()).filter(Boolean)
     .filter((k, i, a) => a.indexOf(k) === i);
 
+// ── Rate limit (best-effort per warm instance; set APP_ORIGIN in Vercel dashboard) ──
+const _rl = new Map();
+function checkRateLimit(ip, max = 120, windowMs = 60_000) {
+  const now = Date.now();
+  const e = _rl.get(ip) || { n: 0, t: now + windowMs };
+  if (now > e.t) { e.n = 0; e.t = now + windowMs; }
+  e.n++;
+  _rl.set(ip, e);
+  if (_rl.size > 500) for (const [k, v] of _rl) if (now > v.t) _rl.delete(k);
+  return e.n <= max;
+}
+function allowedOrigin(req) {
+  const origin = req.headers['origin'] || '';
+  if (!origin) return true; // server-to-server — no Origin header
+  const allowed = env('APP_ORIGIN');
+  if (allowed) return origin === allowed || /^https?:\/\/localhost(:\d+)?$/.test(origin);
+  return true; // open until APP_ORIGIN is configured
+}
+
 const GEMINI_DEFAULT_MODELS = [
   'gemini-3.5-flash',
   'gemini-3.1-pro',
@@ -101,6 +120,13 @@ async function fetchT(url, init, ms = 8000) {
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: { message: 'Method not allowed' } });
+  }
+  if (!allowedOrigin(req)) {
+    return res.status(403).json({ error: { message: 'Forbidden' } });
+  }
+  const ip = String(req.headers['x-forwarded-for'] || '').split(',')[0].trim() || 'unknown';
+  if (!checkRateLimit(ip)) {
+    return res.status(429).json({ error: { message: 'Too many requests. Please slow down.' } });
   }
 
   let body = req.body;

@@ -354,7 +354,7 @@ p {
 
 .btn-sm {
   padding: var(--space-2) var(--space-4);
-  font-size: var(--text-xs);
+  font-size: var(--text-sm);
   min-height: 36px;
 }
 
@@ -442,7 +442,7 @@ p {
   cursor: pointer;
   transition: all var(--transition-fast);
   white-space: nowrap;
-  min-height: unset;
+  min-height: 36px;
 }
 
 .tab:hover {
@@ -822,7 +822,7 @@ p {
   color: rgba(255,255,255,0.82);
   transition: background 0.12s, color 0.12s;
   text-align: left;
-  min-height: unset;
+  min-height: 44px;
 }
 
 .shell-nav-btn:hover  { background: rgba(255,255,255,0.14); color: #fff; }
@@ -876,7 +876,7 @@ p {
   font-weight: 600;
   font-family: var(--font-ui);
   transition: color 0.12s, background 0.12s;
-  min-height: unset;
+  min-height: 44px;
 }
 
 .shell-mobile-nav-btn.active {
@@ -913,7 +913,7 @@ p {
   font-family: var(--font-ui);
   height: 100%;
   transition: color 0.12s;
-  min-height: unset;
+  min-height: 36px;
 }
 
 .workflow-step:hover { color: var(--accent); }
@@ -1612,7 +1612,6 @@ p {
 }
 
 .studio-orb-icon {
-  font-size: 2rem;
   margin-bottom: 4px;
   width: 40px;
   height: 40px;
@@ -1622,6 +1621,7 @@ p {
   border-radius: var(--radius-sm);
   background: rgba(72,199,199,0.18);
   color: #d8fbf8;
+  flex-shrink: 0;
 }
 
 .studio-orb-label {
@@ -1773,7 +1773,7 @@ p {
   cursor: pointer;
   font-family: var(--font-ui);
   transition: transform 0.15s;
-  min-height: unset;
+  min-height: 44px;
 }
 
 .student-prep-box button:hover {
@@ -2232,7 +2232,7 @@ p {
   cursor: pointer;
   text-align: left;
   font-family: var(--font-ui);
-  min-height: unset;
+  min-height: 44px;
 }
 
 .student-homework-card-head:focus-visible {
@@ -2585,7 +2585,7 @@ p {
   font-size: var(--text-xs);
   color: var(--text-2);
   cursor: pointer;
-  min-height: unset;
+  min-height: 44px;
 }
 
 .cycle-pipeline button.is-active {
@@ -2624,7 +2624,7 @@ p {
 .modal-overlay {
   position: fixed;
   inset: 0;
-  z-index: 200;
+  z-index: var(--z-modal);
   background: rgba(11,31,58,0.82);
   display: flex;
   align-items: flex-start;
@@ -3128,7 +3128,7 @@ textarea:focus, .textarea:focus {
 
   .dash-nav-btn {
     flex: 0 0 auto;
-    min-height: 34px;
+    min-height: 44px;
     padding: 6px 10px;
     white-space: nowrap;
   }
@@ -3262,7 +3262,7 @@ textarea:focus, .textarea:focus {
   }
 
   .shell-topbar > div:last-child span { display: none; }
-  .shell-topbar .btn { padding: 6px 8px; min-height: 30px; }
+  .shell-topbar .btn { padding: 6px 8px; min-height: 44px; }
   .shell-mobile-title { display: block; }
 
   .shell-mobile-nav {
@@ -3326,7 +3326,7 @@ textarea:focus, .textarea:focus {
 .review-overlay {
   position: fixed;
   inset: 0;
-  z-index: 200;
+  z-index: var(--z-modal);
   background: rgba(11,31,58,0.82);
   display: flex;
   align-items: flex-start;
@@ -3373,8 +3373,11 @@ textarea:focus, .textarea:focus {
   font-size: 1rem;
   line-height: 1;
 }
-.review-modal-close:hover {
+.review-modal-close:hover,
+.review-modal-close:focus-visible {
   background: rgba(255,255,255,0.25);
+  outline: 2px solid rgba(255,255,255,0.6);
+  outline-offset: 2px;
 }
 .review-modal-body {
   padding: 24px 22px;
@@ -3384,8 +3387,15 @@ textarea:focus, .textarea:focus {
   padding: 20px 0;
 }
 .review-finished-icon {
-  font-size: 2rem;
-  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  margin: 0 auto 12px;
+  border-radius: 50%;
+  background: var(--success-bg);
+  color: var(--success);
 }
 .review-finished h3 {
   margin: 0 0 6px;

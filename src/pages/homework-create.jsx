@@ -4,7 +4,7 @@
  */
 import { useState, useEffect, useRef } from 'react';
 import { Icon, Card, SectionHeader, Button, Pill, Modal } from '../components/shared.jsx';
-import { callAI } from '../components/shared.jsx';
+import { callAI } from '../lib/callAI.js';
 import { parseAiJson } from '../lib/ai-helpers.js';
 import {
   buildExerciseListPrompt,
