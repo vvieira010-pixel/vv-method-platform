@@ -22,19 +22,19 @@ function SubskillRadar({ sectionData }) {
   if (!RechartsComponents) return null;
   const { ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, Legend, Tooltip } = RechartsComponents;
   return (
-    <div style={{ width: '100%', height: 380, marginBottom: 24 }}>
+    <div style={{ width: '100%', height: 520, marginBottom: 24 }}>
       <ResponsiveContainer width="100%" height="100%">
         <RadarChart data={sectionData} cx="50%" cy="50%" outerRadius="70%">
           <PolarGrid stroke="var(--divider)" />
-          <PolarAngleAxis dataKey="skill" tick={{ fill: 'var(--text-2)', fontSize: 11, fontFamily: 'var(--font-ui)' }} />
-          <PolarRadiusAxis domain={[0, 80]} tick={{ fill: 'var(--muted)', fontSize: 10 }} tickCount={5} />
+          <PolarAngleAxis dataKey="skill" tick={{ fill: 'var(--text-2)', fontSize: 12, fontFamily: 'var(--font-ui)' }} />
+          <PolarRadiusAxis domain={[0, 80]} tick={{ fill: 'var(--muted)', fontSize: 11 }} tickCount={5} />
           {sectionData.some(d => d.previous != null) && (
-            <Radar name="Previous" dataKey="previous" stroke="var(--muted)" strokeWidth={1} strokeDasharray="5 5" fill="var(--muted)" fillOpacity={0.15} isAnimationActive={true} animationDuration={900} />
+            <Radar name="Previous" dataKey="previous" stroke="var(--muted)" strokeWidth={1.5} strokeDasharray="5 5" fill="var(--muted)" fillOpacity={0.22} isAnimationActive={true} animationDuration={900} />
           )}
-          <Radar name="Current" dataKey="current" stroke="var(--accent)" strokeWidth={2} fill="var(--accent)" fillOpacity={0.25} isAnimationActive={true} animationDuration={1200} />
-          <Radar name="Target" dataKey="target" stroke="var(--primary)" strokeWidth={1.5} strokeDasharray="4 4" fill="none" isAnimationActive={true} animationDuration={1000} />
+          <Radar name="Current" dataKey="current" stroke="var(--accent)" strokeWidth={3} fill="var(--accent)" fillOpacity={0.38} isAnimationActive={true} animationDuration={1200} />
+          <Radar name="Target" dataKey="target" stroke="var(--primary)" strokeWidth={2} strokeDasharray="4 4" fill="none" isAnimationActive={true} animationDuration={1000} />
           <Legend wrapperStyle={{ fontSize: 12, fontFamily: 'var(--font-ui)', color: 'var(--text-2)' }} />
-          <Tooltip contentStyle={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 0, fontSize: 12, fontFamily: 'var(--font-ui)' }} />
+          <Tooltip contentStyle={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: 12, fontFamily: 'var(--font-ui)' }} />
         </RadarChart>
       </ResponsiveContainer>
     </div>
