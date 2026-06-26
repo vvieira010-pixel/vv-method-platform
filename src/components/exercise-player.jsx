@@ -77,7 +77,7 @@ function MCQPlayer({ ex, res, update, readOnly }) {
         {ex.question}
       </p>
       {!readOnly && !done && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10, padding: '6px 10px', background: 'var(--accent-subtle)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-xs)', color: 'var(--accent-deep)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10, padding: '6px 10px', background: 'var(--accent-subtle)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-xs)', color: 'var(--primary)' }}>
           <Icon.info size={13} />
           <span>Pick and press Check. The correct answer is shown after {wrongLimit} {wrongLimit === 1 ? 'try' : 'tries'}.</span>
         </div>
@@ -149,13 +149,13 @@ function MCQPlayer({ ex, res, update, readOnly }) {
         </div>
       )}
       {!done && ex.hints && wrongPicks.length >= 1 && ex.hints[0] && (
-        <div style={{ marginTop: 8, padding: '9px 13px', borderRadius: 0, background: 'var(--accent-subtle)', color: 'var(--accent-deep)', fontSize: 'var(--text-sm)', borderLeft: '3px solid var(--accent)' }}>
+        <div style={{ marginTop: 8, padding: '9px 13px', borderRadius: 0, background: 'var(--accent-subtle)', color: 'var(--primary)', fontSize: 'var(--text-sm)', borderLeft: '3px solid var(--accent)' }}>
           <strong style={{ fontSize: 'var(--text-xs)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Hint</strong>
           <p style={{ margin: '4px 0 0' }}>{ex.hints[0]}</p>
         </div>
       )}
       {!done && ex.hints && wrongPicks.length >= 2 && ex.hints[1] && (
-        <div style={{ marginTop: 6, padding: '9px 13px', borderRadius: 0, background: 'var(--info-bg)', color: 'var(--accent-deep)', fontSize: 'var(--text-sm)', borderLeft: '3px solid var(--info)' }}>
+        <div style={{ marginTop: 6, padding: '9px 13px', borderRadius: 0, background: 'var(--info-bg)', color: 'var(--primary)', fontSize: 'var(--text-sm)', borderLeft: '3px solid var(--info)' }}>
           <strong style={{ fontSize: 'var(--text-xs)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Another hint</strong>
           <p style={{ margin: '4px 0 0' }}>{ex.hints[1]}</p>
         </div>
@@ -206,7 +206,7 @@ function BlankPlayer({ ex, res, update, readOnly }) {
   return (
     <div>
       {hasAnswers && !readOnly && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10, padding: '6px 10px', background: 'var(--accent-subtle)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-xs)', color: 'var(--accent-deep)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10, padding: '6px 10px', background: 'var(--accent-subtle)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-xs)', color: 'var(--primary)' }}>
           <Icon.info size={13} />
           <span>Keep trying — if a blank is tricky, its answer appears after {BLANK_MAX_TRIES} attempts.</span>
         </div>
@@ -262,13 +262,13 @@ function BlankPlayer({ ex, res, update, readOnly }) {
         </div>
       )}
       {!readOnly && ex.hints && Object.values(attempts).some(n => n >= 2) && ex.hints[0] && (
-        <div style={{ marginTop: 10, padding: '9px 13px', borderRadius: 0, background: 'var(--accent-subtle)', color: 'var(--accent-deep)', fontSize: 'var(--text-sm)', borderLeft: '3px solid var(--accent)' }}>
+        <div style={{ marginTop: 10, padding: '9px 13px', borderRadius: 0, background: 'var(--accent-subtle)', color: 'var(--primary)', fontSize: 'var(--text-sm)', borderLeft: '3px solid var(--accent)' }}>
           <strong style={{ fontSize: 'var(--text-xs)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Hint</strong>
           <p style={{ margin: '4px 0 0' }}>{ex.hints[0]}</p>
         </div>
       )}
       {!readOnly && ex.hints && Object.values(attempts).some(n => n >= 3) && ex.hints[1] && (
-        <div style={{ marginTop: 6, padding: '9px 13px', borderRadius: 0, background: 'var(--info-bg)', color: 'var(--accent-deep)', fontSize: 'var(--text-sm)', borderLeft: '3px solid var(--info)' }}>
+        <div style={{ marginTop: 6, padding: '9px 13px', borderRadius: 0, background: 'var(--info-bg)', color: 'var(--primary)', fontSize: 'var(--text-sm)', borderLeft: '3px solid var(--info)' }}>
           <strong style={{ fontSize: 'var(--text-xs)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Another hint</strong>
           <p style={{ margin: '4px 0 0' }}>{ex.hints[1]}</p>
         </div>
@@ -303,7 +303,7 @@ function ShortPlayer({ ex, res, update, readOnly }) {
         <div style={{ marginBottom: 12, padding: '8px 12px', background: 'var(--accent-subtle)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-xs)' }}>
           {ex.scaffolding.vocabulary?.length > 0 && (
             <div style={{ marginBottom: 6 }}>
-              <span style={{ fontWeight: 700, color: 'var(--accent-deep)', marginRight: 6 }}>Vocabulary:</span>
+              <span style={{ fontWeight: 700, color: 'var(--primary)', marginRight: 6 }}>Vocabulary:</span>
               {ex.scaffolding.vocabulary.map((word, i) => (
                 <span key={i} style={{ display: 'inline-block', background: 'var(--white)', padding: '2px 6px', borderRadius: 0, marginRight: 4, border: '1px solid var(--accent-soft)' }}>{word}</span>
               ))}
@@ -311,7 +311,7 @@ function ShortPlayer({ ex, res, update, readOnly }) {
           )}
           {ex.scaffolding.structure?.length > 0 && (
             <div>
-              <span style={{ fontWeight: 700, color: 'var(--accent-deep)', marginRight: 6 }}>Structure:</span>
+              <span style={{ fontWeight: 700, color: 'var(--primary)', marginRight: 6 }}>Structure:</span>
               <ul style={{ margin: '4px 0 0 16px', padding: 0, color: 'var(--text-2)' }}>
                 {ex.scaffolding.structure.map((line, i) => <li key={i}>{line}</li>)}
               </ul>
@@ -322,7 +322,7 @@ function ShortPlayer({ ex, res, update, readOnly }) {
 
       {ex.rubric && (
         <div style={{ margin: '0 0 12px', padding: '8px 12px', background: 'var(--accent-subtle)', border: '1px solid var(--accent-soft)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-xs)', color: 'var(--text-2)', lineHeight: 1.6 }}>
-          <span style={{ fontWeight: 700, color: 'var(--accent-deep)', marginRight: 6 }}>Teacher note:</span>
+          <span style={{ fontWeight: 700, color: 'var(--primary)', marginRight: 6 }}>Teacher note:</span>
           {ex.rubric}
         </div>
       )}
@@ -333,7 +333,7 @@ function ShortPlayer({ ex, res, update, readOnly }) {
           <button
             type="button"
             onClick={() => setChecklistOpen(v => !v)}
-            style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--accent-deep)', fontFamily: 'var(--font-ui)' }}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--primary)', fontFamily: 'var(--font-ui)' }}
           >
             <span style={{ display: 'inline-flex', transform: checklistOpen ? 'rotate(90deg)' : 'none', transition: 'transform .15s' }}><Icon.chevronRight size={10} /></span>
             Quality checklist — what good MET writing requires
@@ -372,13 +372,42 @@ function ShortPlayer({ ex, res, update, readOnly }) {
 
 /* ─── 4. SPEAKING ──────────────────────────────────────────── */
 
-const SPEAKING_STRATEGY_CHECKS = [
-  { label: 'Task type', hint: 'Describe a picture · Share a story · Give an opinion · Weigh pros & cons · Persuade an authority figure — which is this?' },
-  { label: 'First 10–15 seconds', hint: 'Start with your position or description immediately. Don\'t say "I think I will talk about…"' },
-  { label: 'Development', hint: 'One clear main point per reason, developed with a specific example — not two vague points.' },
-  { label: 'Q4 check (if pros & cons)', hint: 'You must cover BOTH sides with roughly equal time. Covering only one side loses ~1/3 of your task score.' },
-  { label: 'Q5 check (if persuading authority)', hint: 'Formal register throughout. Say "I strongly believe…" not "I think maybe…"' },
-];
+const MET_TASK_LABELS = {
+  Q1: 'Task 1 — Describe a picture · 60 s',
+  Q2: 'Task 2 — Personal experience · 60 s',
+  Q3: 'Task 3 — Give an opinion · 60 s',
+  Q4: 'Task 4 — Advantages & disadvantages · 90 s',
+  Q5: 'Task 5 — Persuade an authority · 90 s',
+};
+
+const SPEAKING_STRATEGY_CHECKS = {
+  Q1: [
+    { label: 'First 10–15 seconds', hint: 'Start with the general scene — "This picture shows…" Don\'t list objects without describing the situation.' },
+    { label: 'Spatial coverage', hint: 'Cover foreground, background, centre, left/right. Use precise spatial language (in the foreground, on the left).' },
+    { label: 'People & actions', hint: 'Describe what people are doing, their appearance, and relationships between them — not just a list of objects.' },
+    { label: 'Inference', hint: 'End with a logical inference — "They might be…" / "It looks like…" This shows higher-level thinking.' },
+  ],
+  Q2: [
+    { label: 'Tell ONE specific story', hint: 'Not a general habit. Start with "I remember a time when…" / "This happened when I was…"' },
+    { label: 'Past tense control', hint: 'Stay in past tense throughout. Switching tenses mid-story loses points.' },
+    { label: 'Narrative arc', hint: 'Follow: setup → event → action → result → reflection. Use narrative connectors (at first, after that, in the end).' },
+  ],
+  Q3: [
+    { label: 'State your position early', hint: 'First sentence = your opinion. "In my opinion…" / "I believe that…" Don\'t start with background.' },
+    { label: 'One side only', hint: 'This is an opinion task — give reasons for YOUR view only. Covering both sides weakens your answer.' },
+    { label: 'Develop with examples', hint: 'One reason + one concrete example is better than two vague reasons. Use "For example…" / "For instance…"' },
+  ],
+  Q4: [
+    { label: 'Both sides required', hint: 'Cover BOTH advantages AND disadvantages with roughly equal time (~40s each). Only one side loses ~1/3 of your task score.' },
+    { label: 'Neutral register', hint: 'No personal opinion. Use: "There are several benefits…" / "One drawback is…" Not: "I think…"' },
+    { label: 'Clear transition', hint: 'Use a pivot phrase: "However…" / "On the other hand…" to signal the switch between sides.' },
+  ],
+  Q5: [
+    { label: 'Position in first 10–15s', hint: 'State your recommendation immediately. "I strongly believe…" / "I would recommend…" Not "I think maybe…"' },
+    { label: 'Formal register throughout', hint: 'Address the authority figure directly. No informal language. Use: "I strongly believe…" / "I am convinced that…"' },
+    { label: 'Commit — no hedging', hint: 'This is persuasion, not discussion. Don\'t give the other side or weaken your position.' },
+  ],
+};
 
 function SpeakPlayer({ ex, res, update, readOnly }) {
   const [strategyOpen, setStrategyOpen] = useState(false);
@@ -481,19 +510,12 @@ function SpeakPlayer({ ex, res, update, readOnly }) {
       ) : null}
 
       {ex.metTask && (() => {
-        const MET_TASK_LABELS = {
-          Q1: 'Task 1 — Describe a picture · 60 s',
-          Q2: 'Task 2 — Personal experience · 60 s',
-          Q3: 'Task 3 — Give an opinion · 90 s',
-          Q4: 'Task 4 — Advantages & disadvantages · 90 s',
-          Q5: 'Task 5 — Persuade an authority · 90 s',
-        };
         const label = MET_TASK_LABELS[ex.metTask];
         if (!label) return null;
         return (
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, marginBottom: 10, padding: '4px 10px', background: 'var(--accent-subtle)', border: '1px solid var(--accent-soft)', borderRadius: 'var(--radius-sm)' }}>
-            <span style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--accent-deep)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>MET</span>
-            <span style={{ fontSize: 'var(--text-xs)', color: 'var(--accent-deep)', fontWeight: 600 }}>{label}</span>
+            <span style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>MET</span>
+            <span style={{ fontSize: 'var(--text-xs)', color: 'var(--primary)', fontWeight: 600 }}>{label}</span>
           </div>
         );
       })()}
@@ -511,7 +533,7 @@ function SpeakPlayer({ ex, res, update, readOnly }) {
         <div style={{ marginBottom: 12, padding: '8px 12px', background: 'var(--accent-subtle)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-xs)' }}>
           {ex.scaffolding.vocabulary?.length > 0 && (
             <div style={{ marginBottom: 6 }}>
-              <span style={{ fontWeight: 700, color: 'var(--accent-deep)', marginRight: 6 }}>Vocabulary:</span>
+              <span style={{ fontWeight: 700, color: 'var(--primary)', marginRight: 6 }}>Vocabulary:</span>
               {ex.scaffolding.vocabulary.map((word, i) => (
                 <span key={i} style={{ display: 'inline-block', background: 'var(--white)', padding: '2px 6px', borderRadius: 0, marginRight: 4, border: '1px solid var(--accent-soft)' }}>{word}</span>
               ))}
@@ -519,7 +541,7 @@ function SpeakPlayer({ ex, res, update, readOnly }) {
           )}
           {ex.scaffolding.structure?.length > 0 && (
             <div>
-              <span style={{ fontWeight: 700, color: 'var(--accent-deep)', marginRight: 6 }}>Structure:</span>
+              <span style={{ fontWeight: 700, color: 'var(--primary)', marginRight: 6 }}>Structure:</span>
               <ul style={{ margin: '4px 0 0 16px', padding: 0, color: 'var(--text-2)' }}>
                 {ex.scaffolding.structure.map((line, i) => <li key={i}>{line}</li>)}
               </ul>
@@ -528,31 +550,37 @@ function SpeakPlayer({ ex, res, update, readOnly }) {
         </div>
       )}
 
-      {/* Strategy checklist — collapsible, shown before recording */}
-      {!readOnly && status === 'idle' && (
-        <div style={{ marginBottom: 14 }}>
-          <button
-            type="button"
-            onClick={() => setStrategyOpen(v => !v)}
-            style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--accent-deep)', fontFamily: 'var(--font-ui)' }}
-          >
-            <span style={{ display: 'inline-flex', transform: strategyOpen ? 'rotate(90deg)' : 'none', transition: 'transform .15s' }}><Icon.chevronRight size={10} /></span>
-            Strategy reminder — what good MET speaking requires
-          </button>
-          {strategyOpen && (
-            <div style={{ marginTop: 8, padding: '8px 12px', background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)' }}>
-              {SPEAKING_STRATEGY_CHECKS.map((c) => (
-                <div key={c.label} style={{ display: 'flex', gap: 8, marginBottom: 6 }}>
-                  <span style={{ fontWeight: 700, color: 'var(--accent)', flexShrink: 0, fontSize: 'var(--text-xs)', marginTop: 1 }}>→</span>
-                  <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-2)', lineHeight: 1.55 }}>
-                    <strong style={{ color: 'var(--text)' }}>{c.label}:</strong> {c.hint}
-                  </span>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
+      {/* Strategy checklist — task-specific, collapsible, shown before recording */}
+      {!readOnly && status === 'idle' && (() => {
+        const taskChecks = ex.metTask && SPEAKING_STRATEGY_CHECKS[ex.metTask]
+          ? SPEAKING_STRATEGY_CHECKS[ex.metTask]
+          : Object.values(SPEAKING_STRATEGY_CHECKS).flat();
+        const taskName = ex.metTask ? MET_TASK_LABELS[ex.metTask]?.replace(/\s*·.*/, '') || 'this task' : 'this task';
+        return (
+          <div style={{ marginBottom: 14 }}>
+            <button
+              type="button"
+              onClick={() => setStrategyOpen(v => !v)}
+              style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--primary)', fontFamily: 'var(--font-ui)' }}
+            >
+              <span style={{ display: 'inline-flex', transform: strategyOpen ? 'rotate(90deg)' : 'none', transition: 'transform .15s' }}><Icon.chevronRight size={10} /></span>
+              Tips for {taskName}
+            </button>
+            {strategyOpen && (
+              <div style={{ marginTop: 8, padding: '8px 12px', background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)' }}>
+                {taskChecks.map((c) => (
+                  <div key={c.label} style={{ display: 'flex', gap: 8, marginBottom: 6 }}>
+                    <span style={{ fontWeight: 700, color: 'var(--accent)', flexShrink: 0, fontSize: 'var(--text-xs)', marginTop: 1 }}>→</span>
+                    <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-2)', lineHeight: 1.55 }}>
+                      <strong style={{ color: 'var(--text)' }}>{c.label}:</strong> {c.hint}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        );
+      })()}
 
       {status === 'idle' && (
         <>
@@ -751,7 +779,7 @@ function FixPlayer({ ex, res, update, readOnly }) {
         </div>
       )}
       {!readOnly && !isFixed && !revealed && !!ex.correctedText && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10, padding: '6px 10px', background: 'var(--accent-subtle)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-xs)', color: 'var(--accent-deep)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10, padding: '6px 10px', background: 'var(--accent-subtle)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-xs)', color: 'var(--primary)' }}>
           <Icon.info size={13} />
           <span>Edit the text, then press Check. The correct version is shown after {FIX_MAX_TRIES} tries.</span>
         </div>
@@ -855,7 +883,7 @@ function FlashPlayer({ ex, res, update, readOnly }) {
               fontSize: 'var(--text-xs)', fontWeight: 700, cursor: 'pointer',
               borderColor: mode === m.id ? 'var(--primary)' : 'var(--border)',
               background: mode === m.id ? 'var(--accent-subtle)' : 'var(--surface)',
-              color: mode === m.id ? 'var(--accent-deep)' : 'var(--text-2)',
+              color: mode === m.id ? 'var(--primary)' : 'var(--text-2)',
             }}>
             {m.label}
           </button>
@@ -885,7 +913,7 @@ function FlashPlayer({ ex, res, update, readOnly }) {
                       borderColor: isSelected ? 'var(--primary)' : 'var(--border)',
                       background: isSelected ? 'var(--accent-subtle)' : 'var(--surface)',
                       cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600,
-                      fontSize: 'var(--text-sm)', color: isSelected ? 'var(--accent-deep)' : 'var(--text)',
+                      fontSize: 'var(--text-sm)', color: isSelected ? 'var(--primary)' : 'var(--text)',
                       textAlign: 'left', transition: 'all .15s',
                     }}>
                     {p.term}
@@ -926,9 +954,9 @@ function FlashPlayer({ ex, res, update, readOnly }) {
           </div>
           <div onClick={() => setFlipped(f => !f)}
             style={{
-              background: flipped ? 'var(--accent-deep)' : 'var(--surface)',
+              background: flipped ? 'var(--primary)' : 'var(--surface)',
               color: flipped ? '#F0F6FC' : 'var(--text)',
-              border: `2px solid ${flipped ? 'var(--accent-deep)' : 'var(--border)'}`,
+              border: `2px solid ${flipped ? 'var(--primary)' : 'var(--border)'}`,
               borderRadius: 0, padding: '40px 28px', textAlign: 'center',
               minHeight: 160, cursor: 'pointer',
               display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
@@ -1001,6 +1029,29 @@ function ReadPlayer({ ex, res, update, readOnly }) {
 
   return (
     <div>
+      {/* Skimming & Scanning strategy guide */}
+      <div style={{
+        padding: '12px 14px', marginBottom: 14,
+        background: 'var(--ex-selected-bg, #f0f5ff)', borderRadius: 'var(--radius-sm)',
+        border: '1px solid var(--accent-soft, #b8d4e3)',
+        fontSize: 'var(--text-xs)', color: 'var(--text)',
+      }}>
+        <div style={{ fontWeight: 700, fontSize: 'var(--text-sm)', marginBottom: 6, color: 'var(--primary)' }}>
+          Skimming &amp; Scanning — MET Reading Strategies
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <div>
+            <strong>Skim</strong> first — read the title, headings, and first sentence of each paragraph to get the <strong>main idea</strong>. Don't read every word. Useful for: "What is the passage mainly about?"
+          </div>
+          <div>
+            <strong>Scan</strong> next — look for <strong>specific information</strong> (names, dates, keywords) by moving your eyes quickly through the text. Stop when you find the target. Useful for: "According to the passage, why did…?"
+          </div>
+        </div>
+        <div style={{ marginTop: 6, padding: '6px 10px', background: 'rgba(184,118,26,.08)', borderRadius: 'var(--radius-sm)', border: '1px solid rgba(184,118,26,.2)' }}>
+          <strong style={{ color: 'var(--warning-text, #b8761a)' }}>Pro tip:</strong> Read the question first, then skim the passage, then scan for the evidence. MET questions follow the order of the text — answer them in sequence.
+        </div>
+      </div>
+
       {/* Vocabulary preview */}
       {vocab.length > 0 && (
         <div style={{
@@ -1008,7 +1059,7 @@ function ReadPlayer({ ex, res, update, readOnly }) {
           background: 'var(--accent-subtle)', borderRadius: 'var(--radius-sm)',
           fontSize: 'var(--text-xs)', border: '1px solid var(--accent-soft)',
         }}>
-          <strong style={{ color: 'var(--accent-deep)', marginRight: 6 }}>Key vocabulary:</strong>
+          <strong style={{ color: 'var(--primary)', marginRight: 6 }}>Key vocabulary:</strong>
           {vocab.map((word, i) => (
             <span key={i} style={{
               display: 'inline-block', background: 'var(--white)', padding: '2px 8px',

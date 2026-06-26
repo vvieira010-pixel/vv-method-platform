@@ -1,22 +1,22 @@
 /**
- * exercise-types.js — Central registry for the 8 interactive exercise types.
- * Provides metadata, factory functions, and auto-grading logic.
+ * exercise-types.js — Central registry for all 12 interactive exercise types.
+ * Each type includes MET skill mapping. Provides metadata, factory functions, and auto-grading logic.
  */
 
 /* ─── TYPE REGISTRY ─────────────────────────────────────────── */
 export const EX_TYPES = [
-  { id: 'mcq',    label: 'Multiple Choice',  iconKey: 'check',    color: '#0A2C56', bg: 'rgba(11,79,74,.12)',   hint: 'Single best answer',          grading: 'auto'  },
-  { id: 'blank',  label: 'Fill the Blank',   iconKey: 'spark',    color: '#25557A', bg: 'rgba(37,85,122,.12)',  hint: '1–3 blanks per item',         grading: 'auto'  },
-  { id: 'short',  label: 'Short Answer',     iconKey: 'doc',      color: '#B8761A', bg: 'rgba(184,118,26,.12)', hint: 'Teacher-reviewed response',   grading: 'ai'    },
-  { id: 'speak',  label: 'Speaking Prompt',  iconKey: 'mic',      color: '#8A2B26', bg: 'rgba(138,43,38,.12)',  hint: 'Audio + optional transcript', grading: 'ai'    },
-  { id: 'order',  label: 'Order Sentences',  iconKey: 'bolt',     color: '#5A2C5C', bg: 'rgba(90,44,92,.12)',   hint: 'Sequence the steps',          grading: 'auto'  },
-  { id: 'fix',    label: 'Error Correction', iconKey: 'search',   color: '#2E6A3F', bg: 'rgba(46,106,63,.12)',  hint: 'Find & fix in a passage',     grading: 'auto'  },
-  { id: 'flash',  label: 'Flashcards',       iconKey: 'homework', color: '#1A1F1E', bg: 'rgba(26,31,30,.08)',   hint: 'Term/definition pairs',       grading: 'track' },
-  { id: 'listen',   label: 'Listening',          iconKey: 'inbox',    color: '#0E5F6B', bg: 'rgba(14,95,107,.12)',  hint: 'Hear audio, answer question',   grading: 'auto'  },
-  { id: 'dialogue', label: 'Dialogue Practice',  iconKey: 'mic',      color: '#0E5F6B', bg: 'rgba(14,95,107,.10)',  hint: 'Role-play conversation',        grading: 'track' },
-  { id: 'swap',     label: 'Synonym Swapper',    iconKey: 'spark',    color: '#5A2C5C', bg: 'rgba(90,44,92,.12)',   hint: 'Click to upgrade B1 words to B2', grading: 'auto' },
-  { id: 'levelup',  label: 'Sentence Level-Up',  iconKey: 'bolt',     color: '#1A5C2A', bg: 'rgba(26,92,42,.12)',   hint: 'B1 → B2 → C1 upgrade challenge', grading: 'auto' },
-  { id: 'read', label: 'Reading', iconKey: 'doc', color: '#1A6B5A', bg: 'rgba(26,107,90,.12)', hint: 'Read a passage and answer questions', grading: 'auto' },
+  { id: 'mcq',    label: 'Multiple Choice',  iconKey: 'check',    color: '#0A2C56', bg: 'rgba(11,79,74,.12)',   hint: 'Single best answer',          grading: 'auto',  metSkill: 'reading,listening,grammar,vocabulary' },
+  { id: 'blank',  label: 'Fill the Blank',   iconKey: 'spark',    color: '#25557A', bg: 'rgba(37,85,122,.12)',  hint: 'Grammar & vocabulary in context',  grading: 'auto',  metSkill: 'grammar,vocabulary' },
+  { id: 'short',  label: 'Short Answer',     iconKey: 'doc',      color: '#B8761A', bg: 'rgba(184,118,26,.12)', hint: 'MET Comp III — teacher-reviewed response', grading: 'ai',    metSkill: 'writing' },
+  { id: 'speak',  label: 'Speaking Prompt',  iconKey: 'mic',      color: '#8A2B26', bg: 'rgba(138,43,38,.12)',  hint: 'MET Comp IV — audio + optional transcript', grading: 'ai',    metSkill: 'speaking' },
+  { id: 'order',  label: 'Order Sentences',  iconKey: 'bolt',     color: '#5A2C5C', bg: 'rgba(90,44,92,.12)',   hint: 'Sequence for coherence',          grading: 'auto',  metSkill: 'grammar,reading' },
+  { id: 'fix',    label: 'Error Correction', iconKey: 'search',   color: '#2E6A3F', bg: 'rgba(46,106,63,.12)',  hint: 'Find & fix grammar errors',     grading: 'auto',  metSkill: 'grammar' },
+  { id: 'flash',  label: 'Flashcards',       iconKey: 'homework', color: '#1A1F1E', bg: 'rgba(26,31,30,.08)',   hint: 'MET vocabulary drill',       grading: 'track', metSkill: 'vocabulary' },
+  { id: 'listen',   label: 'Listening',          iconKey: 'inbox',    color: '#0E5F6B', bg: 'rgba(14,95,107,.12)',  hint: 'MET Comp I — hear audio, answer question',   grading: 'auto',  metSkill: 'listening' },
+  { id: 'dialogue', label: 'Dialogue Practice',  iconKey: 'mic',      color: '#0E5F6B', bg: 'rgba(14,95,107,.10)',  hint: 'MET speaking roleplay conversation',        grading: 'track', metSkill: 'speaking' },
+  { id: 'swap',     label: 'Synonym Swapper',    iconKey: 'spark',    color: '#5A2C5C', bg: 'rgba(90,44,92,.12)',   hint: 'Upgrade vocabulary to MET level', grading: 'auto', metSkill: 'vocabulary' },
+  { id: 'levelup',  label: 'Sentence Level-Up',  iconKey: 'bolt',     color: '#1A5C2A', bg: 'rgba(26,92,42,.12)',   hint: 'B1 → B2 → C1 upgrade', grading: 'auto', metSkill: 'grammar,vocabulary' },
+  { id: 'read', label: 'Reading', iconKey: 'doc', color: '#1A6B5A', bg: 'rgba(26,107,90,.12)', hint: 'MET Comp II — passage with comprehension questions', grading: 'auto', metSkill: 'reading' },
 ];
 
 /** Look up a type by id */
@@ -40,7 +40,7 @@ const FACTORIES = {
   mcq:    () => ({ id: exId(), type: 'mcq',    instruction: '', question: '', options: ['', '', '', ''], correct: null }),
   blank:  () => ({ id: exId(), type: 'blank',  instruction: '', template: '', blanks: [] }),
   short:  () => ({ id: exId(), type: 'short',  instruction: '', prompt: '', rubric: '', targetWords: 120, scaffolding: { vocabulary: [], structure: [] } }),
-  speak:  () => ({ id: exId(), type: 'speak',  instruction: '', prompt: '', imageDescription: '', imageUrl: '', imageAlt: '', targetSeconds: 60, scaffolding: { vocabulary: [], structure: [] } }),
+  speak:  () => ({ id: exId(), type: 'speak',  metTask: '', instruction: '', prompt: '', imageDescription: '', imageUrl: '', imageAlt: '', targetSeconds: 60, scaffolding: { vocabulary: [], structure: [] } }),
   order:  () => ({ id: exId(), type: 'order',  instruction: '', sentences: [''] }),
   fix:    () => ({ id: exId(), type: 'fix',    instruction: '', errorText: '', correctedText: '', hint: '' }),
   flash:  () => ({ id: exId(), type: 'flash',  instruction: '', pairs: [{ term: '', def: '' }] }),

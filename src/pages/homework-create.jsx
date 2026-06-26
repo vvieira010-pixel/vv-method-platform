@@ -1,4 +1,4 @@
-﻿/**
+/**
  * homework-create.jsx — Interactive homework builder with 7 exercise types.
  * Teacher picks exercise types, fills type-specific fields, previews as student.
  */
@@ -33,6 +33,7 @@ import { getExerciseModules, getModuleExercises, bankMeta } from '../lib/exercis
 import { getB2Modules, getB2ModuleExercises, b2BankMeta } from '../lib/met-b2-bank.js';
 import { getLifestyleModules, getLifestyleModuleExercises, lifestylePackMeta } from '../lib/lifestyle-pack.js';
 import { getDeepResearchModules, getDeepResearchModuleExercises, deepResearchMeta } from '../lib/met-b2-exercises.js';
+import { getGrammarModules, getGrammarModuleExercises, grammarBankMeta } from '../lib/met-grammar-bank.js';
 import { getLibraryExercises, saveExerciseToLibrary, deleteLibraryExercise, incrementUsage } from '../lib/exercise-library.js';
 import { generateExerciseImage } from '../lib/image-generation.js';
 import HomeworkSetWizard from '../components/homework-set-wizard.jsx';
@@ -52,12 +53,12 @@ const HOMEWORK_AI_BASE_OPTIONS = { preferredProvider: 'gemini' };
 
 // Skill groups available for per-group generation
 const SKILL_GROUPS = [
-  { key: 'speaking',   label: 'Speaking',   icon: <Icon.mic size={16} /> },
-  { key: 'writing',    label: 'Writing',    icon: <Icon.edit size={16} /> },
-  { key: 'grammar',    label: 'Grammar',    icon: <Icon.diagnose size={16} /> },
-  { key: 'vocabulary', label: 'Vocabulary', icon: <Icon.book size={16} /> },
-  { key: 'reading',    label: 'Reading',    icon: <Icon.eye size={16} /> },
-  { key: 'listening',  label: 'Listening',  icon: <Icon.headphones size={16} /> },
+  { key: 'speaking',   label: 'Speaking (Comp IV)',   icon: <Icon.mic size={16} /> },
+  { key: 'writing',    label: 'Writing (Comp III)',    icon: <Icon.edit size={16} /> },
+  { key: 'grammar',    label: 'Grammar (Comp II)',    icon: <Icon.diagnose size={16} /> },
+  { key: 'vocabulary', label: 'Vocabulary (Comp II)', icon: <Icon.book size={16} /> },
+  { key: 'reading',    label: 'Reading (Comp II)',    icon: <Icon.eye size={16} /> },
+  { key: 'listening',  label: 'Listening (Comp I)',  icon: <Icon.headphones size={16} /> },
 ];
 
 export default function HomeworkCreate({ diagnosisId, studentId, students, onNavigate, initialStep = 1 }) {
@@ -570,7 +571,7 @@ function getPriorityItems(dx) {
     const exercises = getLifestyleModuleExercises(mod.id);
     if (!exercises.length) { window.toast?.('No exercises in this section.', 'warn'); return; }
     setForm(f => ({ ...f, exercises: [...f.exercises, ...exercises] }));
-    window.toast?.(`Added ${exercises.length} lifestyle exercises from "${mod.label}".`, 'ok');
+    window.toast?.(`Added ${exercises.length} Everyday English exercises from "${mod.label}".`, 'ok');
     setActivePanel(null);
   }
 
@@ -579,6 +580,14 @@ function getPriorityItems(dx) {
     if (!exercises.length) { window.toast?.('No exercises in this module.', 'warn'); return; }
     setForm(f => ({ ...f, exercises: [...f.exercises, ...exercises] }));
     window.toast?.(`Added ${exercises.length} exercises from "${mod.label}".`, 'ok');
+    setActivePanel(null);
+  }
+
+  function addModuleFromGrammarBank(mod) {
+    const exercises = getGrammarModuleExercises(mod.id);
+    if (!exercises.length) { window.toast?.('No exercises in this module.', 'warn'); return; }
+    setForm(f => ({ ...f, exercises: [...f.exercises, ...exercises] }));
+    window.toast?.(`Added ${exercises.length} grammar exercises from "${mod.label}".`, 'ok');
     setActivePanel(null);
   }
 
@@ -604,21 +613,21 @@ function getPriorityItems(dx) {
   function addLifestylePack() {
     const exercises = getLifestyleModules().flatMap(mod => getLifestyleModuleExercises(mod.id));
     if (!exercises.length) {
-      window.toast?.('No lifestyle pack exercises found.', 'warn');
+      window.toast?.('No Everyday English exercises found.', 'warn');
       return;
     }
     setForm(f => ({ ...f, exercises: [...f.exercises, ...exercises] }));
-    window.toast?.(`Added ${exercises.length} lifestyle pack exercises.`, 'ok');
+    window.toast?.(`Added ${exercises.length} Everyday English exercises.`, 'ok');
   }
 
   function addDeepResearchPack() {
     const exercises = getDeepResearchModules().flatMap(mod => getDeepResearchModuleExercises(mod.id));
     if (!exercises.length) {
-      window.toast?.('No deep research exercises found.', 'warn');
+      window.toast?.('No Extended Practice exercises found.', 'warn');
       return;
     }
     setForm(f => ({ ...f, exercises: [...f.exercises, ...exercises] }));
-    window.toast?.(`Added ${exercises.length} deep research exercises.`, 'ok');
+    window.toast?.(`Added ${exercises.length} Extended Practice exercises.`, 'ok');
   }
 
   function addUnitBankPack() {
@@ -887,7 +896,7 @@ Return JSON only with fields: type "read", passage (2-3 paragraphs), source, que
   form.exercises.forEach(e => { typeCounts[e.type] = (typeCounts[e.type] || 0) + 1; });
 
   return (
-    <div className="homework-create-page" style={{ maxWidth: 1120, width: '100%', margin: '0 auto', padding: '22px 24px 14px' }}>
+    <div className="homework-create-page" style={{ maxWidth: 1120, width: '100%', margin: '0 auto', padding: 'var(--space-6) var(--space-6) var(--space-4)' }}>
       <button className="back-link" onClick={() => onNavigate('homework')}>
         <Icon.arrowL size={13} /> Back
       </button>
@@ -936,8 +945,8 @@ Return JSON only with fields: type "read", passage (2-3 paragraphs), source, que
                   </Field>
                 )}
                 {diagnosis && (
-                  <div style={{ padding: 14, background: 'var(--surface)', borderRadius: 'var(--radius-md)', border: '1px solid var(--accent-soft)', boxShadow: 'var(--shadow-sm)' }}>
-                    <div style={{ fontWeight: 600, fontSize: 'var(--text-sm)', color: 'var(--accent-deep)', marginBottom: 4 }}>
+                  <div style={{ padding: 'var(--space-4)', background: 'var(--surface)', borderRadius: 'var(--radius-md)', border: '1px solid var(--accent-soft)', boxShadow: 'var(--shadow-sm)' }}>
+                    <div style={{ fontWeight: 600, fontSize: 'var(--text-sm)', color: 'var(--primary)', marginBottom: 4 }}>
                       Diagnostic Focus:
                     </div>
                     <div style={{ fontSize: 'var(--text-sm)', marginBottom: 8 }}>
@@ -976,27 +985,28 @@ Return JSON only with fields: type "read", passage (2-3 paragraphs), source, que
                 <TopicExplanationsEditor topics={topicExplanations} onChange={setTopicExplanations} onAiGenerate={handleTopicAiGenerate} />
                 <div style={{ marginTop: 12, display: 'flex', gap: 8, alignItems: 'center' }}>
                   <Button variant="ghost" size="sm" onClick={() => setShowResourcePicker(true)}>
-                    <Icon.image size={12} /> Resource Library
+                    <Icon.image size={12} /> Media Library
                   </Button>
                 </div>
                 {showResourcePicker && (
                   <ResourcePicker open={true} onClose={() => setShowResourcePicker(false)} onSelect={() => setShowResourcePicker(false)} tab="images" />
                 )}
                 {(() => {
-                  const SKILLS = ['all','speaking','writing','grammar','vocabulary','reading','listening'];
-                  const SKILL_LABELS = { all:'All', speaking:'Speaking', writing:'Writing', grammar:'Grammar', vocabulary:'Vocabulary', reading:'Reading', listening:'Listening' };
+                  const SKILLS = ['all','reading','listening','grammar','vocabulary','writing','speaking'];
+                  const SKILL_LABELS = { all:'All', reading:'Reading (Comp II)', listening:'Listening (Comp I)', grammar:'Grammar (Comp II)', vocabulary:'Vocabulary (Comp II)', writing:'Writing (Comp III)', speaking:'Speaking (Comp IV)' };
                   const b2Mods = getB2Modules().map(m => ({ ...m, pack:'MET B2', packLevel:'B2', level:'B2' }));
-                  const lifeMods = getLifestyleModules().map(m => ({ ...m, pack:'Lifestyle', packLevel:'B1-B2', level:'B1-B2' }));
-                  const drMods = getDeepResearchModules().map(m => ({ ...m, pack:'Deep Research', packLevel:'B2', level:'B2' }));
-                  const allPrebuilt = [...b2Mods, ...lifeMods, ...drMods];
+                  const lifeMods = getLifestyleModules().map(m => ({ ...m, pack:'Everyday English', packLevel:'B1-B2', level:'B1-B2' }));
+                  const drMods = getDeepResearchModules().map(m => ({ ...m, pack:'Extended Practice', packLevel:'B2', level:'B2' }));
+                  const grMods = getGrammarModules().map(m => ({ ...m, pack:'Grammar Drill Bank', packLevel:'B2', level:'B2' }));
+                  const allPrebuilt = [...b2Mods, ...lifeMods, ...drMods, ...grMods];
                   const filtered = packFilter === 'all' ? allPrebuilt : allPrebuilt.filter(m => m.skill === packFilter);
                   return (
-                    <div style={{ marginTop: 18, padding: 14, background: 'var(--surface)', border: '1px solid var(--accent-soft)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-sm)' }}>
+                    <div style={{ marginTop: 18, padding: 'var(--space-4)', background: 'var(--surface)', border: '1px solid var(--accent-soft)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-sm)' }}>
                       <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>
-                        Prebuilt Exercises
+                        MET-Aligned Exercise Packs
                       </div>
                       <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-2)', lineHeight: 1.5, marginBottom: 12 }}>
-                        Browse all packs by skill. Click <strong>Add</strong> on any module to add its exercises to this homework.
+                        Browse MET-aligned packs by skill. Click <strong>Add</strong> on any module to add its exercises to this homework.
                       </div>
                       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 12 }}>
                         {SKILLS.map(s => (
@@ -1033,15 +1043,16 @@ Return JSON only with fields: type "read", passage (2-3 paragraphs), source, que
                               </div>
                             </div>
                             <Button variant="ghost" size="sm" onClick={() => {
-                              if (mod.pack === 'Lifestyle') addModuleFromLifestylePack(mod);
-                              else if (mod.pack === 'Deep Research') addModuleFromDeepResearch(mod);
+                              if (mod.pack === 'Everyday English') addModuleFromLifestylePack(mod);
+                              else if (mod.pack === 'Extended Practice') addModuleFromDeepResearch(mod);
+                              else if (mod.pack === 'Grammar Drill Bank') addModuleFromGrammarBank(mod);
                               else addModuleFromB2Bank(mod);
                             }}>Add</Button>
                           </div>
                         ))}
                       </div>
                       {unitBankExercises.length > 0 && (
-                        <div style={{ marginTop: 10, padding: '10px 12px', background: 'var(--bg)', border: '1px solid var(--accent-soft)', borderRadius: 'var(--radius-sm)' }}>
+                        <div style={{ marginTop: 10, padding: 'var(--space-3) var(--space-4)', background: 'var(--bg)', border: '1px solid var(--accent-soft)', borderRadius: 'var(--radius-sm)' }}>
                           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
                             <div>
                               <div style={{ fontWeight: 600, fontSize: 'var(--text-sm)' }}>Unit Bank — {subjectLabel}</div>
@@ -1067,7 +1078,7 @@ Return JSON only with fields: type "read", passage (2-3 paragraphs), source, que
               <SectionHeader title="Step 2: Retrieval & MET Focus" />
               <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 16 }}>
                 {/* ── Retrieval Practice ── */}
-                <div style={{ padding: 'var(--space-4)', background: 'var(--surface)', border: '1px solid var(--accent-soft)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-sm)' }}>
+                  <div style={{ padding: 'var(--space-5)', background: 'var(--surface)', border: '1px solid var(--accent-soft)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-sm)' }}>
                   <div style={{ fontWeight: 700, fontSize: 'var(--text-sm)', marginBottom: 6 }}>Retrieval Practice</div>
                   <div style={{ color: 'var(--text-2)', fontSize: 'var(--text-sm)', lineHeight: 1.6, marginBottom: 12 }}>
                     Generate recall questions from the homework objective so the student practices remembering the target language.
@@ -1077,16 +1088,16 @@ Return JSON only with fields: type "read", passage (2-3 paragraphs), source, que
                       {retrievalCount} retrieval exercise{retrievalCount === 1 ? '' : 's'} added
                     </span>
                   </div>
-                  <Button variant="primary" size="sm" onClick={handleGenerateRetrieval} disabled={generatingRetrieval || generating}>
+                  <Button variant="secondary" size="sm" onClick={handleGenerateRetrieval} disabled={generatingRetrieval || generating}>
                     <Icon.spark size={12} /> {generatingRetrieval ? 'Generating…' : 'Generate Retrieval Practice'}
                   </Button>
                 </div>
 
                 {/* ── MET Focus: AI generation per skill ── */}
-                <div style={{ padding: 16, background: 'var(--surface)', border: '1px solid var(--accent-soft)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-sm)' }}>
-                  <div style={{ fontWeight: 700, fontSize: 'var(--text-sm)', marginBottom: 6 }}>MET Focus — Generate by Skill</div>
+                <div style={{ padding: 'var(--space-5)', background: 'var(--surface)', border: '1px solid var(--accent-soft)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-sm)' }}>
+                  <div style={{ fontWeight: 700, fontSize: 'var(--text-sm)', marginBottom: 6 }}>MET Focus — Generate by Exam Skill</div>
                   <div style={{ color: 'var(--text-2)', fontSize: 'var(--text-xs)', lineHeight: 1.5, marginBottom: 12 }}>
-                    Choose the MET skills this homework should target. Each generated item is checked for complete student-ready fields before being added.
+                    Choose the MET exam skills this homework should target. Each generated item is checked for complete student-ready fields before being added.
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 8 }}>
                     {SKILL_GROUPS.map(group => (
@@ -1103,24 +1114,27 @@ Return JSON only with fields: type "read", passage (2-3 paragraphs), source, que
                     ))}
                   </div>
                   <div style={{ display: 'flex', gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
+                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+                    <span style={{ fontSize: 'var(--text-xs)', fontWeight: 600, color: 'var(--muted)', marginRight: 4 }}>Generate:</span>
                     <Button variant="primary" size="sm" onClick={handleGenerateByGroups} disabled={generating}>
-                      <Icon.spark size={12} /> Generate Selected Skills
+                      <Icon.spark size={12} /> Selected Skills
                     </Button>
-                    <Button variant="primary" size="sm" onClick={handleAiGenerate} disabled={!diagnosis || generating}>
-                      <Icon.spark size={12} /> {generating ? 'Generating…' : 'Generate MET Homework'}
+                    <Button variant="secondary" size="sm" onClick={handleAiGenerate} disabled={!diagnosis || generating}>
+                      <Icon.spark size={12} /> From Diagnosis
                     </Button>
-                    <Button variant="primary" size="sm" onClick={handleGenerateListening} disabled={!diagnosis || generatingListening}>
-                      <Icon.headphones size={12} /> {generatingListening ? 'Generating…' : 'Listening Task'}
+                    <Button variant="secondary" size="sm" onClick={handleGenerateListening} disabled={!diagnosis || generatingListening}>
+                      <Icon.headphones size={12} /> Listening
                     </Button>
-                    <Button variant="primary" size="sm" onClick={handleGenerateReading} disabled={generatingReading}>
-                      <Icon.doc size={12} /> {generatingReading ? 'Generating…' : 'Reading Task'}
+                    <Button variant="secondary" size="sm" onClick={handleGenerateReading} disabled={generatingReading}>
+                      <Icon.doc size={12} /> Reading
                     </Button>
                     <Button variant="ghost" size="sm" onClick={handleGenerateOptions} disabled={!diagnosis || loadingOptions}>
-                      <Icon.refresh size={12} /> {loadingOptions ? 'Suggesting…' : 'Suggest from Diagnosis'}
+                      <Icon.refresh size={12} /> {loadingOptions ? 'Generating…' : 'Suggestions'}
                     </Button>
                   </div>
+                  </div>
                   {groupGenStatus && (
-                    <div style={{ marginTop: 12, padding: '8px 12px', border: '1.5px solid var(--accent-soft)', borderRadius: 'var(--radius-sm)', background: 'var(--surface)', color: 'var(--accent-deep)', fontSize: 'var(--text-xs)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <div style={{ marginTop: 12, padding: '8px 12px', border: '1.5px solid var(--accent-soft)', borderRadius: 'var(--radius-sm)', background: 'var(--surface)', color: 'var(--primary)', fontSize: 'var(--text-xs)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8 }}>
                       <span style={{ width: 12, height: 12, borderRadius: '50%', border: '2px solid var(--accent)', borderTopColor: 'transparent', animation: 'spin .7s linear infinite' }} />
                       {groupGenStatus}
                     </div>
@@ -1135,11 +1149,11 @@ Return JSON only with fields: type "read", passage (2-3 paragraphs), source, que
             </Card>
           )}
           {currentStep === 3 && (
-            <Card style={{ padding: 18 }}>
+            <Card style={{ padding: 'var(--space-5)' }}>
               <SectionHeader title="Step 3: Build" />
               <div style={{ marginTop: 16 }}>
                 {/* ── Toolbar ── */}
-                <div className="homework-create-toolbar" style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 16 }}>
+                <div className="homework-create-toolbar">
                   <Button variant="primary" size="sm" onClick={() => togglePanel('type-picker')}
                     style={activePanel === 'type-picker' ? { opacity: 0.75 } : {}}>
                     <Icon.plus size={12} /> Add Exercise
@@ -1174,7 +1188,7 @@ Return JSON only with fields: type "read", passage (2-3 paragraphs), source, que
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
                       <div>
                         <div style={{ fontWeight: 700, fontSize: 'var(--text-sm)', display: 'flex', alignItems: 'center', gap: 8 }}>
-                          <span>Review ({reviewDueCount} item{reviewDueCount !== 1 ? 's' : ''} due)</span>
+                          <span>Error Review ({reviewDueCount} item{reviewDueCount !== 1 ? 's' : ''} due)</span>
                           <span style={{
                             display: 'inline-flex', alignItems: 'center', gap: 4,
                             padding: '1px 8px', borderRadius: 'var(--radius-pill)',
@@ -1286,8 +1300,8 @@ Return JSON only with fields: type "read", passage (2-3 paragraphs), source, que
                 )}
 
                 {/* ── Assign ── */}
-                <div ref={assignRef} style={{ marginTop: 16, padding: 20, border: '2px solid var(--accent-soft)', borderRadius: 'var(--radius-md)', background: 'var(--surface)' }}>
-                  <div style={{ fontWeight: 700, fontSize: 'var(--text-base)', marginBottom: 16, color: 'var(--accent-deep)' }}>Assign homework</div>
+                <div ref={assignRef} style={{ marginTop: 'var(--space-4)', padding: 'var(--space-5)', border: '2px solid var(--accent-soft)', borderRadius: 'var(--radius-md)', background: 'var(--surface)' }}>
+                  <div style={{ fontWeight: 700, fontSize: 'var(--text-base)', marginBottom: 16, color: 'var(--primary)' }}>Assign homework</div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                     {studentId || diagnosis?.studentId ? null : (
                       <Field label="Student">

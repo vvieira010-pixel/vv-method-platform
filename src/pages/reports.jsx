@@ -206,7 +206,7 @@ export default function ReportsPage({ students, onNavigate, workspaceQuery = '' 
                         <div style={S.rowSub}>{row.count} assignments · {row.submitted} submitted · {row.reviewed} reviewed</div>
                       </div>
                       <ExerciseStatusBars row={row} />
-                      <strong style={{ fontSize: 'var(--text-xs)', color: 'var(--accent-deep)', textAlign: 'right' }}>{row.reviewedRate}% reviewed</strong>
+                      <strong style={{ fontSize: 'var(--text-xs)', color: 'var(--primary)', textAlign: 'right' }}>{row.reviewedRate}% reviewed</strong>
                     </div>
                   ))}
                 </div>
@@ -264,7 +264,7 @@ function StatCard({ label, value, tone }) {
   return (
     <Card style={{ padding: 14, background: bg }}>
       <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</div>
-      <div style={{ marginTop: 8, fontSize: 'var(--text-2xl)', fontWeight: 800, color: 'var(--accent-deep)' }}>{value}</div>
+      <div style={{ marginTop: 8, fontSize: 'var(--text-2xl)', fontWeight: 800, color: 'var(--primary)' }}>{value}</div>
     </Card>
   );
 }
@@ -398,7 +398,7 @@ const S = {
     height: 24,
     borderRadius: 'var(--radius-sm)',
     background: 'var(--accent-subtle)',
-    color: 'var(--accent-deep)',
+    color: 'var(--primary)',
     display: 'grid',
     placeItems: 'center',
     fontSize: 'var(--text-xs)',

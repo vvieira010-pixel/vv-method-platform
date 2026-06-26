@@ -329,7 +329,7 @@ export function LevelUpPlayer({ ex, res, update, readOnly }) {
               if (isRight) { bg = 'rgba(34,139,34,.1)'; border = '1.5px solid #3CB371'; color = '#226B22'; }
               else if (isSelected) { bg = 'rgba(200,50,50,.08)'; border = '1.5px solid #C03030'; color = '#C03030'; }
             } else if (isSelected) {
-              bg = 'var(--accent-subtle)'; border = '1.5px solid var(--primary)'; color = 'var(--accent-deep)';
+              bg = 'var(--accent-subtle)'; border = '1.5px solid var(--primary)'; color = 'var(--primary)';
             }
             return (
               <button key={i} onClick={() => pick(i)}

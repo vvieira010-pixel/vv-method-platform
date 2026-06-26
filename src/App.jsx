@@ -5,7 +5,7 @@ import ErrorBoundary from './components/error-boundary.jsx';
 import { TweaksPanel, TweakSection, TweakRadio, TweakColor, TweakToggle } from './components/tweaks-panel.jsx';
 import { Icon, Shell } from './components/shared.jsx';
 const getStudentsData = () => import('./data/students.jsx').then(m => m.STUDENTS);
-import { seedStudentsIfEmpty, getStudents } from './lib/workflow-roster.js';
+import { seedStudentsIfEmpty, getStudents, requestInboxNotificationPermission } from './lib/workflow-roster.js';
 import { getAllSubmissions } from './lib/workflow.js';
 import {
   getSupabaseConfig,
@@ -54,6 +54,7 @@ export default function App() {
   }));
   const [students, setStudents] = useState([]);
   const [pendingSubmissions, setPendingSubmissions] = useState(0);
+  const [inboxUnread, setInboxUnread] = useState(0);
 
   // ── Supabase auth: handle implicit-flow hash redirect + restore stored session ──
   useEffect(() => {
@@ -201,11 +202,28 @@ export default function App() {
     return () => window.removeEventListener('vv:students-updated', reload);
   }, []);
 
+  // Inbox unread badge — poll every 15s + react to events
+  useEffect(() => {
+    const check = () => {
+      const v = Number(localStorage.getItem('inboxUnread') || 0);
+      setInboxUnread(Number.isFinite(v) && v > 0 ? v : 0);
+    };
+    check();
+    const interval = setInterval(check, 15000);
+    window.addEventListener('vv:inbox-unread-changed', check);
+    window.addEventListener('storage', check);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('vv:inbox-unread-changed', check);
+      window.removeEventListener('storage', check);
+    };
+  }, []);
+
   useEffect(() => {
     document.documentElement.setAttribute('data-cards', tweaks.cardStyle);
     document.documentElement.setAttribute('data-theme', tweaks.darkMode ? 'dark' : 'light');
     document.documentElement.style.setProperty('--accent', tweaks.accent);
-    document.documentElement.style.setProperty('--accent-deep', shadeColor(tweaks.accent, -22));
+    document.documentElement.style.setProperty('--primary', shadeColor(tweaks.accent, -22));
     document.documentElement.style.setProperty('--accent-soft', softColor(tweaks.accent));
   }, [tweaks]);
 
@@ -248,6 +266,7 @@ export default function App() {
   // ── Pending submissions badge (must be before conditional returns for hooks rule) ──
   useEffect(() => {
     if (auth?.role !== 'teacher') return;
+    requestInboxNotificationPermission();
     getAllSubmissions().then(list => {
       setPendingSubmissions((list || []).filter(s => s.status === 'submitted').length);
     }).catch(() => {});
@@ -281,7 +300,7 @@ export default function App() {
     { id: 'diagnostics',  label: 'Diagnostics',  icon: <Icon.diagnose size={16} /> },
     { id: 'homework',     label: 'Homework',     icon: <Icon.homework size={16} /> },
     { id: 'submissions',  label: 'Submissions',  icon: <Icon.doc size={16} />,     badge: pendingSubmissions || 0 },
-    { id: 'inbox',        label: 'Inbox',        icon: <Icon.inbox size={16} /> },
+    { id: 'inbox',        label: 'Inbox',        icon: <Icon.inbox size={16} />,     badge: inboxUnread },
     { id: 'error-bank',   label: 'Error Bank',   icon: <Icon.warning size={16} /> },
     { id: 'reports',      label: 'Reports',      icon: <Icon.progress size={16} /> },
     { id: 'exercises',    label: 'Exercises',    icon: <Icon.book size={16} /> },

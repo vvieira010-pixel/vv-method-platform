@@ -44,6 +44,7 @@ function convertExercise(ex) {
         title: ex.title || '',
         prompt: ex.prompt || ex.instructions || '',
         targetSeconds: ex.targetSeconds || 60,
+        metTask: ex.metTask || '',
         scaffolding: ex.scaffolding || { vocabulary: [], structure: [] },
         imageUrl: ex.imageUrl || '',
         imageAlt: ex.imageAlt || '',

@@ -336,7 +336,7 @@ Return JSON:
           <div style={{ background: 'var(--surface)', borderRadius: 'var(--radius)', maxWidth: 560, width: '100%', maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 16px 48px rgba(0,0,0,0.28)', padding: 28 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
               <div>
-                <div className="section-label" style={{ color: 'var(--accent-deep)', marginBottom: 3 }}>Preview — student will see</div>
+                <div className="section-label" style={{ color: 'var(--primary)', marginBottom: 3 }}>Preview — student will see</div>
                 <div style={{ fontWeight: 700, fontSize: 'var(--text-lg)', color: 'var(--text)' }}>Homework Review: {homework?.title || 'Homework'}</div>
               </div>
               <Button variant="ghost" size="sm" onClick={() => setShowPreview(false)}>✕ Edit</Button>
@@ -465,7 +465,7 @@ Return JSON:
             {/* ── Per-question evaluation ── */}
             {submissionEvidence.entries.length > 0 && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                <div className="section-label" style={{ color: 'var(--accent-deep)', fontWeight: 800, display: 'flex', alignItems: 'center', gap: 5 }}>
+                <div className="section-label" style={{ color: 'var(--primary)', fontWeight: 800, display: 'flex', alignItems: 'center', gap: 5 }}>
                   <Icon.check size={12} /> Per-question review
                 </div>
                 {submissionEvidence.entries.map((entry, idx) => {
@@ -477,7 +477,7 @@ Return JSON:
                     <Card key={entry.id} style={{ padding: 'var(--space-4)' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
                         <span style={{ fontWeight: 700, fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>Q{idx + 1}</span>
-                        <span style={{ padding: '2px 8px', borderRadius: 'var(--radius-pill)', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', background: 'var(--accent-subtle)', color: 'var(--accent-deep)', letterSpacing: '0.04em' }}>
+                        <span style={{ padding: '2px 8px', borderRadius: 'var(--radius-pill)', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', background: 'var(--accent-subtle)', color: 'var(--primary)', letterSpacing: '0.04em' }}>
                           {skill}
                         </span>
                         {activity.objective && (
@@ -499,7 +499,7 @@ Return JSON:
                       {/* Student response */}
                       {entry.transcript ? (
                         <div style={{ padding: '8px 10px', background: 'var(--bg)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-sm)', lineHeight: 1.6, color: 'var(--text-2)', whiteSpace: 'pre-wrap', marginBottom: 8 }}>
-                          <strong style={{ color: 'var(--accent-deep)', display: 'block', fontSize: 'var(--text-xs)', marginBottom: 3 }}>Transcript</strong>
+                          <strong style={{ color: 'var(--primary)', display: 'block', fontSize: 'var(--text-xs)', marginBottom: 3 }}>Transcript</strong>
                           {entry.transcript}
                         </div>
                       ) : entry.answer ? (
@@ -523,7 +523,7 @@ Return JSON:
                       {/* AI result */}
                       {qe.aiResult && (
                         <div style={{ padding: '10px 12px', background: 'rgba(var(--accent-rgb, 56,111,249), 0.06)', border: '1px solid var(--accent-light)', borderRadius: 'var(--radius-sm)', marginBottom: 8 }}>
-                          <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--accent-deep)', marginBottom: 4 }}>AI assessment</div>
+                          <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--primary)', marginBottom: 4 }}>AI assessment</div>
                           <p style={{ margin: 0, fontSize: 'var(--text-sm)', lineHeight: 1.6, color: 'var(--text-2)' }}>{qe.aiResult.assessment}</p>
                           {qe.aiResult.questionNote && (
                             <p style={{ margin: '6px 0 0', fontSize: 'var(--text-xs)', color: 'var(--text-2)', fontStyle: 'italic', borderTop: '1px solid var(--border)', paddingTop: 6 }}>
@@ -790,7 +790,7 @@ Return JSON:
                   {feedbackReplies.map(msg => (
                     <div key={msg.id} style={{ padding: '10px 12px', borderRadius: 'var(--radius-sm)', background: 'var(--accent-subtle)', border: '1px solid var(--accent-soft)', fontSize: 'var(--text-sm)', lineHeight: 1.5 }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                        <span style={{ fontWeight: 600, color: 'var(--accent-deep)' }}>{msg.fromName || 'Student'}</span>
+                        <span style={{ fontWeight: 600, color: 'var(--primary)' }}>{msg.fromName || 'Student'}</span>
                         <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>
                           {new Date(msg.createdAt).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
                         </span>

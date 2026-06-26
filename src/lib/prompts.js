@@ -1,4 +1,4 @@
-/**
+﻿/**
  * prompts.js — Diagnostic prompt for MET teaching platform.
  * Wired with official MET scoring rubrics, CEFR bands, and all skill subskills.
  *
@@ -168,21 +168,10 @@ The competency model is the pedagogical lens; the 7-skill keys are the data laye
 
 // ━━━ PROMPT MODULES ━━━
 
-function topicRules() {
-  const isHealthcare = typeof window !== 'undefined' && window.localStorage?.getItem('vv:healthcare_mode') === 'true';
-  if (isHealthcare) {
-    return `MET topic rules:
-- Default to healthcare and nursing contexts: patient handovers, explaining medications, describing symptoms, giving instructions, reassuring patients, explaining procedures, reporting changes in patient condition, communicating with coworkers, handling difficult patient situations, and other clinical communication scenarios.
-- Include general MET topics for balance: education, work, technology, community life, environment, personal decisions, travel, communication, public services, health and wellbeing, or study habits.
-- Healthcare scenarios should feel practical and realistic for a nursing context.
-- Tone should be professional, calm, and clear.`;
-  }
-  return `MET topic rules:
-- Default to general MET preparation topics: education, work, technology, community life, environment, personal decisions, travel, communication, public services, health and wellbeing, or study habits.
-- Do NOT default to nurses, hospitals, patients, doctors, medication, wards, symptoms, procedures, or healthcare roleplays.
-- Use healthcare/nursing content only when the teacher explicitly asks for a healthcare task or the source exercise bank item is already healthcare-specific.
-- If the student's profile mentions nursing or healthcare, treat it as background context, not as the topic for automatic diagnosis-based exercises.`;
-}
+const MET_TOPIC_RULES = `MET topic rules:
+- Default to general MET preparation topics: education, work, technology, community life, environment, personal decisions, travel, communication, public services, general health and wellbeing, or study habits.
+- Use healthcare/nursing content only when explicitly assigned or when the source exercise bank item is already healthcare-specific.
+- If the student's profile mentions nursing or healthcare, treat it as background context, not as the default topic.`;
 
 /**
  * Module 1: Skill Diagnosis (The Analyst)
@@ -571,7 +560,7 @@ Grammar: ${grammar.map(g => g.area).join(', ') || 'No grammar targets'}
 3. VARIETY: Include at least one reading, one listening, and one speaking/writing task.
 4. TARGET-DRIVEN: Every task must target a specific weakness identified in the diagnosis.
 5. LEVEL-APPROPRIATE: B1-B2 level.
- 6. TOPICS: ${topicRules()}
+ 6. TOPICS: ${MET_TOPIC_RULES}
 
 RETURN ONLY VALID JSON:
 {
@@ -652,7 +641,7 @@ const EXERCISE_COMPLETENESS_RULES = `Complete exercise JSON requirements:
 - read: type, title, passage (full reading text, 150–250 words, authentic MET-style), questions array of at least 3 items each with {question, options[4], correct as 0-3, explanation}.
 Do not return placeholder text. Do not omit answer keys.`;
 
-const GENERAL_MET_TOPIC_RULES = `Topics should reflect real-life situations appropriate for the MET exam: education, work, healthcare, technology, community, lifestyle, environment, personal decisions, public services, health and wellbeing. Avoid overly niche or culturally specific topics.`;
+const GENERAL_MET_TOPIC_RULES = `Topics should reflect real-life situations appropriate for the MET exam: education, work, technology, community, lifestyle, environment, personal decisions, public services, general health and wellbeing. Avoid overly niche or culturally specific topics.`;
 
 export const buildHomeworkBlueprintPrompt = ({ student, diagnosis }) => {
   const priorities = pickArray(diagnosis?.priorityDiagnosis, diagnosis?.sections?.priorityDiagnosis?.content);
@@ -730,7 +719,7 @@ MET focus:
 - Listening/reading: test main idea, detail, inference, purpose, attitude, or distractor recognition.
 - Grammar/vocabulary: practice the exact language needed to perform better on MET tasks.
 - Test strategy: help the student notice evidence, distractors, timing, or answer organization.
-- ${topicRules()}
+- ${MET_TOPIC_RULES}
 
 Return ONLY one valid JSON object for type "${taskType}".`;
 };
@@ -948,7 +937,7 @@ ${grammar.slice(0, 3).map(g => `- ${g.area}: ${g.issue}`).join('\n') || 'None.'}
 ${isSpeaking ? '- Generate one exercise per MET Speaking task (Q1–Q5). Follow the task map above exactly.' : isWriting ? '- Generate one exercise per MET Writing task (T1 and T2). Follow the task format above exactly.' : '- Cover different MET skills: speaking, writing, reading or listening, grammar, vocabulary, and test strategy.'}
 - Each exercise should take 5–15 minutes.
 - Match B1–B2 transition level. Use general MET topics by default, not nurse/healthcare scenarios.
-- ${topicRules()}
+- ${MET_TOPIC_RULES}
 - Use the INTERACTIVE EXERCISE TYPES below to create varied, engaging exercises.
 - Return only exercises that include all required fields and answer keys.
 
@@ -1069,7 +1058,7 @@ Vocab: ${vocab.slice(0, 4).map(v => v.wordOrPhrase).join(', ') || 'general MET v
 1. COMPLETENESS: The output must be a single valid JSON object for the 'listen' type.
 2. AUDIO TEXT: The 'audioText' must be a realistic, 2–5 sentence dialogue or monologue. 
    - Use a general MET topic by default, not the student's professional context.
-   - ${topicRules()}
+   - ${MET_TOPIC_RULES}
    - It should target B1-B2 level complexity.
 3. MET FOCUS: The task must target one of these MET listening subskills: main_idea, detail, inference, speaker_purpose, or vocabulary_in_context.
 4. QUESTIONS: The 'question' must be clear. The 'options' must have exactly 4 choices.

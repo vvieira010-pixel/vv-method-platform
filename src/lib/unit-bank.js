@@ -23,18 +23,14 @@ export function getUnitsByLevel(level) {
   return entry ? entry.units : [];
 }
 
-/** All 10 subject options shown in the wizard */
+/** All 6 MET-aligned subject options shown in the wizard */
 export const SUBJECT_OPTIONS = [
-  { id: 'reading',             label: 'Reading',            icon: '📖', desc: 'Passage comprehension MCQ',            competency: 'II' },
-  { id: 'listening',           label: 'Listening',          icon: '🎧', desc: 'Dialogue comprehension MCQ',           competency: 'I' },
-  { id: 'vocabulary',          label: 'Vocabulary',         icon: '📚', desc: 'Flashcard sets',                       competency: 'II' },
-  { id: 'grammar',             label: 'Grammar Drills',     icon: '✏️', desc: 'Sentence completion MCQ',              competency: 'II' },
-  { id: 'speaking',            label: 'Speaking',           icon: '🎙️', desc: 'Situational roleplay prompt',          competency: 'IV' },
-  { id: 'writing',             label: 'Writing',            icon: '📝', desc: 'Essay composition prompt',             competency: 'III' },
-  { id: 'levelup',             label: 'Level-Up',           icon: '🚀', desc: 'B1 → B2 sentence upgrade MCQ',         competency: 'II' },
-  { id: 'grammar-doctor',      label: 'Grammar Doctor',     icon: '🩺', desc: 'Error correction challenges',          competency: 'II' },
-  { id: 'vocab-swapper',       label: 'Vocab Swapper',      icon: '🔄', desc: 'Replace simple words with B2 vocab',   competency: 'II' },
-  { id: 'interactive-dialogue',label: 'Interactive Dialogue',icon: '💬', desc: 'Speech roleplay with dialogue script', competency: 'IV' },
+  { id: 'reading',    label: 'Reading',    icon: '📖', desc: 'MET Comp II — passage comprehension, main idea, inference, vocabulary in context' },
+  { id: 'listening',  label: 'Listening',  icon: '🎧', desc: 'MET Comp I — dialogue/lecture comprehension, speaker purpose, detail' },
+  { id: 'vocabulary', label: 'Vocabulary', icon: '📚', desc: 'MET Comp II — academic vocabulary, collocation, paraphrasing' },
+  { id: 'grammar',    label: 'Grammar',    icon: '✏️', desc: 'MET Comp II — grammar in context, verb tenses, conditionals, connectors' },
+  { id: 'speaking',   label: 'Speaking',   icon: '🎙️', desc: 'MET Comp IV — picture description, opinion, roleplay (Q1–Q5)' },
+  { id: 'writing',    label: 'Writing',    icon: '📝', desc: 'MET Comp III — short-answer (T1) and formal essay (T2)' },
 ];
 
 /* ── converters ── */

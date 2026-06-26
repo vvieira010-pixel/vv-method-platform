@@ -12,8 +12,8 @@ import { ExTypeBadge } from '../components/exercise-editor.jsx';
 const PACK_TABS = [
   { id: 'library', label: 'My Library' },
   { id: 'b2', label: 'MET B2 Pack' },
-  { id: 'lifestyle', label: 'Lifestyle Pack' },
-  { id: 'research', label: 'Deep Research' },
+  { id: 'lifestyle', label: 'Everyday English' },
+  { id: 'research', label: 'Extended Practice' },
 ];
 
 const SKILL_ORDER = ['speaking', 'listening', 'reading', 'writing', 'grammar', 'vocabulary', 'pronunciation', 'test strategy'];
@@ -115,8 +115,8 @@ export default function ExercisesPage({ onNavigate }) {
       )}
 
       {tab === 'b2' && <PackTab title="MET B2 Exercise Pack" modules={getB2Modules()} onNavigate={onNavigate} />}
-      {tab === 'lifestyle' && <PackTab title="Lifestyle B1–B2 Pack" modules={getLifestyleModules()} onNavigate={onNavigate} />}
-      {tab === 'research' && <PackTab title="Deep Research Pack" modules={getDeepResearchModules()} onNavigate={onNavigate} />}
+      {tab === 'lifestyle' && <PackTab title="Everyday English Pack" modules={getLifestyleModules()} onNavigate={onNavigate} />}
+      {tab === 'research' && <PackTab title="Extended Practice Pack" modules={getDeepResearchModules()} onNavigate={onNavigate} />}
     </div>
   );
 }

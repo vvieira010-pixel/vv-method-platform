@@ -118,6 +118,13 @@ function targetSeconds(timing) {
   return match ? Number(match[1]) : 60;
 }
 
+const SPEAKING_MET_TASK_MAP = {
+  speak_life_01: 'Q1', speak_life_02: 'Q3', speak_life_03: 'Q3',
+  speak_life_04: 'Q5', speak_life_05: 'Q3', speak_life_06: 'Q4',
+  speak_life_07: 'Q5', speak_life_08: 'Q5', speak_life_09: 'Q2',
+  speak_life_10: 'Q5',
+};
+
 function convertSpeaking(item) {
   const followUps = item.follow_up_questions || item.discussion_questions || [];
   const vocabulary = item.target_language || [];
@@ -129,6 +136,7 @@ function convertSpeaking(item) {
     level: item.difficulty,
     prompt: [item.setup, item.instructions, followUps.length ? `Follow-up: ${followUps.join(' ')}` : ''].filter(Boolean).join('\n\n'),
     targetSeconds: targetSeconds(item.timing),
+    metTask: SPEAKING_MET_TASK_MAP[item.id] || '',
     scaffolding: { vocabulary, structure: vocabulary },
   }];
 }
@@ -216,7 +224,7 @@ export function getLifestyleModuleExercises(moduleId) {
 }
 
 export const lifestylePackMeta = {
-  title: pack.title || 'Lifestyle English Practice Pack',
+  title: 'Everyday English Practice Pack',
   subtitle: pack.theme || '',
   level: pack.level || 'B1-B2',
   note: pack.platform_note || '',

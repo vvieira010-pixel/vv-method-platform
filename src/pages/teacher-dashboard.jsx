@@ -5,6 +5,7 @@
  */
 import { useState, useEffect } from 'react';
 import { Icon, SectionHeader, Pill, Avatar, Skeleton, SkeletonCard, SkeletonText, EmptyState } from '../components/shared.jsx';
+import { IlloNoClasses } from '../components/ui/empty-illustrations.jsx';
 import { Button } from '../components/ui/Button.jsx';
 import { Card } from '../components/ui/Card.jsx';
 import {
@@ -152,9 +153,9 @@ export default function TeacherDashboard({ students, onNavigate, teacherName = '
 
       <div className="teacher-dashboard-stack">
         {/* Quick actions — top of stack for immediate access */}
-        <Card style={{ padding: 14 }}>
+        <Card style={{ padding: 'var(--space-4)' }}>
           <SectionHeader title="Quick Actions" icon={<Icon.spark size={15} />} />
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 8 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', marginTop: 'var(--space-2)' }}>
             <QuickAction icon={<Icon.student size={16} />} label="Add new student" onClick={() => onNavigate('students')} />
             <QuickAction icon={<Icon.calendar size={16} />} label="Schedule a class" onClick={() => onNavigate('calendar')} />
             <QuickAction icon={<Icon.diagnose size={16} />} label="Run a diagnosis" onClick={() => onNavigate('diagnostics')} />
@@ -164,18 +165,18 @@ export default function TeacherDashboard({ students, onNavigate, teacherName = '
         </Card>
 
         {/* Today's classes */}
-        <Card style={{ padding: 14 }}>
+        <Card style={{ padding: 'var(--space-4)' }}>
           <SectionHeader title="Today's Classes" icon={<Icon.calendar size={15} />} action={<Button variant="ghost" size="sm" onClick={() => onNavigate('calendar')}>View calendar</Button>} />
           {todayClasses.length === 0 ? (
             <EmptyState
-              icon={<Icon.calendar size={20} />}
+              icon={<IlloNoClasses />}
               title="No classes today"
               text="Use this time to catch up on diagnoses, review homework, or plan ahead."
               action="Schedule a class"
               onAction={() => onNavigate('calendar')}
             />
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 8 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', marginTop: 'var(--space-2)' }}>
               {todayClasses.map(ev => {
                 const student = students.find(s => s.id === ev.studentId);
                 return (
@@ -193,32 +194,21 @@ export default function TeacherDashboard({ students, onNavigate, teacherName = '
           )}
         </Card>
 
-        {/* Needs your attention */}
         {needsAttention.length > 0 && (
-          <Card style={{ padding: 14, border: '1.5px solid var(--warning-soft)', background: 'var(--warning-bg)' }}>
-            <SectionHeader title="Needs Your Attention" icon={<Icon.spark size={15} />} />
-            <div style={{ marginTop: 8 }}>
-              {needsAttention.slice(0, 5).map((s, i) => {
-                const config = STAGE_CONFIG[s.cycle.cycleStage] || STAGE_CONFIG['needs-diagnosis'];
-                const staleNote = s.cycle.daysSinceLastDiagnosis > 14 ? ` — ${s.cycle.daysSinceLastDiagnosis}d since last diagnosis` : '';
-                return (
-                  <div key={s.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 0', borderTop: i > 0 ? '1px solid var(--divider)' : 'none' }}>
-                    <Avatar name={s.name} size={28} />
-                    <span style={{ fontSize: 'var(--text-sm)', fontWeight: 'var(--weight-semibold)', flex: 1 }}>{s.firstName}</span>
-                    <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>{config.label}{staleNote}</span>
-                    <Button variant="primary" size="sm" onClick={() => handleAction(s)}>{config.action}</Button>
-                  </div>
-                );
-              })}
-            </div>
-          </Card>
+          <div className="td-alert-banner">
+            <Icon.spark size={14} />
+            <span>{needsAttention.length} student{needsAttention.length > 1 ? 's' : ''} need{needsAttention.length === 1 ? 's' : ''} attention</span>
+            <button className="td-alert-link" onClick={() => setStageFilter('submitted')}>
+              Review now <Icon.arrowR size={12} />
+            </button>
+          </div>
         )}
 
         {/* Student cycle board */}
-        <Card style={{ padding: 14 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', marginBottom: 8 }}>
+        <Card style={{ padding: 'var(--space-4)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', flexWrap: 'wrap', marginBottom: 'var(--space-2)' }}>
             <SectionHeader title="Student Cycle Board" icon={<Icon.student size={15} />} />
-            <div style={{ display: 'flex', gap: 6, marginLeft: 'auto', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: 'var(--space-2)', marginLeft: 'auto', flexWrap: 'wrap' }}>
               <FilterChip label="All" count={students.length} active={stageFilter === 'all'} onClick={() => setStageFilter('all')} />
               {Object.entries(STAGE_CONFIG)
                 .filter(([key]) => stageCounts[key] > 0)
@@ -228,7 +218,7 @@ export default function TeacherDashboard({ students, onNavigate, teacherName = '
             </div>
           </div>
           {loading ? (
-            <div aria-busy="true" aria-label="Loading student data" style={{ padding: 8 }}>
+            <div aria-busy="true" aria-label="Loading student data" style={{ padding: 'var(--space-2)' }}>
               <SkeletonCard height={60} lines={1} />
               <SkeletonCard height={60} lines={1} />
               <SkeletonCard height={60} lines={1} />
@@ -236,7 +226,7 @@ export default function TeacherDashboard({ students, onNavigate, teacherName = '
           ) : urgencySorted.length === 0 ? (
             <EmptyState icon={<Icon.student size={20} />} title="No students match this filter" text="Try selecting a different filter above or check the Students page." action="View all students" onAction={() => setStageFilter('all')} />
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
               {urgencySorted.map(s => (
                 <StudentRow key={s.id} student={s} onNavigate={onNavigate} onAction={handleAction} seedsStages={seedsStages} onSetSeedsStage={handleSetSeedsStage} />
               ))}
@@ -293,7 +283,7 @@ function getTodayPriority({ needsAttention, todayClasses }) {
 
 function KpiCard({ label, value, icon, tone, onClick }) {
   const cls = ['td-kpi-card', tone ? `td-kpi-card--${tone}` : ''].filter(Boolean).join(' ');
-  const fg = tone === 'warning' ? 'var(--warning)' : tone === 'danger' ? 'var(--danger)' : tone === 'info' ? 'var(--info)' : 'var(--accent-deep)';
+  const fg = tone === 'warning' ? 'var(--warning)' : tone === 'danger' ? 'var(--danger)' : tone === 'info' ? 'var(--info)' : 'var(--primary)';
   return (
     <Card className={cls} onClick={onClick}>
       <div className="td-kpi-card-inner">
@@ -320,13 +310,13 @@ function StudentRow({ student: s, onNavigate, onAction, seedsStages, onSetSeedsS
   const currentSeeds = seedsEntry ? SEEDS_STAGES[seedsEntry.stage] : null;
 
   return (
-    <Card style={{ padding: '14px 18px' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-        <button
-          type="button"
-          onClick={() => onNavigate('students:profile', { studentId: s.id })}
-          style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10, flex: 1, minWidth: 160, textAlign: 'left', fontFamily: 'var(--font-ui)' }}
-        >
+    <Card
+      className="td-student-row"
+      onClick={() => onNavigate('students:profile', { studentId: s.id })}
+      style={{ padding: '14px 18px' }}
+    >
+      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', flex: 1, minWidth: 160 }}>
           <Avatar name={s.name} size={34} />
           <div>
             <div style={{ fontWeight: 'var(--weight-semibold)', fontSize: 'var(--text-base)', color: 'var(--text-1)' }}>{s.name}</div>
@@ -339,7 +329,7 @@ function StudentRow({ student: s, onNavigate, onAction, seedsStages, onSetSeedsS
               </div>
             )}
           </div>
-        </button>
+        </div>
 
         {isStale21 && <Pill tone="danger">{days}d overdue</Pill>}
         {!isStale21 && isStale14 && <Pill tone="warning">{days}d stale</Pill>}
@@ -351,10 +341,10 @@ function StudentRow({ student: s, onNavigate, onAction, seedsStages, onSetSeedsS
           <span style={{ fontSize: 'var(--text-xs)', color: 'var(--success)', fontWeight: 'var(--weight-semibold)' }}>{s.cycle.pendingSubmissions.length} to review</span>
         )}
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
           <Pill tone={config.tone}>{config.label}</Pill>
           {currentSeeds ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-1)' }}>
               <Pill tone={currentSeeds.tone}>{currentSeeds.label}</Pill>
               <button
                 type="button"
@@ -392,7 +382,13 @@ function StudentRow({ student: s, onNavigate, onAction, seedsStages, onSetSeedsS
             </button>
           )}
         </div>
-        <Button variant={isPrimary ? 'primary' : 'ghost'} size="sm" onClick={() => onAction(s)}>{config.action}</Button>
+        <button
+          type="button"
+          className="td-row-action"
+          onClick={(e) => { e.stopPropagation(); onAction(s); }}
+        >
+          {config.action} <Icon.arrowR size={12} />
+        </button>
       </div>
     </Card>
   );
@@ -404,7 +400,7 @@ function FilterChip({ label, count, active, onClick }) {
       type="button"
       onClick={onClick}
       style={{
-        display: 'inline-flex', alignItems: 'center', gap: 4, padding: '4px 10px',
+        display: 'inline-flex', alignItems: 'center', gap: 'var(--space-1)', padding: 'var(--space-1) var(--space-3)',
         borderRadius: 'var(--radius-pill)', border: active ? '1.5px solid var(--accent)' : '1px solid var(--border)',
         background: active ? 'var(--accent-soft, rgba(37,99,235,0.1))' : 'var(--surface)',
         color: active ? 'var(--accent)' : 'var(--muted)', fontSize: 'var(--text-xs)', fontWeight: 'var(--weight-semibold)',

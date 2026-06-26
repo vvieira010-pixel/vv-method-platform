@@ -6,7 +6,7 @@ import { getHomework, deleteHomework } from '../lib/workflow.js';
 import { printHomework } from '../lib/print-homework.js';
 
 const STATUS_TONE = { 'not-started': 'muted', 'in-progress': 'info', submitted: 'warning', corrected: 'success', reviewed: 'success', completed: 'success' };
-const KIND_ORDER = ['grammar', 'vocabulary', 'reading', 'listening', 'speaking', 'mixed', ''];
+const KIND_ORDER = ['grammar', 'vocabulary', 'reading', 'listening', 'speaking', ''];
 const LEVEL_ORDER = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2', ''];
 
 function normalizeKind(value) {
@@ -17,7 +17,6 @@ function normalizeKind(value) {
   if (v.includes('read')) return 'reading';
   if (v.includes('listen')) return 'listening';
   if (v.includes('speak')) return 'speaking';
-  if (v.includes('mix')) return 'mixed';
   return v;
 }
 
@@ -68,19 +67,19 @@ export default function HomeworkPage({ students, onNavigate }) {
       />
 
       <div className="page-filters">
-        <select className="input" style={{ maxWidth: 200 }} value={filterStudent} onChange={e => setFilterStudent(e.target.value)}>
+        <select className="input page-filter-select" value={filterStudent} onChange={e => setFilterStudent(e.target.value)}>
           <option value="">All students</option>
           {students.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
         </select>
-        <select className="input" style={{ maxWidth: 180 }} value={filterKind} onChange={e => setFilterKind(e.target.value)}>
+        <select className="input page-filter-select" value={filterKind} onChange={e => setFilterKind(e.target.value)}>
           <option value="">All kinds</option>
-          {KIND_ORDER.filter(Boolean).map(kind => <option key={kind} value={kind}>{kind.charAt(0).toUpperCase() + kind.slice(1)}</option>)}
+          {KIND_ORDER.filter(k => k).map(kind => <option key={kind} value={kind}>{kind.charAt(0).toUpperCase() + kind.slice(1)}</option>)}
         </select>
-        <select className="input" style={{ maxWidth: 140 }} value={filterLevel} onChange={e => setFilterLevel(e.target.value)}>
+        <select className="input page-filter-select" value={filterLevel} onChange={e => setFilterLevel(e.target.value)}>
           <option value="">All levels</option>
           {LEVEL_ORDER.filter(Boolean).map(level => <option key={level} value={level}>{level}</option>)}
         </select>
-        <select className="input" style={{ maxWidth: 180 }} value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
+        <select className="input page-filter-select" value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
           <option value="">All statuses</option>
           {[['not-started','Not started'],['in-progress','In progress'],['submitted','Submitted'],['reviewed','Reviewed']].map(([val,label]) => <option key={val} value={val}>{label}</option>)}
         </select>

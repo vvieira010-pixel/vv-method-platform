@@ -154,7 +154,7 @@ function RepoKpi({ label, value, icon, tone }) {
         <span style={{ color: 'var(--accent)' }}>{icon}</span>
         <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</span>
       </div>
-      <div style={{ marginTop: 8, fontSize: 'var(--text-2xl)', fontWeight: 800, color: 'var(--accent-deep)' }}>{value}</div>
+      <div style={{ marginTop: 8, fontSize: 'var(--text-2xl)', fontWeight: 800, color: 'var(--primary)' }}>{value}</div>
     </Card>
   );
 }

@@ -1,4 +1,4 @@
-import { callAI } from '../../components/shared.jsx';
+﻿import { callAI } from '../../components/shared.jsx';
 import { parseAiJson } from '../../lib/ai-helpers.js';
 import {
   buildSkillDiagnosisPrompt,
@@ -206,6 +206,8 @@ export function buildSnapshot(skillDiagnosis) {
       score_0_80: data?.score0to80 ?? 0,
       score_0_4: data?.score0to80 ? Math.round((data.score0to80 / 80) * 4 * 100) / 100 : 0,
       confidence: data?.scoreProvisional ? 'low' : 'medium',
+      confidenceLabel: data?.scoreConfidenceLevel || null,
+      evidenceCount: data?.evidenceCount || 0,
       trend: 'stable',
       strength: data?.strengths?.[0] || '',
       gap: data?.weaknesses?.[0] || '',

@@ -62,7 +62,7 @@ export function StudentFeedbackView({ feedback }) {
       )}
       {fixes.length > 0 && (
         <div style={card}>
-          <div style={{ ...cardTitle, color: 'var(--accent-deep)' }}>Focus for next time</div>
+          <div style={{ ...cardTitle, color: 'var(--primary)' }}>Focus for next time</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             {fixes.map((f, i) => (
               <div key={i} style={{ padding: 12, background: 'var(--teal-soft)', borderRadius: 'var(--radius-sm)' }}>
@@ -164,7 +164,7 @@ export function StudentNextTask({ task, onAction, onStart, onSecondary }) {
   };
   return (
     <div style={{
-      background:'var(--accent-deep)', color:'#fff', borderRadius:'var(--radius-lg)',
+      background:'var(--primary)', color:'#fff', borderRadius:'var(--radius-lg)',
       padding:'16px 20px', display:'flex', alignItems:'center',
       justifyContent:'space-between', gap:12,
     }}>

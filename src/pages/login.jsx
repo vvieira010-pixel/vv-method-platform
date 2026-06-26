@@ -1,15 +1,15 @@
 /**
  * login.jsx — MET Proficiency Mastery Login Screen
  *
- * Three modes:
- *  - "signin"   — existing users (incl. the teacher) sign in with password.
- *  - "register" — first-time students set their OWN password (self-register).
- *  - "reset"    — sends a password-reset link via Supabase Recovery API.
+ * Two modes:
+ *  - "signin" — existing users (incl. the teacher) sign in with password.
+ *  - "reset"  — sends a password-reset link via Supabase Recovery API.
+ * Access is by invitation only — no self-registration.
  */
 
 import { useState, useEffect } from 'react';
 import {
-  signInWithPassword, signUpWithPassword,
+  signInWithPassword,
   storeSupabaseSession, getSupabaseConfig,
   resetPasswordForEmail,
 } from '../lib/supabase-storage.js';
@@ -18,14 +18,13 @@ import { Icon } from '../components/shared.jsx';
 
 
 export default function LoginScreen() {
-  const [mode, setMode] = useState('signin'); // 'signin' | 'register' | 'reset'
+  const [mode, setMode] = useState('signin'); // 'signin' | 'reset'
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [resetSent, setResetSent] = useState(false);
   const supabaseReady = getSupabaseConfig().isConfigured;
-  const isRegister = mode === 'register';
   const isReset = mode === 'reset';
 
   useEffect(() => {
@@ -69,24 +68,13 @@ export default function LoginScreen() {
       setError("Access isn't set up yet. Contact your teacher to get started.");
       return;
     }
-    if (isRegister && password.length < 6) {
-      setError('Choose a password with at least 6 characters.');
-      return;
-    }
-
     setLoading(true);
     try {
-      const session = isRegister
-        ? await signUpWithPassword(email.trim(), password)
-        : await signInWithPassword(email.trim(), password);
+      const session = await signInWithPassword(email.trim(), password);
       storeSupabaseSession(session);
       window.location.reload();
     } catch (err) {
-      setError(
-        isRegister
-          ? (err.message || 'Could not create your account. Try again or contact your teacher.')
-          : 'Incorrect email or password. Try again or contact your teacher.'
-      );
+      setError('Incorrect email or password. Try again or contact your teacher.');
       setLoading(false);
     }
   };
@@ -96,6 +84,20 @@ export default function LoginScreen() {
 
       {/* ── Brand panel ── */}
       <div className="lp-brand">
+        <svg className="lp-brand-hero-illo" width="320" height="280" viewBox="0 0 320 280" fill="none" aria-hidden="true">
+          <path d="M40 200 Q80 60 160 80 Q240 100 280 60" stroke="rgba(20,136,145,0.2)" strokeWidth="2" fill="none" strokeLinecap="round" />
+          <path d="M40 220 Q100 120 180 140 Q260 160 300 120" stroke="rgba(72,199,199,0.12)" strokeWidth="2" fill="none" strokeLinecap="round" />
+          <circle cx="160" cy="80" r="6" fill="rgba(20,136,145,0.25)" />
+          <circle cx="240" cy="100" r="4" fill="rgba(72,199,199,0.2)" />
+          <circle cx="100" cy="120" r="3" fill="rgba(255,255,255,0.1)" />
+          <rect x="255" y="50" width="32" height="22" rx="4" stroke="rgba(200,102,7,0.3)" strokeWidth="1.5" fill="rgba(200,102,7,0.08)" />
+          <text x="263" y="65" fill="rgba(200,102,7,0.5)" fontSize="10" fontWeight="700" fontFamily="sans-serif">B2</text>
+          <path d="M280 45 L290 55 M290 45 L280 55" stroke="rgba(200,102,7,0.25)" strokeWidth="1.5" strokeLinecap="round" />
+          <circle cx="80" cy="180" r="2" fill="rgba(255,255,255,0.08)" />
+          <circle cx="200" cy="160" r="2.5" fill="rgba(255,255,255,0.06)" />
+          <circle cx="270" cy="180" r="1.5" fill="rgba(255,255,255,0.05)" />
+        </svg>
+
         <div className="lp-brand-logo">
           <div>
             <div className="lp-brand-logo-name">MET Proficiency Mastery</div>
@@ -133,13 +135,6 @@ export default function LoginScreen() {
           </div>
 
           {!isReset && (
-            <div className="lp-mode-switch" role="tablist" aria-label="Account mode">
-              <button type="button" role="tab" aria-selected={!isRegister} className={!isRegister ? 'active' : ''} onClick={() => switchMode('signin')} disabled={loading}>Sign in</button>
-              <button type="button" role="tab" aria-selected={isRegister} className={isRegister ? 'active' : ''} onClick={() => switchMode('register')} disabled={loading}>New student</button>
-            </div>
-          )}
-
-          {!isRegister && !isReset && (
             <div className="lp-invite-notice" role="note">
               <Icon.lock size={14} />
               Private platform · Contact Teacher Vinicius to get access
@@ -148,13 +143,11 @@ export default function LoginScreen() {
 
           <div className="lp-greeting">
             <h1>
-              {isReset ? 'Reset your password' : isRegister ? 'Create your account' : 'Welcome back'}
+              {isReset ? 'Reset your password' : 'Welcome back'}
             </h1>
             <p>
               {isReset
                 ? "Enter your email and we'll send you a sign-in link."
-                : isRegister
-                ? 'Enter your email and choose a password to set up your account.'
                 : 'Enter your email and password below.'}
             </p>
           </div>
@@ -187,8 +180,8 @@ export default function LoginScreen() {
                     id="lp-password"
                     className="lp-input"
                     type="password"
-                    autoComplete={isRegister ? 'new-password' : 'current-password'}
-                    placeholder={isRegister ? 'Choose a password (min. 6 characters)' : '••••••••••••••'}
+                    autoComplete="current-password"
+                    placeholder="••••••••••••••"
                     value={password}
                     onChange={e => setPassword(e.target.value)}
                     disabled={loading}
@@ -198,8 +191,8 @@ export default function LoginScreen() {
 
               <button type="submit" className="lp-submit" disabled={loading}>
                 {loading
-                  ? <><span className="lp-spinner" />{isReset ? 'Sending…' : isRegister ? 'Creating account…' : 'Signing in…'}</>
-                  : isReset ? 'Send link' : isRegister ? 'Create account' : 'Sign in'}
+                  ? <><span className="lp-spinner" />{isReset ? 'Sending…' : 'Signing in…'}</>
+                  : isReset ? 'Send link' : 'Sign in'}
               </button>
             </form>
           )}
@@ -208,7 +201,7 @@ export default function LoginScreen() {
             <div className="lp-error" role="alert" aria-live="polite">{error}</div>
           )}
 
-          {!isReset && !isRegister && (
+          {!isReset && (
             <div className="lp-forgot">
               <button type="button" onClick={() => switchMode('reset')} disabled={loading}>
                 Forgot password?

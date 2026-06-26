@@ -45,7 +45,7 @@ export default function HomeworkSetWizard({ onComplete, onSkip }) {
                 borderRadius: 'var(--radius-md)',
                 border: level === l.id ? '2px solid var(--accent)' : '1.5px solid var(--border)',
                 background: level === l.id ? 'var(--accent-subtle)' : 'var(--surface)',
-                color: level === l.id ? 'var(--accent-deep)' : 'var(--text-body)',
+                color: level === l.id ? 'var(--primary)' : 'var(--text-body)',
                 fontWeight: level === l.id ? 700 : 500,
                 fontSize: 'var(--text-sm)',
                 cursor: 'pointer',
@@ -86,7 +86,7 @@ export default function HomeworkSetWizard({ onComplete, onSkip }) {
                 <div style={{
                   fontSize: 'var(--text-sm)',
                   fontWeight: skill === s.id ? 700 : 600,
-                  color: skill === s.id ? 'var(--accent-deep)' : 'var(--text-body)',
+                  color: skill === s.id ? 'var(--primary)' : 'var(--text-body)',
                   lineHeight: 1.3,
                 }}>
                   {s.label}

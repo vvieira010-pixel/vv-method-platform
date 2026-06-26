@@ -332,7 +332,7 @@ export default function Listening({ exercise, onComplete }) {
           background: 'var(--accent-subtle)', borderRadius: 'var(--radius-sm)',
           fontSize: 'var(--text-xs)', border: '1px solid var(--accent-soft)',
         }}>
-          <strong style={{ color: 'var(--accent-deep)', marginRight: 6 }}>Key vocabulary:</strong>
+          <strong style={{ color: 'var(--primary)', marginRight: 6 }}>Key vocabulary:</strong>
           {vocabulary.map((word, i) => (
             <span key={i} style={{
               display: 'inline-block', background: 'var(--white)', padding: '2px 8px',
@@ -423,7 +423,7 @@ export default function Listening({ exercise, onComplete }) {
                   padding: '2px 8px', borderRadius: 'var(--radius-sm)',
                   border: `1px solid ${playbackRate === s ? 'var(--accent)' : 'var(--border)'}`,
                   background: playbackRate === s ? 'var(--accent-subtle)' : 'transparent',
-                  color: playbackRate === s ? 'var(--accent-deep)' : 'var(--muted)',
+                  color: playbackRate === s ? 'var(--primary)' : 'var(--muted)',
                   cursor: 'pointer', fontWeight: playbackRate === s ? 700 : 400,
                   fontFamily: 'var(--font-ui)', fontSize: 11,
                   transition: 'all 0.12s',

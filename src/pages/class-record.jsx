@@ -138,7 +138,7 @@ export default function ClassRecord({ classEventId, students, onNavigate }) {
                   <span style={{ width: 18, height: 18, borderRadius: 0, border: `2px solid ${evaluated ? 'var(--accent)' : 'var(--border)'}`, background: evaluated ? 'var(--accent)' : 'transparent', display: 'grid', placeItems: 'center', flexShrink: 0 }}>
                     {evaluated && <Icon.check size={11} color="#fff" />}
                   </span>
-                  <span style={{ fontWeight: 600, fontSize: 'var(--text-sm)', color: evaluated ? 'var(--accent-deep)' : 'var(--text)' }}>{key}</span>
+                  <span style={{ fontWeight: 600, fontSize: 'var(--text-sm)', color: evaluated ? 'var(--primary)' : 'var(--text)' }}>{key}</span>
                 </div>
                 {evaluated && countKey && (
                   <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 6 }} onClick={e => e.stopPropagation()}>
@@ -227,7 +227,7 @@ const EMPTY_FORM = {
 };
 const backStyle = { background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)', fontSize: 'var(--text-sm)', display: 'flex', alignItems: 'center', gap: 4, marginBottom: 16, padding: 0, fontFamily: 'var(--font-ui)' };
 const S = {
-  headline: { fontFamily: 'var(--font-ui)', fontSize: 'var(--text-2xl)', fontWeight: 700, color: 'var(--accent-deep)', margin: 0 },
+  headline: { fontFamily: 'var(--font-ui)', fontSize: 'var(--text-2xl)', fontWeight: 700, color: 'var(--primary)', margin: 0 },
   sub: { fontSize: 'var(--text-sm)', color: 'var(--muted)', margin: '4px 0 0' },
 };
 

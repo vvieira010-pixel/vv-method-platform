@@ -1,4 +1,4 @@
-import { Icon, Pill } from '../../../components/shared.jsx';
+﻿import { Icon, Pill } from '../../../components/shared.jsx';
 import { StudentFeedbackView } from '../../../components/domain-ui.jsx';
 
 export function camelToLabel(str) {
@@ -114,7 +114,11 @@ export function SectionContent({ sectionKey, content }) {
               ) : (
                 <>
                   {data?.score0to80 != null && <Pill tone={data.score0to80 >= 55 ? 'success' : data.score0to80 >= 40 ? 'warning' : 'danger'}>{data.score0to80}/80</Pill>}
-                  {data?.scoreConfidenceLevel && <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>{data.scoreConfidenceLevel}</span>}
+                  {data?.scoreConfidenceLevel && (() => {
+                    const isLow = ['Not evaluated enough', 'Limited evidence', 'Provisional estimate'].includes(data.scoreConfidenceLevel);
+                    return <span style={{ fontSize: 'var(--text-xs)', color: isLow ? 'var(--warning)' : 'var(--muted)', fontStyle: isLow ? 'italic' : 'normal' }}>{data.scoreConfidenceLevel}</span>;
+                  })()}
+                  {data?.evidenceCount > 0 && <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginLeft: 4 }}>({data.evidenceCount} ev)</span>}
                 </>
               )}
             </div>
