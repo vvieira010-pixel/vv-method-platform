@@ -56,7 +56,7 @@ export default function ExercisesPage({ onNavigate }) {
       <SectionHeader
         title="Exercise Library"
         sub="Browse packs and saved exercises. Assign via Create Homework."
-        action={<Button variant="primary" onClick={() => onNavigate('homework-create')}><Icon.plus size={14} /> Create Homework</Button>}
+        action={<Button variant="primary" onClick={() => onNavigate('homework:create')}><Icon.plus size={14} /> Create Homework</Button>}
       />
 
       <nav className="tabs-line">
@@ -150,7 +150,7 @@ function PackTab({ title, modules, onNavigate }) {
                       <div style={{ fontWeight: 500, fontSize: 'var(--text-sm)' }}>{mod.label}</div>
                       <div className="card-row-meta">{mod.exercises?.length || 0} exercises</div>
                     </div>
-                    <Button variant="ghost" size="sm" onClick={() => onNavigate('homework-create')}>
+                    <Button variant="ghost" size="sm" onClick={() => onNavigate('homework:create')}>
                       Add to Homework
                     </Button>
                   </div>
