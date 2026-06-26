@@ -23,6 +23,7 @@ export const K = {
   classEvidence:       'vv:classEvidence',
   vocabularyBank:      'vv:vocabularyBank',
   progressNotes:       'vv:progressNotes',
+  seedsStages:         'vv:seedsStages',
 };
 
 export function load(key)     { try { return JSON.parse(localStorage.getItem(key) || '[]'); } catch { return []; } }

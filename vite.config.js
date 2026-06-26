@@ -10,10 +10,14 @@ export default defineConfig({
     target: 'esnext',
     rollupOptions: {
       output: {
-        manualChunks: {
-          'vendor-react':    ['react', 'react-dom'],
-          'vendor-motion':   ['motion'],
-          'vendor-recharts': ['recharts'],
+        manualChunks(id) {
+          if (id.includes('node_modules/react/') || id.includes('node_modules/react-dom/')) {
+            return 'vendor-react';
+          }
+          if (id.includes('node_modules/motion/')) return 'vendor-motion';
+          if (id.includes('node_modules/recharts/')) return 'vendor-recharts';
+          if (id.includes('node_modules/d3-')) return 'vendor-d3';
+          if (id.includes('node_modules/es-toolkit')) return 'vendor-toolkit';
         },
       },
     },

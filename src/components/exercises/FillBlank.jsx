@@ -53,12 +53,12 @@ export default function FillBlank({ exercise, onComplete }) {
       padding: '3px 8px', margin: '0 3px',
       borderRadius: 'var(--radius-sm, 6px)', border: '2px solid', fontSize: 'var(--text-sm)',
       fontFamily: 'var(--font-ui)', outline: 'none',
-      verticalAlign: 'middle', background: '#fff',
+      verticalAlign: 'middle', background: 'var(--surface)',
       transition: 'border-color 0.15s',
     };
     if (!submitted) return { ...base, borderColor: values[i] ? TEAL : 'var(--border)' };
-    if (results[i]?.correct) return { ...base, borderColor: '#059669', background: '#ECFDF5', color: '#065F46' };
-    return { ...base, borderColor: 'var(--danger)', background: '#FEF2F2', color: '#991B1B' };
+    if (results[i]?.correct) return { ...base, borderColor: 'var(--ex-correct-strong)', background: 'var(--ex-correct-bg)', color: 'var(--ex-correct-text)' };
+    return { ...base, borderColor: 'var(--danger)', background: 'var(--ex-wrong-bg)', color: 'var(--ex-wrong-text)' };
   }
 
   function renderBlankInput(i) {
@@ -71,22 +71,22 @@ export default function FillBlank({ exercise, onComplete }) {
             const isResult = submitted && results[i];
             const isCorrectChoice = isResult && normalize(choice) === normalize(blank.correct);
             const isWrongSelected = isResult && selected && !results[i].correct;
-            let bg = '#fff';
+            let bg = 'var(--surface)';
             let border = 'var(--border)';
             let color = NAVY;
-            if (!submitted && selected) { bg = '#F0FDFA'; border = TEAL; color = TEAL; }
-            if (isResult && isCorrectChoice) { bg = '#ECFDF5'; border = '#059669'; color = '#065F46'; }
-            if (isWrongSelected) { bg = '#FEF2F2'; border = 'var(--danger)'; color = '#991B1B'; }
+            if (!submitted && selected) { bg = 'var(--ex-selected-bg)'; border = TEAL; color = TEAL; }
+            if (isResult && isCorrectChoice) { bg = 'var(--ex-correct-bg)'; border = 'var(--ex-correct-strong)'; color = 'var(--ex-correct-text)'; }
+            if (isWrongSelected) { bg = 'var(--ex-wrong-bg)'; border = 'var(--danger)'; color = 'var(--ex-wrong-text)'; }
             return (
               <button
                 key={ci}
                 onClick={() => setValue(i, choice)}
                 disabled={submitted}
                 style={{
-                  padding: '2px 10px',
+                  padding: '6px 12px',
                   borderRadius: 'var(--radius-sm, 6px)',
                   border: `2px solid ${selected || (isResult && isCorrectChoice) ? border : 'var(--border)'}`,
-                  background: selected || (isResult && isCorrectChoice) ? bg : '#fff',
+                  background: selected || (isResult && isCorrectChoice) ? bg : 'var(--surface)',
                   color: selected || (isResult && isCorrectChoice) ? color : 'var(--text)',
                   fontWeight: selected ? 600 : 400, fontSize: 'var(--text-sm)', fontFamily: 'var(--font-ui)',
                   cursor: submitted ? 'default' : 'pointer', transition: 'all 0.12s',
@@ -113,7 +113,7 @@ export default function FillBlank({ exercise, onComplete }) {
   }
 
   return (
-    <div>
+    <div onKeyDown={e => { if (e.key === 'Enter' && !submitted && allFilled) { e.preventDefault(); handleSubmit(); } }}>
       {instruction && (
         <p style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', marginBottom: 8, lineHeight: 1.6 }}>{instruction}</p>
       )}
@@ -147,30 +147,30 @@ export default function FillBlank({ exercise, onComplete }) {
           Check answers
         </button>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, animation: 'fadeUp 0.22s ease-out both' }}>
+        <div role="status" aria-live="polite" style={{ display: 'flex', flexDirection: 'column', gap: 8, animation: 'fadeUp 0.22s ease-out both' }}>
           {results.map((r, i) => (
             <div key={i} style={{ borderRadius: 'var(--radius-sm, 6px)', overflow: 'hidden' }}>
               <div style={{
                 display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px',
-                background: r.correct ? '#ECFDF5' : '#FEF2F2',
-                border: `1px solid ${r.correct ? '#A7F3D0' : '#FECACA'}`,
+                background: r.correct ? 'var(--ex-correct-bg)' : 'var(--ex-wrong-bg)',
+                border: `1px solid ${r.correct ? 'var(--ex-correct-border)' : 'var(--ex-wrong-border)'}`,
                 fontSize: 'var(--text-sm)',
               }}>
-                <span style={{ fontWeight: 700, color: r.correct ? '#059669' : 'var(--danger)', flexShrink: 0 }}>
+                <span style={{ fontWeight: 700, color: r.correct ? 'var(--ex-correct-strong)' : 'var(--danger)', flexShrink: 0 }}>
                   {r.correct ? '✓' : '✗'}
                 </span>
                 <span style={{ color: 'var(--muted)' }}>Blank {i + 1}:</span>
                 {!r.correct && (
                   <>
-                    <span style={{ color: '#991B1B' }}>{r.given || '(empty)'}</span>
+                    <span style={{ color: 'var(--ex-wrong-text)' }}>{r.given || '(empty)'}</span>
                     <span style={{ color: 'var(--muted)' }}>→</span>
-                    <span style={{ fontWeight: 600, color: '#065F46' }}>{r.expected}</span>
+                    <span style={{ fontWeight: 600, color: 'var(--ex-correct-text)' }}>{r.expected}</span>
                   </>
                 )}
-                {r.correct && <span style={{ fontWeight: 600, color: '#065F46' }}>{r.expected}</span>}
+                {r.correct && <span style={{ fontWeight: 600, color: 'var(--ex-correct-text)' }}>{r.expected}</span>}
               </div>
               {!r.correct && (
-                <div style={{ padding: '9px 14px', background: '#FFFBEB', border: '1px solid #FDE68A', borderTop: 'none', fontSize: 'var(--text-xs)', color: '#92400E', lineHeight: 1.6 }}>
+                <div style={{ padding: '9px 14px', background: 'var(--ex-hint-bg)', border: '1px solid var(--ex-hint-border)', borderTop: 'none', fontSize: 'var(--text-xs)', color: 'var(--ex-hint-text)', lineHeight: 1.6 }}>
                   <strong>Your answer:</strong> "{r.given}" &nbsp;→&nbsp; <strong>Correct:</strong> "{r.expected}"
                   {r.isChoice && r.choiceExplanation && (
                     <div style={{ marginTop: 4 }}><strong>Why:</strong> {r.choiceExplanation}</div>
@@ -181,9 +181,9 @@ export default function FillBlank({ exercise, onComplete }) {
           ))}
           <div style={{
             marginTop: 4, padding: '10px 14px', borderRadius: 'var(--radius-sm, 6px)', fontSize: 'var(--text-sm)', fontWeight: 500,
-            background: results.every(r => r.correct) ? '#ECFDF5' : '#FFFBEB',
-            color: results.every(r => r.correct) ? '#065F46' : '#92400E',
-            border: `1px solid ${results.every(r => r.correct) ? '#A7F3D0' : '#FDE68A'}`,
+            background: results.every(r => r.correct) ? 'var(--ex-correct-bg)' : 'var(--ex-hint-bg)',
+            color: results.every(r => r.correct) ? 'var(--ex-correct-text)' : 'var(--ex-hint-text)',
+            border: `1px solid ${results.every(r => r.correct) ? 'var(--ex-correct-border)' : 'var(--ex-hint-border)'}`,
           }}>
             {results.every(r => r.correct)
               ? '✓ All correct — well done.'
@@ -191,9 +191,9 @@ export default function FillBlank({ exercise, onComplete }) {
           </div>
           {exercise.explanation && (
             <div style={{
-              fontSize: 'var(--text-sm)', color: '#374151', lineHeight: 1.65,
-              padding: '11px 14px', background: '#F8FAFC', borderRadius: 'var(--radius-sm, 6px)',
-              border: '1px solid #E2E8F0',
+              fontSize: 'var(--text-sm)', color: 'var(--ex-panel-text)', lineHeight: 1.65,
+              padding: '11px 14px', background: 'var(--ex-panel-bg)', borderRadius: 'var(--radius-sm, 6px)',
+              border: '1px solid var(--ex-panel-border)',
             }}>
               <span style={{ fontWeight: 700, color: NAVY }}>Why: </span>
               {exercise.explanation}

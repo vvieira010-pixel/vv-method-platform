@@ -350,6 +350,21 @@ const ENTITIES = {
   progressNotes: contentEntity('progress_notes'),
   /* error bank — per-student long-term error store (object-keyed in localStorage) */
   errorBank: contentEntity('error_bank_entries'),
+
+  /* seeds stages — one row per student tracking SEEDS cycle stage */
+  seedsStages: {
+    ...contentEntity('seeds_stages'),
+    async toRow(record, ctx) {
+      return {
+        teacher_id: ctx.teacherId,
+        student_id: await studentUuid(ctx, record.studentId),
+        stage: record.stage || '',
+        note: record.note || '',
+        started_at: record.startedAt || null,
+        content: record,
+      };
+    },
+  },
 };
 
 export function dbHasEntity(key) { return Boolean(ENTITIES[key]); }
@@ -465,6 +480,32 @@ export async function createSignedAudioUrl(path, expiresIn = 3600) {
   }
 }
 
+/* ─── Storage (exercise images) ──────────────────────────────── */
+
+const IMAGE_BUCKET = 'exercise-images';
+
+/**
+ * Upload a teacher-supplied image to the public exercise-images bucket.
+ * Returns a stable public URL suitable for storing in exercise.imageUrl and
+ * rendering directly in an <img src>. Throws on failure.
+ */
+export async function uploadExerciseImage(file, path) {
+  const ctx = getDbContext();
+  if (!ctx) throw new Error('Not signed in.');
+  const res = await fetch(`${ctx.url}/storage/v1/object/${IMAGE_BUCKET}/${path}`, {
+    method: 'POST',
+    headers: {
+      apikey: ctx.anonKey,
+      Authorization: `Bearer ${ctx.token}`,
+      'Content-Type': file.type || 'image/png',
+      'x-upsert': 'true',
+    },
+    body: file,
+  });
+  if (!res.ok) throw new Error(`image upload → ${res.status} ${await res.text().catch(() => '')}`);
+  return `${ctx.url}/storage/v1/object/public/${IMAGE_BUCKET}/${path}`;
+}
+
 /* ─── teacher settings ───────────────────────────────────────── */
 
 /**
@@ -513,6 +554,73 @@ export async function setTeacherSetting(key, value) {
   } catch (e) {
     console.warn('[supabase-db] setTeacherSetting failed:', e.message);
     return false;
+  }
+}
+
+/* ─── review schedule (spaced-repetition persistence) ───────── */
+
+/**
+ * Bulk-upsert a student's full review schedule.
+ * Called by spaced-repetition.js via enableSync() on every SR state change.
+ * @param {string} localStudentId — app local string id (e.g. "ana-paula")
+ * @param {object[]} list — full schedule array from localStorage
+ */
+export async function upsertReviewSchedule(localStudentId, list) {
+  const ctx = getDbContext();
+  if (!ctx || !list?.length) return;
+  const sid = await studentUuid(ctx, localStudentId);
+  if (!sid) return;
+  const rows = list.map(e => ({
+    student_id: sid,
+    error_id: e.errorId,
+    error_text: e.errorText || '',
+    correct_text: e.correctText || '',
+    interval_days: e.interval || 1,
+    last_seen: e.lastSeen || null,
+    next_due: e.nextDue || null,
+    source_diagnosis_id: e.sourceDiagnosisId || null,
+    practice_count: e.practiceCount || 0,
+    mastered: Boolean(e.mastered),
+  }));
+  await sbFetch(ctx, 'review_schedule?on_conflict=student_id,error_id', {
+    method: 'POST',
+    headers: { Prefer: 'resolution=merge-duplicates,return=minimal' },
+    body: JSON.stringify(rows),
+  });
+}
+
+/**
+ * Load a student's review schedule from Supabase and write it to localStorage
+ * so the in-memory SR module picks it up without a schema change.
+ * Returns the list of schedule entries (or [] if DB unavailable / empty).
+ */
+export async function loadReviewSchedule(localStudentId) {
+  const ctx = getDbContext();
+  if (!ctx) return [];
+  try {
+    const sid = await studentUuid(ctx, localStudentId);
+    if (!sid) return [];
+    const rows = await sbSelect(
+      ctx,
+      'review_schedule',
+      `student_id=eq.${sid}&select=*&order=created_at.asc`,
+    );
+    return rows.map(r => ({
+      id: r.id,
+      studentId: localStudentId,
+      errorId: r.error_id,
+      errorText: r.error_text || '',
+      correctText: r.correct_text || '',
+      interval: r.interval_days || 1,
+      lastSeen: r.last_seen || null,
+      nextDue: r.next_due || null,
+      sourceDiagnosisId: r.source_diagnosis_id || null,
+      practiceCount: r.practice_count || 0,
+      mastered: Boolean(r.mastered),
+    }));
+  } catch (e) {
+    console.warn('[supabase-db] loadReviewSchedule:', e.message);
+    return [];
   }
 }
 
@@ -565,4 +673,64 @@ export async function claimStudentByEmail(email) {
     console.warn('[supabase-db] claimStudentByEmail select failed:', e.message);
     return null;
   }
+}
+
+/* ─── Storage: teacher resources (public bucket) ────────────── */
+
+const RESOURCE_BUCKET = 'teacher-resources';
+
+/**
+ * Upload a file (image or audio) to the public teacher-resources bucket.
+ * Path: {folder}/{timestamp}-{filename}
+ */
+export async function uploadTeacherResource(file, folder = 'images') {
+  const ctx = getDbContext();
+  if (!ctx) throw new Error('Not signed in.');
+  const ext = file.name.split('.').pop() || 'bin';
+  const path = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2, 6)}.${ext}`;
+  const res = await fetch(`${ctx.url}/storage/v1/object/${RESOURCE_BUCKET}/${path}`, {
+    method: 'POST',
+    headers: {
+      apikey: ctx.anonKey,
+      Authorization: `Bearer ${ctx.token}`,
+      'Content-Type': file.type || 'application/octet-stream',
+      'x-upsert': 'true',
+    },
+    body: file,
+  });
+  if (!res.ok) throw new Error(`upload → ${res.status} ${await res.text().catch(() => '')}`);
+  return `${ctx.url}/storage/v1/object/public/${RESOURCE_BUCKET}/${path}`;
+}
+
+/**
+ * List all objects in a folder (e.g. 'images' or 'audio').
+ * Returns an array of { name, created_at, updated_at, id, ... } or null.
+ */
+export async function listTeacherResources(folder = 'images') {
+  const ctx = getDbContext();
+  if (!ctx) return null;
+  try {
+    const res = await fetch(`${ctx.url}/storage/v1/object/list/${RESOURCE_BUCKET}`, {
+      method: 'POST',
+      headers: { apikey: ctx.anonKey, Authorization: `Bearer ${ctx.token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prefix: `${folder}/`, sortBy: { column: 'created_at', order: 'desc' } }),
+    });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Delete a resource by its full path (e.g. 'images/abc123.jpg').
+ */
+export async function deleteTeacherResource(path) {
+  const ctx = getDbContext();
+  if (!ctx) throw new Error('Not signed in.');
+  const res = await fetch(`${ctx.url}/storage/v1/object/${RESOURCE_BUCKET}/${path}`, {
+    method: 'DELETE',
+    headers: { apikey: ctx.anonKey, Authorization: `Bearer ${ctx.token}` },
+  });
+  if (!res.ok) throw new Error(`delete → ${res.status}`);
 }

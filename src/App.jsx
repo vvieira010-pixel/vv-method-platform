@@ -3,8 +3,8 @@ import { useState, useEffect, lazy, Suspense } from 'react';
 import LoginScreen from './pages/login.jsx';
 import ErrorBoundary from './components/error-boundary.jsx';
 import { TweaksPanel, TweakSection, TweakRadio, TweakColor, TweakToggle } from './components/tweaks-panel.jsx';
-import { Icon, Avatar, Button, Shell } from './components/shared.jsx';
-import { STUDENTS } from './data/students.jsx';
+import { Icon, Shell } from './components/shared.jsx';
+const getStudentsData = () => import('./data/students.jsx').then(m => m.STUDENTS);
 import { seedStudentsIfEmpty, getStudents } from './lib/workflow-roster.js';
 import { getAllSubmissions } from './lib/workflow.js';
 import {
@@ -17,7 +17,8 @@ import {
   clearStoredSupabaseSession,
   fetchSupabaseUser,
 } from './lib/supabase-storage.js';
-import { claimStudentByEmail, ensureProfile, setSessionRole } from './lib/supabase-db.js';
+import { claimStudentByEmail, ensureProfile, setSessionRole, upsertReviewSchedule, loadReviewSchedule } from './lib/supabase-db.js';
+import { enableSync } from './lib/spaced-repetition.js';
 
 // Lazy-loaded pages
 const StudentDashboard  = lazy(() => import('./pages/student-dashboard.jsx'));
@@ -51,6 +52,7 @@ export default function App() {
     ...window.TWEAK_DEFAULTS,
   }));
   const [students, setStudents] = useState([]);
+  const [pendingSubmissions, setPendingSubmissions] = useState(0);
 
   // ── Supabase auth: handle implicit-flow hash redirect + restore stored session ──
   useEffect(() => {
@@ -75,7 +77,8 @@ export default function App() {
         return { role: 'student', studentId: claimed.local_id || claimed.id, email };
       }
       // No roster row claimed → only known teacher email(s) may be a teacher.
-      const teacherEmails = String(import.meta.env.VITE_TEACHER_EMAIL || 'vvieira010x@gmail.com')
+      const rawTeacherEmail = import.meta.env.VITE_TEACHER_EMAIL;
+      const teacherEmails = (rawTeacherEmail || 'vvieira010x@gmail.com')
         .split(',').map(e => e.trim().toLowerCase()).filter(Boolean);
       if (teacherEmails.includes(email.trim().toLowerCase())) {
         setSessionRole('teacher');
@@ -160,11 +163,34 @@ export default function App() {
     }).catch(() => { clearStoredSupabaseSession(); });
   }, []);
 
+  // Wire spaced-repetition Supabase sync for student sessions
+  useEffect(() => {
+    if (!auth || auth.role !== 'student' || !auth.studentId) return;
+    const { studentId } = auth;
+    enableSync((sid, list) => upsertReviewSchedule(sid, list));
+    loadReviewSchedule(studentId).then(rows => {
+      if (!rows.length) return;
+      try {
+        localStorage.setItem(`vv:reviewSchedule:${studentId}`, JSON.stringify(rows));
+      } catch { /* storage unavailable */ }
+    }).catch(() => { /* silent — localStorage is the fallback */ });
+  }, [auth]);
+
   // Seed students from hardcoded list on first run, then load live roster
   useEffect(() => {
-    seedStudentsIfEmpty(STUDENTS).then(() => {
-      getStudents().then(setStudents);
+    getStudentsData().then(data => {
+      seedStudentsIfEmpty(data).then(() => getStudents().then(setStudents));
     });
+  }, []);
+
+  // Pending submissions badge (teacher shell). Declared here — above the
+  // role-based early returns — so the hook order stays stable across the
+  // logged-out → logged-in transition (otherwise React throws "Rendered more
+  // hooks than during the previous render" and blanks the app on sign in).
+  useEffect(() => {
+    getAllSubmissions().then(list => {
+      setPendingSubmissions((list || []).filter(s => s.status === 'submitted').length);
+    }).catch(() => {});
   }, []);
 
   // Re-load students on updates
@@ -218,6 +244,14 @@ export default function App() {
     setViewParams({});
   };
 
+  // ── Pending submissions badge (must be before conditional returns for hooks rule) ──
+  useEffect(() => {
+    if (auth?.role !== 'teacher') return;
+    getAllSubmissions().then(list => {
+      setPendingSubmissions((list || []).filter(s => s.status === 'submitted').length);
+    }).catch(() => {});
+  }, [auth]);
+
   if (!auth) {
     return <LoginScreen onSignIn={handleSignIn} initialMode="choose" />;
   }
@@ -262,8 +296,6 @@ export default function App() {
 
   const rightSlot = (
     <div className="shell-topbar-right">
-      <span style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)' }}>Teacher</span>
-      <Avatar name="Vini V" size={32} tone="ink" />
       <button
         type="button"
         onClick={() => navigate('settings')}
@@ -272,9 +304,11 @@ export default function App() {
         aria-current={view === 'settings' ? 'page' : undefined}
         className={`shell-settings-btn${view === 'settings' ? ' active' : ''}`}
       >
-        <Icon.settings size={16} />
+        <Icon.settings size={15} />
       </button>
-      <Button variant="quiet" size="sm" onClick={handleSignOut}>Sign out</Button>
+      <button type="button" onClick={handleSignOut} className="shell-settings-btn" aria-label="Sign out" title="Sign out">
+        <Icon.close size={14} />
+      </button>
     </div>
   );
 
@@ -389,6 +423,8 @@ function PageLoader() {
   );
 }
 
+const TOAST_GLYPHS = { ok: '+', info: 'i', warn: '!', go: '→' };
+
 function ToastHost() {
   const [toasts, setToasts] = useState([]);
   useEffect(() => {
@@ -401,27 +437,14 @@ function ToastHost() {
     window.toast = (msg, kind) => window.dispatchEvent(new CustomEvent('vv-toast', { detail: { msg, kind } }));
     return () => { window.removeEventListener('vv-toast', onToast); delete window.toast; };
   }, []);
-  const TONES = {
-    ok:   { bg: 'var(--primary-ink)', fg: '#fff', g: '+' },
-    info: { bg: 'var(--primary)',     fg: '#fff', g: 'i' },
-    warn: { bg: 'var(--warning)',     fg: '#fff', g: '!' },
-    go:   { bg: 'var(--accent)',      fg: '#fff', g: '→' },
-  };
   return (
-    <div
-      aria-live="polite"
-      aria-atomic="true"
-      style={{ position: 'fixed', right: 22, bottom: 22, zIndex: 60, display: 'flex', flexDirection: 'column', gap: 10, pointerEvents: 'none' }}
-    >
-      {toasts.map(t => {
-        const tone = TONES[t.kind] || TONES.ok;
-        return (
-          <div key={t.id} style={{ background: tone.bg, color: tone.fg, padding: '12px 18px', borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-toast)', display: 'flex', alignItems: 'center', gap: 12, minWidth: 280, maxWidth: 380, pointerEvents: 'auto' }}>
-            <span style={{ width: 22, height: 22, borderRadius: 'var(--radius-pill)', background: 'rgba(255,255,255,.18)', display: 'grid', placeItems: 'center', fontSize: 12, fontWeight: 700 }}>{tone.g}</span>
-            <span style={{ fontSize: 13.5, fontWeight: 500, lineHeight: 1.4 }}>{t.msg}</span>
-          </div>
-        );
-      })}
+    <div className="toast-host" aria-live="polite" aria-atomic="true">
+      {toasts.map(t => (
+        <div key={t.id} className={`toast toast-${t.kind || 'ok'}`}>
+          <span className="toast-glyph">{TOAST_GLYPHS[t.kind] || '+'}</span>
+          <span className="toast-msg">{t.msg}</span>
+        </div>
+      ))}
     </div>
   );
 }

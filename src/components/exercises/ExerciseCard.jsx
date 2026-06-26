@@ -1,4 +1,4 @@
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useState } from 'react';
 import { Icon } from '../shared.jsx';
 import { getExType, exercisePreview } from '../../lib/exercise-types.js';
 import { ExTypeBadge, ExerciseEditor } from '../exercise-editor.jsx';
@@ -16,12 +16,21 @@ function arrowBtnStyle(disabled) {
 export default function ExerciseCard({ exercise, index, total, isExpanded, onToggle, onChange, onRemove, onMove, onSaveToLibrary }) {
   const previewText = exercisePreview(exercise);
   const cardRef = useRef(null);
+  const [showNotes, setShowNotes] = useState(false);
+
+  const isAiGen = exercise.aiGenerated;
+  const isVerified = exercise._teacherVerified;
 
   useEffect(() => {
     if (isExpanded && cardRef.current) {
       cardRef.current.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
     }
   }, [isExpanded]);
+
+  const toggleVerified = (e) => {
+    e.stopPropagation();
+    onChange({ _teacherVerified: !isVerified });
+  };
 
   return (
     <div ref={cardRef} className="homework-exercise-card" style={{
@@ -55,6 +64,18 @@ export default function ExerciseCard({ exercise, index, total, isExpanded, onTog
           {index + 1}
         </span>
         <ExTypeBadge typeId={exercise.type} />
+        {isAiGen && (
+          <span style={{
+            fontSize: 10, fontWeight: 700, textTransform: 'uppercase',
+            letterSpacing: '0.04em', padding: '1px 6px', borderRadius: 'var(--radius-pill)',
+            background: isVerified ? '#D1FAE5' : '#FEF3C7',
+            color: isVerified ? '#065F46' : '#92400E',
+            border: isVerified ? '1px solid #A7F3D0' : '1px solid #FDE68A',
+            lineHeight: '16px', flexShrink: 0,
+          }}>
+            {isVerified ? '✓ Verified' : 'AI'}
+          </span>
+        )}
         <span className="homework-exercise-card-title" style={{
           flex: 1, minWidth: 0, fontSize: 'var(--text-sm)', color: 'var(--text-2)',
           overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
@@ -62,6 +83,18 @@ export default function ExerciseCard({ exercise, index, total, isExpanded, onTog
           {previewText}
         </span>
         <div className="homework-exercise-card-controls" style={{ display: 'flex', gap: 4, alignItems: 'center', flexShrink: 0 }}>
+          {isAiGen && (
+            <button
+              onClick={toggleVerified}
+              style={{
+                ...arrowBtnStyle(false),
+                color: isVerified ? 'var(--success)' : 'var(--muted)',
+              }}
+              title={isVerified ? 'Mark as not reviewed' : 'Mark as reviewed / verified'}
+            >
+              <Icon.check size={12} />
+            </button>
+          )}
           {onSaveToLibrary && (
             <button
               onClick={e => { e.stopPropagation(); onSaveToLibrary(); }}
@@ -118,6 +151,48 @@ export default function ExerciseCard({ exercise, index, total, isExpanded, onTog
             padding: '14px 14px 14px',
           }}>
             <ExerciseEditor exercise={exercise} onChange={onChange} />
+
+            {/* Teacher review section */}
+            {isAiGen && (
+              <div style={{ marginTop: 12, padding: '10px 12px', border: '1px solid #FDE68A', borderRadius: 'var(--radius-sm)', background: '#FFFBEB' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: showNotes ? 8 : 0 }}>
+                  <span style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: '#92400E' }}>
+                    {isVerified ? '✓ Reviewed' : '⚠ Needs review'}
+                  </span>
+                  <div style={{ display: 'flex', gap: 6 }}>
+                    <button onClick={(e) => { e.stopPropagation(); onChange({ _teacherVerified: !isVerified }); }}
+                      style={{
+                        padding: '3px 10px', borderRadius: 'var(--radius-sm)', border: 'none',
+                        background: isVerified ? '#FEF3C7' : '#10B981', color: isVerified ? '#92400E' : '#fff',
+                        cursor: 'pointer', fontWeight: 600, fontSize: 'var(--text-xs)',
+                        fontFamily: 'var(--font-ui)',
+                      }}>
+                      {isVerified ? 'Unmark' : '✓ Verify content'}
+                    </button>
+                    <button onClick={(e) => { e.stopPropagation(); setShowNotes(!showNotes); }}
+                      style={{
+                        padding: '3px 10px', borderRadius: 'var(--radius-sm)', border: '1px solid #FDE68A',
+                        background: 'transparent', color: '#92400E',
+                        cursor: 'pointer', fontWeight: 600, fontSize: 'var(--text-xs)',
+                        fontFamily: 'var(--font-ui)',
+                      }}>
+                      {showNotes ? 'Close notes' : 'Notes'}
+                    </button>
+                  </div>
+                </div>
+                {showNotes && (
+                  <textarea
+                    value={exercise._teacherNotes || ''}
+                    onChange={(e) => onChange({ _teacherNotes: e.target.value })}
+                    placeholder="e.g. ⚕ Check answer key — option B may also be correct. / L Vocabulary is closer to B2 than B1."
+                    rows={3}
+                    className="input"
+                    style={{ width: '100%', resize: 'vertical', fontFamily: 'var(--font-ui)', fontSize: 'var(--text-xs)', lineHeight: 1.5 }}
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>

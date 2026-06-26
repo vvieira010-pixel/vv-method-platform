@@ -54,10 +54,17 @@ export default function ReportsPage({ students, onNavigate, workspaceQuery = '' 
     const skillCoverageChart = buildSkillCoverageChart(approved);
     const exerciseMix = buildExerciseMix(homework || []);
 
+    const baseline = approved.find(d => d.isBaseline) || approved[approved.length - 1] || null;
+    const latest = approved[0] || null;
+    const inquiryComparison = baseline && latest ? buildInquiryComparison(baseline, latest) : null;
+
     setReport({
       student,
       diagnoses: diagnoses || [],
       approved,
+      baseline,
+      latest,
+      inquiryComparison,
       homework: homework || [],
       completedHw,
       errors: errors || [],
@@ -155,6 +162,29 @@ export default function ReportsPage({ students, onNavigate, workspaceQuery = '' 
                     <Bar dataKey="notEvaluated" name="Not evaluated" stackId="coverage" fill="#94a3b8" isAnimationActive animationDuration={1300} />
                   </BarChart>
                 </ResponsiveContainer>
+              </div>
+            </Card>
+          )}
+
+          {report.inquiryComparison && (
+            <Card style={{ padding: 18, marginTop: 14 }}>
+              <SectionHeader title="Inquiry — Baseline vs Latest" icon={<Icon.progress size={14} />} />
+              <p style={S.caption}>
+                Skill score deltas between first{report.baseline?.isBaseline ? ' (baseline)' : ''} and most recent diagnosis.
+                {report.baseline?.interventionNote ? <span style={{ display: 'block', marginTop: 4 }}>Intervention: <strong>{report.baseline.interventionNote}</strong></span> : ''}
+              </p>
+              <div style={{ display: 'grid', gap: 8, marginTop: 10, gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))' }}>
+                {report.inquiryComparison.map(({ skill, baseline, latest, delta }) => (
+                  <div key={skill} style={{ border: '1px solid var(--divider)', padding: '11px 12px', background: delta > 0 ? 'var(--success-bg)' : delta < 0 ? 'var(--danger-bg)' : 'var(--surface)' }}>
+                    <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{skill}</div>
+                    <div style={{ marginTop: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8 }}>
+                      <span style={{ fontSize: 'var(--text-sm)', color: 'var(--text-2)' }}>{baseline} → {latest}</span>
+                      <span style={{ fontSize: 'var(--text-lg)', fontWeight: 700, color: delta > 0 ? 'var(--success)' : delta < 0 ? 'var(--danger)' : 'var(--muted)' }}>
+                        {delta > 0 ? '+' : ''}{delta}
+                      </span>
+                    </div>
+                  </div>
+                ))}
               </div>
             </Card>
           )}
@@ -266,6 +296,20 @@ function buildSkillCoverageChart(approvedDiagnoses) {
 
     return { skill, enoughEvidence, lowEvidence, notEvaluated };
   });
+}
+
+function buildInquiryComparison(baseline, latest) {
+  const SKILLS = ['Speaking', 'Writing', 'Reading', 'Listening', 'Grammar', 'Vocabulary', 'TestStrategy'];
+  const bSnap = {};
+  (baseline.content?.section_snapshot || []).forEach(s => { bSnap[s.section] = s.score_0_80; });
+  const lSnap = {};
+  (latest.content?.section_snapshot || []).forEach(s => { lSnap[s.section] = s.score_0_80; });
+  return SKILLS.map(skill => {
+    const b = bSnap[skill];
+    const l = lSnap[skill];
+    if (!b || !l) return null;
+    return { skill, baseline: b, latest: l, delta: l - b };
+  }).filter(Boolean);
 }
 
 function getEvidenceCount(dx, countKey) {

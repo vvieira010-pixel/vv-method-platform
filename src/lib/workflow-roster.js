@@ -343,7 +343,7 @@ export async function getClassEvent(id) {
   return (await getClassEvents()).find(e => e.id === id) || null;
 }
 export async function saveClassEvent(data) {
-  const record = { id: data.id || uid(), studentId: data.studentId || null, date: data.date || new Date().toISOString().slice(0, 10), startTime: data.startTime || '', endTime: data.endTime || '', title: data.title || 'English Class', classFocus: data.classFocus || '', metSkillFocus: data.metSkillFocus || '', status: data.status || 'scheduled', diagnosticStatus: data.diagnosticStatus || 'not-started', homeworkStatus: data.homeworkStatus || 'not-generated', createdAt: data.createdAt || new Date().toISOString(), updatedAt: new Date().toISOString() };
+  const record = { id: data.id || uid(), studentId: data.studentId || null, date: data.date || new Date().toISOString().slice(0, 10), startTime: data.startTime || '', endTime: data.endTime || '', title: data.title || 'English Class', classFocus: data.classFocus || '', metSkillFocus: data.metSkillFocus || '', timezone: data.timezone || 'America/Sao_Paulo', status: data.status || 'scheduled', diagnosticStatus: data.diagnosticStatus || 'not-started', homeworkStatus: data.homeworkStatus || 'not-generated', createdAt: data.createdAt || new Date().toISOString(), updatedAt: new Date().toISOString() };
   if (dbReady('classEvents')) { try { const saved = await dbUpsert('classEvents', record); if (saved) return saved; } catch (e) { console.warn('[workflow] saveClassEvent via Supabase failed, using localStorage:', e.message); } }
   const all = load(K.classEvents);
   const existing = all.findIndex(e => e.id === record.id);

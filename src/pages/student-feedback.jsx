@@ -2,12 +2,10 @@ import { useState, useEffect } from 'react';
 import { Icon, Button } from '../components/shared.jsx';
 import { StudentFeedbackView } from '../components/domain-ui.jsx';
 import { getDiagnoses, getSubmissions, getReviews, getInbox, sendMessage } from '../lib/workflow.js';
-import { asArray, getProgressStage, getRelevantGlossaryTerms, hasVisibleApprovedStudentFeedback } from './student-helpers.js';
+import { asArray, getRelevantGlossaryTerms, hasVisibleApprovedStudentFeedback } from './student-helpers.js';
 
 export default function StudentFeedback({ student, onTab }) {
   const [feedbackItems, setFeedbackItems] = useState([]);
-  const [selfAssessment, setSelfAssessment] = useState(null);
-  const [confidenceScore, setConfidenceScore] = useState(null);
   const [feedbackReplies, setFeedbackReplies] = useState({});
   const [replyText, setReplyText] = useState({});
   const [showReply, setShowReply] = useState({});
@@ -24,15 +22,6 @@ export default function StudentFeedback({ student, onTab }) {
         .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
         .map(dx => ({ id: dx.id, createdAt: dx.createdAt, feedback: dx.sections.studentFeedback.content, snapshot: asArray(dx.content?.section_snapshot) }));
       setFeedbackItems(approved);
-      if (approved[0]?.id) {
-        const stored = localStorage.getItem(`vv:feedback_selfassess:${approved[0].id}`);
-        if (stored) setSelfAssessment(stored);
-      }
-      const reviewedSub = (submissions || []).filter(s => s.confidence != null).sort((a, b) => new Date(b.submittedAt || 0) - new Date(a.submittedAt || 0))[0];
-      if (reviewedSub) {
-        const review = (reviews || []).find(r => r.homeworkId === reviewedSub.homeworkId);
-        setConfidenceScore({ confidence: reviewedSub.confidence, score: review?.score ?? null });
-      }
       const replies = {}; const und = {};
       (inbox || []).forEach(msg => {
         if (msg.diagnosisId) {
@@ -60,15 +49,9 @@ export default function StudentFeedback({ student, onTab }) {
     window.toast?.('Marked as understood.', 'ok');
   }
 
-  function handleSelfAssessment(value, diagnosisId) {
-    setSelfAssessment(value);
-    if (diagnosisId) localStorage.setItem(`vv:feedback_selfassess:${diagnosisId}`, value);
-  }
-
   const latest = feedbackItems[0];
   const feedback = latest?.feedback;
   const primarySkill = latest?.snapshot?.find(s => Number(s.score_0_80) > 0) || null;
-  const stage = primarySkill ? getProgressStage(Number(primarySkill.score_0_80) || 0) : null;
   const highlights = Array.isArray(feedback?.highlights) ? feedback.highlights : (Array.isArray(feedback?.whatYouDidWell) ? feedback.whatYouDidWell : []);
   const rawFocusArea = feedback?.focusArea || (Array.isArray(feedback?.whatToImprove) ? feedback.whatToImprove[0] : null);
   const focusArea = typeof rawFocusArea === 'string' ? { area: rawFocusArea, explanation: rawFocusArea } : rawFocusArea;
@@ -90,48 +73,17 @@ export default function StudentFeedback({ student, onTab }) {
         <div className="student-empty-card">No approved feedback yet. After your teacher reviews your diagnosis, your feedback will appear here.</div>
       ) : (
         <>
-          <section className="student-progress-profile">
-            <div>
-              <span className="student-panel-kicker">Today's progress</span>
-              <h2>{primarySkill ? `${primarySkill.section} progress` : 'MET progress'}</h2>
-              <p>{feedback.classFocus || 'Your teacher has shared a short summary of your latest class.'}</p>
-            </div>
-            {stage && <span className="student-stage-badge">{stage.label}</span>}
-          </section>
-
-          <section className="student-feedback-grid">
+          <section className="student-feedback-grid" style={{ marginTop: 16 }}>
             <article className="student-panel student-panel--primary">
               <div className="student-panel-head">
                 <div>
                   <span className="student-panel-kicker">Your feedback</span>
-                  <h2>Teacher-approved feedback</h2>
+                  <h2>Teacher-approved notes</h2>
                 </div>
                 {latest.createdAt && <span className="student-muted-pill">{new Date(latest.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</span>}
               </div>
               <StudentFeedbackView feedback={feedback} />
             </article>
-
-            {confidenceScore && (
-              <article className="student-panel">
-                <span className="student-panel-kicker">Your confidence vs result</span>
-                <h2>How your confidence matched your score</h2>
-                <div style={{ display: 'flex', gap: 16, marginTop: 8 }}>
-                  {[{ label: 'Your confidence', value: confidenceScore.confidence != null ? `${confidenceScore.confidence + 1}/4` : '—', color: 'var(--accent)' },
-                    { label: 'Teacher score', value: confidenceScore.score != null ? `${confidenceScore.score}/100` : 'Pending', color: confidenceScore.score != null ? 'var(--success)' : 'var(--text-2)' },
-                  ].map(m => (
-                    <div key={m.label} style={{ flex: 1, padding: '12px 16px', borderRadius: 'var(--radius-sm)', background: 'var(--surface)', border: '1px solid var(--border)' }}>
-                      <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-2)', marginBottom: 4 }}>{m.label}</div>
-                      <div style={{ fontSize: 'var(--text-lg)', fontWeight: 700, color: m.color }}>{m.value}</div>
-                    </div>
-                  ))}
-                </div>
-                {confidenceScore.confidence != null && confidenceScore.score != null && (
-                  <div style={{ marginTop: 8, fontSize: 'var(--text-sm)', color: 'var(--text-2)', lineHeight: 1.6 }}>
-                    {(() => { const diff = confidenceScore.score / 25 - (confidenceScore.confidence + 1); if (Math.abs(diff) <= 0.5) return 'Your confidence matched your result — great self-assessment!'; if (diff > 0.5) return 'You did better than expected — keep believing in yourself!'; return 'You were more confident than your score — review the feedback and try again.'; })()}
-                  </div>
-                )}
-              </article>
-            )}
 
             {(() => {
               const allFeedbackText = [focusArea?.area, focusArea?.explanation, focusArea?.howToImprove, ...(highlights || []).map(h => `${h.strength} ${h.explanation}`), nextStep].filter(Boolean).join(' ');
@@ -163,31 +115,14 @@ export default function StudentFeedback({ student, onTab }) {
             </article>
 
             <article className="student-panel">
-              <span className="student-panel-kicker">Your view</span>
-              <h2>Does this feedback match your experience?</h2>
-              <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-2)', marginBottom: 12, lineHeight: 1.6 }}>Your answer helps your teacher prepare the next class. There is no wrong response.</p>
-              {selfAssessment ? (
-                <div style={{ fontSize: 'var(--text-sm)', color: 'var(--success)', display: 'flex', alignItems: 'center', gap: 6 }}><Icon.check size={14} /> <span>You said: <strong>{selfAssessment}</strong> — your teacher will see this.</span></div>
-              ) : (
-                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                  {['Yes, it matches', 'Partly', 'Not sure'].map(option => (
-                    <button key={option} type="button" onClick={() => handleSelfAssessment(option, latest?.id)}
-                      style={{ padding: '7px 16px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', cursor: 'pointer', fontSize: 'var(--text-sm)', fontFamily: 'var(--font-ui)', fontWeight: 500 }}>
-                      {option}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </article>
-
-            <article className="student-panel">
               <span className="student-panel-kicker">Discuss this feedback</span>
-              <h2>Ask your teacher or confirm you understand</h2>
+              <h2>Ask your teacher about these notes</h2>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 4 }}>
-                {understood[latest?.id] ? (
-                  <div style={{ fontSize: 'var(--text-sm)', color: 'var(--success)', display: 'flex', alignItems: 'center', gap: 6 }}><Icon.check size={14} /> Marked as understood</div>
-                ) : (
-                  <Button variant="ghost" size="sm" onClick={() => handleMarkUnderstood(latest?.id)} disabled={!latest?.id}><Icon.check size={12} /> Mark as understood</Button>
+                {!understood[latest?.id] && (
+                  <Button variant="ghost" size="sm" onClick={() => handleMarkUnderstood(latest?.id)} disabled={!latest?.id}><Icon.check size={12} /> I understand this feedback</Button>
+                )}
+                {understood[latest?.id] && (
+                  <div style={{ fontSize: 'var(--text-sm)', color: 'var(--accent-text)', display: 'flex', alignItems: 'center', gap: 6 }}><Icon.check size={14} /> Marked as understood</div>
                 )}
                 <div>
                   {(feedbackReplies[latest?.id] || []).length > 0 && (
@@ -217,7 +152,7 @@ export default function StudentFeedback({ student, onTab }) {
           </section>
 
           {feedbackItems.length > 1 && (
-            <section className="student-panel student-feedback-history">
+            <section className="student-panel student-feedback-history" style={{ marginTop: 16 }}>
               <div className="student-panel-head">
                 <div><span className="student-panel-kicker">History</span><h2>Past feedback</h2></div>
                 <span className="student-muted-pill">{feedbackItems.length - 1} older</span>

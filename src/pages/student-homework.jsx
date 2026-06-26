@@ -8,6 +8,7 @@ import { ExTypeBadge } from '../components/exercise-badge.jsx';
 import { recordPractice } from '../lib/spaced-repetition.js';
 import { printHomework } from '../lib/print-homework.js';
 import { asArray, exerciseSearchText } from './student-helpers.js';
+import { TopicContentRenderer } from '../components/topic-explanations.jsx';
 
 function CorrectionNote({ c }) {
   return (
@@ -149,13 +150,13 @@ export default function StudentHomework({ student }) {
 
   return (
     <div className="student-homework-page">
-      <section className="student-hero">
-        <div>
-          <p className="student-hero-kicker">Homework</p>
+      <section className="student-homework-hero">
+        <div className="student-homework-hero-copy">
+          <span className="student-homework-hero-kicker">Homework</span>
           <h1>Assigned practice</h1>
           <p>Complete the tasks your teacher assigned, then submit them for review.</p>
         </div>
-        <span className="student-stage-badge">{homework.length} assigned</span>
+        <span className="student-homework-hero-badge">{homework.length} assigned</span>
       </section>
 
       {homework.length === 0 && (
@@ -190,10 +191,18 @@ export default function StudentHomework({ student }) {
         structuredExercises.forEach(e => { typeSummary[e.type] = (typeSummary[e.type] || 0) + 1; });
 
         return (
-          <article key={h.id} className={'student-homework-card' + (isExpanded ? ' is-expanded' : '')}>
+          <article key={h.id} className={`student-homework-card student-homework-card--${statusTone}${isExpanded ? ' is-expanded' : ''}`}>
             <button className="student-homework-card-head" onClick={() => toggleHomework(h)}>
+              <div className="student-homework-card-orb">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                  <polyline points="14 2 14 8 20 8" />
+                  <line x1="16" y1="13" x2="8" y2="13" />
+                  <line x1="16" y1="17" x2="8" y2="17" />
+                  <polyline points="10 9 9 9 8 9" />
+                </svg>
+              </div>
               <div className="student-homework-title">
-                <span className="student-panel-kicker">Assigned homework</span>
                 <h2>{h.title || 'Homework task'}</h2>
                 <div className="student-homework-meta">
                   {isStructured ? (
@@ -247,6 +256,19 @@ export default function StudentHomework({ student }) {
                   </div>
                 )}
 
+                {Array.isArray(h.topicExplanations) && h.topicExplanations.length > 0 && (
+                  <div style={{ marginBottom: 18, padding: 14, background: 'var(--surface)', border: '1px solid var(--accent-soft)', borderRadius: 'var(--radius-md)' }}>
+                    <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 10 }}>
+                      Topic Background
+                    </div>
+                    {h.topicExplanations.map(topic => (
+                      <div key={topic.id} style={{ marginBottom: 14 }}>
+                        <div style={{ fontWeight: 700, fontSize: 'var(--text-sm)', marginBottom: 6, color: 'var(--accent-deep)' }}>{topic.title}</div>
+                        <TopicContentRenderer content={topic.content} />
+                      </div>
+                    ))}
+                  </div>
+                )}
                 {isStructured && !submitted && !review && (
                   <HomeworkStepThrough
                     exercises={structuredExercises}

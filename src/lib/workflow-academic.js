@@ -45,6 +45,7 @@ export async function saveDiagnosis(data) {
   return saveVia('diagnoses', K.diagnoses, data, {
     studentId: null, sessionId: null, strengths: [], weaknesses: [],
     grammarIssues: [], vocabularyIssues: [], skillIssues: [], metConnections: [], nextSteps: [], content: null,
+    isBaseline: false, interventionNote: '', inquiryHypothesis: '',
   });
 }
 export async function deleteDiagnosis(id) {
@@ -244,12 +245,16 @@ export async function getStudentCycleState(studentId) {
   const pendingReviews = pendingSubmissions.filter(s => !reviews.some(r => r.submissionId === s.id));
   let cycleStage = 'needs-diagnosis';
   if (latestDiagnosis) {
-    const stage = latestDiagnosis.cycleStage;
-    if (stage === 'reviewed') cycleStage = 'reviewed';
-    else if (pendingReviews.length > 0) cycleStage = 'submitted';
-    else if (stage === 'homework-assigned' || pendingHomework.length > 0) cycleStage = 'homework-assigned';
-    else if (stage === 'feedback-sent') cycleStage = 'feedback-sent';
-    else cycleStage = 'diagnosed';
+    if (latestDiagnosis.isBaseline && !latestDiagnosis.interventionNote) cycleStage = 'baseline-complete';
+    else if (latestDiagnosis.interventionNote) cycleStage = 'intervention-applied';
+    else {
+      const stage = latestDiagnosis.cycleStage;
+      if (stage === 'reviewed') cycleStage = 'reviewed';
+      else if (pendingReviews.length > 0) cycleStage = 'submitted';
+      else if (stage === 'homework-assigned' || pendingHomework.length > 0) cycleStage = 'homework-assigned';
+      else if (stage === 'feedback-sent') cycleStage = 'feedback-sent';
+      else cycleStage = 'diagnosed';
+    }
   }
   return { cycleStage, latestDiagnosis, pendingHomework, pendingSubmissions: pendingReviews, daysSinceLastDiagnosis, totalDiagnoses: diagnoses.length, totalHomework: homework.length, totalSubmissions: submissions.length };
 }

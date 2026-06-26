@@ -15,6 +15,12 @@ export const MET_TASK_CONFIG = {
   Q1: {
     label: 'Speaking Q1 — Describe a Picture (60s)',
     structure: 'General scene → people/actions → details → possible inference',
+    executionFormula: 'General situation (who, where, what) → key details (actions, objects, relationships) → logical inferences',
+    stages: [
+      'General situation: who, where, what',
+      'Key details: actions, objects, relationships',
+      'Logical inferences: what may be happening and why',
+    ],
     frames: ['This picture shows…', 'In the foreground, I can see…', 'In the background, there is/are…', 'The people seem to be…', 'It looks like…'],
     checks: [
       'I started with a general description of the scene',
@@ -27,6 +33,14 @@ export const MET_TASK_CONFIG = {
   Q2: {
     label: 'Speaking Q2 — Personal Experience (60s)',
     structure: 'When/where → what happened → result/feeling',
+    executionFormula: 'Situation → Problem/Main Event → Action Taken → Result → Reflection/Lesson',
+    stages: [
+      'Situation: set the scene (when, where, who)',
+      'Problem/Main Event: what happened',
+      'Action Taken: what you did about it',
+      'Result: what was the outcome',
+      'Reflection/Lesson: what you learned or felt',
+    ],
     frames: ['I remember a time when…', 'This happened when I was…', 'At first…', 'After that…', 'In the end…', 'I felt… because…'],
     checks: [
       'I described a specific experience, not a general habit',
@@ -39,6 +53,14 @@ export const MET_TASK_CONFIG = {
   Q3: {
     label: 'Speaking Q3 — Personal Opinion (60s)',
     structure: 'Opinion → reason 1 → reason 2/example → final comment',
+    executionFormula: 'Opinion → Reason 1 → Example → Reason 2 → Conclusion',
+    stages: [
+      'Opinion: state your clear position',
+      'Reason 1: first supporting argument',
+      'Example: concrete illustration',
+      'Reason 2: second supporting argument',
+      'Conclusion: restate and close',
+    ],
     frames: ['In my opinion…', 'I believe that…', 'The main reason is…', 'Another reason is…', 'For example…', 'That is why I think…'],
     checks: [
       'I stated ONE clear opinion — not both sides',
@@ -51,6 +73,13 @@ export const MET_TASK_CONFIG = {
   Q4: {
     label: 'Speaking Q4 — Advantages & Disadvantages (90s)',
     structure: 'Introduction → advantages → disadvantages → balanced conclusion',
+    executionFormula: 'Introduce both sides → advantage with support → drawback with support → balanced concluding synthesis',
+    stages: [
+      'Introduce both sides of the situation',
+      'Present one major advantage with support',
+      'Contrast with one major drawback with support',
+      'Deliver a balanced concluding synthesis',
+    ],
     frames: ['There are several advantages to this.', 'One benefit is…', 'However, there are also disadvantages.', 'One problem is…', 'On balance, I think…'],
     checks: [
       'I covered BOTH advantages AND disadvantages — covering only one side loses ~1/3 of marks',
@@ -63,6 +92,14 @@ export const MET_TASK_CONFIG = {
   Q5: {
     label: 'Speaking Q5 — Persuade an Authority (90s)',
     structure: 'Recommendation → reasons → benefits → respectful closing',
+    executionFormula: 'Address authority → State problem → Present reasons → Offer practical solution → Formal request',
+    stages: [
+      'Respectfully address the authority figure',
+      'State the core problem clearly',
+      'Present strong supporting reasons',
+      'Offer a highly practical solution',
+      'Close with a direct, formal request',
+    ],
     frames: ['I strongly believe that…', 'I would recommend…', 'This would be beneficial because…', 'One important reason is…', 'I understand there may be concerns, but…', 'For these reasons, I hope you will consider this.'],
     checks: [
       'I stated my position or recommendation in the FIRST 10–15 seconds',
@@ -75,6 +112,7 @@ export const MET_TASK_CONFIG = {
   W1Q1: {
     label: 'Writing Task 1 — Question 1',
     structure: 'Direct answer → detail → small explanation',
+    responseModel: 'direct answer + reason + concrete personal detail',
     frames: [],
     checks: [
       'I answered the question directly in my first sentence',
@@ -87,6 +125,7 @@ export const MET_TASK_CONFIG = {
   W1Q2: {
     label: 'Writing Task 1 — Question 2',
     structure: 'Answer → reason → support',
+    responseModel: 'direct answer + reason + concrete personal detail',
     frames: ['Because…', 'Since…', 'For example…', 'However…', 'I prefer…', 'In my opinion…'],
     checks: [
       'I gave a clear reason — not just repeating my Q1 answer',
@@ -99,6 +138,7 @@ export const MET_TASK_CONFIG = {
   W1Q3: {
     label: 'Writing Task 1 — Question 3',
     structure: 'Position/idea → explanation → example or consequence',
+    responseModel: 'direct answer + reason + concrete personal detail',
     frames: ['Should…', 'Would…', 'Could…', 'Might…', 'On the other hand…', 'As a result…'],
     checks: [
       'I extended the topic — gave advice, a comparison, or a future consequence',
@@ -111,6 +151,9 @@ export const MET_TASK_CONFIG = {
   W2: {
     label: 'Writing Task 2 — Formal Essay',
     structure: 'Introduction → Body ×2 → Conclusion',
+    model: 'Intro → Body 1 → Body 2 → Conclusion',
+    assessmentStandards: ['Task Completion', 'Organization', 'Development', 'Grammar Accuracy', 'Vocabulary Range', 'Coherence', 'Register'],
+    connectors: ['In addition', 'Furthermore', 'This is because', 'For instance', 'However', 'Overall', 'In conclusion'],
     frames: [],
     checks: [
       'I understood the prompt and gave a clear position or main idea in the introduction',

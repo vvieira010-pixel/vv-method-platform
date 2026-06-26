@@ -1,8 +1,9 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { Icon, Card, SectionHeader, Button } from '../components/shared.jsx';
 import { clearWorkflowData, syncLocalToCloud } from '../lib/workflow.js';
-import { getDbContext, setTeacherSetting } from '../lib/supabase-db.js';
+import { getDbContext, getTeacherSetting, setTeacherSetting } from '../lib/supabase-db.js';
 import { getSupabaseConfig, readStoredSupabaseSession, updateUserPassword } from '../lib/supabase-storage.js';
+import { getAllTaskTypes } from '../education-skills/index.js';
 
 const SENSITIVE_LOCAL_KEYS = new Set([
   'vv:groq_api_key',
@@ -14,30 +15,23 @@ const SENSITIVE_LOCAL_KEYS = new Set([
   'vv:deepgram_api_key',
 ]);
 
-/** Password-style input with an eye toggle to reveal/hide the value. */
 function SecretInput({ value, onChange, placeholder }) {
   const [show, setShow] = useState(false);
   return (
-    <div style={{ position: 'relative' }}>
+    <div className="secret-input">
       <input
         className="input"
         type={show ? 'text' : 'password'}
         value={value}
         onChange={onChange}
         placeholder={placeholder}
-        style={{ width: '100%', paddingRight: 40 }}
       />
       <button
         type="button"
         onClick={() => setShow(s => !s)}
         aria-label={show ? 'Hide key' : 'Show key'}
         title={show ? 'Hide' : 'Show'}
-        style={{
-          position: 'absolute', right: 6, top: '50%', transform: 'translateY(-50%)',
-          background: 'none', border: 'none', cursor: 'pointer', padding: 6,
-          display: 'grid', placeItems: 'center',
-          color: show ? 'var(--primary)' : 'var(--muted)',
-        }}
+        className={`secret-toggle${show ? ' active' : ''}`}
       >
         <Icon.eye size={16} />
       </button>
@@ -56,6 +50,8 @@ export default function SettingsPage({ onNavigate }) {
   const [piperUrl, setPiperUrl] = useState(() => localStorage.getItem('vv:piper_server_url') || '');
   const [generalMemo, setGeneralMemo] = useState(() => localStorage.getItem('vv:student_general_memo') || '');
   const [examDate, setExamDate] = useState(() => localStorage.getItem('vv:met_exam_date') || '');
+  const [zoomUrl, setZoomUrl] = useState(() => localStorage.getItem('vv:zoom_meeting_url') || '');
+  const [teacherName, setTeacherName] = useState(() => localStorage.getItem('vv:teacher_name') || '');
   const [saved, setSaved] = useState('');
   const [syncing, setSyncing] = useState(false);
   const [syncResult, setSyncResult] = useState('');
@@ -63,10 +59,49 @@ export default function SettingsPage({ onNavigate }) {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [passwordSaving, setPasswordSaving] = useState(false);
   const [passwordMsg, setPasswordMsg] = useState(null); // { ok, text }
+  const [skillToggles, setSkillToggles] = useState({});
+  const [skillTogglesLoaded, setSkillTogglesLoaded] = useState(false);
   const importInputRef = useRef(null);
 
   const supabaseConfigured = getSupabaseConfig().isConfigured;
   const activeSession = readStoredSupabaseSession();
+
+  useEffect(() => {
+    (async () => {
+      let toggles = null;
+      const stored = await getTeacherSetting('skills_enabled');
+      if (stored) {
+        try { toggles = JSON.parse(stored); } catch { /* ignore */ }
+      }
+      if (!toggles) {
+        try {
+          const ls = localStorage.getItem('vv:skills_enabled');
+          if (ls) toggles = JSON.parse(ls);
+        } catch { /* ignore */ }
+      }
+      if (toggles) setSkillToggles(toggles);
+      setSkillTogglesLoaded(true);
+    })();
+  }, []);
+
+  async function handleSaveSkillToggles() {
+    const toggles = { ...skillToggles };
+    const success = await setTeacherSetting('skills_enabled', JSON.stringify(toggles));
+    try { localStorage.setItem('vv:skills_enabled', JSON.stringify(toggles)); } catch { /* ignore */ }
+    if (!success) { window.toast?.('Saved locally only (Supabase unavailable).', 'warn'); return; }
+    window.toast?.('Skill preferences saved.', 'ok');
+  }
+
+  function handleToggleSkill(taskId, enabled) {
+    setSkillToggles(prev => {
+      if (enabled) {
+        const next = { ...prev };
+        delete next[taskId];
+        return next;
+      }
+      return { ...prev, [taskId]: false };
+    });
+  }
 
   async function handleSetPassword(e) {
     e.preventDefault();
@@ -132,6 +167,20 @@ export default function SettingsPage({ onNavigate }) {
     if (examDate) localStorage.setItem('vv:met_exam_date', examDate);
     else localStorage.removeItem('vv:met_exam_date');
     window.toast?.('Exam date saved — students will see the countdown on their dashboard.', 'ok');
+  }
+
+  function saveClassLink() {
+    const url = zoomUrl.trim();
+    if (url && !/^https?:\/\//i.test(url)) {
+      window.toast?.('Enter a full link starting with https://', 'warn');
+      return;
+    }
+    if (url) localStorage.setItem('vv:zoom_meeting_url', url);
+    else localStorage.removeItem('vv:zoom_meeting_url');
+    const name = teacherName.trim();
+    if (name) localStorage.setItem('vv:teacher_name', name);
+    else localStorage.removeItem('vv:teacher_name');
+    window.toast?.('Class link saved — use "Send invite" on a class in the Calendar.', 'ok');
   }
 
   async function saveGeneralMemo() {
@@ -222,17 +271,17 @@ export default function SettingsPage({ onNavigate }) {
   }
 
   return (
-    <div style={{ maxWidth: 640, margin: '0 auto', padding: '28px 20px' }}>
-      <h1 style={S.headline}>Settings</h1>
+    <div className="page-shell-narrow">
+      <SectionHeader title="Settings" />
 
       {/* API Keys */}
-      <Card style={{ padding: 20, marginTop: 20 }}>
+      <Card style={{ marginTop: 'var(--space-5)' }}>
         <SectionHeader title="AI Provider Keys" icon={<Icon.spark size={15} />} />
-        <p style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', margin: '8px 0 16px', lineHeight: 1.6 }}>
+        <p className="card-row-meta" style={{ margin: 'var(--space-2) 0 var(--space-4)', lineHeight: 1.6 }}>
           Keys are stored in your browser only. Priority: Gemini (free) → OpenRouter (free models, auto-cascade) → Groq (free, fast) → Anthropic → OpenAI.
           Any one key is enough. <strong>Tip:</strong> paste several keys in a field (comma-separated) and the app rotates to the next one when a key hits its limit. Keys are not included in platform backups.
         </p>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
           <Field label="Groq API Key (recommended — free)">
             <SecretInput value={groqKey} onChange={e => setGroqKey(e.target.value)} placeholder="gsk_…" />
             <a href="https://console.groq.com/keys" target="_blank" rel="noopener noreferrer" style={{ fontSize: 'var(--text-xs)', color: 'var(--accent)', marginTop: 3 }}>Get a free Groq key →</a>
@@ -257,7 +306,7 @@ export default function SettingsPage({ onNavigate }) {
           <Field label="OpenAI API Key (fallback)">
             <SecretInput value={openaiKey} onChange={e => setOpenaiKey(e.target.value)} placeholder="sk-…" />
           </Field>
-          <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 4 }}>
+          <div style={{ display: 'flex', gap: 'var(--space-2)', alignItems: 'center', marginTop: 'var(--space-1)' }}>
             <Button variant="primary" onClick={saveKeys}>Save Keys</Button>
             {saved && <span style={{ color: 'var(--success)', fontSize: 'var(--text-sm)' }}>{saved}</span>}
           </div>
@@ -265,9 +314,9 @@ export default function SettingsPage({ onNavigate }) {
       </Card>
 
       {/* TTS Keys */}
-      <Card style={{ padding: 20, marginTop: 14 }}>
+      <Card style={{ marginTop: 'var(--space-4)' }}>
         <SectionHeader title="TTS — Listening Exercise Audio" icon={<Icon.mic size={15} />} />
-        <p style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', margin: '8px 0 4px', lineHeight: 1.6 }}>
+        <p className="card-row-meta" style={{ margin: 'var(--space-2) 0 var(--space-1)', lineHeight: 1.6 }}>
           Audio for listening exercises is generated in this order:
         </p>
         <ol style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', margin: '4px 0 16px', paddingLeft: 18, lineHeight: 1.8 }}>
@@ -278,7 +327,7 @@ export default function SettingsPage({ onNavigate }) {
           <li><strong>Piper</strong> — offline/local, if server URL is set below</li>
           <li><strong>Browser speech</strong> — always available, no key needed</li>
         </ol>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
           <Field label="ElevenLabs API Key (priority)">
             <SecretInput value={elevenlabsKey} onChange={e => setElevenlabsKey(e.target.value)} placeholder="sk_…" />
             <a href="https://elevenlabs.io/app/settings/api-keys" target="_blank" rel="noopener noreferrer" style={{ fontSize: 'var(--text-xs)', color: 'var(--accent)', marginTop: 3 }}>Get your ElevenLabs key →</a>
@@ -287,18 +336,10 @@ export default function SettingsPage({ onNavigate }) {
             <SecretInput value={deepgramKey} onChange={e => setDeepgramKey(e.target.value)} placeholder="dg_… or Deepgram key" />
             <a href="https://console.deepgram.com/" target="_blank" rel="noopener noreferrer" style={{ fontSize: 'var(--text-xs)', color: 'var(--accent)', marginTop: 3 }}>Get your Deepgram key →</a>
           </Field>
-          <div style={{
-            padding: '10px 14px', borderRadius: 0, fontSize: 'var(--text-xs)',
-            background: 'var(--accent-subtle)', color: 'var(--muted)', lineHeight: 1.6,
-            border: '1px solid var(--accent-soft)',
-          }}>
+          <div className="note-box">
             <strong>Voice note</strong> — use one woman voice and one man voice for listening variety. The default server setup uses an ElevenLabs woman voice first, Deepgram's Aura fallback, then OpenAI <em>nova</em>. You can change voices with <code>ELEVENLABS_VOICE_ID</code>, <code>DEEPGRAM_TTS_MODEL</code>, or <code>OPENAI_TTS_VOICE</code> in the server environment.
           </div>
-          <div style={{
-            padding: '10px 14px', borderRadius: 0, fontSize: 'var(--text-xs)',
-            background: 'var(--accent-subtle)', color: 'var(--muted)', lineHeight: 1.6,
-            border: '1px solid var(--accent-soft)',
-          }}>
+          <div className="note-box">
             <strong>OpenAI TTS</strong> — uses your OpenAI key from the AI section above. No extra key needed.
             Voices: <em>alloy</em> (neutral), <em>nova</em> (female), <em>onyx</em> (male). Active automatically if ElevenLabs and Deepgram are not set or fail.
           </div>
@@ -316,7 +357,7 @@ export default function SettingsPage({ onNavigate }) {
               Listen to samples at <a href="https://rhasspy.github.io/piper-samples" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)' }}>Piper samples</a> and download models from <a href="https://huggingface.co/rhasspy/piper-voices/tree/main" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)' }}>Piper voices</a>. Used only when ElevenLabs, Deepgram, OpenAI, and Gemini are not configured.
             </span>
           </Field>
-          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: 'var(--space-2)', alignItems: 'center' }}>
             <Button variant="primary" onClick={saveKeys}>Save TTS Keys</Button>
             {saved && <span style={{ color: 'var(--success)', fontSize: 'var(--text-sm)' }}>{saved}</span>}
           </div>
@@ -324,9 +365,9 @@ export default function SettingsPage({ onNavigate }) {
       </Card>
 
       {/* Student dashboard memo */}
-      <Card style={{ padding: 20, marginTop: 14 }}>
+      <Card style={{ marginTop: 'var(--space-4)' }}>
         <SectionHeader title="Student Dashboard Memo" icon={<Icon.inbox size={15} />} />
-        <p style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', margin: '8px 0 12px', lineHeight: 1.6 }}>
+        <p className="card-row-meta" style={{ margin: 'var(--space-2) 0 var(--space-3)', lineHeight: 1.6 }}>
           This general memo appears for every student on the Memo Board.
         </p>
         <Field label="General memo for all students">
@@ -344,9 +385,9 @@ export default function SettingsPage({ onNavigate }) {
       </Card>
 
       {/* Class & Exam Settings */}
-      <Card style={{ padding: 20, marginTop: 14 }}>
+      <Card style={{ marginTop: 'var(--space-4)' }}>
         <SectionHeader title="Class & Exam Date" icon={<Icon.calendar size={15} />} />
-        <p style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', margin: '8px 0 14px', lineHeight: 1.6 }}>
+        <p className="card-row-meta" style={{ margin: 'var(--space-2) 0 var(--space-4)', lineHeight: 1.6 }}>
           Set the MET exam date for your students. It appears as a live countdown on their Home dashboard.
           Leave blank to hide the countdown.
         </p>
@@ -372,11 +413,53 @@ export default function SettingsPage({ onNavigate }) {
         </div>
       </Card>
 
+      {/* Class video link (Zoom) for calendar invites */}
+      <Card style={{ padding: 20, marginTop: 14 }}>
+        <SectionHeader title="Class Video Link (Zoom)" icon={<Icon.calendar size={15} />} />
+        <p style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', margin: '8px 0 14px', lineHeight: 1.6 }}>
+          Paste your Zoom Personal Meeting Room link. Every calendar invite you send from a class
+          will include this link and an <code>.ics</code> calendar attachment for the student.
+        </p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <Field label="Zoom meeting link">
+            <input
+              className="input"
+              type="url"
+              value={zoomUrl}
+              onChange={e => setZoomUrl(e.target.value)}
+              placeholder="https://us05web.zoom.us/j/0000000000?pwd=…"
+            />
+            <a href="https://zoom.us/profile" target="_blank" rel="noopener noreferrer" style={{ fontSize: 'var(--text-xs)', color: 'var(--accent)', marginTop: 3 }}>Find your Personal Meeting Room link →</a>
+          </Field>
+          <Field label="Your name (shown as the organizer)">
+            <input
+              className="input"
+              value={teacherName}
+              onChange={e => setTeacherName(e.target.value)}
+              placeholder="e.g. Vinicius — MET Coach"
+            />
+          </Field>
+          <div style={{
+            padding: '10px 14px', fontSize: 'var(--text-xs)',
+            background: 'var(--accent-subtle)', color: 'var(--muted)', lineHeight: 1.6,
+            border: '1px solid var(--accent-soft)',
+          }}>
+            <strong>Emailing setup</strong> — sending invites also needs a transactional email
+            provider configured on the server: set <code>RESEND_API_KEY</code> and
+            <code> INVITE_FROM_EMAIL</code> (a verified sender) in your Vercel environment.
+            Until then, the link is saved but invites can't be emailed.
+          </div>
+          <div>
+            <Button variant="primary" onClick={saveClassLink}>Save class link</Button>
+          </div>
+        </div>
+      </Card>
+
       {/* Set / change password */}
       {activeSession && (
-        <Card style={{ padding: 20, marginTop: 14 }}>
+        <Card style={{ marginTop: 'var(--space-4)' }}>
           <SectionHeader title="Account Password" icon={<Icon.lock size={15} />} />
-          <p style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', margin: '8px 0 16px', lineHeight: 1.6 }}>
+          <p className="card-row-meta" style={{ margin: 'var(--space-2) 0 var(--space-4)', lineHeight: 1.6 }}>
             Set a password so you can sign in with your email and password next time — no login link needed.
           </p>
           <form onSubmit={handleSetPassword} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -418,7 +501,7 @@ export default function SettingsPage({ onNavigate }) {
 
       {/* Cloud sync */}
       {supabaseConfigured && (
-        <Card style={{ padding: 20, marginTop: 14 }}>
+        <Card style={{ marginTop: 'var(--space-4)' }}>
           <SectionHeader title="Cloud Sync" icon={<Icon.upload size={15} />} />
           <p style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', margin: '8px 0 14px' }}>
             Push the data stored in this browser (students, diagnoses, homework, submissions, reviews…)
@@ -433,9 +516,53 @@ export default function SettingsPage({ onNavigate }) {
           )}
         </Card>
       )}
+      {supabaseConfigured && skillTogglesLoaded && (
+        <Card style={{ padding: 20, marginTop: 14 }}>
+          <SectionHeader title="AI Skill Augmentations" icon={<Icon.settings size={15} />} />
+          <p style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', margin: '8px 0 14px' }}>
+            Enable pedagogical skill prompts that augment AI behaviour. Each task type uses specific skills
+            to improve diagnosis quality, feedback structure, exercise scaffolding, and student guidance.
+          </p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {getAllTaskTypes().map(task => {
+              const enabled = skillToggles[task.id] !== false;
+              return (
+                <div key={task.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
+                  <div>
+                    <div style={{ fontWeight: 600, fontSize: 'var(--text-sm)', color: 'var(--text-1)' }}>{task.label}</div>
+                    <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: 2 }}>{task.description}</div>
+                  </div>
+                  <label style={{ flexShrink: 0, cursor: 'pointer', position: 'relative', width: 40, height: 22 }} aria-label={`Toggle ${task.label}`}>
+                    <input
+                      type="checkbox"
+                      checked={enabled}
+                      onChange={() => handleToggleSkill(task.id, enabled)}
+                      style={{ position: 'absolute', opacity: 0, width: 0, height: 0 }}
+                    />
+                    <span style={{
+                      position: 'absolute', inset: 0, borderRadius: 11,
+                      backgroundColor: enabled ? 'var(--accent-1)' : 'var(--border)',
+                      transition: 'background-color 0.2s',
+                    }}>
+                      <span style={{
+                        position: 'absolute', top: 2, left: enabled ? 20 : 2,
+                        width: 18, height: 18, borderRadius: '50%', backgroundColor: '#fff',
+                        transition: 'left 0.2s', boxShadow: '0 1px 2px rgba(0,0,0,0.15)',
+                      }} />
+                    </span>
+                  </label>
+                </div>
+              );
+            })}
+          </div>
+          <div style={{ marginTop: 16 }}>
+            <Button variant="primary" onClick={handleSaveSkillToggles}>Save Skill Preferences</Button>
+          </div>
+        </Card>
+      )}
 
       {/* Platform info */}
-      <Card style={{ padding: 20, marginTop: 14 }}>
+      <Card style={{ marginTop: 'var(--space-4)' }}>
         <SectionHeader title="Platform" />
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 12, fontSize: 'var(--text-sm)', color: 'var(--muted)' }}>
           <p>MET Proficiency Mastery — Michigan English Test Preparation for Nurses</p>
@@ -463,14 +590,10 @@ export default function SettingsPage({ onNavigate }) {
 
 function Field({ label, children }) {
   return (
-    <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-      <span style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</span>
+    <label className="field">
+      <span className="field-label">{label}</span>
       {children}
     </label>
   );
 }
-
-const S = {
-  headline: { fontFamily: 'var(--font-ui)', fontSize: 'var(--text-2xl)', fontWeight: 700, color: 'var(--accent-deep)', margin: 0 },
-};
 

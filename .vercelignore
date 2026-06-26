@@ -9,7 +9,6 @@ supabase/.temp
 
 # Extraneous workspace directories (not part of the app)
 product-audit
-education-agent-skills-main
 SupportAssist_Backups
 MicrosoftWindows.Client.CBS_cw5n1h2txyewy!InputApp
 .netlify

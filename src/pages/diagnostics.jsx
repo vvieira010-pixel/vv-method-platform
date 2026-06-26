@@ -43,7 +43,7 @@ export default function DiagnosticsPage({ students, onNavigate }) {
 
       {filtered.length === 0 ? (
         <Card className="page-empty-state">
-          <p style={{ color: 'var(--muted)' }}>No diagnoses yet. Diagnoses appear here after you run one following a class.</p>
+          <p className="card-row-meta">No diagnoses yet. Diagnoses appear here after you run one following a class.</p>
         </Card>
       ) : (
         <div className="page-list">
@@ -53,24 +53,24 @@ export default function DiagnosticsPage({ students, onNavigate }) {
             const totalCount = dx.sections ? Object.keys(dx.sections).length : 0;
             const evidence = getEvidenceSummary(dx);
             return (
-              <Card key={dx.id} style={{ padding: '14px 18px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+              <Card key={dx.id}>
+                <div className="card-row">
                   <Avatar name={student?.name || '?'} size={34} />
-                  <div style={{ flex: 1, minWidth: 160 }}>
-                    <div style={{ fontWeight: 700 }}>{student?.name || 'Unknown student'}</div>
-                    <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: 2 }}>
+                  <div className="card-row-body">
+                    <div className="card-row-title">{student?.name || 'Unknown student'}</div>
+                    <div className="card-row-meta">
                       {new Date(dx.createdAt).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}
                       {dx.classSummary ? ` · ${dx.classSummary.slice(0, 60)}…` : ''}
                     </div>
                     {evidence.total > 0 && (
-                      <div style={S.evidenceRow} aria-label="Diagnosis evidence coverage">
-                        <span style={S.evidenceChip}>{evidence.evaluated} evaluated</span>
-                        <span style={S.evidenceChip}>{evidence.limited} not enough evidence</span>
-                        <span style={S.evidenceChip}>{evidence.notEvaluated} not evaluated</span>
+                      <div className="evidence-row" aria-label="Diagnosis evidence coverage">
+                        <span className="evidence-chip">{evidence.evaluated} evaluated</span>
+                        <span className="evidence-chip">{evidence.limited} not enough evidence</span>
+                        <span className="evidence-chip">{evidence.notEvaluated} not evaluated</span>
                       </div>
                     )}
                   </div>
-                  {totalCount > 0 && <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>{approvedCount}/{totalCount} approved</span>}
+                  {totalCount > 0 && <span className="card-row-meta">{approvedCount}/{totalCount} approved</span>}
                   <Pill tone={dx.status === 'approved' ? 'success' : 'warning'}>{dx.status || 'draft'}</Pill>
                   <Button variant="ghost" size="sm" onClick={() => onNavigate('diagnostics:create', { studentId: dx.studentId, diagnosisId: dx.id })}>
                     {dx.status === 'approved' ? 'View' : 'Review'}
@@ -121,19 +121,4 @@ function getEvidenceSummary(dx) {
     return acc;
   }, { total: 0, evaluated: 0, limited: 0, notEvaluated: 0 });
 }
-
-const S = {
-  evidenceRow: { display: 'flex', flexWrap: 'wrap', gap: 5, marginTop: 7 },
-  evidenceChip: {
-    display: 'inline-flex',
-    alignItems: 'center',
-    border: '1px solid var(--border)',
-    borderRadius: 'var(--radius-sm)',
-    padding: '2px 6px',
-    fontSize: '11px',
-    fontWeight: 700,
-    color: 'var(--muted)',
-    background: 'var(--bg)',
-  },
-};
 

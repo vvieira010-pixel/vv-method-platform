@@ -95,12 +95,12 @@ export default function HomeworkPage({ students, onNavigate }) {
             const kind = normalizeKind(h.kind || h.skillType || h.type);
             const level = normalizeLevel(h.level || h.currentLevel);
             return (
-              <Card key={h.id} style={{ padding: '14px 18px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+              <Card key={h.id}>
+                <div className="card-row">
                   <Avatar name={student?.name || '?'} size={32} />
-                  <div style={{ flex: 1, minWidth: 160 }}>
-                    <div style={{ fontWeight: 700 }}>{h.title}</div>
-                    <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: 2 }}>
+                  <div className="card-row-body">
+                    <div className="card-row-title">{h.title}</div>
+                    <div className="card-row-meta">
                       {student?.name} · {kind || 'kind'}{level ? ` · ${level}` : ''} · Assigned {new Date(h.assignedAt || h.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
                       {h.dueDate ? ` · Due ${new Date(h.dueDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}` : ''}
                     </div>

@@ -4,11 +4,13 @@
  * with the old Class Prep cycle board (per-student stage + next action).
  */
 import { useState, useEffect } from 'react';
-import { Icon, Card, SectionHeader, Pill, Button, Avatar } from '../components/shared.jsx';
+import { Icon, Card, SectionHeader, Pill, Button, Avatar, Skeleton, SkeletonCard, SkeletonText, EmptyState } from '../components/shared.jsx';
 import {
   getClassEvents, getAllSubmissions, getReviews,
   getStudentCycleState, requestInboxNotificationPermission,
+  getSeedsStages, setStudentSeedsStage,
 } from '../lib/workflow.js';
+import { SEEDS_STAGES, SEEDS_STAGE_ORDER } from '../domain/seeds/constants.js';
 
 function timeOfDay() {
   const h = new Date().getHours();
@@ -32,6 +34,7 @@ export default function TeacherDashboard({ students, onNavigate, teacherName = '
   const [classesToday, setClassesToday] = useState(0);
   const [loading, setLoading] = useState(true);
   const [stageFilter, setStageFilter] = useState('all');
+  const [seedsStages, setSeedsStages] = useState({});
 
   useEffect(() => {
     let live = true;
@@ -48,9 +51,15 @@ export default function TeacherDashboard({ students, onNavigate, teacherName = '
       setTodayClasses(todays);
       setClassesToday(todays.length);
       setCycleStates(Object.fromEntries(entries));
+      const seedsArray = await getSeedsStages();
+      setSeedsStages(Object.fromEntries(seedsArray.map(s => [s.studentId, s])));
       setLoading(false);
     }
     void load();
+    window.addEventListener('vv:seeds-updated', async () => {
+      const arr = await getSeedsStages();
+      setSeedsStages(Object.fromEntries(arr.map(s => [s.studentId, s])));
+    });
     requestInboxNotificationPermission();
     window.addEventListener('focus', load);
     window.addEventListener('vv:students-updated', load);
@@ -93,12 +102,20 @@ export default function TeacherDashboard({ students, onNavigate, teacherName = '
     onNavigate(target, params);
   };
 
+  const handleSetSeedsStage = (studentId, stage) => {
+    setStudentSeedsStage(studentId, stage);
+    setSeedsStages(prev => ({ ...prev, [studentId]: { stage, startedAt: new Date().toISOString(), note: '' } }));
+  };
+
   const today = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
   const priority = getTodayPriority({ needsAttention, todayClasses });
 
   return (
     <div className="td-shell">
       {/* Header */}
+      <div aria-live="polite" aria-atomic="true" style={{ position: 'fixed', left: '-9999px' }}>
+        {loading ? 'Loading dashboard' : `${students.length} students, ${classesToday} classes today`}
+      </div>
       <div style={{ marginBottom: 16 }}>
         <h1 className="td-headline">Good {timeOfDay()}, {teacherName}.</h1>
         <p className="td-sub">{today} — your teaching cycle at a glance.</p>
@@ -148,10 +165,13 @@ export default function TeacherDashboard({ students, onNavigate, teacherName = '
         <Card style={{ padding: 14 }}>
           <SectionHeader title="Today's Classes" icon={<Icon.calendar size={15} />} action={<Button variant="ghost" size="sm" onClick={() => onNavigate('calendar')}>View calendar</Button>} />
           {todayClasses.length === 0 ? (
-            <div className="td-empty-state">
-              <p className="td-empty">No classes scheduled today.</p>
-              <Button variant="ghost" size="sm" onClick={() => onNavigate('calendar')}>Schedule a class →</Button>
-            </div>
+            <EmptyState
+              icon={<Icon.calendar size={20} />}
+              title="No classes today"
+              text="Use this time to catch up on diagnoses, review homework, or plan ahead."
+              action="Schedule a class"
+              onAction={() => onNavigate('calendar')}
+            />
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 8 }}>
               {todayClasses.map(ev => {
@@ -206,13 +226,17 @@ export default function TeacherDashboard({ students, onNavigate, teacherName = '
             </div>
           </div>
           {loading ? (
-            <p style={{ color: 'var(--muted)', padding: 16 }}>Loading student data…</p>
+            <div aria-busy="true" aria-label="Loading student data" style={{ padding: 8 }}>
+              <SkeletonCard height={60} lines={1} />
+              <SkeletonCard height={60} lines={1} />
+              <SkeletonCard height={60} lines={1} />
+            </div>
           ) : urgencySorted.length === 0 ? (
-            <p style={{ color: 'var(--muted)', padding: 16 }}>No students match this filter.</p>
+            <EmptyState icon={<Icon.student size={20} />} title="No students match this filter" text="Try selecting a different filter above or check the Students page." action="View all students" onAction={() => setStageFilter('all')} />
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {urgencySorted.map(s => (
-                <StudentRow key={s.id} student={s} onNavigate={onNavigate} onAction={handleAction} />
+                <StudentRow key={s.id} student={s} onNavigate={onNavigate} onAction={handleAction} seedsStages={seedsStages} onSetSeedsStage={handleSetSeedsStage} />
               ))}
             </div>
           )}
@@ -279,7 +303,7 @@ function KpiCard({ label, value, icon, tone, onClick }) {
   );
 }
 
-function StudentRow({ student: s, onNavigate, onAction }) {
+function StudentRow({ student: s, onNavigate, onAction, seedsStages, onSetSeedsStage }) {
   const config = STAGE_CONFIG[s.cycle.cycleStage] || STAGE_CONFIG['needs-diagnosis'];
   const diag = s.cycle.latestDiagnosis;
   const focusArea = diag?.content?.priorities?.[0]?.area || '';
@@ -290,6 +314,8 @@ function StudentRow({ student: s, onNavigate, onAction }) {
   const currentBand = s.currentBand || s.band || 'B1';
   const targetBand = s.targetBand || s.bandTarget || 'B2';
   const isPrimary = s.cycle.cycleStage === 'submitted';
+  const seedsEntry = seedsStages[s.id];
+  const currentSeeds = seedsEntry ? SEEDS_STAGES[seedsEntry.stage] : null;
 
   return (
     <Card style={{ padding: '14px 18px' }}>
@@ -323,7 +349,47 @@ function StudentRow({ student: s, onNavigate, onAction }) {
           <span style={{ fontSize: 'var(--text-xs)', color: 'var(--success)', fontWeight: 'var(--weight-semibold)' }}>{s.cycle.pendingSubmissions.length} to review</span>
         )}
 
-        <Pill tone={config.tone}>{config.label}</Pill>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <Pill tone={config.tone}>{config.label}</Pill>
+          {currentSeeds ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+              <Pill tone={currentSeeds.tone}>{currentSeeds.label}</Pill>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  const idx = SEEDS_STAGE_ORDER.indexOf(seedsEntry.stage);
+                  const next = SEEDS_STAGE_ORDER[(idx + 1) % SEEDS_STAGE_ORDER.length];
+                  onSetSeedsStage(s.id, next);
+                }}
+                title="Advance SEEDS stage"
+                style={{
+                  background: 'none', border: 'none', padding: '2px 4px',
+                  cursor: 'pointer', fontSize: 'var(--text-xs)', color: 'var(--muted)',
+                  fontFamily: 'var(--font-ui)',
+                }}
+              >
+                <Icon.chevronRight size={12} />
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onSetSeedsStage(s.id, 'sense');
+              }}
+              title="Start SEEDS cycle"
+              style={{
+                background: 'none', border: '1px dashed var(--border)', borderRadius: 'var(--radius-pill)',
+                padding: '2px 8px', cursor: 'pointer', fontSize: 'var(--text-xs)',
+                color: 'var(--muted)', fontFamily: 'var(--font-ui)',
+              }}
+            >
+              + SEEDS
+            </button>
+          )}
+        </div>
         <Button variant={isPrimary ? 'primary' : 'ghost'} size="sm" onClick={() => onAction(s)}>{config.action}</Button>
       </div>
     </Card>
