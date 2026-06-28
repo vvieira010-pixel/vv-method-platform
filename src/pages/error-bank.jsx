@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Icon, SectionHeader, Pill, Avatar } from '../components/shared.jsx';
+import { Icon, SectionHeader, Pill, Avatar, S_DARK } from '../components/shared.jsx';
 import { Button } from '../components/ui/Button.jsx';
 import { Card } from '../components/ui/Card.jsx';
 import { getErrorBank, markErrorSolved, markErrorPracticed } from '../lib/workflow.js';
@@ -56,7 +56,7 @@ export default function ErrorBankPage({ students, workspaceQuery = '' }) {
   const solvedCount = errors.filter((e) => e.status === 'solved').length;
 
   return (
-    <div style={S.shell}>
+    <div className="page-container" style={S.shell}>
       <section style={S.hero}>
         <div>
           <div style={S.heroTag}>Quality Repository</div>
@@ -160,7 +160,7 @@ function RepoKpi({ label, value, icon, tone }) {
 }
 
 const S = {
-  shell: { maxWidth: 1120, margin: '0 auto', padding: '28px 20px' },
+  shell: { padding: '28px 20px' },
   hero: {
     display: 'flex',
     alignItems: 'flex-end',
@@ -174,8 +174,7 @@ const S = {
     color: '#fff',
   },
   heroTag: { fontSize: 'var(--text-xs)', letterSpacing: '0.1em', textTransform: 'uppercase', color: '#9fd6d6', fontWeight: 700, marginBottom: 6 },
-  headline: { fontFamily: 'var(--font-ui)', fontSize: 'var(--text-2xl)', fontWeight: 700, color: '#fff', margin: 0 },
-  sub: { fontSize: 'var(--text-sm)', color: 'rgba(255,255,255,.78)', margin: '4px 0 0', maxWidth: 620 },
+  ...S_DARK,
   kpiGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 10, marginBottom: 16 },
   filterGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: 10 },
   repoGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 10 },

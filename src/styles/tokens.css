@@ -1,0 +1,213 @@
+﻿/* MET Proficiency Mastery — Design System
+   Single source of truth replacing design-system.css, globals.css, sanctuary.css, logbook.css
+   Navy + teal + amber system for a calm, professional MET preparation platform. */
+
+
+/* ══════════════════════════════════════════════════════════════════
+   1. DESIGN TOKENS
+   ══════════════════════════════════════════════════════════════════ */
+
+/* Reduced motion: disable all non-essential animations for vestibular safety */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+:root {
+  /* ── Colors — navy + teal + amber ────────────────────────────── */
+  --primary: #0f1b2d;                        /* Deep navy — matches login brand panel */
+  --primary-hover: #0a1422;
+  --primary-light: #e3f4f2;
+  --accent: #148891;                         /* Teal — login button / interactive teal */
+  --accent-hover: #0f6b73;
+  --accent-light: #c8ecea;
+  --accent-deep: var(--primary);
+  --accent-soft: #48C7C7;                    /* Bright teal — login glow dots / decorative */
+  --accent-subtle: #e3f5f4;
+  --accent-text: #0a6e74;
+  --accent-soft-08: rgba(72,199,199,0.08);
+  --accent-soft-10: rgba(72,199,199,0.10);
+  --accent-soft-12: rgba(72,199,199,0.12);
+  --accent-soft-14: rgba(72,199,199,0.14);
+  --accent-soft-15: rgba(72,199,199,0.15);
+  --accent-soft-18: rgba(72,199,199,0.18);
+  --accent-soft-20: rgba(72,199,199,0.20);
+  --accent-soft-22: rgba(72,199,199,0.22);
+  --accent-soft-25: rgba(72,199,199,0.25);
+  --accent-soft-30: rgba(72,199,199,0.30);
+  --accent-soft-34: rgba(72,199,199,0.34);
+  --accent-soft-35: rgba(72,199,199,0.35);
+  --accent-soft-40: rgba(72,199,199,0.40);
+  --accent-soft-45: rgba(72,199,199,0.45);
+  --accent-soft-55: rgba(72,199,199,0.55);
+  --accent-soft-70: rgba(72,199,199,0.70);
+  --accent-soft-85: rgba(72,199,199,0.85);
+  --interaction: #c86607;                   /* Amber */
+  --interaction-hover: #a55205;
+  --primary-ink: var(--accent-text);
+
+  --bg: #f4f9fc;
+  --bg-deep: #e3f5f4;
+  --surface: #fefcf5;
+  --surface-glass: rgba(255,255,255,0.96);
+  --surface-hover: #f7fbfc;
+  --border: #d0e2e8;
+  --border-strong: #b0ccd4;
+  --divider: #e3f5f4;
+  --faint: #f0f8f7;
+
+  --text: #071527;
+  --text-muted: #3d5365;
+  --text-2: #1a2b38;
+  --muted: #445567;                          /* darkened from #4a5f70 to clear WCAG AAA 7:1 on --bg */
+  --on-dark: #f1faee;                        /* Login's warm white on dark — rgba(241,250,238,1) */
+  --on-dark-muted: rgba(241,250,238,0.78);   /* Login's warm white muted */
+
+  /* Status colors — semantic, kept for clarity */
+  --success: #1a8c5f;                        /* was oklch(55% 0.14 150) — hex for compat + consistency */
+  --success-light: #e7f7ef;                  /* was oklch(95% 0.05 150) */
+  --success-bg: #ecfdf5;
+  --success-soft: #d1fae5;
+  --warning: #c86607;
+  --warning-light: #fff7ed;
+  --warning-bg: #fff7ed;
+  --warning-soft: #fed7aa;
+  --warning-text: #92400e;
+  --error: #b91c1c;
+  --error-light: #fff1f2;
+  --danger: #b91c1c;
+  --danger-bg: #fff1f2;
+  --danger-soft: #fecaca;
+  --info: #148891;
+  --info-light: #e7f6f3;
+  --info-bg: #e7f6f3;
+
+  /* ── Border radius — standardized ───────────────────────────────
+     Containers/cards use radius-sm (6px).
+     Buttons use radius-pill (999px) for pill shape.
+     No ad-hoc radius values anywhere. */
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 20px;
+  --radius-pill: 999px;
+  --radius-full: 9999px;
+
+  /* ── Typography ──────────────────────────────────────────────── */
+  --font-sans: 'DM Sans', -apple-system, system-ui, sans-serif;
+  --font-ui: 'DM Sans', -apple-system, system-ui, sans-serif;
+  --font-display: 'Sora', 'DM Sans', -apple-system, system-ui, sans-serif;
+  --font-mono: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Droid Sans Mono', monospace;
+
+  /* Font sizes — extended scale */
+  --text-2xs: 0.6875rem; /* 11px */
+  --text-xs: 0.75rem;    /* 12px */
+  --text-2sm: 0.8125rem; /* 13px */
+  --text-sm: 0.875rem;   /* 14px */
+  --text-base: 1rem;     /* 16px */
+  --text-lg: 1.125rem;   /* 18px */
+  --text-xl: 1.25rem;    /* 20px */
+  --text-2xl: 1.5rem;    /* 24px */
+  --text-3xl: 1.875rem;  /* 30px */
+  --text-4xl: 2.5rem;    /* 40px — new for page headings */
+  --text-5xl: 3.25rem;   /* 52px — new for hero headings */
+
+  --weight-normal: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+
+  /* ── Spacing scale (rem-based, 4px base) ─────────────────────── */
+  --space-1: 0.25rem;   /* 4px */
+  --space-2: 0.5rem;    /* 8px */
+  --space-3: 0.75rem;   /* 12px */
+  --space-4: 1rem;      /* 16px */
+  --space-5: 1.25rem;   /* 20px */
+  --space-6: 1.5rem;    /* 24px */
+  --space-7: 1.75rem;   /* 28px */
+  --space-8: 2rem;      /* 32px */
+  --space-9: 2.25rem;   /* 36px */
+  --space-10: 2.5rem;   /* 40px */
+  --space-11: 2.75rem;  /* 44px */
+  --space-12: 3rem;     /* 48px */
+  --space-16: 4rem;     /* 64px */
+  --space-20: 5rem;     /* 80px */
+
+  /* ── Shadows ─────────────────────────────────────────────────── */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  --shadow-card: 0 16px 35px -20px rgba(26, 35, 50, 0.2), 0 3px 8px rgba(26, 35, 50, 0.06);
+  --shadow-modal: 0 24px 58px -24px rgba(26, 35, 50, 0.3), 0 8px 20px rgba(26, 35, 50, 0.1);
+  --shadow-toast: 0 4px 16px rgba(26, 35, 50, 0.18);
+
+  /* ── Transitions ─────────────────────────────────────────────── */
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-base: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 350ms cubic-bezier(0.4, 0, 0.2, 1);
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* ── Z-index scale ───────────────────────────────────────────── */
+  --z-base: 0;
+  --z-dropdown: 100;
+  --z-sticky: 200;
+  --z-fixed: 300;
+  --z-modal-backdrop: 400;
+  --z-modal: 500;
+  --z-popover: 600;
+  --z-tooltip: 700;
+
+  /* ── Misc ────────────────────────────────────────────────────── */
+  --dark-accent-border: var(--accent-soft-18);
+
+  /* ── Layout ──────────────────────────────────────────────────── */
+  --max-width: 1200px;
+
+  /* ── Student dashboard theme ─────────────────────────────────── */
+  --student-bg: #f5fafc;
+  --teal-soft: rgba(20,136,145,0.08);
+
+  /* ── Exercise feedback tokens ────────────────────────────────────
+     Used by src/components/exercises/*. Light values preserve the
+     original hand-picked palette; dark overrides live in the
+     [data-theme="dark"] block so the practice surface themes correctly. */
+  --ex-correct-bg: #ECFDF5;
+  --ex-correct-border: #A7F3D0;
+  --ex-correct-text: #065F46;
+  --ex-correct-strong: #059669;
+  --ex-wrong-bg: #FEF2F2;
+  --ex-wrong-border: #FECACA;
+  --ex-wrong-text: #991B1B;
+  --ex-hint-bg: #FFFBEB;
+  --ex-hint-border: #FDE68A;
+  --ex-hint-text: #92400E;
+  --ex-panel-bg: #F8FAFC;
+  --ex-panel-border: #E2E8F0;
+  --ex-panel-text: #374151;
+  --ex-selected-bg: #F0FDFA;
+  --ex-selected-border: #99F6E4;
+  /* MET section / task category hues */
+  --ex-cat-blue-bg: #EFF6FF;
+  --ex-cat-blue-border: #BFDBFE;
+  --ex-cat-blue-text: #1D4ED8;
+  --ex-cat-blue-chip: #DBEAFE;
+  --ex-cat-blue-strong: #1E3A5F;
+  --ex-cat-sky-bg: #F0F9FF;
+  --ex-cat-sky-border: #BAE6FD;
+  --ex-cat-sky-text: #0369A1;
+  --ex-cat-sky-strong: #0C4A6E;
+  --ex-cat-purple-bg: #F5F3FF;
+  --ex-cat-purple-border: #DDD6FE;
+  --ex-cat-purple-text: #7C3AED;
+  --ex-cat-purple-strong: #4C1D95;
+}
+
+/* ── Card style variants (set via [data-cards] on <html>) ─────── */
+[data-cards="flat"]     .card { border: none; box-shadow: none; background: var(--bg); }
+[data-cards="bordered"] .card { border: 1px solid var(--border); box-shadow: none; background: var(--surface); }
+[data-cards="shadowed"] .card { border: none; box-shadow: var(--shadow-card); background: var(--surface); }
+

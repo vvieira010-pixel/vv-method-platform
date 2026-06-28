@@ -206,7 +206,7 @@ export default function ToolHomework({ student, students = [], onSelectStudent, 
 
   return (
     <div className="page-shell">
-      <div style={{ maxWidth: 900, margin: "0 auto", padding: "24px 16px" }}>
+      <div className="page-container--md" style={{ padding: "24px 16px" }}>
         <SectionHeader title="Homework" sub={student?.name ? `for ${student.firstName}` : 'All students'} />
 
         {/* Student + diagnosis selector */}

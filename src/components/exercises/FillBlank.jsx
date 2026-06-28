@@ -49,7 +49,7 @@ export default function FillBlank({ exercise, onComplete }) {
 
   function textInputStyle(i) {
     const base = {
-      display: 'inline-block', minWidth: 90, maxWidth: 160,
+      display: 'inline-block', minWidth: 90,
       padding: '3px 8px', margin: '0 3px',
       borderRadius: 'var(--radius-sm, 6px)', border: '2px solid', fontSize: 'var(--text-sm)',
       fontFamily: 'var(--font-ui)', outline: 'none',

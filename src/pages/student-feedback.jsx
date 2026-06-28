@@ -3,7 +3,7 @@ import { Icon } from '../components/shared.jsx';
 import { Button } from '../components/ui/Button.jsx';
 import { StudentFeedbackView } from '../components/domain-ui.jsx';
 import { getDiagnoses, getSubmissions, getReviews, getInbox, sendMessage } from '../lib/workflow.js';
-import { asArray, getRelevantGlossaryTerms, hasVisibleApprovedStudentFeedback } from './student-helpers.js';
+import { asArray, getRelevantGlossaryTerms, hasVisibleApprovedStudentFeedback } from './student-helpers.jsx';
 
 export default function StudentFeedback({ student, onTab }) {
   const [feedbackItems, setFeedbackItems] = useState([]);
@@ -11,28 +11,41 @@ export default function StudentFeedback({ student, onTab }) {
   const [replyText, setReplyText] = useState({});
   const [showReply, setShowReply] = useState({});
   const [understood, setUnderstood] = useState({});
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(null);
 
   useEffect(() => {
+    let cancelled = false;
     (async () => {
-      const [diagnoses, submissions, reviews, inbox] = await Promise.all([
-        getDiagnoses(student.id), getSubmissions(student.id), getReviews(student.id),
-        getInbox({ role: 'student', studentId: student.id }),
-      ]);
-      const approved = (diagnoses || [])
-        .filter(hasVisibleApprovedStudentFeedback)
-        .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
-        .map(dx => ({ id: dx.id, createdAt: dx.createdAt, feedback: dx.sections.studentFeedback.content, snapshot: asArray(dx.content?.section_snapshot) }));
-      setFeedbackItems(approved);
-      const replies = {}; const und = {};
-      (inbox || []).forEach(msg => {
-        if (msg.diagnosisId) {
-          if (msg.type === 'feedback-reply' && msg.fromStudentId === student.id) { replies[msg.diagnosisId] = replies[msg.diagnosisId] || []; replies[msg.diagnosisId].push(msg); }
-          if (msg.type === 'feedback-understood' && msg.fromStudentId === student.id) und[msg.diagnosisId] = true;
-        }
-      });
-      setFeedbackReplies(replies);
-      setUnderstood(und);
+      setLoading(true);
+      setLoadError(null);
+      try {
+        const [diagnoses, submissions, reviews, inbox] = await Promise.all([
+          getDiagnoses(student.id), getSubmissions(student.id), getReviews(student.id),
+          getInbox({ role: 'student', studentId: student.id }),
+        ]);
+        if (cancelled) return;
+        const approved = (diagnoses || [])
+          .filter(hasVisibleApprovedStudentFeedback)
+          .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
+          .map(dx => ({ id: dx.id, createdAt: dx.createdAt, feedback: dx.sections.studentFeedback.content, snapshot: asArray(dx.content?.section_snapshot) }));
+        setFeedbackItems(approved);
+        const replies = {}; const und = {};
+        (inbox || []).forEach(msg => {
+          if (msg.diagnosisId) {
+            if (msg.type === 'feedback-reply' && msg.fromStudentId === student.id) { replies[msg.diagnosisId] = replies[msg.diagnosisId] || []; replies[msg.diagnosisId].push(msg); }
+            if (msg.type === 'feedback-understood' && msg.fromStudentId === student.id) und[msg.diagnosisId] = true;
+          }
+        });
+        setFeedbackReplies(replies);
+        setUnderstood(und);
+      } catch (err) {
+        if (!cancelled) setLoadError(err.message || 'Failed to load feedback');
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
     })();
+    return () => { cancelled = true; };
   }, [student.id]);
 
   async function handleFeedbackReply(diagnosisId) {
@@ -50,6 +63,33 @@ export default function StudentFeedback({ student, onTab }) {
     window.toast?.('Marked as understood.', 'ok');
   }
 
+  if (loading) return (
+    <div className="student-feedback-page">
+      <section className="student-hero bg-grain fade-up" style={{ '--delay': '0s' }}>
+        <div>
+          <p className="student-hero-kicker">Feedback</p>
+          <h1>Your teacher's latest notes</h1>
+        </div>
+      </section>
+      <div className="skeleton-card" style={{ height: 120 }} />
+    </div>
+  );
+
+  if (loadError) return (
+    <div className="student-feedback-page">
+      <section className="student-hero bg-grain fade-up" style={{ '--delay': '0s' }}>
+        <div>
+          <p className="student-hero-kicker">Feedback</p>
+          <h1>Your teacher's latest notes</h1>
+        </div>
+      </section>
+      <div className="student-empty-card">
+        <p>Could not load feedback: {loadError}</p>
+        <button className="student-wide-action" onClick={() => window.location.reload()} style={{ marginTop: 12 }}>Retry</button>
+      </div>
+    </div>
+  );
+
   const latest = feedbackItems[0];
   const feedback = latest?.feedback;
   const primarySkill = latest?.snapshot?.find(s => Number(s.score_0_80) > 0) || null;
@@ -61,11 +101,10 @@ export default function StudentFeedback({ student, onTab }) {
 
   return (
     <div className="student-feedback-page">
-      <section className="student-hero">
+      <section className="student-hero bg-grain fade-up" style={{ '--delay': '0s' }}>
         <div>
           <p className="student-hero-kicker">Feedback</p>
           <h1>Your teacher's latest notes</h1>
-          <p>Simple, approved feedback you can use before the next class.</p>
         </div>
         <button className="student-hero-action" onClick={() => onTab('homework')}><Icon.homework size={15} /> Practice next</button>
       </section>

@@ -178,7 +178,7 @@ const MET_TOPIC_RULES = `MET topic rules:
  * Focus: Accuracy, Rubrics, Evidence-based scores.
  */
 export const buildSkillDiagnosisPrompt = (data) => {
-  const { student, classEvent, classEvidence, targetProfile } = data;
+  const { student, classEvent, classEvidence, targetProfile, studentGoal } = data;
   const ev = classEvidence || {};
   const tp = targetProfile || {};
   const bool = (v) => v ? 'Yes' : 'No';
@@ -192,6 +192,7 @@ Name: ${student?.name || 'Unknown'}
 Current level: ${student?.currentLevel || student?.band || 'B1'}
 Target level: ${student?.targetLevel || student?.bandTarget || 'B2'}
 Exam goal: ${student?.examGoal || student?.goal || 'Pass MET B2'}
+Student's self-stated weekly focus: ${studentGoal || 'Not set'}
 
 ━━━ TARGET SCORE PROFILE ━━━
 Profile: ${tp.label || tp.profileName || 'not selected'}
@@ -375,100 +376,6 @@ JSON shape:
 };
 
 /**
- * Module 1b: Diagnostic Data Only (The Analyst — data only, no narrative)
- * Returns ONLY structured data — scores, errors, vocabulary, gaps, priority recommendations.
- * No student-facing text, no feedback, no narrative. Teacher reads this data and writes meaning.
- */
-export const buildDiagnosticDataPrompt = (data) => {
-  const { student, classEvent, classEvidence, targetProfile } = data;
-  const ev = classEvidence || {};
-  const tp = targetProfile || {};
-  const bool = (v) => v ? 'Yes' : 'No';
-  const count = (n) => `${n || 0} turn${(n || 1) === 1 ? '' : 's'}`;
-
-  return `You are the Diagnostic Data Analyst for a MET English teaching platform.
-Your job is to produce ONLY structured data — scores, errors, vocabulary, gaps, and priority recommendations.
-Do NOT write any narrative, student-facing text, or feedback. Output must be pure JSON data only.
-
-━━━ STUDENT PROFILE ━━━
-Name: ${student?.name || 'Unknown'}
-Current level: ${student?.currentLevel || student?.band || 'B1'}
-Target level: ${student?.targetLevel || student?.bandTarget || 'B2'}
-Exam goal: ${student?.examGoal || student?.goal || 'Pass MET B2'}
-
-━━━ TARGET SCORE PROFILE ━━━
-Profile: ${tp.label || tp.profileName || 'not selected'}
-Targets: Overall ${tp.overallTarget ?? '?'} | Speaking ${tp.speakingTarget ?? '?'} | Writing ${tp.writingTarget ?? '?'} | Reading ${tp.readingTarget ?? '?'} | Listening ${tp.listeningTarget ?? '?'}
-
-━━━ EVALUATED SKILLS ━━━
-Speaking: ${bool(ev.evaluatedSpeaking)} (${count(ev.speakingEvidenceCount)})
-Writing: ${bool(ev.evaluatedWriting)} (${count(ev.writingEvidenceCount)})
-Reading: ${bool(ev.evaluatedReading)} (${count(ev.readingEvidenceCount)})
-Listening: ${bool(ev.evaluatedListening)} (${count(ev.listeningEvidenceCount)})
-Grammar: ${bool(ev.evaluatedGrammar)} (${count(ev.grammarEvidenceCount)})
-Vocabulary: ${bool(ev.evaluatedVocabulary)} (${count(ev.vocabularyEvidenceCount)})
-Test strategy: ${bool(ev.evaluatedTestStrategy)} (${count(ev.testStrategyEvidenceCount)})
-
-━━━ CLASS EVIDENCE ━━━
-Transcript/Answer:
-${ev.studentTranscript || ev.studentAnswer || 'not provided'}
-
-Performance Notes:
-${ev.studentPerformance || 'not provided'}
-
-Additional Teacher Notes:
-${ev.additionalNotes || ev.teacherNotes || 'none'}
-
-${SHARED_MET_DATA}
-
-━━━ RULES ━━━
-1. ONLY score skills that were evaluated (Evaluated: Yes).
-2. For unevaluated skills: set evaluated:false, score0to80:null, scoreConfidenceLevel:"Not evaluated enough".
-3. Never create a score estimate for unevaluated skills.
-4. Use the exact scoreConfidenceLevel strings from the reference.
-5. For speaking with transcript only: score0to4 for Intelligibility/Delivery must be null and note "audio required."
-6. subskillsAssessed should only list subskills you have actual evidence for.
-7. ratingBreakdown for speaking and writing must align with the official MET rating scales.
-8. priorityRecommendations: recommend 3–5 ranked priorities. Each must include an exact evidence quote from the transcript above — never invent.
-9. errors: extract all correctable errors from the evidence. Each must include exact quote and corrected version.
-10. vocabulary: identify new high-value B1–B2 words from the evidence. Do NOT include words the student already knows or basic vocabulary.
-11. gapVsTarget: compute the gap between each evaluated skill's score and the corresponding target. Use null for unevaluated skills.
-12. FORMAT: Return only the JSON structure below. No extra text, no commentary, no markdown.
-
-RETURN ONLY VALID JSON:
-{
-  "scores": {
-    "speaking": { "evaluated": boolean, "evidenceCount": number, "score0to80": number|null, "scoreConfidenceLevel": string, "scoreProvisional": boolean, "transcriptOnly": boolean, "ratingBreakdown": { "taskCompletion": { "score0to4": number, "notes": string }, "languageResources": { "score0to4": number, "notes": string }, "intelligibilityDelivery": { "score0to4": number|null, "notes": string } }, "subskillsAssessed": string[], "strengths": string[], "weaknesses": string[], "readinessTowardTarget": string, "whatToImproveNext": string, "evidenceNote": "1 sentence stating what evidence this score is based on" },
-    "writing": { "evaluated": boolean, "evidenceCount": number, "score0to80": number|null, "scoreConfidenceLevel": string, "scoreProvisional": boolean, "strengths": string[], "weaknesses": string[], "subskillsAssessed": string[], "readinessTowardTarget": string, "whatToImproveNext": string, "evidenceNote": "1 sentence" },
-    "reading": { "evaluated": boolean, "evidenceCount": number, "score0to80": number|null, "scoreConfidenceLevel": string, "scoreProvisional": boolean, "strengths": string[], "weaknesses": string[], "subskillsAssessed": string[], "readinessTowardTarget": string, "whatToImproveNext": string, "evidenceNote": "1 sentence" },
-    "listening": { "evaluated": boolean, "evidenceCount": number, "score0to80": number|null, "scoreConfidenceLevel": string, "scoreProvisional": boolean, "strengths": string[], "weaknesses": string[], "subskillsAssessed": string[], "readinessTowardTarget": string, "whatToImproveNext": string, "evidenceNote": "1 sentence" },
-    "grammar": { "evaluated": boolean, "evidenceCount": number, "score0to80": number|null, "scoreConfidenceLevel": string, "scoreProvisional": boolean, "subskillsAssessed": string[], "mainIssues": string[], "strengths": string[], "whatToImproveNext": string, "evidenceNote": "1 sentence" },
-    "vocabulary": { "evaluated": boolean, "evidenceCount": number, "score0to80": number|null, "scoreConfidenceLevel": string, "scoreProvisional": boolean, "subskillsAssessed": string[], "mainIssues": string[], "strengths": string[], "whatToImproveNext": string, "evidenceNote": "1 sentence" },
-    "testStrategy": { "evaluated": boolean, "evidenceCount": number, "score0to80": number|null, "scoreConfidenceLevel": string, "scoreProvisional": boolean, "subskillsAssessed": string[], "mainIssues": string[], "strengths": string[], "whatToImproveNext": string, "evidenceNote": "1 sentence" }
-  },
-  "errors": [
-    { "error": "exact student quote with error", "correct": "corrected version", "category": "grammar|vocabulary|pronunciation|register|strategy|cohesion", "priority": "high|medium|low", "evidence": "exact quote", "explanation": "short 1-sentence rule" }
-  ],
-  "vocabulary": [
-    { "wordOrPhrase": "word", "meaning": "definition appropriate for B1-B2 level", "exampleSentence": "example using this word", "category": "topic tag" }
-  ],
-  "gapVsTarget": {
-    "speaking": "X points below target or 'Not evaluated'",
-    "writing": "X points below target or 'Not evaluated'",
-    "reading": "X points below target or 'Not evaluated'",
-    "listening": "X points below target or 'Not evaluated'",
-    "grammar": "X points below target or 'Not evaluated'",
-    "vocabulary": "X points below target or 'Not evaluated'",
-    "testStrategy": "X points below target or 'Not evaluated'",
-    "prioritySkillForTarget": "name of the single skill most holding the student back from their target"
-  },
-  "priorityRecommendations": [
-    { "rank": 1, "urgency": "Critical|Developing|Strength", "area": "short skill/subskill name", "evidence": "exact quote from the evidence", "whatToImprove": "1 concrete sentence", "howToImprove": "1 sentence — frame as hypothesis, not guarantee. Use 'try...' / 'experiment with...' / 'see if...'" }
-  ]
-}`;
-};
-
-/**
  * Module 2: Student Feedback (The Tutor)
  * Focus: Warmth, Empathy, "You" language, Personalized quotes.
  */
@@ -490,8 +397,6 @@ Transcript/Evidence: ${ev.studentTranscript || ev.studentAnswer || 'no transcrip
 
 ━━━ DIAGNOSIS DATA (For Reference) ━━━
 ${JSON.stringify(diagnosis?.skillDiagnosis || {}, null, 2)}
-
-${SHARED_MET_DATA}
 
 ━━━ VOICE RULES (CRITICAL — this is the #1 priority) ━━━
 Write like a real teacher talking TO this student right after class — warm, specific, human. Not a report.

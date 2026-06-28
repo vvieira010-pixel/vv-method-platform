@@ -2,7 +2,7 @@
  * calendar.jsx — Class scheduling and calendar view
  */
 import { useState, useEffect } from 'react';
-import { Icon, SectionHeader, Pill, Avatar } from '../components/shared.jsx';
+import { Icon, SectionHeader, Pill, Avatar, S } from '../components/shared.jsx';
 import { Card } from '../components/ui/Card.jsx';
 import { Button } from '../components/ui/Button.jsx';
 import { getClassEvents, saveClassEvent, deleteClassEvent, updateClassEventStatus, getStudents } from '../lib/workflow.js';
@@ -27,8 +27,12 @@ export default function CalendarPage({ students, onNavigate }) {
   useEffect(() => { load(); }, []);
 
   async function load() {
-    const ev = await getClassEvents();
-    setEvents(ev);
+    try {
+      const ev = await getClassEvents();
+      setEvents(ev);
+    } catch (e) {
+      window.toast?.(`Failed to load calendar: ${e.message}`, 'warn');
+    }
   }
 
   function openSchedule(date) {
@@ -40,11 +44,15 @@ export default function CalendarPage({ students, onNavigate }) {
     if (!form.studentId) { window.toast?.('Select a student.', 'warn'); return; }
     if (!form.date) { window.toast?.('Set a date.', 'warn'); return; }
     setSaving(true);
-    await saveClassEvent(form);
-    await load();
+    try {
+      await saveClassEvent(form);
+      await load();
+      setShowForm(false);
+      window.toast?.('Class scheduled.', 'ok');
+    } catch (e) {
+      window.toast?.(`Failed to save: ${e.message}`, 'warn');
+    }
     setSaving(false);
-    setShowForm(false);
-    window.toast?.('Class scheduled.', 'ok');
   }
 
   async function handleMarkComplete(ev) {
@@ -112,7 +120,7 @@ export default function CalendarPage({ students, onNavigate }) {
   const needsDiagnosis = events.filter(e => e.status === 'completed' && e.diagnosticStatus === 'not-started');
 
   return (
-    <div style={{ maxWidth: 1000, margin: '0 auto', padding: '28px 20px' }}>
+    <div className="page-container page-container--sm">
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 24 }}>
         <div>
           <h1 style={S.headline}>Calendar</h1>
@@ -173,7 +181,7 @@ export default function CalendarPage({ students, onNavigate }) {
         </Card>
       )}
 
-      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 20 }}>
+      <div className="grid-2fr-1fr">
         {/* Calendar grid */}
         <div>
           <Card style={{ padding: 16 }}>
@@ -197,7 +205,7 @@ export default function CalendarPage({ students, onNavigate }) {
                   <button key={d} onClick={() => setSelectedDate(isSelected ? null : ds)}
                     aria-label={`${new Date(year, month, d).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}${isSelected ? ', selected' : ''}${dayEvents.length > 0 ? `, ${dayEvents.length} event${dayEvents.length > 1 ? 's' : ''}` : ''}`}
                     aria-pressed={isSelected}
-                    style={{ padding: '6px 4px', borderRadius: 'var(--radius-sm)', border: isSelected ? '2px solid var(--accent)' : isToday ? '2px solid var(--primary)' : '1px solid transparent', background: isSelected ? 'var(--accent-subtle)' : 'transparent', cursor: 'pointer', fontFamily: 'var(--font-ui)', fontSize: 'var(--text-xs)', fontWeight: isToday ? 700 : 400, color: isToday ? 'var(--accent)' : 'var(--text)', position: 'relative', minHeight: 36 }}>
+                    style={{ padding: '6px 4px', borderRadius: 'var(--radius-sm)', border: isSelected ? '2px solid var(--accent)' : isToday ? '2px solid var(--primary)' : '1px solid transparent', background: isSelected ? 'var(--accent-subtle)' : 'transparent', cursor: 'pointer', fontFamily: 'var(--font-ui)', fontSize: 'var(--text-xs)', fontWeight: isToday ? 700 : 400, color: isToday ? 'var(--accent)' : 'var(--text)', position: 'relative', minHeight: 44 }}>
                     {d}
                     {dayEvents.length > 0 && <div style={{ display: 'flex', justifyContent: 'center', gap: 2, marginTop: 2 }} aria-hidden="true">
                       {dayEvents.slice(0, 3).map((ev, i) => <span key={i} style={{ width: 5, height: 5, borderRadius: '50%', background: ev.status === 'completed' ? 'var(--success)' : ev.status === 'canceled' ? 'var(--danger)' : 'var(--primary)' }} />)}
@@ -297,8 +305,5 @@ function Field({ label, children }) {
 }
 
 const EMPTY_FORM = { studentId: '', date: '', startTime: '', endTime: '', title: 'English Class', classFocus: '', metSkillFocus: '', timezone: 'America/Sao_Paulo', status: 'scheduled', diagnosticStatus: 'not-started', homeworkStatus: 'not-generated' };
-const S = {
-  headline: { fontFamily: 'var(--font-ui)', fontSize: 'var(--text-2xl)', fontWeight: 700, color: 'var(--primary)', margin: 0 },
-  sub: { fontSize: 'var(--text-sm)', color: 'var(--muted)', margin: '4px 0 0' },
-};
+
 

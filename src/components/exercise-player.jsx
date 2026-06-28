@@ -143,20 +143,26 @@ function MCQPlayer({ ex, res, update, readOnly }) {
           Answer shown after {wrongLimit} {wrongLimit === 1 ? 'try' : 'tries'} — the correct option is highlighted above.
         </div>
       )}
+      {(solved || revealed) && ex.explanation && (
+        <div className="exercise-callout exercise-callout--explanation" style={{ marginTop: 10 }}>
+          <strong className="exercise-callout-kicker">Explanation</strong>
+          {ex.explanation}
+        </div>
+      )}
       {!done && wrongPicks.length > 0 && (
         <div style={{ marginTop: 14, padding: '10px 14px', borderRadius: 0, background: 'var(--warning-bg)', color: 'var(--warning)', fontSize: 'var(--text-sm)' }}>
           Not quite — try another option. ({wrongPicks.length}/{wrongLimit})
         </div>
       )}
       {!done && ex.hints && wrongPicks.length >= 1 && ex.hints[0] && (
-        <div style={{ marginTop: 8, padding: '9px 13px', borderRadius: 0, background: 'var(--accent-subtle)', color: 'var(--primary)', fontSize: 'var(--text-sm)', borderLeft: '3px solid var(--accent)' }}>
-          <strong style={{ fontSize: 'var(--text-xs)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Hint</strong>
+        <div className="exercise-callout exercise-callout--hint" style={{ marginTop: 8 }}>
+          <strong className="exercise-callout-kicker exercise-callout-kicker--inline">Hint</strong>
           <p style={{ margin: '4px 0 0' }}>{ex.hints[0]}</p>
         </div>
       )}
       {!done && ex.hints && wrongPicks.length >= 2 && ex.hints[1] && (
-        <div style={{ marginTop: 6, padding: '9px 13px', borderRadius: 0, background: 'var(--info-bg)', color: 'var(--primary)', fontSize: 'var(--text-sm)', borderLeft: '3px solid var(--info)' }}>
-          <strong style={{ fontSize: 'var(--text-xs)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Another hint</strong>
+        <div className="exercise-callout exercise-callout--hint2" style={{ marginTop: 6 }}>
+          <strong className="exercise-callout-kicker exercise-callout-kicker--inline">Another hint</strong>
           <p style={{ margin: '4px 0 0' }}>{ex.hints[1]}</p>
         </div>
       )}
@@ -261,15 +267,21 @@ function BlankPlayer({ ex, res, update, readOnly }) {
           <span>Answer shown after {BLANK_MAX_TRIES} tries — type it in to finish the blank.</span>
         </div>
       )}
+      {anyRevealed && ex.explanation && (
+        <div className="exercise-callout exercise-callout--explanation" style={{ marginTop: 10 }}>
+          <strong className="exercise-callout-kicker">Explanation</strong>
+          {ex.explanation}
+        </div>
+      )}
       {!readOnly && ex.hints && Object.values(attempts).some(n => n >= 2) && ex.hints[0] && (
-        <div style={{ marginTop: 10, padding: '9px 13px', borderRadius: 0, background: 'var(--accent-subtle)', color: 'var(--primary)', fontSize: 'var(--text-sm)', borderLeft: '3px solid var(--accent)' }}>
-          <strong style={{ fontSize: 'var(--text-xs)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Hint</strong>
+        <div className="exercise-callout exercise-callout--hint" style={{ marginTop: 10 }}>
+          <strong className="exercise-callout-kicker exercise-callout-kicker--inline">Hint</strong>
           <p style={{ margin: '4px 0 0' }}>{ex.hints[0]}</p>
         </div>
       )}
       {!readOnly && ex.hints && Object.values(attempts).some(n => n >= 3) && ex.hints[1] && (
-        <div style={{ marginTop: 6, padding: '9px 13px', borderRadius: 0, background: 'var(--info-bg)', color: 'var(--primary)', fontSize: 'var(--text-sm)', borderLeft: '3px solid var(--info)' }}>
-          <strong style={{ fontSize: 'var(--text-xs)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Another hint</strong>
+        <div className="exercise-callout exercise-callout--hint2" style={{ marginTop: 6 }}>
+          <strong className="exercise-callout-kicker exercise-callout-kicker--inline">Another hint</strong>
           <p style={{ margin: '4px 0 0' }}>{ex.hints[1]}</p>
         </div>
       )}
@@ -418,6 +430,10 @@ function SpeakPlayer({ ex, res, update, readOnly }) {
   const timerRef = useRef(null);
   const mediaRef = useRef(null);
   const chunksRef = useRef([]);
+  const transcriptRef = useRef(res?.transcript || '');
+
+  // Keep transcriptRef in sync with the latest user input
+  useEffect(() => { transcriptRef.current = res?.transcript || ''; }, [res?.transcript]);
 
   const fmt = s => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
   const target = ex.targetSeconds || 60;
@@ -430,9 +446,11 @@ function SpeakPlayer({ ex, res, update, readOnly }) {
       chunksRef.current = [];
       mediaRef.current.ondataavailable = e => { if (e.data.size > 0) chunksRef.current.push(e.data); };
       mediaRef.current.onstop = async () => {
-        const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
+        const blobType = chunksRef.current.length > 0 ? chunksRef.current[0].type : 'audio/webm';
+        const blob = new Blob(chunksRef.current, { type: blobType });
         // Immediate local playback regardless of where it's persisted.
         setPlaybackUrl(URL.createObjectURL(blob));
+        const currentTranscript = transcriptRef.current;
         const ctx = getDbContext();
         if (ctx) {
           // Signed-in: upload to private Storage, persist only the object path.
@@ -440,17 +458,23 @@ function SpeakPlayer({ ex, res, update, readOnly }) {
             const rand = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now());
             const path = `${ctx.authUid}/${rand}/${ex.id || 'audio'}.webm`;
             await uploadSubmissionAudio(blob, path);
-            update({ audioPath: path, audioB64: null, transcript: res?.transcript || '' });
+            update({ audioPath: path, audioB64: null, transcript: currentTranscript });
           } catch (e) {
-            console.warn('[speak] audio upload failed, storing inline instead:', e.message);
-            const reader = new FileReader();
-            reader.onloadend = () => update({ audioB64: reader.result, audioPath: null, transcript: res?.transcript || '' });
-            reader.readAsDataURL(blob);
+            console.warn('[speak] audio upload failed:', e.message);
+            // Fallback to base64 inline only if blob is small enough (< 500KB → ~700KB base64)
+            if (blob.size < 500_000) {
+              const reader = new FileReader();
+              reader.onloadend = () => update({ audioB64: reader.result, audioPath: null, transcript: currentTranscript });
+              reader.readAsDataURL(blob);
+            } else {
+              window.toast?.('Audio upload failed. Recording is too large for local storage.', 'warn');
+              update({ audioB64: null, audioPath: null, transcript: currentTranscript });
+            }
           }
         } else {
           // localStorage mode: keep the legacy base64-in-record behaviour.
           const reader = new FileReader();
-          reader.onloadend = () => update({ audioB64: reader.result, transcript: res?.transcript || '' });
+          reader.onloadend = () => update({ audioB64: reader.result, transcript: currentTranscript });
           reader.readAsDataURL(blob);
         }
         stream.getTracks().forEach(t => t.stop());
@@ -728,6 +752,12 @@ function OrderPlayer({ ex, res, update, readOnly }) {
           <Icon.check size={14} /> Correct order!
         </div>
       )}
+      {isCorrect && ex.explanation && (
+        <div className="exercise-callout exercise-callout--explanation" style={{ marginTop: 10 }}>
+          <strong className="exercise-callout-kicker">Explanation</strong>
+          {ex.explanation}
+        </div>
+      )}
     </div>
   );
 }
@@ -816,6 +846,12 @@ function FixPlayer({ ex, res, update, readOnly }) {
             Correct version (shown after {FIX_MAX_TRIES} tries)
           </div>
           <div style={{ fontSize: 'var(--text-sm)', lineHeight: 1.7, color: 'var(--text)' }}>{ex.correctedText}</div>
+        </div>
+      )}
+      {(isFixed || revealed) && ex.explanation && (
+        <div className="exercise-callout exercise-callout--explanation" style={{ marginTop: 10 }}>
+          <strong className="exercise-callout-kicker">Explanation</strong>
+          {ex.explanation}
         </div>
       )}
     </div>
@@ -1153,6 +1189,12 @@ function ReadPlayer({ ex, res, update, readOnly }) {
         }}>
           {results.hits} / {results.total} correct
           {results.hits === results.total ? ' — Great work!' : ''}
+        </div>
+      )}
+      {checked && ex.explanation && (
+        <div className="exercise-callout exercise-callout--explanation" style={{ marginTop: 10 }}>
+          <strong className="exercise-callout-kicker">Explanation</strong>
+          {ex.explanation}
         </div>
       )}
     </div>

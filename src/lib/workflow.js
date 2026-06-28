@@ -39,7 +39,7 @@ export {
   // roster / admin domain
   TARGET_PROFILE_PRESETS,
   getInbox, sendMessage, markRead, requestInboxNotificationPermission,
-  getProgress, saveProgress,
+  getProgress, saveProgress, getStudentGoal, saveStudentGoal,
   getReports, saveReport,
   getPracticeAssignments, savePracticeAssignment, deletePracticeAssignment,
   getPracticeResources, savePracticeResource, deletePracticeResource,

@@ -12,7 +12,7 @@
  *   constants.js, diagnosis-utils.js, hooks/useSectionApproval.js, components/SectionContent.jsx
  */
 import { useState, useEffect } from 'react';
-import { Icon, SectionHeader, Pill, Avatar } from '../components/shared.jsx';
+import { Icon, SectionHeader, Pill, Avatar, Breadcrumb } from '../components/shared.jsx';
 import { Button } from '../components/ui/Button.jsx';
 import { Card } from '../components/ui/Card.jsx';
 import { callAI } from '../components/shared.jsx';
@@ -29,7 +29,7 @@ import {
 import { TARGET_PROFILE_PRESETS } from '../lib/workflow.js';
 import { STUDENT_ERROR_PROFILES, buildErrorProfileContext } from '../lib/error-bank-profiles.js';
 import {
-  getStudent, getStudents,
+  getStudent, getStudents, getStudentGoal,
   getTargetProfiles, saveTargetProfile, setActiveTargetProfile,
   getClassEvent, getClassEvidence,
   getDiagnosis, saveDiagnosis, updateClassEventStatus,
@@ -50,7 +50,6 @@ import { SectionContent, PrereqIcon, camelToLabel } from '../domain/assessment/c
 
 
 export default function DiagnosticCreate({ studentId, classEventId, diagnosisId, students, onNavigate }) {
-  const labelStyle = { display: 'block', fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 };
   const [step, setStep] = useState('prereq'); // prereq | generating | review | saved
   const [student, setStudent] = useState(null);
   const [classEvent, setClassEvent] = useState(null);
@@ -87,12 +86,6 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
     approvedCount, totalSections,
     missingRequiredApprovals, canApproveDiagnosis,
   } = useSectionApproval();
-
-  const backStyle = { background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)', fontSize: 'var(--text-sm)', display: 'flex', alignItems: 'center', gap: 4, marginBottom: 16, padding: 0, fontFamily: 'var(--font-ui)' };
-  const S = {
-    headline: { fontFamily: 'var(--font-ui)', fontSize: 'var(--text-2xl)', fontWeight: 700, color: 'var(--primary)', margin: '0 0 4px' },
-    sub: { fontSize: 'var(--text-sm)', color: 'var(--muted)', margin: '0 0 0' },
-  };
 
   useEffect(() => {
     getStudents().then(setAllStudents);
@@ -202,7 +195,8 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
     if (!diagnosisId) setSavedDiagnosis(null);
 
     try {
-      const promptData = { student: selectedStudent, classEvent, classEvidence: normalizedEvidence, targetProfile };
+      const studentGoal = await getStudentGoal(selectedStudent.id);
+      const promptData = { student: selectedStudent, classEvent, classEvidence: normalizedEvidence, targetProfile, studentGoal };
       const getContent = (res) => (res?.content?.map(b => b.text || '').join('') || '');
 
       setGeneratingStatus('Step 1/4 — Generating skill diagnosis…');
@@ -219,11 +213,11 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
       };
 
       setGeneratingStatus('Step 2/4 — Analysing errors and vocabulary targets…');
-      const errorBankRaw = await callAI(buildErrorBankPrompt({ ...promptData, diagnosis: evaluatedOnlyDx }), withSkills('diagnosis', { max_tokens: 2500, preferredProvider: 'gemini' })).catch(() => null);
+      const errorBankRaw = await callAI(buildErrorBankPrompt({ ...promptData, diagnosis: evaluatedOnlyDx }), withSkills('diagnosis', { max_tokens: 2500 })).catch(() => null);
       const parsedErrorBank = normalizeErrorTargets(errorBankRaw ? parseAiJson(getContent(errorBankRaw)) : {});
 
       setGeneratingStatus('Step 3/4 — Writing student feedback…');
-      const feedbackRaw = await callAI(buildStudentFeedbackPrompt({ ...promptData, diagnosis: evaluatedOnlyDx }), withSkills('feedback', { max_tokens: 2500, preferredProvider: 'gemini' })).catch(() => null);
+      const feedbackRaw = await callAI(buildStudentFeedbackPrompt({ ...promptData, diagnosis: evaluatedOnlyDx }), withSkills('feedback', { max_tokens: 2500 })).catch(() => null);
       const parsedFeedback = feedbackRaw ? parseAiJson(getContent(feedbackRaw)) : {};
 
       setGeneratingStatus('Step 4/4 — Building homework recommendation…');
@@ -232,7 +226,7 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
         diagnosis: evaluatedOnlyDx,
         errorBank: parsedErrorBank.errorBankSuggestions,
         vocabTargets: parsedErrorBank.vocabGrammarTargets,
-      }), withSkills('homework', { max_tokens: 3000, preferredProvider: 'gemini' })).catch(() => null);
+      }), withSkills('homework', { max_tokens: 3000 })).catch(() => null);
       const parsedHomework = homeworkRaw ? parseAiJson(getContent(homeworkRaw)) : {};
 
       setGeneratingStatus('Structuring results…');
@@ -332,7 +326,6 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
       const skillMap = { skillDiagnosis:'diagnosis', studentFeedback:'feedback', homeworkRecommendation:'homework', errorBankSuggestions:'diagnosis', vocabGrammarTargets:'diagnosis' };
       const data = await callAI(prompt, withSkills(skillMap[key] || 'diagnosis', {
         max_tokens: DIAGNOSIS_DERIVED_KEYS.has(key) ? Math.min(SECTION_BUDGETS[key] || 2500, 3000) : SECTION_BUDGETS[key] || 2000,
-        preferredProvider: 'gemini',
       }));
       const raw = data.content?.map(b => b.text || '').join('') || '';
       const parsed = DIAGNOSIS_DERIVED_KEYS.has(key)
@@ -478,19 +471,19 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
   if (step === 'generating') {
     return (
       <div className="page-empty-state" style={{ minHeight: 280 }}>
-        <div className="spinner" style={{ width: 40, height: 40 }} />
-        <p className="card-row-meta" style={{ maxWidth: 340, textAlign: 'center' }}>{generatingStatus}</p>
+        <div className="spinner" />
+        <p className="card-row-meta text-center" style={{ maxWidth: 340 }}>{generatingStatus}</p>
       </div>
     );
   }
 
   if (step === 'saved') {
     return (
-      <div className="stack-list-lg" style={{ maxWidth: 680 }}>
+      <div className="page-container page-container--sm">
         <button className="back-link" onClick={() => setStep('review')}><Icon.arrowL size={14} /> Back to Review</button>
         <SectionHeader title="Post-Approval Actions" subtitle="Sync this diagnosis to other parts of the platform." />
-        <Card style={{ padding: 'var(--space-5)' }}>
-          <div className="stack-list" style={{ gap: 'var(--space-3)' }}>
+        <Card className="card-p-5">
+          <div className="stack-list gap-3">
             <Button variant="ghost" onClick={saveErrorsToBank}><Icon.warning size={14} /> Save Errors to Error Bank</Button>
             <Button variant="ghost" onClick={saveVocabToBank}><Icon.book size={14} /> Save Vocabulary to Vocab Bank</Button>
             <Button variant="ghost" onClick={saveProgressNoteFromDx}><Icon.doc size={14} /> Save Progress Note</Button>
@@ -508,6 +501,8 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
 
   return (
     <div className="page-shell-md">
+      <Breadcrumb crumbs={[{ label: 'Diagnostics', onClick: () => onNavigate('diagnostics') }, { label: 'Create Diagnosis' }]} />
+
       <SectionHeader
         title="AI Diagnosis"
         sub={selectedStudent
@@ -525,10 +520,10 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
 
           {/* Student selector */}
           {!studentId && (
-            <Card style={{ padding: 'var(--space-4)' }}>
+            <Card className="card-p-4">
               <label className="field-label">Student</label>
               <select
-                className="input"
+                className="select"
                 value={selectedStudentId}
                 onChange={e => { setSelectedStudentId(e.target.value); setSelectedClassEventId(''); setClassEvidence(null); setClassEvent(null); }}
               >
@@ -542,20 +537,20 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
 
           {/* Target profile */}
           {selectedStudent && (
-            <Card style={{ padding: 'var(--space-4)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+            <Card className="card-p-4">
+              <div className="flex-row-gap3 mb-3">
                 <PrereqIcon ok={!!targetProfile} required />
-                <label className="field-label" style={{ margin: 0 }}>Target Score Profile</label>
+                <label className="field-label">Target Score Profile</label>
               </div>
               {profiles.length > 0 ? (
-                <select className="input" value={targetProfile?.id || ''} onChange={e => setTargetProfile(profiles.find(p => p.id === e.target.value) || null)}>
+                <select className="select" value={targetProfile?.id || ''} onChange={e => setTargetProfile(profiles.find(p => p.id === e.target.value) || null)}>
                   <option value="">— Select profile —</option>
                   {profiles.map(p => <option key={p.id} value={p.id}>{p.profileName || p.label}</option>)}
                 </select>
               ) : (
                 <div>
-                  <p className="card-row-meta" style={{ marginBottom: 'var(--space-3)' }}>No profiles — pick a preset to create one:</p>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-2)' }}>
+                  <p className="card-row-meta mb-3">No profiles — pick a preset to create one:</p>
+                  <div className="flex-wrap-row">
                     {Object.entries(TARGET_PROFILE_PRESETS).map(([key, preset]) => (
                       <Button key={key} variant="ghost" size="sm" onClick={() => selectPreset(key)}>{preset.label}</Button>
                     ))}
@@ -567,31 +562,30 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
 
           {/* Class evidence */}
           {selectedStudent && (
-            <Card style={{ padding: 'var(--space-4)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+            <Card className="card-p-4">
+              <div className="flex-row-gap3 mb-3">
                 <PrereqIcon ok={evaluatedSkills.length > 0 && inlineReady} required />
-                <label className="field-label" style={{ margin: 0 }}>Class Evidence</label>
+                <label className="field-label">Class Evidence</label>
               </div>
 
               {/* Class event selector */}
               {!classEventId && (
-                <div style={{ marginBottom: 'var(--space-3)' }}>
+                <div className="mb-3">
                   <label className="field-label">Link a class record (optional)</label>
                   <input
-                    className="input"
+                    className="input mb-2"
                     placeholder="Class event ID (optional)"
                     value={selectedClassEventId}
                     onChange={e => setSelectedClassEventId(e.target.value)}
-                    style={{ marginBottom: 'var(--space-2)' }}
                   />
                 </div>
               )}
 
               {/* Linked class evidence pills */}
               {classEvidence && (
-                <div style={{ marginBottom: 10 }}>
-                  <p className="card-row-meta" style={{ marginBottom: 'var(--space-2)' }}>Skills evaluated in the linked class:</p>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-2)' }}>
+                <div className="mb-3">
+                  <p className="card-row-meta mb-2">Skills evaluated in the linked class:</p>
+                  <div className="flex-wrap-row">
                     {SKILL_KEYS.map(({ key, evalKey, countKey }) => {
                       const evaluated = classEvidence[evalKey];
                       const count = countKey ? classEvidence[countKey] : null;
@@ -603,43 +597,41 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
                       );
                     })}
                   </div>
-                  {classEventId && <Button variant="ghost" size="sm" style={{ marginTop: 'var(--space-3)' }} onClick={() => onNavigate('calendar:class', { classEventId })}>Edit Class Record</Button>}
+                  {classEventId && <Button variant="ghost" size="sm" className="mt-3" onClick={() => onNavigate('calendar:class', { classEventId })}>Edit Class Record</Button>}
                 </div>
               )}
 
               {/* No linked class — inline input form */}
               {noLinkedEvidence && (
-                <div style={{ marginTop: 'var(--space-4)' }}>
-                  <p className="card-row-meta" style={{ marginBottom: 'var(--space-3)' }}>
+                <div className="mt-4">
+                  <p className="card-row-meta mb-3">
                     No class linked. Paste your transcript and select which skills were covered — the AI will only diagnose what you evaluated.
                   </p>
 
                   <label className="field-label">Class transcript / student answers *</label>
                   <textarea
-                    className="input"
+                    className="input mb-3"
                     rows={8}
                     value={inlineTranscript}
                     onChange={e => setInlineTranscript(e.target.value)}
                     placeholder="Paste the student's exact words, speaking answer, writing sample, or transcript here. Quote errors directly — this is what the AI will analyze..."
-                    style={{ marginBottom: 'var(--space-3)' }}
                   />
 
                   <label className="field-label">Teacher notes (optional)</label>
                   <textarea
-                    className="input"
+                    className="input mb-4"
                     rows={2}
                     value={inlineTeacherNotes}
                     onChange={e => setInlineTeacherNotes(e.target.value)}
                     placeholder="Observations, main difficulty, student mood..."
-                    style={{ marginBottom: 'var(--space-4)' }}
                   />
 
-                  <label className="field-label" style={{ marginBottom: 'var(--space-2)' }}>Skills evaluated in this class *</label>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(170px, 1fr))', gap: 'var(--space-2)' }}>
+                  <label className="field-label mb-2">Skills evaluated in this class *</label>
+                  <div className="grid-auto-fill-md">
                     {SKILL_KEYS.map(({ key, evalKey, countKey }) => {
                       const evaluated = inlineSkills[evalKey];
                       return (
-                        <div
+                        <button type="button"
                           key={key}
                           className={`skill-chip${evaluated ? ' active' : ''}`}
                           onClick={() => setInlineSkills(s => {
@@ -651,21 +643,21 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
                             };
                           })}
                         >
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+                          <div className="flex-row-gap2">
                             <span className="skill-chip-check">
                               {evaluated && <Icon.check size={10} color="#fff" />}
                             </span>
-                            <span style={{ fontWeight: 600, fontSize: 'var(--text-xs)', color: evaluated ? 'var(--primary)' : 'var(--text)' }}>{key}</span>
+                            <span className={`text-xs font-semibold ${evaluated ? 'text-primary' : ''}`}>{key}</span>
                           </div>
                           {evaluated && countKey && (
                             <div style={{ marginTop: 6, display: 'flex', alignItems: 'center', gap: 6 }} onClick={e => e.stopPropagation()}>
-                              <span style={{ fontSize: 10, color: 'var(--muted)' }}>Turns:</span>
+                              <span className="text-2xs text-muted">Turns:</span>
                               <input type="number" min={1} max={30} value={inlineSkills[countKey]}
                                 onChange={e => setInlineSkills(s => ({ ...s, [countKey]: Math.max(1, Number(e.target.value) || 1) }))}
-                                style={{ width: 48, padding: '2px 4px', border: '1px solid var(--border)', borderRadius: 0, fontSize: 11, textAlign: 'center' }} />
+                                style={{ width: 56, minHeight: 44, padding: '2px 4px', border: '1px solid var(--border)', borderRadius: 0, fontSize: 11, textAlign: 'center' }} />
                             </div>
                           )}
-                        </div>
+                        </button>
                       );
                     })}
                   </div>
@@ -687,11 +679,11 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
           )}
 
           <div>
-            <Button variant="primary" style={{ fontSize: 'var(--text-base)', padding: '12px 24px' }} onClick={handleGenerate} disabled={!prereqOk}>
+            <Button variant="primary" className="text-base" style={{ padding: '12px 24px' }} onClick={handleGenerate} disabled={!prereqOk}>
               <Icon.diagnose size={16} /> Run AI Diagnosis
             </Button>
             {!prereqOk && (
-              <p className="card-row-meta" style={{ marginTop: 'var(--space-2)' }}>
+              <p className="card-row-meta mt-2">
                 {!selectedStudent ? '• Select a student' : ''}
                 {!targetProfile ? ' • Select a target score profile' : ''}
                 {evaluatedSkills.length === 0 ? ' • At least one skill must be evaluated' : ''}
@@ -703,24 +695,24 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
 
       {/* ── STEP: WRITE (Teacher writes in own words) ── */}
       {step === 'write' && (
-        <div style={{ marginTop: 20 }}>
-          <div style={{ display: 'grid', gap: 18, gridTemplateColumns: '1fr 1fr' }}>
+        <div className="mt-5">
+          <div className="grid-2col">
             {/* Left: AI data summary */}
             <div>
               <SectionHeader title="AI Diagnosis Data" icon={<Icon.diagnose size={14} />} />
-              <Card style={{ padding: 16, marginTop: 8 }}>
+              <Card small style={{ marginTop: 8 }}>
                 {sections.skillDiagnosis?.content && (() => {
                   const skills = buildSnapshot(sections.skillDiagnosis.content);
                   return (
-                    <div style={{ display: 'grid', gap: 6, gridTemplateColumns: 'repeat(auto-fill, minmax(140px,1fr))' }}>
+                    <div className="grid-auto-fill-sm">
                       {skills.map(s => {
                         const isLowConf = s.confidenceLabel && !['Diagnostic estimate', 'Mock-test estimate', 'Official score imported manually'].includes(s.confidenceLabel);
                         return (
                           <div key={s.section} style={{ padding: '8px 10px', border: '1px solid ' + (isLowConf ? 'var(--warning)' : 'var(--divider)'), background: 'var(--surface)' }}>
-                            <div style={{ fontSize: 10, color: 'var(--muted)', textTransform: 'uppercase' }}>{s.section}</div>
-                            <div style={{ fontSize: 18, fontWeight: 700 }}>{s.score_0_80 ?? '—'}</div>
+                            <div className="text-2xs text-muted text-uppercase">{s.section}</div>
+                            <div className="font-bold" style={{ fontSize: 18 }}>{s.score_0_80 ?? '—'}</div>
                             {s.confidenceLabel && (
-                              <div style={{ fontSize: 10, color: isLowConf ? 'var(--warning)' : 'var(--muted)', fontStyle: isLowConf ? 'italic' : 'normal', marginTop: 2 }}>{s.confidenceLabel}</div>
+                              <div className={`text-2xs mt-1 ${isLowConf ? 'text-warning text-italic' : 'text-muted'}`}>{s.confidenceLabel}</div>
                             )}
                           </div>
                         );
@@ -729,10 +721,10 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
                   );
                 })()}
                 {sections.priorityDiagnosis?.content?.length > 0 && (
-                  <div style={{ marginTop: 12 }}>
-                    <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>AI Priorities</div>
+                  <div className="mt-3">
+                    <div className="text-2xs font-bold text-muted text-uppercase letter-spacing-01 mb-2">AI Priorities</div>
                     {sections.priorityDiagnosis.content.slice(0, 3).map((p, i) => (
-                      <div key={i} style={{ fontSize: 'var(--text-xs)', padding: '4px 0', borderBottom: '1px solid var(--divider)' }}>{p.skill ? <strong>{p.skill}: </strong> : ''}{p.focus || p.reason || p}</div>
+                      <div key={i} className="text-xs" style={{ padding: '4px 0', borderBottom: '1px solid var(--divider)' }}>{p.skill ? <strong>{p.skill}: </strong> : ''}{p.focus || p.reason || p}</div>
                     ))}
                   </div>
                 )}
@@ -742,62 +734,57 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
             {/* Right: Teacher writes */}
             <div>
               <SectionHeader title="Your Analysis" icon={<Icon.edit size={14} />} />
-              <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div className="flex-col-gap4 mt-2">
                 <div>
-                  <label style={labelStyle}>Class Summary</label>
-                  <textarea value={teacherMeaning.classSummary} onChange={e => setTeacherMeaning(t => ({ ...t, classSummary: e.target.value }))}
-                    rows={3} placeholder="What happened in class today? Summarize the lesson and the student's general performance…"
-                    style={{ width: '100%', padding: 10, border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-xs)', fontFamily: 'var(--font-ui)', resize: 'vertical' }} />
+                  <label className="field-label-block">Class Summary</label>
+                  <textarea className="dx-textarea" value={teacherMeaning.classSummary} onChange={e => setTeacherMeaning(t => ({ ...t, classSummary: e.target.value }))}
+                    rows={3} placeholder="What happened in class today? Summarize the lesson and the student's general performance…" />
                 </div>
                 <div>
-                  <label style={labelStyle}>Student Feedback</label>
-                  <textarea value={teacherMeaning.studentFeedback} onChange={e => setTeacherMeaning(t => ({ ...t, studentFeedback: e.target.value }))}
-                    rows={4} placeholder="What will you tell the student? One strength, one improvement focus, one next step…"
-                    style={{ width: '100%', padding: 10, border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-xs)', fontFamily: 'var(--font-ui)', resize: 'vertical' }} />
+                  <label className="field-label-block">Student Feedback</label>
+                  <textarea className="dx-textarea" value={teacherMeaning.studentFeedback} onChange={e => setTeacherMeaning(t => ({ ...t, studentFeedback: e.target.value }))}
+                    rows={4} placeholder="What will you tell the student? One strength, one improvement focus, one next step…" />
                 </div>
                 <div>
-                  <label style={labelStyle}>Homework Recommendation</label>
-                  <textarea value={teacherMeaning.homeworkRecommendation} onChange={e => setTeacherMeaning(t => ({ ...t, homeworkRecommendation: e.target.value }))}
-                    rows={2} placeholder="Brief description of what the student should practice next…"
-                    style={{ width: '100%', padding: 10, border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-xs)', fontFamily: 'var(--font-ui)', resize: 'vertical' }} />
+                  <label className="field-label-block">Homework Recommendation</label>
+                  <textarea className="dx-textarea" value={teacherMeaning.homeworkRecommendation} onChange={e => setTeacherMeaning(t => ({ ...t, homeworkRecommendation: e.target.value }))}
+                    rows={2} placeholder="Brief description of what the student should practice next…" />
                 </div>
               </div>
             </div>
           </div>
 
           {/* ── Inquiry fields ── */}
-          <div style={{ marginTop: 24 }}>
+          <div className="mt-6">
             <SectionHeader title="Teacher Inquiry" icon={<Icon.progress size={14} />} />
-            <p style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', margin: '4px 0 12px' }}>
+            <p className="text-xs text-muted" style={{ margin: '4px 0 12px' }}>
               Optional. Use when tracking teaching impact across a cycle of diagnosis → intervention → re-diagnosis.
             </p>
-            <Card style={{ padding: 16 }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <Card small>
+              <div className="flex-col-gap4">
+                <div className="flex-row-gap3">
                   <input type="checkbox" id="isBaseline" checked={isBaseline} onChange={e => setIsBaseline(e.target.checked)}
                     style={{ width: 18, height: 18, accentColor: '#14536b' }} />
-                  <label htmlFor="isBaseline" style={{ fontSize: 'var(--text-sm)', fontWeight: 600 }}>Mark as baseline diagnosis (first measurement before intervention)</label>
+                  <label htmlFor="isBaseline" className="text-sm font-semibold">Mark as baseline diagnosis (first measurement before intervention)</label>
                 </div>
                 {isBaseline && (
                   <div>
-                    <label style={labelStyle}>Inquiry Hypothesis</label>
-                    <textarea value={inquiryHypothesis} onChange={e => setInquiryHypothesis(e.target.value)}
-                      rows={2} placeholder="What do you think will improve? E.g. Focused vocabulary work will improve task completion score by 10+ points…"
-                      style={{ width: '100%', padding: 10, border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-xs)', fontFamily: 'var(--font-ui)', resize: 'vertical' }} />
+                    <label className="field-label-block">Inquiry Hypothesis</label>
+                    <textarea className="dx-textarea" value={inquiryHypothesis} onChange={e => setInquiryHypothesis(e.target.value)}
+                      rows={2} placeholder="What do you think will improve? E.g. Focused vocabulary work will improve task completion score by 10+ points…" />
                   </div>
                 )}
                 <div>
-                  <label style={labelStyle}>Intervention Note</label>
-                  <textarea value={interventionNote} onChange={e => setInterventionNote(e.target.value)}
-                    rows={2} placeholder="What did you do between the baseline and this diagnosis? E.g. 3 sessions focused on organizing speaking answers using PEEL structure…"
-                    style={{ width: '100%', padding: 10, border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-xs)', fontFamily: 'var(--font-ui)', resize: 'vertical' }} />
+                  <label className="field-label-block">Intervention Note</label>
+                  <textarea className="dx-textarea" value={interventionNote} onChange={e => setInterventionNote(e.target.value)}
+                    rows={2} placeholder="What did you do between the baseline and this diagnosis? E.g. 3 sessions focused on organizing speaking answers using PEEL structure…" />
                 </div>
               </div>
             </Card>
           </div>
 
           {/* ── Actions ── */}
-          <div style={{ display: 'flex', gap: 10, marginTop: 24 }}>
+          <div className="flex gap-3 mt-6">
             <Button variant="ghost" size="sm" onClick={() => handleSave(false)} disabled={saving}>Save Draft</Button>
             <Button variant="primary" onClick={() => setStep('review')}>
               <Icon.arrowR size={14} /> Review & Approve
@@ -808,13 +795,13 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
 
       {/* ── STEP: REVIEW ── */}
       {step === 'review' && (
-        <div style={{ marginTop: 'var(--space-5)' }}>
+        <div className="mt-5">
           {/* Approval status bar */}
           <div className="approval-bar">
-            <div style={{ flex: 1 }}>
-              <div className="card-row-title" style={{ fontSize: 'var(--text-sm)' }}>{approvedCount} of {totalSections} sections approved</div>
+            <div className="flex-1">
+              <div className="card-row-title text-sm">{approvedCount} of {totalSections} sections approved</div>
               {missingRequiredApprovals.length > 0 && (
-                <div className="card-row-meta" style={{ marginTop: 'var(--space-1)' }}>
+                <div className="card-row-meta mt-1">
                   Required before final approval: {missingRequiredApprovals.map(key => SECTION_LABELS[key]).join(', ')}
                 </div>
               )}
@@ -832,7 +819,7 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
           {/* Empty draft */}
           {!SECTION_KEYS.some(({ key }) => sections[key]) && (
             <Card className="page-empty-state">
-              <p className="card-row-meta" style={{ marginBottom: 'var(--space-4)' }}>
+              <p className="card-row-meta mb-4">
                 This diagnosis has no generated content — it was saved before the AI analysis completed.
               </p>
               <Button variant="primary" size="sm" onClick={() => onNavigate('diagnostics:create', { studentId: savedDiagnosis?.studentId || selectedStudentId || studentId })}>
@@ -857,10 +844,10 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
                   {sec.edited && <Pill tone="warning">Edited</Pill>}
                   {sec.hidden && <Pill tone="muted">Hidden</Pill>}
                   {sec.approved && <Pill tone="success"><Icon.check size={12} /> Approved</Pill>}
-                  <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
+                  <div className="flex gap-2">
                     <Button variant="ghost" size="sm" onClick={() => startEdit(key)} disabled={isRegenning}><Icon.edit size={12} /> Edit</Button>
                     <Button variant="ghost" size="sm" onClick={() => regenerateSection(key)} disabled={isRegenning}><Icon.refresh size={12} /> {isRegenning ? '…' : 'Regen'}</Button>
-                    <Button variant="ghost" size="sm" onClick={() => toggleHide(key)} style={{ color: sec.hidden ? 'var(--muted)' : 'var(--text)' }}><Icon.eye size={12} /></Button>
+                    <Button variant="ghost" size="sm" onClick={() => toggleHide(key)} style={{ color: sec.hidden ? 'var(--muted)' : 'var(--text)' }} aria-label="Toggle section visibility"><Icon.eye size={12} /></Button>
                     <Button variant={sec.approved ? 'ghost' : 'primary'} size="sm" onClick={() => toggleApprove(key)} style={sec.approved ? { color: 'var(--danger)' } : {}}>
                       {sec.approved ? <><Icon.close size={12} /> Unapprove</> : <><Icon.check size={12} /> Approve</>}
                     </Button>
@@ -873,7 +860,7 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
                   {isEditing ? (
                     <div>
                       <textarea value={editText} onChange={e => setEditText(e.target.value)} rows={10} style={{ width: '100%', fontFamily: 'var(--font-mono)', fontSize: 'var(--text-xs)', padding: 10, border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', resize: 'vertical' }} />
-                      <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+                      <div className="flex gap-2 mt-2">
                         <Button variant="primary" size="sm" onClick={() => saveEdit(key)}>Save Edit</Button>
                         <Button variant="ghost" size="sm" onClick={() => setEditingSection(null)}>Cancel</Button>
                       </div>
@@ -919,7 +906,7 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
           })()}
 
           {/* Bottom actions */}
-          <div style={{ display: 'flex', gap: 'var(--space-3)', marginTop: 'var(--space-5)', flexWrap: 'wrap' }}>
+          <div className="flex flex-wrap gap-3 mt-5">
             <Button variant="ghost" size="sm" onClick={() => handleSave(false)} disabled={saving}>Save Draft</Button>
             <Button variant="primary" onClick={() => handleSave(true)} disabled={saving || !canApproveDiagnosis}>
               <Icon.check size={14} /> Approve & Save ({approvedCount}/{totalSections})

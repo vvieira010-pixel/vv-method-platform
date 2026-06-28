@@ -64,5 +64,15 @@
             "label": "revert",
             "description": "Reverts a previous commit"
         }
-    ]
+    ],
+    "chat.mcp.discovery.enabled": {
+        "claude-desktop": true,
+        "cursor-global": true,
+        "windsurf": true,
+        "cursor-workspace": true
+    },
+    "chat.mcp.assisted.nuget.enabled": true,
+    "github.copilot.chat.githubMcpServer.enabled": true,
+    "github.copilot.chat.githubMcpServer.lockdown": true,
+    "github.copilot.chat.localIndex.enabled": true
 }

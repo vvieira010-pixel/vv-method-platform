@@ -369,7 +369,7 @@ export default function ExercisePlayer({ exercises: raw, title, onSessionComplet
   // Errors only (nothing valid loaded)
   if (errors.length > 0 && exercises.length === 0) {
     return (
-      <div style={{ maxWidth: 640, margin: '0 auto', padding: '20px 16px' }}>
+      <div style={{ maxWidth: 720, margin: '0 auto', padding: '20px 16px' }}>
         {title && <h2 style={{ fontFamily: 'var(--font-ui)', fontSize: 'var(--text-xl)', fontWeight: 700, color: NAVY, marginBottom: 16 }}>{title}</h2>}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {errors.map((e, i) => <InvalidExercise key={i} reason={e} />)}
@@ -381,7 +381,7 @@ export default function ExercisePlayer({ exercises: raw, title, onSessionComplet
   const completedCount = results.filter(Boolean).length;
 
   return (
-    <div style={{ maxWidth: 640, margin: '0 auto', padding: '20px 16px' }}>
+    <div style={{ maxWidth: 720, margin: '0 auto', padding: '20px 16px' }}>
       {title && (
         <h2 style={{ fontFamily: 'var(--font-ui)', fontSize: 'var(--text-xl)', fontWeight: 700, color: NAVY, marginBottom: 6 }}>{title}</h2>
       )}

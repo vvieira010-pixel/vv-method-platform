@@ -128,7 +128,7 @@ export default function ToolPerspectiveDesigner({ student, students, onSelectStu
 
   return (
     <div className="page-shell">
-      <div style={{ maxWidth: 920, margin: '0 auto', padding: '24px 16px' }}>
+      <div className="page-container--md" style={{ padding: '24px 16px' }}>
         <h1 style={headline}>Perspective-Taking Designer</h1>
         <p style={sub}>Design structured activities that develop genuine perspective-taking — understanding how others think, feel, and experience situations from within their own context and constraints.</p>
 

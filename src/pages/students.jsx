@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import { Icon, SectionHeader, Pill, Avatar } from '../components/shared.jsx';
 import { Button } from '../components/ui/Button.jsx';
 import { Card } from '../components/ui/Card.jsx';
+import { SkeletonCard } from '../components/ui/Skeleton.jsx';
 import { getStudents, saveStudent, deleteStudent, getDiagnoses, getHomework, getAllSubmissions, getClassEvents } from '../lib/workflow.js';
 import { sendMagicLink } from '../lib/supabase-storage.js';
 import { getDbContext } from '../lib/supabase-db.js';
@@ -19,19 +20,26 @@ export default function StudentsPage({ onNavigate }) {
   const [studentActions, setStudentActions] = useState({});
   const [inviteStatus, setInviteStatus] = useState({});
   const [setup, setSetup] = useState(null); // { id, pwd, busy, result }
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => { load(); }, []);
 
   async function load() {
-    const [s, diagnoses, homework, submissions, classEvents] = await Promise.all([
-      getStudents(),
-      getDiagnoses(),
-      getHomework(),
-      getAllSubmissions(),
-      getClassEvents(),
-    ]);
-    setStudents(s);
-    setStudentActions(buildStudentActions(s, { diagnoses, homework, submissions, classEvents }));
+    try {
+      const [s, diagnoses, homework, submissions, classEvents] = await Promise.all([
+        getStudents(),
+        getDiagnoses(),
+        getHomework(),
+        getAllSubmissions(),
+        getClassEvents(),
+      ]);
+      setStudents(s);
+      setStudentActions(buildStudentActions(s, { diagnoses, homework, submissions, classEvents }));
+    } catch (e) {
+      window.toast?.(`Failed to load students: ${e.message}`, 'warn');
+    } finally {
+      setLoading(false);
+    }
   }
 
   function openAdd() {
@@ -118,6 +126,15 @@ export default function StudentsPage({ onNavigate }) {
     window.dispatchEvent(new CustomEvent('vv:students-updated'));
     window.toast?.('Student deleted.', 'info');
   }
+
+  if (loading) return (
+    <div className="page-shell">
+      <SectionHeader title="Students" sub="Loading..." />
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        {[1,2,3].map(i => <SkeletonCard key={i} height={68} />)}
+      </div>
+    </div>
+  );
 
   const filtered = students.filter(s =>
     !search || (s.name || '').toLowerCase().includes(search.toLowerCase())
@@ -254,8 +271,8 @@ function StudentRow({ student, nextAction, inviteStatus, setupState, onProfile, 
               {isSending ? 'Sending…' : isSent ? '✓ Link sent' : 'Send login link'}
             </Button>
           )}
-          <Button variant="ghost" size="sm" onClick={onEdit}><Icon.edit size={13} /></Button>
-          <Button variant="ghost" size="sm" onClick={onDelete} style={{ color: 'var(--danger)' }}><Icon.trash size={13} /></Button>
+          <Button variant="ghost" size="sm" onClick={onEdit} aria-label="Edit student"><Icon.edit size={13} /></Button>
+          <Button variant="ghost" size="sm" onClick={onDelete} style={{ color: 'var(--danger)' }} aria-label="Delete student"><Icon.trash size={13} /></Button>
         </div>
       </div>
 

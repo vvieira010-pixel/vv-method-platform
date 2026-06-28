@@ -3,7 +3,7 @@
  * Teacher picks exercise types, fills type-specific fields, previews as student.
  */
 import { useState, useEffect, useRef } from 'react';
-import { Icon, SectionHeader, Pill, Modal, callAI } from '../components/shared.jsx';
+import { Icon, SectionHeader, Pill, Modal, callAI, Breadcrumb } from '../components/shared.jsx';
 import { Card } from '../components/ui/Card.jsx';
 import { Button } from '../components/ui/Button.jsx';
 import { parseAiJson } from '../lib/ai-helpers.js';
@@ -49,7 +49,7 @@ const EMPTY_FORM = {
 };
 
 const SKILL_TYPES = ['writing', 'speaking', 'grammar', 'vocabulary', 'reading', 'listening', 'mixed'];
-const HOMEWORK_AI_BASE_OPTIONS = { preferredProvider: 'gemini' };
+const HOMEWORK_AI_BASE_OPTIONS = {};
 
 // Skill groups available for per-group generation
 const SKILL_GROUPS = [
@@ -896,35 +896,30 @@ Return JSON only with fields: type "read", passage (2-3 paragraphs), source, que
   form.exercises.forEach(e => { typeCounts[e.type] = (typeCounts[e.type] || 0) + 1; });
 
   return (
-    <div className="homework-create-page" style={{ maxWidth: 1120, width: '100%', margin: '0 auto', padding: 'var(--space-6) var(--space-6) var(--space-4)' }}>
-      <button className="back-link" onClick={() => onNavigate('homework')}>
-        <Icon.arrowL size={13} /> Back
-      </button>
+    <div className="homework-create-page">
+      <Breadcrumb crumbs={[{ label: 'Homework', onClick: () => onNavigate('homework') }, { label: 'Create' }]} />
 
       {/* Wizard Header */}
       <SectionHeader title="Create Homework" />
       {(selectedLevel || subjectLabel) && (
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 12 }}>
+        <div className="homework-wizard-info">
           {selectedLevel && <Pill tone="info">{selectedLevel}</Pill>}
           {subjectLabel && <Pill tone="info">{subjectLabel}</Pill>}
-          <button onClick={() => setWizardDone(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>Change</button>
+          <button className="homework-wizard-change" onClick={() => setWizardDone(false)}>Change</button>
         </div>
       )}
-      <div className="homework-create-steps" style={{ display: 'flex', flexDirection: 'row', gap: 8, marginBottom: 20 }}>
+      <div className="homework-step-tabs">
         {['Prebuilt', 'Retrieval', 'Build'].map((step, i) => (
-          <div key={step} onClick={() => setCurrentStep(i + 1)}
-            style={{
-              fontSize: 'var(--text-xs)', fontWeight: 600, cursor: 'pointer',
-              color: currentStep === i + 1 ? 'var(--accent)' : 'var(--muted)',
-              paddingBottom: 4, borderBottom: currentStep === i + 1 ? '2px solid var(--accent)' : 'none'
-            }}>
+          <button type="button" key={step}
+            className={`homework-step-tab${currentStep === i + 1 ? ' homework-step-tab--active' : ''}`}
+            onClick={() => setCurrentStep(i + 1)}>
             {i + 1}. {step}
-          </div>
+          </button>
         ))}
       </div>
 
       {/* Step Content */}
-      <div className="homework-create-grid" style={{ display: 'grid', gap: 24, alignItems: 'start' }}>
+      <div className="homework-create-grid">
         <div>
           {currentStep === 1 && (
             <Card style={{ padding: 'var(--space-5)' }}>
@@ -945,11 +940,9 @@ Return JSON only with fields: type "read", passage (2-3 paragraphs), source, que
                   </Field>
                 )}
                 {diagnosis && (
-                  <div style={{ padding: 'var(--space-4)', background: 'var(--surface)', borderRadius: 'var(--radius-md)', border: '1px solid var(--accent-soft)', boxShadow: 'var(--shadow-sm)' }}>
-                    <div style={{ fontWeight: 600, fontSize: 'var(--text-sm)', color: 'var(--primary)', marginBottom: 4 }}>
-                      Diagnostic Focus:
-                    </div>
-                    <div style={{ fontSize: 'var(--text-sm)', marginBottom: 8 }}>
+                  <div className="homework-diagnosis-box">
+                    <div className="homework-diagnosis-label">Diagnostic Focus:</div>
+                    <div className="homework-diagnosis-text">
                       {getPriorityItems(diagnosis)[0]?.area} — {getPriorityItems(diagnosis)[0]?.whatToImprove}
                     </div>
                     <Button variant="ghost" size="sm" onClick={() => onNavigate('diagnostics')}>View Full Diagnosis</Button>
@@ -964,16 +957,16 @@ Return JSON only with fields: type "read", passage (2-3 paragraphs), source, que
                       Error Bank — Active Patterns
                     </div>
                     {errorBankItems.filter(e => e.status !== 'solved').slice(0, 3).map(entry => (
-                      <div key={entry.id} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6, padding: '6px 10px', background: 'var(--bg)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--divider)' }}>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <span style={{ fontSize: 'var(--text-xs)', color: 'var(--danger)', fontWeight: 600 }}>{entry.error}</span>
-                          <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', margin: '0 4px' }}>→</span>
-                          <span style={{ fontSize: 'var(--text-xs)', color: 'var(--success)' }}>{entry.correct}</span>
-                          {entry.type && <span style={{ marginLeft: 6, fontSize: 10, color: 'var(--faint)', textTransform: 'capitalize' }}>{entry.type}</span>}
+                      <div key={entry.id} className="homework-error-item">
+                        <div className="homework-error-body">
+                          <span className="homework-error-text">{entry.error}</span>
+                          <span className="homework-error-arrow">→</span>
+                          <span className="homework-error-correct">{entry.correct}</span>
+                          {entry.type && <span className="homework-error-type">{entry.type}</span>}
                         </div>
                         <button
+                          className="homework-error-btn"
                           onClick={() => setForm(f => ({ ...f, objective: f.objective ? f.objective : `Fix error: ${entry.error} → ${entry.correct}` }))}
-                          style={{ fontSize: 'var(--text-xs)', padding: '2px 8px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', background: 'var(--surface)', cursor: 'pointer', whiteSpace: 'nowrap', color: 'var(--accent)', fontFamily: 'var(--font-ui)' }}
                           title="Use as homework goal"
                         >
                           Use as goal
@@ -983,7 +976,7 @@ Return JSON only with fields: type "read", passage (2-3 paragraphs), source, que
                   </div>
                 )}
                 <TopicExplanationsEditor topics={topicExplanations} onChange={setTopicExplanations} onAiGenerate={handleTopicAiGenerate} />
-                <div style={{ marginTop: 12, display: 'flex', gap: 8, alignItems: 'center' }}>
+                <div className="homework-gen-toolbar">
                   <Button variant="ghost" size="sm" onClick={() => setShowResourcePicker(true)}>
                     <Icon.image size={12} /> Media Library
                   </Button>
@@ -1001,44 +994,33 @@ Return JSON only with fields: type "read", passage (2-3 paragraphs), source, que
                   const allPrebuilt = [...b2Mods, ...lifeMods, ...drMods, ...grMods];
                   const filtered = packFilter === 'all' ? allPrebuilt : allPrebuilt.filter(m => m.skill === packFilter);
                   return (
-                    <div style={{ marginTop: 18, padding: 'var(--space-4)', background: 'var(--surface)', border: '1px solid var(--accent-soft)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-sm)' }}>
-                      <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>
-                        MET-Aligned Exercise Packs
-                      </div>
-                      <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-2)', lineHeight: 1.5, marginBottom: 12 }}>
+                    <div className="homework-packs-section">
+                      <div className="homework-packs-header">MET-Aligned Exercise Packs</div>
+                      <div className="homework-packs-desc">
                         Browse MET-aligned packs by skill. Click <strong>Add</strong> on any module to add its exercises to this homework.
                       </div>
-                      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 12 }}>
+                      <div className="homework-pack-filters">
                         {SKILLS.map(s => (
-                          <button key={s} onClick={() => setPackFilter(s)}
-                            style={{
-                              padding: '4px 12px', borderRadius: 'var(--radius-pill)', border: 'none', cursor: 'pointer',
-                              fontSize: 'var(--text-xs)', fontWeight: 600, fontFamily: 'var(--font-ui)',
-                              background: packFilter === s ? 'var(--accent)' : 'var(--bg)',
-                              color: packFilter === s ? '#fff' : 'var(--text-2)',
-                              transition: 'background .12s',
-                            }}>
+                          <button key={s}
+                            className={`homework-pack-filter-btn${packFilter === s ? ' homework-pack-filter-btn--active' : ''}`}
+                            onClick={() => setPackFilter(s)}>
                             {SKILL_LABELS[s]}
                           </button>
                         ))}
                       </div>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 4, maxHeight: 340, overflowY: 'auto' }}>
+                      <div className="homework-pack-list">
                         {filtered.length === 0 && (
-                          <div style={{ padding: '12px 0', color: 'var(--muted)', fontSize: 'var(--text-sm)' }}>No prebuilt packs match this skill.</div>
+                          <div className="homework-pack-empty">No prebuilt packs match this skill.</div>
                         )}
                         {filtered.map(mod => (
-                          <div key={mod.id} style={{
-                            display: 'flex', alignItems: 'center', gap: 10,
-                            padding: '8px 12px', borderRadius: 'var(--radius-sm)',
-                            background: 'var(--bg)', border: '1px solid var(--divider)',
-                          }}>
-                            <div style={{ flex: 1, minWidth: 0 }}>
-                              <div style={{ fontWeight: 600, fontSize: 'var(--text-sm)' }}>{mod.label}</div>
-                              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', display: 'flex', gap: 6, alignItems: 'center' }}>
+                          <div key={mod.id} className="homework-pack-module">
+                            <div className="homework-pack-module-info">
+                              <div className="homework-pack-module-title">{mod.label}</div>
+                              <div className="homework-pack-module-meta">
                                 <span>{mod.pack}</span>
-                                <span style={{ opacity: 0.4 }}>·</span>
-                                <span style={{ textTransform: 'capitalize' }}>{mod.skill}</span>
-                                <span style={{ opacity: 0.4 }}>·</span>
+                                <span className="homework-pack-module-dot">·</span>
+                                <span className="homework-pack-module-skill">{mod.skill}</span>
+                                <span className="homework-pack-module-dot">·</span>
                                 <span>{mod.exercises?.length || mod.exerciseCount || 0} exercises</span>
                               </div>
                             </div>
@@ -1052,11 +1034,11 @@ Return JSON only with fields: type "read", passage (2-3 paragraphs), source, que
                         ))}
                       </div>
                       {unitBankExercises.length > 0 && (
-                        <div style={{ marginTop: 10, padding: 'var(--space-3) var(--space-4)', background: 'var(--bg)', border: '1px solid var(--accent-soft)', borderRadius: 'var(--radius-sm)' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+                        <div className="homework-unit-bank-row">
+                          <div className="homework-unit-bank-inner">
                             <div>
-                              <div style={{ fontWeight: 600, fontSize: 'var(--text-sm)' }}>Unit Bank — {subjectLabel}</div>
-                              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>{selectedLevel} · {unitBankExercises.length} exercises available</div>
+                              <div className="homework-pack-module-title">Unit Bank — {subjectLabel}</div>
+                              <div className="homework-pack-module-meta">{selectedLevel} · {unitBankExercises.length} exercises available</div>
                             </div>
                             <Button variant="ghost" size="sm" onClick={addUnitBankPack}>Add all</Button>
                           </div>
@@ -1065,7 +1047,7 @@ Return JSON only with fields: type "read", passage (2-3 paragraphs), source, que
                     </div>
                   );
                 })()}
-                <div style={{ marginTop: 24 }}>
+                <div className="homework-create-actions" style={{ marginTop: 'var(--space-6)' }}>
                   <Button variant="primary" onClick={() => setCurrentStep(2)}>
                     Next: Retrieval
                   </Button>
@@ -1076,15 +1058,15 @@ Return JSON only with fields: type "read", passage (2-3 paragraphs), source, que
           {currentStep === 2 && (
             <Card style={{ padding: 'var(--space-5)' }}>
               <SectionHeader title="Step 2: Retrieval & MET Focus" />
-              <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <div style={{ marginTop: 'var(--space-4)', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
                 {/* ── Retrieval Practice ── */}
-                  <div style={{ padding: 'var(--space-5)', background: 'var(--surface)', border: '1px solid var(--accent-soft)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-sm)' }}>
-                  <div style={{ fontWeight: 700, fontSize: 'var(--text-sm)', marginBottom: 6 }}>Retrieval Practice</div>
-                  <div style={{ color: 'var(--text-2)', fontSize: 'var(--text-sm)', lineHeight: 1.6, marginBottom: 12 }}>
+                  <div className="homework-panel-section">
+                  <div className="homework-panel-title">Retrieval Practice</div>
+                  <div className="homework-panel-desc">
                     Generate recall questions from the homework objective so the student practices remembering the target language.
                   </div>
-                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 12 }}>
-                    <span style={{ padding: '4px 10px', borderRadius: 'var(--radius-pill)', background: 'var(--bg)', border: '1px solid var(--border)', fontSize: 'var(--text-xs)', color: 'var(--text-2)' }}>
+                  <div className="homework-gen-toolbar" style={{ marginBottom: 0, marginTop: 0 }}>
+                    <span className="homework-retrieval-badge">
                       {retrievalCount} retrieval exercise{retrievalCount === 1 ? '' : 's'} added
                     </span>
                   </div>
@@ -1094,28 +1076,27 @@ Return JSON only with fields: type "read", passage (2-3 paragraphs), source, que
                 </div>
 
                 {/* ── MET Focus: AI generation per skill ── */}
-                <div style={{ padding: 'var(--space-5)', background: 'var(--surface)', border: '1px solid var(--accent-soft)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-sm)' }}>
-                  <div style={{ fontWeight: 700, fontSize: 'var(--text-sm)', marginBottom: 6 }}>MET Focus — Generate by Exam Skill</div>
-                  <div style={{ color: 'var(--text-2)', fontSize: 'var(--text-xs)', lineHeight: 1.5, marginBottom: 12 }}>
+                <div className="homework-panel-section">
+                  <div className="homework-panel-title">MET Focus — Generate by Exam Skill</div>
+                  <div className="homework-panel-desc" style={{ fontSize: 'var(--text-xs)' }}>
                     Choose the MET exam skills this homework should target. Each generated item is checked for complete student-ready fields before being added.
                   </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 8 }}>
+                  <div className="homework-skill-grid">
                     {SKILL_GROUPS.map(group => (
-                      <label key={group.key} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', background: 'var(--bg)' }}>
+                      <label key={group.key} className="homework-skill-group">
                         <span aria-hidden="true">{group.icon}</span>
-                        <span style={{ flex: 1, fontSize: 'var(--text-sm)', fontWeight: 600 }}>{group.label}</span>
+                        <span className="homework-skill-group-label">{group.label}</span>
                         <input
+                          className="homework-skill-count"
                           type="number" min="0" max="6"
                           value={groupGenConfig[group.key] || 0}
                           onChange={e => setGroupGenConfig(cfg => ({ ...cfg, [group.key]: Math.max(0, Math.min(6, Number(e.target.value) || 0)) }))}
-                          style={{ width: 48, padding: '4px 6px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-sm)' }}
                         />
                       </label>
                     ))}
                   </div>
-                  <div style={{ display: 'flex', gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
-                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-                    <span style={{ fontSize: 'var(--text-xs)', fontWeight: 600, color: 'var(--muted)', marginRight: 4 }}>Generate:</span>
+                  <div className="homework-gen-toolbar">
+                    <span className="homework-gen-label">Generate:</span>
                     <Button variant="primary" size="sm" onClick={handleGenerateByGroups} disabled={generating}>
                       <Icon.spark size={12} /> Selected Skills
                     </Button>
@@ -1132,16 +1113,15 @@ Return JSON only with fields: type "read", passage (2-3 paragraphs), source, que
                       <Icon.refresh size={12} /> {loadingOptions ? 'Generating…' : 'Suggestions'}
                     </Button>
                   </div>
-                  </div>
                   {groupGenStatus && (
-                    <div style={{ marginTop: 12, padding: '8px 12px', border: '1.5px solid var(--accent-soft)', borderRadius: 'var(--radius-sm)', background: 'var(--surface)', color: 'var(--primary)', fontSize: 'var(--text-xs)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <span style={{ width: 12, height: 12, borderRadius: '50%', border: '2px solid var(--accent)', borderTopColor: 'transparent', animation: 'spin .7s linear infinite' }} />
+                    <div className="homework-gen-status">
+                      <span className="homework-gen-spinner" />
                       {groupGenStatus}
                     </div>
                   )}
                 </div>
 
-                <div className="homework-create-actions" style={{ display: 'flex', gap: 10 }}>
+                <div className="homework-create-actions">
                   <Button variant="ghost" onClick={() => setCurrentStep(1)}>Back</Button>
                   <Button variant="primary" onClick={() => setCurrentStep(3)}>Next: Build</Button>
                 </div>
@@ -1154,8 +1134,7 @@ Return JSON only with fields: type "read", passage (2-3 paragraphs), source, que
               <div style={{ marginTop: 16 }}>
                 {/* ── Toolbar ── */}
                 <div className="homework-create-toolbar">
-                  <Button variant="primary" size="sm" onClick={() => togglePanel('type-picker')}
-                    style={activePanel === 'type-picker' ? { opacity: 0.75 } : {}}>
+                  <Button variant="primary" size="sm" onClick={() => togglePanel('type-picker')}>
                     <Icon.plus size={12} /> Add Exercise
                   </Button>
                   <Button variant="secondary" size="sm" onClick={() => { setPreviewResponses({}); setStudentPreview(true); }} disabled={!form.exercises.some(isStructuredExercise)} title="Step through the whole homework exactly as the student will receive it">
@@ -1178,35 +1157,19 @@ Return JSON only with fields: type "read", passage (2-3 paragraphs), source, que
 
                 {/* ── SPACED REPETITION REVIEW ITEMS ── */}
                 {reviewDueCount > 0 && (
-                  <div style={{
-                    marginBottom: 16, padding: '12px 14px',
-                    border: `1px solid ${includeReview ? 'var(--border-strong)' : 'var(--border)'}`,
-                    borderRadius: 'var(--radius-md)',
-                    background: 'var(--surface)',
-                    transition: 'border-color .15s, background .15s',
-                  }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+                  <div className={`homework-review-block${includeReview ? ' homework-review-block--active' : ''}`}>
+                    <div className="homework-review-row">
                       <div>
-                        <div style={{ fontWeight: 700, fontSize: 'var(--text-sm)', display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <div className="homework-review-title">
                           <span>Error Review ({reviewDueCount} item{reviewDueCount !== 1 ? 's' : ''} due)</span>
-                          <span style={{
-                            display: 'inline-flex', alignItems: 'center', gap: 4,
-                            padding: '1px 8px', borderRadius: 'var(--radius-pill)',
-                            background: 'var(--warning-bg)', color: 'var(--warning)',
-                            fontSize: 'var(--text-xs)', fontWeight: 600,
-                          }}>
-                            Spaced repetition
-                          </span>
+                          <span className="homework-review-pill">Spaced repetition</span>
                         </div>
-                        <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-2)', lineHeight: 1.5, marginTop: 2 }}>
+                        <div className="homework-review-desc">
                           Past errors due for review. Each item becomes an <strong>MCQ</strong> exercise.
                         </div>
                       </div>
-                      <label style={{
-                        display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer',
-                        fontSize: 'var(--text-sm)', fontWeight: 600, userSelect: 'none',
-                      }}>
-                        <input type="checkbox" checked={includeReview}
+                      <label className="homework-review-toggle">
+                        <input type="checkbox" className="homework-review-checkbox" checked={includeReview}
                           onChange={e => {
                             setIncludeReview(e.target.checked);
                             if (e.target.checked) {
@@ -1219,8 +1182,7 @@ Return JSON only with fields: type "read", passage (2-3 paragraphs), source, que
                             } else {
                               setForm(f => ({ ...f, exercises: f.exercises.filter(ex => !ex.isReviewItem) }));
                             }
-                          }}
-                          style={{ accentColor: 'var(--accent)', width: 18, height: 18 }} />
+                          }} />
                         {includeReview ? 'Added' : `Add ${reviewDueCount} review item${reviewDueCount !== 1 ? 's' : ''}`}
                       </label>
                     </div>
@@ -1228,7 +1190,7 @@ Return JSON only with fields: type "read", passage (2-3 paragraphs), source, que
                 )}
                   
                 {/* ── Exercise list ── */}
-                <div ref={exerciseListRef} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <div ref={exerciseListRef} className="homework-exercise-list">
                   {form.exercises.map((ex, i) => (
                     <ExerciseCard
                       key={ex.id}
@@ -1249,8 +1211,8 @@ Return JSON only with fields: type "read", passage (2-3 paragraphs), source, que
                 {(() => {
                   const warn = getHomeworkCognitiveSufficiencyWarning(form.exercises, diagnosis);
                   return warn ? (
-                    <div style={{ marginTop: 16, marginBottom: 14, padding: '8px 12px', background: 'var(--warning-bg)', border: '1px solid var(--warning)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-xs)', color: 'var(--warning)', display: 'flex', gap: 8, alignItems: 'flex-start' }}>
-                      <Icon.spark size={13} style={{ flexShrink: 0, marginTop: 1 }} />
+                    <div className="homework-warning-note">
+                      <Icon.spark size={13} className="homework-warning-icon" />
                       <span><strong>Cognitive sufficiency note:</strong> {warn}</span>
                     </div>
                   ) : null;
@@ -1258,40 +1220,36 @@ Return JSON only with fields: type "read", passage (2-3 paragraphs), source, que
 
                 {/* ── Language Demand ── */}
                 {languageDemand && (
-                  <div style={{ marginTop: 16, padding: 14, border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', background: 'var(--surface)' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-                      <span style={{ fontWeight: 700, fontSize: 'var(--text-sm)' }}>Language Demand Analysis</span>
-                      <span style={{
-                        padding: '2px 8px', borderRadius: 'var(--radius-pill)', fontSize: 11, fontWeight: 700, textTransform: 'uppercase',
-                        background: languageDemand.overall_demand === 'high' ? '#FEF2F2' : languageDemand.overall_demand === 'medium' ? '#FFFBEB' : '#F0FDFA',
-                        color: languageDemand.overall_demand === 'high' ? '#991B1B' : languageDemand.overall_demand === 'medium' ? '#92400E' : '#065F46',
-                      }}>{languageDemand.overall_demand} demand</span>
-                      <button onClick={() => setLanguageDemand(null)} style={{ marginLeft: 'auto', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)', fontSize: 16 }}>×</button>
+                  <div className="homework-lang-demand">
+                    <div className="homework-lang-demand-header">
+                      <span className="homework-lang-demand-title">Language Demand Analysis</span>
+                      <span className={`homework-demand-badge homework-demand-badge--${languageDemand.overall_demand === 'high' ? 'high' : languageDemand.overall_demand === 'medium' ? 'medium' : 'low'}`}>{languageDemand.overall_demand} demand</span>
+                      <button className="homework-lang-demand-dismiss" onClick={() => setLanguageDemand(null)}>×</button>
                     </div>
                     {languageDemand.teacher_note && (
-                      <p style={{ fontSize: 'var(--text-xs)', color: 'var(--text-2)', lineHeight: 1.5, marginBottom: 10 }}>{languageDemand.teacher_note}</p>
+                      <p className="homework-lang-demand-note">{languageDemand.teacher_note}</p>
                     )}
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    <div className="homework-demand-actions">
                       {(languageDemand.priority_actions || []).map((action, i) => (
-                        <div key={i} style={{ padding: '8px 10px', background: 'var(--bg)', borderRadius: 'var(--radius-sm)', borderLeft: '3px solid var(--accent)' }}>
-                          <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--accent)', textTransform: 'uppercase', marginBottom: 2 }}>{action.demand_type}</div>
-                          <div style={{ fontSize: 'var(--text-sm)', lineHeight: 1.5 }}>{action.description}</div>
-                          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-2)', marginTop: 4 }}>Recommend: {action.recommendation}</div>
+                        <div key={i} className="homework-demand-action-card">
+                          <div className="homework-demand-action-type">{action.demand_type}</div>
+                          <div className="homework-demand-action-desc">{action.description}</div>
+                          <div className="homework-demand-action-rec">Recommend: {action.recommendation}</div>
                         </div>
                       ))}
                     </div>
                     {(languageDemand.tier2_vocabulary?.length > 0 || languageDemand.tier3_vocabulary?.length > 0) && (
-                      <div style={{ marginTop: 10, display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+                      <div className="homework-demand-vocab">
                         {languageDemand.tier2_vocabulary?.length > 0 && (
                           <div>
                             <div className="section-label" style={{ marginBottom: 4 }}>Tier 2 to pre-teach</div>
-                            <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-2)' }}>{languageDemand.tier2_vocabulary.join(' · ')}</div>
+                            <div className="homework-demand-vocab-group">{languageDemand.tier2_vocabulary.join(' · ')}</div>
                           </div>
                         )}
                         {languageDemand.tier3_vocabulary?.length > 0 && (
                           <div>
                             <div className="section-label" style={{ marginBottom: 4 }}>Tier 3 to pre-teach</div>
-                            <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-2)' }}>{languageDemand.tier3_vocabulary.join(' · ')}</div>
+                            <div className="homework-demand-vocab-group">{languageDemand.tier3_vocabulary.join(' · ')}</div>
                           </div>
                         )}
                       </div>
@@ -1300,9 +1258,9 @@ Return JSON only with fields: type "read", passage (2-3 paragraphs), source, que
                 )}
 
                 {/* ── Assign ── */}
-                <div ref={assignRef} style={{ marginTop: 'var(--space-4)', padding: 'var(--space-5)', border: '2px solid var(--accent-soft)', borderRadius: 'var(--radius-md)', background: 'var(--surface)' }}>
-                  <div style={{ fontWeight: 700, fontSize: 'var(--text-base)', marginBottom: 16, color: 'var(--primary)' }}>Assign homework</div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                <div ref={assignRef} className="homework-assign-section">
+                  <div className="homework-assign-title">Assign homework</div>
+                  <div className="homework-assign-fields">
                     {studentId || diagnosis?.studentId ? null : (
                       <Field label="Student">
                         <select className="input" value={selectedStudentId} onChange={e => setSelectedStudentId(e.target.value)}>
@@ -1311,7 +1269,7 @@ Return JSON only with fields: type "read", passage (2-3 paragraphs), source, que
                         </select>
                       </Field>
                     )}
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                    <div className="homework-assign-grid">
                       <Field label="Homework Title">
                         <input className="input" value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} />
                       </Field>
@@ -1320,7 +1278,7 @@ Return JSON only with fields: type "read", passage (2-3 paragraphs), source, que
                       </Field>
                     </div>
                   </div>
-                  <div style={{ marginTop: 20, display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+                  <div className="homework-assign-actions">
                     <Button variant="primary" onClick={handleAssign} disabled={saving}>
                       {saving ? 'Assigning…' : 'Assign Homework'}
                     </Button>
@@ -1335,14 +1293,25 @@ Return JSON only with fields: type "read", passage (2-3 paragraphs), source, que
         </div>
 
         {/* Persistent Summary Side Panel */}
-        <Card className="homework-create-summary" style={{ padding: 'var(--space-5)', position: 'sticky', top: 20 }}>
+        <Card className="homework-create-summary">
           <SectionHeader title="Homework Summary" />
-          <div style={{ marginTop: 12, fontSize: 'var(--text-sm)' }}>
+          <div className="homework-create-summary-stats">
             <p>Exercises: <strong style={exerciseCount > 10 ? { color: 'var(--danger)' } : {}}>{exerciseCount} / 10</strong></p>
             <p>Est. time: <strong>~{Math.max(5, exerciseCount * 4)} min</strong></p>
           </div>
         </Card>
       </div>
+
+      <Modal open={studentPreview} onClose={() => setStudentPreview(false)} title="Preview — student view" variant="fullscreen">
+        <HomeworkStepThrough
+          exercises={form.exercises.filter(isStructuredExercise)}
+          responses={previewResponses}
+          onResponse={(id, updated) => setPreviewResponses(prev => ({ ...prev, [id]: updated }))}
+          onSubmit={() => setStudentPreview(false)}
+          onSave={() => {}}
+          readOnly={true}
+        />
+      </Modal>
     </div>
   );
 }

@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
-import { motion } from 'motion/react';
 import { getDiagnoses } from '../lib/workflow.js';
-import { asArray, getProgressStage, getSkillTrend, PROGRESS_STAGES, STAGE_DESCRIPTIONS } from './student-helpers.js';
+import { asArray, getProgressStage, getSkillTrend, PROGRESS_STAGES, STAGE_DESCRIPTIONS, TrendChip, SkillRow } from './student-helpers.jsx';
 
 function sectionToLabel(section) {
   if (!section) return '';
@@ -10,85 +9,87 @@ function sectionToLabel(section) {
     .replace(/Vocabulary/g, 'Voc.').replace(/Listening/g, 'Lis.').replace(/Reading/g, 'Read.').slice(0, 18);
 }
 
-function TrendChip({ trend }) {
-  if (!trend || trend.dir === 'none') return null;
-  const glyph = { up: '↑', down: '↓', steady: '→', new: '•' }[trend.dir] || '•';
-  return <span className={`student-trend-chip student-trend-chip--${trend.dir}`}><span aria-hidden="true">{glyph}</span> {trend.label}</span>;
-}
-
 function SubskillRadar({ sectionData }) {
-  const [RechartsComponents, setRechartsComponents] = useState(null);
-  useEffect(() => { import('recharts').then(mod => setRechartsComponents(mod)); }, []);
-  if (!RechartsComponents) return null;
-  const { ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, Legend, Tooltip } = RechartsComponents;
-  return (
-    <div style={{ width: '100%', height: 520, marginBottom: 24 }}>
-      <ResponsiveContainer width="100%" height="100%">
-        <RadarChart data={sectionData} cx="50%" cy="50%" outerRadius="70%">
-          <PolarGrid stroke="var(--divider)" />
-          <PolarAngleAxis dataKey="skill" tick={{ fill: 'var(--text-2)', fontSize: 12, fontFamily: 'var(--font-ui)' }} />
-          <PolarRadiusAxis domain={[0, 80]} tick={{ fill: 'var(--muted)', fontSize: 11 }} tickCount={5} />
-          {sectionData.some(d => d.previous != null) && (
-            <Radar name="Previous" dataKey="previous" stroke="var(--muted)" strokeWidth={1.5} strokeDasharray="5 5" fill="var(--muted)" fillOpacity={0.22} isAnimationActive={true} animationDuration={900} />
-          )}
-          <Radar name="Current" dataKey="current" stroke="var(--accent)" strokeWidth={3} fill="var(--accent)" fillOpacity={0.38} isAnimationActive={true} animationDuration={1200} />
-          <Radar name="Target" dataKey="target" stroke="var(--primary)" strokeWidth={2} strokeDasharray="4 4" fill="none" isAnimationActive={true} animationDuration={1000} />
-          <Legend wrapperStyle={{ fontSize: 12, fontFamily: 'var(--font-ui)', color: 'var(--text-2)' }} />
-          <Tooltip contentStyle={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: 12, fontFamily: 'var(--font-ui)' }} />
-        </RadarChart>
-      </ResponsiveContainer>
+  const [loaded, setLoaded] = useState(false);
+  const [Modules, setModules] = useState(null);
+  const [chartHeight, setChartHeight] = useState(400);
+  useEffect(() => { import('recharts').then(mod => { setModules(mod); setLoaded(true); }); }, []);
+  useEffect(() => {
+    const check = () => setChartHeight(window.innerWidth < 640 ? 300 : 400);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
+
+  if (!loaded) return (
+    <div className="student-radar-skeleton" aria-hidden="true">
+      <div className="student-radar-skeleton-pulse" />
     </div>
   );
-}
 
-function ProgressProfileCard({ skill, trend }) {
-  const score = Number(skill.score_0_80) || 0;
-  if (score <= 0) return null;
-  const stage = getProgressStage(score);
-  const trendNote = trend?.dir === 'new' ? 'Evaluated once — your progress trend appears after the next class.'
-    : trend?.dir === 'up' ? 'You are moving in the right direction since your last class.'
-    : trend?.dir === 'down' ? 'Practice focus for next class.' : 'Holding steady — keep practising to reach the next stage.';
+  const hasData = sectionData?.some(d => (d.current || 0) > 0);
+  if (!hasData || !sectionData?.length) return null;
+
+  const { ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, Legend, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid, LabelList } = Modules;
+  const maxVal = Math.max(...sectionData.map(d => Math.max(d.current || 0, d.previous || 0, d.target || 0)), 60);
+  const domainMax = Math.ceil(maxVal / 10) * 10;
 
   return (
-    <article className="student-progress-card">
-      <div className="student-panel-head">
-        <div><span className="student-panel-kicker">Skill progress</span><h2>{skill.section}</h2></div>
-        {trend?.label === 'Moved up a stage' ? (
-          <motion.span key={stage.label} className="student-stage-badge" initial={{ scale: 0.7, opacity: 0 }} animate={{ scale: [1, 1.25, 0.9, 1.08, 1], opacity: 1 }} transition={{ duration: 0.7 }}>{stage.label}</motion.span>
-        ) : (
-          <span className="student-stage-badge">{stage.label}</span>
-        )}
+    <div>
+      <div className="student-radar-wrap" role="img" aria-label="Skill radar chart comparing current, previous, and target scores across MET sections">
+        <ResponsiveContainer width="100%" height={chartHeight}>
+          {sectionData.length < 3 ? (
+            <BarChart data={sectionData} margin={{ top: 8, right: 16, bottom: 8, left: -8 }} layout="vertical">
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--divider)" horizontal={false} />
+              <XAxis type="number" domain={[0, domainMax]} tick={{ fill: 'var(--muted)', fontSize: 11 }} tickCount={5} />
+              <YAxis type="category" dataKey="skill" tick={{ fill: 'var(--text-2)', fontSize: 12, fontFamily: 'var(--font-ui)' }} width={60} />
+              <Tooltip contentStyle={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: 12, fontFamily: 'var(--font-ui)', boxShadow: 'var(--shadow-md)' }} />
+              <Legend wrapperStyle={{ fontSize: 12, fontFamily: 'var(--font-ui)', color: 'var(--text-2)', paddingTop: 8 }} />
+              <Bar name="Current" dataKey="current" fill="var(--accent)" radius={[0, 3, 3, 0]} isAnimationActive animationDuration={1000} animationBegin={300}>
+                <LabelList dataKey="current" position="right" fill="var(--accent)" fontSize={11} fontWeight={700} />
+              </Bar>
+              {sectionData.some(d => d.previous != null) && (
+                <Bar name="Previous" dataKey="previous" fill="var(--muted)" fillOpacity={0.5} radius={[0, 3, 3, 0]} isAnimationActive animationDuration={800} animationBegin={0} />
+              )}
+              <Bar name="Target" dataKey="target" fill="var(--primary)" fillOpacity={0.25} radius={[0, 3, 3, 0]} isAnimationActive animationDuration={900} animationBegin={150} />
+            </BarChart>
+          ) : (
+            <RadarChart data={sectionData} cx="50%" cy="50%" outerRadius="70%">
+              <PolarGrid stroke="var(--divider)" />
+              <PolarAngleAxis dataKey="skill" tick={{ fill: 'var(--text-2)', fontSize: 12, fontFamily: 'var(--font-ui)' }} />
+              <PolarRadiusAxis domain={[0, domainMax]} tick={{ fill: 'var(--muted)', fontSize: 11 }} tickCount={5} />
+              {sectionData.some(d => d.previous != null) && (
+                <Radar name="Previous" dataKey="previous" stroke="var(--muted)" strokeWidth={1.5} strokeDasharray="5 5" fill="var(--muted)" fillOpacity={0.22} isAnimationActive animationDuration={900} animationBegin={0} />
+              )}
+              <Radar name="Current" dataKey="current" stroke="var(--accent)" strokeWidth={3} fill="var(--accent)" fillOpacity={0.38} isAnimationActive animationDuration={1200} animationBegin={600} />
+              <Radar name="Target" dataKey="target" stroke="var(--primary)" strokeWidth={2} strokeDasharray="4 4" fill="none" isAnimationActive animationDuration={1000} animationBegin={300} />
+              <Legend wrapperStyle={{ fontSize: 12, fontFamily: 'var(--font-ui)', color: 'var(--text-2)', paddingTop: 8 }} />
+              <Tooltip contentStyle={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: 12, fontFamily: 'var(--font-ui)', boxShadow: 'var(--shadow-md)' }} />
+            </RadarChart>
+          )}
+        </ResponsiveContainer>
       </div>
-
-      <div className="student-stage-track student-stage-track--wide student-stage-track--animate" key={stage.label} aria-label={`${skill.section} stage: ${stage.label}`}>
-        {PROGRESS_STAGES.map(item => (
-          <span key={item.label} className={item.order <= stage.order ? 'active' : ''} title={item.label} />
-        ))}
-      </div>
-
-      <div className="student-progress-trend">
-        <TrendChip trend={trend} />
-        <span className="student-progress-trend-note">{trendNote}</span>
-      </div>
-
-      <div className="student-progress-copy-grid">
-        <div><strong>Current focus</strong><p>{skill.next_step || `Keep building more control in ${skill.section}.`}</p></div>
-        <div><strong>Last assessed</strong><p>{stage.label} stage · {trend?.evaluations > 1 ? `based on ${trend.evaluations} classes` : 'based on your latest class'}.</p></div>
-      </div>
-
-      <div className="student-confidence-list">
-        <div className="student-todo-row"><span className={`student-todo-check${stage.order >= 2 ? ' done' : ''}`}>{stage.order >= 2 ? '✓' : ''}</span><span><strong>I understand the {skill.section} task</strong><small>Foundation step</small></span></div>
-        <div className="student-todo-row"><span className={`student-todo-check${stage.order >= 3 ? ' done' : ''}`}>{stage.order >= 3 ? '✓' : ''}</span><span><strong>I can complete it with support</strong><small>Building control</small></span></div>
-        <div className="student-todo-row"><span className={`student-todo-check${stage.order >= 4 ? ' done' : ''}`}>{stage.order >= 4 ? '✓' : ''}</span><span><strong>I can do it more independently</strong><small>Consistency step</small></span></div>
-        <div className="student-todo-row"><span className={`student-todo-check${stage.order >= 5 ? ' done' : ''}`}>{stage.order >= 5 ? '✓' : ''}</span><span><strong>I can try timed mock practice</strong><small>Ready for mock practice</small></span></div>
-      </div>
-    </article>
+      <table className="sr-only" aria-label="Radar chart data">
+        <thead><tr><th>Skill</th><th>Current</th><th>Previous</th><th>Target</th></tr></thead>
+        <tbody>
+          {sectionData.map(d => (
+            <tr key={d.skill}>
+              <td>{d.skill}</td>
+              <td>{d.current}</td>
+              <td>{d.previous ?? '—'}</td>
+              <td>{d.target}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }
 
 export default function StudentProgress({ student }) {
   const [diagnoses, setDiagnoses] = useState([]);
   const [legendOpen, setLegendOpen] = useState(false);
+  const [expandedSkill, setExpandedSkill] = useState(null);
 
   useEffect(() => {
     (async () => {
@@ -105,14 +106,20 @@ export default function StudentProgress({ student }) {
     const snap = asArray(d?.content?.section_snapshot);
     return snap.filter(s => s.evaluated || Number(s.score_0_80) > 0);
   }, []);
+  const lowestSkill = skills.length > 1
+    ? [...skills].sort((a, b) => (Number(a.score_0_80) || 80) - (Number(b.score_0_80) || 80))[0]
+    : null;
+
+  const handleExpand = (section) => {
+    setExpandedSkill(expandedSkill === section ? null : section);
+  };
 
   return (
     <div className="student-progress-page">
-      <section className="student-hero">
+      <section className="student-hero bg-grain fade-up" style={{ '--delay': '0s' }}>
         <div>
           <p className="student-hero-kicker">MET progress profile</p>
           <h1>Your MET progress path</h1>
-          <p>Progress stages show direction without turning your learning into a grade.</p>
         </div>
       </section>
 
@@ -151,7 +158,7 @@ export default function StudentProgress({ student }) {
         </section>
       ) : (
         <>
-          {skills.length > 1 && (() => {
+          {skills.length > 0 && (() => {
             const sortedDx = [...diagnoses].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
             const previousDx = sortedDx.find(d => {
               const snap = asArray(d?.content?.section_snapshot);
@@ -162,36 +169,108 @@ export default function StudentProgress({ student }) {
               const prevSkill = prevSnapshot.find(s => s.section === skill.section);
               return { skill: sectionToLabel(skill.section), current: Number(skill.score_0_80) || 0, previous: prevSkill ? (Number(prevSkill.score_0_80) || 0) : null, target: 65 };
             });
-            return <SubskillRadar sectionData={radarData} />;
+            return (
+              <section className="student-panel student-panel--primary" style={{ cursor: 'default', marginBottom: 24 }}>
+                <div className="student-panel-head">
+                  <div>
+                    <span className="student-panel-kicker">Skill overview</span>
+                    <h2>Radar comparison</h2>
+                  </div>
+                  <span className="student-pill">{skills.length} skill{skills.length !== 1 ? 's' : ''}</span>
+                </div>
+                <SubskillRadar sectionData={radarData} />
+              </section>
+            );
           })()}
 
-          {skills.length > 0 ? (
-            <section className="student-readiness-grid">
-              {skills.map(skill => (<ProgressProfileCard key={skill.section} skill={skill} trend={getSkillTrend(skill.section, sorted)} />))}
-            </section>
-          ) : (
-            <div className="student-empty-card" style={{ marginBottom: 18 }}>No evaluated skills are ready to show yet. When a class evaluates speaking only, only speaking progress will appear here.</div>
-          )}
+          <section className="student-panel" style={{ cursor: 'default', marginBottom: 24 }}>
+            <div className="student-panel-head">
+              <div>
+                <span className="student-panel-kicker">Readiness Snapshot</span>
+                <h2>Evaluated skills</h2>
+              </div>
+            </div>
+            {skills.length > 0 ? (
+              <div className="student-skill-list">
+                {skills.map(skill => {
+                  const skillTrend = getSkillTrend(skill.section, sorted);
+                  const isExpanded = expandedSkill === skill.section;
+                  return (
+                    <div key={skill.section} className={`student-skill-detail${isExpanded ? ' is-open' : ''}`}>
+                      <SkillRow skill={skill} trend={skillTrend} onClick={() => handleExpand(skill.section)} />
+                      {isExpanded && (
+                        <div className="student-skill-expanded">
+                          <div className="student-skill-expanded-grid">
+                            <div><strong>Current focus</strong><p>{skill.next_step || `Keep building more control in ${skill.section}.`}</p></div>
+                            <div><strong>Last assessed</strong><p>{skillTrend?.evaluations > 1 ? `Based on ${skillTrend.evaluations} classes` : 'Based on your latest class'}.</p></div>
+                          </div>
+                          <div className="student-confidence-list">
+                            {(() => {
+                              const stage = getProgressStage(Number(skill.score_0_80) || 0);
+                              return PROGRESS_STAGES.map((st, i) => (
+                                <div key={st.label} className={`student-todo-row${stage.order >= st.order ? ' done' : ''}`}>
+                                  <span className="student-todo-check">{stage.order >= st.order ? '✓' : ''}</span>
+                                  <span>
+                                    <strong>{['I understand the task', 'I can do it with support', 'I can do it independently', 'I can try mock practice', 'Ready for the MET'][i] || st.label}</strong>
+                                    <small>{['Foundation', 'Building control', 'Consistency', 'Timed practice', 'Exam ready'][i] || ''}</small>
+                                  </span>
+                                </div>
+                              ));
+                            })()}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="student-empty-card">No evaluated skills are ready to show yet. When a class evaluates speaking only, only speaking progress will appear here.</div>
+            )}
+          </section>
+
+          {lowestSkill && lowestSkill.score_0_80 > 0 && (() => {
+            const lowScore = Number(lowestSkill.score_0_80) || 0;
+            return (
+              <section className="sp-section-callout student-panel student-panel--clickable" style={{ cursor: 'default' }}>
+                <div className="student-panel-head">
+                  <div>
+                    <span className="student-panel-kicker">Focus Area</span>
+                    <h2>{lowestSkill.section.replace(/_/g, ' ')}</h2>
+                  </div>
+                  <span className="student-skill-score">{lowScore}/80</span>
+                </div>
+                <p style={{ fontSize: 'var(--text-sm)', lineHeight: 1.6, color: 'var(--text)', margin: '8px 0 0' }}>
+                  This skill needs the most attention. Focus on it in your next class or practice session.
+                </p>
+                {lowestSkill.next_step && (
+                  <p style={{ fontSize: 'var(--text-sm)', lineHeight: 1.6, color: 'var(--text-2)', margin: '6px 0 0' }}>
+                    <strong>Next step:</strong> {lowestSkill.next_step}
+                  </p>
+                )}
+              </section>
+            );
+          })()}
 
           {sorted.length > 1 && (
-            <section className="student-panel">
+            <section className="student-panel" style={{ cursor: 'default' }}>
               <div className="student-panel-head">
-                <div><span className="student-panel-kicker">Compare by date</span><h2>Skill progress</h2></div>
+                <div><span className="student-panel-kicker">Compare by date</span><h2>Progress history</h2></div>
               </div>
               <div className="student-history-list">
                 {sorted.map(dx => {
                   const snap = asArray(dx?.content?.section_snapshot).filter(s => s.evaluated || Number(s.score_0_80) > 0);
                   if (snap.length === 0) return null;
                   return (
-                    <div key={dx.id} className="student-history-item" style={{ alignItems: 'flex-start', gap: 16 }}>
+                    <div key={dx.id} className="student-history-item items-start gap-4">
                       <span style={{ minWidth: 80, color: 'var(--muted)', fontSize: 'var(--text-xs)', paddingTop: 3, flexShrink: 0 }}>
                         {new Date(dx.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
                       </span>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, flex: 1 }}>
+                      <div className="flex-col-gap2 flex-1">
                         {snap.map(s => {
                           const stage = getProgressStage(s.score_0_80);
                           return (
-                            <div key={s.section} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                            <div key={s.section} className="flex-row-gap3">
                               <span style={{ minWidth: 88, fontSize: 'var(--text-xs)', color: 'var(--muted)', textTransform: 'capitalize' }}>
                                 {s.section.replace(/_/g, ' ')}
                               </span>
@@ -201,7 +280,7 @@ export default function StudentProgress({ student }) {
                               <div style={{ display: 'flex', gap: 3 }} aria-label={`${stage.order} of 5 stages`}>
                                 {PROGRESS_STAGES.map(st => (
                                   <span key={st.label} style={{
-                                    width: 16, height: 6, borderRadius: 3,
+                                    flex: 1, height: 6, borderRadius: 3,
                                     background: st.order <= stage.order ? 'var(--accent)' : 'var(--border)',
                                     transition: 'background 0.2s',
                                   }} />

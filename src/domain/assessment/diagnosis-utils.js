@@ -38,7 +38,7 @@ export function aiText(res) {
 export async function generateDiagnosisJson(promptData, setStatus = () => {}) {
   let firstError = null;
   try {
-    const raw = await callAI(buildSkillDiagnosisPrompt(promptData), withSkills('diagnosis', { max_tokens: 6000, preferredProvider: 'gemini' }));
+    const raw = await callAI(buildSkillDiagnosisPrompt(promptData), withSkills('diagnosis', { max_tokens: 6000 }));
     const parsed = normalizeDiagnosisJson(parseAiJson(aiText(raw)), promptData.classEvidence);
     if (hasUsefulDiagnosis(parsed)) return { raw, parsed };
     firstError = new Error('Full diagnosis returned incomplete sections.');
@@ -48,7 +48,7 @@ export async function generateDiagnosisJson(promptData, setStatus = () => {}) {
 
   setStatus('Step 1/4 — Retrying with a smaller diagnosis prompt...');
   try {
-    const raw = await callAI(buildCompactSkillDiagnosisPrompt(promptData), withSkills('diagnosis', { max_tokens: 3200, preferredProvider: 'gemini' }));
+    const raw = await callAI(buildCompactSkillDiagnosisPrompt(promptData), withSkills('diagnosis', { max_tokens: 3200 }));
     const parsed = normalizeDiagnosisJson(parseAiJson(aiText(raw)), promptData.classEvidence);
     return { raw, parsed };
   } catch (fallbackError) {

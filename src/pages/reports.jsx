@@ -2,7 +2,7 @@
  * reports.jsx — Progress and performance repository
  */
 import { useState, useEffect, useMemo } from 'react';
-import { Icon, SectionHeader, Avatar, Pill } from '../components/shared.jsx';
+import { Icon, SectionHeader, Avatar, Pill, S_DARK } from '../components/shared.jsx';
 import { Button } from '../components/ui/Button.jsx';
 import { Card } from '../components/ui/Card.jsx';
 import { getDiagnoses, getHomework, getErrorBank, getAllSubmissions, getProgressNotes } from '../lib/workflow.js';
@@ -84,7 +84,7 @@ export default function ReportsPage({ students, onNavigate, workspaceQuery = '' 
   const visibleExerciseRows = report?.exerciseMix.filter((row) => exerciseTypeFilter === 'all' || row.type === exerciseTypeFilter) || [];
 
   return (
-    <div style={S.shell}>
+    <div className="page-container" style={S.shell}>
       <section style={S.hero}>
         <div>
           <div style={S.heroTag}>Progress Repository</div>
@@ -99,7 +99,7 @@ export default function ReportsPage({ students, onNavigate, workspaceQuery = '' 
         </div>
       </section>
 
-      <Card style={{ padding: 16, marginBottom: 16 }}>
+      <Card small style={{ marginBottom: 16 }}>
         <div style={S.filterGrid}>
           <label style={S.field}>
             <span style={S.fieldLabel}>Student</span>
@@ -118,12 +118,12 @@ export default function ReportsPage({ students, onNavigate, workspaceQuery = '' 
       </Card>
 
       {!report ? (
-        <Card style={{ padding: 30, textAlign: 'center' }}>
+        <Card small style={{ textAlign: 'center' }}>
           <p style={{ color: 'var(--muted)', margin: 0 }}>{loading ? 'Generating report…' : 'Select a student to generate report data.'}</p>
         </Card>
       ) : (
         <>
-          <Card style={{ padding: 18, marginBottom: 14 }}>
+          <Card small style={{ marginBottom: 14 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
               <Avatar name={report.student?.name || '?'} size={48} />
               <div style={{ minWidth: 220 }}>
@@ -148,7 +148,7 @@ export default function ReportsPage({ students, onNavigate, workspaceQuery = '' 
           </div>
 
           {report.approved.length > 0 && (
-            <Card style={{ padding: 18, marginTop: 14 }}>
+            <Card small style={{ marginTop: 14 }}>
               <SectionHeader title="Which MET skills have enough evidence?" icon={<Icon.diagnose size={14} />} />
               <p style={S.caption}>Approved diagnoses only. Missing evidence stays visible instead of becoming a score.</p>
               <div style={{ width: '100%', height: 320, marginTop: 12 }}>
@@ -157,11 +157,11 @@ export default function ReportsPage({ students, onNavigate, workspaceQuery = '' 
                     <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
                     <XAxis dataKey="skill" tick={{ fontSize: 12, fill: 'var(--text-2)' }} axisLine={{ stroke: 'var(--divider)' }} tickLine={{ stroke: 'var(--divider)' }} />
                     <YAxis allowDecimals={false} tick={{ fontSize: 12, fill: 'var(--text-2)' }} axisLine={{ stroke: 'var(--divider)' }} tickLine={{ stroke: 'var(--divider)' }} />
-                    <Tooltip contentStyle={{ borderRadius: 3, border: '1px solid var(--border)', background: '#fff' }} cursor={{ fill: 'rgba(20, 80, 120, 0.08)' }} />
+                    <Tooltip contentStyle={{ borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)', background: 'var(--surface)' }} cursor={{ fill: 'rgba(20,136,145,0.08)' }} />
                     <Legend wrapperStyle={{ fontSize: 12 }} />
-                    <Bar dataKey="enoughEvidence" name="Evaluated with evidence" stackId="coverage" fill="#0f766e" isAnimationActive animationDuration={900} />
-                    <Bar dataKey="lowEvidence" name="Not evaluated enough" stackId="coverage" fill="#f59e0b" isAnimationActive animationDuration={1100} />
-                    <Bar dataKey="notEvaluated" name="Not evaluated" stackId="coverage" fill="#94a3b8" isAnimationActive animationDuration={1300} />
+                    <Bar dataKey="enoughEvidence" name="Evaluated with evidence" stackId="coverage" fill="var(--accent)" isAnimationActive animationDuration={900} />
+                    <Bar dataKey="lowEvidence" name="Not evaluated enough" stackId="coverage" fill="var(--warning)" isAnimationActive animationDuration={1100} />
+                    <Bar dataKey="notEvaluated" name="Not evaluated" stackId="coverage" fill="var(--muted)" isAnimationActive animationDuration={1300} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -169,7 +169,7 @@ export default function ReportsPage({ students, onNavigate, workspaceQuery = '' 
           )}
 
           {report.inquiryComparison && (
-            <Card style={{ padding: 18, marginTop: 14 }}>
+            <Card small style={{ marginTop: 14 }}>
               <SectionHeader title="Inquiry — Baseline vs Latest" icon={<Icon.progress size={14} />} />
               <p style={S.caption}>
                 Skill score deltas between first{report.baseline?.isBaseline ? ' (baseline)' : ''} and most recent diagnosis.
@@ -192,7 +192,7 @@ export default function ReportsPage({ students, onNavigate, workspaceQuery = '' 
           )}
 
           <div style={S.splitGrid}>
-            <Card style={{ padding: 16 }}>
+            <Card small>
               <SectionHeader title="Exercise Status by Format" icon={<Icon.homework size={14} />} />
               <p style={S.caption}>Submitted and reviewed are separate so teacher backlog does not hide student effort.</p>
               {visibleExerciseRows.length === 0 ? (
@@ -213,7 +213,7 @@ export default function ReportsPage({ students, onNavigate, workspaceQuery = '' 
               )}
             </Card>
 
-            <Card style={{ padding: 16 }}>
+            <Card small>
               <SectionHeader title="Diagnosis Timeline" icon={<Icon.calendar size={14} />} action={<Button variant="ghost" size="sm" onClick={() => onNavigate('diagnostics')}>Open Hub</Button>} />
               {report.approved.length === 0 ? (
                 <p style={S.empty}>No approved diagnoses yet.</p>
@@ -233,7 +233,7 @@ export default function ReportsPage({ students, onNavigate, workspaceQuery = '' 
             </Card>
           </div>
 
-          <Card style={{ padding: 16, marginTop: 12 }}>
+          <Card small style={{ marginTop: 12 }}>
             <SectionHeader title="Progress Notes" icon={<Icon.doc size={14} />} />
             {report.notes.length === 0 ? (
               <p style={S.empty}>No notes recorded.</p>
@@ -262,7 +262,7 @@ function StatCard({ label, value, tone }) {
       : 'var(--surface)';
 
   return (
-    <Card style={{ padding: 14, background: bg }}>
+    <Card small style={{ background: bg }}>
       <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</div>
       <div style={{ marginTop: 8, fontSize: 'var(--text-2xl)', fontWeight: 800, color: 'var(--primary)' }}>{value}</div>
     </Card>
@@ -343,7 +343,7 @@ function ExerciseStatusBars({ row }) {
 }
 
 const S = {
-  shell: { maxWidth: 1120, margin: '0 auto', padding: '28px 20px 40px' },
+  shell: { padding: '28px 20px 40px' },
   hero: {
     display: 'flex',
     alignItems: 'flex-end',
@@ -353,14 +353,13 @@ const S = {
     marginBottom: 18,
     padding: '22px 24px',
     borderRadius: 'var(--radius-sm)',
-    border: '1px solid rgba(168, 218, 220, 0.18)',
-    background: 'linear-gradient(135deg, #101a28 0%, #172537 50%, #1f4e58 100%)',
+    border: '1px solid rgba(20,136,145,0.18)',
+    background: 'linear-gradient(135deg, var(--primary) 0%, #172537 50%, var(--accent) 100%)',
     boxShadow: '0 18px 44px -30px rgba(16, 26, 40, 0.8)',
-    color: '#fff',
+    color: 'var(--on-dark)',
   },
-  heroTag: { fontSize: 'var(--text-xs)', letterSpacing: '0.1em', textTransform: 'uppercase', color: '#9fd6d6', fontWeight: 700, marginBottom: 6 },
-  headline: { fontFamily: 'var(--font-ui)', fontSize: 'var(--text-2xl)', fontWeight: 700, color: '#fff', margin: 0 },
-  sub: { fontSize: 'var(--text-sm)', color: 'rgba(255,255,255,.78)', margin: '4px 0 0', maxWidth: 620 },
+  heroTag: { fontSize: 'var(--text-xs)', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--accent-soft)', fontWeight: 700, marginBottom: 6 },
+  ...S_DARK,
   filterGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 10 },
   field: { display: 'flex', flexDirection: 'column', gap: 4 },
   fieldLabel: { fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em' },
@@ -377,11 +376,11 @@ const S = {
     border: '1px solid var(--divider)',
     borderRadius: 'var(--radius-sm)',
     padding: '11px 12px',
-    background: 'linear-gradient(180deg, #ffffff 0%, #f9fcfc 100%)',
+    background: 'var(--surface)',
   },
   statusBars: { display: 'grid', gap: 5, minWidth: 0 },
   statusLine: { display: 'grid', gridTemplateColumns: '62px minmax(60px, 1fr) 34px', alignItems: 'center', gap: 7, fontSize: 'var(--text-xs)', color: 'var(--muted)' },
-  progressTrack: { height: 8, borderRadius: 'var(--radius-sm)', background: 'var(--bg-deep)', overflow: 'hidden', boxShadow: 'inset 0 0 0 1px rgba(26,35,50,0.04)' },
+  progressTrack: { height: 8, borderRadius: 'var(--radius-sm)', background: 'var(--bg-deep)', overflow: 'hidden' },
   progressFillSubmitted: { height: '100%', borderRadius: 'var(--radius-sm)', background: 'var(--accent-soft)' },
   progressFillReviewed: { height: '100%', borderRadius: 'var(--radius-sm)', background: 'var(--accent)' },
   timelineRow: {
@@ -391,7 +390,7 @@ const S = {
     border: '1px solid var(--divider)',
     borderRadius: 'var(--radius-sm)',
     padding: '10px 12px',
-    background: 'linear-gradient(180deg, #ffffff 0%, #f9fcfc 100%)',
+    background: 'var(--surface)',
   },
   timelineIdx: {
     width: 24,

@@ -2,7 +2,7 @@
  * student-profile.jsx — Deep-dive student profile with tabs
  */
 import { useState, useEffect } from 'react';
-import { Icon, SectionHeader, Pill, Avatar, PillNav } from '../components/shared.jsx';
+import { Icon, SectionHeader, Pill, Avatar, PillNav, Breadcrumb } from '../components/shared.jsx';
 import { Button } from '../components/ui/Button.jsx';
 import { Card } from '../components/ui/Card.jsx';
 import {
@@ -42,26 +42,30 @@ export default function StudentProfile({ studentId, students, onNavigate }) {
 
   async function load() {
     if (!studentId) return;
-    const [s, tp, ev, dx, hw, subs, eb, vb, pn] = await Promise.all([
-      getStudent(studentId),
-      getTargetProfiles(studentId),
-      getClassEvents(studentId),
-      getDiagnoses(studentId),
-      getHomework(studentId),
-      getSubmissions(studentId),
-      getErrorBank(studentId),
-      getVocabularyBank(studentId),
-      getProgressNotes(studentId),
-    ]);
-    setStudent(s);
-    setProfiles(tp);
-    setClasses(ev);
-    setDiagnoses(dx || []);
-    setHomework(hw || []);
-    setSubmissions(subs || []);
-    setErrors(eb || []);
-    setVocab(vb || []);
-    setNotes(pn || []);
+    try {
+      const [s, tp, ev, dx, hw, subs, eb, vb, pn] = await Promise.all([
+        getStudent(studentId),
+        getTargetProfiles(studentId),
+        getClassEvents(studentId),
+        getDiagnoses(studentId),
+        getHomework(studentId),
+        getSubmissions(studentId),
+        getErrorBank(studentId),
+        getVocabularyBank(studentId),
+        getProgressNotes(studentId),
+      ]);
+      setStudent(s);
+      setProfiles(tp);
+      setClasses(ev);
+      setDiagnoses(dx || []);
+      setHomework(hw || []);
+      setSubmissions(subs || []);
+      setErrors(eb || []);
+      setVocab(vb || []);
+      setNotes(pn || []);
+    } catch (e) {
+      window.toast?.(`Failed to load student profile: ${e.message}`, 'warn');
+    }
   }
 
   if (!student) return <div style={{ padding: 'var(--space-10)', color: 'var(--muted)' }}>Student not found.</div>;
@@ -70,9 +74,7 @@ export default function StudentProfile({ studentId, students, onNavigate }) {
 
   return (
     <div className="page-shell-lg">
-      <button className="back-link" onClick={() => onNavigate('students')}>
-        <Icon.arrowL size={13} /> Back to students
-      </button>
+      <Breadcrumb crumbs={[{ label: 'Students', onClick: () => onNavigate('students') }, { label: 'Profile' }]} />
 
       <Card style={{ padding: 'var(--space-5)', marginBottom: 'var(--space-5)' }}>
         <div className="card-row" style={{ gap: 'var(--space-4)' }}>

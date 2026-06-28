@@ -82,6 +82,16 @@ export const Icon = {
 /* ─── SKELETON (canonical: ui/Skeleton.jsx) ─────────────────── */
 export { Skeleton, SkeletonText, SkeletonCard } from './ui/Skeleton.jsx';
 
+/* ─── PAGE HEADING STYLE CONSTANTS ──────────────────────────── */
+export const S = {
+  headline: { fontFamily: 'var(--font-ui)', fontSize: 'var(--text-2xl)', fontWeight: 700, color: 'var(--primary)', margin: 0 },
+  sub: { fontSize: 'var(--text-sm)', color: 'var(--muted)', margin: '4px 0 0' },
+};
+export const S_DARK = {
+  headline: { fontFamily: 'var(--font-ui)', fontSize: 'var(--text-2xl)', fontWeight: 700, color: '#fff', margin: 0 },
+  sub: { fontSize: 'var(--text-sm)', color: 'rgba(255,255,255,.78)', margin: '4px 0 0', maxWidth: 620 },
+};
+
 /* ─── EMPTY STATE (canonical: ui/EmptyState.jsx) ────────────── */
 export { EmptyState } from './ui/EmptyState.jsx';
 
@@ -188,6 +198,8 @@ export function Shell({ tabs = [], active, onTab, children, rightSlot, workflowA
 
 /* ─── Modal (canonical: ui/Modal.jsx) ────────────────────────── */
 export { Modal } from './ui/Modal.jsx';
+export { Breadcrumb } from './ui/Breadcrumb.jsx';
+export { Select } from './ui/Select.jsx';
 
 /* ─── callAI (see src/lib/callAI.js) ────────────────────────── */
 export { callAI, summarizeTranscript } from '../lib/callAI.js';

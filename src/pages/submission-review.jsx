@@ -2,7 +2,8 @@
  * submission-review.jsx — Teacher reviews student submission vs. diagnosis
  */
 import { useState, useEffect } from 'react';
-import { Icon, Card, SectionHeader, Pill, Button, Avatar } from '../components/shared.jsx';
+import { Icon, Card, SectionHeader, Pill, Button, Avatar, Breadcrumb } from '../components/shared.jsx';
+import { Modal } from '../components/ui/Modal.jsx';
 import { callAI } from '../lib/callAI.js';
 import { parseAiJson } from '../lib/ai-helpers.js';
 import { withSkills } from '../education-skills/active-skills.js';
@@ -30,14 +31,16 @@ export default function SubmissionReview({ submissionId, students, onNavigate })
   const [replyToStudent, setReplyToStudent] = useState('');
   const [questionEvals, setQuestionEvals] = useState({});
   const [showPreview, setShowPreview] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => { load(); }, [submissionId]);
 
   async function load() {
-    const allSubs = await getAllSubmissions();
-    const sub = allSubs.find(s => s.id === submissionId);
-    if (!sub) return;
-    setSubmission(sub);
+    try {
+      const allSubs = await getAllSubmissions();
+      const sub = allSubs.find(s => s.id === submissionId);
+      if (!sub) { setLoading(false); return; }
+      setSubmission(sub);
 
     const urls = {};
     for (const [exId, r] of Object.entries(sub.responses || {})) {
@@ -90,6 +93,11 @@ export default function SubmissionReview({ submissionId, students, onNavigate })
     setStudent(s);
     const eb = await getErrorBank(sub.studentId);
     setErrors(eb || []);
+    } catch (e) {
+      window.toast?.(`Failed to load submission: ${e.message}`, 'warn');
+    } finally {
+      setLoading(false);
+    }
   }
 
   async function runAiComparison() {
@@ -204,6 +212,7 @@ Return JSON:
     try {
       const data = await callAI(prompt, withSkills('feedback', { max_tokens: 900, temperature: 0.65 }));
       const raw = data.content?.map(b => b.text || '').join('') || '';
+      const parsed = parseAiJson(raw);
       setQuestionEvals(q => ({
         ...q,
         [exId]: {
@@ -285,6 +294,12 @@ Return JSON:
     doSave();
   }
 
+  if (loading) return (
+    <div className="review-page">
+      <div className="submission-loading">Loading submission...</div>
+    </div>
+  );
+
   if (!submission) return <div style={{ padding: 'var(--space-10)', color: 'var(--muted)' }}>Submission not found.</div>;
 
   const activeErrorBank = errors.filter(e => e.status === 'active');
@@ -329,107 +344,92 @@ Return JSON:
   return (
     <div>
       {/* ── Preview modal ─────────────────────────────────────── */}
-      {showPreview && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 50, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}
-          onClick={e => { if (e.target === e.currentTarget) setShowPreview(false); }}>
-          <div style={{ background: 'var(--surface)', borderRadius: 'var(--radius)', maxWidth: 560, width: '100%', maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 16px 48px rgba(0,0,0,0.28)', padding: 28 }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
-              <div>
-                <div className="section-label" style={{ color: 'var(--primary)', marginBottom: 3 }}>Preview — student will see</div>
-                <div style={{ fontWeight: 700, fontSize: 'var(--text-lg)', color: 'var(--text)' }}>Homework Review: {homework?.title || 'Homework'}</div>
-              </div>
-              <Button variant="ghost" size="sm" onClick={() => setShowPreview(false)}>✕ Edit</Button>
-            </div>
+      <Modal open={showPreview} onClose={() => setShowPreview(false)} kicker="Preview — student will see" title={`Homework Review: ${homework?.title || 'Homework'}`} maxWidth={560}>
+        {form.overallNote && (
+          <div style={{ padding: '12px 14px', background: 'var(--bg)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-sm)', lineHeight: 1.7, color: 'var(--text-2)', whiteSpace: 'pre-wrap', marginBottom: 14 }}>
+            {form.overallNote}
+          </div>
+        )}
+        {form.whatImproved && (
+          <div className="sr-feedback-block" style={{ background: 'rgba(46,106,63,.06)', border: '1px solid var(--success-soft, var(--border))', color: 'var(--text-2)', marginBottom: 14 }}>
+            <strong className="text-success">What improved: </strong>{form.whatImproved}
+          </div>
+        )}
 
-            {form.overallNote && (
-              <div style={{ padding: '12px 14px', background: 'var(--bg)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-sm)', lineHeight: 1.7, color: 'var(--text-2)', whiteSpace: 'pre-wrap', marginBottom: 14 }}>
-                {form.overallNote}
-              </div>
-            )}
-            {form.whatImproved && (
-              <div style={{ padding: '8px 12px', borderRadius: 'var(--radius-sm)', background: 'rgba(46,106,63,.06)', border: '1px solid var(--success-soft, var(--border))', fontSize: 'var(--text-sm)', color: 'var(--text-2)', marginBottom: 14 }}>
-                <strong style={{ color: 'var(--success, var(--accent))' }}>What improved: </strong>{form.whatImproved}
-              </div>
-            )}
-
-            {previewQuestions.length > 0 && (
-              <div style={{ marginBottom: 14 }}>
-                <div className="section-label" style={{ marginBottom: 8 }}>Per-question feedback</div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  {previewQuestions.map(({ entry, qe, activity }, i) => (
-                    <div key={entry.id} style={{ padding: '10px 12px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', background: 'var(--bg)' }}>
-                      <div style={{ fontWeight: 600, fontSize: 'var(--text-sm)', marginBottom: 4 }}>
-                        {entry.prompt || activity.prompt || `Question ${i + 1}`}
-                      </div>
-                      {qe.note && <p style={{ margin: '0 0 6px', fontSize: 'var(--text-sm)', color: 'var(--text-2)', lineHeight: 1.5 }}>{qe.note}</p>}
-                      {(qe.corrections || []).filter(c => c.original || c.improved).map((c, ci) => (
-                        <div key={ci} className="correction-pair" style={{ fontSize: 'var(--text-xs)', marginTop: 4 }}>
-                          <span className="correction-original">{c.original}</span>
-                          <span className="correction-arrow">→</span>
-                          <span className="correction-improved">{c.improved}</span>
-                        </div>
-                      ))}
+        {previewQuestions.length > 0 && (
+          <div className="mb-4">
+            <div className="section-label mb-2">Per-question feedback</div>
+            <div className="flex-col-gap2">
+              {previewQuestions.map(({ entry, qe, activity }, i) => (
+                <div key={entry.id} style={{ padding: '10px 12px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', background: 'var(--bg)' }}>
+                  <div style={{ fontWeight: 600, fontSize: 'var(--text-sm)', marginBottom: 4 }}>
+                    {entry.prompt || activity.prompt || `Question ${i + 1}`}
+                  </div>
+                  {qe.note && <p style={{ margin: '0 0 6px', fontSize: 'var(--text-sm)', color: 'var(--text-2)', lineHeight: 1.5 }}>{qe.note}</p>}
+                  {(qe.corrections || []).filter(c => c.original || c.improved).map((c, ci) => (
+                    <div key={ci} className="correction-pair" style={{ fontSize: 'var(--text-xs)', marginTop: 4 }}>
+                      <span className="correction-original">{c.original}</span>
+                      <span className="correction-arrow">→</span>
+                      <span className="correction-improved">{c.improved}</span>
                     </div>
                   ))}
                 </div>
-              </div>
-            )}
-
-            {previewCorrections.length > 0 && previewQuestions.length === 0 && (
-              <div style={{ marginBottom: 14 }}>
-                <div className="section-label" style={{ marginBottom: 6 }}>Corrections</div>
-                {previewCorrections.map((c, i) => (
-                  <div key={i} className="correction-pair" style={{ fontSize: 'var(--text-sm)', marginBottom: 4 }}>
-                    <span className="correction-original">{c.original}</span>
-                    <span className="correction-arrow">→</span>
-                    <span className="correction-improved">{c.improved}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {form.redoRequired && (
-              <div style={{ padding: '8px 12px', borderRadius: 'var(--radius-sm)', background: 'var(--warning-bg)', border: '1px solid var(--warning-soft)', fontSize: 'var(--text-sm)', color: 'var(--warning-text)', fontWeight: 600, marginBottom: 14 }}>
-                Redo required — your teacher will ask you to resubmit this homework.
-              </div>
-            )}
-
-            <div style={{ borderTop: '1px solid var(--border)', paddingTop: 16, display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
-              <Button variant="ghost" onClick={() => setShowPreview(false)}>Edit first</Button>
-              <Button variant="primary" disabled={saving} onClick={() => doSave()}>
-                {saving ? 'Sending…' : 'Confirm & Send to Student'}
-              </Button>
+              ))}
             </div>
           </div>
+        )}
+
+        {previewCorrections.length > 0 && previewQuestions.length === 0 && (
+          <div className="mb-4">
+            <div className="section-label mb-2">Corrections</div>
+            {previewCorrections.map((c, i) => (
+              <div key={i} className="correction-pair" style={{ fontSize: 'var(--text-sm)', marginBottom: 4 }}>
+                <span className="correction-original">{c.original}</span>
+                <span className="correction-arrow">→</span>
+                <span className="correction-improved">{c.improved}</span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {form.redoRequired && (
+          <div className="sr-feedback-block font-semibold" style={{ background: 'var(--warning-bg)', border: '1px solid var(--warning-soft)', color: 'var(--warning-text)', marginBottom: 14 }}>
+            Redo required — your teacher will ask you to resubmit this homework.
+          </div>
+        )}
+
+        <div style={{ borderTop: '1px solid var(--border)', paddingTop: 16, display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+          <Button variant="ghost" onClick={() => setShowPreview(false)}>Edit first</Button>
+          <Button variant="primary" disabled={saving} onClick={() => doSave()}>
+            {saving ? 'Sending…' : 'Confirm & Send to Student'}
+          </Button>
         </div>
-      )}
+      </Modal>
 
       {/* ── Sticky context + action bar ──────────────────────────── */}
-      <div style={{
+      <div className="sr-sticky-bar" style={{
         position: 'sticky', top: 0, zIndex: 20,
         background: 'var(--surface-glass)',
         backdropFilter: 'blur(12px)',
         WebkitBackdropFilter: 'blur(12px)',
         borderBottom: '1px solid var(--border)',
       }}>
-        <div style={{ maxWidth: 960, margin: '0 auto', padding: '0 20px', height: 54, display: 'flex', alignItems: 'center', gap: 10 }}>
-          <button className="back-link" style={{ marginBottom: 0, fontSize: 'var(--text-xs)', fontWeight: 600, flexShrink: 0 }} onClick={() => onNavigate('submissions')}>
-            <Icon.arrowL size={13} /> Submissions
-          </button>
-          <div style={{ width: 1, height: 18, background: 'var(--border)', flexShrink: 0 }} />
+        <div className="flex items-center" style={{ maxWidth: 960, margin: '0 auto', padding: '0 20px', height: 54, gap: 10 }}>
+          <Breadcrumb crumbs={[{ label: 'Submissions', onClick: () => onNavigate('submissions') }, { label: 'Review' }]} />
+          <div className="divider-vert" />
           {student && (
             <>
               <Avatar name={student.name} size={26} />
-              <span style={{ fontWeight: 700, fontSize: 'var(--text-sm)', color: 'var(--text)', whiteSpace: 'nowrap' }}>{student.name}</span>
+              <span className="font-bold text-sm" style={{ color: 'var(--text)', whiteSpace: 'nowrap' }}>{student.name}</span>
             </>
           )}
           {homework && (
-            <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            <span className="text-xs text-muted flex-1 truncate">
               {homework.title}
             </span>
           )}
-          {!homework && <span style={{ flex: 1 }} />}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+          {!homework && <span className="flex-1" />}
+          <div className="flex items-center gap-2 shrink-0">
             {existingReview && <Pill tone="success"><Icon.check size={11} /> Reviewed</Pill>}
             <Button variant="ghost" size="sm" onClick={runAiComparison} disabled={aiComparing || !diagnosis}>
               <Icon.spark size={13} /> {aiComparing ? 'Analyzing…' : 'AI Compare'}
@@ -443,28 +443,28 @@ Return JSON:
 
       {/* ── Page body ─────────────────────────────────────────────── */}
       <div className="page-shell-lg" style={{ paddingBottom: 'var(--space-12)' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 20 }}>
+        <div className="grid-auto-fit-lg">
 
           {/* ── Left: submission + context ───────────────────────── */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <div className="flex-col-gap4">
 
             {/* Student submission */}
-            <Card style={{ padding: 'var(--space-5)' }}>
+            <Card className="card-p-5">
               <SectionHeader title="Student Submission" right={
-                <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>
+                <span className="text-xs text-muted">
                   {new Date(submission.submittedAt).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}
                 </span>
               } />
-              <div style={{ marginTop: 10, padding: 12, background: 'var(--bg)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-sm)', lineHeight: 1.7, minHeight: 80, whiteSpace: 'pre-wrap' }}>
-                {submission.content || <em style={{ color: 'var(--muted)' }}>No text content submitted.</em>}
+              <div className="sr-content-block" style={{ marginTop: 10, minHeight: 80, lineHeight: 1.7 }}>
+                {submission.content || <em className="text-muted">No text content submitted.</em>}
               </div>
 
             </Card>
 
             {/* ── Per-question evaluation ── */}
             {submissionEvidence.entries.length > 0 && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                <div className="section-label" style={{ color: 'var(--primary)', fontWeight: 800, display: 'flex', alignItems: 'center', gap: 5 }}>
+              <div className="flex-col-gap3">
+                <div className="section-label text-primary flex-row-gap2">
                   <Icon.check size={12} /> Per-question review
                 </div>
                 {submissionEvidence.entries.map((entry, idx) => {
@@ -473,14 +473,14 @@ Return JSON:
                   const qe = questionEvals[entry.id] || {};
                   const audioUrl = audioUrls[entry.id];
                   return (
-                    <Card key={entry.id} style={{ padding: 'var(--space-4)' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                        <span style={{ fontWeight: 700, fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>Q{idx + 1}</span>
-                        <span style={{ padding: '2px 8px', borderRadius: 'var(--radius-pill)', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', background: 'var(--accent-subtle)', color: 'var(--primary)', letterSpacing: '0.04em' }}>
+                    <Card key={entry.id} className="card-p-4">
+                      <div className="flex-row-gap2 mb-2">
+                        <span className="text-xs font-bold text-muted">Q{idx + 1}</span>
+                        <span className="sr-tag">
                           {skill}
                         </span>
                         {activity.objective && (
-                          <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', flex: 1 }}>{activity.objective}</span>
+                          <span className="text-xs text-muted flex-1">{activity.objective}</span>
                         )}
                         <Button variant="ghost" size="sm" disabled={qe.aiRunning}
                           onClick={() => evaluateQuestion(entry.id)}
@@ -490,23 +490,23 @@ Return JSON:
                       </div>
 
                       {entry.prompt && (
-                        <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', lineHeight: 1.5, marginBottom: 8, padding: '6px 8px', background: 'var(--bg)', borderRadius: 'var(--radius-sm)' }}>
+                        <div className="sr-content-block-sm mb-2">
                           {entry.prompt}
                         </div>
                       )}
 
                       {/* Student response */}
                       {entry.transcript ? (
-                        <div style={{ padding: '8px 10px', background: 'var(--bg)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-sm)', lineHeight: 1.6, color: 'var(--text-2)', whiteSpace: 'pre-wrap', marginBottom: 8 }}>
-                          <strong style={{ color: 'var(--primary)', display: 'block', fontSize: 'var(--text-xs)', marginBottom: 3 }}>Transcript</strong>
+                        <div className="sr-content-block mb-2">
+                          <strong className="text-primary text-xs font-bold" style={{ display: 'block', marginBottom: 3 }}>Transcript</strong>
                           {entry.transcript}
                         </div>
                       ) : entry.answer ? (
-                        <div style={{ padding: '8px 10px', background: 'var(--bg)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-sm)', lineHeight: 1.6, color: 'var(--text-2)', whiteSpace: 'pre-wrap', marginBottom: 8 }}>{entry.answer}</div>
+                        <div className="sr-content-block mb-2">{entry.answer}</div>
                       ) : null}
 
                       {audioUrl && (
-                        <div style={{ marginBottom: 8 }}>
+                        <div className="mb-2">
                           <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--accent)', marginBottom: 4 }}>
                             <Icon.mic size={12} /> Audio
                             {!entry.transcript && <span style={{ fontWeight: 400, color: 'var(--muted)' }}>— no transcript · AI will still evaluate</span>}
@@ -516,14 +516,14 @@ Return JSON:
                       )}
 
                       {!entry.transcript && !entry.answer && !audioUrl && (
-                        <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginBottom: 8 }}>No response recorded.</div>
+                        <div className="text-xs text-muted mb-2">No response recorded.</div>
                       )}
 
                       {/* AI result */}
                       {qe.aiResult && (
-                        <div style={{ padding: '10px 12px', background: 'rgba(var(--accent-rgb, 56,111,249), 0.06)', border: '1px solid var(--accent-light)', borderRadius: 'var(--radius-sm)', marginBottom: 8 }}>
-                          <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--primary)', marginBottom: 4 }}>AI assessment</div>
-                          <p style={{ margin: 0, fontSize: 'var(--text-sm)', lineHeight: 1.6, color: 'var(--text-2)' }}>{qe.aiResult.assessment}</p>
+                        <div className="sr-ai-result mb-2">
+                          <div className="text-xs font-bold text-primary mb-1">AI assessment</div>
+                          <p className="text-body" style={{ margin: 0 }}>{qe.aiResult.assessment}</p>
                           {qe.aiResult.questionNote && (
                             <p style={{ margin: '6px 0 0', fontSize: 'var(--text-xs)', color: 'var(--text-2)', fontStyle: 'italic', borderTop: '1px solid var(--border)', paddingTop: 6 }}>
                               Suggested note: {qe.aiResult.questionNote}
@@ -544,7 +544,7 @@ Return JSON:
 
                       {/* Per-question corrections */}
                       {((qe.corrections || []).length > 0) && (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                        <div className="flex-col-gap2">
                           <span className="section-label">Corrections</span>
                           {(qe.corrections || []).map((c, ci) => (
                             <div key={c.id || ci} style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
@@ -565,7 +565,7 @@ Return JSON:
                                 onClick={() => setQuestionEvals(q => {
                                   const cs = (q[entry.id]?.corrections || []).filter((_, i) => i !== ci);
                                   return { ...q, [entry.id]: { ...(q[entry.id] || {}), corrections: cs } };
-                                })}>
+                                })} aria-label="Delete correction">
                                 <Icon.trash size={11} />
                               </Button>
                             </div>
@@ -587,7 +587,7 @@ Return JSON:
 
             {/* Homework instructions */}
             {homework && (
-              <Card style={{ padding: 'var(--space-5)' }}>
+              <Card className="card-p-5">
                 <SectionHeader title="Homework Instructions" />
                 <div style={{ marginTop: 8, fontSize: 'var(--text-sm)', lineHeight: 1.7 }}>
                   <strong>Objective:</strong> {homework.objective || '—'}
@@ -598,9 +598,9 @@ Return JSON:
 
             {/* Diagnosis priorities */}
             {Array.isArray(diagnosis?.sections?.priorityDiagnosis?.content) && diagnosis.sections.priorityDiagnosis.content.length > 0 && (
-              <Card style={{ padding: 'var(--space-5)' }}>
+              <Card className="card-p-5">
                 <SectionHeader title="Diagnosis Priorities" right={<Icon.diagnose size={15} color="var(--muted)" />} />
-                <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <div className="flex-col-gap2 mt-3">
                   {diagnosis.sections.priorityDiagnosis.content.map((p, i) => (
                     <div key={i} style={{ display: 'flex', gap: 10, padding: '8px 10px', background: 'var(--bg)', borderRadius: 'var(--radius-sm)', alignItems: 'flex-start' }}>
                       <span style={{ fontWeight: 700, color: 'var(--accent)', fontSize: 'var(--text-xs)', flexShrink: 0, marginTop: 2 }}>#{p.rank}</span>
@@ -616,8 +616,8 @@ Return JSON:
 
             {/* Active error bank */}
             {activeErrorBank.length > 0 && (
-              <Card style={{ padding: 'var(--space-5)' }}>
-                <SectionHeader title="Active Error Bank" right={<span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>Click to add to corrections</span>} />
+              <Card className="card-p-5">
+                <SectionHeader title="Active Error Bank" right={<span className="text-xs text-muted">Click to add to corrections</span>} />
                 <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 6 }}>
                   {activeErrorBank.slice(0, 5).map(err => {
                     const appearances = err.submissionAppearances || 0;
@@ -648,13 +648,13 @@ Return JSON:
           </div>
 
           {/* ── Right: review form ───────────────────────────────── */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <div className="flex-col-gap4">
 
             {/* AI comparison result */}
             {aiComparison && (
-              <Card style={{ padding: 'var(--space-5)', borderLeft: '3px solid var(--accent)' }}>
+              <Card className="sr-review-callout">
                 <SectionHeader title="AI Assessment" right={<Icon.spark size={15} color="var(--accent)" />} />
-                <p style={{ marginTop: 8, fontSize: 'var(--text-sm)', lineHeight: 1.6, color: 'var(--text-2)', marginBottom: 0 }}>
+                <p className="text-sm mt-2" style={{ lineHeight: 1.6, color: 'var(--text-2)', marginBottom: 0 }}>
                   {aiComparison.didStudentImprove}
                 </p>
                 {aiComparison.correctedErrors?.length > 0 && (
@@ -666,9 +666,9 @@ Return JSON:
             )}
 
             {/* Teacher review form */}
-            <Card style={{ padding: 'var(--space-5)' }}>
+            <Card className="card-p-5">
               <SectionHeader title="Teacher Review" />
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginTop: 14 }}>
+              <div className="flex-col-gap4 mt-4">
 
                 <Field label="What improved">
                   <textarea className="input" rows={3} value={form.whatImproved}
@@ -703,7 +703,7 @@ Return JSON:
                       <Icon.plus size={12} /> Add
                     </Button>
                   </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <div className="flex-col-gap2">
                     {form.corrections.map((c, i) => (
                       <div key={c.id} style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: '10px 12px', background: 'var(--bg)', display: 'flex', flexDirection: 'column', gap: 8 }}>
                         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
@@ -712,7 +712,7 @@ Return JSON:
                           <span style={{ color: 'var(--muted)', fontSize: 'var(--text-sm)', flexShrink: 0 }}>→</span>
                           <input className="input" placeholder="Correction" value={c.improved} style={{ flex: 1, fontSize: 'var(--text-sm)' }}
                             onChange={e => updateCorrection(i, 'improved', e.target.value)} />
-                          <Button variant="ghost" size="sm" style={{ padding: '4px 8px', flexShrink: 0 }} onClick={() => removeCorrection(i)}>
+                          <Button variant="ghost" size="sm" style={{ padding: '4px 8px', flexShrink: 0 }} onClick={() => removeCorrection(i)} aria-label="Remove correction">
                             <Icon.trash size={12} />
                           </Button>
                         </div>
@@ -759,10 +759,10 @@ Return JSON:
               };
               const c = toneColors[formativeRec.band];
               return (
-                <Card style={{ padding: 'var(--space-5)', borderLeft: `3px solid ${c.border}` }}>
+                <Card style={{ padding: 'var(--space-5)', border: `1px solid ${c.border}` }}>
                   <SectionHeader title="Next Teaching Action" right={<Icon.diagnose size={15} color="var(--muted)" />} />
                   <div style={{ marginTop: 10 }}>
-                    <span style={{ display: 'inline-block', padding: '2px 10px', borderRadius: 'var(--radius-pill)', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', background: c.bg, color: c.label, border: `1px solid ${c.border}`, marginBottom: 10 }}>
+                    <span className="sr-feedback-block" style={{ display: 'inline-block', padding: '2px 10px', fontSize: 11, background: c.bg, color: c.label, border: `1px solid ${c.border}`, marginBottom: 10 }}>
                       {formativeRec.label}
                     </span>
                     <p style={{ fontSize: 'var(--text-sm)', lineHeight: 1.6, color: 'var(--text-2)', marginBottom: 8 }}>{formativeRec.action}</p>
@@ -778,11 +778,11 @@ Return JSON:
 
             {/* Student feedback replies */}
             {(feedbackReplies.length > 0 || feedbackUnderstood) && (
-              <Card style={{ padding: 'var(--space-5)', borderLeft: '3px solid var(--accent)' }}>
+              <Card className="sr-review-callout">
                 <SectionHeader title={feedbackUnderstood ? 'Student feedback status' : 'Student replies'} />
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 8 }}>
+                <div className="flex-col-gap3 mt-2">
                   {feedbackUnderstood && (
-                    <div style={{ padding: '8px 12px', borderRadius: 'var(--radius-sm)', background: 'rgba(46,106,63,.08)', border: '1px solid var(--success)', fontSize: 'var(--text-sm)', color: 'var(--success)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <div className="sr-feedback-block font-semibold flex items-center gap-2" style={{ background: 'rgba(46,106,63,.08)', border: '1px solid var(--success)', color: 'var(--success)' }}>
                       <Icon.check size={14} /> Student marked this feedback as understood.
                     </div>
                   )}
@@ -790,7 +790,8 @@ Return JSON:
                     <div key={msg.id} style={{ padding: '10px 12px', borderRadius: 'var(--radius-sm)', background: 'var(--accent-subtle)', border: '1px solid var(--accent-soft)', fontSize: 'var(--text-sm)', lineHeight: 1.5 }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
                         <span style={{ fontWeight: 600, color: 'var(--primary)' }}>{msg.fromName || 'Student'}</span>
-                        <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>
+                <span className="text-xs text-muted">
+
                           {new Date(msg.createdAt).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
                         </span>
                       </div>

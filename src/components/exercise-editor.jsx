@@ -410,7 +410,7 @@ function SpeakEditor({ ex, update }) {
             fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--text)',
             opacity: uploading ? 0.6 : 1,
           }}>
-            <Icon name="inbox" size={15} />
+            <Icon.inbox size={15} />
             {uploading ? 'Uploading…' : ex.imageUrl ? 'Replace image' : 'Upload image'}
             <input
               type="file" accept="image/*" disabled={uploading}

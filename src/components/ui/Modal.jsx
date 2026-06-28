@@ -2,7 +2,7 @@ import { useRef, useEffect } from 'react';
 
 const FOCUSABLE = 'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
-export function Modal({ open, onClose, kicker, title, subtitle, maxWidth = 680, children }) {
+export function Modal({ open, onClose, kicker, title, subtitle, maxWidth = 680, variant, children }) {
   const dialogRef = useRef(null);
 
   useEffect(() => {
@@ -38,6 +38,20 @@ export function Modal({ open, onClose, kicker, title, subtitle, maxWidth = 680, 
 
   function handleBackdrop(e) {
     if (e.target === e.currentTarget) onClose();
+  }
+
+  if (variant === 'fullscreen') {
+    return (
+      <div className="modal-fullscreen" onClick={handleBackdrop}>
+        <div ref={dialogRef} role="dialog" aria-modal="true" aria-label={title || kicker}>
+          <div className="modal-fullscreen-header">
+            <div className="modal-fullscreen-title">{title || kicker}</div>
+            <button onClick={onClose} className="modal-fullscreen-close">Close preview</button>
+          </div>
+          <div className="modal-fullscreen-body">{children}</div>
+        </div>
+      </div>
+    );
   }
 
   return (

@@ -3,7 +3,7 @@
  * Merges the old Dashboard (priority banner + KPIs + today's classes + quick actions)
  * with the old Class Prep cycle board (per-student stage + next action).
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Icon, SectionHeader, Pill, Avatar, Skeleton, SkeletonCard, SkeletonText, EmptyState } from '../components/shared.jsx';
 import { IlloNoClasses } from '../components/ui/empty-illustrations.jsx';
 import { Button } from '../components/ui/Button.jsx';
@@ -73,31 +73,37 @@ export default function TeacherDashboard({ students, onNavigate, teacherName = '
     };
   }, [students]);
 
-  const studentsWithCycle = students.map(s => ({
-    ...s,
-    cycle: cycleStates[s.id] || {
-      cycleStage: 'needs-diagnosis', latestDiagnosis: null,
-      pendingHomework: [], pendingSubmissions: [], daysSinceLastDiagnosis: null, totalDiagnoses: 0,
-    },
-  }));
+  const { studentsWithCycle, stageCounts, needsAttention, pendingReview, needDiagnosis, urgencySorted } = useMemo(() => {
+    if (!students || !Array.isArray(students)) return { studentsWithCycle: [], stageCounts: {}, needsAttention: [], pendingReview: 0, needDiagnosis: 0, urgencySorted: [] };
+    
+    const studentsWithCycle = students.map(s => ({
+      ...s,
+      cycle: cycleStates[s.id] || {
+        cycleStage: 'needs-diagnosis', latestDiagnosis: null,
+        pendingHomework: [], pendingSubmissions: [], daysSinceLastDiagnosis: null, totalDiagnoses: 0,
+      },
+    }));
 
-  const stageCounts = {};
-  studentsWithCycle.forEach(s => { stageCounts[s.cycle.cycleStage] = (stageCounts[s.cycle.cycleStage] || 0) + 1; });
+    const stageCounts = {};
+    studentsWithCycle.forEach(s => { stageCounts[s.cycle.cycleStage] = (stageCounts[s.cycle.cycleStage] || 0) + 1; });
 
-  const needsAttention = studentsWithCycle.filter(s =>
-    s.cycle.cycleStage === 'submitted' ||
-    s.cycle.cycleStage === 'needs-diagnosis' ||
-    (s.cycle.daysSinceLastDiagnosis !== null && s.cycle.daysSinceLastDiagnosis > 14)
-  );
-  const pendingReview = studentsWithCycle.filter(s => s.cycle.cycleStage === 'submitted').length;
-  const needDiagnosis = stageCounts['needs-diagnosis'] || 0;
+    const needsAttention = studentsWithCycle.filter(s =>
+      s.cycle.cycleStage === 'submitted' ||
+      s.cycle.cycleStage === 'needs-diagnosis' ||
+      (s.cycle.daysSinceLastDiagnosis !== null && s.cycle.daysSinceLastDiagnosis > 14)
+    );
+    const pendingReview = studentsWithCycle.filter(s => s.cycle.cycleStage === 'submitted').length;
+    const needDiagnosis = stageCounts['needs-diagnosis'] || 0;
 
-  const filtered = stageFilter === 'all'
-    ? studentsWithCycle
-    : studentsWithCycle.filter(s => s.cycle.cycleStage === stageFilter);
-  const urgencySorted = [...filtered].sort(
-    (a, b) => URGENCY_ORDER.indexOf(a.cycle.cycleStage) - URGENCY_ORDER.indexOf(b.cycle.cycleStage)
-  );
+    const filtered = stageFilter === 'all'
+      ? studentsWithCycle
+      : studentsWithCycle.filter(s => s.cycle.cycleStage === stageFilter);
+    const urgencySorted = [...filtered].sort(
+      (a, b) => URGENCY_ORDER.indexOf(a.cycle.cycleStage) - URGENCY_ORDER.indexOf(b.cycle.cycleStage)
+    );
+
+    return { studentsWithCycle, stageCounts, needsAttention, pendingReview, needDiagnosis, urgencySorted };
+  }, [students, cycleStates, stageFilter]);
 
   const handleAction = (student) => {
     const config = STAGE_CONFIG[student.cycle.cycleStage] || STAGE_CONFIG['needs-diagnosis'];
@@ -114,21 +120,20 @@ export default function TeacherDashboard({ students, onNavigate, teacherName = '
   const priority = getTodayPriority({ needsAttention, todayClasses });
 
   return (
-    <div className="td-shell">
+    <div className="td-shell bg-grain">
       {/* Header */}
       <div aria-live="polite" aria-atomic="true" style={{ position: 'fixed', left: '-9999px' }}>
         {loading ? 'Loading dashboard' : `${students.length} students, ${classesToday} classes today`}
       </div>
-      <div style={{ marginBottom: 16 }}>
+      <div style={{ marginBottom: 'var(--space-4)' }}>
         <h1 className="td-headline">Good {timeOfDay()}, {teacherName}.</h1>
         <p className="td-sub">{today} — your teaching cycle at a glance.</p>
       </div>
 
       {/* Today's priority */}
-      <Card className="td-priority-card" style={{ animation: 'fadeUp 0.3s var(--ease) both' }}>
+      <Card className="td-priority-card">
         <div className="td-priority-icon">{priority.icon}</div>
         <div className="teacher-priority-copy">
-          <div className="td-priority-kicker">Today priority</div>
           <h2 className="td-priority-title">{priority.title}</h2>
           <p className="td-priority-text">{priority.text}</p>
         </div>
@@ -140,10 +145,10 @@ export default function TeacherDashboard({ students, onNavigate, teacherName = '
       {/* KPIs */}
       <div className="td-kpi-grid">
         {[
-          { label: 'Students', value: students.length, icon: <Icon.student size={16} /> },
-          { label: 'Classes today', value: classesToday, icon: <Icon.calendar size={16} />, tone: classesToday > 0 ? 'info' : '' },
-          { label: 'Need diagnosis', value: needDiagnosis, icon: <Icon.diagnose size={16} />, tone: needDiagnosis > 0 ? 'warning' : '', onClick: () => setStageFilter('needs-diagnosis') },
-          { label: 'Pending review', value: pendingReview, icon: <Icon.doc size={16} />, tone: pendingReview > 0 ? 'danger' : '', onClick: () => onNavigate('submissions') },
+          { label: 'Students', value: students.length, icon: <Icon.student size={16} />, tone: 'navy' },
+          { label: 'Classes today', value: classesToday, icon: <Icon.calendar size={16} />, tone: classesToday > 0 ? 'info' : 'teal' },
+          { label: 'Need diagnosis', value: needDiagnosis, icon: <Icon.diagnose size={16} />, tone: needDiagnosis > 0 ? 'warning' : 'teal', onClick: () => setStageFilter('needs-diagnosis') },
+          { label: 'Pending review', value: pendingReview, icon: <Icon.doc size={16} />, tone: pendingReview > 0 ? 'danger' : 'teal', onClick: () => onNavigate('submissions') },
         ].map((kpi, i) => (
           <div key={kpi.label} className="td-anim" style={{ animationDelay: `${i * 60}ms` }}>
             <KpiCard {...kpi} />
@@ -153,9 +158,9 @@ export default function TeacherDashboard({ students, onNavigate, teacherName = '
 
       <div className="teacher-dashboard-stack">
         {/* Quick actions — top of stack for immediate access */}
-        <Card style={{ padding: 'var(--space-4)' }}>
+        <Card className="td-card-section">
           <SectionHeader title="Quick Actions" icon={<Icon.spark size={15} />} />
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', marginTop: 'var(--space-2)' }}>
+          <div className="td-list-wrapper">
             <QuickAction icon={<Icon.student size={16} />} label="Add new student" onClick={() => onNavigate('students')} />
             <QuickAction icon={<Icon.calendar size={16} />} label="Schedule a class" onClick={() => onNavigate('calendar')} />
             <QuickAction icon={<Icon.diagnose size={16} />} label="Run a diagnosis" onClick={() => onNavigate('diagnostics')} />
@@ -165,7 +170,7 @@ export default function TeacherDashboard({ students, onNavigate, teacherName = '
         </Card>
 
         {/* Today's classes */}
-        <Card style={{ padding: 'var(--space-4)' }}>
+        <Card className="td-card-section">
           <SectionHeader title="Today's Classes" icon={<Icon.calendar size={15} />} action={<Button variant="ghost" size="sm" onClick={() => onNavigate('calendar')}>View calendar</Button>} />
           {todayClasses.length === 0 ? (
             <EmptyState
@@ -176,7 +181,7 @@ export default function TeacherDashboard({ students, onNavigate, teacherName = '
               onAction={() => onNavigate('calendar')}
             />
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', marginTop: 'var(--space-2)' }}>
+            <div className="td-list-wrapper">
               {todayClasses.map(ev => {
                 const student = students.find(s => s.id === ev.studentId);
                 return (
@@ -205,10 +210,10 @@ export default function TeacherDashboard({ students, onNavigate, teacherName = '
         )}
 
         {/* Student cycle board */}
-        <Card style={{ padding: 'var(--space-4)' }}>
+        <Card className="td-card-section">
           <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', flexWrap: 'wrap', marginBottom: 'var(--space-2)' }}>
             <SectionHeader title="Student Cycle Board" icon={<Icon.student size={15} />} />
-            <div style={{ display: 'flex', gap: 'var(--space-2)', marginLeft: 'auto', flexWrap: 'wrap' }}>
+            <div className="td-filter-bar">
               <FilterChip label="All" count={students.length} active={stageFilter === 'all'} onClick={() => setStageFilter('all')} />
               {Object.entries(STAGE_CONFIG)
                 .filter(([key]) => stageCounts[key] > 0)
@@ -218,7 +223,7 @@ export default function TeacherDashboard({ students, onNavigate, teacherName = '
             </div>
           </div>
           {loading ? (
-            <div aria-busy="true" aria-label="Loading student data" style={{ padding: 'var(--space-2)' }}>
+            <div aria-busy="true" aria-label="Loading student data" className="td-skeleton-area">
               <SkeletonCard height={60} lines={1} />
               <SkeletonCard height={60} lines={1} />
               <SkeletonCard height={60} lines={1} />
@@ -226,7 +231,7 @@ export default function TeacherDashboard({ students, onNavigate, teacherName = '
           ) : urgencySorted.length === 0 ? (
             <EmptyState icon={<Icon.student size={20} />} title="No students match this filter" text="Try selecting a different filter above or check the Students page." action="View all students" onAction={() => setStageFilter('all')} />
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+            <div className="td-cycle-list">
               {urgencySorted.map(s => (
                 <StudentRow key={s.id} student={s} onNavigate={onNavigate} onAction={handleAction} seedsStages={seedsStages} onSetSeedsStage={handleSetSeedsStage} />
               ))}
@@ -305,7 +310,6 @@ function StudentRow({ student: s, onNavigate, onAction, seedsStages, onSetSeedsS
   const isStale14 = days !== null && days > 14;
   const currentBand = s.currentBand || s.band || 'B1';
   const targetBand = s.targetBand || s.bandTarget || 'B2';
-  const isPrimary = s.cycle.cycleStage === 'submitted';
   const seedsEntry = seedsStages[s.id];
   const currentSeeds = seedsEntry ? SEEDS_STAGES[seedsEntry.stage] : null;
 
@@ -315,16 +319,16 @@ function StudentRow({ student: s, onNavigate, onAction, seedsStages, onSetSeedsS
       onClick={() => onNavigate('students:profile', { studentId: s.id })}
       style={{ padding: '14px 18px' }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', flexWrap: 'wrap' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', flex: 1, minWidth: 160 }}>
+      <div className="td-student-row-inner">
+        <div className="td-student-avatar-area">
           <Avatar name={s.name} size={34} />
           <div>
-            <div style={{ fontWeight: 'var(--weight-semibold)', fontSize: 'var(--text-base)', color: 'var(--text-1)' }}>{s.name}</div>
-            <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: 2 }}>
+            <div className="td-student-name">{s.name}</div>
+            <div className="td-student-meta">
               {currentBand} → {targetBand} · Session {s.session}/{s.totalSessions} · Last diagnosis: {diagDate}
             </div>
             {focusArea && (
-              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-2)', marginTop: 2, fontStyle: 'italic' }}>
+              <div className="td-student-focus">
                 Focus: {focusArea.length > 65 ? focusArea.slice(0, 65) + '…' : focusArea}
               </div>
             )}
@@ -335,19 +339,20 @@ function StudentRow({ student: s, onNavigate, onAction, seedsStages, onSetSeedsS
         {!isStale21 && isStale14 && <Pill tone="warning">{days}d stale</Pill>}
 
         {s.cycle.pendingHomework.length > 0 && (
-          <span style={{ fontSize: 'var(--text-xs)', color: 'var(--warning)', fontWeight: 'var(--weight-semibold)' }}>{s.cycle.pendingHomework.length} homework pending</span>
+          <span className="td-pending-hw">{s.cycle.pendingHomework.length} homework pending</span>
         )}
         {s.cycle.pendingSubmissions.length > 0 && (
-          <span style={{ fontSize: 'var(--text-xs)', color: 'var(--success)', fontWeight: 'var(--weight-semibold)' }}>{s.cycle.pendingSubmissions.length} to review</span>
+          <span className="td-pending-review">{s.cycle.pendingSubmissions.length} to review</span>
         )}
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+        <div className="td-student-badges">
           <Pill tone={config.tone}>{config.label}</Pill>
           {currentSeeds ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-1)' }}>
               <Pill tone={currentSeeds.tone}>{currentSeeds.label}</Pill>
               <button
                 type="button"
+                className="td-seeds-advance"
                 onClick={(e) => {
                   e.stopPropagation();
                   const idx = SEEDS_STAGE_ORDER.indexOf(seedsEntry.stage);
@@ -355,11 +360,6 @@ function StudentRow({ student: s, onNavigate, onAction, seedsStages, onSetSeedsS
                   onSetSeedsStage(s.id, next);
                 }}
                 title="Advance SEEDS stage"
-                style={{
-                  background: 'none', border: 'none', padding: '2px 4px',
-                  cursor: 'pointer', fontSize: 'var(--text-xs)', color: 'var(--muted)',
-                  fontFamily: 'var(--font-ui)',
-                }}
               >
                 <Icon.chevronRight size={12} />
               </button>
@@ -367,16 +367,12 @@ function StudentRow({ student: s, onNavigate, onAction, seedsStages, onSetSeedsS
           ) : (
             <button
               type="button"
+              className="td-seeds-start"
               onClick={(e) => {
                 e.stopPropagation();
                 onSetSeedsStage(s.id, 'sense');
               }}
               title="Start SEEDS cycle"
-              style={{
-                background: 'none', border: '1px dashed var(--border)', borderRadius: 'var(--radius-pill)',
-                padding: '2px 8px', cursor: 'pointer', fontSize: 'var(--text-xs)',
-                color: 'var(--muted)', fontFamily: 'var(--font-ui)',
-              }}
             >
               + SEEDS
             </button>
@@ -399,15 +395,9 @@ function FilterChip({ label, count, active, onClick }) {
     <button
       type="button"
       onClick={onClick}
-      style={{
-        display: 'inline-flex', alignItems: 'center', gap: 'var(--space-1)', padding: 'var(--space-1) var(--space-3)',
-        borderRadius: 'var(--radius-pill)', border: active ? '1.5px solid var(--accent)' : '1px solid var(--border)',
-        background: active ? 'var(--accent-soft, rgba(37,99,235,0.1))' : 'var(--surface)',
-        color: active ? 'var(--accent)' : 'var(--muted)', fontSize: 'var(--text-xs)', fontWeight: 'var(--weight-semibold)',
-        cursor: 'pointer', fontFamily: 'var(--font-ui)',
-      }}
+      className={`td-filter-chip${active ? ' td-filter-chip--active' : ''}`}
     >
-      {label}{count > 0 && <span style={{ opacity: 0.65 }}>({count})</span>}
+      {label}{count > 0 && <span>({count})</span>}
     </button>
   );
 }

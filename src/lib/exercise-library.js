@@ -113,16 +113,22 @@ async function sbFetch(ctx, path, init = {}) {
 
 /* ─── public API (async) ─────────────────────────────────────── */
 
-/** All saved exercises, newest first. */
+/** All saved exercises, newest first. Merges Supabase + localStorage for resilience. */
 export async function getLibraryExercises() {
+  const local = lsLoad();
   const ctx = supabaseCtx();
-  if (!ctx) return lsLoad();
+  if (!ctx) return local;
   try {
     const res = await sbFetch(ctx, 'exercises?select=*&order=created_at.desc');
-    return (await res.json()).map(rowToExercise);
+    const remote = (await res.json()).map(rowToExercise);
+    // Merge — localStorage items supplement any that Supabase didn't return
+    // (e.g. when the session was missing at save time).
+    const remoteSigs = new Set(remote.map(contentHash));
+    const extra = local.filter(e => !remoteSigs.has(contentHash(e)));
+    return [...remote, ...extra];
   } catch (e) {
     console.warn('[exercise-library] Supabase read failed, falling back to localStorage:', e.message);
-    return lsLoad();
+    return local;
   }
 }
 
@@ -136,29 +142,52 @@ export async function saveExerciseToLibrary(exercise, meta = {}) {
   const { fields, title, tags, level } = splitExercise(exercise, meta);
   const ctx = supabaseCtx();
 
+  // Always mirror to localStorage so exercises survive Supabase session expiry.
+  function saveLocal() {
+    const list = lsLoad();
+    const sig = contentHash(exercise);
+    const base = { ...fields, type: exercise.type, title, tags, level };
+    const idx = list.findIndex(e => contentHash(e) === sig);
+    if (idx >= 0) {
+      const prev = list[idx];
+      const updated = { ...prev, ...base, id: prev.id, createdAt: prev.createdAt, usageCount: prev.usageCount || 0 };
+      list[idx] = updated;
+      lsSave(list);
+      return updated;
+    }
+    const record = { ...base, id: 'lib_' + uid(), createdAt: new Date().toISOString(), usageCount: 0 };
+    list.unshift(record);
+    lsSave(list);
+    return record;
+  }
+
   if (ctx) {
     try {
       const sig = contentHash(exercise);
-      // Dedupe: look for an existing row with the same content signature.
       const existing = (await (await sbFetch(ctx, 'exercises?select=*&order=created_at.desc')).json())
         .map(rowToExercise)
         .find(e => contentHash(e) === sig);
 
       const payload = { type: exercise.type, title, tags, level, content: fields };
+      let saved;
       if (existing) {
         const res = await sbFetch(ctx, `exercises?id=eq.${existing.id}`, {
           method: 'PATCH',
           headers: { Prefer: 'return=representation' },
           body: JSON.stringify(payload),
         });
-        return rowToExercise((await res.json())[0]);
+        saved = rowToExercise((await res.json())[0]);
+      } else {
+        const res = await sbFetch(ctx, 'exercises', {
+          method: 'POST',
+          headers: { Prefer: 'return=representation' },
+          body: JSON.stringify(payload),
+        });
+        saved = rowToExercise((await res.json())[0]);
       }
-      const res = await sbFetch(ctx, 'exercises', {
-        method: 'POST',
-        headers: { Prefer: 'return=representation' },
-        body: JSON.stringify(payload),  // teacher_id defaults to auth.uid() server-side
-      });
-      return rowToExercise((await res.json())[0]);
+      // Mirror to localStorage for offline / session-expiry resilience.
+      if (saved) saveLocal();
+      return saved;
     } catch (e) {
       console.warn('[exercise-library] Supabase save failed, falling back to localStorage:', e.message);
       // fall through to localStorage
@@ -166,58 +195,43 @@ export async function saveExerciseToLibrary(exercise, meta = {}) {
   }
 
   // localStorage path (fallback / unauthenticated / dev login)
-  const list = lsLoad();
-  const sig = contentHash(exercise);
-  const base = { ...fields, type: exercise.type, title, tags, level };
-  const idx = list.findIndex(e => contentHash(e) === sig);
-  if (idx >= 0) {
-    const prev = list[idx];
-    const updated = { ...prev, ...base, id: prev.id, createdAt: prev.createdAt, usageCount: prev.usageCount || 0 };
-    list[idx] = updated;
-    lsSave(list);
-    return updated;
-  }
-  const record = { ...base, id: 'lib_' + uid(), createdAt: new Date().toISOString(), usageCount: 0 };
-  list.unshift(record);
-  lsSave(list);
-  return record;
+  return saveLocal();
 }
 
-/** Remove a saved exercise by id. */
+/** Remove a saved exercise by id. Also cleans localStorage mirror. */
 export async function deleteLibraryExercise(id) {
+  // Always clean localStorage.
+  lsSave(lsLoad().filter(e => e.id !== id));
   const ctx = supabaseCtx();
   if (ctx) {
     try {
       await sbFetch(ctx, `exercises?id=eq.${id}`, { method: 'DELETE' });
-      return;
     } catch (e) {
-      console.warn('[exercise-library] Supabase delete failed, falling back to localStorage:', e.message);
+      console.warn('[exercise-library] Supabase delete failed:', e.message);
     }
   }
-  lsSave(lsLoad().filter(e => e.id !== id));
 }
 
 /** Bump usage count (called when a saved exercise is added into a homework). */
 export async function incrementUsage(id) {
+  // Always update localStorage mirror.
+  const list = lsLoad();
+  const idx = list.findIndex(e => e.id === id);
+  if (idx >= 0) {
+    list[idx] = { ...list[idx], usageCount: (list[idx].usageCount || 0) + 1 };
+    lsSave(list);
+  }
   const ctx = supabaseCtx();
   if (ctx) {
     try {
-      // read current, then write +1 (no atomic RPC for the pilot)
       const rows = await (await sbFetch(ctx, `exercises?id=eq.${id}&select=usage_count`)).json();
       const current = rows[0]?.usage_count || 0;
       await sbFetch(ctx, `exercises?id=eq.${id}`, {
         method: 'PATCH',
         body: JSON.stringify({ usage_count: current + 1 }),
       });
-      return;
     } catch (e) {
-      console.warn('[exercise-library] Supabase usage bump failed, falling back to localStorage:', e.message);
+      console.warn('[exercise-library] Supabase usage bump failed:', e.message);
     }
-  }
-  const list = lsLoad();
-  const idx = list.findIndex(e => e.id === id);
-  if (idx >= 0) {
-    list[idx] = { ...list[idx], usageCount: (list[idx].usageCount || 0) + 1 };
-    lsSave(list);
   }
 }

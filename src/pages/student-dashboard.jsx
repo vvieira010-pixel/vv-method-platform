@@ -1,7 +1,7 @@
 import { useState, useEffect, lazy, Suspense } from 'react';
 import { Icon, Avatar } from '../components/shared.jsx';
 import { getDiagnoses, getReviews } from '../lib/workflow.js';
-import { hasVisibleApprovedStudentFeedback, asArray } from './student-helpers.js';
+import { hasVisibleApprovedStudentFeedback, asArray } from './student-helpers.jsx';
 import StudentHome from './student-home.jsx';
 import StudentSettings from './student-settings.jsx';
 import { StudentInbox, MessageTeacherDock } from '../components/message-center.jsx';
@@ -77,7 +77,7 @@ export default function StudentDashboard({ student, onSignOut }) {
   }
 
   if (!student) {
-    return <div style={{ padding: 40, textAlign: 'center', color: 'var(--muted)' }}><p>Loading your dashboard…</p></div>;
+    return <div className="student-loading"><p>Loading your dashboard…</p></div>;
   }
 
   return (
@@ -86,9 +86,19 @@ export default function StudentDashboard({ student, onSignOut }) {
         <div className="dash-brand">
           <span className="dash-brand-name">MET Proficiency Mastery</span>
         </div>
-        <nav className="dash-top-nav" aria-label="Student sections" role="tablist">
+        <nav className="dash-top-nav" aria-label="Student sections" role="tablist" onKeyDown={(e) => {
+          const tabs = Array.from(e.currentTarget.querySelectorAll('[role="tab"]'));
+          const currentIdx = tabs.indexOf(document.activeElement);
+          if (currentIdx === -1) return;
+          const dir = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+          if (!dir) return;
+          e.preventDefault();
+          const nextIdx = (currentIdx + dir + tabs.length) % tabs.length;
+          tabs[nextIdx].focus();
+          tabs[nextIdx].click();
+        }}>
           {TABS.map(t => (
-            <button key={t.id} role="tab" aria-selected={tab === t.id} onClick={() => handleTabChange(t.id)} className={'dash-nav-btn' + (tab === t.id ? ' active' : '')}>
+            <button key={t.id} role="tab" aria-selected={tab === t.id} aria-controls={`tabpanel-${t.id}`} onClick={() => handleTabChange(t.id)} className={'dash-nav-btn' + (tab === t.id ? ' active' : '')}>
               <span className="dash-nav-icon" aria-hidden="true">{t.icon}</span>
               <span className="dash-nav-label">{t.label}</span>
               {dots[t.id] && <span className="dash-nav-dot" aria-label="New content available" />}
@@ -98,15 +108,13 @@ export default function StudentDashboard({ student, onSignOut }) {
         <div className="dash-topbar-right">
           <span className="dash-topbar-name">{student.firstName}</span>
           <Avatar name={student.name} size={30} tone="auto" />
-          <button onClick={onSignOut} style={{ background: 'none', border: '1px solid var(--dark-accent-border)', borderRadius: 'var(--radius-sm)', padding: '5px 10px', fontSize: 11.5, fontWeight: 500, color: 'var(--on-dark-muted)', cursor: 'pointer', fontFamily: 'inherit', position: 'relative' }}>
-            Sign out
-          </button>
+          <button className="student-sign-out" onClick={onSignOut}>Sign out</button>
         </div>
       </header>
 
       <div className="dash-body">
         {tab === 'home' && <StudentHome student={student} onTab={setTab} />}
-        <Suspense fallback={<div style={{ padding: 40, color: 'var(--muted)', fontSize: 'var(--text-sm)' }}>Loading…</div>}>
+        <Suspense fallback={<div className="student-suspense-fallback">Loading…</div>}>
           {tab === 'homework' && <StudentHomework student={student} />}
           {tab === 'feedback' && <StudentFeedback student={student} onTab={setTab} />}
           {tab === 'progress' && <StudentProgress student={student} />}

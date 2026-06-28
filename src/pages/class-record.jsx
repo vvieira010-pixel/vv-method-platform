@@ -2,7 +2,7 @@
  * class-record.jsx — Record class evidence after a class
  */
 import { useState, useEffect } from 'react';
-import { Icon, SectionHeader, Pill } from '../components/shared.jsx';
+import { Icon, SectionHeader, Pill, S, Breadcrumb } from '../components/shared.jsx';
 import { Button } from '../components/ui/Button.jsx';
 import { Card } from '../components/ui/Card.jsx';
 import { getClassEvent, getClassEvidence, saveClassEvidence, updateClassEventStatus, getStudent } from '../lib/workflow.js';
@@ -28,40 +28,44 @@ export default function ClassRecord({ classEventId, students, onNavigate }) {
 
   async function load() {
     if (!classEventId) return;
-    const [ev, evid] = await Promise.all([
-      getClassEvent(classEventId),
-      getClassEvidence(classEventId),
-    ]);
-    setEvent(ev);
-    if (ev) {
-      const s = await getStudent(ev.studentId) || students.find(s => s.id === ev.studentId);
-      setStudent(s);
-    }
-    if (evid) {
-      setEvidence(evid);
-      setForm({
-        evaluatedSpeaking: evid.evaluatedSpeaking || false,
-        evaluatedWriting: evid.evaluatedWriting || false,
-        evaluatedReading: evid.evaluatedReading || false,
-        evaluatedListening: evid.evaluatedListening || false,
-        evaluatedGrammar: evid.evaluatedGrammar || false,
-        evaluatedVocabulary: evid.evaluatedVocabulary || false,
-        evaluatedTestStrategy: evid.evaluatedTestStrategy || false,
-        speakingEvidenceCount: evid.speakingEvidenceCount || 0,
-        writingEvidenceCount: evid.writingEvidenceCount || 0,
-        readingEvidenceCount: evid.readingEvidenceCount || 0,
-        listeningEvidenceCount: evid.listeningEvidenceCount || 0,
-        grammarEvidenceCount: evid.grammarEvidenceCount || 0,
-        vocabularyEvidenceCount: evid.vocabularyEvidenceCount || 0,
-        testStrategyEvidenceCount: evid.testStrategyEvidenceCount || 0,
-        teacherNotes: evid.teacherNotes || '',
-        studentPerformance: evid.studentPerformance || '',
-        studentTranscript: evid.studentTranscript || '',
-        studentAnswer: evid.studentAnswer || '',
-        homeworkReviewed: evid.homeworkReviewed || '',
-        studentMood: evid.studentMood || '',
-        additionalNotes: evid.additionalNotes || '',
-      });
+    try {
+      const [ev, evid] = await Promise.all([
+        getClassEvent(classEventId),
+        getClassEvidence(classEventId),
+      ]);
+      setEvent(ev);
+      if (ev) {
+        const s = await getStudent(ev.studentId) || students.find(s => s.id === ev.studentId);
+        setStudent(s);
+      }
+      if (evid) {
+        setEvidence(evid);
+        setForm({
+          evaluatedSpeaking: evid.evaluatedSpeaking || false,
+          evaluatedWriting: evid.evaluatedWriting || false,
+          evaluatedReading: evid.evaluatedReading || false,
+          evaluatedListening: evid.evaluatedListening || false,
+          evaluatedGrammar: evid.evaluatedGrammar || false,
+          evaluatedVocabulary: evid.evaluatedVocabulary || false,
+          evaluatedTestStrategy: evid.evaluatedTestStrategy || false,
+          speakingEvidenceCount: evid.speakingEvidenceCount || 0,
+          writingEvidenceCount: evid.writingEvidenceCount || 0,
+          readingEvidenceCount: evid.readingEvidenceCount || 0,
+          listeningEvidenceCount: evid.listeningEvidenceCount || 0,
+          grammarEvidenceCount: evid.grammarEvidenceCount || 0,
+          vocabularyEvidenceCount: evid.vocabularyEvidenceCount || 0,
+          testStrategyEvidenceCount: evid.testStrategyEvidenceCount || 0,
+          teacherNotes: evid.teacherNotes || '',
+          studentPerformance: evid.studentPerformance || '',
+          studentTranscript: evid.studentTranscript || '',
+          studentAnswer: evid.studentAnswer || '',
+          homeworkReviewed: evid.homeworkReviewed || '',
+          studentMood: evid.studentMood || '',
+          additionalNotes: evid.additionalNotes || '',
+        });
+      }
+    } catch (e) {
+      window.toast?.(`Failed to load class: ${e.message}`, 'warn');
     }
   }
 
@@ -76,21 +80,25 @@ export default function ClassRecord({ classEventId, students, onNavigate }) {
 
   async function handleSave(andDiagnose = false) {
     setSaving(true);
-    const normalizedForm = normalizeEvidenceCounts(form);
-    const record = await saveClassEvidence({
-      id: evidence?.id,
-      classEventId,
-      studentId: event?.studentId,
-      ...normalizedForm,
-    });
-    setEvidence(record);
-    // Mark class as completed if still scheduled
-    if (event?.status === 'scheduled') {
-      await updateClassEventStatus(classEventId, { status: 'completed' });
-      setEvent(e => ({ ...e, status: 'completed' }));
+    try {
+      const normalizedForm = normalizeEvidenceCounts(form);
+      const record = await saveClassEvidence({
+        id: evidence?.id,
+        classEventId,
+        studentId: event?.studentId,
+        ...normalizedForm,
+      });
+      setEvidence(record);
+      // Mark class as completed if still scheduled
+      if (event?.status === 'scheduled') {
+        await updateClassEventStatus(classEventId, { status: 'completed' });
+        setEvent(e => ({ ...e, status: 'completed' }));
+      }
+      window.toast?.('Evidence saved.', 'ok');
+    } catch (e) {
+      window.toast?.(`Failed to save: ${e.message}`, 'warn');
     }
     setSaving(false);
-    window.toast?.('Evidence saved.', 'ok');
     if (andDiagnose) {
       onNavigate('diagnostics:create', { studentId: event?.studentId, classEventId });
     }
@@ -101,11 +109,8 @@ export default function ClassRecord({ classEventId, students, onNavigate }) {
   const anySkillEvaluated = SKILLS.some(s => form[s.evalKey]);
 
   return (
-    <div style={{ maxWidth: 800, margin: '0 auto', padding: '28px 20px' }}>
-      {/* Back */}
-      <button onClick={() => onNavigate('calendar')} style={backStyle}>
-        <Icon.arrowL size={13} /> Back to calendar
-      </button>
+    <div className="page-container page-container--sm">
+      <Breadcrumb crumbs={[{ label: 'Calendar', onClick: () => onNavigate('calendar') }, { label: 'Class Record' }]} />
 
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 24 }}>
@@ -133,7 +138,7 @@ export default function ClassRecord({ classEventId, students, onNavigate }) {
           {SKILLS.map(({ key, evalKey, countKey }) => {
             const evaluated = form[evalKey];
             return (
-              <div key={key} style={{ padding: 12, borderRadius: 'var(--radius-sm)', border: `2px solid ${evaluated ? 'var(--accent)' : 'var(--border)'}`, background: evaluated ? 'var(--accent-subtle)' : 'var(--surface)', cursor: 'pointer', transition: 'all 0.15s' }} onClick={() => toggleSkill(evalKey, countKey)}>
+              <button type="button" key={key} style={{ padding: 12, borderRadius: 'var(--radius-sm)', border: `2px solid ${evaluated ? 'var(--accent)' : 'var(--border)'}`, background: evaluated ? 'var(--accent-subtle)' : 'var(--surface)', cursor: 'pointer', transition: 'all 0.15s' }} onClick={() => toggleSkill(evalKey, countKey)}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <span style={{ width: 18, height: 18, borderRadius: 0, border: `2px solid ${evaluated ? 'var(--accent)' : 'var(--border)'}`, background: evaluated ? 'var(--accent)' : 'transparent', display: 'grid', placeItems: 'center', flexShrink: 0 }}>
                     {evaluated && <Icon.check size={11} color="#fff" />}
@@ -144,13 +149,13 @@ export default function ClassRecord({ classEventId, students, onNavigate }) {
                   <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 6 }} onClick={e => e.stopPropagation()}>
                     <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>Evidence turns:</span>
                     <input type="number" min={1} max={30} value={form[countKey]} onChange={e => setForm(f => ({ ...f, [countKey]: Math.max(1, Number(e.target.value) || 1) }))}
-                      style={{ width: 52, padding: '3px 6px', border: '1px solid var(--border)', borderRadius: 0, fontSize: 'var(--text-xs)', textAlign: 'center' }} />
+                      style={{ width: 56, minHeight: 44, padding: '3px 6px', border: '1px solid var(--border)', borderRadius: 0, fontSize: 'var(--text-xs)', textAlign: 'center' }} />
                   </div>
                 )}
                 {evaluated && !countKey && (
                   <div style={{ marginTop: 6, fontSize: 'var(--text-xs)', color: 'var(--accent)' }}>Will inform diagnosis</div>
                 )}
-              </div>
+              </button>
             );
           })}
         </div>
@@ -169,7 +174,7 @@ export default function ClassRecord({ classEventId, students, onNavigate }) {
           <Field label="Teacher notes & observations">
             <textarea className="input" rows={3} value={form.teacherNotes} onChange={e => setForm(f => ({ ...f, teacherNotes: e.target.value }))} placeholder="Patterns observed, surprising moments, teaching decisions made..." />
           </Field>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          <div className="grid-2col">
             <Field label="Homework reviewed in class">
               <textarea className="input" rows={2} value={form.homeworkReviewed} onChange={e => setForm(f => ({ ...f, homeworkReviewed: e.target.value }))} placeholder="Was homework reviewed? What did you find?" />
             </Field>
@@ -189,7 +194,6 @@ export default function ClassRecord({ classEventId, students, onNavigate }) {
         <Button variant="primary" style={{ background: 'var(--success)' }} onClick={() => handleSave(true)} disabled={saving || !anySkillEvaluated}>
           <Icon.diagnose size={14} /> Save & Run Diagnosis
         </Button>
-        <Button variant="ghost" onClick={() => onNavigate('calendar')}>Back to Calendar</Button>
       </div>
       {!anySkillEvaluated && (
         <p style={{ color: 'var(--warning)', fontSize: 'var(--text-xs)', marginTop: 8 }}>Select at least one evaluated skill before running diagnosis.</p>
@@ -225,9 +229,6 @@ const EMPTY_FORM = {
   teacherNotes: '', studentPerformance: '', studentTranscript: '', studentAnswer: '',
   homeworkReviewed: '', studentMood: '', additionalNotes: '',
 };
-const backStyle = { background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)', fontSize: 'var(--text-sm)', display: 'flex', alignItems: 'center', gap: 4, marginBottom: 16, padding: 0, fontFamily: 'var(--font-ui)' };
-const S = {
-  headline: { fontFamily: 'var(--font-ui)', fontSize: 'var(--text-2xl)', fontWeight: 700, color: 'var(--primary)', margin: 0 },
-  sub: { fontSize: 'var(--text-sm)', color: 'var(--muted)', margin: '4px 0 0' },
-};
+
+
 

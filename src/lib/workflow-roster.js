@@ -53,6 +53,15 @@ export async function saveProgress(studentId, data) {
   save(K.progress, obj);
 }
 
+/* ─── STUDENT GOALS ─────────────────────────────────────────── */
+export async function getStudentGoal(studentId) {
+  const progress = await getProgress(studentId);
+  return progress?.goal || null;
+}
+export async function saveStudentGoal(studentId, goal) {
+  return saveProgress(studentId, { goal });
+}
+
 /* ─── REPORTS ────────────────────────────────────────────────── */
 export async function getReports(studentId) {
   return listVia('reports', K.reports, studentId ? (r => r.studentId === studentId) : null);

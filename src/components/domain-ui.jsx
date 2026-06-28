@@ -1,26 +1,20 @@
 import { Icon, Pill } from './shared.jsx';
 
 /* ─── REVIEW STATUS BADGE ────────────────────────────────────── */
-const RS = {
-  'not-started':        { label:'Not started',     bg:'var(--divider)',    fg:'var(--muted)',   dot:'#94A3B8' },
-  'in-progress':        { label:'In progress',     bg:'var(--info-bg)',    fg:'var(--info)',    dot:'var(--info)' },
-  'submitted':          { label:'Submitted',       bg:'var(--warning-bg)', fg:'var(--warning)', dot:'var(--warning)' },
-  'corrected':          { label:'Corrected',       bg:'var(--success-bg)', fg:'var(--success)', dot:'var(--success)' },
-  'revision-requested': { label:'Revision needed', bg:'var(--danger-bg)',  fg:'var(--danger)',  dot:'var(--danger)' },
-  'completed':          { label:'Completed',       bg:'var(--success-soft)',fg:'var(--success)',dot:'var(--success)' },
-  'draft':              { label:'Draft',           bg:'var(--divider)',    fg:'var(--muted)',   dot:'#94A3B8' },
-  'queued':             { label:'Queued',          bg:'var(--info-bg)',    fg:'var(--info)',    dot:'var(--info)' },
-  'reviewed':           { label:'Reviewed',        bg:'var(--success-bg)', fg:'var(--success)', dot:'var(--success)' },
-  'overdue':            { label:'Overdue',         bg:'var(--danger-bg)',  fg:'var(--danger)',  dot:'var(--danger)' },
+const STATUS_TONE = {
+  'not-started':'muted', 'in-progress':'info', 'submitted':'warning',
+  'corrected':'success', 'revision-requested':'danger', 'completed':'success',
+  'draft':'muted', 'queued':'info', 'reviewed':'success', 'overdue':'danger',
+};
+const STATUS_LABEL = {
+  'not-started':'Not started', 'in-progress':'In progress', 'submitted':'Submitted',
+  'corrected':'Corrected', 'revision-requested':'Revision needed', 'completed':'Completed',
+  'draft':'Draft', 'queued':'Queued', 'reviewed':'Reviewed', 'overdue':'Overdue',
 };
 export function ReviewStatusBadge({ status }) {
-  const s = RS[status] || RS['not-started'];
-  return (
-    <span className="review-badge" role="status" aria-label={`Status: ${s.label}`} style={{ background: s.bg, color: s.fg }}>
-      <span aria-hidden="true" style={{ width:6, height:6, borderRadius:'50%', background:s.dot, flexShrink:0 }} />
-      {s.label}
-    </span>
-  );
+  const tone = STATUS_TONE[status] || 'muted';
+  const label = STATUS_LABEL[status] || 'Not started';
+  return <Pill tone={tone} dot role="status" aria-label={`Status: ${label}`}>{label}</Pill>;
 }
 
 /* ─── STUDENT FEEDBACK VIEW ──────────────────────────────────── */

@@ -109,7 +109,7 @@ export default function ToolInbox({ students = [], onNavigate, workspaceQuery = 
   };
 
   return (
-    <div style={S.shell}>
+    <div className="page-container" style={S.shell}>
       <section style={S.hero}>
         <div>
           <div style={S.heroTag}>Communication Repository</div>
@@ -254,7 +254,7 @@ function RepoKpi({ label, value, icon, tone }) {
 }
 
 const S = {
-  shell: { maxWidth: 1120, margin: '0 auto', padding: '28px 20px' },
+  shell: { padding: '28px 20px' },
   hero: {
     display: 'flex',
     alignItems: 'flex-end',

@@ -531,7 +531,7 @@ export default function SettingsPage({ onNavigate }) {
               return (
                 <div key={task.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
                   <div>
-                    <div style={{ fontWeight: 600, fontSize: 'var(--text-sm)', color: 'var(--text-1)' }}>{task.label}</div>
+                    <div style={{ fontWeight: 600, fontSize: 'var(--text-sm)', color: 'var(--text)' }}>{task.label}</div>
                     <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: 2 }}>{task.description}</div>
                   </div>
                   <label style={{ flexShrink: 0, cursor: 'pointer', position: 'relative', width: 40, height: 22 }} aria-label={`Toggle ${task.label}`}>
@@ -543,7 +543,7 @@ export default function SettingsPage({ onNavigate }) {
                     />
                     <span style={{
                       position: 'absolute', inset: 0, borderRadius: 11,
-                      backgroundColor: enabled ? 'var(--accent-1)' : 'var(--border)',
+                      backgroundColor: enabled ? 'var(--accent)' : 'var(--border)',
                       transition: 'background-color 0.2s',
                     }}>
                       <span style={{

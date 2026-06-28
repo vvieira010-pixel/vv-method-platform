@@ -9,9 +9,10 @@ const PILL_TONE = {
   reviewed:'pill-success', overdue:'pill-danger', pending:'pill-warning',
 };
 
-export function Pill({ children, tone = 'default', icon, style }) {
+export function Pill({ children, tone = 'default', icon, dot, ...props }) {
   return (
-    <span className={`pill ${PILL_TONE[tone] || 'pill-default'}`} style={style}>
+    <span className={`pill ${PILL_TONE[tone] || 'pill-default'}`} {...props}>
+      {dot && <span className="pill-dot" />}
       {icon}{children}
     </span>
   );

@@ -1,13 +1,13 @@
 import { useState, useEffect, lazy, Suspense } from 'react';
 import { Icon, Avatar, Skeleton, SkeletonText, SkeletonCard, EmptyState } from '../components/shared.jsx';
-import { getHomework, getDiagnoses, getClassEvents, getReviews, getStudentSeedsStage } from '../lib/workflow.js';
+import { getHomework, getDiagnoses, getClassEvents, getReviews, getStudentSeedsStage, getStudentGoal, saveStudentGoal } from '../lib/workflow.js';
 import { recordPractice, getDueCount, getDueItems, toMCQ, getAllEntries } from '../lib/spaced-repetition.js';
 
 import { SEEDS_STAGES, SEEDS_STAGE_ORDER } from '../domain/seeds/constants.js';
 
 const PracticeSession = lazy(() => import('../components/PracticeSession.jsx'));
 const ReviewSession   = lazy(() => import('../components/ReviewSession.jsx'));
-import { asArray, getProgressStage, getSkillTrend, hasVisibleApprovedStudentFeedback, PROGRESS_STAGES } from './student-helpers.js';
+import { asArray, getProgressStage, getSkillTrend, hasVisibleApprovedStudentFeedback, PROGRESS_STAGES, TrendChip, SkillRow } from './student-helpers.jsx';
 import { getTeacherSetting } from '../lib/supabase-db.js';
 
 function daysUntilExam() {
@@ -56,26 +56,11 @@ function MemoCard({ kicker, title, text }) {
     <article className="student-panel student-panel--primary student-panel-mb">
       <span className="student-panel-kicker">{kicker}</span>
       <h2>{title}</h2>
-      <p style={{
-        margin: '8px 0 0',
-        fontSize: 'var(--text-sm)',
-        lineHeight: 1.6,
-        color: 'var(--text)',
-        overflow: 'hidden',
-        display: '-webkit-box',
-        WebkitLineClamp: expanded ? 'unset' : MEMO_CLAMP,
-        WebkitBoxOrient: 'vertical',
-      }}>
+      <p className="student-memo-text" style={{ WebkitLineClamp: expanded ? 'unset' : MEMO_CLAMP }}>
         {text}
       </p>
       {needsClamp && (
-        <button
-          onClick={() => setExpanded(e => !e)}
-          style={{
-            background: 'none', border: 'none', padding: '6px 0 0',
-            cursor: 'pointer', fontSize: 'var(--text-xs)', fontWeight: 700,
-            color: 'var(--primary)', letterSpacing: '0.03em',
-          }}>
+        <button className="student-memo-toggle" onClick={() => setExpanded(e => !e)}>
           {expanded ? 'Show less ↑' : 'Read more ↓'}
         </button>
       )}
@@ -95,42 +80,6 @@ function TodoRow({ done, label, meta }) {
   );
 }
 
-function SkillRow({ skill, trend, onClick }) {
-  const score = Number(skill.score_0_80) || 0;
-  const stage = score > 0 ? getProgressStage(score) : PROGRESS_STAGES[0];
-  return (
-    <button type="button" className="student-skill-row" onClick={onClick}>
-      <div className="student-skill-top">
-        <strong style={{ textTransform: 'capitalize' }}>{skill.section}</strong>
-        <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          {score > 0 && <span className="student-skill-score">{score}/80</span>}
-          <span className="student-skill-stage">{stage.label}</span>
-        </span>
-      </div>
-      <div style={{ display: 'flex', gap: 4, margin: '6px 0' }} aria-label={`${skill.section}: ${stage.label}`}>
-        {PROGRESS_STAGES.map(st => (
-          <span key={st.label} style={{
-            flex: 1, height: 6, borderRadius: 3,
-            background: st.order <= stage.order ? 'var(--accent)' : 'var(--border)',
-            transition: 'background 0.2s',
-          }} />
-        ))}
-      </div>
-      <TrendChip trend={trend} />
-    </button>
-  );
-}
-
-function TrendChip({ trend }) {
-  if (!trend || trend.dir === 'none') return null;
-  const glyph = { up: '↑', down: '↓', steady: '→', new: '•' }[trend.dir] || '•';
-  return (
-    <span className={`student-trend-chip student-trend-chip--${trend.dir}`}>
-      <span aria-hidden="true">{glyph}</span> {trend.label}
-    </span>
-  );
-}
-
 export default function StudentHome({ student, onTab }) {
   const [latestFeedback, setLatestFeedback] = useState(null);
   const [pendingHw, setPendingHw] = useState([]);
@@ -147,9 +96,16 @@ export default function StudentHome({ student, onTab }) {
   const [loadError, setLoadError] = useState(null);
   const [seedsStage, setSeedsStage] = useState(null);
   const [generalMemoText, setGeneralMemoText] = useState(() => localStorage.getItem('vv:student_general_memo') || '');
+  const [goal, setGoal] = useState('');
+  const [goalDraft, setGoalDraft] = useState('');
+  const [editingGoal, setEditingGoal] = useState(false);
+  const [savingGoal, setSavingGoal] = useState(false);
 
   useEffect(() => {
     getStudentSeedsStage(student.id).then(setSeedsStage);
+    getStudentGoal(student.id).then(existingGoal => {
+      if (existingGoal) { setGoal(existingGoal); setGoalDraft(existingGoal); }
+    });
     getTeacherSetting('general_memo').then(val => {
       if (val !== null) {
         setGeneralMemoText(val);
@@ -261,7 +217,6 @@ export default function StudentHome({ student, onTab }) {
       <div className="student-home">
         <section className="student-hero bg-grain fade-up" style={{ '--delay': '0s' }}>
           <div>
-            <p className="student-hero-kicker">MET preparation dashboard</p>
             <h1>Could not load dashboard</h1>
             <p>Something went wrong. Please try refreshing the page.</p>
           </div>
@@ -291,7 +246,6 @@ export default function StudentHome({ student, onTab }) {
     <div className="student-home">
       <section className="student-hero bg-grain fade-up" style={{ '--delay': '0s' }}>
         <div>
-          <p className="student-hero-kicker">MET preparation dashboard</p>
           <h1>Good {timeOfDay()}, {student.firstName}.</h1>
           <p>{student.currentLevel || student.band || 'Current level'} to {student.targetLevel || student.bandTarget || 'target level'} · Session {student.session || 1}/{student.totalSessions || 24}</p>
         </div>
@@ -385,7 +339,6 @@ export default function StudentHome({ student, onTab }) {
           <article className="student-panel student-panel--primary">
             <div className="student-panel-head">
               <div>
-                <span className="student-panel-kicker">Upcoming</span>
                 <h2>{nextClass?.title || 'Your next MET class'}</h2>
               </div>
               <span className="student-pill">{nextDate}</span>
@@ -418,11 +371,67 @@ export default function StudentHome({ student, onTab }) {
             )}
           </article>
 
+          <article className="student-panel mb-3">
+            <div className="student-panel-head">
+              <div>
+                <span className="student-panel-kicker">Weekly Goal</span>
+                <h2>{goal ? 'Your focus this week' : 'Set a weekly goal'}</h2>
+              </div>
+              {!editingGoal && (
+                <button type="button" className="student-text-action" onClick={() => setEditingGoal(true)}>
+                  {goal ? 'Edit' : 'Set goal'} <Icon.edit size={13} />
+                </button>
+              )}
+            </div>
+            {editingGoal ? (
+              <div>
+                <textarea
+                  className="student-goal-input"
+                  value={goalDraft}
+                  onChange={e => setGoalDraft(e.target.value)}
+                  placeholder="e.g. I want to improve my speaking fluency and expand my healthcare vocabulary."
+                  rows={3}
+                  style={{ resize: 'vertical' }}
+                  aria-label="Your weekly goal"
+                />
+                <div className="flex gap-2 mt-2">
+                  <button
+                    type="button"
+                    className="student-wide-action"
+                    disabled={savingGoal || !goalDraft.trim()}
+                    onClick={async () => {
+                      setSavingGoal(true);
+                      await saveStudentGoal(student.id, goalDraft.trim());
+                      setGoal(goalDraft.trim());
+                      setEditingGoal(false);
+                      setSavingGoal(false);
+                    }}
+                  >
+                    {savingGoal ? 'Saving…' : 'Save goal'}
+                  </button>
+                  <button
+                    type="button"
+                    className="student-text-action"
+                    onClick={() => { setGoalDraft(goal); setEditingGoal(false); }}
+                    style={{ alignSelf: 'center' }}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : goal ? (
+              <p style={{ margin: 0, fontSize: 'var(--text-sm)', color: 'var(--text-muted)' }}>{goal}</p>
+            ) : (
+              <p style={{ margin: 0, fontSize: 'var(--text-sm)', color: 'var(--muted)' }}>
+                Tell your teacher what you'd like to work on. Your goal will appear in your next diagnosis.
+              </p>
+            )}
+          </article>
+
           <div className="student-home-columns">
             <article className="student-panel student-panel--todo">
               <div className="student-panel-head">
                 <div>
-                  <span className="student-panel-kicker">Up next</span>
                   <h2>Your next steps</h2>
                 </div>
               </div>
@@ -434,23 +443,6 @@ export default function StudentHome({ student, onTab }) {
               <button className="student-wide-action" onClick={() => onTab('homework')}>Go to homework <Icon.arrowR size={14} /></button>
             </article>
 
-            <article className="student-panel">
-              <div className="student-panel-head">
-                <div>
-                  <span className="student-panel-kicker">Teacher Insights</span>
-                  <h2>Latest approved note</h2>
-                </div>
-                <button className="student-text-action" onClick={() => onTab('feedback')}>Open feedback</button>
-              </div>
-              {latestFeedback && typeof latestFeedback === 'object' ? (
-                <div className="student-feedback-summary">
-                  <p>{latestFeedback.classFocus || latestFeedback.finalNote || 'Your teacher has approved new feedback for you.'}</p>
-                  <button className="student-wide-action" onClick={() => onTab('feedback')}>Read feedback <Icon.arrowR size={14} /></button>
-                </div>
-              ) : (
-                <EmptyState title="Waiting for feedback" text="Your teacher will add notes here after reviewing your next class." />
-              )}
-            </article>
           </div>
         </div>
 
@@ -458,7 +450,6 @@ export default function StudentHome({ student, onTab }) {
           <article className="student-panel" style={{ borderRadius: 0 }}>
             <div className="student-panel-head">
               <div>
-                <span className="student-panel-kicker">Readiness Snapshot</span>
                 <h2>Evaluated skills</h2>
               </div>
             </div>
@@ -469,6 +460,13 @@ export default function StudentHome({ student, onTab }) {
             ) : (
               <EmptyState title="No skills evaluated yet" text="Your first skill result will appear after your next class diagnosis." />
             )}
+            {latestFeedback && typeof latestFeedback === 'object' && (
+              <div className="student-teacher-note">
+                <span className="student-teacher-note-kicker student-panel-kicker">Teacher note</span>
+                <p className="student-teacher-note-text">{latestFeedback.classFocus || latestFeedback.finalNote || 'Your teacher has approved new feedback for you.'}</p>
+                <button className="student-text-action" style={{ fontSize: 'var(--text-xs)' }} onClick={() => onTab('feedback')}>Read full feedback →</button>
+              </div>
+            )}
           </article>
 
           {/* Focus area callout */}
@@ -476,18 +474,18 @@ export default function StudentHome({ student, onTab }) {
             const lowest = [...evaluatedSkills].sort((a, b) => (Number(a.score_0_80) || 80) - (Number(b.score_0_80) || 80))[0];
             if (!lowest || !Number(lowest.score_0_80)) return null;
             return (
-              <button type="button" className="student-panel student-panel--clickable" style={{ borderLeft: '3px solid var(--warning)', textAlign: 'left', width: '100%', fontFamily: 'var(--font-ui)' }} onClick={() => onTab('progress')}>
+              <button type="button" className="student-focus-callout student-panel student-panel--clickable" onClick={() => onTab('progress')}>
                 <div className="student-panel-head">
                   <div>
                     <span className="student-panel-kicker">Focus Area</span>
                     <h2>{lowest.section.replace(/_/g, ' ')}</h2>
                   </div>
                 </div>
-                <p style={{ fontSize: 'var(--text-sm)', lineHeight: 1.6, color: 'var(--text)', margin: '8px 0 0' }}>
+                <p>
                   This skill needs the most attention ({Number(lowest.score_0_80) || 0}/80). Focus on it in your next class or practice session.
                 </p>
                 {lowest.next_step && (
-                  <p style={{ fontSize: 'var(--text-sm)', lineHeight: 1.6, color: 'var(--text-2)', margin: '6px 0 0' }}>
+                  <p>
                     <strong>Next step:</strong> {lowest.next_step}
                   </p>
                 )}
@@ -499,27 +497,23 @@ export default function StudentHome({ student, onTab }) {
             const s = seedsStage && SEEDS_STAGES[seedsStage.stage];
             if (!s) return null;
             return (
-              <button type="button" className="student-panel student-panel--clickable" style={{ borderLeft: `3px solid ${s.color}`, textAlign: 'left', width: '100%', fontFamily: 'var(--font-ui)' }} onClick={() => onTab('progress')}>
+              <button type="button" className="student-seeds-panel student-panel student-panel--clickable" style={{ borderColor: s.color }} onClick={() => onTab('progress')}>
                 <div className="student-panel-head">
                   <div>
                     <span className="student-panel-kicker">Your SEEDS Cycle</span>
                     <h2 style={{ color: s.color }}>{s.label}: {s.subtitle}</h2>
                   </div>
                 </div>
-                <p style={{ fontSize: 'var(--text-sm)', lineHeight: 1.6, color: 'var(--text)', margin: '8px 0 0' }}>
-                  {s.studentDescription}
-                </p>
-                <div style={{ display: 'flex', gap: 4, marginTop: 10 }}>
+                <p>{s.studentDescription}</p>
+                <div className="student-seeds-progress">
                   {SEEDS_STAGE_ORDER.map(stageId => {
                     const st = SEEDS_STAGES[stageId];
                     const isActive = stageId === seedsStage.stage;
                     const isPast = SEEDS_STAGE_ORDER.indexOf(stageId) < SEEDS_STAGE_ORDER.indexOf(seedsStage.stage);
                     return (
-                      <span key={stageId} style={{
-                        flex: 1, height: 4, borderRadius: 2,
+                      <span key={stageId} className="student-seeds-dot" style={{
                         background: isActive ? st.color : isPast ? st.color : 'var(--border)',
                         opacity: isActive ? 1 : isPast ? 0.5 : 0.3,
-                        transition: 'all 0.3s',
                       }} title={`${st.label}: ${st.subtitle}`} />
                     );
                   })}

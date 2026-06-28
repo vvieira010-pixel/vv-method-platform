@@ -64,6 +64,38 @@ export function getRelevantGlossaryTerms(feedbackText) {
     .map(([term, definition]) => ({ term, definition }));
 }
 
+export function TrendChip({ trend }) {
+  if (!trend || trend.dir === 'none') return null;
+  const glyph = { up: '\u2191', down: '\u2193', steady: '\u2192', new: '\u2022' }[trend.dir] || '\u2022';
+  return <span className={`student-trend-chip student-trend-chip--${trend.dir}`}><span aria-hidden="true">{glyph}</span> {trend.label}</span>;
+}
+
+export function SkillRow({ skill, trend, onClick }) {
+  const score = Number(skill.score_0_80) || 0;
+  const stage = score > 0 ? getProgressStage(score) : PROGRESS_STAGES[0];
+  return (
+    <button type="button" className="student-skill-row" onClick={onClick}>
+      <div className="student-skill-top">
+        <strong style={{ textTransform: 'capitalize' }}>{skill.section}</strong>
+        <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          {score > 0 && <span className="student-skill-score">{score}/80</span>}
+          <span className="student-skill-stage">{stage.label}</span>
+        </span>
+      </div>
+      <div style={{ display: 'flex', gap: 4, margin: '6px 0' }} aria-label={`${skill.section}: ${stage.label}`}>
+        {PROGRESS_STAGES.map(st => (
+          <span key={st.label} style={{
+            flex: 1, height: 6, borderRadius: 3,
+            background: st.order <= stage.order ? 'var(--accent)' : 'var(--border)',
+            transition: 'background 0.2s',
+          }} />
+        ))}
+      </div>
+      <TrendChip trend={trend} />
+    </button>
+  );
+}
+
 export function hasVisibleApprovedStudentFeedback(dx) {
   const feedback = dx?.sections?.studentFeedback;
   return dx?.status === 'approved' && feedback?.approved === true && feedback.hidden !== true;

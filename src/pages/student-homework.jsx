@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { Button } from '../components/ui/Button.jsx';
+import { SkeletonCard } from '../components/ui/Skeleton.jsx';
 import { getHomework, submitHomework, getReviews, getDraft, saveDraft } from '../lib/workflow.js';
 import { isStructuredExercise, autoGrade } from '../lib/exercise-types.js';
 import { ExercisePlayer, HomeworkStepThrough } from '../components/exercise-player.jsx';
 import { ExTypeBadge } from '../components/exercise-badge.jsx';
 import { recordPractice } from '../lib/spaced-repetition.js';
 import { printHomework } from '../lib/print-homework.js';
-import { asArray, exerciseSearchText } from './student-helpers.js';
+import { asArray, exerciseSearchText } from './student-helpers.jsx';
 import { TopicContentRenderer } from '../components/topic-explanations.jsx';
 
 function CorrectionNote({ c }) {
@@ -31,6 +32,8 @@ export default function StudentHomework({ student }) {
   const [homeworkFilter, setHomeworkFilter] = useState('todo');
   const [submitting, setSubmitting] = useState(false);
   const [selfChecks, setSelfChecks] = useState({});
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(null);
 
   function selfCheckKey(hwId) { return `vv:hw_selfcheck:${student.id}:${hwId}`; }
   function getSelfChecks(hwId) {
@@ -44,11 +47,22 @@ export default function StudentHomework({ student }) {
   }
 
   useEffect(() => {
+    let cancelled = false;
     (async () => {
-      const [hw, revs] = await Promise.all([getHomework(student.id), getReviews(student.id)]);
-      setHomework(hw || []);
-      setReviews(revs || []);
+      setLoading(true);
+      setLoadError(null);
+      try {
+        const [hw, revs] = await Promise.all([getHomework(student.id), getReviews(student.id)]);
+        if (cancelled) return;
+        setHomework(hw || []);
+        setReviews(revs || []);
+      } catch (err) {
+        if (!cancelled) setLoadError(err.message || 'Failed to load homework');
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
     })();
+    return () => { cancelled = true; };
   }, [student.id]);
 
   function hasStructuredExercises(h) {
@@ -137,6 +151,21 @@ export default function StudentHomework({ student }) {
     window.toast?.('Progress saved. You can continue later.', 'ok');
   }
 
+  if (loading) return (
+    <div className="student-home" style={{ gap: 12 }}>
+      {[1,2,3].map(i => <SkeletonCard key={i} height={80} />)}
+    </div>
+  );
+
+  if (loadError) return (
+    <div className="student-home">
+      <div className="student-empty-card">
+        <p>Could not load homework: {loadError}</p>
+        <button className="student-wide-action" onClick={() => window.location.reload()} style={{ marginTop: 12 }}>Retry</button>
+      </div>
+    </div>
+  );
+
   const reviewedIds = new Set(reviews.map(r => r.homeworkId));
   const sortedHomework = [...homework].sort((a, b) => new Date(b.reviewedAt || b.assignedAt || b.createdAt || 0) - new Date(a.reviewedAt || a.assignedAt || a.createdAt || 0));
   const visibleHomework = sortedHomework.filter(h => {
@@ -154,7 +183,6 @@ export default function StudentHomework({ student }) {
         <div className="student-homework-hero-copy">
           <span className="student-homework-hero-kicker">Homework</span>
           <h1>Assigned practice</h1>
-          <p>Complete the tasks your teacher assigned, then submit them for review.</p>
         </div>
         <span className="student-homework-hero-badge">{homework.length} assigned</span>
       </section>

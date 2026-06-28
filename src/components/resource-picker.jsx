@@ -20,12 +20,14 @@ export default function ResourcePicker({ open, onClose, onSelect, tab: initialTa
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState('');
   const fileRef = useRef(null);
 
   useEffect(() => {
     if (!open) return;
     setTab(initialTab || 'images');
     loadItems(initialTab || 'images');
+    setUploadError('');
   }, [open, initialTab]);
 
   async function loadItems(folder) {
@@ -40,17 +42,21 @@ export default function ResourcePicker({ open, onClose, onSelect, tab: initialTa
   function switchTab(folder) {
     setTab(folder);
     loadItems(folder);
+    setUploadError('');
   }
 
   async function handleUpload(e) {
     const file = e.target.files?.[0];
     if (!file) return;
+    setUploadError('');
     setUploading(true);
     try {
-      await uploadTeacherResource(file, tab);
+      const url = await uploadTeacherResource(file, tab);
       await loadItems(tab);
       window.toast?.(`Uploaded ${file.name}`, 'ok');
     } catch (err) {
+      console.error('[resource-picker] upload failed:', err);
+      setUploadError(err.message || 'Upload failed. Check your connection and try again.');
       window.toast?.(`Upload failed: ${err.message}`, 'warn');
     }
     setUploading(false);
@@ -64,6 +70,8 @@ export default function ResourcePicker({ open, onClose, onSelect, tab: initialTa
       setItems(prev => prev.filter(i => i.name !== path));
       window.toast?.('Deleted.', 'info');
     } catch (err) {
+      console.error('[resource-picker] delete failed:', err);
+      setUploadError(`Delete failed: ${err.message}`);
       window.toast?.(`Delete failed: ${err.message}`, 'warn');
     }
   }
@@ -123,16 +131,25 @@ export default function ResourcePicker({ open, onClose, onSelect, tab: initialTa
           <label htmlFor="resource-upload" style={{
             display: 'inline-flex', alignItems: 'center', gap: 6,
             padding: '6px 14px', borderRadius: 'var(--radius-sm)',
-            background: 'var(--accent)', color: '#fff', cursor: 'pointer',
+            background: uploading ? 'var(--border)' : 'var(--accent)',
+            color: '#fff', cursor: uploading ? 'wait' : 'pointer',
             fontSize: 'var(--text-xs)', fontWeight: 600, fontFamily: 'var(--font-ui)',
-            border: 'none',
+            border: 'none', opacity: uploading ? 0.7 : 1,
           }}>
             {uploading ? 'Uploading…' : <><Icon.plus size={12} /> Upload {tab === 'images' ? 'Image' : 'Audio'}</>}
           </label>
           <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>
             {tab === 'images' ? 'PNG, JPG, WebP' : 'MP3, WAV, OGG, M4A'}
           </span>
+          {uploading && <span style={{ fontSize: 'var(--text-xs)', color: 'var(--primary)' }}>Uploading — please wait…</span>}
         </div>
+        {uploadError && (
+          <div style={{ margin: '0 20px', padding: '8px 12px', background: 'var(--ex-wrong-bg)', border: '1px solid var(--danger)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-xs)', color: 'var(--ex-wrong-text)', display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span>!</span>
+            <span>{uploadError}</span>
+            <button onClick={() => setUploadError('')} style={{ marginLeft: 'auto', background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', fontFamily: 'var(--font-ui)', fontSize: 14 }}>×</button>
+          </div>
+        )}
 
         {/* Grid / List */}
         <div style={{ flex: 1, overflowY: 'auto', padding: 12 }}>
