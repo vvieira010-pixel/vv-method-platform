@@ -97,8 +97,8 @@
   --radius-full: 9999px;
 
   /* ── Typography ──────────────────────────────────────────────── */
-  --font-sans: 'DM Sans', -apple-system, system-ui, sans-serif;
-  --font-ui: 'DM Sans', -apple-system, system-ui, sans-serif;
+  --font-sans: 'Outfit', -apple-system, system-ui, sans-serif;
+  --font-ui: 'Outfit', -apple-system, system-ui, sans-serif;
   --font-display: 'Sora', 'DM Sans', -apple-system, system-ui, sans-serif;
   --font-mono: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Droid Sans Mono', monospace;
 
@@ -136,14 +136,14 @@
   --space-16: 4rem;     /* 64px */
   --space-20: 5rem;     /* 80px */
 
-  /* ── Shadows ─────────────────────────────────────────────────── */
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
-  --shadow-card: 0 16px 35px -20px rgba(26, 35, 50, 0.2), 0 3px 8px rgba(26, 35, 50, 0.06);
-  --shadow-modal: 0 24px 58px -24px rgba(26, 35, 50, 0.3), 0 8px 20px rgba(26, 35, 50, 0.1);
-  --shadow-toast: 0 4px 16px rgba(26, 35, 50, 0.18);
+  /* ── Shadows (tinted to brand navy for natural depth) ────────── */
+  --shadow-sm: 0 1px 2px 0 rgba(15,27,45,0.06);
+  --shadow-md: 0 4px 6px -1px rgba(15,27,45,0.08), 0 2px 4px -2px rgba(15,27,45,0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(15,27,45,0.08), 0 4px 6px -4px rgba(15,27,45,0.06);
+  --shadow-xl: 0 20px 25px -5px rgba(15,27,45,0.08), 0 8px 10px -6px rgba(15,27,45,0.06);
+  --shadow-card: 0 16px 35px -20px rgba(15,27,45,0.18), 0 3px 8px rgba(15,27,45,0.06);
+  --shadow-modal: 0 24px 58px -24px rgba(15,27,45,0.28), 0 8px 20px rgba(15,27,45,0.10);
+  --shadow-toast: 0 4px 16px rgba(15,27,45,0.16);
 
   /* ── Transitions ─────────────────────────────────────────────── */
   --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);

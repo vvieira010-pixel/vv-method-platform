@@ -6,15 +6,13 @@
 .card {
   background: var(--surface);
   border-radius: var(--radius-sm);
-  box-shadow: var(--shadow-sm);
-  border: 1px solid var(--border);
+  box-shadow: var(--shadow-card);
   padding: var(--space-6);
-  transition: box-shadow var(--transition-base), border-color var(--transition-base), transform var(--transition-fast);
+  transition: box-shadow var(--transition-base), transform var(--transition-fast);
 }
 
 .card:hover {
-  box-shadow: var(--shadow-md);
-  border-color: var(--border-strong);
+  box-shadow: var(--shadow-lg);
   transform: translateY(-1px);
 }
 
@@ -3836,10 +3834,10 @@
   inset: 0;
   pointer-events: none;
   z-index: 0;
-  opacity: 0.035;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity: 0.045;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   background-repeat: repeat;
-  background-size: 180px 180px;
+  background-size: 160px 160px;
 }
 
 /* ── Page transitions ──────────────────────────────────────────── */
@@ -5835,7 +5833,7 @@ textarea:focus, .textarea:focus {
 .lp-root {
   min-height: 100vh; min-height: 100dvh;
   display: grid; grid-template-columns: 420px 1fr;
-  font-family: var(--font-ui); background: #fff;
+  font-family: var(--font-ui);
   overflow-x: hidden;
 }
 
@@ -5915,7 +5913,7 @@ textarea:focus, .textarea:focus {
 .lp-signin {
   display: flex; align-items: center; justify-content: center;
   min-height: 100dvh; padding: 56px clamp(24px, 6vw, 64px);
-  overflow-y: auto; overflow-x: hidden; background: #fff;
+  overflow-y: auto; overflow-x: hidden; background: var(--bg);
   width: 100%; min-width: 0; box-sizing: border-box;
 }
 .lp-signin-inner { width: min(100%, 420px); max-width: calc(100vw - 48px); min-width: 0; }
@@ -5973,7 +5971,7 @@ textarea:focus, .textarea:focus {
 .lp-submit {
   width: 100%; padding: 13px; margin-top: 8px;
   background: var(--accent); color: #fff;
-  border: none; border-radius: var(--radius-md); cursor: pointer;
+  border: none; border-radius: var(--radius-pill); cursor: pointer;
   font-size: var(--text-lg); font-weight: 700; font-family: var(--font-ui);
   letter-spacing: .01em;
   transition: opacity var(--transition-fast), box-shadow var(--transition-fast);

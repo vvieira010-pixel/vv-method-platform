@@ -83,7 +83,7 @@ export default function LoginScreen() {
     <div className="lp-root">
 
       {/* ── Brand panel ── */}
-      <div className="lp-brand">
+      <div className="lp-brand bg-grain">
         <svg className="lp-brand-hero-illo" width="320" height="280" viewBox="0 0 320 280" fill="none" aria-hidden="true">
           <path d="M40 200 Q80 60 160 80 Q240 100 280 60" stroke="rgba(20,136,145,0.2)" strokeWidth="2" fill="none" strokeLinecap="round" />
           <path d="M40 220 Q100 120 180 140 Q260 160 300 120" stroke="rgba(72,199,199,0.12)" strokeWidth="2" fill="none" strokeLinecap="round" />
@@ -91,7 +91,7 @@ export default function LoginScreen() {
           <circle cx="240" cy="100" r="4" fill="rgba(72,199,199,0.2)" />
           <circle cx="100" cy="120" r="3" fill="rgba(255,255,255,0.1)" />
           <rect x="255" y="50" width="32" height="22" rx="4" stroke="rgba(200,102,7,0.3)" strokeWidth="1.5" fill="rgba(200,102,7,0.08)" />
-          <text x="263" y="65" fill="rgba(200,102,7,0.5)" fontSize="10" fontWeight="700" fontFamily="sans-serif">B2</text>
+          <text x="263" y="65" fill="rgba(200,102,7,0.5)" fontSize="10" fontWeight="700" fontFamily="Outfit, sans-serif">B2</text>
           <path d="M280 45 L290 55 M290 45 L280 55" stroke="rgba(200,102,7,0.25)" strokeWidth="1.5" strokeLinecap="round" />
           <circle cx="80" cy="180" r="2" fill="rgba(255,255,255,0.08)" />
           <circle cx="200" cy="160" r="2.5" fill="rgba(255,255,255,0.06)" />
