@@ -567,6 +567,13 @@ export const vocabTopics = [
         skill: 'Speaking',
         prompt: 'Do you think technology makes learning easier or more difficult?\n\nSpeak for 60–90 seconds. Use at least 5 words from the Technology and Digital Life topic.',
       },
+      {
+        id: 'tech_sp2',
+        type: 'speak',
+        skill: 'Speaking',
+        prompt: 'Look at the picture. Describe what you see and discuss the topic.\n\nSpeak for 60–90 seconds.',
+        image: 'speaking_pictures/speaking_picture_05_chatgpt_generated.png',
+      },
       // Part 4 — Writing
       {
         id: 'tech_wr1',
