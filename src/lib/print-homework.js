@@ -73,11 +73,11 @@ export function buildPrintableHomeworkHtml(homework, { studentName = '' } = {}) 
 <title>${esc(homework?.title || 'Homework')}</title>
 <style>
   * { box-sizing: border-box; }
-  body { font-family: Georgia, 'Times New Roman', serif; color: #111; line-height: 1.5; max-width: 720px; margin: 24px auto; padding: 0 16px; }
+  body { font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #111; line-height: 1.6; max-width: 720px; margin: 24px auto; padding: 0 16px; }
   .head { border-bottom: 2px solid #111; padding-bottom: 10px; margin-bottom: 18px; }
-  .head h1 { font-size: 22px; margin: 0 0 4px; }
-  .meta { font-size: 12px; color: #444; }
-  .nameline { margin: 14px 0 18px; font-size: 13px; }
+  .head h1 { font-family: 'Sora', 'Outfit', sans-serif; font-size: 24px; margin: 0 0 4px; font-weight: 700; letter-spacing: -0.02em; }
+  .meta { font-size: 11px; color: #555; text-transform: uppercase; letter-spacing: 0.06em; }
+  .nameline { margin: 14px 0 18px; font-size: 12px; }
   .goal { font-size: 13px; background: #f4f4f4; padding: 10px 12px; border-radius: 6px; margin-bottom: 18px; }
   .ex { display: flex; gap: 10px; padding: 12px 0; border-top: 1px solid #ddd; page-break-inside: avoid; }
   .exnum { font-weight: bold; min-width: 22px; }
@@ -87,10 +87,10 @@ export function buildPrintableHomeworkHtml(homework, { studentName = '' } = {}) 
   .promptimg { display: block; width: 100%; max-height: 300px; object-fit: cover; border: 1px solid #ddd; border-radius: 4px; margin: 0 0 10px; }
   .opts { margin: 6px 0; } .opts li { margin: 3px 0; }
   .scramble, .pairs { margin: 6px 0; padding-left: 18px; } .scramble li, .pairs li { margin: 4px 0; }
-  .ans { margin-top: 8px; font-size: 13px; color: #333; }
-  .note { font-size: 12px; color: #555; margin: 6px 0 4px; }
+  .ans { margin-top: 8px; font-size: 12px; color: #333; }
+  .note { font-size: 11px; color: #555; margin: 6px 0 4px; }
   .lines .line { border-bottom: 1px solid #aaa; height: 22px; }
-  .selfcheck { margin-top: 22px; border-top: 2px solid #111; padding-top: 10px; font-size: 13px; }
+  .selfcheck { margin-top: 22px; border-top: 2px solid #111; padding-top: 10px; font-size: 12px; }
   .selfcheck li { margin: 4px 0; }
   @media print { body { margin: 0; } .noprint { display: none; } }
 </style></head><body>

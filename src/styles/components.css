@@ -5041,7 +5041,7 @@ textarea:focus, .textarea:focus {
   }
 
   .student-homework-card {
-    border-left-width: 3px;
+    border: 1px solid var(--border);
   }
 
   .student-homework-card-head {
