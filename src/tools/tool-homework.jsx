@@ -1,7 +1,7 @@
 /**
  * tool-homework.jsx — Assign homework from diagnosis + review student submissions
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Icon, SectionHeader, Pill, PillNav, Avatar } from '../components/shared.jsx';
 import { Button } from '../components/ui/Button.jsx';
 import { Card } from '../components/ui/Card.jsx';
@@ -49,7 +49,7 @@ export default function ToolHomework({ student, students = [], onSelectStudent, 
   const [reviewingSubmission, setReviewingSubmission] = useState(null);
   const [reviewForm, setReviewForm] = useState({ corrections: [{ original: '', improved: '', note: '' }], overallNote: '', score: '' });
 
-  const load = async () => {
+  const load = useCallback(async () => {
     const [hwData, subData, revData] = await Promise.all([
       getHomework(student?.id),
       getSubmissions(student?.id),
@@ -58,7 +58,7 @@ export default function ToolHomework({ student, students = [], onSelectStudent, 
     setHw(hwData || []);
     setSubmissions(subData || []);
     setReviews(revData || []);
-  };
+  }, [student?.id]);
 
   useEffect(() => {
     (async () => {
@@ -67,7 +67,7 @@ export default function ToolHomework({ student, students = [], onSelectStudent, 
       setDiagnoses(diags || []);
       setSelectedDiagnosisId(prev => prev && diags?.some(d => d.id === prev) ? prev : (diags?.[0]?.id || ''));
     })();
-  }, [student?.id]);
+  }, [student?.id, load]);
 
   // Auto-populate from preloaded diagnosis (coming from Diagnose tool)
   useEffect(() => {
@@ -102,7 +102,7 @@ export default function ToolHomework({ student, students = [], onSelectStudent, 
       window.toast?.('Homework pre-filled from diagnosis.', 'ok');
       onDiagnosisConsumed?.();
     }
-  }, [preloadedDiagnosis]);
+  }, [preloadedDiagnosis, student?.firstName, onDiagnosisConsumed]);
 
   const selectedDiagnosis = diagnoses.find(d => d.id === selectedDiagnosisId) || diagnoses[0] || null;
 

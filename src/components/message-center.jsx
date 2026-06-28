@@ -1,7 +1,7 @@
 /**
  * message-center.jsx — In-app messaging between teacher and students
  */
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Icon, Avatar } from './shared.jsx';
 import { getInbox, sendMessage, markRead } from '../lib/workflow.js';
 
@@ -149,12 +149,12 @@ export function MessageTeacherDock({ student, onSent }) {
   const [unread, setUnread] = useState(0);
   const endRef = useRef(null);
 
-  const load = async () => {
+  const load = useCallback(async () => {
     const all = await getInbox({ role: 'student', studentId: student?.id });
     setMessages(all || []);
     const u = (all || []).filter(m => m.fromRole === 'teacher' && !m.read).length;
     setUnread(u);
-  };
+  }, [student?.id]);
 
   useEffect(() => {
     inject();
@@ -162,7 +162,7 @@ export function MessageTeacherDock({ student, onSent }) {
     const h = () => load();
     window.addEventListener('vv:messages-changed', h);
     return () => window.removeEventListener('vv:messages-changed', h);
-  }, [student?.id]);
+  }, [student?.id, load]);
 
   useEffect(() => {
     if (open && endRef.current) endRef.current.scrollIntoView({ behavior: 'smooth' });
@@ -171,7 +171,7 @@ export function MessageTeacherDock({ student, onSent }) {
         .forEach(m => markRead(m.id));
       setUnread(0);
     }
-  }, [open, messages.length]);
+  }, [open, messages, markRead]);
 
   const handleSend = async () => {
     if (!text.trim()) return;

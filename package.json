@@ -11,7 +11,8 @@
     "preview": "vite preview",
     "lint": "eslint src/",
     "lint:fix": "eslint src/ --fix",
-    "test": "node --test \"tests/**/*.test.js\""
+    "test": "node --test \"tests/**/*.test.js\"",
+    "generate:listening-audio": "node scripts/generate-listening-audio.js"
   },
   "dependencies": {
     "@vitejs/plugin-react": "^5.0.4",

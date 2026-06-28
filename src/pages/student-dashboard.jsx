@@ -1,4 +1,4 @@
-import { useState, useEffect, lazy, Suspense } from 'react';
+import { useState, useEffect, lazy, Suspense, useCallback } from 'react';
 import { Icon, Avatar } from '../components/shared.jsx';
 import { getDiagnoses, getReviews } from '../lib/workflow.js';
 import { hasVisibleApprovedStudentFeedback, asArray } from './student-helpers.jsx';
@@ -25,10 +25,10 @@ export default function StudentDashboard({ student, onSignOut }) {
 
   const lvKey = student?.id ? `vv:student_last_visited:${student.id}` : null;
 
-  function getLastVisited() {
+  const getLastVisited = useCallback(() => {
     if (!lvKey) return {};
     try { return JSON.parse(localStorage.getItem(lvKey) || '{}'); } catch { return {}; }
-  }
+  }, [lvKey]);
 
   useEffect(() => {
     if (!student?.id) return;
@@ -64,7 +64,7 @@ export default function StudentDashboard({ student, onSignOut }) {
 
       setDots(next);
     })();
-  }, [student?.id]);
+  }, [student?.id, getLastVisited]);
 
   function handleTabChange(tabId) {
     setTab(tabId);

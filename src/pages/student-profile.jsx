@@ -1,7 +1,7 @@
 /**
  * student-profile.jsx — Deep-dive student profile with tabs
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Icon, SectionHeader, Pill, Avatar, PillNav, Breadcrumb } from '../components/shared.jsx';
 import { Button } from '../components/ui/Button.jsx';
 import { Card } from '../components/ui/Card.jsx';
@@ -38,9 +38,7 @@ export default function StudentProfile({ studentId, students, onNavigate }) {
   const [notes, setNotes] = useState([]);
   const [newNote, setNewNote] = useState('');
 
-  useEffect(() => { load(); }, [studentId]);
-
-  async function load() {
+  const load = useCallback(async () => {
     if (!studentId) return;
     try {
       const [s, tp, ev, dx, hw, subs, eb, vb, pn] = await Promise.all([
@@ -66,7 +64,9 @@ export default function StudentProfile({ studentId, students, onNavigate }) {
     } catch (e) {
       window.toast?.(`Failed to load student profile: ${e.message}`, 'warn');
     }
-  }
+  }, [studentId]);
+
+  useEffect(() => { load(); }, [studentId, load]);
 
   if (!student) return <div style={{ padding: 'var(--space-10)', color: 'var(--muted)' }}>Student not found.</div>;
 

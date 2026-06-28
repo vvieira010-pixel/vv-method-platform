@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Icon, Modal } from './shared.jsx';
+import { Modal } from './shared.jsx';
 import { Button } from '../components/ui/Button.jsx';
 import ExercisePlayer from './exercises/ExercisePlayer.jsx';
 import {

@@ -1,7 +1,7 @@
 /**
  * submission-review.jsx — Teacher reviews student submission vs. diagnosis
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Icon, Card, SectionHeader, Pill, Button, Avatar, Breadcrumb } from '../components/shared.jsx';
 import { Modal } from '../components/ui/Modal.jsx';
 import { callAI } from '../lib/callAI.js';
@@ -33,9 +33,7 @@ export default function SubmissionReview({ submissionId, students, onNavigate })
   const [showPreview, setShowPreview] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => { load(); }, [submissionId]);
-
-  async function load() {
+  const load = useCallback(async () => {
     try {
       const allSubs = await getAllSubmissions();
       const sub = allSubs.find(s => s.id === submissionId);
@@ -98,7 +96,9 @@ export default function SubmissionReview({ submissionId, students, onNavigate })
     } finally {
       setLoading(false);
     }
-  }
+  }, [submissionId, students]);
+
+  useEffect(() => { load(); }, [submissionId, load]);
 
   async function runAiComparison() {
     if (!submission || !homework || !diagnosis) { window.toast?.('Need submission, homework, and diagnosis to compare.', 'warn'); return; }

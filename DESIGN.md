@@ -36,7 +36,15 @@ A calm, focused, and expert interface designed for healthcare professionals. The
 - **Perpetual Micro-motion:** Active status indicators use a subtle, infinite pulse or shimmer loop.
 - **Performance:** Animations are limited to `transform` and `opacity`. Background grain is applied via a fixed pseudo-element overlay to prevent layout thrash.
 
-## 7. Anti-Patterns (Banned)
+## 7. Component Guide
+- **Button:** Use `Button` component. `variant="primary"` for main actions (Medical Teal), `variant="ghost"` for secondary. Avoid hardcoded colors.
+- **Card:** Use `Card` component. Always borderless with a diffused shadow. Use `className="card-compact"` for high-density views.
+- **Pill:** Use `Pill` component for tags and status indicators. Use semantic `tone` (e.g., `info`, `success`, `warning`, `error`).
+- **Modal:** Use `Modal` component for overlays. Always provide a clear `kicker` and `title`.
+- **Inputs:** Use standard `.input` classes. Labels must be positioned above the field.
+- **Empty States:** Use `EmptyState` component with an illustrative icon and a clear CTA.
+
+## 8. Anti-Patterns (Banned)
 - **No Emojis:** Professional, clinical tone only.
 - **No Pure Black:** Use Deep Navy Ink (#071527) instead of #000000.
 - **No Side-Tabs:** Thick colored borders on the left side of cards are strictly forbidden.

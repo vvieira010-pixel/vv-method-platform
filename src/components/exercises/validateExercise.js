@@ -87,7 +87,7 @@ export function validateExercise(ex) {
  * Returns { exercises: [], errors: [] }
  */
 export function loadExercises(raw) {
-  let list = [];
+  let list;
   if (Array.isArray(raw)) {
     list = raw;
   } else if (raw && Array.isArray(raw.exercises)) {

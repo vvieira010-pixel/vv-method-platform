@@ -13,7 +13,8 @@ import { dbEnabled, uploadExerciseImage } from '../lib/supabase-db.js';
 import { DialogueEditor, SwapEditor, LevelUpEditor, ReadEditor } from './exercise-editor-new-types.jsx';
 import { generateExerciseImage } from '../lib/image-generation.js';
 import ResourcePicker from './resource-picker.jsx';
-export { ExTypeBadge } from './exercise-badge.jsx';
+import { ExTypeBadge } from './exercise-badge.jsx';
+export { ExTypeBadge };
 
 /* ─── SHARED STYLES ─────────────────────────────────────────── */
 const fieldLabel = {

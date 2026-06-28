@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Icon, Pill } from './shared.jsx';
 import { Card } from './ui/Card.jsx';
 import { Button } from './ui/Button.jsx';
-import { getExType, parseBlankTemplate, shuffleArray, autoGrade } from '../lib/exercise-types.js';
+import { parseBlankTemplate, shuffleArray } from '../lib/exercise-types.js';
 import { ExTypeBadge } from './exercise-badge.jsx';
 import Listening from './exercises/Listening.jsx';
 import { getDbContext, uploadSubmissionAudio, createSignedAudioUrl } from '../lib/supabase-db.js';
@@ -511,7 +511,7 @@ function SpeakPlayer({ ex, res, update, readOnly }) {
       setStatus('done');
       createSignedAudioUrl(res.audioPath).then(url => { if (url) setPlaybackUrl(url); });
     }
-  }, []);
+  }, [res]);
 
   return (
     <div>
@@ -705,7 +705,7 @@ function OrderPlayer({ ex, res, update, readOnly }) {
   // Sync order to response
   useEffect(() => {
     if (!readOnly && order.length > 0) update({ order });
-  }, [order]);
+  }, [order, readOnly, update]);
 
   const move = (i, dir) => {
     if (readOnly) return;
@@ -1217,7 +1217,7 @@ export function HomeworkStepThrough({ exercises, responses, onResponse, onSubmit
     if (!initialExerciseId || !Array.isArray(exercises)) return;
     const idx = exercises.findIndex(ex => ex.id === initialExerciseId);
     if (idx >= 0) setCurrentIdx(idx);
-  }, [initialExerciseId]);
+  }, [initialExerciseId, exercises]);
 
   if (!exercises || exercises.length === 0) return null;
 

@@ -3,8 +3,7 @@
  * Core UI primitives, icons, layout shell, and AI utilities.
  */
 
-import { useState, useRef, useEffect } from 'react';
-import { Button } from './ui/Button.jsx';
+import { WorkflowStageStrip } from './domain-ui.jsx';
 
 /* ─── CSS CUSTOM PROPERTIES (injected once) ─────────────────── */
 

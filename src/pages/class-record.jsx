@@ -24,8 +24,6 @@ export default function ClassRecord({ classEventId, students, onNavigate }) {
   const [form, setForm] = useState(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => { load(); }, [classEventId]);
-
   async function load() {
     if (!classEventId) return;
     try {
@@ -68,6 +66,8 @@ export default function ClassRecord({ classEventId, students, onNavigate }) {
       window.toast?.(`Failed to load class: ${e.message}`, 'warn');
     }
   }
+
+  useEffect(() => { load(); }, [classEventId]);
 
   function toggleSkill(evalKey, countKey) {
     setForm(f => {

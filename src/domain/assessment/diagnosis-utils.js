@@ -36,7 +36,7 @@ export function aiText(res) {
 }
 
 export async function generateDiagnosisJson(promptData, setStatus = () => {}) {
-  let firstError = null;
+  let firstError;
   try {
     const raw = await callAI(buildSkillDiagnosisPrompt(promptData), withSkills('diagnosis', { max_tokens: 6000 }));
     const parsed = normalizeDiagnosisJson(parseAiJson(aiText(raw)), promptData.classEvidence);

@@ -254,7 +254,7 @@ export default function Listening({ exercise, onComplete }) {
       setError(e.message || 'Could not play audio.');
       setRevealed(true);
     }
-  }, [canPlay, audioText, audioSrc, audioUrl]);
+  }, [canPlay, audioText, audioSrc, audioUrl, playbackRate]);
 
   function handleStop() {
     if (audioRef.current) {

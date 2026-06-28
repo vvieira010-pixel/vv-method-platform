@@ -1,15 +1,15 @@
 import { useState, useEffect, lazy, Suspense, useMemo } from 'react';
-import { Icon, Avatar, Skeleton, SkeletonText, SkeletonCard, EmptyState } from '../components/shared.jsx';
+import { Icon, SkeletonCard, EmptyState } from '../components/shared.jsx';
 import { getHomework, getDiagnoses, getClassEvents, getReviews, getSubmissions, getStudentSeedsStage, getStudentGoal, saveStudentGoal } from '../lib/workflow.js';
-import { recordPractice, getDueCount, getDueItems, toMCQ, getAllEntries } from '../lib/spaced-repetition.js';
+import { getDueCount, getDueItems, toMCQ, getAllEntries } from '../lib/spaced-repetition.js';
 
 import { SEEDS_STAGES, SEEDS_STAGE_ORDER } from '../domain/seeds/constants.js';
 
 const PracticeSession = lazy(() => import('../components/PracticeSession.jsx'));
 const ReviewSession   = lazy(() => import('../components/ReviewSession.jsx'));
-import { asArray, getProgressStage, getSkillTrend, hasVisibleApprovedStudentFeedback, PROGRESS_STAGES, TrendChip, SkillRow } from './student-helpers.jsx';
+import { asArray, getSkillTrend, hasVisibleApprovedStudentFeedback, SkillRow } from './student-helpers.jsx';
 import { getTeacherSetting } from '../lib/supabase-db.js';
-import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Cell } from 'recharts';
+import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
 
 function daysUntilExam() {
   try {
@@ -84,6 +84,8 @@ function TodoRow({ done, label, meta }) {
 export default function StudentHome({ student, onTab }) {
   const [latestFeedback, setLatestFeedback] = useState(null);
   const [pendingHw, setPendingHw] = useState([]);
+  const [homework, setHomework] = useState([]);
+  const [reviews, setReviews] = useState([]);
   const [latestReview, setLatestReview] = useState(null);
   const [snapshot, setSnapshot] = useState([]);
   const [practiceMode, setPracticeMode] = useState(null);
@@ -139,6 +141,8 @@ export default function StudentHome({ student, onTab }) {
         getReviews(student.id),
         getSubmissions(student.id),
       ]);
+      setHomework(hw || []);
+      setReviews(reviews || []);
       setSubmissions(subs || []);
       setReviewCount(getDueCount(student.id));
       const doneStatuses = new Set(['submitted', 'reviewed', 'completed', 'corrected']);
@@ -222,9 +226,6 @@ export default function StudentHome({ student, onTab }) {
   const fallbackFocus = nextClass?.metSkillFocus || nextClass?.classFocus || student.focusSkill || 'MET speaking organization';
   const focusSkill = snapshotEvaluatedSkills[0]?.section || fallbackFocus;
   const focusTrend = snapshotEvaluatedSkills[0] ? getSkillTrend(focusSkill, approvedHistory) : { dir: 'none' };
-  const feedbackFocus = latestFeedback && typeof latestFeedback === 'object'
-    ? latestFeedback.nextStep || latestFeedback.focusArea?.area || latestFeedback.focusArea?.explanation || latestFeedback.finalNote
-    : '';
 
   function handleOpenReview() {
     const due = getDueItems(student.id);

@@ -19,23 +19,24 @@ import {
   buildRetrievalPracticePrompt,
   buildLanguageDemandPrompt,
 } from '../lib/prompts.js';
-import { getDiagnoses, getStudent, saveHomework, updateClassEventStatus, getErrorBank } from '../lib/workflow.js';
-import { EX_TYPES, createExercise, getExType, isStructuredExercise } from '../lib/exercise-types.js';
-import { getDueItems, getDueCount, toMCQ, getAllEntries } from '../lib/spaced-repetition.js';
-import { ExerciseEditor, ExerciseTypePicker, ExTypeBadge } from '../components/exercise-editor.jsx';
+import { getDiagnoses, getStudent, saveHomework, updateClassEventStatus } from '../lib/workflow.js';
+import { createExercise, getExType, isStructuredExercise } from '../lib/exercise-types.js';
+import { getDueItems, toMCQ, getAllEntries } from '../lib/spaced-repetition.js';
+import { ExerciseTypePicker } from '../components/exercise-editor.jsx';
 import ExerciseCard from '../components/exercises/ExerciseCard.jsx';
-import { ExercisePlayer, HomeworkStepThrough } from '../components/exercise-player.jsx';
+import { HomeworkStepThrough } from '../components/exercise-player.jsx';
 import {
   normalizeTaskTypes, buildCompleteExercises, createCompleteExercise,
   isStructuredAiExerciseComplete, getHomeworkCognitiveSufficiencyWarning,
 } from '../lib/exercise-ai-helpers.js';
-import { getExerciseModules, getModuleExercises, bankMeta } from '../lib/exercise-bank.js';
-import { getB2Modules, getB2ModuleExercises, b2BankMeta } from '../lib/met-b2-bank.js';
+import { getModuleExercises } from '../lib/exercise-bank.js';
+import { getB2Modules, getB2ModuleExercises } from '../lib/met-b2-bank.js';
 import { getLifestyleModules, getLifestyleModuleExercises, lifestylePackMeta } from '../lib/lifestyle-pack.js';
-import { getDeepResearchModules, getDeepResearchModuleExercises, deepResearchMeta } from '../lib/met-b2-exercises.js';
-import { getGrammarModules, getGrammarModuleExercises, grammarBankMeta } from '../lib/met-grammar-bank.js';
+import { getDeepResearchModules, getDeepResearchModuleExercises } from '../lib/met-b2-exercises.js';
+import { getGrammarModules, getGrammarModuleExercises } from '../lib/met-grammar-bank.js';
 import { getLibraryExercises, saveExerciseToLibrary, deleteLibraryExercise, incrementUsage } from '../lib/exercise-library.js';
 import { generateExerciseImage } from '../lib/image-generation.js';
+import { generateId, generateShortId } from '../lib/utils.js';
 import HomeworkSetWizard from '../components/homework-set-wizard.jsx';
 import { getUnitsByLevel, getSkillExercises, SUBJECT_OPTIONS } from '../lib/unit-bank.js';
 import { TopicExplanationsEditor } from '../components/topic-explanations.jsx';
@@ -48,7 +49,6 @@ const EMPTY_FORM = {
   skillType: 'grammar', dueDate: '', teacherNotes: '',
 };
 
-const SKILL_TYPES = ['writing', 'speaking', 'grammar', 'vocabulary', 'reading', 'listening', 'mixed'];
 const HOMEWORK_AI_BASE_OPTIONS = {};
 
 // Skill groups available for per-group generation
@@ -63,13 +63,11 @@ const SKILL_GROUPS = [
 
 export default function HomeworkCreate({ diagnosisId, studentId, students, onNavigate, initialStep = 1 }) {
   const exerciseListRef = useRef(null);
-  const revisionRef = useRef(null);
   const assignRef = useRef(null);
   const [diagnosis, setDiagnosis] = useState(null);
   const [student, setStudent] = useState(null);
   const [selectedStudentId, setSelectedStudentId] = useState(studentId || '');
   const [form, setForm] = useState(EMPTY_FORM);
-  const [preview, setPreview] = useState(false);
   const [saving, setSaving] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [generatingListening, setGeneratingListening] = useState(false);
@@ -118,30 +116,6 @@ export default function HomeworkCreate({ diagnosisId, studentId, students, onNav
     getLibraryExercises().then(list => { if (!cancelled) setLibraryExercises(list); }).catch(() => {});
     return () => { cancelled = true; };
   }, [libVersion]);
-
-  useEffect(() => { load(); }, [diagnosisId, studentId]);
-
-  useEffect(() => {
-    if (!selectedStudentId) {
-      if (!studentId) setStudent(null);
-      setErrorBankItems([]);
-      return;
-    }
-    const rosterStudent = students.find(s => s.id === selectedStudentId);
-    if (rosterStudent) setStudent(rosterStudent);
-    else getStudent(selectedStudentId).then(s => { if (s) setStudent(s); }).catch(() => {});
-    getErrorBank(selectedStudentId).then(items => setErrorBankItems(items || [])).catch(() => {});
-  }, [selectedStudentId, studentId, students]);
-
-  // Load spaced repetition due count when a student is known
-  useEffect(() => {
-    const sid = studentId || selectedStudentId || student?.id || diagnosis?.studentId;
-    if (sid) {
-      setReviewDueCount(getDueCount(sid));
-    } else {
-      setReviewDueCount(0);
-    }
-  }, [studentId, selectedStudentId, student?.id, diagnosis?.studentId]);
 
   async function load() {
     let sid = studentId || '';
@@ -243,11 +217,6 @@ function getPriorityItems(dx) {
     });
   }
 
-  /* ── Self-check management ── */
-  function addCheck() { setForm(f => ({ ...f, selfCheck: [...f.selfCheck, ''] })); }
-  function updateCheck(i, v) { setForm(f => ({ ...f, selfCheck: f.selfCheck.map((t, idx) => idx === i ? v : t) })); }
-  function removeCheck(i) { setForm(f => ({ ...f, selfCheck: f.selfCheck.filter((_, idx) => idx !== i) })); }
-
   /* ── Per-skill-group generation ── */
   async function handleGenerateByGroups() {
     const selectedGroups = Object.entries(groupGenConfig).filter(([, count]) => count > 0);
@@ -306,10 +275,11 @@ function getPriorityItems(dx) {
       if (!parsed || parsed.type !== 'listen') throw new Error('AI returned invalid listening task.');
       
       const fresh = createExercise('listen');
+      const listeningId = generateId('ex_');
       const listeningEx = { 
         ...fresh, 
         ...parsed,
-        id: 'ex_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6)
+        id: listeningId
       };
 
       setForm(f => ({ ...f, exercises: [...f.exercises, listeningEx] }));
@@ -348,17 +318,18 @@ function getPriorityItems(dx) {
       const parsed = parseAiJson(data.content?.map(b => b.text || '').join('') || '');
       if (!parsed || parsed.type !== 'read') throw new Error('AI returned invalid reading task.');
       const fresh = createExercise('read');
+      const readId = generateId('ex_');
       const readEx = {
         ...fresh,
         ...parsed,
         questions: (parsed.questions || []).map(q => ({
-          id: 'rq_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 5),
+          id: generateShortId('rq_'),
           question: q.question || '',
           options: (q.options || ['', '', '', '']).slice(0, 4),
           correct: typeof q.correct === 'number' ? q.correct : null,
           explanation: q.explanation || '',
         })),
-        id: 'ex_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+        id: readId,
       };
       setForm(f => ({ ...f, exercises: [...f.exercises, readEx] }));
       setExpandedEx(readEx.id);
@@ -637,7 +608,7 @@ function getPriorityItems(dx) {
     }
     const exercises = unitBankExercises.map(ex => ({
       ...ex,
-      id: 'ub_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+      id: generateId('ub_')
     }));
     setForm(f => ({ ...f, exercises: [...f.exercises, ...exercises] }));
     window.toast?.(`Added ${exercises.length} unit bank exercises.`, 'ok');
@@ -657,7 +628,7 @@ function getPriorityItems(dx) {
   async function addFromLibrary(libEx) {
     // Drop the lib id so it becomes a fresh per-homework exercise.
     const { id, title, tags, level, createdAt, usageCount, ...fields } = libEx;
-    const fresh = { ...fields, id: 'ex_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6) };
+    const fresh = { ...fields, id: generateId('ex_') };
     setForm(f => ({ ...f, exercises: [...f.exercises, fresh] }));
     setShowLibrary(false);
     window.toast?.(`"${title}" added.`, 'ok');
@@ -736,7 +707,10 @@ function getPriorityItems(dx) {
     onNavigate('homework');
   }
 
-  function addUnitBankExercise(ex) { setForm(f => ({ ...f, exercises: [...f.exercises, { ...ex, id: 'ub_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2) }] })); }
+  function addUnitBankExercise(ex) {
+    const newId = generateId('ub_');
+    setForm(f => ({ ...f, exercises: [...f.exercises, { ...ex, id: newId }] }));
+  }
   function handleWizardComplete({ level, skill }) {
     setSelectedLevel(level);
     setSelectedSkill(skill);

@@ -1,4 +1,5 @@
 import bankData from '../data/met-b2-skills-bank.json';
+import { listeningModules } from './met-listening-bank.js';
 
 let _counter = 0;
 function bankId() {
@@ -80,7 +81,7 @@ function buildModule(mod) {
   };
 }
 
-const _modules = bankData.modules.map(buildModule);
+const _modules = [...bankData.modules.map(buildModule), ...listeningModules];
 
 export const b2BankMeta = {
   id: 'met_b2_skills',

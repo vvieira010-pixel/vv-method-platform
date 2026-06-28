@@ -17,7 +17,7 @@ function lines(n = 3) {
 
 function exerciseHtml(ex, n) {
   const t = ex.type;
-  let body = '';
+  let body;
 
   if (t === 'mcq') {
     const opts = (ex.options || []).filter(o => o !== undefined);

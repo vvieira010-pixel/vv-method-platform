@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Modal, Icon } from './shared.jsx';
 import { recordPractice } from '../lib/spaced-repetition.js';
 
@@ -10,11 +10,11 @@ export default function ReviewSession({ exercises, studentId, onClose }) {
   const ex = exercises[idx];
   const remaining = exercises.length - idx - 1;
 
-  function handleSelect(optionIndex) {
+  const handleSelect = useCallback(optionIndex => {
     setAnswers(prev => ({ ...prev, [ex.id]: optionIndex }));
-  }
+  }, [ex]);
 
-  function handleNext() {
+  const handleNext = useCallback(() => {
     if (!ex || answers[ex.id] == null) return;
     recordPractice(studentId, ex.reviewItemId, answers[ex.id] === ex.correct);
     if (idx + 1 >= exercises.length) {
@@ -22,7 +22,7 @@ export default function ReviewSession({ exercises, studentId, onClose }) {
     } else {
       setIdx(i => i + 1);
     }
-  }
+  }, [ex, studentId, idx, exercises.length]);
 
   // Keyboard shortcuts: 1–4 selects option, Enter advances
   useEffect(() => {
@@ -40,7 +40,7 @@ export default function ReviewSession({ exercises, studentId, onClose }) {
     }
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [finished, ex, answers, idx]);
+  }, [finished, ex, answers, idx, handleSelect, handleNext]);
 
   return (
     <Modal

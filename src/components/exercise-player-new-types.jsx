@@ -12,7 +12,7 @@ export function DialoguePlayer({ ex, res, update, readOnly }) {
   const [revealed, setRevealed] = useState(new Set(res?.linesRevealed || []));
   const [activeLine, setActiveLine] = useState(null);
   const [playing, setPlaying] = useState(false);
-  const utterancesRef = useRef([]);
+
 
   const speakerName = (s) => s === 'A' ? (ex.speakerA || 'Speaker A') : (ex.speakerB || 'Speaker B');
   const practiceRole = mode === 'practiceA' ? 'A' : mode === 'practiceB' ? 'B' : null;

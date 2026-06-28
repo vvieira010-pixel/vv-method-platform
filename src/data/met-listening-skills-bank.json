@@ -1,0 +1,366 @@
+{
+  "schemaVersion": "2.0",
+  "contentType": "met_listening_skills_bank",
+  "title": "MET Listening Skills Pack",
+  "subtitle": "Authentic B2 Listening exercises: Part 1 (Short Conversations), Part 2 (Longer Dialogues), and Part 3 (Short Talks)",
+  "level": "B2",
+  "modules": [
+    {
+      "id": "listening_part1",
+      "title": "Listening Part 1: Short Conversations",
+      "levelRange": "B2",
+      "skill": "listening",
+      "moduleType": "listening_set",
+      "items": [
+        {
+          "id": "P1_01",
+          "script": "Woman: Did the professor cancel the review session?\nMan: No, he just moved it to Friday afternoon.",
+          "questions": [
+            {
+              "stem": "What does the man say about the review session?",
+              "options": ["It was canceled.", "It was postponed.", "It was shortened.", "It was recorded."],
+              "correct": 1,
+              "explanation": "The man says he 'just moved it to Friday afternoon', which implies a postponement."
+            }
+          ]
+        },
+        {
+          "id": "P1_02",
+          "script": "Man: I tried to print my paper in the library, but the printer was out of paper.\nWoman: There’s another one on the second floor.",
+          "questions": [
+            {
+              "stem": "Why couldn’t the man print his paper?",
+              "options": ["He forgot his password.", "The library was closed.", "The printer had no paper.", "The paper was too long."],
+              "correct": 2,
+              "explanation": "The man explicitly mentions 'the printer was out of paper'."
+            }
+          ]
+        },
+        {
+          "id": "P1_03",
+          "script": "Woman: I thought the meeting started at ten.\nMan: It did, but they delayed it because the manager was late.",
+          "questions": [
+            {
+              "stem": "Why was the meeting delayed?",
+              "options": ["The room was unavailable.", "The manager arrived late.", "The speakers were absent.", "The woman had the wrong day."],
+              "correct": 1,
+              "explanation": "The man explains the delay was due to the manager being late."
+            }
+          ]
+        },
+        {
+          "id": "P1_04",
+          "script": "Man: Are you still going to the bookstore after class?\nWoman: I was, but I already ordered the book online.",
+          "questions": [
+            {
+              "stem": "What changed the woman’s plan?",
+              "options": ["The store closed early.", "She borrowed the book.", "She found the book online.", "She no longer needs the book."],
+              "correct": 2,
+              "explanation": "The woman mentions she 'already ordered the book online'."
+            }
+          ]
+        },
+        {
+          "id": "P1_05",
+          "script": "Woman: I can’t believe the restaurant is full again.\nMan: We should have made a reservation this morning.",
+          "questions": [
+            {
+              "stem": "What does the man suggest?",
+              "options": ["The food is not good.", "They arrived too early.", "They should wait outside.", "They should have reserved a table."],
+              "correct": 3,
+              "explanation": "The man suggests they should have made a reservation earlier."
+            }
+          ]
+        },
+        {
+          "id": "P1_06",
+          "script": "Man: Your presentation was really clear.\nWoman: Thanks. I was nervous, so I practiced it three times last night.",
+          "questions": [
+            {
+              "stem": "Why did the woman practice her presentation?",
+              "options": ["She had extra free time.", "She felt nervous.", "Her teacher asked her to.", "She wanted to shorten it."],
+              "correct": 1,
+              "explanation": "She explicitly states she was nervous, which led her to practice."
+            }
+          ]
+        },
+        {
+          "id": "P1_07",
+          "script": "Woman: Did you return the movie to Alex?\nMan: Not yet. He said I can bring it to his office tomorrow.",
+          "questions": [
+            {
+              "stem": "What will the man probably do tomorrow?",
+              "options": ["Watch the movie again.", "Lend the movie to the woman.", "Return the movie to Alex.", "Buy a new movie."],
+              "correct": 2,
+              "explanation": "The man mentions he can bring the movie to Alex's office tomorrow."
+            }
+          ]
+        },
+        {
+          "id": "P1_08",
+          "script": "Man: I’m surprised Jenna drove to work today.\nWoman: Her bike is being repaired, so she had no choice.",
+          "questions": [
+            {
+              "stem": "Why did Jenna drive to work?",
+              "options": ["She was running late.", "Her bike was unavailable.", "It was raining heavily.", "She needed to carry boxes."],
+              "correct": 1,
+              "explanation": "Jenna's bike is being repaired, making it unavailable."
+            }
+          ]
+        },
+        {
+          "id": "P1_09",
+          "script": "Woman: This soup tastes much better than the one we had last week.\nMan: I know. This time the chef added more spices.",
+          "questions": [
+            {
+              "stem": "Why does the soup taste better this time?",
+              "options": ["It is hotter.", "It was served earlier.", "It has more spices.", "It is a different kind of soup."],
+              "correct": 2,
+              "explanation": "The man says the chef added more spices this time."
+            }
+          ]
+        },
+        {
+          "id": "P1_10",
+          "script": "Man: I was going to take the bus, but my brother offered me a ride.\nWoman: That’s good. The buses are moving very slowly because of the parade.",
+          "questions": [
+            {
+              "stem": "Why is the bus slow today?",
+              "options": ["There was an accident.", "The driver is new.", "The weather is bad.", "There is a parade."],
+              "correct": 3,
+              "explanation": "The woman notes that the buses are moving slowly because of the parade."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "listening_part2",
+      "title": "Listening Part 2: Longer Conversations",
+      "levelRange": "B2",
+      "skill": "listening",
+      "moduleType": "listening_set",
+      "items": [
+        {
+          "id": "P2_01",
+          "script": "Woman: I’m looking for a laptop for university, but I don’t know which one to choose.\nMan: What will you use it for mostly?\nWoman: Writing papers, joining online classes, and maybe some light photo editing.\nMan: Then you probably don’t need the most expensive model. This one is lighter, has a long battery life, and is on sale today.\nWoman: That sounds good, but I’m worried the screen is too small.\nMan: In that case, look at this one. It costs a little more, but the screen is larger and the keyboard is more comfortable.\nWoman: I think that’s the better option. Can I pay in installments?\nMan: Yes, up to six monthly payments.",
+          "questions": [
+            {
+              "stem": "Why does the woman need a laptop?",
+              "options": ["For travel", "For university", "For gaming", "For office work"],
+              "correct": 1,
+              "explanation": "She says she is looking for a laptop for university."
+            },
+            {
+              "stem": "Why does the man first recommend the cheaper model?",
+              "options": ["It has better speakers.", "It is the newest model.", "It matches her basic needs.", "It includes free software."],
+              "correct": 2,
+              "explanation": "The lighter, cheaper model matches her mentioned needs (writing, online classes, photo editing) without needing the 'most expensive model'."
+            },
+            {
+              "stem": "Why does the woman hesitate?",
+              "options": ["The battery is too weak.", "The screen may be too small.", "The color is not available.", "The keyboard is broken."],
+              "correct": 1,
+              "explanation": "She says, 'I’m worried the screen is too small'."
+            },
+            {
+              "stem": "Which laptop will she probably choose?",
+              "options": ["The light, cheaper one", "The used one", "The larger, more expensive one", "None of them"],
+              "correct": 2,
+              "explanation": "She says, 'I think that’s the better option' when referring to the larger, more expensive one."
+            }
+          ]
+        },
+        {
+          "id": "P2_02",
+          "script": "Man: You look exhausted. Did you stay up late studying again?\nWoman: Yes, and I still don’t feel ready for the biology exam. There’s just too much to memorize.\nMan: Have you tried studying with diagrams instead of only reading your notes?\nWoman: Not really. I usually just read everything again and again.\nMan: That might be the problem. My sister studies science that way, and she says drawing processes helps her remember them.\nWoman: That makes sense, especially for topics like the circulatory system.\nMan: I can help you after class if you want.\nWoman: I’d appreciate that. Maybe we can review the hardest chapters together.",
+          "questions": [
+            {
+              "stem": "Why is the woman tired?",
+              "options": ["She worked a night shift.", "She stayed up studying.", "She traveled last night.", "She is feeling sick."],
+              "correct": 1,
+              "explanation": "She says, 'Yes, and I still don’t feel ready for the biology exam. There’s just too much to memorize.'"
+            },
+            {
+              "stem": "What problem does the woman mention?",
+              "options": ["She missed the exam date.", "She lost her notes.", "She has too much to memorize.", "She dislikes biology class."],
+              "correct": 2,
+              "explanation": "She mentions there is 'just too much to memorize'."
+            },
+            {
+              "stem": "What study method does the man suggest?",
+              "options": ["Recording the lectures", "Reading faster", "Making diagrams", "Using flashcards only"],
+              "correct": 2,
+              "explanation": "He asks, 'Have you tried studying with diagrams instead of only reading your notes?'"
+            },
+            {
+              "stem": "What will they probably do later?",
+              "options": ["Meet to study together", "Talk to the professor", "Skip the class", "Take the exam"],
+              "correct": 0,
+              "explanation": "She says, 'Maybe we can review the hardest chapters together.'"
+            }
+          ]
+        },
+        {
+          "id": "P2_03",
+          "script": "Woman: I saw the ad for the apartment downtown. Is it still available?\nMan: Yes, but several people have already asked about it.\nWoman: Can you tell me what’s included in the rent?\nMan: Water and internet are included, but electricity is separate.\nWoman: I work from home, so reliable internet is important. Is the area quiet?\nMan: Usually yes, although there’s a market nearby that gets busy on weekends.\nWoman: That’s fine. Could I come see it tomorrow evening?\nMan: Tomorrow is full, but I have an opening on Saturday morning.\nWoman: Perfect. Please put me down for that.",
+          "questions": [
+            {
+              "stem": "Why did the woman call?",
+              "options": ["To complain about noise", "To rent an apartment", "To cancel a visit", "To ask for internet service"],
+              "correct": 1,
+              "explanation": "She is inquiring about an apartment advertisement."
+            },
+            {
+              "stem": "What is included in the rent?",
+              "options": ["Electricity and water", "Water and internet", "Internet and parking", "Electricity and parking"],
+              "correct": 1,
+              "explanation": "The man states, 'Water and internet are included, but electricity is separate'."
+            },
+            {
+              "stem": "Why is internet important to the woman?",
+              "options": ["She studies online at night.", "She runs a market.", "She works from home.", "She streams movies professionally."],
+              "correct": 2,
+              "explanation": "She says, 'I work from home, so reliable internet is important'."
+            },
+            {
+              "stem": "When will she visit the apartment?",
+              "options": ["Tomorrow evening", "Saturday morning", "Sunday afternoon", "This weekend at night"],
+              "correct": 1,
+              "explanation": "The man mentions an opening on Saturday morning, and she agrees."
+            }
+          ]
+        },
+        {
+          "id": "P2_04",
+          "script": "Man: Welcome back, everyone. Before we start the tour, I need to make one announcement.\nWoman: Is it about the boat trip this afternoon?\nMan: Yes. Because the wind is getting stronger, the captain has canceled it for safety reasons.\nWoman: Oh no. That was the activity I was most excited about.\nMan: I understand, so we arranged a visit to the history museum instead. Transportation will leave in twenty minutes.\nWoman: Will the museum visit cost extra?\nMan: No, it’s included in your package.\nWoman: All right. Then I’ll go tell the others.",
+          "questions": [
+            {
+              "stem": "What has been canceled?",
+              "options": ["A city tour", "A museum visit", "A boat trip", "A dinner event"],
+              "correct": 2,
+              "explanation": "The man says the captain has canceled the boat trip."
+            },
+            {
+              "stem": "Why was it canceled?",
+              "options": ["The group was late.", "The weather was unsafe.", "The captain was absent.", "The boat was too small."],
+              "correct": 1,
+              "explanation": "The cancellation was due to the wind getting stronger (unsafe weather)."
+            },
+            {
+              "stem": "What was arranged instead?",
+              "options": ["A shopping trip", "A beach walk", "A history museum visit", "A free afternoon"],
+              "correct": 2,
+              "explanation": "They arranged a visit to the history museum instead."
+            },
+            {
+              "stem": "What will the woman probably do next?",
+              "options": ["Ask for a refund", "Leave the group", "Call the captain", "Inform the other people"],
+              "correct": 3,
+              "explanation": "She says, 'All right. Then I’ll go tell the others'."
+            }
+          ]
+        },
+        {
+          "id": "P2_05",
+          "script": "Woman: I noticed your report was submitted after the deadline. Is everything okay?\nMan: Mostly, yes. My computer froze the night before, and I lost the final version.\nWoman: That’s frustrating. Did you have a backup copy?\nMan: Only an older draft, so I had to rewrite the conclusion in the morning.\nWoman: I see. The content is strong, but next time please email me before the deadline if there’s a problem.\nMan: You’re right. I should have done that.\nWoman: I won’t reduce your grade this time, but I need the corrected chart by Friday.\nMan: No problem. I’ll send it tomorrow.",
+          "questions": [
+            {
+              "stem": "Why was the report late?",
+              "options": ["The man forgot the deadline.", "The internet stopped working.", "The man lost the final version.", "The woman changed the instructions."],
+              "correct": 2,
+              "explanation": "The man mentions his computer froze and he lost the final version."
+            },
+            {
+              "stem": "What did the man still have?",
+              "options": ["A printed copy", "An older draft", "The chart file", "A classmate’s report"],
+              "correct": 1,
+              "explanation": "He says he only had an older draft."
+            },
+            {
+              "stem": "What does the woman say about the report?",
+              "options": ["It is incomplete.", "The content is strong.", "It needs a new topic.", "The conclusion is confusing."],
+              "correct": 1,
+              "explanation": "She states, 'The content is strong'."
+            },
+            {
+              "stem": "What must the man do by Friday?",
+              "options": ["Rewrite the whole report", "Meet with the woman", "Correct the chart", "Submit a backup copy"],
+              "correct": 2,
+              "explanation": "The woman says, 'I need the corrected chart by Friday'."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "listening_part3",
+      "title": "Listening Part 3: Short Talks",
+      "levelRange": "B2",
+      "skill": "listening",
+      "moduleType": "listening_set",
+      "items": [
+        {
+          "id": "P3_01",
+          "script": "Good morning, passengers. This is an announcement for Flight 782 to Porto Alegre. Boarding will begin about thirty minutes later than scheduled because the aircraft arrived late from its previous destination. We expect boarding to start at Gate 6 at 10:40. Please keep your boarding pass ready and stay near the gate area. Passengers needing special assistance or traveling with small children will be invited to board first. We apologize for the delay and thank you for your patience.",
+          "questions": [
+            {
+              "stem": "What is the main purpose of the talk?",
+              "options": ["To advertise a new flight", "To explain airport security rules", "To announce a boarding delay", "To cancel a trip completely"],
+              "correct": 2,
+              "explanation": "The announcement is specifically about a boarding delay."
+            },
+            {
+              "stem": "Why is the flight delayed?",
+              "options": ["The weather is too bad.", "The aircraft arrived late.", "The gate has changed.", "The crew is missing."],
+              "correct": 1,
+              "explanation": "The announcement says the delay is 'because the aircraft arrived late from its previous destination'."
+            },
+            {
+              "stem": "Who will probably board first?",
+              "options": ["Business travelers", "Passengers with no luggage", "People in window seats", "Passengers needing assistance and families with small children"],
+              "correct": 3,
+              "explanation": "The announcement says passengers needing special assistance or with small children will be invited to board first."
+            },
+            {
+              "stem": "What should passengers do now?",
+              "options": ["Go to another airport", "Wait near Gate 6", "Check in again", "Collect their luggage"],
+              "correct": 1,
+              "explanation": "The announcement says they expect boarding to start at Gate 6 and to stay near the gate area."
+            }
+          ]
+        },
+        {
+          "id": "P3_02",
+          "script": "Today I want to talk about the benefits of joining a community garden. First, it gives people a chance to grow fresh food even if they do not have a yard at home. Second, it helps neighbors get to know one another, which can make a neighborhood feel safer and friendlier. Community gardens also teach practical skills, such as how to prepare soil, water plants properly, and recognize common pests. Of course, gardening takes time and patience, and not every plant grows successfully. Still, many people say the experience is rewarding because they can see the direct results of their work over time.",
+          "questions": [
+            {
+              "stem": "What is the speaker mainly discussing?",
+              "options": ["How to start a farm business", "The benefits of community gardens", "Why food prices are rising", "A problem with insects in cities"],
+              "correct": 1,
+              "explanation": "The talk is about the benefits of joining a community garden."
+            },
+            {
+              "stem": "What is one social benefit mentioned?",
+              "options": ["People save on transportation.", "Children get better grades.", "Neighbors get to know each other.", "Cities become less crowded."],
+              "correct": 2,
+              "explanation": "The speaker says it helps neighbors get to know one another."
+            },
+            {
+              "stem": "What practical skills can people learn?",
+              "options": ["Cooking restaurant meals", "Selling vegetables online", "Designing parks", "Soil preparation and plant care"],
+              "correct": 3,
+              "explanation": "The speaker mentions skills like preparing soil, watering plants, and recognizing pests."
+            },
+            {
+              "stem": "What is the speaker’s attitude toward community gardening?",
+              "options": ["Mostly positive", "Deeply critical", "Uncertain and confused", "Completely uninterested"],
+              "correct": 0,
+              "explanation": "The speaker describes the experience as 'rewarding'."
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
