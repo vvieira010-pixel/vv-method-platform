@@ -1,4 +1,4 @@
-﻿/* MET Proficiency Mastery — Design System
+/* MET Proficiency Mastery, Design System
    Single source of truth replacing design-system.css, globals.css, sanctuary.css, logbook.css
    Navy + teal + amber system for a calm, professional MET preparation platform. */
 
@@ -17,15 +17,15 @@
 }
 
 :root {
-  /* ── Colors — navy + teal + amber ────────────────────────────── */
-  --primary: #0f1b2d;                        /* Deep navy — matches login brand panel */
+  /* ── Colors, navy + teal + amber ────────────────────────────── */
+  --primary: #0f1b2d;                        /* Deep navy, matches login brand panel */
   --primary-hover: #0a1422;
   --primary-light: #e3f4f2;
-  --accent: #148891;                         /* Teal — login button / interactive teal */
+  --accent: #148891;                         /* Teal, login button / interactive teal */
   --accent-hover: #0f6b73;
   --accent-light: #c8ecea;
   --accent-deep: var(--primary);
-  --accent-soft: #48C7C7;                    /* Bright teal — login glow dots / decorative */
+  --accent-soft: #48C7C7;                    /* Bright teal, login glow dots / decorative */
   --accent-subtle: #e3f5f4;
   --accent-text: #0a6e74;
   --accent-soft-08: rgba(72,199,199,0.08);
@@ -63,11 +63,11 @@
   --text-muted: #3d5365;
   --text-2: #1a2b38;
   --muted: #445567;                          /* darkened from #4a5f70 to clear WCAG AAA 7:1 on --bg */
-  --on-dark: #f1faee;                        /* Login's warm white on dark — rgba(241,250,238,1) */
+  --on-dark: #f1faee;                        /* Login's warm white on dark, rgba(241,250,238,1) */
   --on-dark-muted: rgba(241,250,238,0.78);   /* Login's warm white muted */
 
-  /* Status colors — semantic, kept for clarity */
-  --success: #1a8c5f;                        /* was oklch(55% 0.14 150) — hex for compat + consistency */
+  /* Status colors, semantic, kept for clarity */
+  --success: #1a8c5f;                        /* was oklch(55% 0.14 150), hex for compat + consistency */
   --success-light: #e7f7ef;                  /* was oklch(95% 0.05 150) */
   --success-bg: #ecfdf5;
   --success-soft: #d1fae5;
@@ -85,7 +85,7 @@
   --info-light: #e7f6f3;
   --info-bg: #e7f6f3;
 
-  /* ── Border radius — standardized ───────────────────────────────
+  /* ── Border radius, standardized ───────────────────────────────
      Containers/cards use radius-sm (6px).
      Buttons use radius-pill (999px) for pill shape.
      No ad-hoc radius values anywhere. */
@@ -102,7 +102,7 @@
   --font-display: 'Sora', 'DM Sans', -apple-system, system-ui, sans-serif;
   --font-mono: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Droid Sans Mono', monospace;
 
-  /* Font sizes — extended scale */
+  /* Font sizes, extended scale */
   --text-2xs: 0.6875rem; /* 11px */
   --text-xs: 0.75rem;    /* 12px */
   --text-2sm: 0.8125rem; /* 13px */
@@ -112,8 +112,8 @@
   --text-xl: 1.25rem;    /* 20px */
   --text-2xl: 1.5rem;    /* 24px */
   --text-3xl: 1.875rem;  /* 30px */
-  --text-4xl: 2.5rem;    /* 40px — new for page headings */
-  --text-5xl: 3.25rem;   /* 52px — new for hero headings */
+  --text-4xl: 2.5rem;    /* 40px, new for page headings */
+  --text-5xl: 3.25rem;   /* 52px, new for hero headings */
 
   --weight-normal: 400;
   --weight-medium: 500;

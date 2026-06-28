@@ -1,6 +1,6 @@
-import { useState, useEffect, lazy, Suspense } from 'react';
+import { useState, useEffect, lazy, Suspense, useMemo } from 'react';
 import { Icon, Avatar, Skeleton, SkeletonText, SkeletonCard, EmptyState } from '../components/shared.jsx';
-import { getHomework, getDiagnoses, getClassEvents, getReviews, getStudentSeedsStage, getStudentGoal, saveStudentGoal } from '../lib/workflow.js';
+import { getHomework, getDiagnoses, getClassEvents, getReviews, getSubmissions, getStudentSeedsStage, getStudentGoal, saveStudentGoal } from '../lib/workflow.js';
 import { recordPractice, getDueCount, getDueItems, toMCQ, getAllEntries } from '../lib/spaced-repetition.js';
 
 import { SEEDS_STAGES, SEEDS_STAGE_ORDER } from '../domain/seeds/constants.js';
@@ -9,6 +9,7 @@ const PracticeSession = lazy(() => import('../components/PracticeSession.jsx'));
 const ReviewSession   = lazy(() => import('../components/ReviewSession.jsx'));
 import { asArray, getProgressStage, getSkillTrend, hasVisibleApprovedStudentFeedback, PROGRESS_STAGES, TrendChip, SkillRow } from './student-helpers.jsx';
 import { getTeacherSetting } from '../lib/supabase-db.js';
+import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Cell } from 'recharts';
 
 function daysUntilExam() {
   try {
@@ -91,6 +92,7 @@ export default function StudentHome({ student, onTab }) {
   const [upcomingClasses, setUpcomingClasses] = useState([]);
   const [reviewCount, setReviewCount] = useState(0);
   const [reviewMode, setReviewMode] = useState(false);
+  const [submissions, setSubmissions] = useState([]);
   const [reviewExercises, setReviewExercises] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
@@ -130,12 +132,14 @@ export default function StudentHome({ student, onTab }) {
   useEffect(() => {
     (async () => {
       try {
-      const [hw, diagnoses, classEvents, reviews] = await Promise.all([
+      const [hw, diagnoses, classEvents, reviews, subs] = await Promise.all([
         getHomework(student.id),
         getDiagnoses(student.id),
         getClassEvents(student.id),
         getReviews(student.id),
+        getSubmissions(student.id),
       ]);
+      setSubmissions(subs || []);
       setReviewCount(getDueCount(student.id));
       const doneStatuses = new Set(['submitted', 'reviewed', 'completed', 'corrected']);
       setPendingHw((hw || []).filter(h => !doneStatuses.has(h.status)));
@@ -179,6 +183,25 @@ export default function StudentHome({ student, onTab }) {
       setLoading(false);
     })();
   }, [student.id]);
+
+  const confidenceTrendData = useMemo(() => {
+    return homework
+      .map(h => {
+        const sub = submissions.find(s => s.homeworkId === h.id);
+        const rev = reviews.find(r => r.homeworkId === h.id);
+        if (sub && rev && sub.confidence !== null && rev.score !== null) {
+          return {
+            name: h.title.length > 10 ? h.title.substring(0, 10) + '..' : h.title,
+            confidence: (sub.confidence / 3) * 100,
+            score: rev.score,
+            date: new Date(rev.reviewedAt || h.assignedAt)
+          };
+        }
+        return null;
+      })
+      .filter(Boolean)
+      .sort((a, b) => a.date - b.date);
+  }, [homework, submissions, reviews]);
 
   function timeOfDay() {
     const h = new Date().getHours();
@@ -333,6 +356,38 @@ export default function StudentHome({ student, onTab }) {
       ) : (
       <section className="student-grid fade-up" style={{ '--delay': '0.3s' }}>
         <div className="student-home-main">
+          <section className="student-panel student-panel--primary mb-3">
+            <div className="student-panel-head">
+              <h2 style={{ fontSize: 'var(--text-lg)', margin: 0 }}>Learning Insights</h2>
+            </div>
+            <div style={{ height: 200, marginTop: 16 }}>
+              {confidenceTrendData.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={confidenceTrendData} margin={{ top: 5, right: 5, left: -30, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--divider)" />
+                    <XAxis dataKey="name" fontSize={10} tickLine={false} axisLine={false} />
+                    <YAxis fontSize={10} tickLine={false} axisLine={false} domain={[0, 100]} />
+                    <Tooltip 
+                      cursor={{ fill: 'var(--accent-soft-10)' }}
+                      contentStyle={{ 
+                        backgroundColor: 'var(--surface)', 
+                        border: '1px solid var(--border)', 
+                        borderRadius: 'var(--radius-sm)',
+                        fontSize: 'var(--text-xs)'
+                      }}
+                    />
+                    <Bar dataKey="confidence" name="Confidence" fill="var(--accent)" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="score" name="Score" fill="var(--primary)" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--muted)', fontSize: 'var(--text-sm)' }}>
+                  Complete some homework to see your progress trends.
+                </div>
+              )}
+            </div>
+          </section>
+
           <section className="student-memo-board">
             <MemoCard kicker="General memo" title="Memo Board" text={generalMemoText || 'No general memo posted yet.'} />
           </section>

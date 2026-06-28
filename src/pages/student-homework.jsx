@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { Button } from '../components/ui/Button.jsx';
 import { SkeletonCard } from '../components/ui/Skeleton.jsx';
-import { getHomework, submitHomework, getReviews, getDraft, saveDraft } from '../lib/workflow.js';
+import { getHomework, submitHomework, getReviews, getSubmissions, getDraft, saveDraft } from '../lib/workflow.js';
 import { isStructuredExercise, autoGrade } from '../lib/exercise-types.js';
 import { ExercisePlayer, HomeworkStepThrough } from '../components/exercise-player.jsx';
 import { ExTypeBadge } from '../components/exercise-badge.jsx';
@@ -32,6 +32,8 @@ export default function StudentHomework({ student }) {
   const [homeworkFilter, setHomeworkFilter] = useState('todo');
   const [submitting, setSubmitting] = useState(false);
   const [selfChecks, setSelfChecks] = useState({});
+  const [submissions, setSubmissions] = useState([]);
+  const [selfAssessed, setSelfAssessed] = useState({});
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
 
@@ -52,10 +54,11 @@ export default function StudentHomework({ student }) {
       setLoading(true);
       setLoadError(null);
       try {
-        const [hw, revs] = await Promise.all([getHomework(student.id), getReviews(student.id)]);
+        const [hw, revs, subs] = await Promise.all([getHomework(student.id), getReviews(student.id), getSubmissions(student.id)]);
         if (cancelled) return;
         setHomework(hw || []);
         setReviews(revs || []);
+        setSubmissions(subs || []);
       } catch (err) {
         if (!cancelled) setLoadError(err.message || 'Failed to load homework');
       } finally {
@@ -258,7 +261,25 @@ export default function StudentHomework({ student }) {
                   </Button>
                 </div>
 
-                {review && (
+                {review && !selfAssessed[h.id] && (
+                  <div className="hw-self-assess">
+                    <div className="hw-self-assess-title">Before you see the review...</div>
+                    <p className="hw-self-assess-desc">How do you think you did on this homework?</p>
+                    <div className="hw-self-assess-options">
+                      {[
+                        { value: 'confident', label: 'I feel confident' },
+                        { value: 'mixed', label: 'Mixed — some right, some wrong' },
+                        { value: 'struggled', label: 'I struggled with this' },
+                      ].map(opt => (
+                        <button key={opt.value} type="button" className={`hw-self-assess-btn hw-self-assess-btn--${opt.value}`} onClick={() => setSelfAssessed(prev => ({ ...prev, [h.id]: opt.value }))}>
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {review && selfAssessed[h.id] && (
                   <div className="hw-teacher-review">
                     <div className="hw-teacher-review-title">
                       <span>Teacher Review</span>
@@ -340,6 +361,8 @@ export default function StudentHomework({ student }) {
 
                 {isStructured && (submitted || review) && (() => {
                   const corrections = asArray(review?.corrections);
+                  const sub = submissions.find(s => s.homeworkId === h.id);
+                  const subResponses = sub?.responses || {};
                   const matchedByEx = structuredExercises.map(ex => {
                     const t = exerciseSearchText(ex);
                     return corrections.filter(c => c.original && t.includes(String(c.original).toLowerCase()));
@@ -348,20 +371,26 @@ export default function StudentHomework({ student }) {
                   const unmatched = corrections.filter(c => !matched.has(c));
                   return (
                     <div>
-                      {structuredExercises.map((ex, i) => (
-                        <div key={ex.id} className="hw-exercise-row">
-                          <div className="hw-exercise-row-head">
-                            <span className="hw-exercise-num">{i + 1}.</span>
-                            <ExTypeBadge typeId={ex.type} />
-                          </div>
-                          <ExercisePlayer exercise={ex} response={{}} onResponse={() => {}} readOnly={true} />
-                          {matchedByEx[i].map((c, ci) => <CorrectionNote key={ci} c={c} />)}
-                        </div>
-                      ))}
-                      {unmatched.length > 0 && (
-                        <div className="hw-unmatched-corrections">
-                          <div className="hw-section-kicker hw-section-kicker--muted">More corrections</div>
-                          {unmatched.map((c, ci) => <CorrectionNote key={ci} c={c} />)}
+                      <HomeworkStepThrough
+                        exercises={structuredExercises}
+                        responses={subResponses}
+                        onResponse={() => {}}
+                        onSubmit={() => {}}
+                        onSave={() => {}}
+                        readOnly={true}
+                      />
+                      {(matchedByEx.some(n => n.length > 0) || unmatched.length > 0) && (
+                        <div className="hw-unmatched-corrections" style={{ marginTop: 16 }}>
+                          <div className="hw-section-kicker hw-section-kicker--muted">Corrections</div>
+                          {matchedByEx.map((notes, i) => notes.length > 0 && (
+                            <div key={i} style={{ marginTop: 8 }}>
+                              <div style={{ fontSize: 'var(--text-xs)', fontWeight: 600, color: 'var(--muted)', marginBottom: 4 }}>
+                                Exercise {i + 1}
+                              </div>
+                              {notes.map((c, ci) => <CorrectionNote key={ci} c={c} />)}
+                            </div>
+                          ))}
+                          {unmatched.length > 0 && unmatched.map((c, ci) => <CorrectionNote key={ci} c={c} />)}
                         </div>
                       )}
                     </div>

@@ -158,11 +158,11 @@ export default function LoginScreen() {
             </div>
           ) : (
             <form onSubmit={handleSubmit} noValidate>
-              <div className="lp-field">
-                <label className="lp-label" htmlFor="lp-email">Email</label>
+              <div className="form-group">
+                <label className="form-label" htmlFor="lp-email">Email</label>
                 <input
                   id="lp-email"
-                  className="lp-input"
+                  className="input"
                   type="email"
                   autoComplete="email"
                   placeholder="your@email.com"
@@ -174,11 +174,11 @@ export default function LoginScreen() {
               </div>
 
               {!isReset && (
-                <div className="lp-field">
-                  <label className="lp-label" htmlFor="lp-password">Password</label>
+                <div className="form-group">
+                  <label className="form-label" htmlFor="lp-password">Password</label>
                   <input
                     id="lp-password"
-                    className="lp-input"
+                    className="input"
                     type="password"
                     autoComplete="current-password"
                     placeholder="••••••••••••••"
@@ -189,7 +189,7 @@ export default function LoginScreen() {
                 </div>
               )}
 
-              <button type="submit" className="lp-submit" disabled={loading}>
+              <button type="submit" className="btn-primary" disabled={loading} style={{ width: '100%', padding: '13px', fontSize: 'var(--text-base)', fontWeight: 700 }}>
                 {loading
                   ? <><span className="lp-spinner" />{isReset ? 'Sending…' : 'Signing in…'}</>
                   : isReset ? 'Send link' : 'Sign in'}
