@@ -188,24 +188,38 @@ export default function StudentHome({ student, onTab }) {
     })();
   }, [student.id]);
 
-  const confidenceTrendData = useMemo(() => {
-    return homework
-      .map(h => {
-        const sub = submissions.find(s => s.homeworkId === h.id);
-        const rev = reviews.find(r => r.homeworkId === h.id);
-        if (sub && rev && sub.confidence !== null && rev.score !== null) {
-          return {
-            name: h.title.length > 10 ? h.title.substring(0, 10) + '..' : h.title,
-            confidence: (sub.confidence / 3) * 100,
-            score: rev.score,
-            date: new Date(rev.reviewedAt || h.assignedAt)
-          };
-        }
-        return null;
-      })
-      .filter(Boolean)
-      .sort((a, b) => a.date - b.date);
-  }, [homework, submissions, reviews]);
+  const developmentData = useMemo(() => {
+    const points = [];
+    homework.forEach(h => {
+      const rev = reviews.find(r => r.homeworkId === h.id);
+      const sub = submissions.find(s => s.homeworkId === h.id);
+      if (rev && rev.score !== null) {
+        points.push({
+          name: h.title.length > 10 ? h.title.substring(0, 10) + '..' : h.title,
+          development: rev.score,
+          confidence: sub?.confidence !== null ? (sub.confidence / 3) * 100 : null,
+          date: new Date(rev.reviewedAt || h.assignedAt),
+          type: 'Homework'
+        });
+      }
+    });
+    approvedHistory.forEach(d => {
+      const snap = asArray(d.content?.section_snapshot);
+      const evaluated = snap.filter(s => s.evaluated && Number(s.score_0_80) > 0);
+      if (evaluated.length > 0) {
+        const avg = evaluated.reduce((sum, s) => sum + Number(s.score_0_80), 0) / evaluated.length;
+        const date = new Date(d.createdAt || 0);
+        points.push({
+          name: 'Diagnosis ' + date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }),
+          development: Math.round((avg / 80) * 100),
+          confidence: null,
+          date,
+          type: 'Diagnosis'
+        });
+      }
+    });
+    return points.sort((a, b) => a.date - b.date);
+  }, [homework, reviews, submissions, approvedHistory]);
 
   function timeOfDay() {
     const h = new Date().getHours();
@@ -366,9 +380,9 @@ export default function StudentHome({ student, onTab }) {
               <h2 style={{ fontSize: 'var(--text-lg)', margin: 0 }}>Learning Insights</h2>
             </div>
             <div style={{ height: 200, marginTop: 16 }}>
-              {confidenceTrendData.length > 0 ? (
+              {developmentData.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={confidenceTrendData} margin={{ top: 5, right: 5, left: -30, bottom: 0 }}>
+                  <BarChart data={developmentData} margin={{ top: 5, right: 5, left: -30, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--divider)" />
                     <XAxis dataKey="name" fontSize={10} tickLine={false} axisLine={false} />
                     <YAxis fontSize={10} tickLine={false} axisLine={false} domain={[0, 100]} />
@@ -380,14 +394,15 @@ export default function StudentHome({ student, onTab }) {
                         borderRadius: 'var(--radius-sm)',
                         fontSize: 'var(--text-xs)'
                       }}
+                      formatter={(value, name) => [value + '%', name]}
                     />
+                    <Bar dataKey="development" name="Development" fill="var(--primary)" radius={[4, 4, 0, 0]} />
                     <Bar dataKey="confidence" name="Confidence" fill="var(--accent)" radius={[4, 4, 0, 0]} />
-                    <Bar dataKey="score" name="Score" fill="var(--primary)" radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               ) : (
                 <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--muted)', fontSize: 'var(--text-sm)' }}>
-                  Complete some homework to see your progress trends.
+                  Complete homework or get a diagnosis to see your development trend.
                 </div>
               )}
             </div>
