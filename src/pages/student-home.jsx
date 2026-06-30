@@ -360,9 +360,6 @@ export default function StudentHome({ student, onTab }) {
       ) : (
       <section className="student-grid fade-up" style={{ '--delay': '0.3s' }}>
           <div className="student-home-main">
-            <section className="student-memo-board">
-              <MemoCard kicker="General memo" title="Memo Board" text={generalMemoText || 'No general memo posted yet.'} />
-            </section>
 
             <section className="student-panel student-panel--primary mb-3">
             <div className="student-panel-head">
@@ -431,12 +428,79 @@ export default function StudentHome({ student, onTab }) {
             )}
             </article>
 
-            <div className="student-home-columns">
-              {/* Next steps moved to side */}
-            </div>
+            <article className="student-panel student-panel--todo">
+              <div className="student-panel-head">
+                <div>
+                  <h2>Your next steps</h2>
+                </div>
+              </div>
+              <div className="student-todo-list">
+                {latestReview && <TodoRow done={false} label="Teacher review ready" meta={latestReview.homeworkTitle} />}
+                <TodoRow done={!!latestFeedback} label="Review latest feedback" meta={latestFeedback ? 'Available in the Feedback tab' : 'Waiting for teacher approval'} />
+                <TodoRow done={pendingHw.length === 0} label={pendingTitle} meta={pendingHw[0]?.dueDate ? `Due ${new Date(pendingHw[0].dueDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}` : 'Homework area'} />
+              </div>
+              <button className="student-wide-action" onClick={() => onTab('homework')}>Go to homework <Icon.arrowR size={14} /></button>
+            </article>
           </div>
 
           <aside className="student-home-side">
+            <article className="student-panel mb-3">
+              <div className="student-panel-head">
+                <div>
+                  <span className="student-panel-kicker">Weekly Goal</span>
+                  <h2>{goal ? 'Your focus this week' : 'Set a weekly goal'}</h2>
+                </div>
+                {!editingGoal && (
+                  <button type="button" className="student-text-action" onClick={() => setEditingGoal(true)}>
+                    {goal ? 'Edit' : 'Set goal'} <Icon.edit size={13} />
+                  </button>
+                )}
+              </div>
+              {editingGoal ? (
+                <div>
+                  <textarea
+                    className="student-goal-input"
+                    value={goalDraft}
+                    onChange={e => setGoalDraft(e.target.value)}
+                    placeholder="e.g. I want to improve my speaking fluency and expand my healthcare vocabulary."
+                    rows={3}
+                    style={{ resize: 'vertical' }}
+                    aria-label="Your weekly goal"
+                  />
+                  <div className="flex gap-2 mt-2">
+                    <button
+                      type="button"
+                      className="student-wide-action"
+                      disabled={savingGoal || !goalDraft.trim()}
+                      onClick={async () => {
+                        setSavingGoal(true);
+                        await saveStudentGoal(student.id, goalDraft.trim());
+                        setGoal(goalDraft.trim());
+                        setEditingGoal(false);
+                        setSavingGoal(false);
+                      }}
+                    >
+                      {savingGoal ? 'Saving…' : 'Save goal'}
+                    </button>
+                    <button
+                      type="button"
+                      className="student-text-action"
+                      onClick={() => { setGoalDraft(goal); setEditingGoal(false); }}
+                      style={{ alignSelf: 'center' }}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              ) : goal ? (
+                <p style={{ margin: 0, fontSize: 'var(--text-sm)', color: 'var(--text-muted)' }}>{goal}</p>
+              ) : (
+                <p style={{ margin: 0, fontSize: 'var(--text-sm)', color: 'var(--muted)' }}>
+                  Tell your teacher what you'd like to work on. Your goal will appear in your next diagnosis.
+                </p>
+              )}
+            </article>
+
           <article className="student-panel" style={{ borderRadius: 0 }}>
             <div className="student-panel-head">
               <div>
@@ -512,76 +576,9 @@ export default function StudentHome({ student, onTab }) {
             );
             })()}
 
-            <article className="student-panel mb-3">
-              <div className="student-panel-head">
-                <div>
-                  <span className="student-panel-kicker">Weekly Goal</span>
-                  <h2>{goal ? 'Your focus this week' : 'Set a weekly goal'}</h2>
-                </div>
-                {!editingGoal && (
-                  <button type="button" className="student-text-action" onClick={() => setEditingGoal(true)}>
-                    {goal ? 'Edit' : 'Set goal'} <Icon.edit size={13} />
-                  </button>
-                )}
-              </div>
-              {editingGoal ? (
-                <div>
-                  <textarea
-                    className="student-goal-input"
-                    value={goalDraft}
-                    onChange={e => setGoalDraft(e.target.value)}
-                    placeholder="e.g. I want to improve my speaking fluency and expand my healthcare vocabulary."
-                    rows={3}
-                    style={{ resize: 'vertical' }}
-                    aria-label="Your weekly goal"
-                  />
-                  <div className="flex gap-2 mt-2">
-                    <button
-                      type="button"
-                      className="student-wide-action"
-                      disabled={savingGoal || !goalDraft.trim()}
-                      onClick={async () => {
-                        setSavingGoal(true);
-                        await saveStudentGoal(student.id, goalDraft.trim());
-                        setGoal(goalDraft.trim());
-                        setEditingGoal(false);
-                        setSavingGoal(false);
-                      }}
-                    >
-                      {savingGoal ? 'Saving…' : 'Save goal'}
-                    </button>
-                    <button
-                      type="button"
-                      className="student-text-action"
-                      onClick={() => { setGoalDraft(goal); setEditingGoal(false); }}
-                      style={{ alignSelf: 'center' }}
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </div>
-              ) : goal ? (
-                <p style={{ margin: 0, fontSize: 'var(--text-sm)', color: 'var(--text-muted)' }}>{goal}</p>
-              ) : (
-                <p style={{ margin: 0, fontSize: 'var(--text-sm)', color: 'var(--muted)' }}>
-                  Tell your teacher what you'd like to work on. Your goal will appear in your next diagnosis.
-                </p>
-              )}
-            </article>
-
-            <article className="student-panel student-panel--todo">
-              <div className="student-panel-head">
-                <div>
-                  <h2>Your next steps</h2>
-                </div>
-              </div>
-              <div className="student-todo-list">
-                {latestReview && <TodoRow done={false} label="Teacher review ready" meta={latestReview.homeworkTitle} />}
-                <TodoRow done={!!latestFeedback} label="Review latest feedback" meta={latestFeedback ? 'Available in the Feedback tab' : 'Waiting for teacher approval'} />
-                <TodoRow done={pendingHw.length === 0} label={pendingTitle} meta={pendingHw[0]?.dueDate ? `Due ${new Date(pendingHw[0].dueDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}` : 'Homework area'} />
-              </div>
-              <button className="student-wide-action" onClick={() => onTab('homework')}>Go to homework <Icon.arrowR size={14} /></button>
-            </article>
+            <section className="student-memo-board">
+              <MemoCard kicker="General memo" title="Memo Board" text={generalMemoText || 'No general memo posted yet.'} />
+            </section>
 
           </aside>
       </section>
