@@ -953,6 +953,47 @@
   background: var(--surface);
 }
 
+.search-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--muted);
+}
+.search-input-wrap:focus-within {
+  border-color: var(--accent);
+}
+.search-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: none;
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+  color: var(--text-1);
+}
+.search-input::placeholder {
+  color: var(--muted);
+}
+.search-clear {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px;
+  color: var(--muted);
+  border-radius: 999px;
+}
+.search-clear:hover {
+  color: var(--text-1);
+  background: var(--hover-bg);
+}
+
 /* ── Exercise callout blocks (explanation / hint / hint2) ────── */
 .exercise-callout {
   border-radius: 0;

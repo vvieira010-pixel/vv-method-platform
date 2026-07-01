@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Icon, SectionHeader } from '../components/shared.jsx';
 import { Button } from '../components/ui/Button.jsx';
 import { Card } from '../components/ui/Card.jsx';
@@ -41,6 +41,20 @@ export default function ExercisesPage({ onNavigate }) {
   const [tab, setTab] = useState('library');
   const [library, setLibrary] = useState([]);
   const [libVersion, setLibVersion] = useState(0);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const filteredLibrary = useMemo(() => {
+    if (!searchQuery.trim()) return library;
+    const q = searchQuery.toLowerCase().trim();
+    return library.filter(ex => {
+      const title = (ex.title || '').toLowerCase();
+      const preview = exercisePreview(ex).toLowerCase();
+      const typeLabel = (EX_TYPES.find(t => t.id === ex.type)?.label || ex.type || '').toLowerCase();
+      const tags = Array.isArray(ex.tags) ? ex.tags.join(' ').toLowerCase() : '';
+      const level = (ex.level || '').toLowerCase();
+      return title.includes(q) || preview.includes(q) || typeLabel.includes(q) || tags.includes(q) || level.includes(q);
+    });
+  }, [library, searchQuery]);
 
   useEffect(() => {
     getLibraryExercises().then(list => setLibrary(list || [])).catch(() => {});
@@ -73,13 +87,35 @@ export default function ExercisesPage({ onNavigate }) {
 
       {tab === 'library' && (
         <Card>
+          <div style={{ marginBottom: 'var(--space-3)' }}>
+            <div className="search-input-wrap">
+              <Icon.search size={15} />
+              <input
+                type="text"
+                className="search-input"
+                placeholder="Search by title, type, tags, or level…"
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                aria-label="Search saved exercises"
+              />
+              {searchQuery && (
+                <button className="search-clear" onClick={() => setSearchQuery('')} aria-label="Clear search">
+                  <Icon.close size={15} />
+                </button>
+              )}
+            </div>
+          </div>
           {library.length === 0 ? (
             <Card className="page-empty-state">
               <p className="card-row-meta">No saved exercises. In the homework builder, tap ☆ on any exercise to save it here.</p>
             </Card>
+          ) : filteredLibrary.length === 0 ? (
+            <Card className="page-empty-state">
+              <p className="card-row-meta">No exercises match "{searchQuery}". Try a different search.</p>
+            </Card>
           ) : (() => {
             const typeOrder = EX_TYPES.map(t => t.id);
-            const grouped = groupBy(library, ex => ex.type);
+            const grouped = groupBy(filteredLibrary, ex => ex.type);
             const sortedKeys = [...grouped.keys()].sort((a, b) => typeOrder.indexOf(a) - typeOrder.indexOf(b));
             return (
               <div>
@@ -93,6 +129,11 @@ export default function ExercisesPage({ onNavigate }) {
                         {items.map(ex => (
                           <div key={ex.id} className="exercise-item">
                             <ExTypeBadge typeId={ex.type} />
+                            {ex.title && (
+                              <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                {ex.title}
+                              </span>
+                            )}
                             <span style={{ flex: 1, fontSize: 'var(--text-sm)', color: 'var(--text-2)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                               {exercisePreview(ex)}
                             </span>
