@@ -1,7 +1,7 @@
 import { useState } from 'react';
 
 const TEAL = 'var(--accent)';
-const NAVY = '#0B1F3A';
+const NAVY = 'var(--accent-text)';
 const GREEN = '#1A5C2A';
 
 export default function LevelUp({ exercise, onComplete }) {
@@ -48,14 +48,14 @@ export default function LevelUp({ exercise, onComplete }) {
       {/* Image */}
       {imgSrc && (
         <img
-          src={imgSrc} alt="Exercise visual"
-          style={{ width: '100%', borderRadius: 10, marginBottom: 16, maxHeight: 240, objectFit: 'cover', display: 'block' }}
+          src={imgSrc} alt="Exercise visual" loading="lazy"
+          style={{ width: '100%', borderRadius: 'var(--radius-sm)', marginBottom: 16, maxHeight: 240, objectFit: 'cover', display: 'block' }}
         />
       )}
 
       {/* B1 sentence */}
       <div style={{
-        padding: '14px 16px', marginBottom: 18, borderRadius: 10,
+        padding: '14px 16px', marginBottom: 18, borderRadius: 'var(--radius-sm)',
         background: 'rgba(26,92,42,.06)', border: '1.5px solid rgba(26,92,42,.25)',
       }}>
         <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.07em', color: GREEN, textTransform: 'uppercase', marginBottom: 8 }}>
@@ -86,7 +86,7 @@ export default function LevelUp({ exercise, onComplete }) {
               onClick={() => !submitted && setSelected(i)}
               style={{
                 display: 'flex', alignItems: 'flex-start', gap: 12,
-                padding: '12px 16px', borderRadius: 10,
+                padding: '12px 16px', borderRadius: 'var(--radius-sm)',
                 border: `1.5px solid ${borderColor}`,
                 cursor: submitted ? 'default' : 'pointer',
                 background: bg, color,
@@ -120,7 +120,7 @@ export default function LevelUp({ exercise, onComplete }) {
           onClick={handleSubmit}
           disabled={selected == null}
           style={{
-            padding: '10px 24px', borderRadius: 10, border: 'none',
+            padding: '10px 24px', borderRadius: 'var(--radius-sm)', border: 'none',
             cursor: selected == null ? 'not-allowed' : 'pointer',
             background: selected == null
               ? 'var(--border)'
@@ -136,7 +136,7 @@ export default function LevelUp({ exercise, onComplete }) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           {/* Feedback */}
           <div style={{
-            padding: '12px 16px', borderRadius: 10,
+            padding: '12px 16px', borderRadius: 'var(--radius-sm)',
             background: isCorrect ? 'var(--ex-correct-bg)' : 'var(--ex-wrong-bg)',
             border: `1px solid ${isCorrect ? 'var(--ex-correct-border)' : 'var(--ex-wrong-border)'}`,
             fontSize: 14, color: isCorrect ? 'var(--ex-correct-text)' : 'var(--ex-wrong-text)', fontWeight: 600,
@@ -145,7 +145,7 @@ export default function LevelUp({ exercise, onComplete }) {
           </div>
 
           {/* B2 model answer */}
-          <div style={{ padding: '14px 16px', borderRadius: 10, background: 'rgba(26,92,42,.06)', border: '1.5px solid rgba(26,92,42,.25)' }}>
+          <div style={{ padding: '14px 16px', borderRadius: 'var(--radius-sm)', background: 'rgba(26,92,42,.06)', border: '1.5px solid rgba(26,92,42,.25)' }}>
             <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.06em', color: GREEN, textTransform: 'uppercase', marginBottom: 8 }}>
               B2 — Model answer
             </div>
@@ -161,7 +161,7 @@ export default function LevelUp({ exercise, onComplete }) {
 
           {/* Explanation */}
           {explanation && (
-            <div style={{ padding: '10px 14px', background: 'var(--ex-panel-bg)', borderRadius: 8, border: '1px solid var(--ex-panel-border)', fontSize: 13.5, color: 'var(--ex-panel-text)', lineHeight: 1.65 }}>
+              <div style={{ padding: '10px 14px', background: 'var(--ex-panel-bg)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--ex-panel-border)', fontSize: 13.5, color: 'var(--ex-panel-text)', lineHeight: 1.65 }}>
               {explanation}
             </div>
           )}
@@ -177,7 +177,7 @@ export default function LevelUp({ exercise, onComplete }) {
               placeholder="Try writing the sentence in your own words…"
               rows={2}
               style={{
-                width: '100%', padding: '10px 12px', borderRadius: 8, resize: 'vertical',
+                width: '100%', padding: '10px 12px', borderRadius: 'var(--radius-sm)', resize: 'vertical',
                 border: '1.5px solid var(--border)', fontSize: 14, fontFamily: 'var(--font-ui)',
                 outline: 'none', background: '#fff', color: 'var(--text)', lineHeight: 1.6,
               }}

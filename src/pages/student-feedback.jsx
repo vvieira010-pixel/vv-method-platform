@@ -130,65 +130,74 @@ export default function StudentFeedback({ student, onTab }) {
               const terms = getRelevantGlossaryTerms(allFeedbackText);
               if (terms.length === 0) return null;
               return (
-                <article className="student-panel">
-                  <span className="student-panel-kicker">Concepts in your feedback</span>
-                  <h2>What these terms mean</h2>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 4 }}>
-                    {terms.map(({ term, definition }) => (
-                      <div key={term} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', fontSize: 'var(--text-sm)', lineHeight: 1.6 }}>
-                        <span style={{ fontWeight: 700, color: 'var(--accent)', flexShrink: 0, textTransform: 'capitalize' }}>{term}:</span>
-                        <span style={{ color: 'var(--text-2)' }}>{definition}</span>
-                      </div>
-                    ))}
-                  </div>
-                </article>
+             <article className="student-panel">
+               <div style={{ maxWidth: '65ch', margin: '0 auto' }}>
+                 <span className="student-panel-kicker">Concepts in your feedback</span>
+                 <h2>What these terms mean</h2>
+                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 4 }}>
+                   {terms.map(({ term, definition }) => (
+                     <div key={term} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', fontSize: 'var(--text-sm)', lineHeight: 1.6 }}>
+                       <span style={{ fontWeight: 700, color: 'var(--accent)', flexShrink: 0, textTransform: 'capitalize' }}>{term}:</span>
+                       <span style={{ color: 'var(--text-2)' }}>{definition}</span>
+                     </div>
+                   ))}
+                 </div>
+               </div>
+             </article>
+
               );
             })()}
 
-            <article className="student-panel">
-              <span className="student-panel-kicker">Before next class</span>
-              <h2>Can you name your focus and one win?</h2>
-              <p className="student-readable-copy">
-                Your focus: <strong>{focusArea?.area || feedback?.nextStep || primarySkill?.section || 'your next MET skill'}</strong>.
-                {' '}One win: <strong>{firstWin?.strength || 'something you did better this class'}</strong>.
-              </p>
-            </article>
+             <article className="student-panel">
+               <div style={{ maxWidth: '65ch', margin: '0 auto' }}>
+                 <span className="student-panel-kicker">Before next class</span>
+                 <h2>Can you name your focus and one win?</h2>
+                 <p className="student-readable-copy">
+                   Your focus: <strong>{focusArea?.area || feedback?.nextStep || primarySkill?.section || 'your next MET skill'}</strong>.
+                   {' '}One win: <strong>{firstWin?.strength || 'something you did better this class'}</strong>.
+                 </p>
+               </div>
+             </article>
 
-            <article className="student-panel">
-              <span className="student-panel-kicker">Discuss this feedback</span>
-              <h2>Ask your teacher about these notes</h2>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 4 }}>
-                {!understood[latest?.id] && (
-                  <Button variant="ghost" size="sm" onClick={() => handleMarkUnderstood(latest?.id)} disabled={!latest?.id}><Icon.check size={12} /> I understand this feedback</Button>
-                )}
-                {understood[latest?.id] && (
-                  <div style={{ fontSize: 'var(--text-sm)', color: 'var(--accent-text)', display: 'flex', alignItems: 'center', gap: 6 }}><Icon.check size={14} /> Marked as understood</div>
-                )}
-                <div>
-                  {(feedbackReplies[latest?.id] || []).length > 0 && (
-                    <div style={{ marginBottom: 8, display: 'flex', flexDirection: 'column', gap: 6 }}>
-                      {(feedbackReplies[latest?.id] || []).map(msg => (
-                        <div key={msg.id} style={{ padding: '8px 12px', borderRadius: 'var(--radius-sm)', background: 'var(--accent-subtle)', border: '1px solid var(--accent-soft)', fontSize: 'var(--text-sm)', lineHeight: 1.5 }}>
-                          <div style={{ color: 'var(--text-2)', marginBottom: 2 }}>{msg.body}</div>
-                          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>{new Date(msg.createdAt).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                  {showReply[latest?.id] ? (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                      <textarea className="input" rows={3} value={replyText[latest?.id] || ''} onChange={e => setReplyText(prev => ({ ...prev, [latest?.id]: e.target.value }))} placeholder="Type your question about this feedback…" />
-                      <div style={{ display: 'flex', gap: 8 }}>
-                        <Button variant="primary" size="sm" onClick={() => handleFeedbackReply(latest?.id)} disabled={!replyText[latest?.id]?.trim()}>Send question</Button>
-                        <Button variant="ghost" size="sm" onClick={() => { setShowReply(prev => ({ ...prev, [latest?.id]: false })); setReplyText(prev => ({ ...prev, [latest?.id]: '' })); }}>Cancel</Button>
-                      </div>
-                    </div>
-                  ) : (
-                    <Button variant="ghost" size="sm" onClick={() => setShowReply(prev => ({ ...prev, [latest?.id]: true }))}><Icon.feedback size={12} /> Ask a question</Button>
-                  )}
-                </div>
-              </div>
-            </article>
+
+             <article className="student-panel">
+               <div style={{ maxWidth: '65ch', margin: '0 auto' }}>
+                 <span className="student-panel-kicker">Discuss this feedback</span>
+                 <h2>Ask your teacher about these notes</h2>
+                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 4 }}>
+                   {!understood[latest?.id] && (
+                     <Button variant="ghost" size="sm" onClick={() => handleMarkUnderstood(latest?.id)} disabled={!latest?.id}><Icon.check size={12} /> I understand this feedback</Button>
+                   )}
+                   {understood[latest?.id] && (
+                     <div style={{ fontSize: 'var(--text-sm)', color: 'var(--accent-text)', display: 'flex', alignItems: 'center', gap: 6 }}><Icon.check size={14} /> Marked as understood</div>
+                   )}
+                   <div>
+                     {(feedbackReplies[latest?.id] || []).length > 0 && (
+                       <div style={{ marginBottom: 8, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                         {(feedbackReplies[latest?.id] || []).map(msg => (
+                           <div key={msg.id} style={{ padding: '8px 12px', borderRadius: 'var(--radius-sm)', background: 'var(--accent-subtle)', border: '1px solid var(--accent-soft)', fontSize: 'var(--text-sm)', lineHeight: 1.5 }}>
+                             <div style={{ color: 'var(--text-2)', marginBottom: 2 }}>{msg.body}</div>
+                             <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>{new Date(msg.createdAt).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</div>
+                           </div>
+                         ))}
+                       </div>
+                     )}
+                     {showReply[latest?.id] ? (
+                       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                         <textarea className="input" rows={3} value={replyText[latest?.id] || ''} onChange={e => setReplyText(prev => ({ ...prev, [latest?.id]: e.target.value }))} placeholder="Type your question about this feedback…" />
+                         <div style={{ display: 'flex', gap: 8 }}>
+                           <Button variant="primary" size="sm" onClick={() => handleFeedbackReply(latest?.id)} disabled={!replyText[latest?.id]?.trim()}>Send question</Button>
+                           <Button variant="ghost" size="sm" onClick={() => { setShowReply(prev => ({ ...prev, [latest?.id]: false })); setReplyText(prev => ({ ...prev, [latest?.id]: '' })); }}>Cancel</Button>
+                         </div>
+                       </div>
+                     ) : (
+                       <Button variant="ghost" size="sm" onClick={() => setShowReply(prev => ({ ...prev, [latest?.id]: true }))}><Icon.feedback size={12} /> Ask a question</Button>
+                     )}
+                   </div>
+                 </div>
+               </div>
+             </article>
+
           </section>
 
           {feedbackItems.length > 1 && (

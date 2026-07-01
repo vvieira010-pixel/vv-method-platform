@@ -453,6 +453,7 @@ export default function StudentHome({ student, onTab }) {
           </div>
 
           <aside className="student-home-side">
+
             <article className="student-panel mb-3">
               <div className="student-panel-head">
                 <div>
@@ -583,9 +584,6 @@ export default function StudentHome({ student, onTab }) {
             );
             })()}
 
-            <section className="student-memo-board">
-              <MemoCard kicker="General memo" title="Memo Board" text={generalMemoText || 'No general memo posted yet.'} />
-            </section>
 
           </aside>
       </section>

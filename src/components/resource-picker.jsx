@@ -171,7 +171,7 @@ export default function ResourcePicker({ open, onClose, onSelect, tab: initialTa
                     overflow: 'hidden', cursor: 'pointer',
                     transition: 'border-color .12s',
                   }} onClick={() => onSelect(url)}>
-                    <img src={url} alt={item.name}
+                    <img src={url} alt={item.name} loading="lazy"
                       style={{ width: '100%', height: 100, objectFit: 'cover', display: 'block' }}
                       onError={e => { e.target.style.display = 'none'; }} />
                     <div style={{ padding: '4px 8px', fontSize: 'var(--text-xs)', color: 'var(--text-2)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>

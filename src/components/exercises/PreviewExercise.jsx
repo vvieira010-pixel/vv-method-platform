@@ -53,7 +53,7 @@ export default function PreviewExercise({ exercise }) {
             <div style={{ marginBottom: 10, borderRadius: 0, overflow: 'hidden', border: '1px solid var(--border)', background: 'var(--bg)' }}>
               <img
                 src={exercise.imageUrl}
-                alt={exercise.imageAlt || 'Speaking prompt image'}
+                alt={exercise.imageAlt || 'Speaking prompt image'} loading="lazy"
                 style={{ width: '100%', maxHeight: 220, objectFit: 'cover', display: 'block' }}
               />
             </div>

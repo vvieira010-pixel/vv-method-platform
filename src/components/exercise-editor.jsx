@@ -447,7 +447,7 @@ function SpeakEditor({ ex, update }) {
           style={{ marginTop: 8 }}
         />
         {ex.imageUrl && (
-          <img src={ex.imageUrl} alt={ex.imageAlt || 'preview'} style={{ marginTop: 8, maxWidth: '100%', maxHeight: 160, borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)' }} />
+          <img src={ex.imageUrl} alt={ex.imageAlt || 'preview'} loading="lazy" style={{ marginTop: 8, maxWidth: '100%', maxHeight: 160, borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)' }} />
         )}
       </div>
       {ex.imageUrl && (

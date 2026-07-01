@@ -16,6 +16,7 @@ import {
   readStoredSupabaseSession,
   clearStoredSupabaseSession,
   fetchSupabaseUser,
+  refreshSupabaseSession,
 } from './lib/supabase-storage.js';
 import { claimStudentByEmail, ensureProfile, setSessionRole, upsertReviewSchedule, loadReviewSchedule } from './lib/supabase-db.js';
 import { enableSync } from './lib/spaced-repetition.js';
@@ -40,6 +41,7 @@ const SettingsPage      = lazy(() => import('./pages/settings.jsx'));
 const InboxPage         = lazy(() => import('./tools/tool-inbox.jsx'));
 const PerspectiveDesigner = lazy(() => import('./tools/tool-perspective-designer.jsx'));
 const ExercisesPage     = lazy(() => import('./pages/exercises.jsx'));
+const MockTestPage      = lazy(() => import('./pages/mock-test.jsx'));
 
 export default function App() {
   const [auth, setAuth] = useState(null);
@@ -148,8 +150,12 @@ export default function App() {
     }
 
     async function restoreSession() {
-      const stored = readStoredSupabaseSession();
-      if (!stored?.access_token) return;
+      let stored = readStoredSupabaseSession();
+      if (!stored?.access_token) {
+        // No valid stored session — try refreshing with the last refresh_token.
+        stored = await refreshSupabaseSession();
+        if (!stored?.access_token) return;
+      }
       try {
         // Re-validate the stored token so a stale or tampered session is rejected.
         const sbUser = await fetchSupabaseUser(url, anonKey, stored.access_token);
@@ -175,7 +181,7 @@ export default function App() {
       try {
         localStorage.setItem(`vv:reviewSchedule:${studentId}`, JSON.stringify(rows));
       } catch { /* storage unavailable */ }
-    }).catch(() => { /* silent — localStorage is the fallback */ });
+    }).catch(e => console.warn('[review schedule] failed to load:', e));
   }, [auth]);
 
   // Seed students from hardcoded list on first run, then load live roster
@@ -192,7 +198,7 @@ export default function App() {
   useEffect(() => {
     getAllSubmissions().then(list => {
       setPendingSubmissions((list || []).filter(s => s.status === 'submitted').length);
-    }).catch(() => {});
+    }).catch(e => console.warn('[submissions] failed to load:', e));
   }, []);
 
   // Re-load students on updates
@@ -205,7 +211,7 @@ export default function App() {
   // Inbox unread badge — poll every 15s + react to events
   useEffect(() => {
     const check = () => {
-      const v = Number(localStorage.getItem('inboxUnread') || 0);
+      const v = Number(localStorage.getItem('vv:inbox_unread') || 0);
       setInboxUnread(Number.isFinite(v) && v > 0 ? v : 0);
     };
     check();
@@ -269,7 +275,7 @@ export default function App() {
     requestInboxNotificationPermission();
     getAllSubmissions().then(list => {
       setPendingSubmissions((list || []).filter(s => s.status === 'submitted').length);
-    }).catch(() => {});
+    }).catch(e => console.warn('[submissions badge] failed:', e));
   }, [auth]);
 
   if (!auth) {
@@ -304,6 +310,7 @@ export default function App() {
     { id: 'error-bank',   label: 'Error Bank',   icon: <Icon.warning size={16} /> },
     { id: 'reports',      label: 'Reports',      icon: <Icon.progress size={16} /> },
     { id: 'exercises',    label: 'Exercises',    icon: <Icon.book size={16} /> },
+    { id: 'mock-test',    label: 'Mock Tests',   icon: <Icon.practice size={16} /> },
   ];
 
   const rightSlot = (
@@ -331,7 +338,9 @@ export default function App() {
       <Shell tabs={teacherTabs} active={view} onTab={(id) => navigate(id)} rightSlot={rightSlot}>
         <ErrorBoundary label="Page unavailable">
           <Suspense fallback={<PageLoader />}>
-            {renderTeacherPage(view, viewParams, { students, navigate, teacherName: auth.displayName?.split(' ')[0] || 'Vini' })}
+            <div key={view} className="page-enter">
+              {renderTeacherPage(view, viewParams, { students, navigate, teacherName: auth.displayName?.split(' ')[0] || 'Vini' })}
+            </div>
           </Suspense>
         </ErrorBoundary>
       </Shell>
@@ -410,6 +419,9 @@ function renderTeacherPage(view, params, ctx) {
 
     case 'perspective':
       return <PerspectiveDesigner students={students} onNavigate={navigate} />;
+
+    case 'mock-test':
+      return <MockTestPage onNavigate={navigate} />;
 
     default:
       return <TeacherDashboard students={students} onNavigate={navigate} teacherName={teacherName} />;

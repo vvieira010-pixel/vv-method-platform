@@ -145,17 +145,14 @@ export default function StudentProgress({ student }) {
       </div>
 
       {diagnoses.length === 0 ? (
-        <section className="student-panel student-panel--readiness">
-          <div className="student-panel-head">
-            <div><span className="student-panel-kicker">Starting point</span><h2>Your first progress steps</h2></div>
-          </div>
-          <div className="student-progress-starter">
+        <div className="student-empty-card">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <p>No approved diagnosis is ready yet. You can still start building useful evidence for your teacher.</p>
             <div className="student-todo-row"><span className="student-todo-check" /><span><strong>Complete the next assigned homework</strong><small>Homework gives your teacher review evidence</small></span></div>
             <div className="student-todo-row"><span className="student-todo-check" /><span><strong>Prepare one speaking sample</strong><small>45 seconds with one clear example</small></span></div>
             <div className="student-todo-row"><span className="student-todo-check" /><span><strong>Ask one MET question in class</strong><small>Use the Messages tab if you need help before class</small></span></div>
           </div>
-        </section>
+        </div>
       ) : (
         <>
           {skills.length > 0 && (() => {

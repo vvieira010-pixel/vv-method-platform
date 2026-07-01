@@ -57,11 +57,11 @@ export default function ExercisesPage({ onNavigate }) {
   }, [library, searchQuery]);
 
   useEffect(() => {
-    getLibraryExercises().then(list => setLibrary(list || [])).catch(() => {});
+    getLibraryExercises().then(list => setLibrary(list || [])).catch(e => console.warn('[exercises] failed to load:', e));
   }, [libVersion]);
 
   async function handleDelete(id) {
-    await deleteLibraryExercise(id).catch(() => {});
+    await deleteLibraryExercise(id).catch(e => console.warn('[exercises] delete failed:', e));
     setLibVersion(v => v + 1);
   }
 

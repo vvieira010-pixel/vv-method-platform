@@ -989,6 +989,10 @@ function FlashPlayer({ ex, res, update, readOnly }) {
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 'var(--text-sm)', color: 'var(--success)' }}><Icon.check size={12} /> {learned} learned</span>
           </div>
           <div onClick={() => setFlipped(f => !f)}
+            role="button"
+            tabIndex={0}
+            onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setFlipped(f => !f); } }}
+            aria-label={flipped ? 'Card showing definition, click to flip back' : 'Card showing term, click to flip'}
             style={{
               background: flipped ? 'var(--primary)' : 'var(--surface)',
               color: flipped ? '#F0F6FC' : 'var(--text)',
@@ -996,7 +1000,7 @@ function FlashPlayer({ ex, res, update, readOnly }) {
               borderRadius: 0, padding: '40px 28px', textAlign: 'center',
               minHeight: 160, cursor: 'pointer',
               display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-              transition: 'all .3s var(--ease)',
+              transition: 'background .3s var(--ease), color .3s var(--ease), border-color .3s var(--ease)',
             }}>
             <div style={{ fontSize: 'var(--text-xs)', textTransform: 'uppercase', letterSpacing: '0.1em', color: flipped ? 'rgba(240,246,252,.55)' : 'var(--faint)', marginBottom: 14 }}>
               {flipped ? 'Definition' : 'Term'}

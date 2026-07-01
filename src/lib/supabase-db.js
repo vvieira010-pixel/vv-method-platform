@@ -25,6 +25,7 @@ import {
   readStoredSupabaseSession,
   buildSupabaseHeaders,
   parseJwtClaims,
+  refreshSupabaseSession,
 } from './supabase-storage.js';
 
 /* ─── session / context ──────────────────────────────────────── */
@@ -490,6 +491,11 @@ const IMAGE_BUCKET = 'exercise-images';
  * rendering directly in an <img src>. Throws on failure.
  */
 export async function uploadExerciseImage(file, path) {
+  // Refresh the session if the token is close to expiry (within 5 min).
+  const stored = readStoredSupabaseSession();
+  if (stored && stored.expires_at && stored.expires_at - 300 <= Math.floor(Date.now() / 1000)) {
+    await refreshSupabaseSession();
+  }
   const ctx = getDbContext();
   if (!ctx) throw new Error('Not signed in.');
   const res = await fetch(`${ctx.url}/storage/v1/object/${IMAGE_BUCKET}/${path}`, {
@@ -684,6 +690,11 @@ const RESOURCE_BUCKET = 'teacher-resources';
  * Path: {folder}/{timestamp}-{filename}
  */
 export async function uploadTeacherResource(file, folder = 'images') {
+  // Refresh the session if the token is close to expiry (within 5 min).
+  const stored = readStoredSupabaseSession();
+  if (stored && stored.expires_at && stored.expires_at - 300 <= Math.floor(Date.now() / 1000)) {
+    await refreshSupabaseSession();
+  }
   const ctx = getDbContext();
   if (!ctx) throw new Error('Not signed in.');
   const ext = file.name.split('.').pop() || 'bin';

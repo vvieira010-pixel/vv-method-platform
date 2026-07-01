@@ -3,6 +3,7 @@
  * Teacher picks exercise types, fills type-specific fields, previews as student.
  */
 import { useState, useEffect, useRef } from 'react';
+import { motion } from 'motion/react';
 import { Icon, SectionHeader, Pill, Modal, callAI, Breadcrumb } from '../components/shared.jsx';
 import { Card } from '../components/ui/Card.jsx';
 import { Button } from '../components/ui/Button.jsx';
@@ -20,14 +21,15 @@ import {
   buildLanguageDemandPrompt,
 } from '../lib/prompts.js';
 import { getDiagnoses, getStudent, saveHomework, updateClassEventStatus } from '../lib/workflow.js';
-import { createExercise, getExType, isStructuredExercise } from '../lib/exercise-types.js';
+import { createExercise, getExType, isStructuredExercise, exercisePreview, EX_TYPES } from '../lib/exercise-types.js';
 import { getDueItems, toMCQ, getAllEntries } from '../lib/spaced-repetition.js';
-import { ExerciseTypePicker } from '../components/exercise-editor.jsx';
+import { ExerciseTypePicker, ExTypeBadge } from '../components/exercise-editor.jsx';
 import ExerciseCard from '../components/exercises/ExerciseCard.jsx';
-import { HomeworkStepThrough } from '../components/exercise-player.jsx';
+import { ExercisePlayer, HomeworkStepThrough } from '../components/exercise-player.jsx';
 import {
   normalizeTaskTypes, buildCompleteExercises, createCompleteExercise,
   isStructuredAiExerciseComplete, getHomeworkCognitiveSufficiencyWarning,
+  buildExercisesFromAiTasks,
 } from '../lib/exercise-ai-helpers.js';
 import { getModuleExercises } from '../lib/exercise-bank.js';
 import { getB2Modules, getB2ModuleExercises } from '../lib/met-b2-bank.js';
@@ -82,6 +84,11 @@ export default function HomeworkCreate({ diagnosisId, studentId, students, onNav
   const [unitBankExercises, setUnitBankExercises] = useState([]);
   const [expandedEx, setExpandedEx] = useState(null);
   const [showLibrary, setShowLibrary] = useState(false);
+  const [libSearchQuery, setLibSearchQuery] = useState('');
+  const [libLevelFilter, setLibLevelFilter] = useState('');
+  const [libTypeFilter, setLibTypeFilter] = useState('');
+  const [libSkillFilter, setLibSkillFilter] = useState('');
+  const [libPreviewEx, setLibPreviewEx] = useState(null);
   // activePanel replaces 5 separate booleans: type-picker/b2-bank/lifestyle/deep-research/group-gen
   const [activePanel, setActivePanel] = useState(null);
   const togglePanel = key => {
@@ -117,26 +124,25 @@ export default function HomeworkCreate({ diagnosisId, studentId, students, onNav
     return () => { cancelled = true; };
   }, [libVersion]);
 
-  async function load() {
+  useEffect(() => {
     let sid = studentId || '';
-    if (sid) {
-      setSelectedStudentId(sid);
-      const s = await getStudent(sid) || students.find(x => x.id === sid);
-      setStudent(s);
-    }
+    if (sid) setSelectedStudentId(sid);
     if (diagnosisId) {
-      const allDx = await getDiagnoses(sid);
-      const dx = allDx.find(d => d.id === diagnosisId);
-      setDiagnosis(dx);
-      if (dx && !sid && dx.studentId) sid = dx.studentId;
-      if (sid) {
-        setSelectedStudentId(sid);
-        const s = await getStudent(sid) || students.find(x => x.id === sid);
-        setStudent(s || null);
-      }
-      if (dx) populateFromDiagnosis(dx, students.find(x => x.id === sid));
+      getDiagnoses(sid).then(allDx => {
+        const dx = allDx.find(d => d.id === diagnosisId);
+        if (!dx) return;
+        setDiagnosis(dx);
+        const resolvedSid = sid || dx.studentId || '';
+        if (!sid && dx.studentId) setSelectedStudentId(dx.studentId);
+        getStudent(resolvedSid).then(s => {
+          setStudent(s || null);
+          populateFromDiagnosis(dx, s || null);
+        });
+      });
+    } else if (sid) {
+      getStudent(sid).then(s => { if (s) setStudent(s); });
     }
-  }
+  }, [diagnosisId, studentId]);
 
   function populateFromDiagnosis(dx, s) {
     const hwRec = dx.sections?.homeworkRecommendation?.content;
@@ -145,14 +151,7 @@ export default function HomeworkCreate({ diagnosisId, studentId, students, onNav
     const description = hwRec?.instructions || '';
     const type = hwRec?.expectedSubmissionType?.split('|')[0] || inferSkillType(getPriorityItems(dx));
 
-    // Convert legacy tasks to structured exercises where possible
-    const legacyTasks = Array.isArray(hwRec?.tasks) ? hwRec.tasks : [];
-    const exercises = legacyTasks.length > 0
-      ? legacyTasks.map(t => {
-          const text = typeof t === 'string' ? t : t.description || '';
-          return { ...createExercise('short'), prompt: text };
-        })
-      : [];
+    const exercises = buildExercisesFromAiTasks(hwRec?.tasks, []);
 
     setForm({
       title,
@@ -1111,6 +1110,9 @@ Return JSON only with fields: type "read", passage (2-3 paragraphs), source, que
                   <Button variant="primary" size="sm" onClick={() => togglePanel('type-picker')}>
                     <Icon.plus size={12} /> Add Exercise
                   </Button>
+                  <Button variant="secondary" size="sm" onClick={() => { setShowLibrary(true); setLibSearchQuery(''); setLibLevelFilter(''); setLibTypeFilter(''); setLibSkillFilter(''); setLibPreviewEx(null); }} disabled={libraryExercises.length === 0}>
+                    <Icon.book size={12} /> From Library
+                  </Button>
                   <Button variant="secondary" size="sm" onClick={() => { setPreviewResponses({}); setStudentPreview(true); }} disabled={!form.exercises.some(isStructuredExercise)} title="Step through the whole homework exactly as the student will receive it">
                     <Icon.play size={12} /> Preview as student
                   </Button>
@@ -1128,6 +1130,170 @@ Return JSON only with fields: type "read", passage (2-3 paragraphs), source, que
                     onAddAiSuggestion={(ex) => { addAiExerciseToList(ex); setExerciseOptions(prev => prev.filter(e => e.id !== ex.id)); }}
                   />
                 )}
+
+                {/* ── Library browser ── */}
+                {showLibrary && (() => {
+                  const priorityItems = diagnosis ? getPriorityItems(diagnosis) : [];
+                  const priorityAreas = [...new Set(priorityItems.map(p => (p.area || '').toLowerCase()))];
+                  const allMetSkills = [...new Set(EX_TYPES.flatMap(t => t.metSkill.split(',').map(s => s.trim()).filter(Boolean)))];
+                  const allLevels = [...new Set(libraryExercises.map(ex => ex.level).filter(Boolean))].sort();
+                  const typeOrder = EX_TYPES.map(t => t.id);
+                  const lowerQuery = libSearchQuery.toLowerCase();
+                  const groupBy = (items, keyFn) => {
+                    const map = new Map();
+                    for (const item of items) {
+                      const k = keyFn(item); if (!map.has(k)) map.set(k, []);
+                      map.get(k).push(item);
+                    } return map;
+                  };
+                  const filtered = libraryExercises.filter(ex => {
+                    const typeMeta = getExType(ex.type);
+                    if (!typeMeta) return false;
+                    if (libTypeFilter && ex.type !== libTypeFilter) return false;
+                    if (libLevelFilter && ex.level !== libLevelFilter) return false;
+                    if (libSkillFilter) {
+                      const exSkills = typeMeta.metSkill.split(',').map(s => s.trim());
+                      if (!exSkills.includes(libSkillFilter)) return false;
+                    }
+                    if (!lowerQuery) return true;
+                    const typeLabel = typeMeta.label.toLowerCase();
+                    const tags = Array.isArray(ex.tags) ? ex.tags.join(' ').toLowerCase() : '';
+                    return (ex.title || '').toLowerCase().includes(lowerQuery)
+                      || typeLabel.includes(lowerQuery)
+                      || tags.includes(lowerQuery)
+                      || (ex.level || '').toLowerCase().includes(lowerQuery)
+                      || (exercisePreview(ex) || '').toLowerCase().includes(lowerQuery);
+                  });
+                  const grouped = groupBy(filtered, ex => ex.type);
+                  const sortedKeys = [...grouped.keys()].sort((a, b) => typeOrder.indexOf(a) - typeOrder.indexOf(b));
+                  return (
+                    <div className="homework-library-panel">
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--space-2)' }}>
+                        <span style={{ fontWeight: 600, fontSize: 'var(--text-sm)' }}>Your Exercise Library</span>
+                        <Button variant="ghost" size="sm" onClick={() => setShowLibrary(false)}>× Close</Button>
+                      </div>
+
+                      {/* ── Filter bar: Level, Type, Skill ── */}
+                      <div style={{ display: 'flex', gap: 'var(--space-2)', marginBottom: 'var(--space-2)', flexWrap: 'wrap' }}>
+                        <select className="homework-lib-select" value={libLevelFilter} onChange={e => setLibLevelFilter(e.target.value)}>
+                          <option value="">All Levels</option>
+                          {allLevels.map(l => <option key={l} value={l}>{l}</option>)}
+                        </select>
+                        <select className="homework-lib-select" value={libTypeFilter} onChange={e => setLibTypeFilter(e.target.value)}>
+                          <option value="">All Types</option>
+                          {EX_TYPES.map(t => <option key={t.id} value={t.id}>{t.label}</option>)}
+                        </select>
+                        <select className="homework-lib-select" value={libSkillFilter} onChange={e => setLibSkillFilter(e.target.value)}>
+                          <option value="">All Skills</option>
+                          {allMetSkills.map(s => <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>)}
+                        </select>
+                      </div>
+
+                      {/* ── Search ── */}
+                      <div className="search-input-wrap" style={{ marginBottom: 'var(--space-3)' }}>
+                        <Icon.search size={15} />
+                        <input type="text" className="search-input" placeholder="Search by title, type, tags, or level…"
+                          value={libSearchQuery} onChange={e => setLibSearchQuery(e.target.value)} />
+                        {libSearchQuery && (
+                          <button className="search-clear" onClick={() => setLibSearchQuery('')}>
+                            <Icon.close size={15} />
+                          </button>
+                        )}
+                      </div>
+
+                      {filtered.length === 0 ? (
+                        <p className="card-row-meta" style={{ padding: 'var(--space-2) 0' }}>
+                          {libraryExercises.length === 0
+                            ? 'No saved exercises. In the homework builder, tap ☆ on any exercise to save it here.'
+                            : 'No exercises match the current filters.'}
+                        </p>
+                      ) : (
+                        <div>
+                          {sortedKeys.map(typeId => {
+                            const exType = EX_TYPES.find(t => t.id === typeId);
+                            const items = grouped.get(typeId);
+                            return (
+                              <div key={typeId} style={{ marginBottom: 'var(--space-3)' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', marginBottom: 'var(--space-1)', padding: 'var(--space-1) 0' }}>
+                                  <span style={{ fontWeight: 600, fontSize: 'var(--text-xs)', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-2)' }}>
+                                    {exType?.label || typeId}
+                                  </span>
+                                  <span className="card-row-meta">{items.length}</span>
+                                </div>
+                                {items.map(ex => {
+                                  const typeMeta = getExType(ex.type);
+                                  const isRecommended = typeMeta && priorityAreas.some(area => area && typeMeta.metSkill.split(',').includes(area));
+                                  return (
+                                    <div key={ex.id} className="exercise-item" style={{ padding: 'var(--space-1) 0' }}>
+                                      <ExTypeBadge typeId={ex.type} />
+                                      {ex.title && (
+                                        <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 100 }}>
+                                          {ex.title}
+                                        </span>
+                                      )}
+                                      <span style={{ flex: 1, fontSize: 'var(--text-sm)', color: 'var(--text-2)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                        {exercisePreview(ex)}
+                                      </span>
+                                      {ex.level && <span className="card-row-meta">{ex.level}</span>}
+                                      {ex.usageCount > 0 && <span className="card-row-meta">Used {ex.usageCount}×</span>}
+                                      {isRecommended && (
+                                        <span className="dx-match-badge" title="Matches a diagnosis priority area">Diagnosis</span>
+                                      )}
+                                      <div className="homework-lib-actions">
+                                        <button className="homework-lib-preview-btn" onClick={() => setLibPreviewEx(ex)} title="Preview full exercise">
+                                          <Icon.eye size={13} />
+                                        </button>
+                                        <Button variant="ghost" size="sm" onClick={() => addFromLibrary(ex)} style={{ flexShrink: 0 }}>Add</Button>
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
+
+                {/* ── Library exercise preview modal ── */}
+                <Modal open={!!libPreviewEx} onClose={() => setLibPreviewEx(null)} title="Exercise Preview" maxWidth={680}>
+                  {libPreviewEx && (
+                    <motion.div 
+                      initial={{ opacity: 0, y: 10 }} 
+                      animate={{ opacity: 1, y: 0 }} 
+                      transition={{ duration: 0.2, ease: 'easeOut' }}
+                      style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', paddingBottom: 'var(--space-3)', borderBottom: '1px solid var(--divider)' }}>
+                        <ExTypeBadge typeId={libPreviewEx.type} />
+                        {libPreviewEx.level && <span className="card-row-meta" style={{ fontSize: 'var(--text-xs)' }}>{libPreviewEx.level}</span>}
+                        {libPreviewEx.title && (
+                          <span style={{ fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--text)' }}>{libPreviewEx.title}</span>
+                        )}
+                      </div>
+                      
+                      <div style={{ 
+                        padding: 'var(--space-4)', 
+                        background: 'var(--surface)', 
+                        borderRadius: 'var(--radius-2)', 
+                        border: '1px solid var(--divider)',
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.04)',
+                        minHeight: '200px'
+                      }}>
+                        <ExercisePlayer exercise={libPreviewEx} readOnly={true} />
+                      </div>
+
+                      <div style={{ display: 'flex', gap: 'var(--space-2)', justifyContent: 'flex-end', paddingTop: 'var(--space-2)' }}>
+                        <Button variant="ghost" size="sm" onClick={() => setLibPreviewEx(null)}>Close</Button>
+                        <Button variant="primary" size="sm" onClick={() => { addFromLibrary(libPreviewEx); setLibPreviewEx(null); }}>
+                          <Icon.plus size={13} /> Add to Homework
+                        </Button>
+                      </div>
+                    </motion.div>
+                  )}
+                </Modal>
 
                 {/* ── SPACED REPETITION REVIEW ITEMS ── */}
                 {reviewDueCount > 0 && (

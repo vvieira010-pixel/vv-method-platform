@@ -61,6 +61,7 @@ export function Modal({ open, onClose, kicker, title, subtitle, maxWidth = 680, 
         role="dialog"
         aria-modal="true"
         aria-labelledby="modal-title"
+        aria-describedby={subtitle ? 'modal-subtitle' : undefined}
         className="modal-card-enter modal-card"
         style={{ maxWidth }}
       >
@@ -68,7 +69,7 @@ export function Modal({ open, onClose, kicker, title, subtitle, maxWidth = 680, 
           <div style={{ flex: 1, minWidth: 0 }}>
             {kicker && <div className="modal-kicker">{kicker}</div>}
             <div id="modal-title" className="modal-title">{title}</div>
-            {subtitle && <div className="modal-subtitle">{subtitle}</div>}
+            {subtitle && <div id="modal-subtitle" className="modal-subtitle">{subtitle}</div>}
           </div>
           <button onClick={onClose} aria-label="Close dialog" className="modal-close">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">

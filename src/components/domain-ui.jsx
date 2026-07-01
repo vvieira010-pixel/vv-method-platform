@@ -33,7 +33,7 @@ export function StudentFeedbackView({ feedback }) {
     textTransform: 'uppercase', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6,
   };
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 14, maxWidth: '72ch', borderTop: '3px solid var(--accent)', paddingTop: 14 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 14, maxWidth: '65ch', margin: '0 auto' }}>
       {feedback.classFocus && (
         <div style={card}>
           <div style={{ ...cardTitle, color: 'var(--primary)' }}>Current focus</div>
@@ -83,6 +83,7 @@ export function StudentFeedbackView({ feedback }) {
     </div>
   );
 }
+
 
 /* ─── EVIDENCE CARD ──────────────────────────────────────────── */
 export function EvidenceCard({ label, children }) {

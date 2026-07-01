@@ -1,12 +1,12 @@
 import { useState } from 'react';
 
 const TEAL = 'var(--accent)';
-const NAVY = '#0B1F3A';
+const NAVY = 'var(--accent-text)';
 
 function optionBase(submitted, selected, correct, i) {
   const base = {
     display: 'flex', alignItems: 'center', gap: 12,
-    padding: '12px 16px', borderRadius: 10,
+          padding: '12px 16px', borderRadius: 'var(--radius-sm)',
     border: '1.5px solid', cursor: submitted ? 'default' : 'pointer',
     transition: 'all 0.15s', fontSize: 14.5, lineHeight: 1.5,
     fontFamily: 'var(--font-ui)', textAlign: 'left', width: '100%',
@@ -61,15 +61,15 @@ export default function Reading({ exercise, onComplete }) {
       {/* Image */}
       {imgSrc && (
         <img
-          src={imgSrc} alt="Exercise visual"
-          style={{ width: '100%', borderRadius: 10, marginBottom: 16, maxHeight: 260, objectFit: 'cover', display: 'block' }}
+          src={imgSrc} alt="Exercise visual" loading="lazy"
+          style={{ width: '100%', borderRadius: 'var(--radius-sm)', marginBottom: 16, maxHeight: 260, objectFit: 'cover', display: 'block' }}
         />
       )}
 
       {/* Passage */}
       {text && (
         <div style={{
-          padding: '16px 18px', marginBottom: 20, borderRadius: 10,
+          padding: '16px 18px', marginBottom: 20, borderRadius: 'var(--radius-sm)',
           background: 'var(--bg)', border: '1px solid var(--border)',
           fontSize: 15, lineHeight: 1.75, color: 'var(--text)',
         }}>
@@ -121,7 +121,7 @@ export default function Reading({ exercise, onComplete }) {
           onClick={handleSubmit}
           disabled={selected == null}
           style={{
-            padding: '10px 24px', borderRadius: 10, border: 'none',
+            padding: '10px 24px', borderRadius: 'var(--radius-sm)', border: 'none',
             cursor: selected == null ? 'not-allowed' : 'pointer',
             background: selected == null
               ? 'var(--border)'
@@ -135,7 +135,7 @@ export default function Reading({ exercise, onComplete }) {
         </button>
       ) : (
         <div style={{
-          padding: '12px 16px', borderRadius: 10,
+    padding: '12px 16px', borderRadius: 'var(--radius-sm)',
           background: isCorrect ? 'var(--ex-correct-bg)' : 'var(--ex-wrong-bg)',
           border: `1px solid ${isCorrect ? 'var(--ex-correct-border)' : 'var(--ex-wrong-border)'}`,
           fontSize: 14,

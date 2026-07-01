@@ -87,7 +87,7 @@ function SpeakingRecorder({ exercise, taskConfig, reflectionChecks, onComplete }
       )}
       {imageUrl ? (
         <div style={{ marginBottom: 16, border: '1px solid var(--border)', borderRadius: 'var(--radius-sm, 6px)', overflow: 'hidden' }}>
-          <img src={imageUrl} alt={imageAlt || imageDescription || 'Picture for this task'} style={{ maxWidth: '100%', maxHeight: 360, display: 'block', margin: '0 auto' }} />
+          <img src={imageUrl} alt={imageAlt || imageDescription || 'Picture for this task'} loading="lazy" style={{ maxWidth: '100%', maxHeight: 360, display: 'block', margin: '0 auto' }} />
           {imageDescription && (
             <p style={{ margin: 0, padding: '8px 12px', fontSize: 'var(--text-xs)', color: 'var(--muted)', fontStyle: 'italic' }}>{imageDescription}</p>
           )}
@@ -278,7 +278,7 @@ export default function ShortAnswer({ exercise, onComplete }) {
 
       {imageUrl && (
         <div style={{ marginBottom: 16, border: '1px solid var(--border)', borderRadius: 'var(--radius-sm, 6px)', overflow: 'hidden', background: 'var(--ex-panel-bg)', textAlign: 'center' }}>
-          <img src={imageUrl} alt={imageAlt || 'Picture for this task'} style={{ maxWidth: '100%', maxHeight: 360, display: 'block', margin: '0 auto' }} />
+          <img src={imageUrl} alt={imageAlt || 'Picture for this task'} loading="lazy" style={{ maxWidth: '100%', maxHeight: 360, display: 'block', margin: '0 auto' }} />
         </div>
       )}
 

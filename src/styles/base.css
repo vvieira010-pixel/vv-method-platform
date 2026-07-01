@@ -182,8 +182,8 @@ p {
 .text-center { text-align: center; }
 .text-right { text-align: right; }
 .cursor-pointer { cursor: pointer; }
-.transition { transition: all var(--transition-base); }
-.transition-fast { transition: all var(--transition-fast); }
+.transition { transition: transform var(--transition-base), opacity var(--transition-base); }
+.transition-fast { transition: transform var(--transition-fast), opacity var(--transition-fast); }
 
 /* Body text */
 .text-body   { font-size: var(--text-sm); line-height: 1.6; color: var(--text-2); }
@@ -282,7 +282,7 @@ p {
 .cr-inform { margin-top: 6px; font-size: var(--text-xs); color: var(--accent); }
 
 /* Skill toggle button */
-.cr-skill-btn { padding: var(--space-3); border-radius: var(--radius-sm); border: 2px solid var(--border); background: var(--surface); cursor: pointer; transition: all var(--transition-fast); text-align: left; width: 100%; }
+.cr-skill-btn { padding: var(--space-3); border-radius: var(--radius-sm); border: 2px solid var(--border); background: var(--surface); cursor: pointer; transition: border-color var(--transition-fast), background var(--transition-fast); text-align: left; width: 100%; }
 .cr-skill-btn:hover { border-color: var(--accent-soft-55); }
 .cr-skill-btn--active { border-color: var(--accent); background: var(--accent-subtle); }
 .cr-skill-check { width: 18px; height: 18px; border: 2px solid var(--border); background: transparent; display: grid; place-items: center; flex-shrink: 0; }

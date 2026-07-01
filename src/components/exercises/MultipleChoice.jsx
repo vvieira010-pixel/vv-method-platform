@@ -1,54 +1,34 @@
 import { useState } from 'react';
-
-const TEAL = 'var(--accent)';
-const NAVY = 'var(--accent-text)';
+import { TEAL, NAVY, optionBaseStyle, MET_SECTION_STYLES } from './shared.js';
 
 const MET_SECTION_CONFIG = {
-  grammar: {
+  grammar: { ...MET_SECTION_STYLES.grammar,
     label: 'Reading Part 1 — Grammar',
-    color: 'var(--ex-cat-purple-text)',
-    bg: 'var(--ex-cat-purple-bg)',
-    border: 'var(--ex-cat-purple-border)',
     tip: 'Choose the option that fits both meaning AND structure. Check: tense · subject–verb agreement · articles · prepositions · modals · connectors · word form.',
     trap: 'Choosing an option that sounds familiar but does not fit grammatically.',
   },
-  listening_p1: {
+  listening_p1: { ...MET_SECTION_STYLES.listening_p1,
     label: 'Listening Part 1 — Short Conversation',
-    color: 'var(--ex-cat-sky-text)',
-    bg: 'var(--ex-cat-sky-bg)',
-    border: 'var(--ex-cat-sky-border)',
     tip: 'Listen for: main point · speaker intention · specific detail · implied meaning. Do not choose an answer based on one word — listen to the whole exchange.',
     trap: 'Choosing based on one familiar word instead of the overall meaning.',
   },
-  listening_p2: {
+  listening_p2: { ...MET_SECTION_STYLES.listening_p2,
     label: 'Listening Part 2 — Longer Conversation',
-    color: 'var(--ex-cat-sky-text)',
-    bg: 'var(--ex-cat-sky-bg)',
-    border: 'var(--ex-cat-sky-border)',
     tip: 'Listen for: main topic · sequence of events · problem and solution · what the speakers agree or disagree about · what a speaker will probably do next.',
     trap: 'Forgetting earlier information by the time the questions appear.',
   },
-  listening_p3: {
+  listening_p3: { ...MET_SECTION_STYLES.listening_p3,
     label: 'Listening Part 3 — Short Talk',
-    color: 'var(--ex-cat-sky-text)',
-    bg: 'var(--ex-cat-sky-bg)',
-    border: 'var(--ex-cat-sky-border)',
     tip: 'Listen for: purpose of the talk · main idea · key detail · reason · speaker attitude · what happens next. Do not focus only on isolated words.',
     trap: 'Missing the purpose of the talk and focusing only on isolated details.',
   },
-  reading_p2: {
+  reading_p2: { ...MET_SECTION_STYLES.reading_p2,
     label: 'Reading Part 2 — Single Text',
-    color: 'var(--ex-correct-text)',
-    bg: 'var(--ex-selected-bg)',
-    border: 'var(--ex-selected-border)',
     tip: 'Find: main idea · specific detail · vocabulary in context · reference words (it/they/this) · inference · author purpose. Manage your time — 5 questions per text.',
     trap: 'Reading too slowly and spending too much time on one text.',
   },
-  reading_p3: {
+  reading_p3: { ...MET_SECTION_STYLES.reading_p3,
     label: 'Reading Part 3 — Multiple Texts',
-    color: 'var(--ex-correct-text)',
-    bg: 'var(--ex-selected-bg)',
-    border: 'var(--ex-selected-border)',
     tip: 'Three related texts — look for: which text says a specific idea · how texts are similar or different · what writers agree or disagree about · inference across texts.',
     trap: 'Treating the three texts separately and missing cross-text questions.',
   },
@@ -69,26 +49,20 @@ export default function MultipleChoice({ exercise, onComplete }) {
   }
 
   function getOptionStyle(i) {
-    const base = {
-      display: 'flex', alignItems: 'center', gap: 12,
-      padding: '12px 16px', borderRadius: 'var(--radius-sm, 6px)',
-      border: '1.5px solid', cursor: submitted ? 'default' : 'pointer',
-      transition: 'all 0.15s', fontSize: 'var(--text-sm)', lineHeight: 1.5,
-      fontFamily: 'var(--font-ui)',
-    };
+    const base = { ...optionBaseStyle(), cursor: submitted ? 'default' : 'pointer' };
     if (!submitted) {
       if (selected === i) return { ...base, borderColor: TEAL, background: 'var(--ex-selected-bg)', color: NAVY };
       return { ...base, borderColor: 'var(--border)', background: 'var(--surface)', color: 'var(--text)' };
     }
     if (i === correct) return { ...base, borderColor: 'var(--ex-correct-strong)', background: 'var(--ex-correct-bg)', color: 'var(--ex-correct-text)' };
-    if (i === selected && !isCorrect) return { ...base, borderColor: 'var(--danger)', background: 'var(--ex-wrong-bg)', color: 'var(--ex-wrong-text)' };
+    if (i === selected) return { ...base, borderColor: 'var(--danger)', background: 'var(--ex-wrong-bg)', color: 'var(--ex-wrong-text)' };
     return { ...base, borderColor: 'var(--divider)', background: 'var(--surface)', color: 'var(--muted)', opacity: 0.6 };
   }
 
   function getMarker(i) {
     if (!submitted) return selected === i ? '◉' : '○';
     if (i === correct) return '✓';
-    if (i === selected && !isCorrect) return '✗';
+    if (i === selected) return '✗';
     return String.fromCharCode(65 + i);
   }
 
@@ -130,7 +104,7 @@ export default function MultipleChoice({ exercise, onComplete }) {
 
       {imageUrl && (
         <div style={{ marginBottom: 16, border: '1px solid var(--border)', borderRadius: 'var(--radius-sm, 6px)', overflow: 'hidden', background: 'var(--ex-panel-bg)', textAlign: 'center' }}>
-          <img src={imageUrl} alt={imageAlt || 'Image for this question'} style={{ maxWidth: '100%', maxHeight: 320, display: 'block', margin: '0 auto' }} />
+          <img src={imageUrl} alt={imageAlt || 'Image for this question'} loading="lazy" style={{ maxWidth: '100%', maxHeight: 320, display: 'block', margin: '0 auto' }} />
         </div>
       )}
 

@@ -48,7 +48,12 @@ export function readStoredSupabaseSession(storage = localStorage) {
     if (!raw) return null;
     const session = JSON.parse(raw);
     if (!session?.access_token) return null;
-    if (session.expires_at && session.expires_at <= Math.floor(Date.now() / 1000)) {
+    // Stale session with no valid expiration — clear it.
+    if (!session.expires_at) {
+      storage.removeItem(SESSION_KEY);
+      return null;
+    }
+    if (session.expires_at <= Math.floor(Date.now() / 1000)) {
       storage.removeItem(SESSION_KEY);
       return null;
     }
@@ -73,6 +78,43 @@ export function storeSupabaseSession(session, storage = localStorage) {
 
 export function clearStoredSupabaseSession(storage = localStorage) {
   storage.removeItem(SESSION_KEY);
+}
+
+/**
+ * Refresh an expired (or expiring) Supabase session using its refresh_token.
+ * Calls POST /auth/v1/token?grant_type=refresh_token which returns a new
+ * { access_token, refresh_token, expires_in, ... }. On success the stored
+ * session is updated in place and the new session object is returned.
+ * Returns null if the refresh fails (user must sign in again).
+ */
+export async function refreshSupabaseSession() {
+  const cfg = getSupabaseConfig();
+  if (!cfg.isConfigured) return null;
+  const stored = readStoredSupabaseSession();
+  if (!stored?.refresh_token) return null;
+  try {
+    const res = await fetch(`${cfg.url}/auth/v1/token?grant_type=refresh_token`, {
+      method: 'POST',
+      headers: { apikey: cfg.anonKey, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refresh_token: stored.refresh_token }),
+    });
+    if (!res.ok) {
+      clearStoredSupabaseSession();
+      return null;
+    }
+    const data = await res.json();
+    const session = {
+      access_token: data.access_token,
+      refresh_token: data.refresh_token || '',
+      expires_at: Math.floor(Date.now() / 1000) + Number(data.expires_in || 3600),
+      user: stored.user,
+    };
+    storeSupabaseSession(session);
+    return session;
+  } catch {
+    clearStoredSupabaseSession();
+    return null;
+  }
 }
 
 /**

@@ -182,12 +182,12 @@ export default function StudentHomework({ student }) {
 
   return (
     <div className="student-homework-page">
-      <section className="student-homework-hero">
-        <div className="student-homework-hero-copy">
-          <span className="student-homework-hero-kicker">Homework</span>
+      <section className="student-hero bg-grain fade-up">
+        <div className="student-hero-copy">
+          <p className="student-hero-kicker">Homework</p>
           <h1>Assigned practice</h1>
         </div>
-        <span className="student-homework-hero-badge">{homework.length} assigned</span>
+        <span className="student-hero-badge">{homework.length} assigned</span>
       </section>
 
       {homework.length === 0 && (
@@ -222,44 +222,47 @@ export default function StudentHomework({ student }) {
         structuredExercises.forEach(e => { typeSummary[e.type] = (typeSummary[e.type] || 0) + 1; });
 
         return (
-          <article key={h.id} className={`student-homework-card student-homework-card--${statusTone}${isExpanded ? ' is-expanded' : ''}`}>
-            <button className="student-homework-card-head" onClick={() => toggleHomework(h)}>
-              <div className="student-homework-card-orb">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                  <polyline points="14 2 14 8 20 8" />
-                  <line x1="16" y1="13" x2="8" y2="13" />
-                  <line x1="16" y1="17" x2="8" y2="17" />
-                  <polyline points="10 9 9 9 8 9" />
-                </svg>
-              </div>
-              <div className="student-homework-title">
-                <h2>{h.title || 'Homework task'}</h2>
-                <div className="student-homework-meta">
-                  {isStructured ? (
-                    <>
-                      <span>{structuredExercises.length} exercise{structuredExercises.length !== 1 ? 's' : ''}</span>
-                      {Object.keys(typeSummary).map(type => (<ExTypeBadge key={type} typeId={type} />))}
-                    </>
-                  ) : (
-                    <span>{h.type}</span>
-                  )}
-                  {h.dueDate && <span>Due {new Date(h.dueDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</span>}
-                  {draftMeta[h.id]?.updatedAt && !submitted && !review && (
-                    <span>Saved {new Date(draftMeta[h.id].updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                  )}
+          <article key={h.id} className={`student-panel student-panel--${statusTone}${isExpanded ? ' is-expanded' : ''}`}>
+            <div className="student-panel-head">
+              <button className="student-panel-head-btn" onClick={() => toggleHomework(h)} style={{ background: 'none', border: 'none', padding: 0, textAlign: 'left', color: 'inherit', cursor: 'pointer', width: '100%', display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div className="student-homework-card-orb">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                    <polyline points="14 2 14 8 20 8" />
+                    <line x1="16" y1="13" x2="8" y2="13" />
+                    <line x1="16" y1="17" x2="8" y2="17" />
+                    <polyline points="10 9 9 9 8 9" />
+                  </svg>
                 </div>
-              </div>
+                <div className="student-homework-title">
+                  <h2 style={{ margin: 0 }}>{h.title || 'Homework task'}</h2>
+                  <div className="student-homework-meta">
+                    {isStructured ? (
+                      <>
+                        <span>{structuredExercises.length} exercise{structuredExercises.length !== 1 ? 's' : ''}</span>
+                        {Object.keys(typeSummary).map(type => (<ExTypeBadge key={type} typeId={type} />))}
+                      </>
+                    ) : (
+                      <span>{h.type}</span>
+                    )}
+                    {h.dueDate && <span>Due {new Date(h.dueDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</span>}
+                    {draftMeta[h.id]?.updatedAt && !submitted && !review && (
+                      <span>Saved {new Date(draftMeta[h.id].updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                    )}
+                  </div>
+                </div>
+              </button>
               <span className={`student-homework-status student-homework-status--${statusTone}`}>{statusLabel}</span>
-            </button>
-
+            </div>
+ 
             {isExpanded && (
-              <div className="student-homework-content">
+              <div className="student-panel-body">
                 <div className="hw-print-row">
                   <Button variant="ghost" size="sm" onClick={() => printHomework(h, { studentName: student?.name })}>
                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><Icon_print /> Print</span>
                   </Button>
                 </div>
+
 
                 {review && !selfAssessed[h.id] && (
                   <div className="hw-self-assess">
@@ -319,15 +322,9 @@ export default function StudentHomework({ student }) {
                   </div>
                 )}
                 {isStructured && !submitted && !review && (
-                  <div style={{
-                    marginBottom: 18,
-                    padding: '14px 16px',
-                    background: 'var(--surface)',
-                    border: '1px solid var(--accent-soft)',
-                    borderRadius: 'var(--radius-md)',
-                  }}>
-                    <div style={{ fontWeight: 700, fontSize: 'var(--text-sm)', color: 'var(--primary)', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <span style={{ fontSize: 16 }}>&#9679;</span> Practice Session
+                  <div className="student-panel student-panel--primary" style={{ marginBottom: 18 }}>
+                    <div className="student-panel-head">
+                      <h2 style={{ margin: 0, fontSize: 'var(--text-sm)', fontWeight: 700 }}>Practice Session</h2>
                     </div>
                     <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-2)', lineHeight: 1.7 }}>
                       <strong>How it works:</strong>

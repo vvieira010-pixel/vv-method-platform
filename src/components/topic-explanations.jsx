@@ -1,10 +1,17 @@
-import { useState, useRef, useCallback } from 'react';
-import { Icon, SectionHeader } from './shared.jsx';
+import { useState } from 'react';
+import { Icon } from './shared.jsx';
 import { Button } from '../components/ui/Button.jsx';
-import { Card } from '../components/ui/Card.jsx';
-import { exercisePreview } from '../lib/exercise-types.js';
 
-/* ── TopicContentRenderer — renders a topic explanation for the student ── */
+function renderBold(text) {
+  const parts = text.split(/(\*\*.+?\*\*)/g);
+  return parts.map((part, i) => {
+    if (part.startsWith('**') && part.endsWith('**')) {
+      return <strong key={i}>{part.slice(2, -2)}</strong>;
+    }
+    return part;
+  });
+}
+
 function parseTopicContent(text) {
   if (!text) return [];
   const lines = text.split('\n');
@@ -18,12 +25,9 @@ function parseTopicContent(text) {
   lines.forEach(line => {
     const trimmed = line.trim();
 
-    // Bold-wrapped inline text rendered as <strong>
-    const withBold = trimmed.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-
     // Bullet list
     if (/^[-•*]\s/.test(trimmed)) {
-      const text = withBold.replace(/^[-•*]\s/, '');
+      const text = trimmed.replace(/^[-•*]\s/, '');
       if (currentList?.type !== 'ul') { flushList(); currentList = { type: 'ul', items: [] }; }
       currentList.items.push(text);
       return;
@@ -31,7 +35,7 @@ function parseTopicContent(text) {
 
     // Numbered list
     if (/^\d+[.)]\s/.test(trimmed)) {
-      const text = withBold.replace(/^\d+[.)]\s/, '');
+      const text = trimmed.replace(/^\d+[.)]\s/, '');
       if (currentList?.type !== 'ol') { flushList(); currentList = { type: 'ol', items: [] }; }
       currentList.items.push(text);
       return;
@@ -39,7 +43,7 @@ function parseTopicContent(text) {
 
     flushList();
     if (trimmed) {
-      blocks.push({ type: 'p', text: withBold });
+      blocks.push({ type: 'p', text: trimmed });
     } else {
       blocks.push({ type: 'br' });
     }
@@ -55,15 +59,15 @@ export function TopicContentRenderer({ content }) {
     <div style={{ lineHeight: 1.7, fontSize: 'var(--text-sm)' }}>
       {blocks.map((b, i) => {
         if (b.type === 'br') return <br key={i} />;
-        if (b.type === 'p') return <p key={i} dangerouslySetInnerHTML={{ __html: b.text }} style={{ margin: '0 0 6px' }} />;
+        if (b.type === 'p') return <p key={i} style={{ margin: '0 0 6px' }}>{renderBold(b.text)}</p>;
         if (b.type === 'ul') return (
           <ul key={i} style={{ margin: '4px 0', paddingLeft: 20 }}>
-            {b.items.map((item, j) => <li key={j} dangerouslySetInnerHTML={{ __html: item }} style={{ marginBottom: 2 }} />)}
+            {b.items.map((item, j) => <li key={j} style={{ marginBottom: 2 }}>{renderBold(item)}</li>)}
           </ul>
         );
         if (b.type === 'ol') return (
           <ol key={i} style={{ margin: '4px 0', paddingLeft: 20 }}>
-            {b.items.map((item, j) => <li key={j} dangerouslySetInnerHTML={{ __html: item }} style={{ marginBottom: 2 }} />)}
+            {b.items.map((item, j) => <li key={j} style={{ marginBottom: 2 }}>{renderBold(item)}</li>)}
           </ol>
         );
         return null;
@@ -188,7 +192,7 @@ export function TopicExplanationsEditor({ topics = [], onChange, onAiGenerate })
 
                 <details style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>
                   <summary style={{ cursor: 'pointer', userSelect: 'none' }}>
-                    {t.aiPrompt ? '✏️ Custom AI prompt set' : 'AI prompt (optional)'}
+                    {t.aiPrompt ? <><Icon.spark size={11} /> Custom AI prompt set</> : 'AI prompt (optional)'}
                   </summary>
                   <textarea
                     value={t.aiPrompt || ''}

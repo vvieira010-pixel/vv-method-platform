@@ -43,13 +43,19 @@ export default function TeacherDashboard({ students, onNavigate, teacherName = '
     let live = true;
     async function load() {
       const todayStr = new Date().toISOString().slice(0, 10);
-      const [events, , , entries] = await Promise.all([
+      const results = await Promise.allSettled([
         getClassEvents(),
         getAllSubmissions(),
         getReviews(),
-        Promise.all(students.map(async (s) => [s.id, await getStudentCycleState(s.id)])),
+        Promise.allSettled(students.map(s =>
+          getStudentCycleState(s.id).then(state => [s.id, state]).catch(() => [s.id, null])
+        )),
       ]);
       if (!live) return;
+      const events = results[0].status === 'fulfilled' ? results[0].value : [];
+      const entries = results[3].status === 'fulfilled'
+        ? results[3].value.filter(r => r.status === 'fulfilled' && r.value[1]).map(r => r.value)
+        : [];
       const todays = (events || []).filter(e => e.date === todayStr && e.status !== 'canceled');
       setTodayClasses(todays);
       setClassesToday(todays.length);
