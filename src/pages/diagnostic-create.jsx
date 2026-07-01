@@ -654,7 +654,7 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
                               <span className="text-2xs text-muted">Turns:</span>
                               <input type="number" min={1} max={30} value={inlineSkills[countKey]}
                                 onChange={e => setInlineSkills(s => ({ ...s, [countKey]: Math.max(1, Number(e.target.value) || 1) }))}
-                                style={{ width: 56, minHeight: 44, padding: '2px 4px', border: '1px solid var(--border)', borderRadius: 0, fontSize: 11, textAlign: 'center' }} />
+                                className="skill-count-input" />
                             </div>
                           )}
                         </button>
@@ -662,10 +662,10 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
                     })}
                   </div>
                   {evaluatedSkills.length === 0 && (
-                    <p className="card-row-meta" style={{ color: 'var(--danger)', marginTop: 'var(--space-2)' }}><Icon.warning size={12} /> Select at least one skill that was covered in class.</p>
+                    <p className="card-row-meta mt-2" style={{ color: 'var(--danger)' }}><Icon.warning size={12} /> Select at least one skill that was covered in class.</p>
                   )}
                   {!inlineTranscript.trim() && !inlineTeacherNotes.trim() && evaluatedSkills.length > 0 && (
-                    <p className="card-row-meta" style={{ color: 'var(--warning)', marginTop: 'var(--space-2)' }}><Icon.warning size={12} /> Paste a transcript or add teacher notes — the AI needs evidence to diagnose.</p>
+                    <p className="card-row-meta mt-2" style={{ color: 'var(--warning)' }}><Icon.warning size={12} /> Paste a transcript or add teacher notes — the AI needs evidence to diagnose.</p>
                   )}
                 </div>
               )}
@@ -700,7 +700,7 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
             {/* Left: AI data summary */}
             <div>
               <SectionHeader title="AI Diagnosis Data" icon={<Icon.diagnose size={14} />} />
-              <Card small style={{ marginTop: 8 }}>
+              <Card small className="mt-2">
                 {sections.skillDiagnosis?.content && (() => {
                   const skills = buildSnapshot(sections.skillDiagnosis.content);
                   return (
@@ -708,9 +708,9 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
                       {skills.map(s => {
                         const isLowConf = s.confidenceLabel && !['Diagnostic estimate', 'Mock-test estimate', 'Official score imported manually'].includes(s.confidenceLabel);
                         return (
-                          <div key={s.section} style={{ padding: '8px 10px', border: '1px solid ' + (isLowConf ? 'var(--warning)' : 'var(--divider)'), background: 'var(--surface)' }}>
+                          <div key={s.section} className={`dx-skill-card${isLowConf ? ' dx-skill-card--warn' : ''}`}>
                             <div className="text-2xs text-muted text-uppercase">{s.section}</div>
-                            <div className="font-bold" style={{ fontSize: 18 }}>{s.score_0_80 ?? '—'}</div>
+                            <div className="font-bold text-lg">{s.score_0_80 ?? '—'}</div>
                             {s.confidenceLabel && (
                               <div className={`text-2xs mt-1 ${isLowConf ? 'text-warning text-italic' : 'text-muted'}`}>{s.confidenceLabel}</div>
                             )}
@@ -724,7 +724,7 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
                   <div className="mt-3">
                     <div className="text-2xs font-bold text-muted text-uppercase letter-spacing-01 mb-2">AI Priorities</div>
                     {sections.priorityDiagnosis.content.slice(0, 3).map((p, i) => (
-                      <div key={i} className="text-xs" style={{ padding: '4px 0', borderBottom: '1px solid var(--divider)' }}>{p.skill ? <strong>{p.skill}: </strong> : ''}{p.focus || p.reason || p}</div>
+                      <div key={i} className="text-xs priority-row">{p.skill ? <strong>{p.skill}: </strong> : ''}{p.focus || p.reason || p}</div>
                     ))}
                   </div>
                 )}
@@ -757,14 +757,14 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
           {/* ── Inquiry fields ── */}
           <div className="mt-6">
             <SectionHeader title="Teacher Inquiry" icon={<Icon.progress size={14} />} />
-            <p className="text-xs text-muted" style={{ margin: '4px 0 12px' }}>
+            <p className="text-xs text-muted mb-3" style={{ marginTop: 4 }}>
               Optional. Use when tracking teaching impact across a cycle of diagnosis → intervention → re-diagnosis.
             </p>
             <Card small>
               <div className="flex-col-gap4">
                 <div className="flex-row-gap3">
                   <input type="checkbox" id="isBaseline" checked={isBaseline} onChange={e => setIsBaseline(e.target.checked)}
-                    style={{ width: 18, height: 18, accentColor: '#14536b' }} />
+                    className="dx-checkbox" />
                   <label htmlFor="isBaseline" className="text-sm font-semibold">Mark as baseline diagnosis (first measurement before intervention)</label>
                 </div>
                 {isBaseline && (
@@ -859,7 +859,7 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
                 <div className="section-body">
                   {isEditing ? (
                     <div>
-                      <textarea value={editText} onChange={e => setEditText(e.target.value)} rows={10} style={{ width: '100%', fontFamily: 'var(--font-mono)', fontSize: 'var(--text-xs)', padding: 10, border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', resize: 'vertical' }} />
+                      <textarea value={editText} onChange={e => setEditText(e.target.value)} rows={10} className="dx-edit-textarea" />
                       <div className="flex gap-2 mt-2">
                         <Button variant="primary" size="sm" onClick={() => saveEdit(key)}>Save Edit</Button>
                         <Button variant="ghost" size="sm" onClick={() => setEditingSection(null)}>Cancel</Button>
@@ -938,19 +938,13 @@ function DiagnosisStepBar({ step }) {
         return (
           <div key={s.id} className="step-bar-item">
             {i > 0 && (
-              <div className="step-bar-connector" style={{ background: done ? 'var(--accent)' : 'var(--divider)' }} />
+              <div className={`step-bar-connector${done ? ' step-bar-connector--done' : ''}`} />
             )}
-            <div className="step-bar-dot" style={{
-              background: (active || done) ? 'var(--accent)' : 'var(--divider)',
-              border: active ? '2px solid var(--primary)' : 'none',
-            }}>
+            <div className={`step-bar-dot${done ? ' step-bar-dot--done' : ''}${active ? ' step-bar-dot--active' : ''}`}>
               {done && <Icon.check size={10} color="#fff" />}
-              {active && <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#fff' }} />}
+              {active && <div className="step-bar-dot-inner" />}
             </div>
-            <span className="step-bar-label" style={{
-              color: active ? 'var(--primary)' : done ? 'var(--accent)' : 'var(--muted)',
-              fontWeight: active ? 700 : 400,
-            }}>{s.label}</span>
+            <span className={`step-bar-label${done ? ' step-bar-label--done' : ''}${active ? ' step-bar-label--active' : ''}`}>{s.label}</span>
           </div>
         );
       })}

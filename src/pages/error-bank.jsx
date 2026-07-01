@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Icon, SectionHeader, Pill, Avatar, S_DARK } from '../components/shared.jsx';
+import { Icon, Pill, Avatar } from '../components/shared.jsx';
 import { Button } from '../components/ui/Button.jsx';
 import { Card } from '../components/ui/Card.jsx';
 import { getErrorBank, markErrorSolved, markErrorPracticed } from '../lib/workflow.js';
@@ -56,24 +56,24 @@ export default function ErrorBankPage({ students, workspaceQuery = '' }) {
   const solvedCount = errors.filter((e) => e.status === 'solved').length;
 
   return (
-    <div className="page-container" style={S.shell}>
-      <section style={S.hero}>
+    <div className="page-container">
+      <section className="hero-section hero-section--errors">
         <div>
-          <div style={S.heroTag}>Quality Repository</div>
-          <h1 style={S.headline}>Error Bank Workspace</h1>
-          <p style={S.sub}>Track recurring mistakes, move them through practice, and close solved patterns with clear teacher control.</p>
+          <div className="hero-tag">Quality Repository</div>
+          <h1 className="page-headline" style={{ color: '#fff' }}>Error Bank Workspace</h1>
+          <p className="page-sub" style={{ color: 'rgba(255,255,255,.78)', maxWidth: 620 }}>Track recurring mistakes, move them through practice, and close solved patterns with clear teacher control.</p>
         </div>
       </section>
 
-      <div style={S.kpiGrid}>
+      <div className="kpi-grid kpi-grid--wide">
         <RepoKpi label="Active patterns" value={activeCount} icon={<Icon.warning size={15} />} tone="danger" />
         <RepoKpi label="Practicing" value={practicingCount} icon={<Icon.spark size={15} />} tone="info" />
         <RepoKpi label="Solved" value={solvedCount} icon={<Icon.check size={15} />} tone="success" />
         <RepoKpi label="Total records" value={errors.length} icon={<Icon.doc size={15} />} tone="neutral" />
       </div>
 
-      <Card style={{ padding: 14, marginBottom: 16 }}>
-        <div style={S.filterGrid}>
+      <Card className="card-p-3 mb-3">
+        <div className="filter-grid">
           <input className="input" value={localSearch} onChange={(e) => setLocalSearch(e.target.value)} placeholder="Search student, error, correction…" />
           <select className="input" value={filterStudent} onChange={(e) => setFilterStudent(e.target.value)}>
             <option value="">All students</option>
@@ -93,40 +93,40 @@ export default function ErrorBankPage({ students, workspaceQuery = '' }) {
       </Card>
 
       {loading ? (
-        <Card style={{ padding: 28, textAlign: 'center' }}>
+        <Card className="empty-panel">
           <p style={{ color: 'var(--muted)', margin: 0 }}>Loading error bank…</p>
         </Card>
       ) : filtered.length === 0 ? (
-        <Card style={{ padding: 28, textAlign: 'center' }}>
+        <Card className="empty-panel">
           <p style={{ color: 'var(--muted)', margin: 0 }}>No errors match current filters. Errors are added when diagnosis is approved.</p>
         </Card>
       ) : (
-        <div style={S.repoGrid}>
+        <div className="repo-grid">
           {filtered.map((err) => {
             const student = students.find((s) => s.id === err.studentId);
             return (
-              <Card key={err.id} style={{ padding: 16 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+              <Card key={err.id} className="card-p-4">
+                <div className="flex items-center gap-3 min-w-0">
                   <Avatar name={student?.name || '?'} size={34} />
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={S.rowTitle}>{student?.name || 'Unknown student'}</div>
-                    <div style={S.rowSub}>{new Date(err.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</div>
+                  <div className="flex-1 min-w-0">
+                    <div className="row-title">{student?.name || 'Unknown student'}</div>
+                    <div className="row-sub">{new Date(err.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</div>
                   </div>
                   <Pill tone="muted">{err.type}</Pill>
                   <Pill tone={STATUS_TONE[err.status] || 'muted'}>{err.status}</Pill>
                 </div>
 
-                <div style={S.patternCard}>
-                  <div style={{ color: 'var(--danger)', fontWeight: 700, fontSize: 'var(--text-sm)' }}>{err.error}</div>
-                  <div style={{ color: 'var(--muted)', fontSize: 'var(--text-xs)' }}>to</div>
-                  <div style={{ color: 'var(--success)', fontWeight: 700, fontSize: 'var(--text-sm)' }}>{err.correct}</div>
+                <div className="pattern-card">
+                  <div className="text-sm font-bold" style={{ color: 'var(--danger)' }}>{err.error}</div>
+                  <div className="text-xs text-muted">to</div>
+                  <div className="text-sm font-bold" style={{ color: 'var(--success)' }}>{err.correct}</div>
                 </div>
 
-                <p style={{ color: 'var(--text-2)', fontSize: 'var(--text-xs)', lineHeight: 1.5, margin: '10px 0 0' }}>
+                <p className="text-xs" style={{ color: 'var(--text-2)', lineHeight: 1.5, margin: '10px 0 0' }}>
                   {err.explanation || 'No explanation saved.'}
                 </p>
 
-                <div style={{ display: 'flex', gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
+                <div className="flex gap-2 mt-3 flex-wrap">
                   {err.status === 'active' && <Button variant="ghost" size="sm" onClick={() => handlePractice(err)}>Mark Practicing</Button>}
                   {err.status !== 'solved' && <Button variant="primary" size="sm" onClick={() => handleSolved(err)}>Mark Solved</Button>}
                 </div>
@@ -150,44 +150,12 @@ function RepoKpi({ label, value, icon, tone }) {
 
   return (
     <Card style={{ padding: 14, background: bg }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+      <div className="flex gap-1 items-center">
         <span style={{ color: 'var(--accent)' }}>{icon}</span>
-        <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</span>
+        <span className="text-2xs text-muted text-uppercase letter-spacing-01">{label}</span>
       </div>
-      <div style={{ marginTop: 8, fontSize: 'var(--text-2xl)', fontWeight: 800, color: 'var(--primary)' }}>{value}</div>
+      <div className="td-kpi-value" style={{ marginTop: 8 }}>{value}</div>
     </Card>
   );
 }
-
-const S = {
-  shell: { padding: '28px 20px' },
-  hero: {
-    display: 'flex',
-    alignItems: 'flex-end',
-    justifyContent: 'space-between',
-    gap: 12,
-    flexWrap: 'wrap',
-    marginBottom: 18,
-    padding: 18,
-    borderRadius: 0,
-    background: 'linear-gradient(130deg, #102131 0%, #1a3148 45%, #2e5f75 100%)',
-    color: '#fff',
-  },
-  heroTag: { fontSize: 'var(--text-xs)', letterSpacing: '0.1em', textTransform: 'uppercase', color: '#9fd6d6', fontWeight: 700, marginBottom: 6 },
-  ...S_DARK,
-  kpiGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 10, marginBottom: 16 },
-  filterGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: 10 },
-  repoGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 10 },
-  rowTitle: { fontWeight: 700, fontSize: 'var(--text-base)' },
-  rowSub: { fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: 2 },
-  patternCard: {
-    marginTop: 12,
-    padding: '10px 12px',
-    borderRadius: 3,
-    border: '1px solid var(--divider)',
-    background: '#fff',
-    display: 'grid',
-    gap: 4,
-  },
-};
 

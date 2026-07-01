@@ -57,7 +57,7 @@ function MemoCard({ kicker, title, text }) {
     <article className="student-panel student-panel--primary student-panel-mb">
       <span className="student-panel-kicker">{kicker}</span>
       <h2>{title}</h2>
-      <p className="student-memo-text" style={{ WebkitLineClamp: expanded ? 'unset' : MEMO_CLAMP }}>
+      <p className={`student-memo-text${expanded ? ' student-memo-text--expanded' : ''}`}>
         {text}
       </p>
       {needsClamp && (
@@ -329,7 +329,7 @@ export default function StudentHome({ student, onTab }) {
         );
       })()}
 
-      <p style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginBottom: 8, textAlign: 'center', fontWeight: 500 }}>
+      <p className="student-practice-caption mb-2">
         Explore the Practice Studio — a bank of exercises to keep you sharp, renewed every week.
       </p>
       <div className="student-practice-row fade-up" style={{ '--delay': '0.2s' }}>
@@ -377,23 +377,17 @@ export default function StudentHome({ student, onTab }) {
 
             <section className="student-panel student-panel--primary mb-3">
             <div className="student-panel-head">
-              <h2 style={{ fontSize: 'var(--text-lg)', margin: 0 }}>Learning Insights</h2>
+              <h2 className="text-lg" style={{ margin: 0 }}>Learning Insights</h2>
             </div>
-            <div style={{ height: 200, marginTop: 16 }}>
+            <div className="sh-chart-wrap">
               {developmentData.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={developmentData} margin={{ top: 5, right: 5, left: -30, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--divider)" />
                     <XAxis dataKey="name" fontSize={10} tickLine={false} axisLine={false} />
                     <YAxis fontSize={10} tickLine={false} axisLine={false} domain={[0, 100]} />
-                    <Tooltip 
+                    <Tooltip
                       cursor={{ fill: 'var(--accent-soft-10)' }}
-                      contentStyle={{ 
-                        backgroundColor: 'var(--surface)', 
-                        border: '1px solid var(--border)', 
-                        borderRadius: 'var(--radius-sm)',
-                        fontSize: 'var(--text-xs)'
-                      }}
                       formatter={(value, name) => [value + '%', name]}
                     />
                     <Bar dataKey="development" name="Development" fill="var(--primary)" radius={[4, 4, 0, 0]} />
@@ -401,7 +395,7 @@ export default function StudentHome({ student, onTab }) {
                   </BarChart>
                 </ResponsiveContainer>
               ) : (
-                <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--muted)', fontSize: 'var(--text-sm)' }}>
+                <div className="sh-chart-empty">
                   Complete homework or get a diagnosis to see your development trend.
                 </div>
               )}
@@ -474,12 +468,11 @@ export default function StudentHome({ student, onTab }) {
               {editingGoal ? (
                 <div>
                   <textarea
-                    className="student-goal-input"
+                    className="student-goal-input resize-y"
                     value={goalDraft}
                     onChange={e => setGoalDraft(e.target.value)}
                     placeholder="e.g. I want to improve my speaking fluency and expand my healthcare vocabulary."
                     rows={3}
-                    style={{ resize: 'vertical' }}
                     aria-label="Your weekly goal"
                   />
                   <div className="flex gap-2 mt-2">
@@ -499,24 +492,23 @@ export default function StudentHome({ student, onTab }) {
                     </button>
                     <button
                       type="button"
-                      className="student-text-action"
+                      className="student-text-action self-center"
                       onClick={() => { setGoalDraft(goal); setEditingGoal(false); }}
-                      style={{ alignSelf: 'center' }}
                     >
                       Cancel
                     </button>
                   </div>
                 </div>
               ) : goal ? (
-                <p style={{ margin: 0, fontSize: 'var(--text-sm)', color: 'var(--text-muted)' }}>{goal}</p>
+                <p className="text-sm text-text-2" style={{ margin: 0 }}>{goal}</p>
               ) : (
-                <p style={{ margin: 0, fontSize: 'var(--text-sm)', color: 'var(--muted)' }}>
+                <p className="text-sm text-muted" style={{ margin: 0 }}>
                   Tell your teacher what you'd like to work on. Your goal will appear in your next diagnosis.
                 </p>
               )}
             </article>
 
-          <article className="student-panel" style={{ borderRadius: 0 }}>
+          <article className="student-panel sh-panel-flush">
             <div className="student-panel-head">
               <div>
                 <h2>Evaluated skills</h2>
@@ -533,7 +525,7 @@ export default function StudentHome({ student, onTab }) {
               <div className="student-teacher-note">
                 <span className="student-teacher-note-kicker student-panel-kicker">Teacher note</span>
                 <p className="student-teacher-note-text">{latestFeedback.classFocus || latestFeedback.finalNote || 'Your teacher has approved new feedback for you.'}</p>
-                <button className="student-text-action" style={{ fontSize: 'var(--text-xs)' }} onClick={() => onTab('feedback')}>Read full feedback →</button>
+                <button className="student-text-action text-xs" onClick={() => onTab('feedback')}>Read full feedback →</button>
               </div>
             )}
           </article>

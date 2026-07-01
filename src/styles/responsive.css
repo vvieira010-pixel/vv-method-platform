@@ -1,0 +1,279 @@
+/* ══════════════════════════════════════════════════════════════════
+   12. RESPONSIVE — extracted from components.css
+   ══════════════════════════════════════════════════════════════════ */
+
+/* ── Tablet / small desktop (≤1024px) ──────────────────────────── */
+@media (max-width: 1024px) {
+  .shell-topbar {
+    padding: 0 4px;
+  }
+  .shell-brand {
+    padding: 0 6px 0 4px;
+  }
+  .shell-nav-btn {
+    padding: 4px 5px;
+    font-size: var(--text-2xs);
+  }
+
+  .td-kpi-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .student-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .student-home-side {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .student-next-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .student-hero {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .student-metrics {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* ── Mobile (≤860px) ──────────────────────────────────────────────
+     Student dashboard breakpoint ──────────────────────────────── */
+@media (max-width: 860px) {
+  .dash {
+    min-height: 100dvh;
+    padding-top: 52px;
+  }
+
+  .dash-topbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: var(--z-fixed);
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 8px;
+    padding: 8px 12px;
+    background: rgba(15, 27, 45, 0.97);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+  }
+
+  .dash-brand-name {
+    font-size: var(--text-base);
+  }
+
+  .dash-top-nav {
+    grid-column: 1 / -1;
+    order: 3;
+    gap: 6px;
+    overflow-x: auto;
+    padding-bottom: 2px;
+    scrollbar-width: none;
+  }
+
+  .dash-top-nav::-webkit-scrollbar { display: none; }
+
+  .dash-nav-btn {
+    flex: 0 0 auto;
+    min-height: 44px;
+    padding: 6px 10px;
+    white-space: nowrap;
+  }
+
+  .dash-topbar-right { min-width: 0; }
+  .dash-topbar-name { display: none; }
+
+  .dash-body {
+    padding: 12px 12px 70px;
+  }
+
+  .student-home { gap: 14px; }
+
+  .student-hero {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 12px;
+    padding: 20px 16px;
+    margin-bottom: 14px;
+  }
+
+  .student-hero h1 {
+    font-size: var(--text-3xl);
+    line-height: 1.12;
+  }
+
+  .student-hero-action {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .student-metrics {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .student-metric { padding: 14px; }
+
+  .student-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .student-panel { padding: 14px; }
+
+  .student-panel-head {
+    gap: 8px;
+    flex-direction: column;
+  }
+
+  .student-home-side {
+    display: block;
+  }
+
+  .student-next-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .student-homework-hero {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 20px 16px;
+    margin-bottom: 14px;
+    gap: 14px;
+  }
+
+  .student-homework-hero h1 {
+    font-size: var(--text-2xl);
+  }
+
+  .student-homework-hero p {
+    font-size: var(--text-sm);
+  }
+
+  .student-homework-card {
+    border: 1px solid var(--border);
+  }
+
+  .student-homework-card-head {
+    padding: 11px 10px;
+  }
+
+  .student-homework-card-orb {
+    width: 30px;
+    height: 30px;
+  }
+
+  .student-homework-card-orb svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .student-homework-title h2 {
+    font-size: var(--text-sm);
+  }
+
+  .student-homework-meta {
+    font-size: var(--text-2xs);
+    gap: 4px;
+  }
+
+  .student-homework-brief {
+    grid-template-columns: 1fr;
+  }
+
+  .student-progress-copy-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .student-stage-legend-name { min-width: 110px; }
+  .student-upcoming-date { min-width: 80px; }
+}
+
+/* ── Teacher mobile (≤768px) ───────────────────────────────────── */
+@media (max-width: 768px) {
+  .shell { display: flex; flex-direction: column; }
+
+  .shell-topbar {
+    height: 52px;
+    padding: 7px 12px;
+    justify-content: flex-start;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: var(--z-fixed);
+  }
+
+  .shell-nav, .shell-brand { display: none; }
+  .shell-mobile-title { display: block; }
+
+  .shell-main { padding-bottom: 68px; }
+
+  .shell-topbar .btn { padding: 6px 8px; min-height: 30px; }
+
+  .shell-mobile-nav {
+    display: flex;
+  }
+
+  .workflow-strip {
+    height: auto;
+    padding: 5px 0;
+    background: transparent;
+    border-bottom: 0;
+  }
+
+  .page-shell { padding: 12px 10px; }
+
+  .td-shell { padding: var(--space-4) var(--space-3); }
+  .td-headline { font-size: var(--text-3xl); }
+  .td-kpi-grid { grid-template-columns: repeat(2, 1fr); }
+
+  .td-priority-card {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .td-priority-card .btn { width: 100%; }
+  .teacher-priority-copy { min-width: 0; width: 100%; }
+
+  .card { padding: var(--space-4); }
+  .section-header { align-items: flex-start; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+  .section-header .btn { width: 100%; }
+  .btn { white-space: normal; min-height: 44px; }
+  .pill-nav { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 2px; }
+
+  .landing-hero-grid { grid-template-columns: 1fr; }
+  .landing-grid-3 { grid-template-columns: 1fr 1fr; }
+  .landing-grid-4 { grid-template-columns: 1fr 1fr; }
+
+  .quick-actions-grid { grid-template-columns: 1fr; }
+  .cycle-pipeline { grid-template-columns: 1fr; }
+}
+
+/* ── Small mobile (≤420px) ─────────────────────────────────────── */
+@media (max-width: 420px) {
+  .dash-topbar { padding-inline: 12px; }
+  .dash-body { padding-inline: 12px; }
+  .student-hero h1 { font-size: var(--text-2xl); }
+
+  .td-kpi-grid { grid-template-columns: 1fr; }
+  .td-shell { padding: var(--space-3); }
+}
+
+/* ── Extra small (≤390px) ──────────────────────────────────────── */
+@media (max-width: 390px) {
+  :root {
+    --space-4: 0.875rem;
+    --space-6: 1rem;
+  }
+}

@@ -1,0 +1,438 @@
+/* ══════════════════════════════════════════════════════════════════
+   15. DARK MODE — extracted from components.css
+   ══════════════════════════════════════════════════════════════════ */
+
+/* ── Dark mode: --primary used as a FOREGROUND color ──────────────
+   --primary (#0f1b2d navy) is not flipped in dark mode because it is also
+   used for backgrounds and borders. Where it was used as a text/icon color it
+   rendered ~1.1:1 on dark surfaces (invisible). Remap those to readable text. */
+[data-theme="dark"] .student-hero h1,
+[data-theme="dark"] .student-panel h2,
+[data-theme="dark"] .student-homework-title h2,
+[data-theme="dark"] .student-metric-copy strong,
+[data-theme="dark"] .student-metric--navy .student-metric-copy strong,
+[data-theme="dark"] .student-prep-box strong,
+[data-theme="dark"] .student-upcoming-date,
+[data-theme="dark"] .student-wide-action,
+[data-theme="dark"] .student-stage-legend-toggle,
+[data-theme="dark"] .student-stage-legend-name,
+[data-theme="dark"] .badge-primary,
+[data-theme="dark"] .text-primary,
+[data-theme="dark"] .hw-filter-btn:hover {
+  color: var(--text);
+}
+
+/* Default metric icon sits on a translucent teal tint that goes dark in dark
+   mode, use bright teal so the glyph stays legible. Every tone variant
+   (--navy/--teal/--amber/--exam/--urgent) keeps its own hardcoded LIGHT icon
+   chip and its own glyph color, so they must be excluded, forcing bright teal
+   onto a light chip would drop them to ~1.9:1. (--compact/--text don't recolor
+   the icon, so they correctly keep this fix.) */
+[data-theme="dark"] .student-metric:not(.student-metric--navy):not(.student-metric--teal):not(.student-metric--amber):not(.student-metric--exam):not(.student-metric--urgent) .student-metric-icon {
+  color: var(--accent-soft);
+}
+
+[data-theme="dark"] .student-metric--teal   .student-metric-icon { background: rgba(20,136,145,0.14); color: var(--accent-soft); }
+[data-theme="dark"] .student-metric--navy   .student-metric-icon { background: rgba(15,27,45,0.14); color: var(--text); }
+[data-theme="dark"] .student-metric--amber  .student-metric-icon { background: rgba(200,102,7,0.14);  color: var(--warning); }
+[data-theme="dark"] .student-metric--exam   .student-metric-icon { background: rgba(26,140,95,0.14);  color: var(--success); }
+[data-theme="dark"] .student-metric--urgent .student-metric-icon { background: rgba(185,28,28,0.14);  color: var(--danger); }
+[data-theme="dark"] .student-metric--exam   { border-top-color: rgba(26,140,95,0.4); }
+[data-theme="dark"] .student-metric--urgent { border-top-color: rgba(185,28,28,0.4); }
+
+[data-theme="dark"] .paper,
+[data-theme="dark"] .evidence-card {
+  background: var(--surface);
+  border-color: var(--border);
+}
+
+[data-theme="dark"] select,
+[data-theme="dark"] .select,
+[data-theme="dark"] textarea,
+[data-theme="dark"] .textarea {
+  background: var(--surface);
+  color: var(--text);
+  border-color: var(--border);
+}
+
+[data-theme="dark"] .hw-filter-btn {
+  background: var(--surface);
+  border-color: var(--border);
+  color: var(--muted);
+}
+
+[data-theme="dark"] .hw-filter-btn.active {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+}
+
+[data-theme="dark"] .hw-teacher-review,
+[data-theme="dark"] .hw-correction-note {
+  background: var(--success-bg);
+  border-color: var(--success-soft);
+}
+
+[data-theme="dark"] .hw-self-check,
+[data-theme="dark"] .hw-error-panel {
+  background: var(--faint);
+  border-color: var(--border);
+}
+
+[data-theme="dark"] .review-option {
+  background: var(--surface);
+  border-color: var(--border);
+  color: var(--text);
+}
+
+[data-theme="dark"] .review-option:hover:not(:disabled) {
+  background: rgba(20,136,145,0.10);
+}
+
+[data-theme="dark"] .lp-signin {
+  background: var(--bg);
+}
+
+[data-theme="dark"] .lp-input {
+  background: var(--surface);
+  color: var(--text);
+  border-color: var(--border);
+}
+
+[data-theme="dark"] .lp-toggle {
+  background: var(--surface);
+  border-color: var(--border);
+}
+
+[data-theme="dark"] .lp-mode-switch {
+  background: var(--faint);
+  border-color: var(--border);
+}
+
+/* ── Dark mode: Shell ────────────────────────────────────────── */
+[data-theme="dark"] .shell-nav-btn {
+  color: rgba(255,255,255,0.65);
+}
+
+[data-theme="dark"] .shell-nav-btn:hover {
+  background: rgba(255,255,255,0.08);
+  color: #fff;
+}
+
+[data-theme="dark"] .shell-nav-btn.active {
+  background: rgba(20,136,145,0.16);
+  border-color: var(--accent-soft-20);
+}
+
+[data-theme="dark"] .shell-mobile-nav {
+  background: var(--surface);
+  border-top-color: var(--border);
+}
+
+[data-theme="dark"] .shell-mobile-title strong {
+  color: var(--on-dark);
+}
+
+[data-theme="dark"] .workflow-strip {
+  background: rgba(15,24,35,0.6);
+  border-bottom-color: var(--accent-soft-08);
+}
+
+/* ── Dark mode: Cards ────────────────────────────────────────── */
+[data-theme="dark"] .card {
+  background: var(--surface);
+  border-color: var(--border);
+}
+
+[data-theme="dark"] .card:hover {
+  border-color: var(--border-strong);
+}
+
+[data-theme="dark"] .page-shell {
+  background: transparent;
+}
+
+[data-theme="dark"] .question-item {
+  background: var(--surface);
+  border-color: var(--border);
+}
+
+[data-theme="dark"] .evidence-card {
+  background: var(--surface);
+  border-color: var(--border);
+}
+
+/* ── Dark mode: Components ───────────────────────────────────── */
+[data-theme="dark"] .btn-secondary {
+  background: rgba(20,136,145,0.18);
+  border-color: rgba(72,199,199,0.25);
+  color: var(--accent-soft);
+}
+
+[data-theme="dark"] .btn-secondary:hover:not(:disabled) {
+  background: rgba(20,136,145,0.28);
+  border-color: var(--accent-soft);
+}
+
+[data-theme="dark"] .btn-ghost {
+  color: var(--text-2);
+}
+
+[data-theme="dark"] .btn-quiet {
+  color: var(--muted);
+}
+
+[data-theme="dark"] .btn-quiet:hover:not(:disabled) {
+  background: var(--divider);
+  color: var(--text);
+}
+
+[data-theme="dark"] .tabs {
+  background: var(--surface);
+  border-color: var(--border);
+}
+
+[data-theme="dark"] .tab:hover {
+  color: var(--text);
+  background: var(--faint);
+}
+
+[data-theme="dark"] .tab.active {
+  background: var(--primary-light);
+  color: var(--text);
+}
+
+[data-theme="dark"] .progress-bar {
+  background: var(--border);
+}
+
+[data-theme="dark"] .input {
+  background: var(--surface);
+  color: var(--text);
+  border-color: var(--border);
+}
+
+[data-theme="dark"] .input:hover {
+  border-color: var(--border-strong);
+}
+
+[data-theme="dark"] .pill-default { background: var(--divider); color: var(--text-2); }
+[data-theme="dark"] .pill-accent  { background: rgba(20,136,145,0.18); color: var(--accent-soft); }
+[data-theme="dark"] .pill-muted   { background: var(--faint); color: var(--muted); }
+[data-theme="dark"] .pill-info    { background: rgba(20,136,145,0.14); color: var(--accent-soft); }
+
+[data-theme="dark"] .shell-settings-btn {
+  background: var(--surface);
+  border-color: var(--border);
+  color: var(--muted);
+}
+
+[data-theme="dark"] .shell-settings-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* ── Dark mode: Student dashboard ────────────────────────────── */
+[data-theme="dark"] .dash-topbar {
+  background: linear-gradient(180deg, #0a1118 0%, #111d2a 100%);
+  border-bottom-color: var(--accent-soft-08);
+}
+
+[data-theme="dark"] .dash-nav-btn {
+  color: rgba(241,250,238,0.5);
+}
+
+[data-theme="dark"] .dash-nav-btn.active {
+  background: rgba(20,136,145,0.22);
+  border-color: var(--accent-soft-25);
+}
+
+[data-theme="dark"] .dash-nav-btn:hover:not(.active) {
+  background: rgba(255,255,255,0.06);
+}
+
+[data-theme="dark"] .student-metric {
+  background: var(--surface);
+  border-color: var(--border);
+}
+
+[data-theme="dark"] .student-metric:hover {
+  border-color: var(--accent);
+}
+
+[data-theme="dark"] .student-panel {
+  background: var(--surface);
+  border-color: var(--border);
+}
+
+[data-theme="dark"] .student-panel:hover {
+  border-color: var(--border-strong);
+}
+
+[data-theme="dark"] .student-panel--primary {
+  border-color: rgba(20,136,145,0.2);
+}
+
+[data-theme="dark"] .student-prep-box {
+  background: var(--faint);
+  border-color: var(--border);
+}
+
+[data-theme="dark"] .evidence-chip {
+  background: var(--faint);
+  border-color: var(--border);
+}
+
+[data-theme="dark"] .student-upcoming-row {
+  border-bottom-color: var(--divider);
+}
+
+[data-theme="dark"] .student-todo-row {
+  border-bottom-color: var(--divider);
+}
+
+[data-theme="dark"] .student-skill-row {
+  border-bottom-color: var(--divider);
+}
+
+[data-theme="dark"] .student-todo-check {
+  border-color: var(--border-strong);
+}
+
+[data-theme="dark"] .student-stage-legend {
+  border-color: var(--border);
+  background: var(--surface);
+}
+
+[data-theme="dark"] .student-stage-legend-body {
+  border-top-color: var(--border);
+}
+
+[data-theme="dark"] .student-stage-legend-toggle:hover {
+  background: var(--teal-soft);
+}
+
+/* ── Dark mode: KPI ──────────────────────────────────────────── */
+[data-theme="dark"] .kpi-value {
+  color: var(--text);
+}
+
+[data-theme="dark"] .section-title {
+  color: var(--text);
+}
+
+[data-theme="dark"] .page-title {
+  color: var(--on-dark);
+}
+
+[data-theme="dark"] .td-headline {
+  color: var(--on-dark);
+}
+
+/* ── Dark mode: Teacher dashboard ────────────────────────────── */
+[data-theme="dark"] .td-priority-card {
+  background: var(--surface) !important;
+  border-color: var(--border);
+}
+
+[data-theme="dark"] .td-priority-title {
+  color: var(--text);
+}
+
+[data-theme="dark"] .td-priority-text {
+  color: var(--muted);
+}
+
+[data-theme="dark"] .td-kpi-card:hover {
+  box-shadow: var(--shadow-md);
+}
+
+[data-theme="dark"] .td-list-row {
+  border-bottom-color: var(--divider);
+}
+
+[data-theme="dark"] .td-quick-action {
+  border-bottom-color: var(--divider);
+  color: var(--text);
+}
+
+[data-theme="dark"] .td-quick-action:hover {
+  color: var(--accent);
+}
+
+[data-theme="dark"] .td-quick-action-icon {
+  color: var(--muted);
+}
+
+[data-theme="dark"] .td-student-row:hover { border-color: var(--accent); }
+
+[data-theme="dark"] .td-row-action { color: var(--text); }
+[data-theme="dark"] .td-row-action:hover { color: var(--accent); }
+
+[data-theme="dark"] .student-practice-btn { color: var(--text); }
+[data-theme="dark"] .student-practice-btn:hover { color: var(--accent); }
+
+[data-theme="dark"] .student-panel--clickable:hover { border-color: var(--accent); }
+
+/* ── Dark mode: Misc ─────────────────────────────────────────── */
+[data-theme="dark"] .page-subtitle {
+  color: var(--muted);
+}
+
+[data-theme="dark"] .section-sub {
+  color: var(--muted);
+}
+
+[data-theme="dark"] .kpi-label {
+  color: var(--muted);
+}
+
+[data-theme="dark"] .td-sub {
+  color: var(--muted);
+}
+
+[data-theme="dark"] .td-priority-kicker {
+  color: var(--muted);
+}
+
+[data-theme="dark"] .student-practice-compact {
+  background: var(--surface);
+  border-color: rgba(20,136,145,0.2);
+}
+
+[data-theme="dark"] .student-practice-compact-orb {
+  background: var(--surface);
+  border-color: var(--border);
+  color: var(--text);
+}
+
+[data-theme="dark"] .student-practice-compact-orb:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+[data-theme="dark"] .student-wide-action {
+  background: var(--teal-soft);
+  border-color: var(--teal-soft);
+  color: var(--on-dark);
+}
+
+[data-theme="dark"] .student-wide-action:hover {
+  background: rgba(20,136,145,0.18);
+}
+
+[data-theme="dark"] .student-empty-card {
+  background: var(--surface);
+  border-color: var(--border);
+}
+
+/* ── Dark mode: Modal ────────────────────────────────────────── */
+[data-theme="dark"] .modal-header {
+  background: var(--surface);
+  border-bottom-color: var(--border);
+  color: var(--text);
+}
+
+[data-theme="dark"] .modal-kicker {
+  opacity: 0.8;
+}

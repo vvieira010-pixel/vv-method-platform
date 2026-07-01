@@ -43,7 +43,7 @@ function SubskillRadar({ sectionData }) {
               <CartesianGrid strokeDasharray="3 3" stroke="var(--divider)" horizontal={false} />
               <XAxis type="number" domain={[0, domainMax]} tick={{ fill: 'var(--muted)', fontSize: 11 }} tickCount={5} />
               <YAxis type="category" dataKey="skill" tick={{ fill: 'var(--text-2)', fontSize: 12, fontFamily: 'var(--font-ui)' }} width={60} />
-              <Tooltip contentStyle={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: 12, fontFamily: 'var(--font-ui)', boxShadow: 'var(--shadow-md)' }} />
+              <Tooltip />
               <Legend wrapperStyle={{ fontSize: 12, fontFamily: 'var(--font-ui)', color: 'var(--text-2)', paddingTop: 8 }} />
               <Bar name="Current" dataKey="current" fill="var(--accent)" radius={[0, 3, 3, 0]} isAnimationActive animationDuration={1000} animationBegin={300}>
                 <LabelList dataKey="current" position="right" fill="var(--accent)" fontSize={11} fontWeight={700} />
@@ -64,7 +64,7 @@ function SubskillRadar({ sectionData }) {
               <Radar name="Current" dataKey="current" stroke="var(--accent)" strokeWidth={3} fill="var(--accent)" fillOpacity={0.38} isAnimationActive animationDuration={1200} animationBegin={600} />
               <Radar name="Target" dataKey="target" stroke="var(--primary)" strokeWidth={2} strokeDasharray="4 4" fill="none" isAnimationActive animationDuration={1000} animationBegin={300} />
               <Legend wrapperStyle={{ fontSize: 12, fontFamily: 'var(--font-ui)', color: 'var(--text-2)', paddingTop: 8 }} />
-              <Tooltip contentStyle={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: 12, fontFamily: 'var(--font-ui)', boxShadow: 'var(--shadow-md)' }} />
+              <Tooltip />
             </RadarChart>
           )}
         </ResponsiveContainer>
@@ -116,7 +116,7 @@ export default function StudentProgress({ student }) {
 
   return (
     <div className="student-progress-page">
-      <section className="student-hero bg-grain fade-up" style={{ '--delay': '0s' }}>
+      <section className="student-hero bg-grain fade-up">
         <div>
           <p className="student-hero-kicker">MET progress profile</p>
           <h1>Your MET progress path</h1>
@@ -126,7 +126,7 @@ export default function StudentProgress({ student }) {
       <div className="student-stage-legend">
         <button className="student-stage-legend-toggle" onClick={() => setLegendOpen(v => !v)} aria-expanded={legendOpen}>
           <span>What do the stages mean?</span>
-          <span aria-hidden="true" style={{ fontSize: 10 }}>{legendOpen ? '▲' : '▼'}</span>
+          <span aria-hidden="true" className="text-2xs">{legendOpen ? '▲' : '▼'}</span>
         </button>
         {legendOpen && (
           <div className="student-stage-legend-body">
@@ -170,7 +170,7 @@ export default function StudentProgress({ student }) {
               return { skill: sectionToLabel(skill.section), current: Number(skill.score_0_80) || 0, previous: prevSkill ? (Number(prevSkill.score_0_80) || 0) : null, target: 65 };
             });
             return (
-              <section className="student-panel student-panel--primary" style={{ cursor: 'default', marginBottom: 24 }}>
+              <section className="student-panel student-panel--primary cursor-default mb-5">
                 <div className="student-panel-head">
                   <div>
                     <span className="student-panel-kicker">Skill overview</span>
@@ -183,7 +183,7 @@ export default function StudentProgress({ student }) {
             );
           })()}
 
-          <section className="student-panel" style={{ cursor: 'default', marginBottom: 24 }}>
+          <section className="student-panel cursor-default mb-5">
             <div className="student-panel-head">
               <div>
                 <span className="student-panel-kicker">Readiness Snapshot</span>
@@ -232,7 +232,7 @@ export default function StudentProgress({ student }) {
           {lowestSkill && lowestSkill.score_0_80 > 0 && (() => {
             const lowScore = Number(lowestSkill.score_0_80) || 0;
             return (
-              <section className="sp-section-callout student-panel student-panel--clickable" style={{ cursor: 'default' }}>
+              <section className="sp-section-callout student-panel student-panel--clickable cursor-default">
                 <div className="student-panel-head">
                   <div>
                     <span className="student-panel-kicker">Focus Area</span>
@@ -240,11 +240,11 @@ export default function StudentProgress({ student }) {
                   </div>
                   <span className="student-skill-score">{lowScore}/80</span>
                 </div>
-                <p style={{ fontSize: 'var(--text-sm)', lineHeight: 1.6, color: 'var(--text)', margin: '8px 0 0' }}>
+                <p className="text-sm lh-1_6" style={{ color: 'var(--text)', margin: '8px 0 0' }}>
                   This skill needs the most attention. Focus on it in your next class or practice session.
                 </p>
                 {lowestSkill.next_step && (
-                  <p style={{ fontSize: 'var(--text-sm)', lineHeight: 1.6, color: 'var(--text-2)', margin: '6px 0 0' }}>
+                  <p className="text-sm lh-1_6" style={{ color: 'var(--text-2)', margin: '6px 0 0' }}>
                     <strong>Next step:</strong> {lowestSkill.next_step}
                   </p>
                 )}
@@ -253,7 +253,7 @@ export default function StudentProgress({ student }) {
           })()}
 
           {sorted.length > 1 && (
-            <section className="student-panel" style={{ cursor: 'default' }}>
+            <section className="student-panel cursor-default">
               <div className="student-panel-head">
                 <div><span className="student-panel-kicker">Compare by date</span><h2>Progress history</h2></div>
               </div>
@@ -263,7 +263,7 @@ export default function StudentProgress({ student }) {
                   if (snap.length === 0) return null;
                   return (
                     <div key={dx.id} className="student-history-item items-start gap-4">
-                      <span style={{ minWidth: 80, color: 'var(--muted)', fontSize: 'var(--text-xs)', paddingTop: 3, flexShrink: 0 }}>
+                      <span className="text-xs text-muted shrink-0" style={{ minWidth: 80, paddingTop: 3 }}>
                         {new Date(dx.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
                       </span>
                       <div className="flex-col-gap2 flex-1">
@@ -271,19 +271,16 @@ export default function StudentProgress({ student }) {
                           const stage = getProgressStage(s.score_0_80);
                           return (
                             <div key={s.section} className="flex-row-gap3">
-                              <span style={{ minWidth: 88, fontSize: 'var(--text-xs)', color: 'var(--muted)', textTransform: 'capitalize' }}>
+                              <span className="text-xs text-muted capitalize" style={{ minWidth: 88 }}>
                                 {s.section.replace(/_/g, ' ')}
                               </span>
-                              <span style={{ fontSize: 'var(--text-xs)', fontWeight: 600, color: 'var(--text)', minWidth: 148 }}>
+                              <span className="text-xs font-semibold" style={{ color: 'var(--text)', minWidth: 148 }}>
                                 {stage.label}
                               </span>
-                              <div style={{ display: 'flex', gap: 3 }} aria-label={`${stage.order} of 5 stages`}>
+                              <div className="flex gap-1" aria-label={`${stage.order} of 5 stages`}>
                                 {PROGRESS_STAGES.map(st => (
-                                  <span key={st.label} style={{
-                                    flex: 1, height: 6, borderRadius: 3,
-                                    background: st.order <= stage.order ? 'var(--accent)' : 'var(--border)',
-                                    transition: 'background 0.2s',
-                                  }} />
+                                  <div key={st.label} className="progress-dot"
+                                    style={{ background: st.order <= stage.order ? 'var(--accent)' : 'var(--border)' }} />
                                 ))}
                               </div>
                             </div>

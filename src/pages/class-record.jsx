@@ -2,7 +2,7 @@
  * class-record.jsx — Record class evidence after a class
  */
 import { useState, useEffect } from 'react';
-import { Icon, SectionHeader, Pill, S, Breadcrumb } from '../components/shared.jsx';
+import { Icon, SectionHeader, Pill, Breadcrumb } from '../components/shared.jsx';
 import { Button } from '../components/ui/Button.jsx';
 import { Card } from '../components/ui/Card.jsx';
 import { getClassEvent, getClassEvidence, saveClassEvidence, updateClassEventStatus, getStudent } from '../lib/workflow.js';
@@ -89,7 +89,6 @@ export default function ClassRecord({ classEventId, students, onNavigate }) {
         ...normalizedForm,
       });
       setEvidence(record);
-      // Mark class as completed if still scheduled
       if (event?.status === 'scheduled') {
         await updateClassEventStatus(classEventId, { status: 'completed' });
         setEvent(e => ({ ...e, status: 'completed' }));
@@ -104,7 +103,7 @@ export default function ClassRecord({ classEventId, students, onNavigate }) {
     }
   }
 
-  if (!event) return <div style={{ padding: 40, color: 'var(--muted)' }}>Class not found.</div>;
+  if (!event) return <div className="p-5 text-muted">Class not found.</div>;
 
   const anySkillEvaluated = SKILLS.some(s => form[s.evalKey]);
 
@@ -113,16 +112,16 @@ export default function ClassRecord({ classEventId, students, onNavigate }) {
       <Breadcrumb crumbs={[{ label: 'Calendar', onClick: () => onNavigate('calendar') }, { label: 'Class Record' }]} />
 
       {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 24 }}>
+      <div className="flex flex-between items-start mb-6">
         <div>
-          <h1 style={S.headline}>Class Record</h1>
-          <p style={S.sub}>
+          <h1 className="page-headline">Class Record</h1>
+          <p className="page-sub">
             {student?.name} · {new Date(event.date).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}
             {event.startTime ? ` · ${event.startTime}` : ''}
           </p>
-          <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-2)', marginTop: 4 }}>{event.title} · {event.classFocus || 'No focus set'}</p>
+          <p className="cr-meta">{event.title} · {event.classFocus || 'No focus set'}</p>
         </div>
-        <div style={{ display: 'flex', gap: 8 }}>
+        <div className="flex gap-2">
           <Pill tone={event.status === 'completed' ? 'success' : 'info'}>{event.status}</Pill>
           <Pill tone={event.diagnosticStatus === 'approved' ? 'success' : event.diagnosticStatus === 'draft' ? 'warning' : 'muted'}>
             Diagnosis: {event.diagnosticStatus}
@@ -131,29 +130,32 @@ export default function ClassRecord({ classEventId, students, onNavigate }) {
       </div>
 
       {/* Skills evaluated */}
-      <Card style={{ padding: 20, marginBottom: 16 }}>
+      <Card className="card-p-5 mb-4">
         <SectionHeader title="Skills Evaluated in This Class" icon={<Icon.diagnose size={15} />} />
-        <p style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: 4 }}>Select only skills that were actually practiced and observed today. AI will only diagnose selected skills with evidence.</p>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 10, marginTop: 14 }}>
+        <p className="cr-desc">Select only skills that were actually practiced and observed today. AI will only diagnose selected skills with evidence.</p>
+        <div className="grid-auto-fill-200 mt-4">
           {SKILLS.map(({ key, evalKey, countKey }) => {
             const evaluated = form[evalKey];
             return (
-              <button type="button" key={key} style={{ padding: 12, borderRadius: 'var(--radius-sm)', border: `2px solid ${evaluated ? 'var(--accent)' : 'var(--border)'}`, background: evaluated ? 'var(--accent-subtle)' : 'var(--surface)', cursor: 'pointer', transition: 'all 0.15s' }} onClick={() => toggleSkill(evalKey, countKey)}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span style={{ width: 18, height: 18, borderRadius: 0, border: `2px solid ${evaluated ? 'var(--accent)' : 'var(--border)'}`, background: evaluated ? 'var(--accent)' : 'transparent', display: 'grid', placeItems: 'center', flexShrink: 0 }}>
+              <button type="button" key={key}
+                className={`cr-skill-btn${evaluated ? ' cr-skill-btn--active' : ''}`}
+                onClick={() => toggleSkill(evalKey, countKey)}>
+                <div className="flex-row gap-2">
+                  <span className={`cr-skill-check${evaluated ? ' cr-skill-check--active' : ''}`}>
                     {evaluated && <Icon.check size={11} color="#fff" />}
                   </span>
-                  <span style={{ fontWeight: 600, fontSize: 'var(--text-sm)', color: evaluated ? 'var(--primary)' : 'var(--text)' }}>{key}</span>
+                  <span className="cr-skill-label">{key}</span>
                 </div>
                 {evaluated && countKey && (
-                  <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 6 }} onClick={e => e.stopPropagation()}>
-                    <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>Evidence turns:</span>
-                    <input type="number" min={1} max={30} value={form[countKey]} onChange={e => setForm(f => ({ ...f, [countKey]: Math.max(1, Number(e.target.value) || 1) }))}
-                      style={{ width: 56, minHeight: 44, padding: '3px 6px', border: '1px solid var(--border)', borderRadius: 0, fontSize: 'var(--text-xs)', textAlign: 'center' }} />
+                  <div className="flex-row gap-2 mt-2" onClick={e => e.stopPropagation()}>
+                    <span className="text-xs text-muted">Evidence turns:</span>
+                    <input type="number" min={1} max={30} value={form[countKey]}
+                      onChange={e => setForm(f => ({ ...f, [countKey]: Math.max(1, Number(e.target.value) || 1) }))}
+                      className="cr-count-input" />
                   </div>
                 )}
                 {evaluated && !countKey && (
-                  <div style={{ marginTop: 6, fontSize: 'var(--text-xs)', color: 'var(--accent)' }}>Will inform diagnosis</div>
+                  <div className="cr-inform">Will inform diagnosis</div>
                 )}
               </button>
             );
@@ -162,41 +164,55 @@ export default function ClassRecord({ classEventId, students, onNavigate }) {
       </Card>
 
       {/* Evidence fields */}
-      <Card style={{ padding: 20, marginBottom: 16 }}>
+      <Card className="card-p-5 mb-4">
         <SectionHeader title="Class Evidence" icon={<Icon.doc size={15} />} />
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginTop: 14 }}>
+        <div className="flex-col-gap4 mt-4">
           <Field label="Student transcript / speaking answers">
-            <textarea className="input" rows={6} value={form.studentTranscript} onChange={e => setForm(f => ({ ...f, studentTranscript: e.target.value }))} placeholder="Paste the student's exact words from the class. Quote errors directly — this is what the AI will analyze..." />
+            <textarea className="input" rows={6} value={form.studentTranscript}
+              onChange={e => setForm(f => ({ ...f, studentTranscript: e.target.value }))}
+              placeholder="Paste the student's exact words from the class. Quote errors directly — this is what the AI will analyze..." />
           </Field>
           <Field label="Student performance notes">
-            <textarea className="input" rows={3} value={form.studentPerformance} onChange={e => setForm(f => ({ ...f, studentPerformance: e.target.value }))} placeholder="Describe what the student did well and what needs work..." />
+            <textarea className="input" rows={3} value={form.studentPerformance}
+              onChange={e => setForm(f => ({ ...f, studentPerformance: e.target.value }))}
+              placeholder="Describe what the student did well and what needs work..." />
           </Field>
           <Field label="Teacher notes & observations">
-            <textarea className="input" rows={3} value={form.teacherNotes} onChange={e => setForm(f => ({ ...f, teacherNotes: e.target.value }))} placeholder="Patterns observed, surprising moments, teaching decisions made..." />
+            <textarea className="input" rows={3} value={form.teacherNotes}
+              onChange={e => setForm(f => ({ ...f, teacherNotes: e.target.value }))}
+              placeholder="Patterns observed, surprising moments, teaching decisions made..." />
           </Field>
           <div className="grid-2col">
             <Field label="Homework reviewed in class">
-              <textarea className="input" rows={2} value={form.homeworkReviewed} onChange={e => setForm(f => ({ ...f, homeworkReviewed: e.target.value }))} placeholder="Was homework reviewed? What did you find?" />
+              <textarea className="input" rows={2} value={form.homeworkReviewed}
+                onChange={e => setForm(f => ({ ...f, homeworkReviewed: e.target.value }))}
+                placeholder="Was homework reviewed? What did you find?" />
             </Field>
             <Field label="Student mood / confidence">
-              <textarea className="input" rows={2} value={form.studentMood} onChange={e => setForm(f => ({ ...f, studentMood: e.target.value }))} placeholder="Nervous, motivated, tired, confident..." />
+              <textarea className="input" rows={2} value={form.studentMood}
+                onChange={e => setForm(f => ({ ...f, studentMood: e.target.value }))}
+                placeholder="Nervous, motivated, tired, confident..." />
             </Field>
           </div>
           <Field label="Additional notes">
-            <textarea className="input" rows={2} value={form.additionalNotes} onChange={e => setForm(f => ({ ...f, additionalNotes: e.target.value }))} placeholder="Anything else relevant for the diagnosis..." />
+            <textarea className="input" rows={2} value={form.additionalNotes}
+              onChange={e => setForm(f => ({ ...f, additionalNotes: e.target.value }))}
+              placeholder="Anything else relevant for the diagnosis..." />
           </Field>
         </div>
       </Card>
 
       {/* Actions */}
-      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-        <Button variant="primary" onClick={() => handleSave(false)} disabled={saving}>{saving ? 'Saving…' : 'Save Evidence'}</Button>
-        <Button variant="primary" style={{ background: 'var(--success)' }} onClick={() => handleSave(true)} disabled={saving || !anySkillEvaluated}>
+      <div className="cr-actions">
+        <Button variant="primary" onClick={() => handleSave(false)} disabled={saving}>
+          {saving ? 'Saving…' : 'Save Evidence'}
+        </Button>
+        <Button variant="success" onClick={() => handleSave(true)} disabled={saving || !anySkillEvaluated}>
           <Icon.diagnose size={14} /> Save & Run Diagnosis
         </Button>
       </div>
       {!anySkillEvaluated && (
-        <p style={{ color: 'var(--warning)', fontSize: 'var(--text-xs)', marginTop: 8 }}>Select at least one evaluated skill before running diagnosis.</p>
+        <p className="cr-warning">Select at least one evaluated skill before running diagnosis.</p>
       )}
     </div>
   );
@@ -204,8 +220,8 @@ export default function ClassRecord({ classEventId, students, onNavigate }) {
 
 function Field({ label, children }) {
   return (
-    <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-      <span style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</span>
+    <label className="field-stack">
+      <span className="field-label-block">{label}</span>
       {children}
     </label>
   );
@@ -229,6 +245,3 @@ const EMPTY_FORM = {
   teacherNotes: '', studentPerformance: '', studentTranscript: '', studentAnswer: '',
   homeworkReviewed: '', studentMood: '', additionalNotes: '',
 };
-
-
-

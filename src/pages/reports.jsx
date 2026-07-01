@@ -2,7 +2,7 @@
  * reports.jsx — Progress and performance repository
  */
 import { useState, useEffect, useMemo } from 'react';
-import { Icon, SectionHeader, Avatar, Pill, S_DARK } from '../components/shared.jsx';
+import { Icon, SectionHeader, Avatar, Pill } from '../components/shared.jsx';
 import { Button } from '../components/ui/Button.jsx';
 import { Card } from '../components/ui/Card.jsx';
 import { getDiagnoses, getHomework, getErrorBank, getAllSubmissions, getProgressNotes } from '../lib/workflow.js';
@@ -84,14 +84,14 @@ export default function ReportsPage({ students, onNavigate, workspaceQuery = '' 
   const visibleExerciseRows = report?.exerciseMix.filter((row) => exerciseTypeFilter === 'all' || row.type === exerciseTypeFilter) || [];
 
   return (
-    <div className="page-container" style={S.shell}>
-      <section style={S.hero}>
+    <div className="page-container">
+      <section className="hero-section hero-section--reports hero-section--rounded">
         <div>
-          <div style={S.heroTag}>Progress Repository</div>
-          <h1 style={S.headline}>Reports Workspace</h1>
-          <p style={S.sub}>Teacher-facing performance view: evidence coverage, exercise pipeline, and progress story before sharing feedback.</p>
+          <div className="hero-tag">Progress Repository</div>
+          <h1 className="page-headline" style={{ color: '#fff' }}>Reports Workspace</h1>
+          <p className="page-sub" style={{ color: 'rgba(255,255,255,.78)', maxWidth: 620 }}>Teacher-facing performance view: evidence coverage, exercise pipeline, and progress story before sharing feedback.</p>
         </div>
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+        <div className="flex gap-2 flex-wrap">
           <Button variant="primary" onClick={() => selectedStudent && generateReport(selectedStudent)} disabled={!selectedStudent || loading}>
             <Icon.progress size={14} /> {loading ? 'Refreshing…' : 'Refresh Report'}
           </Button>
@@ -99,16 +99,16 @@ export default function ReportsPage({ students, onNavigate, workspaceQuery = '' 
         </div>
       </section>
 
-      <Card small style={{ marginBottom: 16 }}>
-        <div style={S.filterGrid}>
-          <label style={S.field}>
-            <span style={S.fieldLabel}>Student</span>
+      <Card small className="mb-3">
+        <div className="filter-grid">
+          <label className="field-stack">
+            <span className="field-label">Student</span>
             <select className="input" value={selectedStudent} onChange={(e) => setSelectedStudent(e.target.value)}>
               {roster.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
             </select>
           </label>
-          <label style={S.field}>
-            <span style={S.fieldLabel}>Exercise view</span>
+          <label className="field-stack">
+            <span className="field-label">Exercise view</span>
             <select className="input" value={exerciseTypeFilter} onChange={(e) => setExerciseTypeFilter(e.target.value)}>
               <option value="all">All exercise types</option>
               {(report?.exerciseMix || []).map((row) => <option key={row.type} value={row.type}>{row.type}</option>)}
@@ -118,21 +118,21 @@ export default function ReportsPage({ students, onNavigate, workspaceQuery = '' 
       </Card>
 
       {!report ? (
-        <Card small style={{ textAlign: 'center' }}>
+        <Card small className="text-center">
           <p style={{ color: 'var(--muted)', margin: 0 }}>{loading ? 'Generating report…' : 'Select a student to generate report data.'}</p>
         </Card>
       ) : (
         <>
-          <Card small style={{ marginBottom: 14 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
+          <Card small className="mb-2">
+            <div className="flex items-center gap-4 flex-wrap">
               <Avatar name={report.student?.name || '?'} size={48} />
               <div style={{ minWidth: 220 }}>
-                <h2 style={{ fontFamily: 'var(--font-ui)', fontSize: 'var(--text-xl)', margin: 0 }}>{report.student?.name || 'Unknown student'}</h2>
-                <p style={{ color: 'var(--muted)', margin: '4px 0 0', fontSize: 'var(--text-sm)' }}>
+                <h2 className="text-xl font-ui" style={{ margin: 0 }}>{report.student?.name || 'Unknown student'}</h2>
+                <p className="text-sm text-muted" style={{ margin: '4px 0 0' }}>
                   {report.student?.currentLevel || '--'} to {report.student?.targetLevel || '--'} · {report.student?.examGoal || 'MET goal not set'}
                 </p>
               </div>
-              <div style={{ marginLeft: 'auto', display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+              <div className="ml-auto flex gap-1 flex-wrap">
                 <Pill tone="info">Diagnoses: {report.diagnoses.length}</Pill>
                 <Pill tone="success">Approved: {report.approved.length}</Pill>
                 <Pill tone="warning">Homework: {report.homework.length}</Pill>
@@ -140,7 +140,7 @@ export default function ReportsPage({ students, onNavigate, workspaceQuery = '' 
             </div>
           </Card>
 
-          <div style={S.kpiGrid}>
+          <div className="kpi-grid" style={{ marginTop: 14 }}>
             <StatCard label="Homework completed" value={`${report.completedHw.length}/${report.homework.length}`} tone="success" />
             <StatCard label="Submissions" value={report.submissions.length} tone="info" />
             <StatCard label="Active errors" value={report.activeErrors.length} tone="danger" />
@@ -148,16 +148,16 @@ export default function ReportsPage({ students, onNavigate, workspaceQuery = '' 
           </div>
 
           {report.approved.length > 0 && (
-            <Card small style={{ marginTop: 14 }}>
+            <Card small className="mt-2">
               <SectionHeader title="Which MET skills have enough evidence?" icon={<Icon.diagnose size={14} />} />
-              <p style={S.caption}>Approved diagnoses only. Missing evidence stays visible instead of becoming a score.</p>
-              <div style={{ width: '100%', height: 320, marginTop: 12 }}>
+              <p className="text-caption">Approved diagnoses only. Missing evidence stays visible instead of becoming a score.</p>
+              <div className="chart-wrap-320 mt-2">
                 <ResponsiveContainer>
                   <BarChart data={report.skillCoverageChart} margin={{ top: 8, right: 8, left: 0, bottom: 8 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
                     <XAxis dataKey="skill" tick={{ fontSize: 12, fill: 'var(--text-2)' }} axisLine={{ stroke: 'var(--divider)' }} tickLine={{ stroke: 'var(--divider)' }} />
                     <YAxis allowDecimals={false} tick={{ fontSize: 12, fill: 'var(--text-2)' }} axisLine={{ stroke: 'var(--divider)' }} tickLine={{ stroke: 'var(--divider)' }} />
-                    <Tooltip contentStyle={{ borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)', background: 'var(--surface)' }} cursor={{ fill: 'rgba(20,136,145,0.08)' }} />
+                    <Tooltip cursor={{ fill: 'rgba(20,136,145,0.08)' }} />
                     <Legend wrapperStyle={{ fontSize: 12 }} />
                     <Bar dataKey="enoughEvidence" name="Evaluated with evidence" stackId="coverage" fill="var(--accent)" isAnimationActive animationDuration={900} />
                     <Bar dataKey="lowEvidence" name="Not evaluated enough" stackId="coverage" fill="var(--warning)" isAnimationActive animationDuration={1100} />
@@ -169,18 +169,18 @@ export default function ReportsPage({ students, onNavigate, workspaceQuery = '' 
           )}
 
           {report.inquiryComparison && (
-            <Card small style={{ marginTop: 14 }}>
+            <Card small className="mt-2">
               <SectionHeader title="Inquiry — Baseline vs Latest" icon={<Icon.progress size={14} />} />
-              <p style={S.caption}>
+              <p className="text-caption">
                 Skill score deltas between first{report.baseline?.isBaseline ? ' (baseline)' : ''} and most recent diagnosis.
-                {report.baseline?.interventionNote ? <span style={{ display: 'block', marginTop: 4 }}>Intervention: <strong>{report.baseline.interventionNote}</strong></span> : ''}
+                {report.baseline?.interventionNote ? <span className="block mt-1">Intervention: <strong>{report.baseline.interventionNote}</strong></span> : ''}
               </p>
-              <div style={{ display: 'grid', gap: 8, marginTop: 10, gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))' }}>
+              <div className="grid-auto-fill-200 mt-2">
                 {report.inquiryComparison.map(({ skill, baseline, latest, delta }) => (
-                  <div key={skill} style={{ border: '1px solid var(--divider)', padding: '11px 12px', background: delta > 0 ? 'var(--success-bg)' : delta < 0 ? 'var(--danger-bg)' : 'var(--surface)' }}>
-                    <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{skill}</div>
-                    <div style={{ marginTop: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8 }}>
-                      <span style={{ fontSize: 'var(--text-sm)', color: 'var(--text-2)' }}>{baseline} → {latest}</span>
+                  <div key={skill} className="inquiry-card" style={{ background: delta > 0 ? 'var(--success-bg)' : delta < 0 ? 'var(--danger-bg)' : 'var(--surface)' }}>
+                    <div className="text-2xs text-muted text-uppercase letter-spacing-01">{skill}</div>
+                    <div className="flex-between mt-1 gap-2" style={{ alignItems: 'baseline' }}>
+                      <span className="text-sm" style={{ color: 'var(--text-2)' }}>{baseline} → {latest}</span>
                       <span style={{ fontSize: 'var(--text-lg)', fontWeight: 700, color: delta > 0 ? 'var(--success)' : delta < 0 ? 'var(--danger)' : 'var(--muted)' }}>
                         {delta > 0 ? '+' : ''}{delta}
                       </span>
@@ -191,22 +191,22 @@ export default function ReportsPage({ students, onNavigate, workspaceQuery = '' 
             </Card>
           )}
 
-          <div style={S.splitGrid}>
+          <div className="split-grid">
             <Card small>
               <SectionHeader title="Exercise Status by Format" icon={<Icon.homework size={14} />} />
-              <p style={S.caption}>Submitted and reviewed are separate so teacher backlog does not hide student effort.</p>
+              <p className="text-caption">Submitted and reviewed are separate so teacher backlog does not hide student effort.</p>
               {visibleExerciseRows.length === 0 ? (
-                <p style={S.empty}>No exercise data for this student yet.</p>
+                <p className="empty-panel" style={{ padding: '8px 0' }}>No exercise data for this student yet.</p>
               ) : (
-                <div style={{ display: 'grid', gap: 8, marginTop: 10 }}>
+                <div className="flex-col-gap2 mt-2">
                   {visibleExerciseRows.map((row) => (
-                    <div key={row.type} style={S.exerciseRow}>
-                      <div style={{ minWidth: 0 }}>
-                        <div style={S.rowTitle}>{row.type}</div>
-                        <div style={S.rowSub}>{row.count} assignments · {row.submitted} submitted · {row.reviewed} reviewed</div>
+                    <div key={row.type} className="exercise-row">
+                      <div className="min-w-0">
+                        <div className="row-title">{row.type}</div>
+                        <div className="row-sub">{row.count} assignments · {row.submitted} submitted · {row.reviewed} reviewed</div>
                       </div>
                       <ExerciseStatusBars row={row} />
-                      <strong style={{ fontSize: 'var(--text-xs)', color: 'var(--primary)', textAlign: 'right' }}>{row.reviewedRate}% reviewed</strong>
+                      <strong className="text-xs text-right" style={{ color: 'var(--primary)' }}>{row.reviewedRate}% reviewed</strong>
                     </div>
                   ))}
                 </div>
@@ -216,15 +216,15 @@ export default function ReportsPage({ students, onNavigate, workspaceQuery = '' 
             <Card small>
               <SectionHeader title="Diagnosis Timeline" icon={<Icon.calendar size={14} />} action={<Button variant="ghost" size="sm" onClick={() => onNavigate('diagnostics')}>Open Hub</Button>} />
               {report.approved.length === 0 ? (
-                <p style={S.empty}>No approved diagnoses yet.</p>
+                <p className="empty-panel" style={{ padding: '8px 0' }}>No approved diagnoses yet.</p>
               ) : (
-                <div style={{ display: 'grid', gap: 8, marginTop: 10 }}>
+                <div className="flex-col-gap2 mt-2">
                   {report.approved.slice(0, 6).map((dx, i) => (
-                    <div key={dx.id} style={S.timelineRow}>
-                      <div style={S.timelineIdx}>{i + 1}</div>
-                      <div style={{ minWidth: 0 }}>
-                        <div style={S.rowTitle}>{new Date(dx.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</div>
-                        <div style={S.rowSub}>{(dx.classSummary || dx.content?.overall_result || 'No summary').slice(0, 140)}</div>
+                    <div key={dx.id} className="timeline-row">
+                      <div className="timeline-idx">{i + 1}</div>
+                      <div className="min-w-0">
+                        <div className="row-title">{new Date(dx.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</div>
+                        <div className="row-sub">{(dx.classSummary || dx.content?.overall_result || 'No summary').slice(0, 140)}</div>
                       </div>
                     </div>
                   ))}
@@ -233,16 +233,16 @@ export default function ReportsPage({ students, onNavigate, workspaceQuery = '' 
             </Card>
           </div>
 
-          <Card small style={{ marginTop: 12 }}>
+          <Card small className="mt-2">
             <SectionHeader title="Progress Notes" icon={<Icon.doc size={14} />} />
             {report.notes.length === 0 ? (
-              <p style={S.empty}>No notes recorded.</p>
+              <p className="empty-panel" style={{ padding: '8px 0' }}>No notes recorded.</p>
             ) : (
-              <div style={{ display: 'grid', gap: 6, marginTop: 8 }}>
+              <div className="flex-col-gap1 mt-2">
                 {report.notes.slice(0, 6).map((n) => (
-                  <div key={n.id} style={S.noteRow}>
-                    <span style={S.noteDate}>{new Date(n.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</span>
-                    <span style={{ fontSize: 'var(--text-sm)' }}>{n.note}</span>
+                  <div key={n.id} className="note-row">
+                    <span className="note-date">{new Date(n.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</span>
+                    <span className="text-sm">{n.note}</span>
                   </div>
                 ))}
               </div>
@@ -263,8 +263,8 @@ function StatCard({ label, value, tone }) {
 
   return (
     <Card small style={{ background: bg }}>
-      <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</div>
-      <div style={{ marginTop: 8, fontSize: 'var(--text-2xl)', fontWeight: 800, color: 'var(--primary)' }}>{value}</div>
+      <div className="text-2xs text-muted text-uppercase letter-spacing-01">{label}</div>
+      <div className="td-kpi-value" style={{ marginTop: 8 }}>{value}</div>
     </Card>
   );
 }
@@ -323,88 +323,22 @@ function getEvidenceCount(dx, countKey) {
 
 function ExerciseStatusBars({ row }) {
   return (
-    <div style={S.statusBars}>
-      <div style={S.statusLine}>
+    <div className="status-bars">
+      <div className="status-line">
         <span>Submitted</span>
-        <div style={S.progressTrack}>
-          <div style={{ ...S.progressFillSubmitted, width: `${row.submittedRate}%` }} />
+        <div className="progress-track">
+          <div className="progress-fill-submitted" style={{ width: `${row.submittedRate}%` }} />
         </div>
         <strong>{row.submittedRate}%</strong>
       </div>
-      <div style={S.statusLine}>
+      <div className="status-line">
         <span>Reviewed</span>
-        <div style={S.progressTrack}>
-          <div style={{ ...S.progressFillReviewed, width: `${row.reviewedRate}%` }} />
+        <div className="progress-track">
+          <div className="progress-fill-reviewed" style={{ width: `${row.reviewedRate}%` }} />
         </div>
         <strong>{row.reviewedRate}%</strong>
       </div>
     </div>
   );
 }
-
-const S = {
-  shell: { padding: '28px 20px 40px' },
-  hero: {
-    display: 'flex',
-    alignItems: 'flex-end',
-    justifyContent: 'space-between',
-    gap: 12,
-    flexWrap: 'wrap',
-    marginBottom: 18,
-    padding: '22px 24px',
-    borderRadius: 'var(--radius-sm)',
-    border: '1px solid rgba(20,136,145,0.18)',
-    background: 'linear-gradient(135deg, var(--primary) 0%, #172537 50%, var(--accent) 100%)',
-    boxShadow: '0 18px 44px -30px rgba(16, 26, 40, 0.8)',
-    color: 'var(--on-dark)',
-  },
-  heroTag: { fontSize: 'var(--text-xs)', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--accent-soft)', fontWeight: 700, marginBottom: 6 },
-  ...S_DARK,
-  filterGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 10 },
-  field: { display: 'flex', flexDirection: 'column', gap: 4 },
-  fieldLabel: { fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em' },
-  kpiGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: 10, marginTop: 14 },
-  splitGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 12, marginTop: 12 },
-  caption: { fontSize: 'var(--text-xs)', color: 'var(--muted)', margin: '4px 0 0' },
-  rowTitle: { fontSize: 'var(--text-sm)', fontWeight: 700 },
-  rowSub: { fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: 2, lineHeight: 1.5 },
-  exerciseRow: {
-    display: 'grid',
-    gridTemplateColumns: 'minmax(0, 1fr) minmax(150px, 1.1fr) minmax(74px, auto)',
-    alignItems: 'center',
-    gap: 10,
-    border: '1px solid var(--divider)',
-    borderRadius: 'var(--radius-sm)',
-    padding: '11px 12px',
-    background: 'var(--surface)',
-  },
-  statusBars: { display: 'grid', gap: 5, minWidth: 0 },
-  statusLine: { display: 'grid', gridTemplateColumns: '62px minmax(60px, 1fr) 34px', alignItems: 'center', gap: 7, fontSize: 'var(--text-xs)', color: 'var(--muted)' },
-  progressTrack: { height: 8, borderRadius: 'var(--radius-sm)', background: 'var(--bg-deep)', overflow: 'hidden' },
-  progressFillSubmitted: { height: '100%', borderRadius: 'var(--radius-sm)', background: 'var(--accent-soft)' },
-  progressFillReviewed: { height: '100%', borderRadius: 'var(--radius-sm)', background: 'var(--accent)' },
-  timelineRow: {
-    display: 'grid',
-    gridTemplateColumns: '28px minmax(0, 1fr)',
-    gap: 10,
-    border: '1px solid var(--divider)',
-    borderRadius: 'var(--radius-sm)',
-    padding: '10px 12px',
-    background: 'var(--surface)',
-  },
-  timelineIdx: {
-    width: 24,
-    height: 24,
-    borderRadius: 'var(--radius-sm)',
-    background: 'var(--accent-subtle)',
-    color: 'var(--primary)',
-    display: 'grid',
-    placeItems: 'center',
-    fontSize: 'var(--text-xs)',
-    fontWeight: 700,
-  },
-  noteRow: { display: 'grid', gridTemplateColumns: '72px minmax(0, 1fr)', gap: 8, alignItems: 'start', padding: '9px 11px', borderRadius: 'var(--radius-sm)', background: 'var(--bg)' },
-  noteDate: { color: 'var(--muted)', fontSize: 'var(--text-xs)' },
-  empty: { fontSize: 'var(--text-sm)', color: 'var(--muted)', margin: '8px 0 0' },
-};
 

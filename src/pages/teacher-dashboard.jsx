@@ -4,7 +4,7 @@
  * with the old Class Prep cycle board (per-student stage + next action).
  */
 import { useState, useEffect, useMemo } from 'react';
-import { Icon, SectionHeader, Pill, Avatar, Skeleton, SkeletonCard, SkeletonText, EmptyState } from '../components/shared.jsx';
+import { Icon, SectionHeader, Pill, Avatar, SkeletonCard, EmptyState } from '../components/shared.jsx';
 import { IlloNoClasses } from '../components/ui/empty-illustrations.jsx';
 import { Button } from '../components/ui/Button.jsx';
 import { Card } from '../components/ui/Card.jsx';
@@ -73,7 +73,7 @@ export default function TeacherDashboard({ students, onNavigate, teacherName = '
     };
   }, [students]);
 
-  const { studentsWithCycle, stageCounts, needsAttention, pendingReview, needDiagnosis, urgencySorted } = useMemo(() => {
+  const { stageCounts, needsAttention, pendingReview, needDiagnosis, urgencySorted } = useMemo(() => {
     if (!students || !Array.isArray(students)) return { studentsWithCycle: [], stageCounts: {}, needsAttention: [], pendingReview: 0, needDiagnosis: 0, urgencySorted: [] };
     
     const studentsWithCycle = students.map(s => ({
@@ -125,7 +125,7 @@ export default function TeacherDashboard({ students, onNavigate, teacherName = '
       <div aria-live="polite" aria-atomic="true" style={{ position: 'fixed', left: '-9999px' }}>
         {loading ? 'Loading dashboard' : `${students.length} students, ${classesToday} classes today`}
       </div>
-      <div style={{ marginBottom: 'var(--space-4)' }}>
+      <div className="mb-4">
         <h1 className="td-headline">Good {timeOfDay()}, {teacherName}.</h1>
         <p className="td-sub">{today} — your teaching cycle at a glance.</p>
       </div>
@@ -187,7 +187,7 @@ export default function TeacherDashboard({ students, onNavigate, teacherName = '
                 return (
                   <div key={ev.id} className="td-list-row">
                     <Avatar name={student?.name || '?'} size={28} />
-                    <div style={{ flex: 1 }}>
+                    <div className="flex-1">
                       <div className="td-row-title">{student?.firstName || 'Unknown'} — {ev.title}</div>
                       <div className="td-row-sub">{ev.startTime || '—'} · {ev.classFocus || 'No focus set'}</div>
                     </div>
@@ -211,7 +211,7 @@ export default function TeacherDashboard({ students, onNavigate, teacherName = '
 
         {/* Student cycle board */}
         <Card className="td-card-section">
-          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', flexWrap: 'wrap', marginBottom: 'var(--space-2)' }}>
+          <div className="flex-wrap-row-3 items-center mb-2">
             <SectionHeader title="Student Cycle Board" icon={<Icon.student size={15} />} />
             <div className="td-filter-bar">
               <FilterChip label="All" count={students.length} active={stageFilter === 'all'} onClick={() => setStageFilter('all')} />
@@ -288,14 +288,13 @@ function getTodayPriority({ needsAttention, todayClasses }) {
 
 function KpiCard({ label, value, icon, tone, onClick }) {
   const cls = ['td-kpi-card', tone ? `td-kpi-card--${tone}` : ''].filter(Boolean).join(' ');
-  const fg = tone === 'warning' ? 'var(--warning)' : tone === 'danger' ? 'var(--danger)' : tone === 'info' ? 'var(--info)' : 'var(--primary)';
   return (
     <Card className={cls} onClick={onClick}>
       <div className="td-kpi-card-inner">
-        <span style={{ color: fg }}>{icon}</span>
+        <span className="td-kpi-icon">{icon}</span>
         <span className="td-kpi-icon">{label}</span>
       </div>
-      <div className="td-kpi-value" style={{ color: fg }}>{value}</div>
+      <div className="td-kpi-value">{value}</div>
     </Card>
   );
 }
@@ -314,10 +313,9 @@ function StudentRow({ student: s, onNavigate, onAction, seedsStages, onSetSeedsS
   const currentSeeds = seedsEntry ? SEEDS_STAGES[seedsEntry.stage] : null;
 
   return (
-    <Card
+      <Card
       className="td-student-row"
       onClick={() => onNavigate('students:profile', { studentId: s.id })}
-      style={{ padding: '14px 18px' }}
     >
       <div className="td-student-row-inner">
         <div className="td-student-avatar-area">
@@ -348,7 +346,7 @@ function StudentRow({ student: s, onNavigate, onAction, seedsStages, onSetSeedsS
         <div className="td-student-badges">
           <Pill tone={config.tone}>{config.label}</Pill>
           {currentSeeds ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-1)' }}>
+            <div className="flex-row gap-1">
               <Pill tone={currentSeeds.tone}>{currentSeeds.label}</Pill>
               <button
                 type="button"

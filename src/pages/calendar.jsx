@@ -2,17 +2,15 @@
  * calendar.jsx — Class scheduling and calendar view
  */
 import { useState, useEffect } from 'react';
-import { Icon, SectionHeader, Pill, Avatar, S } from '../components/shared.jsx';
+import { Icon, SectionHeader, Pill, Avatar } from '../components/shared.jsx';
 import { Card } from '../components/ui/Card.jsx';
 import { Button } from '../components/ui/Button.jsx';
-import { getClassEvents, saveClassEvent, deleteClassEvent, updateClassEventStatus, getStudents } from '../lib/workflow.js';
+import { getClassEvents, saveClassEvent, deleteClassEvent, updateClassEventStatus } from '../lib/workflow.js';
 import { sendClassInvite, getZoomUrl } from '../lib/send-invite.js';
 import { MET_SKILLS } from '../lib/report-metrics.js';
 
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const STATUS_TONE = { scheduled: 'info', completed: 'success', canceled: 'danger' };
-const DX_TONE = { 'not-started': 'muted', draft: 'warning', approved: 'success' };
-
 export default function CalendarPage({ students, onNavigate }) {
   const [events, setEvents] = useState([]);
   const [showForm, setShowForm] = useState(false);
@@ -121,10 +119,10 @@ export default function CalendarPage({ students, onNavigate }) {
 
   return (
     <div className="page-container page-container--sm">
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 24 }}>
+      <div className="flex flex-between items-start mb-6">
         <div>
-          <h1 style={S.headline}>Calendar</h1>
-          <p style={S.sub}>{allUpcoming.length} upcoming · {needsDiagnosis.length} need diagnosis</p>
+          <h1 className="page-headline">Calendar</h1>
+          <p className="page-sub">{allUpcoming.length} upcoming · {needsDiagnosis.length} need diagnosis</p>
         </div>
         <Button variant="primary" onClick={() => openSchedule(today)}><Icon.plus size={14} /> Schedule Class</Button>
       </div>
