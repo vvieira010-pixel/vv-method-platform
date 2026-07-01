@@ -22,7 +22,7 @@ export default function ReviewSession({ exercises, studentId, onClose }) {
     } else {
       setIdx(i => i + 1);
     }
-  }, [ex, studentId, idx, exercises.length]);
+  }, [ex, studentId, idx, exercises.length, answers]);
 
   // Keyboard shortcuts: 1–4 selects option, Enter advances
   useEffect(() => {

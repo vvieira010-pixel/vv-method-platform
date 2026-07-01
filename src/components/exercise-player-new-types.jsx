@@ -1,7 +1,7 @@
 /**
  * exercise-player-new-types.jsx — Players for dialogue, swap, and levelup types.
  */
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Icon } from './shared.jsx';
 import { Button } from './ui/Button.jsx';
 

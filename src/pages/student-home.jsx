@@ -1,5 +1,5 @@
 import { useState, useEffect, lazy, Suspense, useMemo } from 'react';
-import { Icon, SkeletonCard, EmptyState } from '../components/shared.jsx';
+import { Icon, SkeletonCard, EmptyState, Card } from '../components/shared.jsx';
 import { getHomework, getDiagnoses, getClassEvents, getReviews, getSubmissions, getStudentSeedsStage, getStudentGoal, saveStudentGoal } from '../lib/workflow.js';
 import { getDueCount, getDueItems, toMCQ, getAllEntries } from '../lib/spaced-repetition.js';
 
@@ -34,16 +34,15 @@ function MetricCard({ icon, label, value, sub, tone, textValue, compact, onClick
         <div className="student-metric-icon">{icon}</div>
       </button>
     );
-  }
+}
   return (
-    <article className={cls}>
+    <Card bezel className={cls}>
       <div className="student-metric-copy">
         <span>{label}</span>
         <strong>{value}</strong>
         <small>{sub}</small>
       </div>
-      <div className="student-metric-icon">{icon}</div>
-    </article>
+    </Card>
   );
 }
 
@@ -54,7 +53,7 @@ function MemoCard({ kicker, title, text }) {
   const lines = text.split(/\n+/).filter(Boolean);
   const needsClamp = lines.length > MEMO_CLAMP || text.length > 320;
   return (
-    <article className="student-panel student-panel--primary student-panel-mb">
+    <Card bezel className="student-panel--primary student-panel-mb">
       <span className="student-panel-kicker">{kicker}</span>
       <h2>{title}</h2>
       <p className={`student-memo-text${expanded ? ' student-memo-text--expanded' : ''}`}>
@@ -65,7 +64,7 @@ function MemoCard({ kicker, title, text }) {
           {expanded ? 'Show less ↑' : 'Read more ↓'}
         </button>
       )}
-    </article>
+    </Card>
   );
 }
 
@@ -287,11 +286,12 @@ export default function StudentHome({ student, onTab }) {
           <h1>Good {timeOfDay()}, {student.firstName}.</h1>
           <p>{student.currentLevel || student.band || 'Current level'} to {student.targetLevel || student.bandTarget || 'target level'} · Session {student.session || 1}/{student.totalSessions || 24}</p>
         </div>
-        <button className="student-hero-action" onClick={() => onTab(heroAction.tab)}>
-          {heroAction.icon}
-          {heroAction.label}
-        </button>
-      </section>
+         <button className="student-hero-action" onClick={() => onTab(heroAction.tab)}>
+           {heroAction.icon}
+           {heroAction.label}
+         </button>
+       </section>
+
 
       {(() => {
         const daysLeft = daysUntilExam();
@@ -299,16 +299,17 @@ export default function StudentHome({ student, onTab }) {
         return (
           <section className="student-metrics fade-up" aria-label="Status at a glance" style={{ '--delay': '0.1s' }}>
             {reviewCount > 0 && (
-              <button className="student-metric student-metric--urgent student-metric-btn" onClick={handleOpenReview} aria-label="Review due items">
-                <div className="student-metric-copy">
-                  <span>Review Due</span>
-                  <strong>{reviewCount} item{reviewCount !== 1 ? 's' : ''}</strong>
-                  <small>Spaced repetition ready</small>
-                </div>
-                <div className="student-metric-icon student-metric-icon-bg">
-                  <Icon.refresh size={19} />
-                </div>
-              </button>
+               <button className="student-metric student-metric--urgent student-metric-btn" onClick={handleOpenReview} aria-label="Review due items">
+                 <div className="student-metric-copy">
+                   <span>Review Due</span>
+                   <strong>{reviewCount} item{reviewCount !== 1 ? 's' : ''}</strong>
+                   <small>Spaced repetition ready</small>
+                 </div>
+                 <div className="student-metric-icon student-metric-icon-bg">
+                   <Icon.refresh size={19} />
+                 </div>
+               </button>
+
             )}
             <MetricCard icon={<Icon.homework size={19} />} label="Homework" value={pendingHw.length} sub={pendingHw.length === 1 ? 'task pending' : 'tasks pending'} tone="teal" onClick={() => onTab('homework')} />
             <MetricCard compact icon={<Icon.calendar size={19} />} label="Next class" value={nextDate} sub={nextTime} tone="teal" onClick={() => onTab('schedule')} />
@@ -375,97 +376,98 @@ export default function StudentHome({ student, onTab }) {
       <section className="student-grid fade-up" style={{ '--delay': '0.3s' }}>
           <div className="student-home-main">
 
-            <section className="student-panel student-panel--primary mb-3">
-            <div className="student-panel-head">
-              <h2 className="text-lg" style={{ margin: 0 }}>Learning Insights</h2>
-            </div>
-            <div className="sh-chart-wrap">
-              {developmentData.length > 0 ? (
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={developmentData} margin={{ top: 5, right: 5, left: -30, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--divider)" />
-                    <XAxis dataKey="name" fontSize={10} tickLine={false} axisLine={false} />
-                    <YAxis fontSize={10} tickLine={false} axisLine={false} domain={[0, 100]} />
-                    <Tooltip
-                      cursor={{ fill: 'var(--accent-soft-10)' }}
-                      formatter={(value, name) => [value + '%', name]}
-                    />
-                    <Bar dataKey="development" name="Development" fill="var(--primary)" radius={[4, 4, 0, 0]} />
-                    <Bar dataKey="confidence" name="Confidence" fill="var(--accent)" radius={[4, 4, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              ) : (
-                <div className="sh-chart-empty">
-                  Complete homework or get a diagnosis to see your development trend.
-                </div>
-              )}
-            </div>
-            </section>
+             <Card bezel className="student-panel--primary mb-3">
+             <div className="student-panel-head">
+               <h2 className="text-lg" style={{ margin: 0 }}>Learning Insights</h2>
+             </div>
+             <div className="sh-chart-wrap">
+               {developmentData.length > 0 ? (
+                 <ResponsiveContainer width="100%" height="100%">
+                   <BarChart data={developmentData} margin={{ top: 5, right: 5, left: -30, bottom: 0 }}>
+                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--divider)" />
+                     <XAxis dataKey="name" fontSize={10} tickLine={false} axisLine={false} />
+                     <YAxis fontSize={10} tickLine={false} axisLine={false} domain={[0, 100]} />
+                     <Tooltip
+                       cursor={{ fill: 'var(--accent-soft-10)' }}
+                       formatter={(value, name) => [value + '%', name]}
+                     />
+                     <Bar dataKey="development" name="Development" fill="var(--primary)" radius={[4, 4, 0, 0]} />
+                     <Bar dataKey="confidence" name="Confidence" fill="var(--accent)" radius={[4, 4, 0, 0]} />
+                   </BarChart>
+                 </ResponsiveContainer>
+               ) : (
+                 <div className="sh-chart-empty">
+                   Complete homework or get a diagnosis to see your development trend.
+                 </div>
+               )}
+             </div>
+             </Card>
 
-            <article className="student-panel student-panel--primary">
-            <div className="student-panel-head">
-              <div>
-                <h2>{nextClass?.title || 'Your next MET class'}</h2>
-              </div>
-              <span className="student-pill">{nextDate}</span>
-            </div>
-            <div className="student-next-layout">
-              <div>
-                <p className="student-focus-line">{nextClass?.classFocus || nextClass?.metSkillFocus || 'Your teacher will confirm the class focus.'}</p>
-                <div className="student-detail-list">
-                  <span><Icon.calendar size={14} /> {nextTime}</span>
-                  <span><Icon.progress size={14} /> {nextClass?.metSkillFocus || focusSkill}</span>
-                </div>
-              </div>
-              <div className="student-prep-box">
-                <strong>Bring to your next class</strong>
-                <p>{nextClass?.metSkillFocus || focusSkill || 'One question about your latest feedback.'}</p>
-              </div>
-            </div>
-            {upcomingClasses.length > 1 && (
-              <div className="student-upcoming-section">
-                <div className="student-upcoming-header">Upcoming schedule</div>
-                {upcomingClasses.map((cls, i) => (
-                  <div key={cls.id || i} className="student-upcoming-row">
-                    <span className="student-upcoming-date">
-                      {cls.startAt.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}
-                    </span>
-                    <span className="student-upcoming-focus">{cls.classFocus || cls.metSkillFocus || cls.title || 'Class'}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-            </article>
+             <Card bezel className="student-panel--primary">
+             <div className="student-panel-head">
+               <div>
+                 <h2>{nextClass?.title || 'Your next MET class'}</h2>
+               </div>
+               <span className="student-pill">{nextDate}</span>
+             </div>
+             <div className="student-next-layout">
+               <div>
+                 <p className="student-focus-line">{nextClass?.classFocus || nextClass?.metSkillFocus || 'Your teacher will confirm the class focus.'}</p>
+                 <div className="student-detail-list">
+                   <span><Icon.calendar size={14} /> {nextTime}</span>
+                   <span><Icon.progress size={14} /> {nextClass?.metSkillFocus || focusSkill}</span>
+                 </div>
+               </div>
+               <div className="student-prep-box">
+                 <strong>Bring to your next class</strong>
+                 <p>{nextClass?.metSkillFocus || focusSkill || 'One question about your latest feedback.'}</p>
+               </div>
+             </div>
+             {upcomingClasses.length > 1 && (
+               <div className="student-upcoming-section">
+                 <div className="student-upcoming-header">Upcoming schedule</div>
+                 {upcomingClasses.map((cls, i) => (
+                   <div key={cls.id || i} className="student-upcoming-row">
+                     <span className="student-upcoming-date">
+                       {cls.startAt.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}
+                     </span>
+                     <span className="student-upcoming-focus">{cls.classFocus || cls.metSkillFocus || cls.title || 'Class'}</span>
+                   </div>
+                 ))}
+               </div>
+             )}
+             </Card>
 
-            <article className="student-panel student-panel--todo">
-              <div className="student-panel-head">
-                <div>
-                  <h2>Your next steps</h2>
-                </div>
-              </div>
-              <div className="student-todo-list">
-                {latestReview && <TodoRow done={false} label="Teacher review ready" meta={latestReview.homeworkTitle} />}
-                <TodoRow done={!!latestFeedback} label="Review latest feedback" meta={latestFeedback ? 'Available in the Feedback tab' : 'Waiting for teacher approval'} />
-                <TodoRow done={pendingHw.length === 0} label={pendingTitle} meta={pendingHw[0]?.dueDate ? `Due ${new Date(pendingHw[0].dueDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}` : 'Homework area'} />
-              </div>
-              <button className="student-wide-action" onClick={() => onTab('homework')}>Go to homework <Icon.arrowR size={14} /></button>
-            </article>
+             <Card bezel className="student-panel--todo">
+               <div className="student-panel-head">
+                 <div>
+                   <h2>Your next steps</h2>
+                 </div>
+               </div>
+               <div className="student-todo-list">
+                 {latestReview && <TodoRow done={false} label="Teacher review ready" meta={latestReview.homeworkTitle} />}
+                 <TodoRow done={!!latestFeedback} label="Review latest feedback" meta={latestFeedback ? 'Available in the Feedback tab' : 'Waiting for teacher approval'} />
+                 <TodoRow done={pendingHw.length === 0} label={pendingTitle} meta={pendingHw[0]?.dueDate ? `Due ${new Date(pendingHw[0].dueDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}` : 'Homework area'} />
+               </div>
+               <button className="student-wide-action" onClick={() => onTab('homework')}>Go to homework <Icon.arrowR size={14} /></button>
+             </Card>
           </div>
 
           <aside className="student-home-side">
 
-            <article className="student-panel mb-3">
-              <div className="student-panel-head">
-                <div>
-                  <span className="student-panel-kicker">Weekly Goal</span>
-                  <h2>{goal ? 'Your focus this week' : 'Set a weekly goal'}</h2>
-                </div>
-                {!editingGoal && (
-                  <button type="button" className="student-text-action" onClick={() => setEditingGoal(true)}>
-                    {goal ? 'Edit' : 'Set goal'} <Icon.edit size={13} />
-                  </button>
-                )}
-              </div>
+             <Card bezel className="student-panel mb-3">
+               <div className="student-panel-head">
+                 <div>
+                   <span className="student-panel-kicker">Weekly Goal</span>
+                   <h2>{goal ? 'Your focus this week' : 'Set a weekly goal'}</h2>
+                 </div>
+                 {!editingGoal && (
+                    <button type="button" className="student-text-action" onClick={() => setEditingGoal(true)}>
+                      {goal ? 'Edit' : 'Set goal'} <Icon.edit size={13} />
+                    </button>
+
+                 )}
+               </div>
               {editingGoal ? (
                 <div>
                   <textarea
@@ -477,27 +479,29 @@ export default function StudentHome({ student, onTab }) {
                     aria-label="Your weekly goal"
                   />
                   <div className="flex gap-2 mt-2">
-                    <button
-                      type="button"
-                      className="student-wide-action"
-                      disabled={savingGoal || !goalDraft.trim()}
-                      onClick={async () => {
-                        setSavingGoal(true);
-                        await saveStudentGoal(student.id, goalDraft.trim());
-                        setGoal(goalDraft.trim());
-                        setEditingGoal(false);
-                        setSavingGoal(false);
-                      }}
-                    >
-                      {savingGoal ? 'Saving…' : 'Save goal'}
-                    </button>
-                    <button
-                      type="button"
-                      className="student-text-action self-center"
-                      onClick={() => { setGoalDraft(goal); setEditingGoal(false); }}
-                    >
-                      Cancel
-                    </button>
+                     <button
+                       type="button"
+                       className="student-wide-action"
+                       disabled={savingGoal || !goalDraft.trim()}
+                       onClick={async () => {
+                         setSavingGoal(true);
+                         await saveStudentGoal(student.id, goalDraft.trim());
+                         setGoal(goalDraft.trim());
+                         setEditingGoal(false);
+                         setSavingGoal(false);
+                       }}
+                     >
+                       {savingGoal ? 'Saving…' : 'Save goal'}
+                     </button>
+
+                     <button
+                       type="button"
+                       className="student-text-action self-center"
+                       onClick={() => { setGoalDraft(goal); setEditingGoal(false); }}
+                     >
+                       Cancel
+                     </button>
+
                   </div>
                 </div>
               ) : goal ? (
@@ -507,14 +511,14 @@ export default function StudentHome({ student, onTab }) {
                   Tell your teacher what you'd like to work on. Your goal will appear in your next diagnosis.
                 </p>
               )}
-            </article>
+               </Card>
 
-          <article className="student-panel sh-panel-flush">
-            <div className="student-panel-head">
-              <div>
-                <h2>Evaluated skills</h2>
-              </div>
-            </div>
+             <Card bezel className="student-panel sh-panel-flush">
+               <div className="student-panel-head">
+                 <div>
+                   <h2>Evaluated skills</h2>
+                 </div>
+               </div>
             {evaluatedSkills.length > 0 ? (
               <div className="student-skill-list">
                 {evaluatedSkills.slice(0, 5).map(s => <SkillRow key={s.section} skill={s} trend={getSkillTrend(s.section, approvedHistory)} onClick={() => onTab('progress')} />)}
@@ -529,43 +533,43 @@ export default function StudentHome({ student, onTab }) {
                 <button className="student-text-action text-xs" onClick={() => onTab('feedback')}>Read full feedback →</button>
               </div>
             )}
-          </article>
+             </Card>
 
           {/* Focus area callout */}
           {evaluatedSkills.length > 1 && (() => {
             const lowest = [...evaluatedSkills].sort((a, b) => (Number(a.score_0_80) || 80) - (Number(b.score_0_80) || 80))[0];
             if (!lowest || !Number(lowest.score_0_80)) return null;
             return (
-              <button type="button" className="student-focus-callout student-panel student-panel--clickable" onClick={() => onTab('progress')}>
-                <div className="student-panel-head">
-                  <div>
-                    <span className="student-panel-kicker">Focus Area</span>
-                    <h2>{lowest.section.replace(/_/g, ' ')}</h2>
-                  </div>
-                </div>
+               <Card bezel className="student-focus-callout student-panel student-panel--clickable" onClick={() => onTab('progress')}>
+                 <div className="student-panel-head">
+                   <div>
+                     <span className="student-panel-kicker">Focus Area</span>
+                     <h2>{lowest.section.replace(/_/g, ' ')}</h2>
+                   </div>
+                 </div>
                 <p>
                   This skill needs the most attention ({Number(lowest.score_0_80) || 0}/80). Focus on it in your next class or practice session.
                 </p>
                 {lowest.next_step && (
-                  <p>
-                    <strong>Next step:</strong> {lowest.next_step}
-                  </p>
-                )}
-              </button>
-            );
+                   <p>
+                     <strong>Next step:</strong> {lowest.next_step}
+                   </p>
+                 )}
+               </Card>
+             );
           })()}
 
           {(() => {
             const s = seedsStage && SEEDS_STAGES[seedsStage.stage];
             if (!s) return null;
             return (
-              <button type="button" className="student-seeds-panel student-panel student-panel--clickable" style={{ borderColor: s.color }} onClick={() => onTab('progress')}>
-                <div className="student-panel-head">
-                  <div>
-                    <span className="student-panel-kicker">Your SEEDS Cycle</span>
-                    <h2 style={{ color: s.color }}>{s.label}: {s.subtitle}</h2>
-                  </div>
-                </div>
+               <Card bezel className="student-seeds-panel student-panel student-panel--clickable" style={{ borderColor: s.color }} onClick={() => onTab('progress')}>
+                 <div className="student-panel-head">
+                   <div>
+                     <span className="student-panel-kicker">Your SEEDS Cycle</span>
+                     <h2 style={{ color: s.color }}>{s.label}: {s.subtitle}</h2>
+                   </div>
+                 </div>
                 <p>{s.studentDescription}</p>
                 <div className="student-seeds-progress">
                   {SEEDS_STAGE_ORDER.map(stageId => {
@@ -577,11 +581,11 @@ export default function StudentHome({ student, onTab }) {
                         background: isActive ? st.color : isPast ? st.color : 'var(--border)',
                         opacity: isActive ? 1 : isPast ? 0.5 : 0.3,
                       }} title={`${st.label}: ${st.subtitle}`} />
-                    );
-                  })}
-                </div>
-              </button>
-            );
+                     );
+                    })}
+                 </div>
+               </Card>
+             );
             })()}
 
 

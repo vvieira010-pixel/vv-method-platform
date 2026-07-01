@@ -47,6 +47,7 @@ import ResourcePicker from '../components/resource-picker.jsx';
 const EMPTY_FORM = {
   title: '', objective: '', description: '',
   exercises: [],
+  attachments: [],
   selfCheck: [''],
   skillType: 'grammar', dueDate: '', teacherNotes: '',
 };
@@ -860,6 +861,33 @@ Return JSON only with fields: type "read", passage (2-3 paragraphs), source, que
     }
   }
 
+  function handleResourceSelect(url) {
+    if (expandedEx) {
+      setForm(f => {
+        const nextExercises = f.exercises.map(ex => {
+          if (ex.id === expandedEx) {
+            if (url.match(/\.(mp3|wav|ogg|m4a)$/i)) {
+              return { ...ex, audioSrc: url };
+            } else if (url.match(/\.(png|jpg|jpeg|webp|gif)$/i)) {
+              if (ex.type === 'speak') return { ...ex, imageUrl: url };
+              if (ex.type === 'listen') return { ...ex, pictureHint: url };
+              return { ...ex, imageUrl: url };
+            }
+          }
+          return ex;
+        });
+        return { ...f, exercises: nextExercises };
+      });
+      window.toast?.('Resource added to exercise!', 'ok');
+    } else {
+      setForm(f => ({
+        ...f,
+        attachments: [...(f.attachments || []), url]
+      }));
+      window.toast?.('Resource added to homework!', 'ok');
+    }
+  }
+
   if (!wizardDone) return <HomeworkSetWizard onComplete={handleWizardComplete} onSkip={() => setWizardDone(true)} />;
   const subjectLabel = SUBJECT_OPTIONS.find(s => s.id === selectedSkill)?.label;
 
@@ -955,7 +983,7 @@ Return JSON only with fields: type "read", passage (2-3 paragraphs), source, que
                   </Button>
                 </div>
                 {showResourcePicker && (
-                  <ResourcePicker open={true} onClose={() => setShowResourcePicker(false)} onSelect={() => setShowResourcePicker(false)} tab="images" />
+                  <ResourcePicker open={true} onClose={() => setShowResourcePicker(false)} onSelect={handleResourceSelect} tab="images" />
                 )}
                 {(() => {
                   const SKILLS = ['all','reading','listening','grammar','vocabulary','writing','speaking'];

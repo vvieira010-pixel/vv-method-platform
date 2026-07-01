@@ -5,7 +5,6 @@
 import { useState } from 'react';
 import { Icon } from './shared.jsx';
 import { Button } from './ui/Button.jsx';
-import { Card } from './ui/Card.jsx';
 import { UNIT_LEVELS, SUBJECT_OPTIONS } from '../lib/unit-bank.js';
 
 export default function HomeworkSetWizard({ onComplete, onSkip }) {

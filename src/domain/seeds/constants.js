@@ -1,11 +1,12 @@
-// SEEDS Regenerative Inquiry Cycle — stage definitions for MET platform
+// SEEDS Regenerative Inquiry Cycle: stage definitions for MET platform
 
 export const SEEDS_STAGES = {
   sense: {
     id: 'sense',
     label: 'Sense',
     subtitle: 'Attunement',
-    description: 'Observing current English patterns — recording speaking, identifying gaps, noticing what is strong and what needs attention.',
+     description: 'Observing current English patterns, recording speaking, identifying gaps, and noticing what is strong and what needs attention.',
+
     studentDescription: 'We are noticing how your English sounds right now. This helps us understand what to work on.',
     color: 'var(--info)',
     order: 0,
@@ -15,7 +16,8 @@ export const SEEDS_STAGES = {
     id: 'envision',
     label: 'Envision',
     subtitle: 'Grounded Ideation',
-    description: 'Setting a clear goal based on what we observed — deciding what to develop and why.',
+     description: 'Setting a clear goal based on what we observed, and deciding what to develop and why.',
+
     studentDescription: 'We are planning what to improve based on what we learned about your English.',
     color: 'var(--accent)',
     order: 1,
@@ -25,7 +27,8 @@ export const SEEDS_STAGES = {
     id: 'experiment',
     label: 'Experiment',
     subtitle: 'Prototyping & Action',
-    description: 'Testing new strategies one at a time — trying, reviewing, adjusting.',
+     description: 'Testing new strategies one at a time: trying, reviewing, adjusting.',
+
     studentDescription: 'You are trying new strategies in your practice. Each attempt teaches us what works for you.',
     color: 'var(--interaction)',
     order: 2,

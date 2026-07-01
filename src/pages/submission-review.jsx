@@ -104,7 +104,7 @@ export default function SubmissionReview({ submissionId, students, onNavigate })
     if (!submission || !homework || !diagnosis) { window.toast?.('Need submission, homework, and diagnosis to compare.', 'warn'); return; }
     setAiComparing(true);
     const submissionEvidence = buildSubmissionEvidence(submission, homework);
-    const prompt = `You are reviewing a student's homework submission against the original diagnosis.
+    const prompt = `You are an expert in formative assessment using the Gap Analysis framework (Heritage 2010, Hattie & Timperley 2007).
 
 DIAGNOSIS PRIORITIES:
 ${JSON.stringify(diagnosis.sections?.priorityDiagnosis?.content || [], null, 2)}
@@ -117,13 +117,19 @@ ${submission.content || '(no text content)'}
 SUBMISSION EVIDENCE FROM STRUCTURED RESPONSES:
 ${submissionEvidence.promptText}
 
-Compare the structured response evidence to the diagnosis. For speaking tasks, evaluate
+Compare the evidence to the diagnosis. For speaking tasks, evaluate
 what the student actually said in the transcript. Use submission.content only as a
 fallback summary when no structured response transcript is available.
 
-Write "teacherFeedback" as a warm, specific note spoken directly to ${student?.name || 'the student'}:
-reference what they ACTUALLY wrote or said, name one concrete strength and the
-single most important fix, and end with a clear next step.
+Apply the gap analysis framework:
+1. Identify strengths first — specific, evidence-based strengths.
+2. Classify each gap by type:
+   - Conceptual: student doesn't understand the underlying idea
+   - Procedural: student understands but makes errors in execution
+   - Communication: student understands but can't express it adequately
+3. For each gap, provide a specific next teaching step (not "practise more").
+4. Prioritize — which gap to address first.
+5. Write teacherFeedback as: acknowledge strength → identify key gap → provide next step.
 
 Extract up to 5 key errors and suggest corrections.
 
@@ -134,10 +140,19 @@ Return JSON:
   "newErrors": ["new errors not in the diagnosis"],
   "redoRequired": false,
   "continuationFocus": "what to focus on next class",
-  "teacherFeedback": "feedback paragraph to send to student",
+  "teacherFeedback": "feedback using strength → gap → next step format",
   "corrections": [
     { "original": "error text", "improved": "corrected text", "note": "brief explanation" }
-  ]
+  ],
+  "gapAnalysis": [
+    {
+      "label": "short gap name",
+      "type": "Conceptual",
+      "evidence": "what shows this gap",
+      "nextStep": "specific teaching action"
+    }
+  ],
+  "priorityGap": "which gap to address first and why"
 }`;
 
     try {
@@ -653,13 +668,35 @@ Return JSON:
             {/* AI comparison result */}
             {aiComparison && (
               <Card className="sr-review-callout">
-                <SectionHeader title="AI Assessment" right={<Icon.spark size={15} color="var(--accent)" />} />
+                <SectionHeader title="Gap Analysis" right={<Icon.spark size={15} color="var(--accent)" />} />
                 <p className="text-sm mt-2" style={{ lineHeight: 1.6, color: 'var(--text-2)', marginBottom: 0 }}>
                   {aiComparison.didStudentImprove}
                 </p>
                 {aiComparison.correctedErrors?.length > 0 && (
                   <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 6, fontSize: 'var(--text-xs)', color: 'var(--success)', fontWeight: 600 }}>
                     <Icon.check size={12} /> Corrected: {aiComparison.correctedErrors.join(', ')}
+                  </div>
+                )}
+                {aiComparison.gapAnalysis?.length > 0 && (
+                  <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {aiComparison.gapAnalysis.map((g, i) => {
+                      const typeColors = { Conceptual: 'var(--warning)', Procedural: 'var(--accent)', Communication: 'var(--info)' };
+                      return (
+                        <div key={i} style={{ fontSize: 'var(--text-xs)', lineHeight: 1.5, padding: '8px 10px', background: 'var(--bg)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                            <span style={{ fontWeight: 600 }}>{g.label}</span>
+                            <Pill variant="ghost" style={{ fontSize: '10px', color: typeColors[g.type] || 'var(--text-2)' }}>{g.type}</Pill>
+                          </div>
+                          <div style={{ color: 'var(--text-2)' }}>{g.evidence}</div>
+                          <div style={{ color: 'var(--success)', marginTop: 4, fontStyle: 'italic' }}>→ {g.nextStep}</div>
+                        </div>
+                      );
+                    })}
+                    {aiComparison.priorityGap && (
+                      <div style={{ fontSize: 'var(--text-xs)', padding: '6px 10px', background: 'var(--warning-soft)', borderRadius: 'var(--radius-sm)', color: 'var(--warning)', fontWeight: 600 }}>
+                        Priority: {aiComparison.priorityGap}
+                      </div>
+                    )}
                   </div>
                 )}
               </Card>

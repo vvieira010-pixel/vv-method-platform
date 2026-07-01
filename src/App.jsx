@@ -42,6 +42,7 @@ const InboxPage         = lazy(() => import('./tools/tool-inbox.jsx'));
 const PerspectiveDesigner = lazy(() => import('./tools/tool-perspective-designer.jsx'));
 const ExercisesPage     = lazy(() => import('./pages/exercises.jsx'));
 const MockTestPage      = lazy(() => import('./pages/mock-test.jsx'));
+const TeacherEvaluationPage = lazy(() => import('./pages/teacher-evaluation.jsx'));
 
 export default function App() {
   const [auth, setAuth] = useState(null);
@@ -66,7 +67,8 @@ export default function App() {
     /**
      * Resolve auth payload from a verified Supabase user. A user who claims a
      * roster row by email is a student. Otherwise ONLY the configured teacher
-     * email(s) get the teacher role — any other account (e.g. a self-registered
+      * email(s) get the teacher role, and any other account (e.g. a self-registered
+
      * or mistyped email) is rejected and signed out, so self-registration can
      * never grant teacher access.
      */
@@ -132,7 +134,8 @@ export default function App() {
       history.replaceState(null, '', window.location.pathname + window.location.search);
 
       try {
-        // Validate by fetching the actual user from Supabase — rejects forged tokens.
+         // Validate by fetching the actual user from Supabase, which rejects forged tokens.
+
         const sbUser = await fetchSupabaseUser(url, anonKey, fragment.access_token);
         storeSupabaseSession({
           access_token: fragment.access_token,
@@ -143,7 +146,8 @@ export default function App() {
         const payload = await resolveAuth(fragment.access_token, sbUser);
         if (payload) setAuth(payload);
       } catch {
-        // Token invalid or Supabase unreachable — do not sign in.
+         // Token invalid or Supabase unreachable; do not sign in.
+
         clearStoredSupabaseSession();
       }
       return true;
@@ -152,7 +156,7 @@ export default function App() {
     async function restoreSession() {
       let stored = readStoredSupabaseSession();
       if (!stored?.access_token) {
-        // No valid stored session — try refreshing with the last refresh_token.
+        // No valid stored session; try refreshing with the last refresh_token.
         stored = await refreshSupabaseSession();
         if (!stored?.access_token) return;
       }
@@ -191,8 +195,10 @@ export default function App() {
     });
   }, []);
 
-  // Pending submissions badge (teacher shell). Declared here — above the
-  // role-based early returns — so the hook order stays stable across the
+   // Pending submissions badge (teacher shell). Declared here, above the
+
+   // role-based early returns, so the hook order stays stable across the
+
   // logged-out → logged-in transition (otherwise React throws "Rendered more
   // hooks than during the previous render" and blanks the app on sign in).
   useEffect(() => {
@@ -208,7 +214,8 @@ export default function App() {
     return () => window.removeEventListener('vv:students-updated', reload);
   }, []);
 
-  // Inbox unread badge — poll every 15s + react to events
+   // Inbox unread badge: poll every 15s + react to events
+
   useEffect(() => {
     const check = () => {
       const v = Number(localStorage.getItem('vv:inbox_unread') || 0);
@@ -310,8 +317,9 @@ export default function App() {
     { id: 'error-bank',   label: 'Error Bank',   icon: <Icon.warning size={16} /> },
     { id: 'reports',      label: 'Reports',      icon: <Icon.progress size={16} /> },
     { id: 'exercises',    label: 'Exercises',    icon: <Icon.book size={16} /> },
-    { id: 'mock-test',    label: 'Mock Tests',   icon: <Icon.practice size={16} /> },
-  ];
+     { id: 'mock-test',    label: 'Mock Tests',   icon: <Icon.practice size={16} /> },
+     { id: 'evaluation',    label: 'Evaluation',   icon: <Icon.star size={16} /> },
+   ];
 
   const rightSlot = (
     <div className="shell-topbar-right">
@@ -420,10 +428,13 @@ function renderTeacherPage(view, params, ctx) {
     case 'perspective':
       return <PerspectiveDesigner students={students} onNavigate={navigate} />;
 
-    case 'mock-test':
-      return <MockTestPage onNavigate={navigate} />;
+     case 'mock-test':
+       return <MockTestPage onNavigate={navigate} />;
 
-    default:
+     case 'evaluation':
+       return <TeacherEvaluationPage onNavigate={navigate} />;
+
+     default:
       return <TeacherDashboard students={students} onNavigate={navigate} teacherName={teacherName} />;
   }
 }
@@ -512,7 +523,8 @@ function OfflineBar() {
       display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
     }}>
       <span aria-hidden="true">⚠</span>
-      No internet connection — changes may not save until you're back online
+       No internet connection; changes may not save until you're back online
+
     </div>
   );
 }

@@ -9,6 +9,7 @@ function buildModule(mod) {
         type: 'listen',
         level: 'B2',
         audioText: item.script,
+        audioSrc: item.audioFile ? `/audio/${item.audioFile}` : '',
         plays: 2,
         question: q.stem,
         options: q.options,

@@ -105,34 +105,33 @@ export default function LoginScreen() {
           </div>
         </div>
 
-        <div className="lp-brand-hero">
-          <div>
-            <span className="lp-brand-tag">Your learning path</span>
-            <span className="lp-brand-b2-badge">B2 Target</span>
-          </div>
-          <h2 className="lp-brand-headline">Clear practice.<br />Better feedback.<br />Real progress.</h2>
-          <p className="lp-brand-copy">
-            Everything you need to reach B2 — lessons, feedback, homework, and your full progress history in one place.
-          </p>
-        </div>
-
-        <div className="lp-brand-features">
-          {['Personalized homework plans', 'Real-time progress tracking', 'Focused MET skill coaching from your teacher'].map(f => (
-            <div key={f} className="lp-brand-feature">
-              <span className="lp-brand-feature-dot" aria-hidden="true" />
-              {f}
+          <div className="lp-brand-hero">
+            <div>
+              <span className="lp-brand-tag">B2 Target</span>
             </div>
-          ))}
-        </div>
+            <h2 className="lp-brand-headline lp-brand-headline--serif">Target B2 mastery.<br />With confidence and precision.</h2>
+            <p className="lp-brand-copy">
+              Personalized 1:1 MET preparation designed for healthcare professionals seeking excellence.
+            </p>
+          </div>
+
+          <div className="lp-brand-features">
+            {['Personalized homework plans', 'Real-time progress tracking', 'Focused MET skill coaching'].map(f => (
+              <div key={f} className="lp-brand-feature">
+                <span className="lp-brand-feature-dot" aria-hidden="true" />
+                {f}
+              </div>
+            ))}
+          </div>
       </div>
 
-      {/* ── Sign-in panel ── */}
-      <div className="lp-signin">
-        <div className="lp-signin-inner">
-          <div className="lp-mobile-brand" aria-label="Platform">
-            <span className="lp-mobile-brand-name">MET Proficiency Mastery</span>
-            <span className="lp-mobile-brand-sub">Michigan English Test Preparation</span>
-          </div>
+       {/* ── Sign-in panel ── */}
+       <div className="lp-signin">
+         <div className="lp-signin-inner v-double-bezel">
+           <div className="lp-mobile-brand" aria-label="Platform">
+             <span className="lp-mobile-brand-name">MET Proficiency Mastery</span>
+             <span className="lp-mobile-brand-sub">Michigan English Test Preparation</span>
+           </div>
 
           {!isReset && (
             <div className="lp-invite-notice" role="note">

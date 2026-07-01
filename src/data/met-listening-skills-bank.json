@@ -361,6 +361,231 @@
           ]
         }
       ]
+    },
+    {
+      "id": "P3_03",
+      "audioFile": "TTS-Task-6-27-2026-10-09-59-AM.mp3",
+      "script": "Attention North Park residents. This is a reminder that there will be a temporary interruption of water service in your area overnight. The interruption is necessary because the city is replacing an old underground pipe to improve system reliability. Water service will be cut off from 10:00 p.m. tonight until about 6:00 a.m. tomorrow morning. Residents are strongly advised to store enough water for drinking and basic cleaning before 10:00 p.m. Please avoid using washing machines or dishwashers until service is fully restored to prevent any issues. For those who cannot store enough water, a supply tank with bottled water will be located at the North Park Community Center. This service is mainly intended for elderly residents and others with urgent needs. We apologize for any inconvenience.",
+      "questions": [
+        {
+          "stem": "Why will the water service be interrupted?",
+          "options": ["A storm damaged the water tower", "The city is replacing an old underground pipe", "Workers are cleaning the water tanks", "There is a problem at the community center"],
+          "correct": 1,
+          "explanation": "The announcement states the interruption is because the city is replacing an old underground pipe."
+        },
+        {
+          "stem": "When will the interruption take place?",
+          "options": ["From 6:00 p.m. to 10:00 p.m.", "From midnight to 8:00 a.m.", "From 10:00 p.m. to about 6:00 a.m.", "From 8:00 a.m. to noon"],
+          "correct": 2,
+          "explanation": "The water service will be cut off from 10:00 p.m. tonight until about 6:00 a.m. tomorrow morning."
+        },
+        {
+          "stem": "What are residents advised to do before 10:00 p.m.?",
+          "options": ["Turn off all lights", "Store enough water for drinking and basic cleaning", "Visit the city office", "Move to another neighborhood"],
+          "correct": 1,
+          "explanation": "Residents are advised to store enough water for drinking and basic cleaning before the service is cut."
+        },
+        {
+          "stem": "Which activity should residents avoid until service is fully restored?",
+          "options": ["Cooking breakfast", "Taking the bus", "Using washing machines or dishwashers", "Watching television"],
+          "correct": 2,
+          "explanation": "The announcement asks residents to avoid using washing machines or dishwashers."
+        },
+        {
+          "stem": "Who is the supply tank with bottled water mainly intended for?",
+          "options": ["Children and teenagers", "City workers only", "Tourists staying in hotels", "Elderly residents and others with urgent needs"],
+          "correct": 3,
+          "explanation": "The bottled water is mainly intended for elderly residents and others with urgent needs."
+        },
+        {
+          "stem": "Where will the supply tank with bottled water be located?",
+          "options": ["City hall", "North Park Community Center", "Museum lobby", "Main library"],
+          "correct": 1,
+          "explanation": "The supply tank will be located at the North Park Community Center."
+        },
+        {
+          "stem": "What two main uses of stored water does the reminder mention?",
+          "options": ["Gardening and car washing", "Drinking and basic cleaning", "Painting and cooking", "Watering plants and showering"],
+          "correct": 1,
+          "explanation": "The reminder mentions storing water for drinking and basic cleaning."
+        },
+        {
+          "stem": "Why is it important to prepare before 10:00 p.m.?",
+          "options": ["To avoid traffic", "Because service stops at 10:00 p.m.", "To meet city workers", "To receive bottled water"],
+          "correct": 1,
+          "explanation": "Preparation is needed because the water service will be cut off at 10:00 p.m."
+        },
+        {
+          "stem": "The interruption will happen during the daytime.",
+          "options": ["True", "False"],
+          "correct": 1,
+          "explanation": "The interruption happens overnight (10 p.m. to 6 a.m.)."
+        },
+        {
+          "stem": "The announcement is for residents of North Park.",
+          "options": ["True", "False"],
+          "correct": 0,
+          "explanation": "The announcement explicitly addresses North Park residents."
+        },
+        {
+          "stem": "Residents are encouraged to use dishwashers during the interruption.",
+          "options": ["True", "False"],
+          "correct": 1,
+          "explanation": "Residents are asked to avoid using dishwashers until service is restored."
+        }
+      ]
+    },
+    {
+      "id": "P3_04",
+      "audioFile": "TTS-Task-6-27-2026-10-12-05-AM.mp3",
+      "script": "When we feel stuck on a problem, many of us tend to stay at our desks and try even harder to find a solution. However, this often leads to repetitive thinking, where we just keep circling the same wrong ideas. Short walks can be a powerful tool to break this cycle. By changing your physical environment, you interrupt that repetitive loop and allow your brain to approach the problem from a new angle. For example, a design team I know holds ten-minute walking meetings whenever they cannot agree on a solution. They've found that moving together makes the conversation calmer and more creative. Now, a word of caution: walking is not a replacement for focused work at a desk. It is simply one tool among others. Once you've had your breakthrough during a walk, you must still return to your desk to do the actual work of implementing the solution. So, the next time your thinking starts to go in circles, just stand up and take a short walk.",
+      "questions": [
+        {
+          "stem": "What do many people usually do when they feel stuck on a problem?",
+          "options": ["Take a long vacation", "Stay at their desks and try harder", "Immediately ask their manager", "Switch to another job"],
+          "correct": 1,
+          "explanation": "The speaker says many people tend to stay at their desks and try even harder."
+        },
+        {
+          "stem": "How can short walks be helpful?",
+          "options": ["They make people work faster", "They change your environment and interrupt repetitive thinking", "They replace the need for meetings", "They stop people from talking to each other"],
+          "correct": 1,
+          "explanation": "Short walks change the environment and interrupt repetitive thinking loops."
+        },
+        {
+          "stem": "What does the design team mentioned in the talk do when they cannot agree on a solution?",
+          "options": ["Cancel the project", "Work overtime at their desks", "Hold 10-minute walking meetings", "Ask another team to decide"],
+          "correct": 2,
+          "explanation": "The design team holds ten-minute walking meetings when they disagree."
+        },
+        {
+          "stem": "According to the speaker, how do these walking meetings affect conversations?",
+          "options": ["They become louder and more stressful", "They become calmer and more creative", "They become shorter but more confusing", "They become less frequent"],
+          "correct": 1,
+          "explanation": "The speaker notes that moving together makes conversations calmer and more creative."
+        },
+        {
+          "stem": "What important warning does the speaker give about walking?",
+          "options": ["It can completely replace focused work", "It is only useful for managers", "It is not helpful for decision making", "It is not a replacement for focused work at a desk"],
+          "correct": 3,
+          "explanation": "The speaker warns that walking is not a replacement for focused work at a desk."
+        },
+        {
+          "stem": "Why might walking help people suggest more creative ideas?",
+          "options": ["Faster heart rate", "Interrupts repetitive thinking", "Better oxygen to brain", "More social interaction"],
+          "correct": 1,
+          "explanation": "Walking interrupts the repetitive loop of thinking, allowing for a new angle."
+        },
+        {
+          "stem": "What should people still do after taking a walk, according to the speaker?",
+          "options": ["Take a nap", "Go home", "Return to desk for focused work", "Call a manager"],
+          "correct": 2,
+          "explanation": "People must still return to their desks to implement the solution."
+        },
+        {
+          "stem": "What does the speaker suggest you do if your thinking “starts to go in circles”?",
+          "options": ["Drink coffee", "Try harder", "Take a short walk", "Write a list"],
+          "correct": 2,
+          "explanation": "The speaker suggests taking a short walk when thinking goes in circles."
+        },
+        {
+          "stem": "The speaker says walking meetings should last at least one hour.",
+          "options": ["True", "False"],
+          "correct": 1,
+          "explanation": "The design team mentioned holds ten-minute walking meetings."
+        },
+        {
+          "stem": "Walking is presented as one tool among others for solving problems.",
+          "options": ["True", "False"],
+          "correct": 0,
+          "explanation": "The speaker says it is 'simply one tool among others'."
+        },
+        {
+          "stem": "The design team never disagrees on solutions anymore.",
+          "options": ["True", "False"],
+          "correct": 1,
+          "explanation": "They use walking meetings *when* they cannot agree, not that they never disagree."
+        }
+      ]
+    },
+    {
+      "id": "P3_05",
+      "audioFile": "TTS-Task-6-27-2026-10-02-34-AM.mp3",
+      "script": "Hello everyone, and thank you so much for volunteering at the city museum. We are very excited to have you on board. Please listen carefully to the following instructions. All volunteers should arrive at the museum fifteen minutes before their shift starts. This extra time is important so you can collect your name badges and leave your bags in the staff room before heading to your posts. Most of you will be stationed in the main wings to help visitors find the correct galleries. If a visitor asks a question that you cannot answer, please do not guess; instead, kindly send them to the information desk located in the main lobby. Regarding food and drinks, please remember that they are strictly banned in the exhibition rooms to protect the artwork. You may have your snacks and beverages in the staff room, but please finish them before you begin your shift. Thank you again for your help!",
+      "questions": [
+        {
+          "stem": "What is the main purpose of this announcement?",
+          "options": ["To advertise a new museum exhibition", "To thank visitors for coming", "To give instructions to museum volunteers", "To invite people to a concert"],
+          "correct": 2,
+          "explanation": "The announcement is intended to give instructions to museum volunteers."
+        },
+        {
+          "stem": "When should volunteers arrive before their shift starts?",
+          "options": ["5 minutes before", "10 minutes before", "15 minutes before", "30 minutes before"],
+          "correct": 2,
+          "explanation": "Volunteers are asked to arrive fifteen minutes before their shift starts."
+        },
+        {
+          "stem": "Why should volunteers arrive early?",
+          "options": ["To buy tickets at the entrance", "To collect their name badges and leave their bags in the staff room", "To have a full tour of the museum", "To meet the mayor"],
+          "correct": 1,
+          "explanation": "They arrive early to collect badges and store their bags."
+        },
+        {
+          "stem": "What will most volunteers do during the event?",
+          "options": ["Guide school groups around the city", "Help visitors find the correct galleries", "Sell food and drinks in the café", "Work in the museum office"],
+          "correct": 1,
+          "explanation": "Most will be stationed in the main wings to help visitors find galleries."
+        },
+        {
+          "stem": "What should volunteers do if they cannot answer a visitor’s question?",
+          "options": ["Guess the answer", "Tell the visitor to search online", "Ignore the question", "Send the visitor to the information desk"],
+          "correct": 3,
+          "explanation": "Volunteers are instructed to send visitors to the information desk if they can't answer."
+        },
+        {
+          "stem": "What rule about food and drinks is mentioned?",
+          "options": ["They are allowed everywhere in the museum", "They are only allowed in the staff room", "They are not allowed in the exhibition rooms", "They must be shared with visitors"],
+          "correct": 2,
+          "explanation": "Food and drinks are strictly banned in the exhibition rooms."
+        },
+        {
+          "stem": "Where is the information desk located?",
+          "options": ["Staff room", "Main lobby", "Exit gate", "Café"],
+          "correct": 1,
+          "explanation": "The information desk is located in the main lobby."
+        },
+        {
+          "stem": "What should volunteers do with their bags before starting their shift?",
+          "options": ["Keep with them", "Leave in staff room", "Give to security", "Put in lockers"],
+          "correct": 1,
+          "explanation": "They should leave their bags in the staff room."
+        },
+        {
+          "stem": "When should volunteers finish their food and drinks?",
+          "options": ["During shift", "Before shift", "In galleries", "At lunch break"],
+          "correct": 1,
+          "explanation": "They should finish their food and drinks before they begin their shift."
+        },
+        {
+          "stem": "Volunteers are told to guess if they do not know an answer.",
+          "options": ["True", "False"],
+          "correct": 1,
+          "explanation": "The speaker explicitly says 'please do not guess'."
+        },
+        {
+          "stem": "The announcement thanks volunteers for helping at the museum.",
+          "options": ["True", "False"],
+          "correct": 0,
+          "explanation": "The speaker starts and ends by thanking the volunteers."
+        },
+        {
+          "stem": "Food and drinks are banned in the exhibition rooms.",
+          "options": ["True", "False"],
+          "correct": 0,
+          "explanation": "Food and drinks are strictly banned in the exhibition rooms."
+        }
+      ]
     }
   ]
 }

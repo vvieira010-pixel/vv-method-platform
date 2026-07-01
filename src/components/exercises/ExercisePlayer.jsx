@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react'; // ExercisePlayer
+import { useState, useCallback, useRef, useEffect } from 'react'; // ExercisePlayer
 import { motion } from 'motion/react';
 import { Icon } from '../shared.jsx';
 import { loadExercises } from './validateExercise.js';
@@ -283,7 +283,7 @@ function ProgressBar({ current, total }) {
   );
 }
 
-function ScoreSummary({ results, total }) {
+function ScoreSummary({ results }) {
   const closed = results.filter(r => r.correct !== null && r.correct !== undefined);
   const correct = closed.filter(r => r.correct === true).length;
   const open = results.filter(r => r.submitted && r.correct === null).length;
@@ -328,43 +328,52 @@ export default function ExercisePlayer({ exercises: raw, title, onSessionComplet
   const [current, setCurrent] = useState(0);
   const [results, setResults] = useState([]);
   const [done, setDone] = useState(false);
+  const currentRef = useRef(current);
+  const totalRef = useRef(exercises.length);
+  const onDoneRef = useRef(onSessionComplete);
   const resultsRef = useRef(results);
+  useEffect(() => { currentRef.current = current; });
+  useEffect(() => { totalRef.current = exercises.length; });
+  useEffect(() => { onDoneRef.current = onSessionComplete; });
+  useEffect(() => { resultsRef.current = results; });
 
   const handleComplete = useCallback((result) => {
     setResults(prev => {
       const next = [...prev];
-      next[current] = { ...result, index: current };
-      resultsRef.current = next;
+      const idx = currentRef.current;
+      next[idx] = { ...result, index: idx };
       return next;
     });
-  }, [current]);
+  }, [setResults]);
 
   const handleNext = useCallback(() => {
-    const nextIdx = current + 1;
-    if (nextIdx >= exercises.length) {
+    const idx = currentRef.current;
+    const nextIdx = idx + 1;
+    if (nextIdx >= totalRef.current) {
       setDone(true);
-      if (onSessionComplete) {
+      const cb = onDoneRef.current;
+      if (cb) {
         const live = resultsRef.current.filter(r => r && r.correct !== null && r.correct !== undefined);
         const score = live.length > 0 ? Math.round((live.filter(r => r.correct).length / live.length) * 100) : null;
-        onSessionComplete({ results: resultsRef.current, score });
+        cb({ results: resultsRef.current, score });
       }
     } else {
       setCurrent(nextIdx);
     }
-  }, [current, exercises.length, onSessionComplete]);
+  }, [setCurrent, setDone]);
 
   const handleBack = useCallback(() => {
-    if (current > 0) setCurrent(c => c - 1);
-  }, [current]);
+    if (currentRef.current > 0) setCurrent(c => c - 1);
+  }, [setCurrent]);
 
   const handleSkip = useCallback(() => {
-    const nextIdx = current + 1;
-    if (nextIdx >= exercises.length) {
+    const nextIdx = currentRef.current + 1;
+    if (nextIdx >= totalRef.current) {
       setDone(true);
     } else {
       setCurrent(nextIdx);
     }
-  }, [current, exercises.length]);
+  }, [setCurrent, setDone]);
 
   // Errors only (nothing valid loaded)
   if (errors.length > 0 && exercises.length === 0) {

@@ -28,7 +28,21 @@ import {
   refreshSupabaseSession,
 } from './supabase-storage.js';
 
+/* ─── cache ────────────────────────────────────────────────── */
+
+const cache = new Map();
+const CACHE_TTL = 30000; // 30 seconds
+
+function invalidateCache(table) {
+  for (const key of cache.keys()) {
+    if (key.startsWith(`${table}:`)) {
+      cache.delete(key);
+    }
+  }
+}
+
 /* ─── session / context ──────────────────────────────────────── */
+
 
 const ROLE_KEY = 'vv:db_role';
 
@@ -74,8 +88,16 @@ async function sbFetch(ctx, path, init = {}) {
 }
 
 export async function sbSelect(ctx, table, query = '') {
+  const cacheKey = `${table}:${query}`;
+  const cached = cache.get(cacheKey);
+  if (cached && (Date.now() - cached.timestamp < CACHE_TTL)) {
+    return cached.data;
+  }
+
   const res = await sbFetch(ctx, `${table}${query ? `?${query}` : ''}`);
-  return res.json();
+  const data = await res.json();
+  cache.set(cacheKey, { data, timestamp: Date.now() });
+  return data;
 }
 
 async function sbInsert(ctx, table, row) {
@@ -84,6 +106,7 @@ async function sbInsert(ctx, table, row) {
     headers: { Prefer: 'return=representation' },
     body: JSON.stringify(row),
   });
+  invalidateCache(table);
   return (await res.json())[0];
 }
 
@@ -93,11 +116,13 @@ async function sbUpdate(ctx, table, filter, patch) {
     headers: { Prefer: 'return=representation' },
     body: JSON.stringify(patch),
   });
+  invalidateCache(table);
   return (await res.json())[0] || null;
 }
 
 async function sbDelete(ctx, table, filter) {
   await sbFetch(ctx, `${table}?${filter}`, { method: 'DELETE' });
+  invalidateCache(table);
 }
 
 /* ─── id resolution (local string ⇄ row uuid) ────────────────── */

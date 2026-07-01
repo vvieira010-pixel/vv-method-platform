@@ -77,6 +77,7 @@ export async function saveHomework(data) {
   return saveVia('homework', K.homework, data, {
     diagnosisId: null, assignedAt: new Date().toISOString(), status: 'not-started',
     activities: data?.activities || data?.tasks || [],
+    attachments: data?.attachments || [],
   });
 }
 export async function deleteHomework(id) {

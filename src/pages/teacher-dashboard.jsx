@@ -136,115 +136,115 @@ export default function TeacherDashboard({ students, onNavigate, teacherName = '
         <p className="td-sub">{today} — your teaching cycle at a glance.</p>
       </div>
 
-      {/* Today's priority */}
-      <Card className="td-priority-card">
-        <div className="td-priority-icon">{priority.icon}</div>
-        <div className="teacher-priority-copy">
-          <h2 className="td-priority-title">{priority.title}</h2>
-          <p className="td-priority-text">{priority.text}</p>
-        </div>
-        <Button variant="primary" onClick={() => onNavigate(priority.target, priority.params || {})}>
-          {priority.action} <Icon.arrowR size={14} />
-        </Button>
-      </Card>
+       {/* Today's priority */}
+       <Card className="td-priority-card" bezel>
+         <div className="td-priority-icon">{priority.icon}</div>
+         <div className="teacher-priority-copy">
+           <h2 className="td-priority-title">{priority.title}</h2>
+           <p className="td-priority-text">{priority.text}</p>
+         </div>
+         <Button variant="primary" onClick={() => onNavigate(priority.target, priority.params || {})}>
+           {priority.action} <Icon.arrowR size={14} />
+         </Button>
+       </Card>
 
-      {/* KPIs */}
-      <div className="td-kpi-grid">
-        {[
-          { label: 'Students', value: students.length, icon: <Icon.student size={16} />, tone: 'navy' },
-          { label: 'Classes today', value: classesToday, icon: <Icon.calendar size={16} />, tone: classesToday > 0 ? 'info' : 'teal' },
-          { label: 'Need diagnosis', value: needDiagnosis, icon: <Icon.diagnose size={16} />, tone: needDiagnosis > 0 ? 'warning' : 'teal', onClick: () => setStageFilter('needs-diagnosis') },
-          { label: 'Pending review', value: pendingReview, icon: <Icon.doc size={16} />, tone: pendingReview > 0 ? 'danger' : 'teal', onClick: () => onNavigate('submissions') },
-        ].map((kpi, i) => (
-          <div key={kpi.label} className="td-anim" style={{ animationDelay: `${i * 60}ms` }}>
-            <KpiCard {...kpi} />
-          </div>
-        ))}
-      </div>
+       {/* KPIs */}
+       <div className="td-kpi-grid">
+         {[
+           { label: 'Students', value: students.length, icon: <Icon.student size={16} />, tone: 'navy' },
+           { label: 'Classes today', value: classesToday, icon: <Icon.calendar size={16} />, tone: classesToday > 0 ? 'info' : 'teal' },
+           { label: 'Need diagnosis', value: needDiagnosis, icon: <Icon.diagnose size={16} />, tone: needDiagnosis > 0 ? 'warning' : 'teal', onClick: () => setStageFilter('needs-diagnosis') },
+           { label: 'Pending review', value: pendingReview, icon: <Icon.doc size={16} />, tone: pendingReview > 0 ? 'danger' : 'teal', onClick: () => onNavigate('submissions') },
+         ].map((kpi, i) => (
+           <div key={kpi.label} className="td-anim" style={{ animationDelay: `${i * 60}ms` }}>
+             <KpiCard {...kpi} />
+           </div>
+         ))}
+       </div>
 
-      <div className="teacher-dashboard-stack">
-        {/* Quick actions — top of stack for immediate access */}
-        <Card className="td-card-section">
-          <SectionHeader title="Quick Actions" icon={<Icon.spark size={15} />} />
-          <div className="td-list-wrapper">
-            <QuickAction icon={<Icon.student size={16} />} label="Add new student" onClick={() => onNavigate('students')} />
-            <QuickAction icon={<Icon.calendar size={16} />} label="Schedule a class" onClick={() => onNavigate('calendar')} />
-            <QuickAction icon={<Icon.diagnose size={16} />} label="Run a diagnosis" onClick={() => onNavigate('diagnostics')} />
-            <QuickAction icon={<Icon.homework size={16} />} label="Create homework" onClick={() => onNavigate('homework')} />
-            <QuickAction icon={<Icon.warning size={16} />} label="View error bank" onClick={() => onNavigate('error-bank')} />
-          </div>
-        </Card>
+       <div className="teacher-dashboard-stack">
+         {/* Quick actions — top of stack for immediate access */}
+         <Card className="td-card-section" bezel>
+           <SectionHeader title="Quick Actions" icon={<Icon.spark size={15} />} />
+           <div className="td-list-wrapper">
+             <QuickAction icon={<Icon.student size={16} />} label="Add new student" onClick={() => onNavigate('students')} />
+             <QuickAction icon={<Icon.calendar size={16} />} label="Schedule a class" onClick={() => onNavigate('calendar')} />
+             <QuickAction icon={<Icon.diagnose size={16} />} label="Run a diagnosis" onClick={() => onNavigate('diagnostics')} />
+             <QuickAction icon={<Icon.homework size={16} />} label="Create homework" onClick={() => onNavigate('homework')} />
+             <QuickAction icon={<Icon.warning size={16} />} label="View error bank" onClick={() => onNavigate('error-bank')} />
+           </div>
+         </Card>
 
-        {/* Today's classes */}
-        <Card className="td-card-section">
-          <SectionHeader title="Today's Classes" icon={<Icon.calendar size={15} />} action={<Button variant="ghost" size="sm" onClick={() => onNavigate('calendar')}>View calendar</Button>} />
-          {todayClasses.length === 0 ? (
-            <EmptyState
-              icon={<IlloNoClasses />}
-              title="No classes today"
-              text="Use this time to catch up on diagnoses, review homework, or plan ahead."
-              action="Schedule a class"
-              onAction={() => onNavigate('calendar')}
-            />
-          ) : (
-            <div className="td-list-wrapper">
-              {todayClasses.map(ev => {
-                const student = students.find(s => s.id === ev.studentId);
-                return (
-                  <div key={ev.id} className="td-list-row">
-                    <Avatar name={student?.name || '?'} size={28} />
-                    <div className="flex-1">
-                      <div className="td-row-title">{student?.firstName || 'Unknown'} — {ev.title}</div>
-                      <div className="td-row-sub">{ev.startTime || '—'} · {ev.classFocus || 'No focus set'}</div>
-                    </div>
-                    <Button variant="ghost" size="sm" onClick={() => onNavigate('calendar:class', { classEventId: ev.id })}>Open</Button>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </Card>
+         {/* Today's classes */}
+         <Card className="td-card-section" bezel>
+           <SectionHeader title="Today's Classes" icon={<Icon.calendar size={15} />} action={<Button variant="ghost" size="sm" onClick={() => onNavigate('calendar')}>View calendar</Button>} />
+           {todayClasses.length === 0 ? (
+             <EmptyState
+               icon={<IlloNoClasses />}
+               title="No classes today"
+               text="Use this time to catch up on diagnoses, review homework, or plan ahead."
+               action="Schedule a class"
+               onAction={() => onNavigate('calendar')}
+             />
+           ) : (
+             <div className="td-list-wrapper">
+               {todayClasses.map(ev => {
+                 const student = students.find(s => s.id === ev.studentId);
+                 return (
+                   <div key={ev.id} className="td-list-row">
+                     <Avatar name={student?.name || '?'} size={28} />
+                     <div className="flex-1">
+                       <div className="td-row-title">{student?.firstName || 'Unknown'} — {ev.title}</div>
+                       <div className="td-row-sub">{ev.startTime || '—'} · {ev.classFocus || 'No focus set'}</div>
+                     </div>
+                     <Button variant="ghost" size="sm" onClick={() => onNavigate('calendar:class', { classEventId: ev.id })}>Open</Button>
+                   </div>
+                 );
+               })}
+             </div>
+           )}
+         </Card>
 
-        {needsAttention.length > 0 && (
-          <div className="td-alert-banner">
-            <Icon.spark size={14} />
-            <span>{needsAttention.length} student{needsAttention.length > 1 ? 's' : ''} need{needsAttention.length === 1 ? 's' : ''} attention</span>
-            <button className="td-alert-link" onClick={() => setStageFilter('submitted')}>
-              Review now <Icon.arrowR size={12} />
-            </button>
-          </div>
-        )}
+         {needsAttention.length > 0 && (
+           <div className="td-alert-banner">
+             <Icon.spark size={14} />
+             <span>{needsAttention.length} student{needsAttention.length > 1 ? 's' : ''} need{needsAttention.length === 1 ? 's' : ''} attention</span>
+             <button className="td-alert-link" onClick={() => setStageFilter('submitted')}>
+               Review now <Icon.arrowR size={12} />
+             </button>
+           </div>
+         )}
 
-        {/* Student cycle board */}
-        <Card className="td-card-section">
-          <div className="flex-wrap-row-3 items-center mb-2">
-            <SectionHeader title="Student Cycle Board" icon={<Icon.student size={15} />} />
-            <div className="td-filter-bar">
-              <FilterChip label="All" count={students.length} active={stageFilter === 'all'} onClick={() => setStageFilter('all')} />
-              {Object.entries(STAGE_CONFIG)
-                .filter(([key]) => stageCounts[key] > 0)
-                .map(([key, cfg]) => (
-                  <FilterChip key={key} label={cfg.label} count={stageCounts[key]} active={stageFilter === key} onClick={() => setStageFilter(key)} />
-                ))}
-            </div>
-          </div>
-          {loading ? (
-            <div aria-busy="true" aria-label="Loading student data" className="td-skeleton-area">
-              <SkeletonCard height={60} lines={1} />
-              <SkeletonCard height={60} lines={1} />
-              <SkeletonCard height={60} lines={1} />
-            </div>
-          ) : urgencySorted.length === 0 ? (
-            <EmptyState icon={<Icon.student size={20} />} title="No students match this filter" text="Try selecting a different filter above or check the Students page." action="View all students" onAction={() => setStageFilter('all')} />
-          ) : (
-            <div className="td-cycle-list">
-              {urgencySorted.map(s => (
-                <StudentRow key={s.id} student={s} onNavigate={onNavigate} onAction={handleAction} seedsStages={seedsStages} onSetSeedsStage={handleSetSeedsStage} />
-              ))}
-            </div>
-          )}
-        </Card>
-      </div>
+         {/* Student cycle board */}
+         <Card className="td-card-section" bezel>
+           <div className="flex-wrap-row-3 items-center mb-2">
+             <SectionHeader title="Student Cycle Board" icon={<Icon.student size={15} />} />
+             <div className="td-filter-bar">
+               <FilterChip label="All" count={students.length} active={stageFilter === 'all'} onClick={() => setStageFilter('all')} />
+               {Object.entries(STAGE_CONFIG)
+                 .filter(([key]) => stageCounts[key] > 0)
+                 .map(([key, cfg]) => (
+                   <FilterChip key={key} label={cfg.label} count={stageCounts[key]} active={stageFilter === key} onClick={() => setStageFilter(key)} />
+                 ))}
+             </div>
+           </div>
+           {loading ? (
+             <div aria-busy="true" aria-label="Loading student data" className="td-skeleton-area">
+               <SkeletonCard height={60} lines={1} />
+               <SkeletonCard height={60} lines={1} />
+               <SkeletonCard height={60} lines={1} />
+             </div>
+           ) : urgencySorted.length === 0 ? (
+             <EmptyState icon={<Icon.student size={20} />} title="No students match this filter" text="Try selecting a different filter above or check the Students page." action="View all students" onAction={() => setStageFilter('all')} />
+           ) : (
+             <div className="td-cycle-list">
+               {urgencySorted.map(s => (
+                 <StudentRow key={s.id} student={s} onNavigate={onNavigate} onAction={handleAction} seedsStages={seedsStages} onSetSeedsStage={handleSetSeedsStage} />
+               ))}
+             </div>
+           )}
+         </Card>
+       </div>
     </div>
   );
 }
@@ -298,7 +298,7 @@ function KpiCard({ label, value, icon, tone, onClick }) {
     <Card className={cls} onClick={onClick}>
       <div className="td-kpi-card-inner">
         <span className="td-kpi-icon">{icon}</span>
-        <span className="td-kpi-icon">{label}</span>
+        <span className="td-kpi-label">{label}</span>
       </div>
       <div className="td-kpi-value">{value}</div>
     </Card>
@@ -318,11 +318,12 @@ function StudentRow({ student: s, onNavigate, onAction, seedsStages, onSetSeedsS
   const seedsEntry = seedsStages[s.id];
   const currentSeeds = seedsEntry ? SEEDS_STAGES[seedsEntry.stage] : null;
 
-  return (
-      <Card
-      className="td-student-row"
-      onClick={() => onNavigate('students:profile', { studentId: s.id })}
-    >
+   return (
+       <Card
+       className="td-student-row"
+       bezel
+       onClick={() => onNavigate('students:profile', { studentId: s.id })}
+     >
       <div className="td-student-row-inner">
         <div className="td-student-avatar-area">
           <Avatar name={s.name} size={34} />
