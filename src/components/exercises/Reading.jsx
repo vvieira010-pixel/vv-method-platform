@@ -9,7 +9,7 @@ function optionBase(submitted, selected, correct, i) {
           padding: '12px 16px', borderRadius: 'var(--radius-sm)',
     border: '1.5px solid', cursor: submitted ? 'default' : 'pointer',
     transition: 'all 0.15s', fontSize: 14.5, lineHeight: 1.5,
-    fontFamily: 'var(--font-ui)', textAlign: 'left', width: '100%',
+    fontFamily: 'var(--font-sans)', textAlign: 'left', width: '100%',
     background: 'var(--surface)',
   };
   if (!submitted) {
@@ -127,7 +127,7 @@ export default function Reading({ exercise, onComplete }) {
               ? 'var(--border)'
               : `linear-gradient(120deg, ${TEAL} 0%, ${NAVY} 100%)`,
             color: '#fff', fontWeight: 600, fontSize: 14,
-            fontFamily: 'var(--font-ui)',
+            fontFamily: 'var(--font-sans)',
             opacity: selected == null ? 0.5 : 1, transition: 'all 0.15s',
           }}
         >

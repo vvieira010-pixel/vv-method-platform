@@ -13,7 +13,7 @@ import {
   storeSupabaseSession, getSupabaseConfig,
   resetPasswordForEmail,
 } from '../lib/supabase-storage.js';
-import { Icon } from '../components/shared.jsx';
+import { Icon, Button } from '../components/shared.jsx';
 
 
 
@@ -127,7 +127,7 @@ export default function LoginScreen() {
 
        {/* ── Sign-in panel ── */}
        <div className="lp-signin">
-         <div className="lp-signin-inner v-double-bezel">
+         <div className="lp-signin-inner">
            <div className="lp-mobile-brand" aria-label="Platform">
              <span className="lp-mobile-brand-name">MET Proficiency Mastery</span>
              <span className="lp-mobile-brand-sub">Michigan English Test Preparation</span>
@@ -188,11 +188,11 @@ export default function LoginScreen() {
                 </div>
               )}
 
-              <button type="submit" className="btn-primary" disabled={loading} style={{ width: '100%', padding: '13px', fontSize: 'var(--text-base)', fontWeight: 700 }}>
+              <Button type="submit" variant="primary" disabled={loading} block style={{ padding: '13px', fontSize: 'var(--text-base)', fontWeight: 700 }}>
                 {loading
                   ? <><span className="lp-spinner" />{isReset ? 'Sending…' : 'Signing in…'}</>
                   : isReset ? 'Send link' : 'Sign in'}
-              </button>
+              </Button>
             </form>
           )}
 

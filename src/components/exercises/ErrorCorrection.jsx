@@ -79,7 +79,7 @@ export default function ErrorCorrection({ exercise, onComplete }) {
         style={{
           width: '100%', padding: '12px 14px', borderRadius: 'var(--radius-sm)',
           border: `1.5px solid ${submitted ? (isCorrect ? 'var(--ex-correct-strong)' : 'var(--danger)') : answer.trim() ? TEAL : 'var(--border)'}`,
-          fontSize: 14.5, fontFamily: 'var(--font-ui)', outline: 'none',
+          fontSize: 14.5, fontFamily: 'var(--font-sans)', outline: 'none',
           background: submitted ? (isCorrect ? 'var(--ex-correct-bg)' : 'var(--ex-wrong-bg)') : 'var(--surface)',
           color: submitted ? (isCorrect ? 'var(--ex-correct-text)' : 'var(--ex-wrong-text)') : 'var(--text)',
           transition: 'border-color 0.15s, background 0.15s',
@@ -95,7 +95,7 @@ export default function ErrorCorrection({ exercise, onComplete }) {
             padding: '10px 24px', borderRadius: 'var(--radius-sm)', border: 'none',
             cursor: answer.trim() ? 'pointer' : 'not-allowed',
             background: answer.trim() ? `linear-gradient(120deg, ${TEAL} 0%, ${NAVY} 100%)` : 'var(--border)',
-            color: '#fff', fontWeight: 600, fontSize: 14, fontFamily: 'var(--font-ui)',
+            color: '#fff', fontWeight: 600, fontSize: 14, fontFamily: 'var(--font-sans)',
             opacity: answer.trim() ? 1 : 0.5, transition: 'all 0.15s',
           }}
         >

@@ -121,7 +121,7 @@
 
 [data-theme="dark"] .shell-nav-btn.active {
   background: rgba(20,136,145,0.16);
-  border-color: var(--accent-soft-20);
+  border-color: rgba(var(--accent-rgb), 0.20);
 }
 
 [data-theme="dark"] .shell-mobile-nav {
@@ -135,7 +135,7 @@
 
 [data-theme="dark"] .workflow-strip {
   background: rgba(15,24,35,0.6);
-  border-bottom-color: var(--accent-soft-08);
+  border-bottom-color: rgba(var(--accent-rgb), 0.08);
 }
 
 /* ── Dark mode: Cards ────────────────────────────────────────── */
@@ -176,15 +176,6 @@
 
 [data-theme="dark"] .btn-ghost {
   color: var(--text-2);
-}
-
-[data-theme="dark"] .btn-quiet {
-  color: var(--muted);
-}
-
-[data-theme="dark"] .btn-quiet:hover:not(:disabled) {
-  background: var(--divider);
-  color: var(--text);
 }
 
 [data-theme="dark"] .tabs {
@@ -235,7 +226,7 @@
 /* ── Dark mode: Student dashboard ────────────────────────────── */
 [data-theme="dark"] .dash-topbar {
   background: linear-gradient(180deg, #0a1118 0%, #111d2a 100%);
-  border-bottom-color: var(--accent-soft-08);
+  border-bottom-color: rgba(var(--accent-rgb), 0.08);
 }
 
 [data-theme="dark"] .dash-nav-btn {
@@ -244,7 +235,7 @@
 
 [data-theme="dark"] .dash-nav-btn.active {
   background: rgba(20,136,145,0.22);
-  border-color: var(--accent-soft-25);
+  border-color: rgba(var(--accent-rgb), 0.25);
 }
 
 [data-theme="dark"] .dash-nav-btn:hover:not(.active) {

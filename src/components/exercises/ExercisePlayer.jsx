@@ -176,12 +176,12 @@ function ExerciseCard({ exercise, index, total, result, onComplete, onNext, onBa
             onChange={e => setRecallText(e.target.value)}
             placeholder="Write anything you remember — words, rules, examples…"
             rows={3}
-            style={{ width: '100%', padding: '8px 10px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm, 6px)', fontSize: 'var(--text-sm)', lineHeight: 1.6, resize: 'vertical', fontFamily: 'var(--font-ui)', boxSizing: 'border-box' }}
+            style={{ width: '100%', padding: '8px 10px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm, 6px)', fontSize: 'var(--text-sm)', lineHeight: 1.6, resize: 'vertical', fontFamily: 'var(--font-sans)', boxSizing: 'border-box' }}
           />
           <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
             <button
               onClick={() => setRecallDone(true)}
-              style={{ padding: '8px 18px', borderRadius: 'var(--radius-sm, 6px)', border: 'none', cursor: 'pointer', background: `linear-gradient(120deg, ${TEAL} 0%, ${NAVY} 100%)`, color: '#fff', fontWeight: 600, fontSize: 13, fontFamily: 'var(--font-ui)' }}
+              style={{ padding: '8px 18px', borderRadius: 'var(--radius-sm, 6px)', border: 'none', cursor: 'pointer', background: `linear-gradient(120deg, ${TEAL} 0%, ${NAVY} 100%)`, color: '#fff', fontWeight: 600, fontSize: 13, fontFamily: 'var(--font-sans)' }}
             >
               {recallText.trim() ? "I'm ready — show the exercise" : 'Skip recall — show the exercise'}
             </button>
@@ -207,7 +207,7 @@ function ExerciseCard({ exercise, index, total, result, onComplete, onNext, onBa
           {hintLevel < hints.length && (
             <button
               onClick={() => setHintLevel(l => l + 1)}
-              style={{ minHeight: 44, padding: '8px 16px', borderRadius: 'var(--radius-sm, 6px)', border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text-2)', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-ui)' }}
+              style={{ minHeight: 44, padding: '8px 16px', borderRadius: 'var(--radius-sm, 6px)', border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text-2)', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-sans)' }}
             >
               {hintLevel === 0 ? 'Need a hint?' : 'Next hint →'}
             </button>
@@ -224,7 +224,7 @@ function ExerciseCard({ exercise, index, total, result, onComplete, onNext, onBa
             padding: '8px 16px', borderRadius: 'var(--radius-sm, 6px)',
             border: '1px solid var(--border, #e5e7eb)', background: 'none',
             color: 'var(--text-2, var(--ex-panel-text))', fontSize: 13, fontWeight: 600,
-            cursor: index === 0 ? 'default' : 'pointer', fontFamily: 'var(--font-ui)',
+            cursor: index === 0 ? 'default' : 'pointer', fontFamily: 'var(--font-sans)',
             opacity: index === 0 ? 0.5 : 1,
           }}
         >
@@ -238,7 +238,7 @@ function ExerciseCard({ exercise, index, total, result, onComplete, onNext, onBa
                 padding: '8px 16px', borderRadius: 'var(--radius-sm, 6px)',
                 border: '1px solid var(--border, #e5e7eb)', background: 'none',
                 color: 'var(--muted, #9ca3af)', fontSize: 13, fontWeight: 500,
-                cursor: 'pointer', fontFamily: 'var(--font-ui)',
+                cursor: 'pointer', fontFamily: 'var(--font-sans)',
               }}
             >
               Skip →
@@ -250,7 +250,7 @@ function ExerciseCard({ exercise, index, total, result, onComplete, onNext, onBa
               style={{
                 padding: '8px 22px', borderRadius: 'var(--radius-sm, 6px)', border: 'none',
                 cursor: 'pointer', background: `linear-gradient(120deg, ${TEAL} 0%, ${NAVY} 100%)`,
-                color: '#fff', fontWeight: 600, fontSize: 13, fontFamily: 'var(--font-ui)',
+                color: '#fff', fontWeight: 600, fontSize: 13, fontFamily: 'var(--font-sans)',
               }}
             >
               {index < total - 1 ? 'Next exercise →' : 'Finish session →'}
@@ -379,7 +379,7 @@ export default function ExercisePlayer({ exercises: raw, title, onSessionComplet
   if (errors.length > 0 && exercises.length === 0) {
     return (
       <div style={{ maxWidth: 720, margin: '0 auto', padding: '20px 16px' }}>
-        {title && <h2 style={{ fontFamily: 'var(--font-ui)', fontSize: 'var(--text-xl)', fontWeight: 700, color: NAVY, marginBottom: 16 }}>{title}</h2>}
+        {title && <h2 style={{ fontFamily: 'var(--font-sans)', fontSize: 'var(--text-xl)', fontWeight: 700, color: NAVY, marginBottom: 16 }}>{title}</h2>}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {errors.map((e, i) => <InvalidExercise key={i} reason={e} />)}
         </div>
@@ -392,7 +392,7 @@ export default function ExercisePlayer({ exercises: raw, title, onSessionComplet
   return (
     <div style={{ maxWidth: 720, margin: '0 auto', padding: '20px 16px' }}>
       {title && (
-        <h2 style={{ fontFamily: 'var(--font-ui)', fontSize: 'var(--text-xl)', fontWeight: 700, color: NAVY, marginBottom: 6 }}>{title}</h2>
+        <h2 style={{ fontFamily: 'var(--font-sans)', fontSize: 'var(--text-xl)', fontWeight: 700, color: NAVY, marginBottom: 6 }}>{title}</h2>
       )}
 
       {/* Load errors (partial — some valid exercises exist) */}
@@ -440,7 +440,7 @@ export default function ExercisePlayer({ exercises: raw, title, onSessionComplet
               marginTop: 16, padding: '10px 24px', borderRadius: 'var(--radius-sm, 6px)',
               border: '1.5px solid var(--border)', background: 'var(--surface)',
               color: 'var(--text-2)', fontWeight: 600, fontSize: 'var(--text-sm)', cursor: 'pointer',
-              fontFamily: 'var(--font-ui)',
+              fontFamily: 'var(--font-sans)',
             }}
           >
             Restart exercises

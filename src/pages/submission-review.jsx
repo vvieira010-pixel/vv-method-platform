@@ -122,13 +122,13 @@ what the student actually said in the transcript. Use submission.content only as
 fallback summary when no structured response transcript is available.
 
 Apply the gap analysis framework:
-1. Identify strengths first — specific, evidence-based strengths.
+1. Identify strengths first: specific, evidence-based strengths.
 2. Classify each gap by type:
    - Conceptual: student doesn't understand the underlying idea
    - Procedural: student understands but makes errors in execution
    - Communication: student understands but can't express it adequately
 3. For each gap, provide a specific next teaching step (not "practise more").
-4. Prioritize — which gap to address first.
+4. Prioritize: which gap to address first.
 5. Write teacherFeedback as: acknowledge strength → identify key gap → provide next step.
 
 Extract up to 5 key errors and suggest corrections.
@@ -206,7 +206,7 @@ Return JSON:
       : entry.answer
       ? `Written response: ${entry.answer}`
       : hasAudio
-      ? 'Student submitted audio. No transcript available — evaluate that the task was attempted and note what to listen for.'
+      ? 'Student submitted audio. No transcript available. Evaluate that the task was attempted and note what to listen for.'
       : '(no response recorded)';
 
     setQuestionEvals(q => ({ ...q, [exId]: { ...(q[exId] || {}), aiRunning: true } }));
@@ -359,7 +359,7 @@ Return JSON:
   return (
     <div>
       {/* ── Preview modal ─────────────────────────────────────── */}
-      <Modal open={showPreview} onClose={() => setShowPreview(false)} kicker="Preview — student will see" title={`Homework Review: ${homework?.title || 'Homework'}`} maxWidth={560}>
+      <Modal open={showPreview} onClose={() => setShowPreview(false)} kicker="Preview, student will see" title={`Homework Review: ${homework?.title || 'Homework'}`} maxWidth={560}>
         {form.overallNote && (
           <div style={{ padding: '12px 14px', background: 'var(--bg)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-sm)', lineHeight: 1.7, color: 'var(--text-2)', whiteSpace: 'pre-wrap', marginBottom: 14 }}>
             {form.overallNote}
@@ -409,7 +409,7 @@ Return JSON:
 
         {form.redoRequired && (
           <div className="sr-feedback-block font-semibold" style={{ background: 'var(--warning-bg)', border: '1px solid var(--warning-soft)', color: 'var(--warning-text)', marginBottom: 14 }}>
-            Redo required — your teacher will ask you to resubmit this homework.
+            Redo required. Your teacher will ask you to resubmit this homework.
           </div>
         )}
 
@@ -925,7 +925,7 @@ function getFormativeRecommendation(score) {
       action: 'Student is ready to move to the next topic or an extension challenge.',
       techniques: [
         'Introduce a related, slightly harder concept or skill in the next session.',
-        'Ask the student to self-explain what they did well — metacognitive reflection consolidates learning.',
+        'Ask the student to self-explain what they did well. Metacognitive reflection consolidates learning.',
         'Schedule a spaced retrieval check in 1 week to confirm long-term retention.',
       ],
     };
@@ -938,14 +938,14 @@ function getFormativeRecommendation(score) {
       techniques: [
         'Assign 2–3 targeted exercises focusing specifically on the areas that were incorrect.',
         'Show a worked example of a correct response, then ask the student to attempt again.',
-        'Go through each error together in the next session — error analysis is high-leverage.',
+        'Go through each error together in the next session. Error analysis is high-leverage.',
       ],
     };
   }
   return {
     band: 'weak',
     label: 'Significant gap (below 5/10)',
-    action: 'Re-teaching is needed before moving on — this topic needs more foundation work.',
+    action: 'Re-teaching is needed before moving on. This topic needs more foundation work.',
     techniques: [
       'Return to the core concept with a new, simpler worked example.',
       'Break the skill into smaller sub-steps and practise each one before combining.',

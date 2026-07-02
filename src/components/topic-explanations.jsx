@@ -188,7 +188,7 @@ export function TopicExplanationsEditor({ topics = [], onChange, onAiGenerate })
                   placeholder="Write your explanation here. Use **bold** for emphasis, - for bullet lists, 1. for numbered lists."
                   rows={6}
                   className="input"
-                  style={{ resize: 'vertical', fontFamily: 'var(--font-ui)', lineHeight: 1.6 }} />
+                  style={{ resize: 'vertical', fontFamily: 'var(--font-sans)', lineHeight: 1.6 }} />
 
                 <details style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>
                   <summary style={{ cursor: 'pointer', userSelect: 'none' }}>
@@ -200,7 +200,7 @@ export function TopicExplanationsEditor({ topics = [], onChange, onAiGenerate })
                     placeholder={'Write a short, clear English explanation for the topic "' + (t.title || '...') + '" for a MET student at B1 level. Use **bold** for key terms, - for bullet points where helpful. Keep it to 2-4 short paragraphs.'}
                     rows={4}
                     className="input"
-                    style={{ marginTop: 8, resize: 'vertical', fontFamily: 'var(--font-ui)', lineHeight: 1.5 }}
+                    style={{ marginTop: 8, resize: 'vertical', fontFamily: 'var(--font-sans)', lineHeight: 1.5 }}
                   />
                 </details>
                 <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
@@ -225,7 +225,7 @@ export function TopicExplanationsEditor({ topics = [], onChange, onAiGenerate })
 const btnMuted = {
   background: 'none', border: 'none', cursor: 'pointer',
   color: 'var(--muted)', padding: '2px 4px', borderRadius: 'var(--radius-sm)',
-  fontFamily: 'var(--font-ui)',
+  fontFamily: 'var(--font-sans)',
   display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
 };
 const btnTool = {

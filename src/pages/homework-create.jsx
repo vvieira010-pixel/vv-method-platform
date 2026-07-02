@@ -67,6 +67,7 @@ const SKILL_GROUPS = [
 export default function HomeworkCreate({ diagnosisId, studentId, students, onNavigate, initialStep = 1 }) {
   const exerciseListRef = useRef(null);
   const assignRef = useRef(null);
+  const [availableDiagnoses, setAvailableDiagnoses] = useState([]);
   const [diagnosis, setDiagnosis] = useState(null);
   const [student, setStudent] = useState(null);
   const [selectedStudentId, setSelectedStudentId] = useState(studentId || '');
@@ -126,6 +127,16 @@ export default function HomeworkCreate({ diagnosisId, studentId, students, onNav
   }, [libVersion]);
 
   useEffect(() => {
+    if (!selectedStudentId) {
+      setAvailableDiagnoses([]);
+      return;
+    }
+    getDiagnoses(selectedStudentId).then(list => {
+      setAvailableDiagnoses(list || []);
+    }).catch(() => {});
+  }, [selectedStudentId]);
+
+  useEffect(() => {
     let sid = studentId || '';
     if (sid) setSelectedStudentId(sid);
     if (diagnosisId) {
@@ -148,7 +159,7 @@ export default function HomeworkCreate({ diagnosisId, studentId, students, onNav
   function populateFromDiagnosis(dx, s) {
     const hwRec = dx.sections?.homeworkRecommendation?.content;
     const priority = getPriorityItems(dx)[0];
-    const title = hwRec?.title || (priority ? `${s?.firstName || 'Student'} — ${priority.area}` : 'Homework from Diagnosis');
+    const title = hwRec?.title || (priority ? `${s?.firstName || 'Student'}, ${priority.area}` : 'Homework from Diagnosis');
     const description = hwRec?.instructions || '';
     const type = hwRec?.expectedSubmissionType?.split('|')[0] || inferSkillType(getPriorityItems(dx));
 
@@ -423,7 +434,7 @@ function getPriorityItems(dx) {
   }
 
   async function handleGenerateOptions() {
-    if (!diagnosis) { window.toast?.('No diagnosis linked — cannot generate exercises.', 'warn'); return; }
+    if (!diagnosis) { window.toast?.('No diagnosis linked. Cannot generate exercises.', 'warn'); return; }
     setLoadingOptions(true);
     setExerciseOptions([]);
     try {
@@ -939,12 +950,36 @@ Return JSON only with fields: type "read", passage (2-3 paragraphs), source, que
                       {students.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                     </select>
                   </Field>
-                )}
-                {diagnosis && (
+                 )}
+                 <Field label="Link Diagnosis" style={{ marginTop: 16 }}>
+                   <select
+                     className="input"
+                     value={diagnosis?.id || ''}
+                     onChange={e => {
+                       const dxId = e.target.value;
+                       const dx = availableDiagnoses.find(d => d.id === dxId);
+                       if (dx) {
+                         setDiagnosis(dx);
+                         populateFromDiagnosis(dx, student);
+                       } else {
+                         setDiagnosis(null);
+                       }
+                     }}
+                   >
+                     <option value="">None, create from scratch</option>
+                     {availableDiagnoses.map(dx => (
+                       <option key={dx.id} value={dx.id}>
+                         {dx.date} — {dx.sections?.priorityDiagnosis?.content?.[0]?.area || 'General Diagnosis'}
+                       </option>
+                     ))}
+                   </select>
+                 </Field>
+                 {diagnosis && (
+
                   <div className="homework-diagnosis-box">
                     <div className="homework-diagnosis-label">Diagnostic Focus:</div>
                     <div className="homework-diagnosis-text">
-                      {getPriorityItems(diagnosis)[0]?.area} — {getPriorityItems(diagnosis)[0]?.whatToImprove}
+                      {getPriorityItems(diagnosis)[0]?.area}: {getPriorityItems(diagnosis)[0]?.whatToImprove}
                     </div>
                     <Button variant="ghost" size="sm" onClick={() => onNavigate('diagnostics')}>View Full Diagnosis</Button>
                   </div>
@@ -955,7 +990,7 @@ Return JSON only with fields: type "read", passage (2-3 paragraphs), source, que
                 {errorBankItems.filter(e => e.status !== 'solved').length > 0 && (
                   <div className="info-panel" style={{ marginTop: 'var(--space-4)' }}>
                     <div className="section-label" style={{ marginBottom: 8 }}>
-                      Error Bank — Active Patterns
+Error Bank: Active Patterns
                     </div>
                     {errorBankItems.filter(e => e.status !== 'solved').slice(0, 3).map(entry => (
                       <div key={entry.id} className="homework-error-item">
@@ -1038,7 +1073,7 @@ Return JSON only with fields: type "read", passage (2-3 paragraphs), source, que
                         <div className="homework-unit-bank-row">
                           <div className="homework-unit-bank-inner">
                             <div>
-                              <div className="homework-pack-module-title">Unit Bank — {subjectLabel}</div>
+                              <div className="homework-pack-module-title">Unit Bank: {subjectLabel}</div>
                               <div className="homework-pack-module-meta">{selectedLevel} · {unitBankExercises.length} exercises available</div>
                             </div>
                             <Button variant="ghost" size="sm" onClick={addUnitBankPack}>Add all</Button>
@@ -1078,7 +1113,7 @@ Return JSON only with fields: type "read", passage (2-3 paragraphs), source, que
 
                 {/* ── MET Focus: AI generation per skill ── */}
                 <div className="homework-panel-section">
-                  <div className="homework-panel-title">MET Focus — Generate by Exam Skill</div>
+                  <div className="homework-panel-title">MET Focus: Generate by Exam Skill</div>
                   <div className="homework-panel-desc" style={{ fontSize: 'var(--text-xs)' }}>
                     Choose the MET exam skills this homework should target. Each generated item is checked for complete student-ready fields before being added.
                   </div>
@@ -1470,7 +1505,7 @@ Return JSON only with fields: type "read", passage (2-3 paragraphs), source, que
         </Card>
       </div>
 
-      <Modal open={studentPreview} onClose={() => setStudentPreview(false)} title="Preview — student view" variant="fullscreen">
+      <Modal open={studentPreview} onClose={() => setStudentPreview(false)} title="Preview: student view" variant="fullscreen">
         <HomeworkStepThrough
           exercises={form.exercises.filter(isStructuredExercise)}
           responses={previewResponses}

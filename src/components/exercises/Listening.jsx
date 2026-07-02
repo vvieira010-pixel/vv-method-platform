@@ -283,7 +283,7 @@ export default function Listening({ exercise, onComplete }) {
       padding: '12px 16px', borderRadius: 'var(--radius-sm)',
       border: '1.5px solid', cursor: submitted ? 'default' : 'pointer',
       transition: 'all 0.15s', fontSize: 14.5, lineHeight: 1.5,
-      fontFamily: 'var(--font-ui)', textAlign: 'left', width: '100%',
+      fontFamily: 'var(--font-sans)', textAlign: 'left', width: '100%',
     };
     if (!submitted) {
       return selected === i
@@ -425,7 +425,7 @@ export default function Listening({ exercise, onComplete }) {
                   background: playbackRate === s ? 'var(--accent-subtle)' : 'transparent',
                   color: playbackRate === s ? 'var(--primary)' : 'var(--muted)',
                   cursor: 'pointer', fontWeight: playbackRate === s ? 700 : 400,
-                  fontFamily: 'var(--font-ui)', fontSize: 11,
+                  fontFamily: 'var(--font-sans)', fontSize: 11,
                   transition: 'all 0.12s',
                 }}
               >{s}x</button>
@@ -499,7 +499,7 @@ export default function Listening({ exercise, onComplete }) {
                   ? 'var(--border)'
                   : `linear-gradient(120deg, ${TEAL} 0%, ${NAVY} 100%)`,
                 color: '#fff', fontWeight: 600, fontSize: 14,
-                fontFamily: 'var(--font-ui)',
+                fontFamily: 'var(--font-sans)',
                 opacity: selected == null ? 0.5 : 1, transition: 'all 0.15s',
               }}
             >

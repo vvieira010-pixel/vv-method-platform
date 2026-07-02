@@ -307,19 +307,14 @@ export default function App() {
 
   // ── Teacher shell ──
   const teacherTabs = [
-    { id: 'dashboard',    label: 'Today',        icon: <Icon.home size={16} /> },
-    { id: 'students',     label: 'Students',     icon: <Icon.student size={16} /> },
-    { id: 'calendar',     label: 'Calendar',     icon: <Icon.calendar size={16} /> },
-    { id: 'diagnostics',  label: 'Diagnostics',  icon: <Icon.diagnose size={16} /> },
-    { id: 'homework',     label: 'Homework',     icon: <Icon.homework size={16} /> },
-    { id: 'submissions',  label: 'Submissions',  icon: <Icon.doc size={16} />,     badge: pendingSubmissions || 0 },
-    { id: 'inbox',        label: 'Inbox',        icon: <Icon.inbox size={16} />,     badge: inboxUnread },
-    { id: 'error-bank',   label: 'Error Bank',   icon: <Icon.warning size={16} /> },
-    { id: 'reports',      label: 'Reports',      icon: <Icon.progress size={16} /> },
-    { id: 'exercises',    label: 'Exercises',    icon: <Icon.book size={16} /> },
-     { id: 'mock-test',    label: 'Mock Tests',   icon: <Icon.practice size={16} /> },
-     { id: 'evaluation',    label: 'Evaluation',   icon: <Icon.star size={16} /> },
-   ];
+    { id: 'dashboard',   label: 'Today',        icon: <Icon.home size={16} /> },
+    { id: 'students',    label: 'Students',     icon: <Icon.student size={16} /> },
+    { id: 'calendar',    label: 'Calendar',     icon: <Icon.calendar size={16} />, badge: inboxUnread },
+    { id: 'diagnostics', label: 'Diagnose',     icon: <Icon.diagnose size={16} /> },
+    { id: 'homework',    label: 'Homework',     icon: <Icon.homework size={16} /> },
+    { id: 'submissions', label: 'Review',       icon: <Icon.doc size={16} />,     badge: pendingSubmissions || 0 },
+    { id: 'library',     label: 'Resources',    icon: <Icon.book size={16} /> },
+  ];
 
   const rightSlot = (
     <div className="shell-topbar-right">
@@ -389,7 +384,13 @@ function renderTeacherPage(view, params, ctx) {
         onNavigate={navigate}
       />;
 
-    case 'homework':
+     case 'diagnostics:errors':
+       return <ErrorBankPage students={students} onNavigate={navigate} />;
+
+     case 'calendar:inbox':
+       return <InboxPage students={students} onNavigate={navigate} />;
+
+     case 'homework':
       return <HomeworkPage students={students} onNavigate={navigate} />;
 
     case 'homework:create':
@@ -433,6 +434,19 @@ function renderTeacherPage(view, params, ctx) {
 
      case 'evaluation':
        return <TeacherEvaluationPage onNavigate={navigate} />;
+
+     case 'library':
+     case 'library:exercises':
+       return <ExercisesPage onNavigate={navigate} />;
+
+     case 'library:mock-test':
+       return <MockTestPage onNavigate={navigate} />;
+
+     case 'library:evaluation':
+       return <TeacherEvaluationPage onNavigate={navigate} />;
+
+     case 'library:reports':
+       return <ReportsPage students={students} onNavigate={navigate} />;
 
      default:
       return <TeacherDashboard students={students} onNavigate={navigate} teacherName={teacherName} />;

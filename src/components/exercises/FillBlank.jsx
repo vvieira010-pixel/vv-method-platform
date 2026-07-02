@@ -52,7 +52,7 @@ export default function FillBlank({ exercise, onComplete }) {
       display: 'inline-block', minWidth: 90,
       padding: '3px 8px', margin: '0 3px',
       borderRadius: 'var(--radius-sm, 6px)', border: '2px solid', fontSize: 'var(--text-sm)',
-      fontFamily: 'var(--font-ui)', outline: 'none',
+      fontFamily: 'var(--font-sans)', outline: 'none',
       verticalAlign: 'middle', background: 'var(--surface)',
       transition: 'border-color 0.15s',
     };
@@ -88,7 +88,7 @@ export default function FillBlank({ exercise, onComplete }) {
                   border: `2px solid ${selected || (isResult && isCorrectChoice) ? border : 'var(--border)'}`,
                   background: selected || (isResult && isCorrectChoice) ? bg : 'var(--surface)',
                   color: selected || (isResult && isCorrectChoice) ? color : 'var(--text)',
-                  fontWeight: selected ? 600 : 400, fontSize: 'var(--text-sm)', fontFamily: 'var(--font-ui)',
+                  fontWeight: selected ? 600 : 400, fontSize: 'var(--text-sm)', fontFamily: 'var(--font-sans)',
                   cursor: submitted ? 'default' : 'pointer', transition: 'all 0.12s',
                 }}
               >
@@ -140,7 +140,7 @@ export default function FillBlank({ exercise, onComplete }) {
             padding: '10px 24px', borderRadius: 'var(--radius-sm, 6px)', border: 'none',
             cursor: allFilled ? 'pointer' : 'not-allowed',
             background: allFilled ? `linear-gradient(120deg, ${TEAL} 0%, ${NAVY} 100%)` : 'var(--border)',
-            color: '#fff', fontWeight: 600, fontSize: 'var(--text-sm)', fontFamily: 'var(--font-ui)',
+            color: '#fff', fontWeight: 600, fontSize: 'var(--text-sm)', fontFamily: 'var(--font-sans)',
             opacity: allFilled ? 1 : 0.5, transition: 'all 0.15s',
           }}
         >

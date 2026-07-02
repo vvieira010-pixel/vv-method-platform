@@ -237,7 +237,7 @@ export default function StudentHome({ student, onTab }) {
         .filter(s => s.evaluated || Number(s.score_0_80) > 0)
         .filter((skill, index, list) => index === list.findIndex(item => item.section === skill.section));
   const fallbackFocus = nextClass?.metSkillFocus || nextClass?.classFocus || student.focusSkill || 'MET speaking organization';
-  const focusSkill = snapshotEvaluatedSkills[0]?.section || fallbackFocus;
+  const focusSkill = String(snapshotEvaluatedSkills[0]?.section || fallbackFocus);
   const focusTrend = snapshotEvaluatedSkills[0] ? getSkillTrend(focusSkill, approvedHistory) : { dir: 'none' };
 
   function handleOpenReview() {
@@ -331,7 +331,7 @@ export default function StudentHome({ student, onTab }) {
       })()}
 
       <p className="student-practice-caption mb-2">
-        Explore the Practice Studio — a bank of exercises to keep you sharp, renewed every week.
+        Explore the Practice Studio, a bank of exercises to keep you sharp, renewed every week.
       </p>
       <div className="student-practice-row fade-up" style={{ '--delay': '0.2s' }}>
         <button className="student-practice-btn" onClick={() => setPracticeMode('speaking')}><Icon.mic size={15} /> Speaking</button>

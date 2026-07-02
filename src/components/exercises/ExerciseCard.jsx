@@ -5,7 +5,7 @@ import { ExTypeBadge, ExerciseEditor } from '../exercise-editor.jsx';
 
 function arrowBtnStyle(disabled) {
   return {
-    width: 24, height: 24, padding: 0, fontFamily: 'var(--font-ui)',
+    width: 24, height: 24, padding: 0, fontFamily: 'var(--font-sans)',
     fontSize: 12, border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)',
     background: 'var(--surface)', color: disabled ? 'var(--faint)' : 'var(--text)',
     cursor: disabled ? 'not-allowed' : 'pointer', display: 'inline-flex',
@@ -53,11 +53,11 @@ export default function ExerciseCard({ exercise, index, total, isExpanded, onTog
           display: 'flex', alignItems: 'center', gap: 10,
           padding: '10px 14px', cursor: 'pointer',
           width: '100%', background: 'var(--surface)', border: 'none',
-          textAlign: 'left', fontFamily: 'var(--font-ui)', minWidth: 0,
+          textAlign: 'left', fontFamily: 'var(--font-sans)', minWidth: 0,
         }}
       >
           <span style={{
-            fontFamily: 'var(--font-ui)', fontWeight: 700,
+            fontFamily: 'var(--font-sans)', fontWeight: 700,
             fontSize: 'var(--text-sm)', color: 'var(--accent)',
             width: 22, textAlign: 'center', flexShrink: 0,
           }}>
@@ -165,7 +165,7 @@ export default function ExerciseCard({ exercise, index, total, isExpanded, onTog
                         padding: '3px 10px', borderRadius: 'var(--radius-sm)', border: 'none',
                         background: isVerified ? '#FEF3C7' : '#10B981', color: isVerified ? '#92400E' : '#fff',
                         cursor: 'pointer', fontWeight: 600, fontSize: 'var(--text-xs)',
-                        fontFamily: 'var(--font-ui)',
+                        fontFamily: 'var(--font-sans)',
                       }}>
                       {isVerified ? 'Unmark' : '✓ Verify content'}
                     </button>
@@ -174,7 +174,7 @@ export default function ExerciseCard({ exercise, index, total, isExpanded, onTog
                         padding: '3px 10px', borderRadius: 'var(--radius-sm)', border: '1px solid #FDE68A',
                         background: 'transparent', color: '#92400E',
                         cursor: 'pointer', fontWeight: 600, fontSize: 'var(--text-xs)',
-                        fontFamily: 'var(--font-ui)',
+                        fontFamily: 'var(--font-sans)',
                       }}>
                       {showNotes ? 'Close notes' : 'Notes'}
                     </button>
@@ -187,7 +187,7 @@ export default function ExerciseCard({ exercise, index, total, isExpanded, onTog
                     placeholder="e.g. ⚕ Check answer key — option B may also be correct. / L Vocabulary is closer to B2 than B1."
                     rows={3}
                     className="input"
-                    style={{ width: '100%', resize: 'vertical', fontFamily: 'var(--font-ui)', fontSize: 'var(--text-xs)', lineHeight: 1.5 }}
+                    style={{ width: '100%', resize: 'vertical', fontFamily: 'var(--font-sans)', fontSize: 'var(--text-xs)', lineHeight: 1.5 }}
                     onClick={(e) => e.stopPropagation()}
                   />
                 )}

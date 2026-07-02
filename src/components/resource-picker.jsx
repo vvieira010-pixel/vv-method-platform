@@ -99,7 +99,7 @@ export default function ResourcePicker({ open, onClose, onSelect, tab: initialTa
             <div style={{ fontWeight: 700, fontSize: 'var(--text-base)' }}>Resource Library</div>
             <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>Browse or upload images and audio for your exercises</div>
           </div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)', fontSize: 20, fontFamily: 'var(--font-ui)' }}>×</button>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)', fontSize: 20, fontFamily: 'var(--font-sans)' }}>×</button>
         </div>
 
         {/* Tabs */}
@@ -114,7 +114,7 @@ export default function ResourcePicker({ open, onClose, onSelect, tab: initialTa
                 background: tab === t.id ? 'var(--accent-subtle)' : 'transparent',
                 color: tab === t.id ? 'var(--accent)' : 'var(--text-2)',
                 fontWeight: 600, fontSize: 'var(--text-xs)',
-                fontFamily: 'var(--font-ui)',
+                fontFamily: 'var(--font-sans)',
                 borderBottom: tab === t.id ? '2px solid var(--accent)' : '2px solid transparent',
                 display: 'flex', alignItems: 'center', gap: 6,
                 transition: 'border-color .12s, background .12s',
@@ -133,7 +133,7 @@ export default function ResourcePicker({ open, onClose, onSelect, tab: initialTa
             padding: '6px 14px', borderRadius: 'var(--radius-sm)',
             background: uploading ? 'var(--border)' : 'var(--accent)',
             color: '#fff', cursor: uploading ? 'wait' : 'pointer',
-            fontSize: 'var(--text-xs)', fontWeight: 600, fontFamily: 'var(--font-ui)',
+            fontSize: 'var(--text-xs)', fontWeight: 600, fontFamily: 'var(--font-sans)',
             border: 'none', opacity: uploading ? 0.7 : 1,
           }}>
             {uploading ? 'Uploading…' : <><Icon.plus size={12} /> Upload {tab === 'images' ? 'Image' : 'Audio'}</>}
@@ -147,7 +147,7 @@ export default function ResourcePicker({ open, onClose, onSelect, tab: initialTa
           <div style={{ margin: '0 20px', padding: '8px 12px', background: 'var(--ex-wrong-bg)', border: '1px solid var(--danger)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-xs)', color: 'var(--ex-wrong-text)', display: 'flex', alignItems: 'center', gap: 8 }}>
             <span>!</span>
             <span>{uploadError}</span>
-            <button onClick={() => setUploadError('')} style={{ marginLeft: 'auto', background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', fontFamily: 'var(--font-ui)', fontSize: 14 }}>×</button>
+            <button onClick={() => setUploadError('')} style={{ marginLeft: 'auto', background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', fontFamily: 'var(--font-sans)', fontSize: 14 }}>×</button>
           </div>
         )}
 
@@ -197,7 +197,7 @@ export default function ResourcePicker({ open, onClose, onSelect, tab: initialTa
                     <audio controls src={url} style={{ width: 200, height: 32 }} onClick={e => e.stopPropagation()} />
                     <span style={{ flex: 1, fontSize: 'var(--text-sm)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{displayName}</span>
                     <button onClick={e => { e.stopPropagation(); handleDelete(item.name); }}
-                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--danger)', fontSize: 16, fontFamily: 'var(--font-ui)' }} title="Delete">×</button>
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--danger)', fontSize: 16, fontFamily: 'var(--font-sans)' }} title="Delete">×</button>
                   </div>
                 );
               })}

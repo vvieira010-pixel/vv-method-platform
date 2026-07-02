@@ -4,6 +4,7 @@ import { getDiagnoses, getReviews } from '../lib/workflow.js';
 import { hasVisibleApprovedStudentFeedback, asArray } from './student-helpers.jsx';
 import StudentHome from './student-home.jsx';
 import StudentSettings from './student-settings.jsx';
+import MockTestPage from './mock-test.jsx';
 import { StudentInbox, MessageTeacherDock } from '../components/message-center.jsx';
 
 const StudentHomework = lazy(() => import('./student-homework.jsx'));
@@ -13,6 +14,7 @@ const StudentProgress = lazy(() => import('./student-progress.jsx'));
 const TABS = [
   { id: 'home',     label: 'Home',     icon: <Icon.home size={16} /> },
   { id: 'homework', label: 'Homework', icon: <Icon.homework size={16} /> },
+  { id: 'mock-test', label: 'Mock Tests', icon: <Icon.practice size={16} /> },
   { id: 'feedback', label: 'Feedback', icon: <Icon.inbox size={16} /> },
   { id: 'progress', label: 'Progress', icon: <Icon.progress size={16} /> },
   { id: 'messages', label: 'Messages', icon: <Icon.feedback size={16} /> },
@@ -113,14 +115,16 @@ export default function StudentDashboard({ student, onSignOut }) {
       </header>
 
       <div className="dash-body">
-        {tab === 'home' && <StudentHome student={student} onTab={setTab} />}
-        <Suspense fallback={<div className="student-suspense-fallback">Loading…</div>}>
-          {tab === 'homework' && <StudentHomework student={student} />}
-          {tab === 'feedback' && <StudentFeedback student={student} onTab={setTab} />}
-          {tab === 'progress' && <StudentProgress student={student} />}
-          {tab === 'messages' && <StudentInbox student={student} />}
-          {tab === 'settings' && <StudentSettings student={student} onSignOut={onSignOut} />}
-        </Suspense>
+          {tab === 'home' && <StudentHome student={student} onTab={setTab} />}
+          <Suspense fallback={<div className="student-suspense-fallback">Loading…</div>}>
+            {tab === 'homework' && <StudentHomework student={student} />}
+            {tab === 'mock-test' && <MockTestPage />}
+            {tab === 'feedback' && <StudentFeedback student={student} onTab={setTab} />}
+            {tab === 'progress' && <StudentProgress student={student} />}
+            {tab === 'messages' && <StudentInbox student={student} />}
+            {tab === 'settings' && <StudentSettings student={student} onSignOut={onSignOut} />}
+          </Suspense>
+
       </div>
       <MessageTeacherDock student={student} onSent={() => setTab('messages')} />
     </div>

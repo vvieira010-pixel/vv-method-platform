@@ -36,7 +36,7 @@ export function ExerciseTypePicker({ onSelect, onClose, onAiGenerate, exerciseOp
     borderRadius: 'var(--radius-sm)', cursor: 'pointer', fontSize: 16, lineHeight: 1, color: 'var(--text)',
   };
   const actionBtn = {
-    padding: '4px 8px', borderRadius: 'var(--radius-sm)', fontFamily: 'var(--font-ui)',
+    padding: '4px 8px', borderRadius: 'var(--radius-sm)', fontFamily: 'var(--font-sans)',
     cursor: 'pointer', whiteSpace: 'nowrap',
   };
   return (
@@ -67,7 +67,7 @@ export function ExerciseTypePicker({ onSelect, onClose, onAiGenerate, exerciseOp
               style={{
                 width: 48, textAlign: 'center', padding: '4px 6px',
                 border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)',
-                fontFamily: 'var(--font-ui)', fontSize: 'var(--text-sm)', color: 'var(--text)',
+                fontFamily: 'var(--font-sans)', fontSize: 'var(--text-sm)', color: 'var(--text)',
               }}
             />
             <button type="button" aria-label="More" style={stepBtn} onClick={() => qty < 20 ? setQty(q => clamp(q + 1)) : null}>+</button>
@@ -137,7 +137,7 @@ export function ExerciseTypePicker({ onSelect, onClose, onAiGenerate, exerciseOp
                   <ExTypeBadge typeId={ex.type} />
                   <span style={{ flex: 1, fontSize: 'var(--text-xs)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: 'var(--text-2)' }}>{preview}</span>
                   <button onClick={() => onAddAiSuggestion?.(ex)}
-                    style={{ padding: '4px 10px', borderRadius: 'var(--radius-sm)', border: 'none', background: 'var(--accent)', color: '#fff', cursor: 'pointer', fontWeight: 600, fontSize: 'var(--text-xs)', fontFamily: 'var(--font-ui)' }}>
+                    style={{ padding: '4px 10px', borderRadius: 'var(--radius-sm)', border: 'none', background: 'var(--accent)', color: '#fff', cursor: 'pointer', fontWeight: 600, fontSize: 'var(--text-xs)', fontFamily: 'var(--font-sans)' }}>
                     Add
                   </button>
                 </div>
@@ -168,7 +168,7 @@ export function ExerciseEditor({ exercise, onChange }) {
           className="input"
           value={exercise.instruction || ''}
           onChange={e => update({ instruction: e.target.value })}
-          placeholder="Tell the student what to do — e.g. 'Read the sentence carefully and choose the best word.'"
+          placeholder="Tell the student what to do, e.g. 'Read the sentence carefully and choose the best word.'"
         />
       </div>
       {renderSubEditor(exercise, update)}
@@ -319,7 +319,7 @@ function ShortEditor({ ex, update }) {
       <div style={fieldWrap}>
         <label style={fieldLabel}>MET task type (adds task-specific frames, checks & traps for the student)</label>
         <select className="input" value={ex.metTaskType || ''} onChange={e => update({ metTaskType: e.target.value || undefined })}>
-          <option value="">— None (generic short answer) —</option>
+          <option value="">– None (generic short answer) –</option>
           {metTaskOptions('short').map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
         </select>
       </div>
@@ -389,7 +389,7 @@ function SpeakEditor({ ex, update }) {
       <div style={fieldWrap}>
         <label style={fieldLabel}>MET task type (adds task-specific frames, checks & traps for the student)</label>
         <select className="input" value={ex.metTaskType || ''} onChange={e => update({ metTaskType: e.target.value || undefined })}>
-          <option value="">— None (generic speaking prompt) —</option>
+          <option value="">– None (generic speaking prompt) –</option>
           {metTaskOptions('speak').map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
         </select>
       </div>
@@ -402,7 +402,7 @@ function SpeakEditor({ ex, update }) {
         />
       </div>
       <div style={fieldWrap}>
-        <label style={fieldLabel}>Picture (optional — replaces description with an actual image)</label>
+        <label style={fieldLabel}>Picture (optional, replaces description with an actual image)</label>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
           <label style={{
             display: 'inline-flex', alignItems: 'center', gap: 6, padding: '7px 14px',
@@ -434,7 +434,7 @@ function SpeakEditor({ ex, update }) {
         </div>
         {!dbEnabled() && (
           <div style={hintText}>
-            Sign in with Supabase to upload — or paste an image URL below.
+            Sign in with Supabase to upload, or paste an image URL below.
           </div>
         )}
         {uploadErr && (
@@ -539,7 +539,7 @@ function FixEditor({ ex, update }) {
         />
       </div>
       <div style={fieldWrap}>
-        <label style={fieldLabel}>Corrected version (your reference — hidden from student)</label>
+        <label style={fieldLabel}>Corrected version (your reference, hidden from student)</label>
         <textarea
           className="input" rows={3} value={ex.correctedText}
           onChange={e => update({ correctedText: e.target.value })}
@@ -547,7 +547,7 @@ function FixEditor({ ex, update }) {
         />
       </div>
       <div style={fieldWrap}>
-        <label style={fieldLabel}>Hint (optional — shown to student)</label>
+        <label style={fieldLabel}>Hint (optional, shown to student)</label>
         <input
           className="input" value={ex.hint}
           onChange={e => update({ hint: e.target.value })}
@@ -618,14 +618,14 @@ function ListenEditor({ ex, update }) {
     <div>
       <ResourcePicker open={picker} onClose={() => setPicker(false)} onSelect={u => { update({ audioSrc: u }); setPicker(false); }} tab="audio" />
       <div style={fieldWrap}>
-        <label style={fieldLabel}>Pre-recorded audio URL (optional — overrides TTS)</label>
+        <label style={fieldLabel}>Pre-recorded audio URL (optional, overrides TTS)</label>
         <div style={{ display: 'flex', gap: 6 }}>
           <input className="input" value={ex.audioSrc || ''}
             onChange={e => update({ audioSrc: e.target.value })}
             placeholder="https://…/audio/listening/asking-for-directions-pt1.mp3"
             style={{ flex: 1 }} />
           <button onClick={() => setPicker(true)}
-            style={{ padding: '4px 10px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)', background: 'var(--surface)', cursor: 'pointer', fontFamily: 'var(--font-ui)', fontSize: 'var(--text-xs)', fontWeight: 600, whiteSpace: 'nowrap', color: 'var(--text)' }}>
+            style={{ padding: '4px 10px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)', background: 'var(--surface)', cursor: 'pointer', fontFamily: 'var(--font-sans)', fontSize: 'var(--text-xs)', fontWeight: 600, whiteSpace: 'nowrap', color: 'var(--text)' }}>
             Browse
           </button>
         </div>
@@ -645,7 +645,7 @@ function ListenEditor({ ex, update }) {
       </div>
 
       <div style={fieldWrap}>
-        <label style={fieldLabel}>Picture hint (optional — context clue shown before listening)</label>
+        <label style={fieldLabel}>Picture hint (optional, context clue shown before listening)</label>
         <div style={{ display: 'flex', gap: 6 }}>
           <input
             className="input" value={ex.pictureHint || ''}

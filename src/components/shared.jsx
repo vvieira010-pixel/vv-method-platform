@@ -114,8 +114,9 @@ const LEGACY_NAV_SECTIONS = [
 // New section map for Phase 1 IDs
 const NEW_NAV_SECTIONS = [
   { label: 'Today',    ids: ['dashboard'] },
-  { label: 'Workflow', ids: ['students', 'calendar', 'diagnostics', 'homework', 'submissions'] },
-  { label: 'Support',  ids: ['inbox', 'error-bank', 'reports', 'exercises'] },
+  { label: 'Workflow', ids: ['students', 'diagnostics', 'homework', 'submissions'] },
+  { label: 'Plan',     ids: ['calendar'] },
+  { label: 'Library',  ids: ['library'] },
   { label: 'Admin',    ids: ['settings'] },
 ];
 
@@ -170,7 +171,7 @@ export function Shell({ tabs = [], active, onTab, children, rightSlot, workflowA
       </header>
       <main id="main-content" className="shell-main">{children}</main>
       <nav className="shell-mobile-nav" aria-label="Mobile navigation">
-        {tabs.filter(t => t.mobile !== false && ['dashboard','students','diagnostics','homework','submissions'].includes(t.id)).map(tab => (
+        {tabs.filter(t => t.mobile !== false && ['dashboard','students','diagnostics','homework','submissions','library'].includes(t.id)).map(tab => (
           <button key={tab.id}
             className={`shell-mobile-nav-btn${active === tab.id ? ' active' : ''}`}
             aria-current={active === tab.id ? 'page' : undefined}

@@ -6,44 +6,63 @@
 :root {
   /* ── Colors: Medical Professional ────────────────────────────── */
   --primary: #148891;                        /* Medical Teal */
+  --primary-rgb: 20, 136, 145;
   --primary-hover: #0f766e;
   --primary-light: #f0fdfa;
   
   --accent: #c86607;                         /* Interaction Bronze */
+  --accent-rgb: 200, 102, 7;
   --accent-hover: #92400e;
   --accent-light: #fef3c7;
   
   --bg: #F4F9FC;                             /* Cloud Canvas */
+  --bg-rgb: 244, 249, 252;
   --bg-deep: #f3f4f6;
   --surface: #FEFCF5;                        /* Warm Surface */
+  --surface-rgb: 254, 252, 245;
   --surface-glass: rgba(254, 252, 245, 0.7);
   --surface-hover: #f9fafb;
   
   --border: #D0E2E8;                         /* Whisper Border */
+  --border-rgb: 208, 226, 232;
   --border-strong: rgba(0, 0, 0, 0.1);
   --divider: rgba(0, 0, 0, 0.03);
   
   --text: #071527;                           /* Deep Navy Ink */
+  --text-rgb: 7, 21, 39;
   --text-muted: #3D5365;                     /* Steel Muted */
+  --text-muted-rgb: 61, 83, 101;
   --text-2: #374151;
   --on-dark: #FFFFFF;
+  --on-dark-rgb: 255, 255, 255;
   --on-dark-muted: rgba(255, 255, 255, 0.7);
   
   /* ── Status colors ─────────────────────────────────────────── */
   --success: #059669;
+  --success-rgb: 5, 150, 105;
   --success-bg: #ECFDF5;
+  --success-bg-rgb: 236, 253, 245;
   --success-soft: #A7F3D0;
   
   --warning: #b45309;
+  --warning-rgb: 180, 83, 9;
   --warning-bg: #FFFBEB;
+  --warning-bg-rgb: 255, 251, 235;
   --warning-soft: #FDE68A;
   
   --error: #DC2626;
+  --error-rgb: 220, 38, 38;
   --error-bg: #FEF2F2;
+  --error-bg-rgb: 254, 242, 242;
   --error-soft: #FECACA;
+  --danger: var(--error);
+  --danger-bg: var(--error-bg);
+  --danger-soft: var(--error-soft);
   
   --info: #0E7490;
+  --info-rgb: 14, 116, 144;
   --info-bg: #ECFEFF;
+  --info-bg-rgb: 236, 254, 255;
   --info-soft: #A5F3FC;
   
   /* ── Geometry: Squircle Scale ──────────────────────────────── */
@@ -55,8 +74,8 @@
   --radius-full: 9999px;
   
   /* ── Typography ────────────────────────────────────────────── */
-  --font-ui: 'Outfit', sans-serif;
   --font-display: 'Sora', sans-serif;
+  --font-sans: 'Outfit', sans-serif;
   --font-mono: 'SF Mono', 'JetBrains Mono', monospace;
   
   /* ── Spacing & Motion ──────────────────────────────────────── */
@@ -70,7 +89,12 @@
   --space-12: 4.5rem;
   --space-16: 6rem;
   
-  --transition-base: all 0.7s cubic-bezier(0.32, 0.72, 0, 1);
-  --transition-fast: all 0.3s cubic-bezier(0.32, 0.72, 0, 1);
-}
+  --transition-base: all 0.25s cubic-bezier(0.32, 0.72, 0, 1);
+  --transition-fast: all 0.18s cubic-bezier(0.32, 0.72, 0, 1);
 
+  /* ── Semantic composite tokens (light-mode defaults) ──────────── */
+  --accent-subtle: rgba(var(--primary-rgb), 0.08);  /* hover/active backgrounds */
+  --accent-text: var(--primary);                     /* text on accent elements */
+  --muted: var(--text-muted);                        /* secondary/muted text */
+  --accent-soft: rgba(var(--accent-rgb), 0.15);      /* fallback; overridden by JS */
+}

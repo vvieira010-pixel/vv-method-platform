@@ -71,7 +71,7 @@ export default function PracticeSession({ mode, onClose, onSessionComplete }) {
       open
       onClose={onClose}
       kicker="Practice Studio"
-      title={MODE_LABELS[selectedKind] + (selectedTopicTitle ? ` — ${selectedTopicTitle}` : '')}
+      title={MODE_LABELS[selectedKind] + (selectedTopicTitle ? `: ${selectedTopicTitle}` : '')}
       subtitle={MODE_SUBTITLES[selectedKind]}
     >
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
@@ -135,7 +135,7 @@ function TopicPicker({ topics, mode, onSelect }) {
         marginBottom: 18,
         marginTop: 0,
       }}>
-        Choose a topic to practice — {descriptions[mode] || ''}.
+        Choose a topic to practice: {descriptions[mode] || ''}.
       </p>
       <div style={{
         display: 'grid',

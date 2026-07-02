@@ -173,13 +173,13 @@ export function StudentNextTask({ task, onAction, onStart, onSecondary }) {
         <button onClick={handlePrimary} style={{
           background:'rgba(255,255,255,0.15)', color:'#fff', border:'none',
           borderRadius:'var(--radius-md)', padding:'8px 16px',
-          fontSize:'var(--text-sm)', fontWeight:600, cursor:'pointer', fontFamily:'var(--font-ui)',
+          fontSize:'var(--text-sm)', fontWeight:600, cursor:'pointer', fontFamily:'var(--font-sans)',
         }}>Start</button>
         {(onSecondary || onAction) && (
           <button onClick={handleSecondary} style={{
             background:'rgba(255,255,255,0.08)', color:'#fff', border:'1px solid rgba(255,255,255,0.2)',
             borderRadius:'var(--radius-md)', padding:'8px 12px',
-            fontSize:'var(--text-sm)', fontWeight:500, cursor:'pointer', fontFamily:'var(--font-ui)',
+            fontSize:'var(--text-sm)', fontWeight:500, cursor:'pointer', fontFamily:'var(--font-sans)',
           }}>Inbox</button>
         )}
       </div>
@@ -218,7 +218,7 @@ export function RecommendedNextStep({ title, detail, message, stage, status, ico
           background:'var(--accent)', color:'#fff', border:'none',
           borderRadius:'var(--radius-md)', padding:'7px 14px',
           fontSize:'var(--text-xs)', fontWeight:600, cursor:'pointer',
-          fontFamily:'var(--font-ui)', flexShrink:0,
+          fontFamily:'var(--font-sans)', flexShrink:0,
         }}>{buttonLabel} →</button>
       )}
     </div>

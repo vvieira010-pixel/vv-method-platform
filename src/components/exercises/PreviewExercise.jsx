@@ -109,7 +109,7 @@ export default function PreviewExercise({ exercise }) {
             borderRadius: 0, padding: '24px 20px', textAlign: 'center',
           }}>
             <div style={{ fontSize: 'var(--text-xs)', color: 'var(--faint)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Term</div>
-            <div style={{ fontFamily: 'var(--font-ui)', fontWeight: 600, fontSize: 'var(--text-xl)' }}>
+            <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 600, fontSize: 'var(--text-xl)' }}>
               {filledPairs[0]?.term || 'Term'}
             </div>
             <div style={{ fontSize: 'var(--text-xs)', color: 'var(--faint)', marginTop: 10 }}>Click to flip</div>
@@ -165,7 +165,7 @@ export default function PreviewExercise({ exercise }) {
             background: 'var(--surface)', border: '1px solid var(--border)',
             borderRadius: 0, padding: '12px 14px', marginBottom: 10,
             maxHeight: 160, overflowY: 'auto', lineHeight: 1.7,
-            fontSize: 'var(--text-sm)', fontFamily: 'var(--font-ui)',
+            fontSize: 'var(--text-sm)', fontFamily: 'var(--font-sans)',
           }}>
             {(exercise.passage || 'No passage provided.').slice(0, 300)}
             {(exercise.passage || '').length > 300 ? '…' : ''}

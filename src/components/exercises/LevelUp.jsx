@@ -91,7 +91,7 @@ export default function LevelUp({ exercise, onComplete }) {
                 cursor: submitted ? 'default' : 'pointer',
                 background: bg, color,
                 transition: 'all 0.15s', fontSize: 14, lineHeight: 1.55,
-                fontFamily: 'var(--font-ui)', textAlign: 'left', width: '100%',
+                fontFamily: 'var(--font-sans)', textAlign: 'left', width: '100%',
                 opacity: submitted && i !== correct && i !== selected ? 0.55 : 1,
               }}
               aria-pressed={selected === i}
@@ -126,7 +126,7 @@ export default function LevelUp({ exercise, onComplete }) {
               ? 'var(--border)'
               : `linear-gradient(120deg, ${TEAL} 0%, ${NAVY} 100%)`,
             color: '#fff', fontWeight: 600, fontSize: 14,
-            fontFamily: 'var(--font-ui)',
+            fontFamily: 'var(--font-sans)',
             opacity: selected == null ? 0.5 : 1, transition: 'all 0.15s',
           }}
         >
@@ -178,7 +178,7 @@ export default function LevelUp({ exercise, onComplete }) {
               rows={2}
               style={{
                 width: '100%', padding: '10px 12px', borderRadius: 'var(--radius-sm)', resize: 'vertical',
-                border: '1.5px solid var(--border)', fontSize: 14, fontFamily: 'var(--font-ui)',
+                border: '1.5px solid var(--border)', fontSize: 14, fontFamily: 'var(--font-sans)',
                 outline: 'none', background: '#fff', color: 'var(--text)', lineHeight: 1.6,
               }}
             />

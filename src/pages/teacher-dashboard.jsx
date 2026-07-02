@@ -133,7 +133,7 @@ export default function TeacherDashboard({ students, onNavigate, teacherName = '
       </div>
       <div className="mb-4">
         <h1 className="td-headline">Good {timeOfDay()}, {teacherName}.</h1>
-        <p className="td-sub">{today} — your teaching cycle at a glance.</p>
+        <p className="td-sub">{today}, your teaching cycle at a glance.</p>
       </div>
 
        {/* Today's priority */}
@@ -171,7 +171,7 @@ export default function TeacherDashboard({ students, onNavigate, teacherName = '
              <QuickAction icon={<Icon.calendar size={16} />} label="Schedule a class" onClick={() => onNavigate('calendar')} />
              <QuickAction icon={<Icon.diagnose size={16} />} label="Run a diagnosis" onClick={() => onNavigate('diagnostics')} />
              <QuickAction icon={<Icon.homework size={16} />} label="Create homework" onClick={() => onNavigate('homework')} />
-             <QuickAction icon={<Icon.warning size={16} />} label="View error bank" onClick={() => onNavigate('error-bank')} />
+             <QuickAction icon={<Icon.warning size={16} />} label="View error bank" onClick={() => onNavigate('diagnostics:errors')} />
            </div>
          </Card>
 
@@ -194,7 +194,7 @@ export default function TeacherDashboard({ students, onNavigate, teacherName = '
                    <div key={ev.id} className="td-list-row">
                      <Avatar name={student?.name || '?'} size={28} />
                      <div className="flex-1">
-                       <div className="td-row-title">{student?.firstName || 'Unknown'} — {ev.title}</div>
+                       <div className="td-row-title">{student?.firstName || 'Unknown'}: {ev.title}</div>
                        <div className="td-row-sub">{ev.startTime || '—'} · {ev.classFocus || 'No focus set'}</div>
                      </div>
                      <Button variant="ghost" size="sm" onClick={() => onNavigate('calendar:class', { classEventId: ev.id })}>Open</Button>

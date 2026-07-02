@@ -140,7 +140,7 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
       setInquiryHypothesis(dx.inquiryHypothesis || '');
       setStep('review');
     } else {
-      setError('Could not load that diagnosis — it may have been deleted.');
+      setError('Could not load that diagnosis; it may have been deleted.');
     }
   }
 
@@ -199,7 +199,7 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
       const promptData = { student: selectedStudent, classEvent, classEvidence: normalizedEvidence, targetProfile, studentGoal };
       const getContent = (res) => (res?.content?.map(b => b.text || '').join('') || '');
 
-      setGeneratingStatus('Step 1/4 — Generating skill diagnosis…');
+      setGeneratingStatus('Step 1/4: Generating skill diagnosis…');
       const diagnosisResult = await generateDiagnosisJson(promptData, (status) => setGeneratingStatus(status));
       const diagnosisRaw = diagnosisResult.raw;
       const parsedDiagnosis = diagnosisResult.parsed;
@@ -212,15 +212,15 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
         ),
       };
 
-      setGeneratingStatus('Step 2/4 — Analysing errors and vocabulary targets…');
+      setGeneratingStatus('Step 2/4: Analysing errors and vocabulary targets…');
       const errorBankRaw = await callAI(buildErrorBankPrompt({ ...promptData, diagnosis: evaluatedOnlyDx }), withSkills('diagnosis', { max_tokens: 2500 })).catch(() => null);
       const parsedErrorBank = normalizeErrorTargets(errorBankRaw ? parseAiJson(getContent(errorBankRaw)) : {});
 
-      setGeneratingStatus('Step 3/4 — Writing student feedback…');
+      setGeneratingStatus('Step 3/4: Writing student feedback…');
       const feedbackRaw = await callAI(buildStudentFeedbackPrompt({ ...promptData, diagnosis: evaluatedOnlyDx }), withSkills('feedback', { max_tokens: 2500 })).catch(() => null);
       const parsedFeedback = feedbackRaw ? parseAiJson(getContent(feedbackRaw)) : {};
 
-      setGeneratingStatus('Step 4/4 — Building homework recommendation…');
+      setGeneratingStatus('Step 4/4: Building homework recommendation…');
       const homeworkRaw = await callAI(buildHomeworkPrompt({
         ...promptData,
         diagnosis: evaluatedOnlyDx,
@@ -231,7 +231,7 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
 
       setGeneratingStatus('Structuring results…');
 
-      const FAILED = { content: 'Failed to generate — click Regen to retry.', approved: false, hidden: false, edited: false };
+      const FAILED = { content: 'Failed to generate. Click Regen to retry.', approved: false, hidden: false, edited: false };
       const initSections = {
         skillDiagnosis:           diagnosisRaw ? { content: parsedDiagnosis.skillDiagnosis ?? null,                                              approved: false, hidden: false, edited: false } : FAILED,
         studentFeedback:          feedbackRaw  ? { content: parsedFeedback,                                                                      approved: false, hidden: false, edited: false } : FAILED,
@@ -287,7 +287,7 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
       }
 
       if (!diagnosisRaw || !errorBankRaw || !feedbackRaw || !homeworkRaw) {
-        window.toast?.('Some sections failed to generate — please Regen them.', 'warn');
+        window.toast?.('Some sections failed to generate. Please Regen them.', 'warn');
       }
 
       setStep('write');
@@ -493,7 +493,7 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
           </div>
         </Card>
         <Button variant="primary" onClick={() => onNavigate('diagnostics:list', {})}>
-          <Icon.check size={14} /> Done — View All Diagnoses
+          <Icon.check size={14} /> Done. View All Diagnoses
         </Button>
       </div>
     );
@@ -527,7 +527,7 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
                 value={selectedStudentId}
                 onChange={e => { setSelectedStudentId(e.target.value); setSelectedClassEventId(''); setClassEvidence(null); setClassEvent(null); }}
               >
-                <option value="">— Select student —</option>
+                <option value="">– Select student –</option>
                 {(students || allStudents).map(s => (
                   <option key={s.id} value={s.id}>{s.name || s.firstName || s.id}</option>
                 ))}
@@ -544,12 +544,12 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
               </div>
               {profiles.length > 0 ? (
                 <select className="select" value={targetProfile?.id || ''} onChange={e => setTargetProfile(profiles.find(p => p.id === e.target.value) || null)}>
-                  <option value="">— Select profile —</option>
+                  <option value="">– Select profile –</option>
                   {profiles.map(p => <option key={p.id} value={p.id}>{p.profileName || p.label}</option>)}
                 </select>
               ) : (
                 <div>
-                  <p className="card-row-meta mb-3">No profiles — pick a preset to create one:</p>
+                  <p className="card-row-meta mb-3">No profiles. Pick a preset to create one:</p>
                   <div className="flex-wrap-row">
                     {Object.entries(TARGET_PROFILE_PRESETS).map(([key, preset]) => (
                       <Button key={key} variant="ghost" size="sm" onClick={() => selectPreset(key)}>{preset.label}</Button>
@@ -605,7 +605,7 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
               {noLinkedEvidence && (
                 <div className="mt-4">
                   <p className="card-row-meta mb-3">
-                    No class linked. Paste your transcript and select which skills were covered — the AI will only diagnose what you evaluated.
+                    No class linked. Paste your transcript and select which skills were covered. The AI will only diagnose what you evaluated.
                   </p>
 
                   <label className="field-label">Class transcript / student answers *</label>
@@ -614,7 +614,7 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
                     rows={8}
                     value={inlineTranscript}
                     onChange={e => setInlineTranscript(e.target.value)}
-                    placeholder="Paste the student's exact words, speaking answer, writing sample, or transcript here. Quote errors directly — this is what the AI will analyze..."
+                    placeholder="Paste the student's exact words, speaking answer, writing sample, or transcript here. Quote errors directly. This is what the AI will analyze..."
                   />
 
                   <label className="field-label">Teacher notes (optional)</label>
@@ -820,7 +820,7 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
           {!SECTION_KEYS.some(({ key }) => sections[key]) && (
             <Card className="page-empty-state">
               <p className="card-row-meta mb-4">
-                This diagnosis has no generated content — it was saved before the AI analysis completed.
+                This diagnosis has no generated content. It was saved before the AI analysis completed.
               </p>
               <Button variant="primary" size="sm" onClick={() => onNavigate('diagnostics:create', { studentId: savedDiagnosis?.studentId || selectedStudentId || studentId })}>
                 <Icon.diagnose size={13} /> Start a new diagnosis

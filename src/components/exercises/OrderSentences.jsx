@@ -177,7 +177,7 @@ export default function OrderSentences({ exercise, onComplete }) {
           style={{
             padding: '10px 24px', borderRadius: 'var(--radius-sm)', border: 'none', cursor: 'pointer',
             background: `linear-gradient(120deg, ${TEAL} 0%, ${NAVY} 100%)`,
-            color: '#fff', fontWeight: 600, fontSize: 14, fontFamily: 'var(--font-ui)',
+            color: '#fff', fontWeight: 600, fontSize: 14, fontFamily: 'var(--font-sans)',
           }}
         >
           Check order
@@ -200,7 +200,7 @@ export default function OrderSentences({ exercise, onComplete }) {
               style={{
                 padding: '9px 20px', borderRadius: 'var(--radius-sm)', border: '1.5px solid var(--border)', cursor: 'pointer',
                 background: 'var(--surface)', color: 'var(--text-2)', fontWeight: 600, fontSize: 13.5,
-                fontFamily: 'var(--font-ui)',
+                fontFamily: 'var(--font-sans)',
               }}
             >
               Reset and try again

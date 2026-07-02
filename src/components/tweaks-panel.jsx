@@ -19,7 +19,7 @@ const CSS = `
     width: 260px; background: var(--surface);
     border: 1px solid var(--border); border-radius: 14px;
     box-shadow: 0 8px 32px rgba(0,0,0,0.14);
-    padding: 18px; font-family: var(--font-ui);
+    padding: 18px; font-family: var(--font-sans);
   }
   .tweaks-title { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 16px; }
   .tweak-section { margin-bottom: 16px; }
@@ -28,7 +28,7 @@ const CSS = `
   .tweak-radio-btn {
     padding: 4px 11px; border-radius: 999px; font-size: 12px; font-weight: 500;
     background: var(--divider); color: var(--text-2); border: none; cursor: pointer;
-    font-family: var(--font-ui); transition: background 0.12s, color 0.12s;
+    font-family: var(--font-sans); transition: background 0.12s, color 0.12s;
   }
   .tweak-radio-btn.active { background: var(--accent); color: #fff; font-weight: 600; }
   .tweak-toggle-row { display: flex; align-items: center; justify-content: space-between; }

@@ -41,7 +41,7 @@ export default function ReadExercise({ exercise, onComplete }) {
   function optionStyle(qIdx, oIdx) {
     const base = {
       padding: '8px 12px', borderRadius: 'var(--radius-sm)', border: '1.5px solid', cursor: submitted ? 'default' : 'pointer',
-      fontSize: 14, lineHeight: 1.5, fontFamily: 'var(--font-ui)', textAlign: 'left', width: '100%',
+      fontSize: 14, lineHeight: 1.5, fontFamily: 'var(--font-sans)', textAlign: 'left', width: '100%',
       background: 'var(--surface)', color: 'var(--text)',
       transition: 'all 0.1s',
     };
@@ -114,7 +114,7 @@ export default function ReadExercise({ exercise, onComplete }) {
         <button onClick={handleSubmit} disabled={!allAnswered} style={{
           padding: '10px 24px', borderRadius: 'var(--radius-sm)', border: 'none', cursor: allAnswered ? 'pointer' : 'not-allowed',
           background: allAnswered ? `linear-gradient(120deg, ${TEAL} 0%, ${NAVY} 100%)` : 'var(--border)',
-          color: '#fff', fontWeight: 600, fontSize: 14, fontFamily: 'var(--font-ui)',
+          color: '#fff', fontWeight: 600, fontSize: 14, fontFamily: 'var(--font-sans)',
           opacity: allAnswered ? 1 : 0.5, transition: 'all 0.15s',
         }}>
           Check answers

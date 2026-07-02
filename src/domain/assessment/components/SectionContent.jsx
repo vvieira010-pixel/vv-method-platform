@@ -1,4 +1,4 @@
-﻿import { Icon, Pill } from '../../../components/shared.jsx';
+import { Icon, Pill } from '../../../components/shared.jsx';
 import { StudentFeedbackView } from '../../../components/domain-ui.jsx';
 
 export function camelToLabel(str) {

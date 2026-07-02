@@ -134,7 +134,7 @@ export default function SettingsPage({ onNavigate }) {
       const counts = await syncLocalToCloud();
       const total = Object.values(counts).reduce((a, b) => a + b, 0);
       const detail = Object.entries(counts).filter(([, n]) => n > 0).map(([k, n]) => `${k}: ${n}`).join(' · ');
-      setSyncResult(total ? `Synced ${total} new record(s). ${detail}` : 'Already up to date — nothing new to sync.');
+      setSyncResult(total ? `Synced ${total} new record(s). ${detail}` : 'Already up to date, nothing new to sync.');
       window.toast?.('Cloud sync complete.', 'ok');
     } catch (e) {
       setSyncResult(`Sync failed: ${e.message}`);
@@ -168,7 +168,7 @@ export default function SettingsPage({ onNavigate }) {
   function saveExamDate() {
     if (examDate) localStorage.setItem('vv:met_exam_date', examDate);
     else localStorage.removeItem('vv:met_exam_date');
-    window.toast?.('Exam date saved — students will see the countdown on their dashboard.', 'ok');
+    window.toast?.('Exam date saved. Students will see the countdown on their dashboard.', 'ok');
   }
 
   function saveClassLink() {
@@ -182,7 +182,7 @@ export default function SettingsPage({ onNavigate }) {
     const name = teacherName.trim();
     if (name) localStorage.setItem('vv:teacher_name', name);
     else localStorage.removeItem('vv:teacher_name');
-    window.toast?.('Class link saved — use "Send invite" on a class in the Calendar.', 'ok');
+    window.toast?.('Class link saved. Use "Send invite" on a class in the Calendar.', 'ok');
   }
 
   async function saveGeneralMemo() {
@@ -284,18 +284,18 @@ export default function SettingsPage({ onNavigate }) {
           Any one key is enough. <strong>Tip:</strong> paste several keys in a field (comma-separated) and the app rotates to the next one when a key hits its limit. Keys are not included in platform backups.
         </p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-          <Field label="Groq API Key (recommended — free)">
+          <Field label="Groq API Key (recommended, free)">
             <SecretInput value={groqKey} onChange={e => setGroqKey(e.target.value)} placeholder="gsk_…" />
             <a href="https://console.groq.com/keys" target="_blank" rel="noopener noreferrer" style={{ fontSize: 'var(--text-xs)', color: 'var(--accent)', marginTop: 3 }}>Get a free Groq key →</a>
           </Field>
-          <Field label="Gemini API Key (free — cascades through Gemini + Gemma)">
+          <Field label="Gemini API Key (free, cascades through Gemini + Gemma)">
             <SecretInput value={geminiKey} onChange={e => setGeminiKey(e.target.value)} placeholder="AIza… (add more, comma-separated, to rotate)" />
             <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener noreferrer" style={{ fontSize: 'var(--text-xs)', color: 'var(--accent)', marginTop: 3 }}>Get a free Gemini key →</a>
             <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: 3, lineHeight: 1.5 }}>
               One key tries: Gemini 2.5 Pro → 2.5 Flash → 2.5 Flash-Lite → 2.0 Flash → 2.0 Flash-Lite → Gemma 4 → Gemma 3, until one answers. Add several keys (comma-separated) to rotate when one is rate-limited.
             </span>
           </Field>
-          <Field label="OpenRouter API Key (free models — auto-cascade)">
+          <Field label="OpenRouter API Key (free models, auto-cascade)">
             <SecretInput value={openrouterKey} onChange={e => setOpenrouterKey(e.target.value)} placeholder="sk-or-…" />
             <a href="https://openrouter.ai/keys" target="_blank" rel="noopener noreferrer" style={{ fontSize: 'var(--text-xs)', color: 'var(--accent)', marginTop: 3 }}>Get a free OpenRouter key →</a>
             <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: 3, lineHeight: 1.5 }}>
@@ -317,17 +317,17 @@ export default function SettingsPage({ onNavigate }) {
 
       {/* TTS Keys */}
       <Card style={{ marginTop: 'var(--space-4)' }}>
-        <SectionHeader title="TTS — Listening Exercise Audio" icon={<Icon.mic size={15} />} />
+        <SectionHeader title="TTS, Listening Exercise Audio" icon={<Icon.mic size={15} />} />
         <p className="card-row-meta" style={{ margin: 'var(--space-2) 0 var(--space-1)', lineHeight: 1.6 }}>
           Audio for listening exercises is generated in this order:
         </p>
         <ol style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', margin: '4px 0 16px', paddingLeft: 18, lineHeight: 1.8 }}>
-          <li><strong>ElevenLabs</strong> — highest quality (priority)</li>
-          <li><strong>Deepgram</strong> — fast fallback voice for listening practice</li>
-          <li><strong>OpenAI TTS</strong> — good quality, uses your OpenAI key from the AI section above</li>
-          <li><strong>Gemini TTS</strong> — free, uses your Gemini key from the AI section above</li>
-          <li><strong>Piper</strong> — offline/local, if server URL is set below</li>
-          <li><strong>Browser speech</strong> — always available, no key needed</li>
+          <li><strong>ElevenLabs</strong>: highest quality (priority)</li>
+          <li><strong>Deepgram</strong>: fast fallback voice for listening practice</li>
+          <li><strong>OpenAI TTS</strong>: good quality, uses your OpenAI key from the AI section above</li>
+          <li><strong>Gemini TTS</strong>: free, uses your Gemini key from the AI section above</li>
+          <li><strong>Piper</strong>: offline/local, if server URL is set below</li>
+          <li><strong>Browser speech</strong>: always available, no key needed</li>
         </ol>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
           <Field label="ElevenLabs API Key (priority)">
@@ -339,13 +339,13 @@ export default function SettingsPage({ onNavigate }) {
             <a href="https://console.deepgram.com/" target="_blank" rel="noopener noreferrer" style={{ fontSize: 'var(--text-xs)', color: 'var(--accent)', marginTop: 3 }}>Get your Deepgram key →</a>
           </Field>
           <div className="note-box">
-            <strong>Voice note</strong> — use one woman voice and one man voice for listening variety. The default server setup uses an ElevenLabs woman voice first, Deepgram's Aura fallback, then OpenAI <em>nova</em>. You can change voices with <code>ELEVENLABS_VOICE_ID</code>, <code>DEEPGRAM_TTS_MODEL</code>, or <code>OPENAI_TTS_VOICE</code> in the server environment.
+            <strong>Voice note</strong>: use one woman voice and one man voice for listening variety. The default server setup uses an ElevenLabs woman voice first, Deepgram's Aura fallback, then OpenAI <em>nova</em>. You can change voices with <code>ELEVENLABS_VOICE_ID</code>, <code>DEEPGRAM_TTS_MODEL</code>, or <code>OPENAI_TTS_VOICE</code> in the server environment.
           </div>
           <div className="note-box">
-            <strong>OpenAI TTS</strong> — uses your OpenAI key from the AI section above. No extra key needed.
+            <strong>OpenAI TTS</strong>: uses your OpenAI key from the AI section above. No extra key needed.
             Voices: <em>alloy</em> (neutral), <em>nova</em> (female), <em>onyx</em> (male). Active automatically if ElevenLabs and Deepgram are not set or fail.
           </div>
-          <Field label="Piper server URL (optional — local/offline)">
+          <Field label="Piper server URL (optional, local/offline)">
             <input
               className="input"
               type="url"
@@ -438,7 +438,7 @@ export default function SettingsPage({ onNavigate }) {
               className="input"
               value={teacherName}
               onChange={e => setTeacherName(e.target.value)}
-              placeholder="e.g. Vinicius — MET Coach"
+              placeholder="e.g. Vinicius, MET Coach"
             />
           </Field>
           <div style={{
@@ -446,7 +446,7 @@ export default function SettingsPage({ onNavigate }) {
             background: 'var(--accent-subtle)', color: 'var(--muted)', lineHeight: 1.6,
             border: '1px solid var(--accent-soft)',
           }}>
-            <strong>Emailing setup</strong> — sending invites also needs a transactional email
+            <strong>Emailing setup</strong>: sending invites also needs a transactional email
             provider configured on the server: set <code>RESEND_API_KEY</code> and
             <code> INVITE_FROM_EMAIL</code> (a verified sender) in your Vercel environment.
             Until then, the link is saved but invites can't be emailed.
@@ -462,7 +462,7 @@ export default function SettingsPage({ onNavigate }) {
         <Card style={{ marginTop: 'var(--space-4)' }}>
           <SectionHeader title="Account Password" icon={<Icon.lock size={15} />} />
           <p className="card-row-meta" style={{ margin: 'var(--space-2) 0 var(--space-4)', lineHeight: 1.6 }}>
-            Set a password so you can sign in with your email and password next time — no login link needed.
+            Set a password so you can sign in with your email and password next time. No login link needed.
           </p>
           <form onSubmit={handleSetPassword} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             <Field label="New password (min. 6 characters)">
@@ -508,7 +508,7 @@ export default function SettingsPage({ onNavigate }) {
           <p style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', margin: '8px 0 14px' }}>
             Push the data stored in this browser (students, diagnoses, homework, submissions, reviews…)
             up to Supabase so it's available across devices and so students can sign in and reach their homework.
-            Run this once after signing in; it's safe to run again — already-synced records are skipped.
+            Run this once after signing in; it's safe to run again. Already-synced records are skipped.
           </p>
           <Button variant="primary" onClick={handleSyncToCloud} disabled={syncing}>
             <Icon.upload size={14} /> {syncing ? 'Syncing…' : 'Sync local data to cloud'}
@@ -567,7 +567,7 @@ export default function SettingsPage({ onNavigate }) {
       <Card style={{ marginTop: 'var(--space-4)' }}>
         <SectionHeader title="Platform" />
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 12, fontSize: 'var(--text-sm)', color: 'var(--muted)' }}>
-          <p>MET Proficiency Mastery — Michigan English Test Preparation for Nurses</p>
+          <p>MET Proficiency Mastery: Michigan English Test Preparation for Nurses</p>
           <p>Diagnosis-first teaching workflow</p>
           <p>All data stored locally in your browser (localStorage).</p>
         </div>

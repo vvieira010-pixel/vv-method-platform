@@ -2,7 +2,7 @@
  * message-center.jsx — In-app messaging between teacher and students
  */
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Icon, Avatar } from './shared.jsx';
+import { Icon, Avatar, Button } from './shared.jsx';
 import { getInbox, sendMessage, markRead } from '../lib/workflow.js';
 
 const CSS = `
@@ -55,7 +55,7 @@ const CSS = `
   }
   .mc-compose-input {
     flex: 1; padding: 8px 11px; border: 1px solid var(--border);
-    border-radius: var(--radius-sm); font-family: var(--font-ui); font-size: 13px;
+    border-radius: var(--radius-sm); font-family: var(--font-sans); font-size: 13px;
     color: var(--text); resize: none; outline: none;
     transition: border-color 0.15s;
   }
@@ -294,7 +294,7 @@ export function StudentInbox({ student }) {
             value={reply} onChange={e => setReply(e.target.value)}
             style={{ width: '100%', marginBottom: 10 }}
           />
-          <button className="btn btn-accent btn-sm" onClick={handleReply}>Send Reply</button>
+          <Button variant="accent" size="sm" onClick={handleReply}>Send Reply</Button>
         </div>
       )}
     </div>

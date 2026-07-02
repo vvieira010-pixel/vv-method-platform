@@ -108,7 +108,7 @@ function MCQPlayer({ ex, res, update, readOnly }) {
                 border: `1.5px solid ${borderColor}`, background: bg,
                 cursor: optionDisabled ? 'default' : 'pointer',
                 opacity: isWrongTried && !showCorrect ? 0.7 : 1,
-                transition: 'all .15s var(--ease)', fontFamily: 'var(--font-ui)',
+                transition: 'all .15s var(--ease)', fontFamily: 'var(--font-sans)',
               }}
             >
               <div style={{
@@ -242,7 +242,7 @@ function BlankPlayer({ ex, res, update, readOnly }) {
                   border: 'none', borderBottom: `2px solid ${color}`,
                   outline: 'none', fontSize: 'var(--text-base)', width: 130,
                   padding: '2px 6px', textAlign: 'center',
-                  fontFamily: 'var(--font-ui)', fontWeight: 600,
+                  fontFamily: 'var(--font-sans)', fontWeight: 600,
                   color, background: 'transparent',
                 }}
               />
@@ -345,7 +345,7 @@ function ShortPlayer({ ex, res, update, readOnly }) {
           <button
             type="button"
             onClick={() => setChecklistOpen(v => !v)}
-            style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--primary)', fontFamily: 'var(--font-ui)' }}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--primary)', fontFamily: 'var(--font-sans)' }}
           >
             <span style={{ display: 'inline-flex', transform: checklistOpen ? 'rotate(90deg)' : 'none', transition: 'transform .15s' }}><Icon.chevronRight size={10} /></span>
             Quality checklist — what good MET writing requires
@@ -585,7 +585,7 @@ function SpeakPlayer({ ex, res, update, readOnly }) {
             <button
               type="button"
               onClick={() => setStrategyOpen(v => !v)}
-              style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--primary)', fontFamily: 'var(--font-ui)' }}
+              style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--primary)', fontFamily: 'var(--font-sans)' }}
             >
               <span style={{ display: 'inline-flex', transform: strategyOpen ? 'rotate(90deg)' : 'none', transition: 'transform .15s' }}><Icon.chevronRight size={10} /></span>
               Tips for {taskName}
@@ -731,7 +731,7 @@ function OrderPlayer({ ex, res, update, readOnly }) {
             background: 'var(--surface)', border: '1px solid var(--border)',
           }}>
             <span style={{
-              fontFamily: 'var(--font-ui)', fontWeight: 700, fontSize: 'var(--text-lg)',
+              fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: 'var(--text-lg)',
               color: 'var(--accent)', width: 24, textAlign: 'center',
             }}>{i + 1}</span>
             <span style={{ fontSize: 'var(--text-sm)', color: 'var(--text)', lineHeight: 1.5 }}>{sentences[idx]}</span>
@@ -764,7 +764,7 @@ function OrderPlayer({ ex, res, update, readOnly }) {
 
 function orderArrowStyle(disabled) {
   return {
-    width: 24, height: 22, padding: 0, fontFamily: 'var(--font-ui)',
+    width: 24, height: 22, padding: 0, fontFamily: 'var(--font-sans)',
     fontSize: 12, border: '1px solid var(--border)', borderRadius: 0,
     background: 'var(--surface)', color: disabled ? 'var(--faint)' : 'var(--text)',
     cursor: disabled ? 'not-allowed' : 'pointer',
@@ -1005,7 +1005,7 @@ function FlashPlayer({ ex, res, update, readOnly }) {
             <div style={{ fontSize: 'var(--text-xs)', textTransform: 'uppercase', letterSpacing: '0.1em', color: flipped ? 'rgba(240,246,252,.55)' : 'var(--faint)', marginBottom: 14 }}>
               {flipped ? 'Definition' : 'Term'}
             </div>
-            <div style={{ fontFamily: 'var(--font-ui)', fontWeight: 600, fontSize: flipped ? 'var(--text-lg)' : 'var(--text-2xl)', lineHeight: 1.3, maxWidth: 480 }}>
+            <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 600, fontSize: flipped ? 'var(--text-lg)' : 'var(--text-2xl)', lineHeight: 1.3, maxWidth: 480 }}>
               {flipped ? card.def : card.term}
             </div>
             <div style={{ marginTop: 16, fontSize: 'var(--text-xs)', color: flipped ? 'rgba(240,246,252,.4)' : 'var(--faint)', letterSpacing: '.1em', textTransform: 'uppercase' }}>
@@ -1116,12 +1116,12 @@ function ReadPlayer({ ex, res, update, readOnly }) {
         background: 'var(--surface)', border: '1px solid var(--border)',
         borderRadius: 'var(--radius-sm)', padding: '14px 16px', marginBottom: 14,
         maxHeight: 260, overflowY: 'auto', lineHeight: 1.8,
-        fontSize: 'var(--text-sm)', fontFamily: 'var(--font-ui)',
+        fontSize: 'var(--text-sm)', fontFamily: 'var(--font-sans)',
         color: 'var(--text)',
       }}>
         <p style={{ margin: 0, whiteSpace: 'pre-wrap' }}>{ex.passage || 'No passage provided.'}</p>
         {ex.source && (
-          <p style={{ margin: '8px 0 0', fontSize: 'var(--text-xs)', color: 'var(--muted)', fontStyle: 'italic', fontFamily: 'var(--font-ui)' }}>
+          <p style={{ margin: '8px 0 0', fontSize: 'var(--text-xs)', color: 'var(--muted)', fontStyle: 'italic', fontFamily: 'var(--font-sans)' }}>
             — {ex.source}
           </p>
         )}
@@ -1156,7 +1156,7 @@ function ReadPlayer({ ex, res, update, readOnly }) {
                     style={{
                       display: 'flex', alignItems: 'center', gap: 10, cursor: (readOnly || checked) ? 'default' : 'pointer',
                       padding: '8px 12px', borderRadius: 'var(--radius-sm)', border: `1px solid ${borderColor}`,
-                      background: bg, color: 'var(--text)', fontFamily: 'var(--font-ui)',
+                      background: bg, color: 'var(--text)', fontFamily: 'var(--font-sans)',
                       fontSize: 'var(--text-sm)', textAlign: 'left', transition: 'border-color .15s, background .15s',
                     }}
                   >
@@ -1268,7 +1268,7 @@ export function HomeworkStepThrough({ exercises, responses, onResponse, onSubmit
                     padding: '12px 16px', borderRadius: 'var(--radius-sm)',
                     border: `2px solid ${confidence === level.value ? 'var(--accent)' : 'var(--border)'}`,
                     background: confidence === level.value ? 'var(--accent-subtle)' : 'var(--surface)',
-                    color: 'var(--text)', fontFamily: 'var(--font-ui)',
+                    color: 'var(--text)', fontFamily: 'var(--font-sans)',
                     fontSize: 'var(--text-sm)', textAlign: 'left', transition: 'border-color .15s, background .15s',
                   }}
                 >

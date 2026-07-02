@@ -42,9 +42,9 @@ function SubskillRadar({ sectionData }) {
             <BarChart data={sectionData} margin={{ top: 8, right: 16, bottom: 8, left: -8 }} layout="vertical">
               <CartesianGrid strokeDasharray="3 3" stroke="var(--divider)" horizontal={false} />
               <XAxis type="number" domain={[0, domainMax]} tick={{ fill: 'var(--muted)', fontSize: 11 }} tickCount={5} />
-              <YAxis type="category" dataKey="skill" tick={{ fill: 'var(--text-2)', fontSize: 12, fontFamily: 'var(--font-ui)' }} width={60} />
+              <YAxis type="category" dataKey="skill" tick={{ fill: 'var(--text-2)', fontSize: 12, fontFamily: 'var(--font-sans)' }} width={60} />
               <Tooltip />
-              <Legend wrapperStyle={{ fontSize: 12, fontFamily: 'var(--font-ui)', color: 'var(--text-2)', paddingTop: 8 }} />
+              <Legend wrapperStyle={{ fontSize: 12, fontFamily: 'var(--font-sans)', color: 'var(--text-2)', paddingTop: 8 }} />
               <Bar name="Current" dataKey="current" fill="var(--accent)" radius={[0, 3, 3, 0]} isAnimationActive animationDuration={1000} animationBegin={300}>
                 <LabelList dataKey="current" position="right" fill="var(--accent)" fontSize={11} fontWeight={700} />
               </Bar>
@@ -56,14 +56,14 @@ function SubskillRadar({ sectionData }) {
           ) : (
             <RadarChart data={sectionData} cx="50%" cy="50%" outerRadius="70%">
               <PolarGrid stroke="var(--divider)" />
-              <PolarAngleAxis dataKey="skill" tick={{ fill: 'var(--text-2)', fontSize: 12, fontFamily: 'var(--font-ui)' }} />
+              <PolarAngleAxis dataKey="skill" tick={{ fill: 'var(--text-2)', fontSize: 12, fontFamily: 'var(--font-sans)' }} />
               <PolarRadiusAxis domain={[0, domainMax]} tick={{ fill: 'var(--muted)', fontSize: 11 }} tickCount={5} />
               {sectionData.some(d => d.previous != null) && (
                 <Radar name="Previous" dataKey="previous" stroke="var(--muted)" strokeWidth={1.5} strokeDasharray="5 5" fill="var(--muted)" fillOpacity={0.22} isAnimationActive animationDuration={900} animationBegin={0} />
               )}
               <Radar name="Current" dataKey="current" stroke="var(--accent)" strokeWidth={3} fill="var(--accent)" fillOpacity={0.38} isAnimationActive animationDuration={1200} animationBegin={600} />
               <Radar name="Target" dataKey="target" stroke="var(--primary)" strokeWidth={2} strokeDasharray="4 4" fill="none" isAnimationActive animationDuration={1000} animationBegin={300} />
-              <Legend wrapperStyle={{ fontSize: 12, fontFamily: 'var(--font-ui)', color: 'var(--text-2)', paddingTop: 8 }} />
+              <Legend wrapperStyle={{ fontSize: 12, fontFamily: 'var(--font-sans)', color: 'var(--text-2)', paddingTop: 8 }} />
               <Tooltip />
             </RadarChart>
           )}

@@ -53,7 +53,7 @@ export function DialogueEditor({ ex, update }) {
             <div key={line.id} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
               <button type="button"
                 onClick={() => updateLine(line.id, { speaker: line.speaker === 'A' ? 'B' : 'A' })}
-                title={`Speaker ${line.speaker} — click to toggle`}
+                title={`Speaker ${line.speaker}, click to toggle`}
                 style={{
                   flexShrink: 0, width: 32, height: 32, borderRadius: '50%', border: '2px solid var(--primary)',
                   cursor: 'pointer', fontWeight: 700, fontSize: 'var(--text-sm)',
@@ -112,7 +112,7 @@ export function SwapEditor({ ex, update }) {
   return (
     <div>
       <div style={fieldWrap}>
-        <label style={fieldLabel}>Sentence — wrap words in [brackets] to make them swappable</label>
+        <label style={fieldLabel}>Sentence: wrap words in [brackets] to make them swappable</label>
         <textarea className="input" rows={3}
           value={ex.sentence || ''}
           onChange={e => handleSentenceChange(e.target.value)}
@@ -129,7 +129,7 @@ export function SwapEditor({ ex, update }) {
       </div>
       {swaps.map(swap => (
         <div key={swap.id} style={{ marginBottom: 12, padding: 12, border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', background: 'var(--bg)' }}>
-          <div style={{ ...fieldLabel, marginBottom: 8 }}>Word: <strong style={{ color: '#5A2C5C' }}>[{swap.word}]</strong> — options (radio = correct B2 upgrade)</div>
+          <div style={{ ...fieldLabel, marginBottom: 8 }}>Word: <strong style={{ color: '#5A2C5C' }}>[{swap.word}]</strong>: options (radio for correct B2 upgrade)</div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
             {[0, 1, 2, 3].map(i => (
               <div key={i} style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
@@ -175,7 +175,7 @@ export function LevelUpEditor({ ex, update }) {
         </div>
       </div>
       <div style={fieldWrap}>
-        <label style={fieldLabel}>MCQ challenge — 3 options (radio = the B2 version)</label>
+        <label style={fieldLabel}>MCQ challenge: 3 options (radio = the B2 version)</label>
         {[0, 1, 2].map(i => (
           <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 6 }}>
             <input type="radio" name={`levelup-correct-${ex.id}`} checked={ex.correct === i}
@@ -184,7 +184,7 @@ export function LevelUpEditor({ ex, update }) {
             <input className="input"
               value={options[i] || ''}
               onChange={e => updateOption(i, e.target.value)}
-              placeholder={`Option ${String.fromCharCode(65 + i)}${i === (ex.correct ?? 0) ? ' (B2 — correct)' : ' (distractor)'}`}
+              placeholder={`Option ${String.fromCharCode(65 + i)}${i === (ex.correct ?? 0) ? ' (B2, correct)' : ' (distractor)'}`}
               style={{ flex: 1 }} />
           </div>
         ))}

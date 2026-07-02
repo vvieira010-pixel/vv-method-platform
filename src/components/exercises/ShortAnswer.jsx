@@ -362,7 +362,7 @@ export default function ShortAnswer({ exercise, onComplete }) {
         style={{
           width: '100%', padding: '12px 14px', borderRadius: 'var(--radius-sm, 6px)',
           border: `1.5px solid ${submitted ? 'var(--border)' : text.trim() ? TEAL : 'var(--border)'}`,
-          fontSize: 'var(--text-sm)', fontFamily: 'var(--font-ui)', lineHeight: 1.7,
+          fontSize: 'var(--text-sm)', fontFamily: 'var(--font-sans)', lineHeight: 1.7,
           resize: 'vertical', outline: 'none', color: 'var(--text)',
           background: submitted ? 'var(--bg)' : 'var(--surface)',
           transition: 'border-color 0.15s',
@@ -377,7 +377,7 @@ export default function ShortAnswer({ exercise, onComplete }) {
             marginTop: 10, padding: '10px 24px', borderRadius: 'var(--radius-sm, 6px)', border: 'none',
             cursor: text.trim() ? 'pointer' : 'not-allowed',
             background: text.trim() ? `linear-gradient(120deg, ${TEAL} 0%, ${NAVY} 100%)` : 'var(--border)',
-            color: '#fff', fontWeight: 600, fontSize: 'var(--text-sm)', fontFamily: 'var(--font-ui)',
+            color: '#fff', fontWeight: 600, fontSize: 'var(--text-sm)', fontFamily: 'var(--font-sans)',
             opacity: text.trim() ? 1 : 0.5, transition: 'all 0.15s',
           }}
         >

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Modal, Icon } from './shared.jsx';
+import { Modal, Icon, Button } from './shared.jsx';
 import { recordPractice } from '../lib/spaced-repetition.js';
 
 export default function ReviewSession({ exercises, studentId, onClose }) {
@@ -58,7 +58,7 @@ export default function ReviewSession({ exercises, studentId, onClose }) {
             You reviewed {exercises.length} item{exercises.length !== 1 ? 's' : ''}.
             Come back when a new review is due.
           </p>
-          <button onClick={onClose} className="btn btn-primary">Done</button>
+          <Button variant="primary" onClick={onClose}>Done</Button>
         </div>
       ) : ex && (
         <div>
