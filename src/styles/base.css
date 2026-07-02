@@ -110,6 +110,21 @@ p {
 .grid-auto-fill-md { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: var(--space-2); }
 .grid-auto-fit-lg { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; }
 
+.grid-square {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: var(--space-3);
+}
+
+.square-card {
+  aspect-ratio: 1 / 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: var(--space-4);
+}
 .flex-wrap-row { display: flex; flex-wrap: wrap; gap: var(--space-2); }
 .flex-wrap-row-3 { display: flex; flex-wrap: wrap; gap: var(--space-3); }
 

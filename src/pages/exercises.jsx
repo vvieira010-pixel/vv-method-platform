@@ -125,25 +125,32 @@ export default function ExercisesPage({ onNavigate }) {
                   return (
                     <div key={typeId}>
                       <GroupHeader label={exType?.label || typeId} count={items.length} />
-                      <div className="page-list" style={{ marginTop: 'var(--space-2)' }}>
+                      <div className="grid-auto-fill-md" style={{ marginTop: 'var(--space-2)' }}>
                         {items.map(ex => (
-                          <div key={ex.id} className="exercise-item">
-                            <ExTypeBadge typeId={ex.type} />
+                          <Card key={ex.id} style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '12px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'space-between' }}>
+                              <ExTypeBadge typeId={ex.type} />
+                              {ex.usageCount > 0 && (
+                                <span className="card-row-meta" style={{ fontSize: 'var(--text-xs)' }}>Used {ex.usageCount}×</span>
+                              )}
+                            </div>
                             {ex.title && (
-                              <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              <div style={{ fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                 {ex.title}
-                              </span>
+                              </div>
                             )}
-                            <span style={{ flex: 1, fontSize: 'var(--text-sm)', color: 'var(--text-2)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-2)', lineHeight: 1.5, overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
                               {exercisePreview(ex)}
-                            </span>
-                            {ex.usageCount > 0 && (
-                              <span className="card-row-meta">Used {ex.usageCount}×</span>
-                            )}
-                            <Button variant="ghost" size="sm" style={{ color: 'var(--danger)' }} onClick={() => handleDelete(ex.id)}>
-                              Remove
-                            </Button>
-                          </div>
+                            </div>
+                            <div style={{ marginTop: 'auto', paddingTop: 8, textAlign: 'right' }}>
+                              <Button variant="ghost" size="sm" style={{ color: 'var(--danger)', padding: '4px 8px' }} onClick={() => handleDelete(ex.id)}>
+                                Remove
+                              </Button>
+                            </div>
+                          </Card>
+                        ))}
+                      </div>
+                    </div>
                         ))}
                       </div>
                     </div>
@@ -184,17 +191,17 @@ function PackTab({ title, modules, onNavigate }) {
           return (
             <div key={skill}>
               <GroupHeader label={skill} count={`${items.length} modules · ${skillExerciseCount} exercises`} />
-              <div className="page-list">
+              <div className="grid-auto-fill-md" style={{ marginTop: 'var(--space-2)' }}>
                 {items.map(mod => (
-                  <div key={mod.id} className="card-row" style={{ padding: 'var(--space-3) var(--space-1)', borderBottom: '1px solid var(--divider)' }}>
-                    <div className="card-row-body">
-                      <div style={{ fontWeight: 500, fontSize: 'var(--text-sm)' }}>{mod.label}</div>
-                      <div className="card-row-meta">{mod.exercises?.length || 0} exercises</div>
+                  <Card key={mod.id} style={{ padding: '12px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: 12 }}>
+                    <div>
+                      <div style={{ fontWeight: 600, fontSize: 'var(--text-sm)', color: 'var(--text)' }}>{mod.label}</div>
+                      <div className="card-row-meta" style={{ fontSize: 'var(--text-xs)' }}>{mod.exercises?.length || 0} exercises</div>
                     </div>
                     <Button variant="ghost" size="sm" onClick={() => onNavigate('homework:create')}>
                       Add to Homework
                     </Button>
-                  </div>
+                  </Card>
                 ))}
               </div>
             </div>

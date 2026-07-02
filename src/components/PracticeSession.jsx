@@ -134,44 +134,22 @@ function TopicPicker({ topics, mode, onSelect }) {
         color: 'var(--muted, #6b7280)',
         marginBottom: 18,
         marginTop: 0,
+        textAlign: 'center'
       }}>
         Choose a topic to practice: {descriptions[mode] || ''}.
       </p>
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(2, 1fr)',
-        gap: 10,
-      }}>
+      <div className="grid-square">
         {topics.map(t => (
-          <button
+          <Card
             key={t.id}
+            className="square-card"
             onClick={() => onSelect(t.id)}
-            style={{
-              background: 'var(--bg, #fff)',
-              border: '1.5px solid var(--border, #e5e7eb)',
-              borderRadius: 0,
-              padding: '14px 16px',
-              textAlign: 'left',
-              cursor: 'pointer',
-              fontSize: '0.875rem',
-              fontWeight: 600,
-              color: 'var(--text, #0F172A)',
-              lineHeight: 1.4,
-              transition: 'all 0.18s ease',
-            }}
-            onMouseEnter={e => {
-              e.currentTarget.style.borderColor = 'var(--accent, #148891)';
-              e.currentTarget.style.background = 'rgba(20,136,145,0.05)';
-              e.currentTarget.style.color = 'var(--accent, #148891)';
-            }}
-            onMouseLeave={e => {
-              e.currentTarget.style.borderColor = 'var(--border, #e5e7eb)';
-              e.currentTarget.style.background = 'var(--bg, #fff)';
-              e.currentTarget.style.color = 'var(--text, #0F172A)';
-            }}
+            style={{ cursor: 'pointer', transition: 'all 0.2s' }}
           >
-            {t.title}
-          </button>
+            <div style={{ fontWeight: 600, fontSize: 'var(--text-sm)', textAlign: 'center' }}>
+              {t.title}
+            </div>
+          </Card>
         ))}
       </div>
     </div>

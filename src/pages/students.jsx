@@ -200,7 +200,7 @@ export default function StudentsPage({ onNavigate }) {
           <p style={{ color: 'var(--muted)' }}>{search ? 'No students match your search.' : 'No students yet. Add your first student above.'}</p>
         </Card>
       ) : (
-        <div className="page-list">
+        <div className="grid-square">
           {filtered.map(student => (
             <StudentRow
               key={student.id}
@@ -243,105 +243,82 @@ function StudentRow({ student, nextAction, inviteStatus, setupState, onProfile, 
   const result = setupState?.result;
 
   return (
-    <Card>
-      <div className="card-row">
-        <Avatar name={student.name} size={36} />
-        <div className="card-row-body">
-          <div className="card-row-title">{student.name}</div>
-          <div className="card-row-meta">
-            {student.currentLevel} → {student.targetLevel} · {student.examGoal}
-            {student.email && ` · ${student.email}`}
-          </div>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+      <Card
+        className="square-card"
+        onClick={() => onProfile()}
+      >
+        <Avatar name={student.name} size={48} />
+        <div style={{ fontWeight: 600, fontSize: 'var(--text-sm)', textAlign: 'center', marginTop: 8 }}>{student.name}</div>
+        <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', textAlign: 'center' }}>
+          {student.currentLevel} → {student.targetLevel}
         </div>
-        <Pill tone="muted">{student.currentLevel}</Pill>
-        <Pill tone={action.tone}>{action.label}</Pill>
-        <span className="card-row-meta">Session {student.session || 1}/{student.totalSessions || 24}</span>
-        <div style={{ display: 'flex', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
-          <Button variant="primary" size="sm" onClick={onProfile}>View Profile</Button>
-          {student.email && (
-            <Button variant="ghost" size="sm" onClick={isSetupOpen ? onCloseSetup : onOpenSetup}
-              style={isSetupOpen ? { color: 'var(--accent)' } : {}}>
-              {isSetupOpen ? 'Cancel setup' : 'Set up account'}
-            </Button>
-          )}
-          {student.email && (
-            <Button variant="ghost" size="sm" onClick={onInvite} disabled={isSending || isSent}
-              title={`Send login link to ${student.email}`}
-              style={isSent ? { color: 'var(--success)' } : {}}>
-              {isSending ? 'Sending…' : isSent ? '✓ Link sent' : 'Send login link'}
-            </Button>
-          )}
-          <Button variant="ghost" size="sm" onClick={onEdit} aria-label="Edit student"><Icon.edit size={13} /></Button>
-          <Button variant="ghost" size="sm" onClick={onDelete} style={{ color: 'var(--danger)' }} aria-label="Delete student"><Icon.trash size={13} /></Button>
+        
+        <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'center' }}>
+          <Pill tone={action.tone}>{action.label}</Pill>
         </div>
-      </div>
+
+        <div style={{ marginTop: 'auto', paddingTop: 12, width: '100%', display: 'flex', gap: 4, justifyContent: 'center' }}>
+          <Button variant="primary" size="sm" onClick={(e) => { e.stopPropagation(); onProfile(); }}>Profile</Button>
+          <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); onEdit(); }} aria-label="Edit"><Icon.edit size={13} /></Button>
+          <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); onDelete(); }} style={{ color: 'var(--danger)' }} aria-label="Delete"><Icon.trash size={13} /></Button>
+        </div>
+      </Card>
 
       {/* Account setup panel */}
       {isSetupOpen && (
-        <div style={{ marginTop: 'var(--space-4)', paddingTop: 'var(--space-4)', borderTop: '1px solid var(--border)' }}>
-          {result?.ok ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-              <p style={{ fontSize: 'var(--text-sm)', fontWeight: 700, color: 'var(--success)', margin: 0 }}>
-                ✓ Account created for {student.name}
-                {result.emailSent && ' — login email sent to their inbox!'}
-              </p>
-              <div style={{ background: 'var(--bg)', border: '1.5px solid var(--border)', borderRadius: 'var(--radius-md)', padding: 'var(--space-3) var(--space-4)', fontFamily: 'var(--font-mono)', fontSize: 'var(--text-sm)', lineHeight: 2 }}>
-                <div><strong>Login (email):</strong> {result.email}</div>
-                <div><strong>Password:</strong> {result.password}</div>
-              </div>
-              <div style={{ display: 'flex', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
-                <Button variant="primary" size="sm" onClick={() => {
-                  copyText(`Login: ${result.email}\nPassword: ${result.password}`);
-                  window.toast?.('Credentials copied!', 'ok');
-                }}>
-                  Copy credentials
-                </Button>
-                <Button variant="ghost" size="sm" onClick={() => {
-                  const msg = `Hi ${student.firstName || student.name.split(' ')[0]}! Here are your login credentials for the MET Proficiency Mastery platform:\n\nWebsite: https://met-mastery.vercel.app\nEmail: ${result.email}\nPassword: ${result.password}\n\nAfter logging in, go to Settings to change your password if you'd like.`;
-                  copyText(msg);
-                  window.toast?.('WhatsApp message copied!', 'ok');
-                }}>
-                  Copy WhatsApp message
-                </Button>
-                <Button variant="ghost" size="sm" onClick={onCloseSetup}>Done</Button>
-              </div>
-            </div>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-              <p style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', margin: 0 }}>
-                Create a login for <strong>{student.name}</strong> ({student.email}). You can use the generated password or type your own.
-              </p>
-              <div style={{ display: 'flex', gap: 'var(--space-2)', alignItems: 'center', flexWrap: 'wrap' }}>
-                <input
-                  className="input"
-                  style={{ maxWidth: 240 }}
-                  value={setupState.pwd}
-                  onChange={e => onSetupPwd(e.target.value)}
-                  placeholder="Password (min. 6 chars)"
-                  disabled={setupState.busy}
-                />
-                <Button variant="ghost" size="sm" onClick={() => onSetupPwd(genPassword())} disabled={setupState.busy}>
-                  Regenerate
-                </Button>
-              </div>
-              {result?.error && (
-                <p style={{ fontSize: 'var(--text-sm)', color: 'var(--danger)', margin: 0 }}>
-                  {result.error.includes('email confirmation') ? (
-                    <>Email confirmation is ON in Supabase. Go to <strong>Supabase → Auth → Providers → Email</strong> and turn off "Confirm email", then try again.</>
-                  ) : result.error}
+        <Card style={{ padding: 'var(--space-4)', border: '1px solid var(--accent)' }}>
+          <div style={{ marginTop: 'var(--space-4)', paddingTop: 'var(--space-4)', borderTop: '1px solid var(--border)' }}>
+            {result?.ok ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+                <p style={{ fontSize: 'var(--text-sm)', fontWeight: 700, color: 'var(--success)', margin: 0 }}>
+                  ✓ Account created for {student.name}
+                  {result.emailSent && ' — login email sent to their inbox!'}
                 </p>
-              )}
-              <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
-                <Button variant="primary" size="sm" onClick={onCreateAccount} disabled={setupState.busy || !setupState.pwd}>
-                  {setupState.busy ? 'Creating…' : 'Create account'}
-                </Button>
-                <Button variant="ghost" size="sm" onClick={onCloseSetup} disabled={setupState.busy}>Cancel</Button>
+                <div style={{ background: 'var(--bg)', border: '1.5px solid var(--border)', borderRadius: 'var(--radius-md)', padding: 'var(--space-3) var(--space-4)', fontFamily: 'var(--font-mono)', fontSize: 'var(--text-sm)', lineHeight: 2 }}>
+                  <div><strong>Login (email):</strong> {result.email}</div>
+                  <div><strong>Password:</strong> {result.password}</div>
+                </div>
+                <div style={{ display: 'flex', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
+                  <Button variant="primary" size="sm" onClick={() => {
+                    copyText(`Login: ${result.email}\nPassword: ${result.password}`);
+                    window.toast?.('Credentials copied!', 'ok');
+                  }}>
+                    Copy credentials
+                  </Button>
+                  <Button variant="ghost" size="sm" onClick={() => {
+                    const msg = `Hi ${student.firstName || student.name.split(' ')[0]}! Here are your login credentials for the MET Proficiency Mastery platform:\n\nWebsite: https://met-mastery.vercel.app\nEmail: ${result.email}\nPassword: ${result.password}\n\nAfter logging in, go to Settings to change your password if you'd like.`;
+                    copyText(msg);
+                    window.toast?.('WhatsApp message copied!', 'ok');
+                  }}>
+                    Copy WhatsApp message
+                  </Button>
+                  <Button variant="ghost" size="sm" onClick={onCloseSetup}>Done</Button>
+                </div>
               </div>
-            </div>
-          )}
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+                <p style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', margin: 0 }}>
+                  Create a login for <strong>{student.name}</strong> ({student.email}). You can use the generated password or type your own.
+                </p>
+                <div style={{ display: 'flex', gap: 'var(--space-2)', alignItems: 'center', flexWrap: 'wrap' }}>
+                  <input
+                    className="input"
+                    style={{ maxWidth: 240 }}
+                    value={setupState.pwd}
+                    onChange={e => onSetupPwd(e.target.value)}
+                    placeholder="New password"
+                  />
+                  <Button variant="primary" size="sm" onClick={onCreateAccount} disabled={setupState.busy}>
+                    {setupState.busy ? 'Creating…' : 'Create'}
+                  </Button>
+                </div>
+              </div>
+            )
+          }
         </div>
-      )}
-    </Card>
+      </Card>
+    </div>
   );
 }
 

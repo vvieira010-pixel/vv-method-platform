@@ -166,13 +166,13 @@ export default function TeacherDashboard({ students, onNavigate, teacherName = '
          {/* Quick actions — top of stack for immediate access */}
          <Card className="td-card-section" bezel>
            <SectionHeader title="Quick Actions" icon={<Icon.spark size={15} />} />
-           <div className="td-list-wrapper">
-             <QuickAction icon={<Icon.student size={16} />} label="Add new student" onClick={() => onNavigate('students')} />
-             <QuickAction icon={<Icon.calendar size={16} />} label="Schedule a class" onClick={() => onNavigate('calendar')} />
-             <QuickAction icon={<Icon.diagnose size={16} />} label="Run a diagnosis" onClick={() => onNavigate('diagnostics')} />
-             <QuickAction icon={<Icon.homework size={16} />} label="Create homework" onClick={() => onNavigate('homework')} />
-             <QuickAction icon={<Icon.warning size={16} />} label="View error bank" onClick={() => onNavigate('diagnostics:errors')} />
-           </div>
+            <div className="grid-square">
+              <QuickAction icon={<Icon.student size={24} />} label="Add new student" onClick={() => onNavigate('students')} />
+              <QuickAction icon={<Icon.calendar size={24} />} label="Schedule a class" onClick={() => onNavigate('calendar')} />
+              <QuickAction icon={<Icon.diagnose size={24} />} label="Run a diagnosis" onClick={() => onNavigate('diagnostics')} />
+              <QuickAction icon={<Icon.homework size={24} />} label="Create homework" onClick={() => onNavigate('homework')} />
+              <QuickAction icon={<Icon.warning size={24} />} label="View error bank" onClick={() => onNavigate('diagnostics:errors')} />
+            </div>
          </Card>
 
          {/* Today's classes */}
@@ -186,23 +186,24 @@ export default function TeacherDashboard({ students, onNavigate, teacherName = '
                action="Schedule a class"
                onAction={() => onNavigate('calendar')}
              />
-           ) : (
-             <div className="td-list-wrapper">
-               {todayClasses.map(ev => {
-                 const student = students.find(s => s.id === ev.studentId);
-                 return (
-                   <div key={ev.id} className="td-list-row">
-                     <Avatar name={student?.name || '?'} size={28} />
-                     <div className="flex-1">
-                       <div className="td-row-title">{student?.firstName || 'Unknown'}: {ev.title}</div>
-                       <div className="td-row-sub">{ev.startTime || '—'} · {ev.classFocus || 'No focus set'}</div>
-                     </div>
-                     <Button variant="ghost" size="sm" onClick={() => onNavigate('calendar:class', { classEventId: ev.id })}>Open</Button>
-                   </div>
-                 );
-               })}
-             </div>
-           )}
+            ) : (
+              <div className="grid-square">
+                {todayClasses.map(ev => {
+                  const student = students.find(s => s.id === ev.studentId);
+                  return (
+                    <Card key={ev.id} className="square-card" style={{ padding: '12px', justifyContent: 'center', gap: 12 }}>
+                      <Avatar name={student?.name || '?'} size={40} />
+                      <div style={{ textAlign: 'center', overflow: 'hidden' }}>
+                        <div className="td-row-title" style={{ fontWeight: 600, fontSize: 'var(--text-sm)' }}>{student?.firstName || 'Unknown'}</div>
+                        <div className="td-row-sub" style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>{ev.title}</div>
+                        <div className="td-row-sub" style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>{ev.startTime || '—'}</div>
+                      </div>
+                      <Button variant="primary" size="sm" onClick={() => onNavigate('calendar:class', { classEventId: ev.id })}>Open</Button>
+                    </Card>
+                  );
+                })}
+              </div>
+            )}
          </Card>
 
          {needsAttention.length > 0 && (
@@ -236,13 +237,13 @@ export default function TeacherDashboard({ students, onNavigate, teacherName = '
              </div>
            ) : urgencySorted.length === 0 ? (
              <EmptyState icon={<Icon.student size={20} />} title="No students match this filter" text="Try selecting a different filter above or check the Students page." action="View all students" onAction={() => setStageFilter('all')} />
-           ) : (
-             <div className="td-cycle-list">
-               {urgencySorted.map(s => (
-                 <StudentRow key={s.id} student={s} onNavigate={onNavigate} onAction={handleAction} seedsStages={seedsStages} onSetSeedsStage={handleSetSeedsStage} />
-               ))}
-             </div>
-           )}
+            ) : (
+              <div className="grid-square">
+                {urgencySorted.map(s => (
+                  <StudentRow key={s.id} student={s} onNavigate={onNavigate} onAction={handleAction} seedsStages={seedsStages} onSetSeedsStage={handleSetSeedsStage} />
+                ))}
+              </div>
+            )}
          </Card>
        </div>
     </div>
@@ -318,78 +319,27 @@ function StudentRow({ student: s, onNavigate, onAction, seedsStages, onSetSeedsS
   const seedsEntry = seedsStages[s.id];
   const currentSeeds = seedsEntry ? SEEDS_STAGES[seedsEntry.stage] : null;
 
-   return (
-       <Card
-       className="td-student-row"
-       bezel
-       onClick={() => onNavigate('students:profile', { studentId: s.id })}
-     >
-      <div className="td-student-row-inner">
-        <div className="td-student-avatar-area">
-          <Avatar name={s.name} size={34} />
-          <div>
-            <div className="td-student-name">{s.name}</div>
-            <div className="td-student-meta">
-              {currentBand} → {targetBand} · Session {s.session}/{s.totalSessions} · Last diagnosis: {diagDate}
-            </div>
-            {focusArea && (
-              <div className="td-student-focus">
-                Focus: {focusArea.length > 65 ? focusArea.slice(0, 65) + '…' : focusArea}
-              </div>
-            )}
-          </div>
-        </div>
+  return (
+    <Card
+      className="square-card"
+      bezel
+      onClick={() => onNavigate('students:profile', { studentId: s.id })}
+    >
+      <Avatar name={s.name} size={48} />
+      <div style={{ fontWeight: 600, fontSize: 'var(--text-sm)', textAlign: 'center', marginTop: 8 }}>{s.name}</div>
+      <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', textAlign: 'center' }}>
+        {currentBand} → {targetBand}
+      </div>
+      
+      <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'center' }}>
+        {isStale21 ? <Pill tone="danger">{days}d overdue</Pill> : isStale14 ? <Pill tone="warning">{days}d stale</Pill> : null}
+        <Pill tone={config.tone}>{config.label}</Pill>
+      </div>
 
-        {isStale21 && <Pill tone="danger">{days}d overdue</Pill>}
-        {!isStale21 && isStale14 && <Pill tone="warning">{days}d stale</Pill>}
-
-        {s.cycle.pendingHomework.length > 0 && (
-          <span className="td-pending-hw">{s.cycle.pendingHomework.length} homework pending</span>
-        )}
-        {s.cycle.pendingSubmissions.length > 0 && (
-          <span className="td-pending-review">{s.cycle.pendingSubmissions.length} to review</span>
-        )}
-
-        <div className="td-student-badges">
-          <Pill tone={config.tone}>{config.label}</Pill>
-          {currentSeeds ? (
-            <div className="flex-row gap-1">
-              <Pill tone={currentSeeds.tone}>{currentSeeds.label}</Pill>
-              <button
-                type="button"
-                className="td-seeds-advance"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  const idx = SEEDS_STAGE_ORDER.indexOf(seedsEntry.stage);
-                  const next = SEEDS_STAGE_ORDER[(idx + 1) % SEEDS_STAGE_ORDER.length];
-                  onSetSeedsStage(s.id, next);
-                }}
-                title="Advance SEEDS stage"
-              >
-                <Icon.chevronRight size={12} />
-              </button>
-            </div>
-          ) : (
-            <button
-              type="button"
-              className="td-seeds-start"
-              onClick={(e) => {
-                e.stopPropagation();
-                onSetSeedsStage(s.id, 'sense');
-              }}
-              title="Start SEEDS cycle"
-            >
-              + SEEDS
-            </button>
-          )}
-        </div>
-        <button
-          type="button"
-          className="td-row-action"
-          onClick={(e) => { e.stopPropagation(); onAction(s); }}
-        >
+      <div style={{ marginTop: 'auto', paddingTop: 12, width: '100%', textAlign: 'center' }}>
+        <Button variant="primary" size="sm" style={{ width: '100%' }} onClick={(e) => { e.stopPropagation(); onAction(s); }}>
           {config.action} <Icon.arrowR size={12} />
-        </button>
+        </Button>
       </div>
     </Card>
   );
@@ -409,10 +359,9 @@ function FilterChip({ label, count, active, onClick }) {
 
 function QuickAction({ icon, label, onClick }) {
   return (
-    <button onClick={onClick} className="td-quick-action">
-      <span className="td-quick-action-icon">{icon}</span>
-      {label}
-      <Icon.arrowR size={13} className="td-quick-action-arrow" />
+    <button onClick={onClick} className="square-card td-quick-action" style={{ border: '1px solid var(--border)', background: 'var(--surface)', cursor: 'pointer', transition: 'all 0.2s' }}>
+      <span className="td-quick-action-icon" style={{ marginBottom: 8, color: 'var(--accent)' }}>{icon}</span>
+      <span style={{ fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--text)', textAlign: 'center' }}>{label}</span>
     </button>
   );
 }

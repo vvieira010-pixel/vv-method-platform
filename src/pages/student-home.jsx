@@ -70,13 +70,15 @@ function MemoCard({ kicker, title, text }) {
 
 function TodoRow({ done, label, meta }) {
   return (
-    <div className={'student-todo-row' + (done ? ' done' : '')}>
-      <span className="student-todo-check">{done ? <Icon.check size={16} /> : ''}</span>
-      <span>
-        <strong>{label}</strong>
-        <small>{meta}</small>
-      </span>
-    </div>
+    <Card className="square-card" style={{ border: done ? '1px solid var(--success)' : '1px solid var(--border)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
+        <span style={{ color: done ? 'var(--success)' : 'var(--muted)' }}>{done ? <Icon.check size={16} /> : <Icon.circle size={16} />}</span>
+        <span style={{ fontSize: 'var(--text-xs)', fontWeight: 600, color: done ? 'var(--text-muted)' : 'var(--text)' }}>{label}</span>
+      </div>
+      <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', textAlign: 'center', lineHeight: 1.4 }}>
+        {meta}
+      </div>
+    </Card>
   );
 }
 
@@ -333,12 +335,24 @@ export default function StudentHome({ student, onTab }) {
       <p className="student-practice-caption mb-2">
         Explore the Practice Studio, a bank of exercises to keep you sharp, renewed every week.
       </p>
-      <div className="student-practice-row fade-up" style={{ '--delay': '0.2s' }}>
-        <button className="student-practice-btn" onClick={() => setPracticeMode('speaking')}><Icon.mic size={15} /> Speaking</button>
-        <button className="student-practice-btn" onClick={() => setPracticeMode('grammar')}><Icon.edit size={15} /> Grammar</button>
-        <button className="student-practice-btn" onClick={() => setPracticeMode('vocab')}><Icon.star size={15} /> Vocab</button>
+      <div className="grid-square fade-up" style={{ '--delay': '0.2s' }}>
+        <button className="square-card" onClick={() => setPracticeMode('speaking')} style={{ border: '1px solid var(--border)', background: 'var(--surface)', cursor: 'pointer' }}>
+          <Icon.mic size={24} style={{ color: 'var(--accent)', marginBottom: 8 }} />
+          <span style={{ fontSize: 'var(--text-sm)', fontWeight: 600 }}>Speaking</span>
+        </button>
+        <button className="square-card" onClick={() => setPracticeMode('grammar')} style={{ border: '1px solid var(--border)', background: 'var(--surface)', cursor: 'pointer' }}>
+          <Icon.edit size={24} style={{ color: 'var(--accent)', marginBottom: 8 }} />
+          <span style={{ fontSize: 'var(--text-sm)', fontWeight: 600 }}>Grammar</span>
+        </button>
+        <button className="square-card" onClick={() => setPracticeMode('vocab')} style={{ border: '1px solid var(--border)', background: 'var(--surface)', cursor: 'pointer' }}>
+          <Icon.star size={24} style={{ color: 'var(--accent)', marginBottom: 8 }} />
+          <span style={{ fontSize: 'var(--text-sm)', fontWeight: 600 }}>Vocab</span>
+        </button>
         {reviewCount > 0 && (
-          <button className="student-practice-btn student-practice-btn--urgent" onClick={handleOpenReview}><Icon.refresh size={15} /> Review</button>
+          <button className="square-card" onClick={handleOpenReview} style={{ border: '1px solid var(--danger)', background: 'var(--surface)', cursor: 'pointer' }}>
+            <Icon.refresh size={24} style={{ color: 'var(--danger)', marginBottom: 8 }} />
+            <span style={{ fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--danger)' }}>Review</span>
+          </button>
         )}
       </div>
       <Suspense fallback={null}>
@@ -444,11 +458,11 @@ export default function StudentHome({ student, onTab }) {
                    <h2>Your next steps</h2>
                  </div>
                </div>
-               <div className="student-todo-list">
-                 {latestReview && <TodoRow done={false} label="Teacher review ready" meta={latestReview.homeworkTitle} />}
-                 <TodoRow done={!!latestFeedback} label="Review latest feedback" meta={latestFeedback ? 'Available in the Feedback tab' : 'Waiting for teacher approval'} />
-                 <TodoRow done={pendingHw.length === 0} label={pendingTitle} meta={pendingHw[0]?.dueDate ? `Due ${new Date(pendingHw[0].dueDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}` : 'Homework area'} />
-               </div>
+                <div className="grid-square">
+                  {latestReview && <TodoRow done={false} label="Teacher review ready" meta={latestReview.homeworkTitle} />}
+                  <TodoRow done={!!latestFeedback} label="Review latest feedback" meta={latestFeedback ? 'Available in the Feedback tab' : 'Waiting for teacher approval'} />
+                  <TodoRow done={pendingHw.length === 0} label={pendingTitle} meta={pendingHw[0]?.dueDate ? `Due ${new Date(pendingHw[0].dueDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}` : 'Homework area'} />
+                </div>
                <button className="student-wide-action" onClick={() => onTab('homework')}>Go to homework <Icon.arrowR size={14} /></button>
              </Card>
           </div>

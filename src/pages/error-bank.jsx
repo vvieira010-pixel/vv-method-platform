@@ -101,34 +101,24 @@ export default function ErrorBankPage({ students, workspaceQuery = '' }) {
           <p style={{ color: 'var(--muted)', margin: 0 }}>No errors match current filters. Errors are added when diagnosis is approved.</p>
         </Card>
       ) : (
-        <div className="repo-grid">
+        <div className="grid-square">
           {filtered.map((err) => {
             const student = students.find((s) => s.id === err.studentId);
             return (
-              <Card key={err.id} className="card-p-4">
-                <div className="flex items-center gap-3 min-w-0">
-                  <Avatar name={student?.name || '?'} size={34} />
-                  <div className="flex-1 min-w-0">
-                    <div className="row-title">{student?.name || 'Unknown student'}</div>
-                    <div className="row-sub">{new Date(err.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</div>
-                  </div>
-                  <Pill tone="muted">{err.type}</Pill>
-                  <Pill tone={STATUS_TONE[err.status] || 'muted'}>{err.status}</Pill>
+              <Card key={err.id} className="square-card">
+                <Avatar name={student?.name || '?'} size={40} />
+                <div style={{ fontWeight: 600, fontSize: 'var(--text-sm)', textAlign: 'center', marginTop: 8 }}>{student?.name || 'Unknown student'}</div>
+                <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', textAlign: 'center', marginBottom: 8 }}>
+                  {new Date(err.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
                 </div>
-
-                <div className="pattern-card">
-                  <div className="text-sm font-bold" style={{ color: 'var(--danger)' }}>{err.error}</div>
-                  <div className="text-xs text-muted">to</div>
-                  <div className="text-sm font-bold" style={{ color: 'var(--success)' }}>{err.correct}</div>
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 4, textAlign: 'center', padding: '0 8px' }}>
+                  <div style={{ color: 'var(--danger)', fontWeight: 700, fontSize: 'var(--text-xs)' }}>{err.error}</div>
+                  <div style={{ color: 'var(--muted)', fontSize: 'var(--text-xs)' }}>to</div>
+                  <div style={{ color: 'var(--success)', fontWeight: 700, fontSize: 'var(--text-xs)' }}>{err.correct}</div>
                 </div>
-
-                <p className="text-xs" style={{ color: 'var(--text-2)', lineHeight: 1.5, margin: '10px 0 0' }}>
-                  {err.explanation || 'No explanation saved.'}
-                </p>
-
-                <div className="flex gap-2 mt-3 flex-wrap">
-                  {err.status === 'active' && <Button variant="ghost" size="sm" onClick={() => handlePractice(err)}>Mark Practicing</Button>}
-                  {err.status !== 'solved' && <Button variant="primary" size="sm" onClick={() => handleSolved(err)}>Mark Solved</Button>}
+                <div style={{ marginTop: 'auto', width: '100%', display: 'flex', gap: 4, justifyContent: 'center' }}>
+                  {err.status === 'active' && <Button variant="ghost" size="sm" onClick={() => handlePractice(err)}>Practice</Button>}
+                  {err.status !== 'solved' && <Button variant="primary" size="sm" onClick={() => handleSolved(err)}>Solved</Button>}
                 </div>
               </Card>
             );

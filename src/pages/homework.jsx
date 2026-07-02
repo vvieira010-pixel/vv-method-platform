@@ -90,33 +90,32 @@ export default function HomeworkPage({ students, onNavigate }) {
           <p style={{ color: 'var(--muted)' }}>No homework assigned yet. Start from a student's approved diagnosis.</p>
         </Card>
       ) : (
-        <div className="page-list">
+        <div className="grid-square">
           {filtered.map(h => {
             const student = students.find(s => s.id === h.studentId);
             const kind = normalizeKind(h.kind || h.skillType || h.type);
             const level = normalizeLevel(h.level || h.currentLevel);
             return (
-              <Card key={h.id}>
-                <div className="card-row">
-                  <Avatar name={student?.name || '?'} size={32} />
-                  <div className="card-row-body">
-                    <div className="card-row-title">{h.title}</div>
-                    <div className="card-row-meta">
-                      {student?.name} · {kind || 'kind'}{level ? ` · ${level}` : ''} · Assigned {new Date(h.assignedAt || h.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
-                      {h.dueDate ? ` · Due ${new Date(h.dueDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}` : ''}
-                    </div>
-                  </div>
-                  <Pill tone={STATUS_TONE[h.status] || 'muted'}>{h.status}</Pill>
-                  {kind && <Pill tone="info">{kind}</Pill>}
-                  {level && <Pill tone="muted">{level}</Pill>}
-                  {h.status === 'submitted' && (
-                    <Button variant="primary" size="sm" onClick={() => onNavigate('submissions', {})}>Review</Button>
-                  )}
-                  <Button variant="ghost" size="sm" onClick={() => printHomework(h, { studentName: student?.name })} aria-label="Print homework">
-                    <Icon.print size={12} />
+              <Card key={h.id} className="square-card">
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'center', marginBottom: 8 }}>
+                  <Avatar name={student?.name || '?'} size={24} />
+                  <span style={{ fontSize: 'var(--text-xs)', fontWeight: 600 }}>{student?.name || 'Student'}</span>
+                </div>
+                <div style={{ fontWeight: 600, fontSize: 'var(--text-sm)', textAlign: 'center', marginBottom: 4 }}>
+                  {h.title || 'Untitled Homework'}
+                </div>
+                <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', textAlign: 'center', marginBottom: 8 }}>
+                  {kind} · {level}
+                </div>
+                <Pill tone={STATUS_TONE[h.status] || 'muted'} style={{ marginBottom: 12 }}>
+                  {h.status === 'not-started' ? 'Not started' : h.status === 'in-progress' ? 'In progress' : h.status === 'submitted' ? 'Submitted' : h.status === 'reviewed' ? 'Reviewed' : h.status}
+                </Pill>
+                <div style={{ marginTop: 'auto', width: '100%', display: 'flex', gap: 4, justifyContent: 'center' }}>
+                  <Button variant="primary" size="sm" onClick={() => onNavigate('submissions:review', { submissionId: h.submissionId })}>
+                    {h.status === 'submitted' ? 'Review' : 'View'}
                   </Button>
-                  <Button variant="ghost" size="sm" style={{ color: 'var(--danger)' }} onClick={async () => { if (confirm('Delete this homework?')) { await deleteHomework(h.id); load(); } }}>
-                    <Icon.trash size={12} />
+                  <Button variant="ghost" size="sm" onClick={() => handleDelete(h.id)} style={{ color: 'var(--danger)' }}>
+                    <Icon.trash size={13} />
                   </Button>
                 </div>
               </Card>

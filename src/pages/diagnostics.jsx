@@ -48,49 +48,37 @@ export default function DiagnosticsPage({ students, onNavigate }) {
           <p className="card-row-meta">No diagnoses yet. Diagnoses appear here after you run one following a class.</p>
         </Card>
       ) : (
-        <div className="page-list">
+        <div className="grid-square">
           {filtered.map(dx => {
             const student = students.find(s => s.id === dx.studentId);
             const approvedCount = dx.sections ? Object.values(dx.sections).filter(s => s.approved).length : 0;
             const totalCount = dx.sections ? Object.keys(dx.sections).length : 0;
             const evidence = getEvidenceSummary(dx);
             return (
-              <Card key={dx.id}>
-                <div className="card-row">
-                  <Avatar name={student?.name || '?'} size={34} />
-                  <div className="card-row-body">
-                    <div className="card-row-title">{student?.name || 'Unknown student'}</div>
-                    <div className="card-row-meta">
-                      {new Date(dx.createdAt).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}
-                      {dx.classSummary ? ` · ${dx.classSummary.slice(0, 60)}…` : ''}
-                    </div>
-                    {evidence.total > 0 && (
-                      <div className="evidence-row" aria-label="Diagnosis evidence coverage">
-                        <span className="evidence-chip">{evidence.evaluated} evaluated</span>
-                        <span className="evidence-chip">{evidence.limited} not enough evidence</span>
-                        <span className="evidence-chip">{evidence.notEvaluated} not evaluated</span>
-                      </div>
-                    )}
-                  </div>
-                  {totalCount > 0 && <span className="card-row-meta">{approvedCount}/{totalCount} approved</span>}
+              <Card key={dx.id} className="square-card">
+                <Avatar name={student?.name || '?'} size={40} />
+                <div style={{ fontWeight: 600, fontSize: 'var(--text-sm)', textAlign: 'center', marginTop: 8 }}>{student?.name || 'Unknown student'}</div>
+                <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', textAlign: 'center', marginBottom: 8 }}>
+                  {new Date(dx.createdAt).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'center' }}>
                   <Pill tone={dx.status === 'approved' ? 'success' : 'warning'}>{dx.status || 'draft'}</Pill>
+                  {totalCount > 0 && <span className="card-row-meta" style={{ fontSize: 'var(--text-xs)' }}>{approvedCount}/{totalCount} approved</span>}
+                </div>
+                <div style={{ marginTop: 'auto', width: '100%', display: 'flex', gap: 4, justifyContent: 'center' }}>
                   <Button variant="ghost" size="sm" onClick={() => onNavigate('diagnostics:create', { studentId: dx.studentId, diagnosisId: dx.id })}>
                     {dx.status === 'approved' ? 'View' : 'Review'}
                   </Button>
                   {dx.status === 'approved' && (
                     <Button variant="primary" size="sm" onClick={() => onNavigate('homework:create', { diagnosisId: dx.id, studentId: dx.studentId })}>
-                      Generate homework
+                      HW
                     </Button>
                   )}
-                  <Button
-                    variant="ghost" size="sm" style={{ color: 'var(--danger)' }}
-                    aria-label="Delete diagnosis"
-                    onClick={async () => {
-                      if (!confirm(`Delete ${student?.name || 'this student'}'s diagnosis? This removes their session record and cannot be undone.`)) return;
-                      await deleteDiagnosis(dx.id);
-                      load();
-                    }}
-                  >
+                  <Button variant="ghost" size="sm" style={{ color: 'var(--danger)' }} onClick={async () => {
+                    if (!confirm(`Delete ${student?.name || 'this student'}'s diagnosis? This removes their session record and cannot be undone.`)) return;
+                    await deleteDiagnosis(dx.id);
+                    load();
+                  }}>
                     <Icon.trash size={13} />
                   </Button>
                 </div>
