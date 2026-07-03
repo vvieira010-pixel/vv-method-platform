@@ -1,15 +1,25 @@
 import { useState, useEffect, lazy, Suspense, useMemo } from 'react';
 import { Icon, SkeletonCard, EmptyState, Card } from '../components/shared.jsx';
-import { getHomework, getDiagnoses, getClassEvents, getReviews, getSubmissions, getStudentSeedsStage, getStudentGoal, saveStudentGoal } from '../lib/workflow.js';
+import { getHomework, getDiagnoses, getClassEvents, getReviews, getSubmissions, getStudentSeedsStage } from '../lib/workflow.js';
 import { getDueCount, getDueItems, toMCQ, getAllEntries } from '../lib/spaced-repetition.js';
-
-import { SEEDS_STAGES, SEEDS_STAGE_ORDER } from '../domain/seeds/constants.js';
-
-const PracticeSession = lazy(() => import('../components/PracticeSession.jsx'));
-const ReviewSession   = lazy(() => import('../components/ReviewSession.jsx'));
-import { asArray, getSkillTrend, hasVisibleApprovedStudentFeedback, SkillRow } from './student-helpers.jsx';
 import { getTeacherSetting } from '../lib/supabase-db.js';
+import { asArray, getSkillTrend, hasVisibleApprovedStudentFeedback } from './student-helpers.jsx';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
+
+function lazyWithRetry(componentImport) {
+  return lazy(async () => {
+    try {
+      return await componentImport();
+    } catch (error) {
+      console.error('[StudentHome] Chunk load failed, forcing reload...', error);
+      window.location.reload();
+      throw error;
+    }
+  });
+}
+
+const PracticeSession = lazyWithRetry(() => import('../components/PracticeSession.jsx'));
+const ReviewSession   = lazyWithRetry(() => import('../components/ReviewSession.jsx'));
 
 function daysUntilExam() {
   try {
@@ -21,65 +31,35 @@ function daysUntilExam() {
   } catch { return null; }
 }
 
-function MetricCard({ icon, label, value, sub, tone, textValue, compact, onClick }) {
-  const cls = `student-metric student-metric--${tone}${textValue ? ' student-metric--text' : ''}${compact ? ' student-metric--compact' : ''}${onClick ? ' student-metric--clickable' : ''}`;
-  if (onClick) {
-    return (
-      <button type="button" className={cls} onClick={onClick}>
-        <div className="student-metric-copy">
-          <span>{label}</span>
-          <strong>{value}</strong>
-          <small>{sub}</small>
-        </div>
-        <div className="student-metric-icon">{icon}</div>
-      </button>
-    );
-}
-  return (
-    <Card bezel className={cls}>
-      <div className="student-metric-copy">
-        <span>{label}</span>
-        <strong>{value}</strong>
-        <small>{sub}</small>
-      </div>
-    </Card>
-  );
-}
-
-const MEMO_CLAMP = 4;
-
-function MemoCard({ kicker, title, text }) {
-  const [expanded, setExpanded] = useState(false);
-  const lines = text.split(/\n+/).filter(Boolean);
-  const needsClamp = lines.length > MEMO_CLAMP || text.length > 320;
-  return (
-    <Card bezel className="student-panel--primary student-panel-mb">
-      <span className="student-panel-kicker">{kicker}</span>
-      <h2>{title}</h2>
-      <p className={`student-memo-text${expanded ? ' student-memo-text--expanded' : ''}`}>
-        {text}
-      </p>
-      {needsClamp && (
-        <button className="student-memo-toggle" onClick={() => setExpanded(e => !e)}>
-          {expanded ? 'Show less ↑' : 'Read more ↓'}
-        </button>
-      )}
-    </Card>
-  );
-}
-
 function TodoRow({ done, label, meta }) {
   return (
-    <Card className="square-card" style={{ border: done ? '1px solid var(--success)' : '1px solid var(--border)' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
-        <span style={{ color: done ? 'var(--success)' : 'var(--muted)' }}>{done ? <Icon.check size={16} /> : <Icon.circle size={16} />}</span>
-        <span style={{ fontSize: 'var(--text-xs)', fontWeight: 600, color: done ? 'var(--text-muted)' : 'var(--text)' }}>{label}</span>
+    <div className={`todo-row${done ? ' todo-row--done' : ''}`}>
+      <span className={`todo-row-icon${done ? ' todo-row-icon--done' : ''}`}>
+        {done ? <Icon.check size={16} /> : <Icon.circle size={16} />}
+      </span>
+      <div className="todo-row-content">
+        <div className={`todo-row-label${done ? ' todo-row-label--done' : ''}`}>{label}</div>
+        <div className="todo-row-meta">{meta}</div>
       </div>
-      <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', textAlign: 'center', lineHeight: 1.4 }}>
-        {meta}
-      </div>
-    </Card>
+    </div>
   );
+}
+
+function StatChip({ icon, label, value, sub, tone, onClick }) {
+  const cls = `stat-chip${tone ? ` stat-chip--${tone}` : ''}${onClick ? ' stat-chip--clickable' : ''}`;
+  const content = (
+    <>
+      <span className="stat-chip-icon">{icon}</span>
+      <div className="stat-chip-copy">
+        <strong className="stat-chip-value">{value}</strong>
+        <span className="stat-chip-label">{sub || label}</span>
+      </div>
+    </>
+  );
+  if (onClick) {
+    return <button type="button" className={cls} onClick={onClick}>{content}</button>;
+  }
+  return <div className={cls}>{content}</div>;
 }
 
 export default function StudentHome({ student, onTab }) {
@@ -99,37 +79,21 @@ export default function StudentHome({ student, onTab }) {
   const [reviewExercises, setReviewExercises] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
-  const [seedsStage, setSeedsStage] = useState(null);
-  const [generalMemoText, setGeneralMemoText] = useState(() => localStorage.getItem('vv:student_general_memo') || '');
-  const [goal, setGoal] = useState('');
-  const [goalDraft, setGoalDraft] = useState('');
-  const [editingGoal, setEditingGoal] = useState(false);
-  const [savingGoal, setSavingGoal] = useState(false);
+  const [memo, setMemo] = useState('');
 
   useEffect(() => {
-    getStudentSeedsStage(student.id).then(setSeedsStage);
-    getStudentGoal(student.id).then(existingGoal => {
-      if (existingGoal) { setGoal(existingGoal); setGoalDraft(existingGoal); }
-    });
-    getTeacherSetting('general_memo').then(val => {
-      if (val !== null) {
-        setGeneralMemoText(val);
-        if (val) localStorage.setItem('vv:student_general_memo', val);
-        else localStorage.removeItem('vv:student_general_memo');
-      }
-    });
-    window.addEventListener('vv:seeds-updated', () => getStudentSeedsStage(student.id).then(setSeedsStage));
-    function syncMemo() {
-      getTeacherSetting('general_memo').then(val => {
-        setGeneralMemoText(val ?? localStorage.getItem('vv:student_general_memo') ?? '');
-      });
-    }
-    window.addEventListener('vv:student-memo-changed', syncMemo);
-    window.addEventListener('storage', syncMemo);
-    return () => {
-      window.removeEventListener('vv:student-memo-changed', syncMemo);
-      window.removeEventListener('storage', syncMemo);
+    getStudentSeedsStage(student.id).then(() => {});
+    const stored = localStorage.getItem('vv:student_general_memo');
+    if (stored) setMemo(stored);
+    getTeacherSetting('general_memo').then(text => {
+      if (text) { setMemo(text); localStorage.setItem('vv:student_general_memo', text); }
+    }).catch(() => {});
+    const handler = () => {
+      const updated = localStorage.getItem('vv:student_general_memo');
+      setMemo(updated || '');
     };
+    window.addEventListener('vv:student-memo-changed', handler);
+    return () => window.removeEventListener('vv:student-memo-changed', handler);
   }, []);
 
   useEffect(() => {
@@ -173,7 +137,6 @@ export default function StudentHome({ student, onTab }) {
         setLatestFeedback(approvedDx[0].sections.studentFeedback.content);
       }
 
-      // Skill snapshot uses all approved diagnoses — feedback visibility is separate
       const allApprovedDx = (diagnoses || [])
         .filter(d => d.status === 'approved')
         .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
@@ -228,9 +191,6 @@ export default function StudentHome({ student, onTab }) {
   }
 
   const pendingTitle = pendingHw[0]?.title || 'No homework pending';
-  // Include transcript-only evaluated skills (evaluated:true, score may be null)
-  // so the Readiness Snapshot stays honest, and fall back to approved history
-  // when the latest snapshot has nothing evaluated yet.
   const snapshotEvaluatedSkills = snapshot.filter(s => s.evaluated || Number(s.score_0_80) > 0);
   const evaluatedSkills = snapshotEvaluatedSkills.length > 0
     ? snapshotEvaluatedSkills
@@ -281,6 +241,13 @@ export default function StudentHome({ student, onTab }) {
     ? nextClass.startAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     : 'Teacher will confirm';
 
+  const daysLeft = daysUntilExam();
+  const examDateStr = (() => { try { return localStorage.getItem('vv:met_exam_date') || ''; } catch { return ''; } })();
+
+  const lowestSkill = evaluatedSkills.length > 1
+    ? [...evaluatedSkills].sort((a, b) => (Number(a.score_0_80) || 80) - (Number(b.score_0_80) || 80))[0]
+    : null;
+
   return (
     <div className="student-home">
       <section className="student-hero bg-grain fade-up" style={{ '--delay': '0s' }}>
@@ -292,72 +259,40 @@ export default function StudentHome({ student, onTab }) {
            {heroAction.icon}
            {heroAction.label}
          </button>
-       </section>
+        </section>
 
+      <Card bezel className="memo-board fade-up" style={{ '--delay': '0.1s' }}>
+        <div className="memo-board-text">
+          {memo ? (
+            <p>{memo}</p>
+          ) : (
+            <p className="memo-board-empty">No announcements. Stay focused on your MET goals.</p>
+          )}
+        </div>
+        <div className="memo-board-chips">
+          {reviewCount > 0 && (
+            <StatChip icon={<Icon.refresh size={15} />} label="Due" value={`${reviewCount}`} sub="spaced repetition" tone="urgent" onClick={handleOpenReview} />
+          )}
+          <StatChip icon={<Icon.homework size={15} />} label="Homework" value={String(pendingHw.length)} sub={pendingHw.length === 1 ? 'task pending' : 'tasks pending'} tone="teal" onClick={() => onTab('homework')} />
+          <StatChip icon={<Icon.calendar size={15} />} label="Next class" value={nextDate} sub={nextTime} tone="teal" onClick={() => onTab('schedule')} />
+          <StatChip icon={<Icon.progress size={15} />} label="Focus" value={focusSkill.length > 18 ? focusSkill.slice(0, 18) + '…' : focusSkill} sub={focusTrend.dir !== 'none' ? focusTrend.label : 'next practice'} tone="navy" onClick={() => onTab('progress')} />
+          <StatChip icon={<Icon.inbox size={15} />} label="Feedback" value={latestFeedback ? 'Ready' : 'Waiting'} sub={latestFeedback ? 'teacher approved' : 'after diagnosis'} tone="teal" onClick={() => latestFeedback && onTab('feedback')} />
+          {daysLeft !== null && (
+            <StatChip icon={<Icon.calendar size={15} />} label="MET exam" value={daysLeft > 0 ? `${daysLeft}d` : daysLeft === 0 ? 'Today!' : 'Done'} sub={daysLeft > 0 ? new Date(examDateStr + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : daysLeft === 0 ? 'Good luck!' : 'Passed'} tone={daysLeft <= 30 ? 'urgent' : 'exam'} />
+          )}
+        </div>
+      </Card>
 
-      {(() => {
-        const daysLeft = daysUntilExam();
-        const examDateStr = (() => { try { return localStorage.getItem('vv:met_exam_date') || ''; } catch { return ''; } })();
-        return (
-          <section className="student-metrics fade-up" aria-label="Status at a glance" style={{ '--delay': '0.1s' }}>
-            {reviewCount > 0 && (
-               <button className="student-metric student-metric--urgent student-metric-btn" onClick={handleOpenReview} aria-label="Review due items">
-                 <div className="student-metric-copy">
-                   <span>Review Due</span>
-                   <strong>{reviewCount} item{reviewCount !== 1 ? 's' : ''}</strong>
-                   <small>Spaced repetition ready</small>
-                 </div>
-                 <div className="student-metric-icon student-metric-icon-bg">
-                   <Icon.refresh size={19} />
-                 </div>
-               </button>
-
-            )}
-            <MetricCard icon={<Icon.homework size={19} />} label="Homework" value={pendingHw.length} sub={pendingHw.length === 1 ? 'task pending' : 'tasks pending'} tone="teal" onClick={() => onTab('homework')} />
-            <MetricCard compact icon={<Icon.calendar size={19} />} label="Next class" value={nextDate} sub={nextTime} tone="teal" onClick={() => onTab('schedule')} />
-            <MetricCard compact icon={<Icon.progress size={19} />} label="Current focus" value={focusSkill} sub={focusTrend.dir !== 'none' ? `Progress: ${focusTrend.label}` : 'next useful practice'} tone="navy" textValue onClick={() => onTab('progress')} />
-            <MetricCard compact icon={<Icon.inbox size={19} />} label="Feedback" value={latestFeedback ? 'Ready' : 'Waiting'} sub={latestFeedback ? 'teacher approved' : 'after diagnosis'} tone="teal" onClick={() => latestFeedback && onTab('feedback')} />
-            {daysLeft !== null && (
-              <MetricCard
-                icon={<Icon.calendar size={19} />}
-                label="MET exam"
-                value={daysLeft > 0 ? `${daysLeft}d` : daysLeft === 0 ? 'Today!' : 'Done'}
-                sub={daysLeft > 0
-                  ? new Date(examDateStr + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
-                  : daysLeft === 0 ? 'Good luck!' : 'Exam has passed'}
-                tone={daysLeft <= 30 ? 'urgent' : 'exam'}
-              />
-            )}
-          </section>
-        );
-      })()}
-
-      <p className="student-practice-caption mb-2">
-        Explore the Practice Studio, a bank of exercises to keep you sharp, renewed every week.
-      </p>
-      <div className="grid-square fade-up" style={{ '--delay': '0.2s' }}>
-        <button className="square-card" onClick={() => setPracticeMode('speaking')} style={{ border: '1px solid var(--border)', background: 'var(--surface)', cursor: 'pointer' }}>
-          <Icon.mic size={24} style={{ color: 'var(--accent)', marginBottom: 8 }} />
-          <span style={{ fontSize: 'var(--text-sm)', fontWeight: 600 }}>Speaking</span>
-        </button>
-        <button className="square-card" onClick={() => setPracticeMode('grammar')} style={{ border: '1px solid var(--border)', background: 'var(--surface)', cursor: 'pointer' }}>
-          <Icon.edit size={24} style={{ color: 'var(--accent)', marginBottom: 8 }} />
-          <span style={{ fontSize: 'var(--text-sm)', fontWeight: 600 }}>Grammar</span>
-        </button>
-        <button className="square-card" onClick={() => setPracticeMode('vocab')} style={{ border: '1px solid var(--border)', background: 'var(--surface)', cursor: 'pointer' }}>
-          <Icon.star size={24} style={{ color: 'var(--accent)', marginBottom: 8 }} />
-          <span style={{ fontSize: 'var(--text-sm)', fontWeight: 600 }}>Vocab</span>
-        </button>
-        {reviewCount > 0 && (
-          <button className="square-card" onClick={handleOpenReview} style={{ border: '1px solid var(--danger)', background: 'var(--surface)', cursor: 'pointer' }}>
-            <Icon.refresh size={24} style={{ color: 'var(--danger)', marginBottom: 8 }} />
-            <span style={{ fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--danger)' }}>Review</span>
-          </button>
-        )}
-      </div>
       <Suspense fallback={null}>
         {practiceMode && (
-          <PracticeSession mode={practiceMode} onClose={() => setPracticeMode(null)} />
+          <PracticeSession 
+            mode={practiceMode} 
+            onClose={() => setPracticeMode(null)} 
+            onSessionComplete={(summary) => {
+              window.toast?.(`Session complete! Score: ${summary.score ?? 'N/A'}%`, 'ok');
+              setPracticeMode(null);
+            }}
+          />
         )}
         {reviewMode && (
           <ReviewSession
@@ -371,242 +306,126 @@ export default function StudentHome({ student, onTab }) {
       <div aria-live="polite" aria-atomic="true" style={{ position: 'fixed', left: '-9999px' }}>
         {loading ? 'Loading dashboard data' : 'Dashboard loaded'}
       </div>
+
       {loading ? (
-        <section className="student-grid fade-up" style={{ '--delay': '0.3s' }} aria-busy="true" aria-label="Loading dashboard">
-          <div className="student-home-main">
-            <SkeletonCard height={160} lines={4} />
-            <div className="student-home-columns">
-              <SkeletonCard height={140} lines={3} />
-              <SkeletonCard height={140} lines={3} />
-            </div>
-          </div>
-          <aside className="student-home-side">
-            <SkeletonCard height={200} lines={6} />
-            <SkeletonCard height={100} lines={3} />
-            <SkeletonCard height={200} lines={5} />
-          </aside>
+        <section className="home-loading fade-up" style={{ '--delay': '0.2s' }} aria-busy="true" aria-label="Loading dashboard">
+          <SkeletonCard height={120} lines={3} />
         </section>
       ) : (
-      <section className="student-grid fade-up" style={{ '--delay': '0.3s' }}>
-          <div className="student-home-main">
-
-             <Card bezel className="student-panel--primary mb-3">
-             <div className="student-panel-head">
-               <h2 className="text-lg" style={{ margin: 0 }}>Learning Insights</h2>
-             </div>
-             <div className="sh-chart-wrap">
-               {developmentData.length > 0 ? (
-                 <ResponsiveContainer width="100%" height="100%">
-                   <BarChart data={developmentData} margin={{ top: 5, right: 5, left: -30, bottom: 0 }}>
-                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--divider)" />
-                     <XAxis dataKey="name" fontSize={10} tickLine={false} axisLine={false} />
-                     <YAxis fontSize={10} tickLine={false} axisLine={false} domain={[0, 100]} />
-                     <Tooltip
-                       cursor={{ fill: 'var(--accent-soft-10)' }}
-                       formatter={(value, name) => [value + '%', name]}
-                     />
-                     <Bar dataKey="development" name="Development" fill="var(--primary)" radius={[4, 4, 0, 0]} />
-                     <Bar dataKey="confidence" name="Confidence" fill="var(--accent)" radius={[4, 4, 0, 0]} />
-                   </BarChart>
-                 </ResponsiveContainer>
-               ) : (
-                 <div className="sh-chart-empty">
-                   Complete homework or get a diagnosis to see your development trend.
-                 </div>
-               )}
-             </div>
-             </Card>
-
-             <Card bezel className="student-panel--primary">
-             <div className="student-panel-head">
-               <div>
-                 <h2>{nextClass?.title || 'Your next MET class'}</h2>
-               </div>
-               <span className="student-pill">{nextDate}</span>
-             </div>
-             <div className="student-next-layout">
-               <div>
-                 <p className="student-focus-line">{nextClass?.classFocus || nextClass?.metSkillFocus || 'Your teacher will confirm the class focus.'}</p>
-                 <div className="student-detail-list">
-                   <span><Icon.calendar size={14} /> {nextTime}</span>
-                   <span><Icon.progress size={14} /> {nextClass?.metSkillFocus || focusSkill}</span>
-                 </div>
-               </div>
-               <div className="student-prep-box">
-                 <strong>Bring to your next class</strong>
-                 <p>{nextClass?.metSkillFocus || focusSkill || 'One question about your latest feedback.'}</p>
-               </div>
-             </div>
-             {upcomingClasses.length > 1 && (
-               <div className="student-upcoming-section">
-                 <div className="student-upcoming-header">Upcoming schedule</div>
-                 {upcomingClasses.map((cls, i) => (
-                   <div key={cls.id || i} className="student-upcoming-row">
-                     <span className="student-upcoming-date">
-                       {cls.startAt.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}
-                     </span>
-                     <span className="student-upcoming-focus">{cls.classFocus || cls.metSkillFocus || cls.title || 'Class'}</span>
-                   </div>
-                 ))}
-               </div>
-             )}
-             </Card>
-
-             <Card bezel className="student-panel--todo">
-               <div className="student-panel-head">
-                 <div>
-                   <h2>Your next steps</h2>
-                 </div>
-               </div>
-                <div className="grid-square">
-                  {latestReview && <TodoRow done={false} label="Teacher review ready" meta={latestReview.homeworkTitle} />}
-                  <TodoRow done={!!latestFeedback} label="Review latest feedback" meta={latestFeedback ? 'Available in the Feedback tab' : 'Waiting for teacher approval'} />
-                  <TodoRow done={pendingHw.length === 0} label={pendingTitle} meta={pendingHw[0]?.dueDate ? `Due ${new Date(pendingHw[0].dueDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}` : 'Homework area'} />
+        <>
+          <div className="home-two-col fade-up" style={{ '--delay': '0.2s' }}>
+            <Card bezel className="home-next-steps">
+              <div className="student-panel-head">
+                <div>
+                  <h2>Your next steps</h2>
                 </div>
-               <button className="student-wide-action" onClick={() => onTab('homework')}>Go to homework <Icon.arrowR size={14} /></button>
-             </Card>
+              </div>
+              <div className="stack-list">
+                {latestReview && <TodoRow done={false} label="Teacher review ready" meta={latestReview.homeworkTitle} />}
+                <TodoRow done={!!latestFeedback} label="Review latest feedback" meta={latestFeedback ? 'Available in the Feedback tab' : 'Waiting for teacher approval'} />
+                <TodoRow done={pendingHw.length === 0} label={pendingTitle} meta={pendingHw[0]?.dueDate ? `Due ${new Date(pendingHw[0].dueDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}` : 'Homework area'} />
+              </div>
+              <button className="student-wide-action" onClick={() => onTab('homework')}>Go to homework <Icon.arrowR size={14} /></button>
+            </Card>
+
+            <div className="practice-pills-grid">
+              <p className="practice-pills-caption">Quick practice</p>
+              <button className="practice-pill" onClick={() => setPracticeMode('speaking')}>
+                <Icon.mic size={15} /> Speaking
+              </button>
+              <button className="practice-pill" onClick={() => setPracticeMode('grammar')}>
+                <Icon.edit size={15} /> Grammar
+              </button>
+              <button className="practice-pill" onClick={() => setPracticeMode('vocab')}>
+                <Icon.star size={15} /> Vocab
+              </button>
+              <button className="practice-pill" onClick={() => setPracticeMode('writing')}>
+                <Icon.edit size={15} /> Writing
+              </button>
+              <button className="practice-pill" onClick={() => setPracticeMode('listening')}>
+                <Icon.headset size={15} /> Listening
+              </button>
+              {reviewCount > 0 && (
+                <button className="practice-pill practice-pill--danger" onClick={handleOpenReview}>
+                  <Icon.refresh size={15} /> Review
+                </button>
+              )}
+            </div>
           </div>
 
-          <aside className="student-home-side">
+          <div className="home-bento fade-up" style={{ '--delay': '0.3s' }}>
+            <Card bezel className="home-bento-cell">
+              <div className="student-panel-head">
+                <h2 className="text-sm" style={{ margin: 0 }}>Learning Insights</h2>
+              </div>
+              <div className="student-chart-wrap">
+                {developmentData.length > 0 ? (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={developmentData} margin={{ top: 5, right: 5, left: -30, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--divider)" />
+                      <XAxis dataKey="name" fontSize={9} tickLine={false} axisLine={false} />
+                      <YAxis fontSize={9} tickLine={false} axisLine={false} domain={[0, 100]} />
+                      <Tooltip
+                        cursor={{ fill: 'var(--accent-soft)' }}
+                        formatter={(value, name) => [value + '%', name]}
+                      />
+                      <Bar dataKey="development" name="Development" fill="var(--primary)" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="confidence" name="Confidence" fill="var(--accent)" radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="student-chart-empty">
+                    Complete homework or get a diagnosis to see your development trend.
+                  </div>
+                )}
+              </div>
+            </Card>
 
-             <Card bezel className="student-panel mb-3">
-               <div className="student-panel-head">
-                 <div>
-                   <span className="student-panel-kicker">Weekly Goal</span>
-                   <h2>{goal ? 'Your focus this week' : 'Set a weekly goal'}</h2>
-                 </div>
-                 {!editingGoal && (
-                    <button type="button" className="student-text-action" onClick={() => setEditingGoal(true)}>
-                      {goal ? 'Edit' : 'Set goal'} <Icon.edit size={13} />
-                    </button>
-
-                 )}
-               </div>
-              {editingGoal ? (
-                <div>
-                  <textarea
-                    className="student-goal-input resize-y"
-                    value={goalDraft}
-                    onChange={e => setGoalDraft(e.target.value)}
-                    placeholder="e.g. I want to improve my speaking fluency and expand my healthcare vocabulary."
-                    rows={3}
-                    aria-label="Your weekly goal"
-                  />
-                  <div className="flex gap-2 mt-2">
-                     <button
-                       type="button"
-                       className="student-wide-action"
-                       disabled={savingGoal || !goalDraft.trim()}
-                       onClick={async () => {
-                         setSavingGoal(true);
-                         await saveStudentGoal(student.id, goalDraft.trim());
-                         setGoal(goalDraft.trim());
-                         setEditingGoal(false);
-                         setSavingGoal(false);
-                       }}
-                     >
-                       {savingGoal ? 'Saving…' : 'Save goal'}
-                     </button>
-
-                     <button
-                       type="button"
-                       className="student-text-action self-center"
-                       onClick={() => { setGoalDraft(goal); setEditingGoal(false); }}
-                     >
-                       Cancel
-                     </button>
-
+            {lowestSkill && Number(lowestSkill.score_0_80) > 0 && (
+              <Card bezel className="home-bento-cell student-focus-callout" onClick={() => onTab('progress')}>
+                <div className="student-panel-head">
+                  <div>
+                    <span className="student-panel-kicker">Focus Area</span>
+                    <h2>{lowestSkill.section.replace(/_/g, ' ')}</h2>
                   </div>
                 </div>
-              ) : goal ? (
-                <p className="text-sm text-text-2" style={{ margin: 0 }}>{goal}</p>
-              ) : (
-                <p className="text-sm text-muted" style={{ margin: 0 }}>
-                  Tell your teacher what you'd like to work on. Your goal will appear in your next diagnosis.
-                </p>
-              )}
-               </Card>
-
-             <Card bezel className="student-panel sh-panel-flush">
-               <div className="student-panel-head">
-                 <div>
-                   <h2>Evaluated skills</h2>
-                 </div>
-               </div>
-            {evaluatedSkills.length > 0 ? (
-              <div className="student-skill-list">
-                {evaluatedSkills.slice(0, 5).map(s => <SkillRow key={s.section} skill={s} trend={getSkillTrend(s.section, approvedHistory)} onClick={() => onTab('progress')} />)}
-              </div>
-            ) : (
-              <EmptyState title="No skills evaluated yet" text="Your first skill result will appear after your next class diagnosis." />
-            )}
-            {latestFeedback && typeof latestFeedback === 'object' && (
-              <div className="student-teacher-note">
-                <span className="student-teacher-note-kicker student-panel-kicker">Teacher note</span>
-                <p className="student-teacher-note-text">{latestFeedback.classFocus || latestFeedback.finalNote || 'Your teacher has approved new feedback for you.'}</p>
-                <button className="student-text-action text-xs" onClick={() => onTab('feedback')}>Read full feedback →</button>
-              </div>
-            )}
-             </Card>
-
-          {/* Focus area callout */}
-          {evaluatedSkills.length > 1 && (() => {
-            const lowest = [...evaluatedSkills].sort((a, b) => (Number(a.score_0_80) || 80) - (Number(b.score_0_80) || 80))[0];
-            if (!lowest || !Number(lowest.score_0_80)) return null;
-            return (
-               <Card bezel className="student-focus-callout student-panel student-panel--clickable" onClick={() => onTab('progress')}>
-                 <div className="student-panel-head">
-                   <div>
-                     <span className="student-panel-kicker">Focus Area</span>
-                     <h2>{lowest.section.replace(/_/g, ' ')}</h2>
-                   </div>
-                 </div>
                 <p>
-                  This skill needs the most attention ({Number(lowest.score_0_80) || 0}/80). Focus on it in your next class or practice session.
+                  This skill needs the most attention ({Number(lowestSkill.score_0_80) || 0}/80). Focus on it in your next class or practice session.
                 </p>
-                {lowest.next_step && (
-                   <p>
-                     <strong>Next step:</strong> {lowest.next_step}
-                   </p>
-                 )}
-               </Card>
-             );
-          })()}
+                {lowestSkill.next_step && (
+                  <p><strong>Next step:</strong> {lowestSkill.next_step}</p>
+                )}
+              </Card>
+            )}
 
-          {(() => {
-            const s = seedsStage && SEEDS_STAGES[seedsStage.stage];
-            if (!s) return null;
-            return (
-               <Card bezel className="student-seeds-panel student-panel student-panel--clickable" style={{ borderColor: s.color }} onClick={() => onTab('progress')}>
-                 <div className="student-panel-head">
-                   <div>
-                     <span className="student-panel-kicker">Your SEEDS Cycle</span>
-                     <h2 style={{ color: s.color }}>{s.label}: {s.subtitle}</h2>
-                   </div>
-                 </div>
-                <p>{s.studentDescription}</p>
-                <div className="student-seeds-progress">
-                  {SEEDS_STAGE_ORDER.map(stageId => {
-                    const st = SEEDS_STAGES[stageId];
-                    const isActive = stageId === seedsStage.stage;
-                    const isPast = SEEDS_STAGE_ORDER.indexOf(stageId) < SEEDS_STAGE_ORDER.indexOf(seedsStage.stage);
-                    return (
-                      <span key={stageId} className="student-seeds-dot" style={{
-                        background: isActive ? st.color : isPast ? st.color : 'var(--border)',
-                        opacity: isActive ? 1 : isPast ? 0.5 : 0.3,
-                      }} title={`${st.label}: ${st.subtitle}`} />
-                     );
-                    })}
-                 </div>
-               </Card>
-             );
-            })()}
-
-
-          </aside>
-      </section>
+            <Card bezel className="home-bento-cell">
+              <div className="student-panel-head">
+                <div>
+                  <h2>{nextClass?.title || 'Your next MET class'}</h2>
+                </div>
+                <span className="student-pill">{nextDate}</span>
+              </div>
+              <p className="student-focus-line" style={{ fontSize: 'var(--text-sm)' }}>{nextClass?.classFocus || nextClass?.metSkillFocus || 'Your teacher will confirm the class focus.'}</p>
+              <div className="student-detail-list">
+                <span><Icon.calendar size={13} /> {nextTime}</span>
+                <span><Icon.progress size={13} /> {nextClass?.metSkillFocus || focusSkill}</span>
+              </div>
+              {upcomingClasses.length > 0 && (
+                <div className="student-upcoming-section" style={{ marginTop: 10 }}>
+                  {upcomingClasses.map((cls, i) => (
+                    <div key={cls.id || i} className="student-upcoming-row">
+                      <span className="student-upcoming-date">
+                        {cls.startAt.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}
+                      </span>
+                      <span className="student-upcoming-focus">{cls.classFocus || cls.metSkillFocus || cls.title || 'Class'}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </Card>
+          </div>
+        </>
       )}
-
     </div>
   );
 }
