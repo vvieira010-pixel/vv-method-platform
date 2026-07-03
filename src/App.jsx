@@ -1,5 +1,5 @@
 import { shadeColor, softColor } from './lib/color-utils.js';
-import { useState, useEffect, lazy, Suspense } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react'; // Removed Suspense, it's used by the renderer
 import LoginScreen from './pages/login.jsx';
 import ErrorBoundary from './components/error-boundary.jsx';
 import { TweaksPanel, TweakSection, TweakRadio, TweakColor, TweakToggle } from './components/tweaks-panel.jsx';
@@ -20,29 +20,32 @@ import {
 } from './lib/supabase-storage.js';
 import { claimStudentByEmail, ensureProfile, setSessionRole, upsertReviewSchedule, loadReviewSchedule } from './lib/supabase-db.js';
 import { enableSync } from './lib/spaced-repetition.js';
+import { lazyWithRetry } from './lib/utils.js'; // Imported from utils.js
 
-// Lazy-loaded pages
-const StudentDashboard  = lazy(() => import('./pages/student-dashboard.jsx'));
-const TeacherDashboard  = lazy(() => import('./pages/teacher-dashboard.jsx'));
-const StudentsPage      = lazy(() => import('./pages/students.jsx'));
-const StudentProfile    = lazy(() => import('./pages/student-profile.jsx'));
-const CalendarPage      = lazy(() => import('./pages/calendar.jsx'));
-const ClassRecord       = lazy(() => import('./pages/class-record.jsx'));
-const DiagnosticsPage   = lazy(() => import('./pages/diagnostics.jsx'));
-const DiagnosticCreate  = lazy(() => import('./pages/diagnostic-create.jsx'));
-const HomeworkPage      = lazy(() => import('./pages/homework.jsx'));
-const HomeworkCreate    = lazy(() => import('./pages/homework-create.jsx'));
-const SubmissionsPage   = lazy(() => import('./pages/submissions.jsx'));
-const SubmissionReview  = lazy(() => import('./pages/submission-review.jsx'));
-const ErrorBankPage     = lazy(() => import('./pages/error-bank.jsx'));
-const ReportsPage       = lazy(() => import('./pages/reports.jsx'));
-const SettingsPage      = lazy(() => import('./pages/settings.jsx'));
+// Lazy-loaded pages with retry on chunk load failure (prevents "Page unavailable" after new deployments)
+// Removed local lazyWithRetry definition as it's now a shared utility
 
-const InboxPage         = lazy(() => import('./tools/tool-inbox.jsx'));
-const PerspectiveDesigner = lazy(() => import('./tools/tool-perspective-designer.jsx'));
-const ExercisesPage     = lazy(() => import('./pages/exercises.jsx'));
-const MockTestPage      = lazy(() => import('./pages/mock-test.jsx'));
-const TeacherEvaluationPage = lazy(() => import('./pages/teacher-evaluation.jsx'));
+const StudentDashboard  = lazyWithRetry(() => import('./pages/student-dashboard.jsx'));
+const TeacherDashboard  = lazyWithRetry(() => import('./pages/teacher-dashboard.jsx'));
+const StudentsPage      = lazyWithRetry(() => import('./pages/students.jsx'));
+const StudentProfile    = lazyWithRetry(() => import('./pages/student-profile.jsx'));
+const CalendarPage      = lazyWithRetry(() => import('./pages/calendar.jsx'));
+const ClassRecord       = lazyWithRetry(() => import('./pages/class-record.jsx'));
+const DiagnosticsPage   = lazyWithRetry(() => import('./pages/diagnostics.jsx'));
+const DiagnosticCreate  = lazyWithRetry(() => import('./pages/diagnostic-create.jsx'));
+const HomeworkPage      = lazyWithRetry(() => import('./pages/homework.jsx'));
+const HomeworkCreate    = lazyWithRetry(() => import('./pages/homework-create.jsx'));
+const SubmissionsPage   = lazyWithRetry(() => import('./pages/submissions.jsx'));
+const SubmissionReview  = lazyWithRetry(() => import('./pages/submission-review.jsx'));
+const ErrorBankPage     = lazyWithRetry(() => import('./pages/error-bank.jsx'));
+const ReportsPage       = lazyWithRetry(() => import('./pages/reports.jsx'));
+const SettingsPage      = lazyWithRetry(() => import('./pages/settings.jsx'));
+
+const InboxPage         = lazyWithRetry(() => import('./tools/tool-inbox.jsx'));
+const PerspectiveDesigner = lazyWithRetry(() => import('./tools/tool-perspective-designer.jsx'));
+const ExercisesPage     = lazyWithRetry(() => import('./pages/exercises.jsx'));
+const MockTestPage      = lazyWithRetry(() => import('./pages/mock-test.jsx'));
+const TeacherEvaluationPage = lazyWithRetry(() => import('./pages/teacher-evaluation.jsx'));
 
 export default function App() {
   const [auth, setAuth] = useState(null);
@@ -67,8 +70,7 @@ export default function App() {
     /**
      * Resolve auth payload from a verified Supabase user. A user who claims a
      * roster row by email is a student. Otherwise ONLY the configured teacher
-      * email(s) get the teacher role, and any other account (e.g. a self-registered
-
+     * email(s) get the teacher role, and any other account (e.g. a self-registered
      * or mistyped email) is rejected and signed out, so self-registration can
      * never grant teacher access.
      */
@@ -542,4 +544,5 @@ function OfflineBar() {
     </div>
   );
 }
+
 
