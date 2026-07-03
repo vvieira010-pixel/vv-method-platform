@@ -552,16 +552,16 @@ export const buildHomeworkBlueprintPrompt = ({ student, diagnosis }) => {
   const priorities = pickArray(diagnosis?.priorityDiagnosis, diagnosis?.sections?.priorityDiagnosis?.content);
   const skillDx = diagnosis?.sections?.skillDiagnosis?.content || {};
 
-  // Map each MET skill to the exercise types that practice it
-  const SKILL_TO_TYPES = {
-    speaking:   ['speak', 'short'],
-    writing:    ['short', 'fix'],
+  // STRICT MET-ONLY TASK TYPES
+  const SKILL_TO_MET_TYPES = {
+    speaking:   ['speak'],
+    writing:    ['short'],
     grammar:    ['fix', 'blank', 'mcq'],
-    vocabulary: ['flash', 'blank'],
+    vocabulary: ['blank', 'mcq'],
     reading:    ['read'],
     listening:  ['listen'],
   };
-  const FALLBACK_TYPES = ['speak', 'short', 'listen', 'mcq', 'blank', 'flash', 'fix'];
+  const MET_FALLBACK_TYPES = ['speak', 'short', 'listen', 'mcq', 'blank', 'fix'];
 
   // Find evaluated skills ordered by score ascending (weakest first)
   const weakSkills = Object.entries(skillDx)
@@ -573,11 +573,11 @@ export const buildHomeworkBlueprintPrompt = ({ student, diagnosis }) => {
   const seen = new Set();
   const taskTypes = [];
   for (const { skill } of weakSkills) {
-    for (const t of (SKILL_TO_TYPES[skill] || [])) {
+    for (const t of (SKILL_TO_MET_TYPES[skill] || [])) {
       if (!seen.has(t)) { taskTypes.push(t); seen.add(t); }
     }
   }
-  for (const t of FALLBACK_TYPES) {
+  for (const t of MET_FALLBACK_TYPES) {
     if (!seen.has(t) && taskTypes.length < 7) { taskTypes.push(t); seen.add(t); }
   }
   const finalTypes = taskTypes.slice(0, 7);
@@ -588,17 +588,21 @@ export const buildHomeworkBlueprintPrompt = ({ student, diagnosis }) => {
       ).join(' | ')
     : null;
 
-  return `Create a complete MET homework blueprint for ${student?.name || 'the student'}.
-Priorities: ${priorities.slice(0, 3).map(p => `${p.area}: ${p.whatToImprove || ''}`).join(' | ') || 'MET B1-B2 readiness'}.
-${weakSummary ? `Diagnosed weaknesses (weakest first): ${weakSummary}.` : ''}
+  return `You are the Architect of a MET Homework set. 
+  Design a Strategic Map for ${student?.name || 'the student'}.
+  
+  Priorities: ${priorities.slice(0, 3).map(p => `${p.area}: ${p.whatToImprove || ''}`).join(' | ') || 'MET B1-B2 readiness'}.
+  ${weakSummary ? `Diagnosed weaknesses (weakest first): ${weakSummary}.` : ''}
+  
+  Rules:
+  - Create a targeted MET set using EXACTLY these task types in this order: ${finalTypes.join(', ')}.
+  - Every task MUST be in strict MET format (e.g., for speaking, use Q1-Q5; for reading, use passage + MCQ).
+  - Do NOT include general practice exercises. Only MET-style assessment tasks.
+  - ${GENERAL_MET_TOPIC_RULES}
+  
+  Return JSON only:
+  { "title": string, "objective": string, "taskTypes": ${JSON.stringify(finalTypes)} }`;
 
-Rules:
-- Build a targeted MET set using exactly these task types in this order: ${finalTypes.join(', ')}.
-- The order reflects the student's diagnosed gaps — do not reorder.
-- ${GENERAL_MET_TOPIC_RULES}
-
-Return JSON only:
-{ "title": string, "objective": string, "taskTypes": ${JSON.stringify(finalTypes)} }`;
 };
 
 export const buildTaskGeneratorPrompt = ({ student, diagnosis, taskBlueprint, taskType }) => {
@@ -606,51 +610,47 @@ export const buildTaskGeneratorPrompt = ({ student, diagnosis, taskBlueprint, ta
   const errors = pickArray(diagnosis?.diagnosticData?.errors, diagnosis?.errorBank, diagnosis?.sections?.errorBankSuggestions?.content);
   const vocab = pickArray(diagnosis?.diagnosticData?.vocabulary, diagnosis?.vocabTargets?.vocabularyTargets, diagnosis?.sections?.vocabGrammarTargets?.content?.vocabularyTargets);
   const grammar = pickArray(diagnosis?.vocabTargets?.grammarTargets, diagnosis?.sections?.vocabGrammarTargets?.content?.grammarTargets);
-
-  return `Generate one complete, fully written ${taskType} exercise for ${student?.name || 'the student'}.
-Target: ${taskBlueprint.objective}.
-
-Student: ${student?.currentLevel || 'B1'} -> ${student?.targetLevel || 'B2'}
-Priorities: ${priorities.slice(0, 3).map(p => `${p.area}: ${p.whatToImprove || ''}`).join(' | ') || 'MET readiness'}
-Errors: ${errors.slice(0, 4).map(e => `"${e.error}" -> "${e.correct}"`).join(' | ') || 'none'}
-Vocabulary: ${vocab.slice(0, 4).map(v => v.wordOrPhrase).join(', ') || 'general MET vocabulary'}
-Grammar: ${grammar.slice(0, 3).map(g => `${g.area}: ${g.issue}`).join(' | ') || 'B1-B2 grammar control'}
-
-${EXERCISE_COMPLETENESS_RULES}
-
-MET focus:
-- Speaking: organize a timed answer with example and clear conclusion.
-- Writing: give a clear opinion, support, transitions, and grammar control.
-- Listening/reading: test main idea, detail, inference, purpose, attitude, or distractor recognition.
-- Grammar/vocabulary: practice the exact language needed to perform better on MET tasks.
-- Test strategy: help the student notice evidence, distractors, timing, or answer organization.
-- ${MET_TOPIC_RULES}
-
-Return ONLY one valid JSON object for type "${taskType}".`;
+  
+  return `You are a MET Specialist Forge for the ${taskType} task type.
+  Generate one complete, high-fidelity MET exam item for ${student?.name || 'the student'}.
+  
+  Target: ${taskBlueprint.objective}.
+  Student: ${student?.currentLevel || 'B1'} -> ${student?.targetLevel || 'B2'}
+  Priorities: ${priorities.slice(0, 3).map(p => `${p.area}: ${p.whatToImprove}`).join(' | ') || 'MET readiness'}
+  Errors: ${errors.slice(0, 4).map(e => `"${e.error}" -> "${e.correct}"`).join(' | ') || 'none'}
+  Vocabulary: ${vocab.slice(0, 4).map(v => v.wordOrPhrase).join(', ') || 'general MET vocabulary'}
+  Grammar: ${grammar.slice(0, 3).map(g => `${g.area}: ${g.issue}`).join(' | ') || 'B1-B2 grammar control'}
+  
+  ${EXERCISE_COMPLETENESS_RULES}
+  
+  STRICT MET-STYLE RULES:
+  - No "generic" exercises. Every item must mirror the official MET exam's structure, phrasing, and cognitive demand.
+  - For speaking, use the MET execution formulas (Q1-Q5).
+  - For listening/reading, test inference, purpose, and distractor resistance.
+  - ${MET_TOPIC_RULES}
+  
+  Return ONLY one valid JSON object for type "${taskType}".`;
 };
+
 
 export const buildFinalRefinementPrompt = ({ student, blueprint, tasks }) => {
   const types = (tasks || []).map(t => (t?.type || t?.skillGroup || '')).filter(Boolean).join(', ');
-  return `Review and refine this homework for ${student?.name || 'the student'}.
-Blueprint: ${blueprint.title}
-Exercise types included: ${types || 'mixed'}
-Tasks: ${JSON.stringify(tasks)}
-
-Rules:
-- Generate short, natural student-facing instructions.
-- Generate 3-5 DISCIPLINE-SPECIFIC self-check items. Each must name the MET standard being checked — not generic reminders like "check before submitting". Examples of good self-check items:
-  • For speaking: "Did I state my position in the first 10–15 seconds?"
-  • For Q4 speaking: "Did I cover both sides with roughly equal time (~40 seconds per side)?"
-  • For Q5 speaking: "Did I use formal register throughout — no hedging, no 'maybe'?"
-  • For writing: "Did I develop my main idea with at least one concrete example?"
-  • For writing: "Do my connectives link ideas, or do they just list them?"
-  • For listening/reading MCQ: "Did I choose the answer based on what was actually said/written, or was I tricked by familiar words?"
-  • For fill-in-blank: "Does my answer fit both the grammar AND the meaning of the sentence?"
-  Match self-check items to the actual exercise types in this homework set.
-- Generate teacher review notes focused on what to inspect after submission.
-- Keep language adult, calm, and MET-focused.
-Return JSON: { "instructions": string, "selfCheck": [string], "teacherNotes": string }`;
+  return `You are the MET Homework Synthesizer.
+  Review and refine this homework set for ${student?.name || 'the student'}.
+  Blueprint: ${blueprint.title}
+  Exercise types: ${types || 'mixed'}
+  Tasks: ${JSON.stringify(tasks)}
+  
+  Rules:
+  - Write short, natural, adult student-facing instructions.
+  - Generate 3-5 MET-SPECIFIC self-check items. 
+  - Each self-check must reference a MET standard (e.g., "Did I cover both sides in my Q4 speaking answer?").
+  - Generate teacher review notes focused on MET scoring markers.
+  - Ensure a cohesive "Golden Thread" connects the exercises to the objective: ${blueprint.objective}.
+  
+  Return JSON: { "instructions": string, "selfCheck": [string], "teacherNotes": string }`;
 };
+
 
 /* ══════════════════════════════════════════════════════════════
    HOMEWORK GROUP PROMPT — per-skill-group exercise generation.
@@ -668,12 +668,12 @@ export const buildHomeworkGroupPrompt = ({ student, diagnosis, group, count = 5 
   const skillData  = skillDx[group] || {};
   const weaknesses = arr(skillData.weaknesses).slice(0, 4);
 
-  // Map group key to required exercise types. listening/reading are LOCKED to their structured type.
+  // Map group key to required MET exam types. listening/reading are LOCKED to their structured type.
   const TYPE_HINTS = {
     speaking:    'speak, short',
     writing:     'short, fix',
     grammar:     'fix, blank, mcq',
-    vocabulary:  'flash, blank, mcq',
+    vocabulary:  'blank, mcq',
     reading:     'read',
     listening:   'listen',
     mixed:       'mcq, blank, short, fix',
@@ -684,7 +684,7 @@ export const buildHomeworkGroupPrompt = ({ student, diagnosis, group, count = 5 
     ? `- MANDATORY: Every exercise MUST be type "listen". Include audioText (2–4 sentence spoken script), question, 4 options, correct index, and explanation. No other types allowed.`
     : group === 'reading'
     ? `- MANDATORY: Every exercise MUST be type "read". Include passage (150–250 words), questions array with at least 3 items (each with question, 4 options, correct index, explanation). No other types allowed.`
-    : `- Use types: ${typeHint}. Mix them for variety. Use the structured types: mcq, blank, short, speak, order, fix, flash, listen, read.`;
+    : `- Use types: ${typeHint}. Mix them for MET variety. Only MET exam types: mcq, blank, short, speak, order, fix.`;
 
   return `You are a MET English exam preparation expert. Generate exactly ${count} structured exercises targeting ${groupLabel}.
 
@@ -726,7 +726,7 @@ ${EXERCISE_COMPLETENESS_RULES}
 Return ONLY valid JSON — an array of ${count} exercise objects:
 [
   {
-    "type": "mcq|blank|short|speak|order|fix|flash|listen|read",
+    "type": "mcq|blank|short|speak|order|fix",
     "skillGroup": "${group}",
     "title": "specific MET exercise title",
     "content": "FULLY WRITTEN exercise content — the actual sentences, questions, or scenario",

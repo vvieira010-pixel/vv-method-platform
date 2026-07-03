@@ -7,7 +7,7 @@ import { Button } from '../components/ui/Button.jsx';
 import { Card } from '../components/ui/Card.jsx';
 import { SkeletonCard } from '../components/ui/Skeleton.jsx';
 import { getStudents, saveStudent, deleteStudent, getDiagnoses, getHomework, getAllSubmissions, getClassEvents } from '../lib/workflow.js';
-import { sendMagicLink } from '../lib/supabase-storage.js';
+import { sendMagicLink, resetPasswordForEmail } from '../lib/supabase-storage.js';
 import { getDbContext } from '../lib/supabase-db.js';
 
 export default function StudentsPage({ onNavigate }) {
@@ -119,6 +119,17 @@ export default function StudentsPage({ onNavigate }) {
     }
   }
 
+  async function handleResetPassword(student) {
+    if (!student.email) { window.toast?.('Add the student\'s email first.', 'warn'); return; }
+    try {
+      const redirectTo = window.location.origin + window.location.pathname;
+      await resetPasswordForEmail(student.email.trim(), redirectTo);
+      window.toast?.(`Password reset link sent to ${student.email}`, 'ok');
+    } catch (err) {
+      window.toast?.(`Could not send reset link: ${err.message}`, 'error');
+    }
+  }
+
   async function handleDelete(student) {
     if (!confirm(`Delete ${student.name} and all related classes, diagnoses, homework, submissions, feedback, messages, notes, and drafts? This cannot be undone. Export a backup first if needed.`)) return;
     await deleteStudent(student.id);
@@ -201,23 +212,25 @@ export default function StudentsPage({ onNavigate }) {
         </Card>
       ) : (
         <div className="grid-square">
-          {filtered.map(student => (
-            <StudentRow
-              key={student.id}
-              student={student}
-              nextAction={studentActions[student.id]}
-              inviteStatus={inviteStatus[student.id]}
-              setupState={setup?.id === student.id ? setup : null}
-              onProfile={() => onNavigate('students:profile', { studentId: student.id })}
-              onEdit={() => openEdit(student)}
-              onDelete={() => handleDelete(student)}
-              onInvite={() => handleInvite(student)}
-              onOpenSetup={() => openSetup(student)}
-              onCloseSetup={() => setSetup(null)}
-              onSetupPwd={pwd => setSetup(s => ({ ...s, pwd, result: null }))}
-              onCreateAccount={() => handleCreateAccount(student)}
-            />
-          ))}
+           {filtered.map(student => (
+             <StudentRow
+               key={student.id}
+               student={student}
+               nextAction={studentActions[student.id]}
+               inviteStatus={inviteStatus[student.id]}
+               setupState={setup?.id === student.id ? setup : null}
+               onProfile={() => onNavigate('students:profile', { studentId: student.id })}
+               onEdit={() => openEdit(student)}
+               onDelete={() => handleDelete(student)}
+               onInvite={() => handleInvite(student)}
+               onOpenSetup={() => openSetup(student)}
+               onCloseSetup={() => setSetup(null)}
+               onSetupPwd={pwd => setSetup(s => ({ ...s, pwd, result: null }))}
+               onCreateAccount={() => handleCreateAccount(student)}
+               onResetPassword={() => handleResetPassword(student)}
+             />
+           ))}
+
         </div>
       )}
     </div>
@@ -235,7 +248,7 @@ function copyText(text) {
   navigator.clipboard?.writeText(text).catch(() => {});
 }
 
-function StudentRow({ student, nextAction, inviteStatus, setupState, onProfile, onEdit, onDelete, onInvite, onOpenSetup, onCloseSetup, onSetupPwd, onCreateAccount }) {
+function StudentRow({ student, nextAction, inviteStatus, setupState, onProfile, onEdit, onDelete, onInvite, onOpenSetup, onCloseSetup, onSetupPwd, onCreateAccount, onResetPassword }) {
   const action = nextAction || { label: 'Ready for next class', tone: 'success' };
   const isSending = inviteStatus === 'sending';
   const isSent = inviteStatus === 'sent';
@@ -258,11 +271,13 @@ function StudentRow({ student, nextAction, inviteStatus, setupState, onProfile, 
           <Pill tone={action.tone}>{action.label}</Pill>
         </div>
 
-        <div style={{ marginTop: 'auto', paddingTop: 12, width: '100%', display: 'flex', gap: 4, justifyContent: 'center' }}>
-          <Button variant="primary" size="sm" onClick={(e) => { e.stopPropagation(); onProfile(); }}>Profile</Button>
-          <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); onEdit(); }} aria-label="Edit"><Icon.edit size={13} /></Button>
-          <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); onDelete(); }} style={{ color: 'var(--danger)' }} aria-label="Delete"><Icon.trash size={13} /></Button>
-        </div>
+         <div style={{ marginTop: 'auto', paddingTop: 12, width: '100%', display: 'flex', gap: 4, justifyContent: 'center', flexWrap: 'wrap' }}>
+           <Button variant="primary" size="sm" onClick={(e) => { e.stopPropagation(); onProfile(); }}>Profile</Button>
+           <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); onOpenSetup(); }} title="Setup Account"><Icon.lock size={13} /></Button>
+           <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); onEdit(); }} aria-label="Edit"><Icon.edit size={13} /></Button>
+           <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); onDelete(); }} style={{ color: 'var(--danger)' }} aria-label="Delete"><Icon.trash size={13} /></Button>
+         </div>
+
       </Card>
 
       {/* Account setup panel */}
@@ -301,23 +316,28 @@ function StudentRow({ student, nextAction, inviteStatus, setupState, onProfile, 
                 <p style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', margin: 0 }}>
                   Create a login for <strong>{student.name}</strong> ({student.email}). You can use the generated password or type your own.
                 </p>
-                <div style={{ display: 'flex', gap: 'var(--space-2)', alignItems: 'center', flexWrap: 'wrap' }}>
-                  <input
-                    className="input"
-                    style={{ maxWidth: 240 }}
-                    value={setupState.pwd}
-                    onChange={e => onSetupPwd(e.target.value)}
-                    placeholder="New password"
-                  />
-                  <Button variant="primary" size="sm" onClick={onCreateAccount} disabled={setupState.busy}>
-                    {setupState.busy ? 'Creating…' : 'Create'}
-                  </Button>
-                </div>
+                 <div style={{ display: 'flex', gap: 'var(--space-2)', alignItems: 'center', flexWrap: 'wrap' }}>
+                   <input
+                     className="input"
+                     style={{ maxWidth: 240 }}
+                     value={setupState.pwd}
+                     onChange={e => onSetupPwd(e.target.value)}
+                     placeholder="New password"
+                   />
+                   <Button variant="primary" size="sm" onClick={onCreateAccount} disabled={setupState.busy}>
+                     {setupState.busy ? 'Creating…' : 'Create'}
+                   </Button>
+                   <Button variant="ghost" size="sm" onClick={onResetPassword} disabled={setupState.busy}>
+                     Reset Password
+                   </Button>
+                 </div>
+
               </div>
             )
           }
-        </div>
-      </Card>
+          </div>
+        </Card>
+      )}
     </div>
   );
 }

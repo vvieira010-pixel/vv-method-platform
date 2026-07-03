@@ -1,7 +1,7 @@
 import { createExercise, exId } from './exercise-types.js';
 
-// Balanced set covering all 4 MET competencies: IV (speak), III (short), I (listen), II (mcq/blank/flash/fix)
-const MET_BALANCED_TYPES = ['speak', 'short', 'listen', 'mcq', 'blank', 'flash', 'fix'];
+// Balanced set covering all 4 MET competencies: IV (speak), III (short), I (listen), II (mcq/blank/fix)
+const MET_BALANCED_TYPES = ['speak', 'short', 'listen', 'mcq', 'blank', 'fix'];
 
 export function mapAiType(aiType) {
   const t = (aiType || '').toLowerCase();

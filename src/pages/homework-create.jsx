@@ -20,6 +20,7 @@ import {
   buildRetrievalPracticePrompt,
   buildLanguageDemandPrompt,
 } from '../lib/prompts.js';
+import { forgeHomework } from '../lib/swarm-homework-forge.js';
 import { getDiagnoses, getStudent, saveHomework, updateClassEventStatus } from '../lib/workflow.js';
 import { createExercise, getExType, isStructuredExercise, exercisePreview, EX_TYPES } from '../lib/exercise-types.js';
 import { getDueItems, toMCQ, getAllEntries } from '../lib/spaced-repetition.js';
@@ -242,7 +243,7 @@ function getPriorityItems(dx) {
       setGroupGenStatus(`Generating ${group} exercises (${index + 1}/${selectedGroups.length})…`);
       try {
         const prompt = buildHomeworkGroupPrompt({ student, diagnosis, group, count: Number(count) });
-        const data = await callAI(prompt, withSkills('exercise', { ...HOMEWORK_AI_BASE_OPTIONS, max_tokens: 3500, temperature: 0.8 }));
+        const data = await callAI(prompt, await withSkills('exercise', { ...HOMEWORK_AI_BASE_OPTIONS, max_tokens: 3500, temperature: 0.8 }));
         const raw = data?.content?.map(b => b.text || '').join('') || '';
         const parsed = parseAiJson(raw);
         const items = Array.isArray(parsed) ? parsed : (Array.isArray(parsed?.exercises) ? parsed.exercises : []);
@@ -280,7 +281,7 @@ function getPriorityItems(dx) {
     
     try {
       const prompt = buildListeningGeneratorPrompt({ student, diagnosis });
-      const data = await callAI(prompt, withSkills('exercise', { ...HOMEWORK_AI_BASE_OPTIONS, max_tokens: 2500, temperature: 0.8 }));
+      const data = await callAI(prompt, await withSkills('exercise', { ...HOMEWORK_AI_BASE_OPTIONS, max_tokens: 2500, temperature: 0.8 }));
       const parsed = parseAiJson(data.content?.map(b => b.text || '').join('') || '');
       
       if (!parsed || parsed.type !== 'listen') throw new Error('AI returned invalid listening task.');
@@ -325,7 +326,7 @@ function getPriorityItems(dx) {
     setGroupGenStatus('Creating reading passage…');
     try {
       const prompt = buildReadingGeneratorPrompt({ student, diagnosis, questionCount: 3 });
-      const data = await callAI(prompt, withSkills('exercise', { ...HOMEWORK_AI_BASE_OPTIONS, max_tokens: 2500, temperature: 0.8 }));
+      const data = await callAI(prompt, await withSkills('exercise', { ...HOMEWORK_AI_BASE_OPTIONS, max_tokens: 2500, temperature: 0.8 }));
       const parsed = parseAiJson(data.content?.map(b => b.text || '').join('') || '');
       if (!parsed || parsed.type !== 'read') throw new Error('AI returned invalid reading task.');
       const fresh = createExercise('read');
@@ -361,77 +362,39 @@ function getPriorityItems(dx) {
     }
     
     setGenerating(true);
-    const errors = [];
-    
     try {
-      setGroupGenStatus('Creating blueprint…');
-      const bpData = await callAI(
-        buildHomeworkBlueprintPrompt({ student, diagnosis }),
-        withSkills('homework', { ...HOMEWORK_AI_BASE_OPTIONS, max_tokens: 1200, temperature: 0.7 })
-      );
-      const blueprint = parseAiJson(bpData.content?.map(b => b.text || '').join('') || '');
-      const taskTypes = normalizeTaskTypes(blueprint?.taskTypes);
+      const result = await forgeHomework({
+        student,
+        diagnosis,
+        onProgress: (msg) => setGroupGenStatus(msg)
+      });
       
-      setGroupGenStatus(`Generating ${taskTypes.length} tasks…`);
-      const tasks = [];
-      let taskNum = 0;
-      for (const taskType of taskTypes) {
-        taskNum++;
-        setGroupGenStatus(`Generating task ${taskNum}/${taskTypes.length} (${taskType})…`);
-        try {
-          const tData = await callAI(
-            buildTaskGeneratorPrompt({ student, diagnosis, taskBlueprint: blueprint, taskType }),
-            withSkills('homework', { ...HOMEWORK_AI_BASE_OPTIONS, max_tokens: 2500, temperature: 0.8 })
-          );
-          const parsed = parseAiJson(tData.content?.map(b => b.text || '').join('') || '');
-          tasks.push(parsed);
-        } catch (e) {
-          errors.push(`${taskType}: ${e.message}`);
-        }
-      }
-      
-      const { exercises, skipped } = buildCompleteExercises(tasks);
-      if (!exercises.length) {
-        const detail = errors.length ? ` (${errors.join('; ')})` : '';
-        throw new Error(`No valid exercises generated${detail}`);
-      }
-      
-      setGroupGenStatus('Refining and finalising…');
-      let refinement = {};
-      try {
-        const refData = await callAI(
-          buildFinalRefinementPrompt({ student, blueprint, tasks }),
-          withSkills('homework', { ...HOMEWORK_AI_BASE_OPTIONS, max_tokens: 1800, temperature: 0.7 })
-        );
-        refinement = parseAiJson(refData.content?.map(b => b.text || '').join('') || '');
-      } catch (e) {
-        errors.push(`refinement: ${e.message}`);
-      }
-
       setForm(f => ({
         ...f,
-        title: blueprint?.title || 'MET Practice Homework',
-        objective: blueprint?.objective || f.objective || 'Build MET readiness through targeted practice.',
-        description: refinement?.instructions || 'Complete each exercise carefully. Bring questions to the next class.',
-        exercises,
-        selfCheck: Array.isArray(refinement?.selfCheck) && refinement.selfCheck.length ? refinement.selfCheck : ['I checked my answers before submitting.'],
-        teacherNotes: skipped ? `${refinement?.teacherNotes || ''}\n\n${skipped} incomplete AI exercise(s) were skipped.`.trim() : (refinement?.teacherNotes || ''),
-        skillType: inferSkillType(getPriorityItems(diagnosis)),
+        title: result.title,
+        objective: result.objective,
+        description: result.description,
+        exercises: result.exercises,
+        selfCheck: result.selfCheck,
+        teacherNotes: result.teacherNotes,
+        skillType: result.taskTypes?.[0] || f.skillType,
       }));
-      setExpandedEx(exercises[0]?.id);
-      for (const ex of exercises) {
+      
+      setExpandedEx(result.exercises[0]?.id);
+      for (const ex of result.exercises) {
         try { await saveExerciseToLibrary(ex); } catch {}
       }
       setLibVersion(v => v + 1);
       setTimeout(() => scrollToExercises(), 100);
-      window.toast?.(`Homework generated: ${exercises.length} exercises${skipped ? `, ${skipped} skipped` : ''}${errors.length ? ` (${errors.length} warnings)` : ''}.`, errors.length ? 'warn' : 'ok');
+      window.toast?.(`MET Homework forged: ${result.exercises.length} validated exercises.`, 'ok');
     } catch (e) {
-      window.toast?.(`Cascade generation failed: ${e.message}`, 'warn');
+      window.toast?.(`Forge failed: ${e.message}`, 'error');
+    } finally {
+      setGroupGenStatus('');
+      setGenerating(false);
     }
-    
-    setGroupGenStatus('');
-    setGenerating(false);
   }
+
 
   async function handleGenerateOptions() {
     if (!diagnosis) { window.toast?.('No diagnosis linked. Cannot generate exercises.', 'warn'); return; }
@@ -439,7 +402,7 @@ function getPriorityItems(dx) {
     setExerciseOptions([]);
     try {
       const prompt = buildExerciseListPrompt({ student, diagnosis, level: selectedLevel, skill: selectedSkill });
-      const data = await callAI(prompt, withSkills('exercise', { ...HOMEWORK_AI_BASE_OPTIONS, max_tokens: 5000, temperature: 0.8 }));
+      const data = await callAI(prompt, await withSkills('exercise', { ...HOMEWORK_AI_BASE_OPTIONS, max_tokens: 5000, temperature: 0.8 }));
       const raw = data.content?.map(b => b.text || '').join('') || '';
       const parsed = parseAiJson(raw);
       const list = Array.isArray(parsed) ? parsed : parsed.exercises || [];
@@ -466,7 +429,7 @@ function getPriorityItems(dx) {
     const level = selectedLevel || student?.currentLevel || 'B1';
     const prompt = buildRetrievalPracticePrompt({ topic, studentLevel: level, questionCount: 5 });
     try {
-      const data = await callAI(prompt, withSkills('exercise', { ...HOMEWORK_AI_BASE_OPTIONS, max_tokens: 2000 }));
+      const data = await callAI(prompt, await withSkills('exercise', { ...HOMEWORK_AI_BASE_OPTIONS, max_tokens: 2000 }));
       const raw = data.content?.map(b => b.text || '').join('') || '';
       const parsed = parseAiJson(raw);
       if (!parsed?.questions?.length) throw new Error('No questions returned');
@@ -541,8 +504,8 @@ function getPriorityItems(dx) {
     setShowLibrary(false);
   }
 
-  function addModuleFromB2Bank(mod) {
-    const exercises = getB2ModuleExercises(mod.id);
+  async function addModuleFromB2Bank(mod) {
+    const exercises = await getB2ModuleExercises(mod.id);
     if (!exercises.length) { window.toast?.('No exercises in this module.', 'warn'); return; }
     setForm(f => ({ ...f, exercises: [...f.exercises, ...exercises] }));
     window.toast?.(`Added ${exercises.length} MET B2 exercises from "${mod.label}".`, 'ok');
@@ -582,8 +545,8 @@ function getPriorityItems(dx) {
     }
   }
 
-  function addB2Pack() {
-    const exercises = getB2Modules().flatMap(mod => getB2ModuleExercises(mod.id));
+  async function addB2Pack() {
+    const exercises = (await Promise.all(getB2Modules().map(mod => getB2ModuleExercises(mod.id)))).flat();
     if (!exercises.length) {
       window.toast?.('No MET B2 pack exercises found.', 'warn');
       return;
@@ -857,7 +820,7 @@ Return JSON only with fields: type "read", passage (2-3 paragraphs), source, que
     const context = form.objective ? ` The student's homework goal is: ${form.objective}.` : '';
     const fullPrompt = prompt + context + ` Level: ${level || selectedLevel || 'B1'}.`;
     try {
-      const data = await callAI(fullPrompt, withSkills('exercise', { ...HOMEWORK_AI_BASE_OPTIONS, max_tokens: 1500, temperature: 0.7 }));
+      const data = await callAI(fullPrompt, await withSkills('exercise', { ...HOMEWORK_AI_BASE_OPTIONS, max_tokens: 1500, temperature: 0.7 }));
       const raw = data?.content?.map(b => b.text || '').join('') || '';
       const parsed = parseAiJson(raw);
       if (!parsed || !parsed.type) throw new Error('AI returned invalid exercise');

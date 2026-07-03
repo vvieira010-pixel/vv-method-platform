@@ -29,7 +29,7 @@ export async function sendMessage(data) {
       const sender = data.fromName || 'A student';
       new Notification(`Message from ${sender}`, {
         body: String(data.body || '').slice(0, 100),
-        icon: '/favicon.ico',
+        icon: '/favicon.svg',
         tag: 'inbox',
       });
     }

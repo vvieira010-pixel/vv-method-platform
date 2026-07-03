@@ -37,8 +37,18 @@ export default function HomeworkPage({ students, onNavigate }) {
   const [filterLevel, setFilterLevel] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
 
-  useEffect(() => { load(); }, []);
-  async function load() { setHomework((await getHomework()) || []); }
+  async function loadHomework() { setHomework((await getHomework()) || []); }
+  useEffect(() => { loadHomework(); }, []);
+  async function handleDelete(id) {
+    if (!confirm('Delete this homework assignment?')) return;
+    try {
+      await deleteHomework(id);
+      setHomework(prev => prev.filter(h => h.id !== id));
+      window.toast?.('Homework deleted.', 'ok');
+    } catch (e) {
+      window.toast?.(`Delete failed: ${e.message}`, 'error');
+    }
+  }
 
   const sorted = [...homework].sort((a, b) => {
     const kindDiff = rankValue(normalizeKind(a.kind || a.skillType || a.type), KIND_ORDER)
