@@ -1,0 +1,98 @@
+[
+    {
+      "id": "listening_part1_new",
+      "title": "Listening Part 1: New Conversations",
+      "levelRange": "B2",
+      "skill": "listening",
+      "moduleType": "listening_set",
+      "items": [
+        {
+          "id": "L1",
+          "script": "Woman: Are you still going to Professor Hall's lecture this afternoon? Man: I wanted to, but the email says it has been moved online because the speaker missed his flight. Woman: That's actually better for me. I can watch it from home.",
+          "questions": [{ "stem": "What does the man say about the lecture?", "options": ["It was canceled.", "It will happen online.", "It already finished.", "It was moved to another building."], "correct": 1, "explanation": "The man says it has been moved online." }]
+        },
+        {
+          "id": "L2",
+          "script": "Man: I'll just eat this sandwich while I finish the chapter. Woman: You'd better wait. They were giving warnings this morning, and the librarian looked serious. Man: Fine, let's go downstairs to the café first.",
+          "questions": [{ "stem": "Why does the woman respond this way?", "options": ["Food is not allowed there.", "The café is already closed.", "She does not like sandwiches.", "The chapter is too difficult."], "correct": 0, "explanation": "The woman says they were giving warnings about eating in the library." }]
+        },
+        {
+          "id": "L3",
+          "script": "Woman: I looked over your sales report. The numbers are fine, but the last section repeats the same chart twice. Man: Oh, I copied the old file and forgot to replace that page. I'll fix it before the meeting.",
+          "questions": [{ "stem": "What is the problem with the report?", "options": ["It is missing all the sales numbers.", "It includes the wrong date.", "One section was duplicated.", "It was sent to the wrong person."], "correct": 2, "explanation": "The man says he copied the old file and forgot to replace that page, so a section was duplicated." }]
+        },
+        {
+          "id": "L4",
+          "script": "Woman: If you take the express bus, you'll have to change at Central Station. Man: Then I'll stay on your bus. It's slower, but I don't want to carry these bags through another station.",
+          "questions": [{ "stem": "Why does the man choose the woman's bus?", "options": ["It arrives first.", "His ticket only works on that bus.", "He wants to avoid changing buses.", "The express bus is full."], "correct": 2, "explanation": "He says he doesn't want to carry his bags through another station." }]
+        }
+      ]
+    },
+    {
+      "id": "listening_part2_new",
+      "title": "Listening Part 2: New Conversations",
+      "levelRange": "B2",
+      "skill": "listening",
+      "moduleType": "listening_set",
+      "items": [
+        {
+          "id": "L5",
+          "script": "Professor: Your ideas are strong, but the essay feels repetitive. Student: Is the topic bad? Professor: No, the topic is fine. You need better transitions and more variety in sentence length. Student: So I shouldn't start over? Professor: Definitely not. Revise what you have, and then add one example in the second paragraph.",
+          "questions": [
+            { "stem": "What is the professor mainly explaining?", "options": ["How to choose a new essay topic.", "How to improve an essay draft.", "How to research a paper.", "How to make an essay shorter."], "correct": 1, "explanation": "The professor suggests revising the draft and adding an example instead of starting over." },
+            { "stem": "What should the student do next?", "options": ["Write a completely new paper.", "Ask another professor for help.", "Revise the current draft.", "Remove the second paragraph."], "correct": 2, "explanation": "The professor says 'Revise what you have, and then add one example in the second paragraph.'" }
+          ]
+        },
+        {
+          "id": "L6",
+          "script": "Man: Have you decided whether you'll apply to the nursing program here? Woman: Not yet. It's cheaper to stay, and my family lives nearby, but I also liked the program in California. Man: I thought you wanted to work there anyway. Woman: Maybe later. First I need to finish my training and see which license requirements I can meet fastest.",
+          "questions": [
+            { "stem": "What is the woman still deciding?", "options": ["Where to continue her studies.", "When to visit her family.", "Which job to quit.", "Whether to become a doctor."], "correct": 0, "explanation": "She is deciding between staying locally or going to California." },
+            { "stem": "Why does she mention her family?", "options": ["They want to move.", "They can help her financially.", "They live close to one option.", "They work in California."], "correct": 2, "explanation": "She says staying is cheaper because her family lives nearby." }
+          ]
+        },
+        {
+          "id": "L7",
+          "script": "Woman: You always say you're too busy to exercise, but the new gym added a 30-minute class after work. Man: Thirty minutes sounds manageable. I just don't like committing to long sessions. Woman: Then this might be perfect. You could start twice a week. Man: You're right. If I put it on my calendar, I'll probably do it.",
+          "questions": [
+            { "stem": "What are the speakers mainly discussing?", "options": ["A sports competition.", "A new exercise option.", "A medical problem.", "A restaurant near work."], "correct": 1, "explanation": "They are talking about a new 30-minute gym class." },
+            { "stem": "What does the man imply about exercise?", "options": ["He prefers long workouts.", "He already goes every day.", "Time is one of his main obstacles.", "He dislikes going with friends."], "correct": 2, "explanation": "He says he doesn't like committing to long sessions, implying time/duration is the issue." }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "listening_part3_new",
+      "title": "Listening Part 3: New Short Talks",
+      "levelRange": "B2",
+      "skill": "listening",
+      "moduleType": "listening_set",
+      "items": [
+        {
+          "id": "L8",
+          "script": "Good morning, everyone. Starting next Monday, the west side of the third floor will be closed for renovation. Employees who usually work there will move temporarily into the large conference room. IT staff will set up workstations this Friday afternoon, so please remove any personal items from your desks before you leave tomorrow.",
+          "questions": [
+            { "stem": "Who will be most affected by this announcement?", "options": ["New employees only.", "Employees on one section of the third floor.", "Building visitors.", "All company managers."], "correct": 1, "explanation": "Employees on the west side of the third floor will be moved." },
+            { "stem": "What will probably happen next?", "options": ["Staff will move into another company.", "A new manager will be hired.", "Workstations will be prepared.", "The renovation will be canceled."], "correct": 2, "explanation": "IT staff will be setting up workstations this Friday afternoon." }
+          ]
+        },
+        {
+          "id": "L9",
+          "script": "When people hear that I studied chemistry, they often assume I planned to work in a laboratory forever. Actually, my career began by accident. I accepted a short summer job in food production, and that experience showed me how chemistry could solve practical problems. As you leave today, you can pick up a brochure with information about internship opportunities in our program.",
+          "questions": [
+            { "stem": "What is the speaker mainly discussing?", "options": ["A failed experiment.", "Her unexpected career path.", "A university entrance test.", "A new chemistry textbook."], "correct": 1, "explanation": "She says her career began by accident in food production." },
+            { "stem": "What can listeners do as they leave?", "options": ["Register for classes.", "See a laboratory sample.", "Get program information.", "Interview industry professionals."], "correct": 2, "explanation": "She says listeners can pick up a brochure with internship information." }
+          ]
+        },
+        {
+          "id": "L10",
+          "script": "Some people think daylight saving time is useful only because it might reduce energy use. However, the evidence for that is mixed. In some places, people actually use more electricity in the evening. Even so, longer daylight after work may help local businesses, because people are more likely to shop, eat outside, or attend community events.",
+          "questions": [
+            { "stem": "What is the speaker's main point?", "options": ["Daylight saving time always saves energy.", "Daylight saving time has no benefits.", "The issue is more complex than energy savings alone.", "All businesses oppose daylight saving time."], "correct": 2, "explanation": "The speaker says the evidence for energy savings is mixed and mentions other benefits." },
+            { "stem": "Who may benefit economically according to the speaker?", "options": ["Local businesses.", "Electricity companies only.", "Factory workers only.", "Airline passengers."], "correct": 0, "explanation": "The speaker says longer daylight may help local businesses." }
+          ]
+        }
+      ]
+    }
+  ]
+}

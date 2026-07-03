@@ -3,7 +3,7 @@
  * Loads the bundled bank and converts its 9 source formats into the
  * platform's 7 interactive exercise types (see exercise-types.js).
  */
-import bank from '../data/met-vocab-bank.json';
+import bank from '../data/exercises/vocabulary/met-vocab-bank.json';
 
 let _seq = 0;
 function exId() {

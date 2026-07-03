@@ -1,0 +1,158 @@
+{
+  "schemaVersion": "2.0",
+  "contentType": "met_b2_skills_bank",
+  "title": "MET B2 Skills Exercise Pack",
+  "subtitle": "Authentic B2 exercises across Listening, Reading, Writing, Speaking, and Grammar",
+  "level": "B2",
+  "modules": [
+    {
+      "id": "speaking_tasks",
+      "title": "Speaking Tasks (B2)",
+      "levelRange": "B2",
+      "skill": "speaking",
+      "moduleType": "exercise_list",
+      "exercises": [
+        {
+          "type": "speak",
+          "level": "B2",
+          "skill": "speaking",
+          "prompt": "Look at the picture and describe what you see. [Picture: two people building a bookcase in a small apartment; boxes on the floor; one person reads the instructions]",
+          "targetSeconds": 60
+        },
+        {
+          "type": "speak",
+          "level": "B2",
+          "skill": "speaking",
+          "prompt": "Look at the picture and describe what you see. [Picture: people waiting for a bus in heavy rain; one person sharing an umbrella; busy street in background]",
+          "targetSeconds": 60
+        },
+        {
+          "type": "speak",
+          "level": "B2",
+          "skill": "speaking",
+          "prompt": "Tell me about a time when you learned a practical skill from someone else.",
+          "targetSeconds": 60
+        },
+        {
+          "type": "speak",
+          "level": "B2",
+          "skill": "speaking",
+          "prompt": "Tell me about a time when you were late and had to solve the problem quickly.",
+          "targetSeconds": 60
+        },
+        {
+          "type": "speak",
+          "level": "B2",
+          "skill": "speaking",
+          "prompt": "Some people prefer buying things new. Other people prefer buying second-hand items. What do you prefer? Give reasons.",
+          "targetSeconds": 60
+        },
+        {
+          "type": "speak",
+          "level": "B2",
+          "skill": "speaking",
+          "prompt": "Is it better to study or work in silence, or with background music? Give your opinion and reasons.",
+          "targetSeconds": 60
+        },
+        {
+          "type": "speak",
+          "level": "B2",
+          "skill": "speaking",
+          "prompt": "Your college is considering moving one day of classes each week online. What are the advantages and disadvantages of this idea?",
+          "targetSeconds": 90
+        },
+        {
+          "type": "speak",
+          "level": "B2",
+          "skill": "speaking",
+          "prompt": "A company wants employees to use shared desks instead of having fixed desks. What are the advantages and disadvantages?",
+          "targetSeconds": 90
+        },
+        {
+          "type": "speak",
+          "level": "B2",
+          "skill": "speaking",
+          "prompt": "The school principal is considering extending library opening hours in the evening. Talk to the principal. Explain what you think and try to convince them to agree with you.",
+          "targetSeconds": 90
+        },
+        {
+          "type": "speak",
+          "level": "B2",
+          "skill": "speaking",
+          "prompt": "A city official is deciding whether to add more bicycle parking near the train station. Talk to the official and explain why you agree or disagree.",
+          "targetSeconds": 90
+        },
+        {
+          "type": "speak",
+          "level": "B2",
+          "skill": "speaking",
+          "prompt": "Tell me about a time when you volunteered to help someone or something. What did you do and how did it make you feel?",
+          "targetSeconds": 60
+        },
+        {
+          "type": "speak",
+          "level": "B2",
+          "skill": "speaking",
+          "prompt": "Look at the picture and describe what you see. [Picture: a busy hospital waiting room; people sitting; a nurse speaking to a patient at the reception desk]",
+          "targetSeconds": 60
+        },
+        {
+          "type": "speak",
+          "level": "B2",
+          "skill": "speaking",
+          "prompt": "Some people prefer to plan their holidays carefully. Others prefer to be spontaneous. Which type are you? Give reasons.",
+          "targetSeconds": 60
+        },
+        {
+          "type": "speak",
+          "level": "B2",
+          "skill": "speaking",
+          "prompt": "Tell me about a skill you had to learn through practice and patience. How did you approach learning it?",
+          "targetSeconds": 60
+        },
+        {
+          "type": "speak",
+          "level": "B2",
+          "skill": "speaking",
+          "prompt": "Look at the picture and describe what you see. [Picture: a family eating dinner together around a table; different generations present; food in the center of the table]",
+          "targetSeconds": 60
+        },
+        {
+          "type": "speak",
+          "level": "B2",
+          "skill": "speaking",
+          "prompt": "Do you think it is better to live in a big city or a small town? Give your opinion with reasons.",
+          "targetSeconds": 60
+        },
+        {
+          "type": "speak",
+          "level": "B2",
+          "skill": "speaking",
+          "prompt": "Your workplace is considering installing a gym and relaxation room for employees. Talk to your manager and explain why you think this is a good idea.",
+          "targetSeconds": 90
+        },
+        {
+          "type": "speak",
+          "level": "B2",
+          "skill": "speaking",
+          "prompt": "Is it better to spend money on experiences, like travel and concerts, or on material things? Give your opinion.",
+          "targetSeconds": 60
+        },
+        {
+          "type": "speak",
+          "level": "B2",
+          "skill": "speaking",
+          "prompt": "A local library is planning to reduce its physical book collection to make space for a digital media lab. Talk to the librarian and share your opinion.",
+          "targetSeconds": 90
+        },
+        {
+          "type": "speak",
+          "level": "B2",
+          "skill": "speaking",
+          "prompt": "Tell me about a time when you had to make a difficult decision. What was the situation and how did you decide what to do?",
+          "targetSeconds": 60
+        }
+      ]
+    }
+  ]
+}

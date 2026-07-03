@@ -34,6 +34,8 @@
   --shadow-card: 0 2px 8px rgba(7, 21, 39, 0.05);
   --shadow-lg: 0 12px 28px rgba(7, 21, 39, 0.10);
   --shadow-xl: 0 24px 48px rgba(7, 21, 39, 0.12);
+  --shadow-toast: 0 8px 24px rgba(7, 21, 39, 0.14);
+  --shadow-modal: 0 16px 48px rgba(7, 21, 39, 0.18);
   
   --text: #071527;                           /* Deep Navy Ink */
   --text-rgb: 7, 21, 39;
@@ -124,6 +126,7 @@
   --accent-text: var(--primary);                     /* text on accent elements */
   --muted: var(--text-muted);                        /* secondary/muted text */
   --accent-soft: rgba(var(--accent-rgb), 0.15);      /* fallback; overridden by JS */
+  --faint: #f0f4f8;                                  /* faint bg for cards/surfaces */
 
   /* ── Layout ────────────────────────────────────────────────── */
   --max-width: 1320px;

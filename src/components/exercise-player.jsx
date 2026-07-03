@@ -73,6 +73,11 @@ function MCQPlayer({ ex, res, update, readOnly }) {
 
   return (
     <div>
+      {ex.imageUrl && (
+        <div style={{ marginBottom: 14, textAlign: 'center' }}>
+          <img src={ex.imageUrl} alt={ex.imageAlt || ''} style={{ maxWidth: '100%', maxHeight: 240, borderRadius: 'var(--radius-sm)', objectFit: 'contain' }} />
+        </div>
+      )}
       <p style={{ margin: '0 0 14px', fontSize: 'var(--text-base)', fontWeight: 600, color: 'var(--text)', lineHeight: 1.55 }}>
         {ex.question}
       </p>
@@ -516,7 +521,7 @@ function SpeakPlayer({ ex, res, update, readOnly }) {
   return (
     <div>
       {ex.imageUrl ? (
-        <div style={{ marginBottom: 14, borderRadius: 0, overflow: 'hidden', border: '1px solid var(--border)', background: 'var(--bg)' }}>
+        <div style={{ marginBottom: 14, borderRadius: 'var(--radius-sm)', overflow: 'hidden', border: '1px solid var(--border)', background: 'var(--bg)' }}>
           <img
             src={ex.imageUrl}
             alt={ex.imageAlt || ex.imageDescription || 'Speaking prompt image'}
@@ -527,14 +532,15 @@ function SpeakPlayer({ ex, res, update, readOnly }) {
           )}
         </div>
       ) : ex.imageDescription ? (
-        <div style={{ marginBottom: 14, padding: '14px 16px', background: 'var(--accent-subtle)', borderRadius: 0, border: '1px solid var(--accent-border, var(--border))' }}>
+        <div style={{ marginBottom: 14, padding: '14px 16px', background: 'var(--accent-subtle)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--accent-border, var(--border))' }}>
           <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>Picture to describe</div>
           <p style={{ margin: 0, fontSize: 'var(--text-sm)', color: 'var(--text)', lineHeight: 1.6 }}>{ex.imageDescription}</p>
         </div>
       ) : null}
 
-      {ex.metTask && (() => {
-        const label = MET_TASK_LABELS[ex.metTask];
+      {(ex.metTaskType || ex.metTask) && (() => {
+        const taskKey = ex.metTaskType || ex.metTask;
+        const label = MET_TASK_LABELS[taskKey];
         if (!label) return null;
         return (
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, marginBottom: 10, padding: '4px 10px', background: 'var(--accent-subtle)', border: '1px solid var(--accent-soft)', borderRadius: 'var(--radius-sm)' }}>
@@ -544,7 +550,7 @@ function SpeakPlayer({ ex, res, update, readOnly }) {
         );
       })()}
 
-      <div style={{ background: 'var(--bg)', borderRadius: 0, padding: '14px 16px', marginBottom: 14 }}>
+      <div style={{ background: 'var(--bg)', borderRadius: 'var(--radius-sm)', padding: '14px 16px', marginBottom: 14 }}>
         <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>Speaking prompt</div>
         <p style={{ margin: 0, fontSize: 'var(--text-base)', color: 'var(--text)', lineHeight: 1.55, fontWeight: 500 }}>
           {ex.prompt}
@@ -928,9 +934,9 @@ function FlashPlayer({ ex, res, update, readOnly }) {
 
       {mode === 'match' && matchPairs ? (
         allMatched ? (
-          <div style={{ textAlign: 'center', padding: '32px 20px', background: 'rgba(34,139,34,.08)', borderRadius: 0, border: '1.5px solid #3CB371' }}>
+          <div style={{ textAlign: 'center', padding: '32px 20px', background: 'var(--success-bg)', borderRadius: 0, border: '1.5px solid var(--success)' }}>
             <Icon.party size={32} style={{ marginBottom: 8 }} />
-            <div style={{ fontWeight: 700, color: '#1A6B1A', fontSize: 'var(--text-lg)' }}>All matched!</div>
+            <div style={{ fontWeight: 700, color: 'var(--success)', fontSize: 'var(--text-lg)' }}>All matched!</div>
             <Button variant="ghost" size="sm" onClick={startMatch} style={{ marginTop: 12 }}>Play again</Button>
           </div>
         ) : (
@@ -938,8 +944,8 @@ function FlashPlayer({ ex, res, update, readOnly }) {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 2 }}>Terms</div>
               {pairs.map((p, origIdx) => {
-                if (matched.has(origIdx)) {
-                  return <div key={origIdx} style={{ padding: '10px 14px', borderRadius: 0, background: 'rgba(34,139,34,.1)', border: '1.5px solid #3CB371', color: '#1A6B1A', fontWeight: 600, fontSize: 'var(--text-sm)' }}>{p.term}</div>;
+                  if (matched.has(origIdx)) {
+                  return <div key={origIdx} style={{ padding: '10px 14px', borderRadius: 0, background: 'var(--success-bg)', border: '1.5px solid var(--success)', color: 'var(--success)', fontWeight: 600, fontSize: 'var(--text-sm)' }}>{p.term}</div>;
                 }
                 const isSelected = selectedTerm === origIdx;
                 return (
@@ -962,7 +968,7 @@ function FlashPlayer({ ex, res, update, readOnly }) {
               {matchPairs.map((p) => {
                 const origIdx = p.origIdx;
                 if (matched.has(origIdx)) {
-                  return <div key={origIdx} style={{ padding: '10px 14px', borderRadius: 0, background: 'rgba(34,139,34,.1)', border: '1.5px solid #3CB371', color: '#1A6B1A', fontSize: 'var(--text-sm)' }}>{p.def}</div>;
+                  return <div key={origIdx} style={{ padding: '10px 14px', borderRadius: 0, background: 'var(--success-bg)', border: '1.5px solid var(--success)', color: 'var(--success)', fontSize: 'var(--text-sm)' }}>{p.def}</div>;
                 }
                 const isWrong = wrongFlash === origIdx;
                 return (
@@ -1111,6 +1117,12 @@ function ReadPlayer({ ex, res, update, readOnly }) {
         </div>
       )}
 
+      {ex.imageUrl && (
+        <div style={{ marginBottom: 14, textAlign: 'center' }}>
+          <img src={ex.imageUrl} alt={ex.imageAlt || ''} style={{ maxWidth: '100%', maxHeight: 240, borderRadius: 'var(--radius-sm)', objectFit: 'contain' }} />
+        </div>
+      )}
+
       {/* Passage */}
       <div style={{
         background: 'var(--surface)', border: '1px solid var(--border)',
@@ -1249,8 +1261,8 @@ export function HomeworkStepThrough({ exercises, responses, onResponse, onSubmit
           <span style={{ fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--text-2)' }}>
             Almost done! How confident are you?
           </span>
-          <div style={{ flex: 1, height: 5, background: 'var(--divider)', borderRadius: 0, overflow: 'hidden' }}>
-            <div style={{ width: '100%', height: '100%', background: 'linear-gradient(90deg, var(--primary), var(--accent))', borderRadius: 999 }} />
+          <div style={{ flex: 1, height: 5, background: 'var(--divider)', borderRadius: 'var(--radius-pill)', overflow: 'hidden' }}>
+            <div style={{ width: '100%', height: '100%', background: 'linear-gradient(90deg, var(--primary), var(--accent))', borderRadius: 'var(--radius-pill)' }} />
           </div>
         </div>
 
@@ -1308,8 +1320,8 @@ export function HomeworkStepThrough({ exercises, responses, onResponse, onSubmit
         <span style={{ fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--text-2)', whiteSpace: 'nowrap' }}>
           Exercise {currentIdx + 1} / {total}
         </span>
-        <div style={{ flex: 1, height: 5, background: 'var(--divider)', borderRadius: 0, overflow: 'hidden' }}>
-          <div style={{ width: '100%', height: '100%', background: 'linear-gradient(90deg, var(--primary), var(--accent))', borderRadius: 0, transform: `scaleX(${progress / 100})`, transformOrigin: 'left', transition: 'transform 0.3s var(--ease)' }} />
+        <div style={{ flex: 1, height: 5, background: 'var(--divider)', borderRadius: 'var(--radius-pill)', overflow: 'hidden' }}>
+          <div style={{ width: '100%', height: '100%', background: 'linear-gradient(90deg, var(--primary), var(--accent))', borderRadius: 'var(--radius-pill)', transform: `scaleX(${progress / 100})`, transformOrigin: 'left', transition: 'transform 0.3s var(--ease)' }} />
         </div>
       </div>
 

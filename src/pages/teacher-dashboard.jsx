@@ -136,36 +136,38 @@ export default function TeacherDashboard({ students, onNavigate, teacherName = '
         <p className="td-sub">{today}, your teaching cycle at a glance.</p>
       </div>
 
-       {/* Today's priority */}
-       <Card className="td-priority-card" bezel>
-         <div className="td-priority-icon">{priority.icon}</div>
-         <div className="teacher-priority-copy">
-           <h2 className="td-priority-title">{priority.title}</h2>
-           <p className="td-priority-text">{priority.text}</p>
-         </div>
-         <Button variant="primary" onClick={() => onNavigate(priority.target, priority.params || {})}>
-           {priority.action} <Icon.arrowR size={14} />
-         </Button>
-       </Card>
+        {/* Today's priority */}
+        <Card className="td-priority-card td-priority-card-premium td-anim td-anim-up" bezel>
+          <div className="td-priority-icon">{priority.icon}</div>
+          <div className="teacher-priority-copy">
+            <h2 className="td-priority-title">{priority.title}</h2>
+            <p className="td-priority-text">{priority.text}</p>
+          </div>
+          <Button variant="primary" onClick={() => onNavigate(priority.target, priority.params || {})}>
+            {priority.action} <Icon.arrowR size={14} />
+          </Button>
+        </Card>
 
-       {/* KPIs */}
-       <div className="td-kpi-grid">
-         {[
-           { label: 'Students', value: students.length, icon: <Icon.student size={16} />, tone: 'navy' },
-           { label: 'Classes today', value: classesToday, icon: <Icon.calendar size={16} />, tone: classesToday > 0 ? 'info' : 'teal' },
-           { label: 'Need diagnosis', value: needDiagnosis, icon: <Icon.diagnose size={16} />, tone: needDiagnosis > 0 ? 'warning' : 'teal', onClick: () => setStageFilter('needs-diagnosis') },
-           { label: 'Pending review', value: pendingReview, icon: <Icon.doc size={16} />, tone: pendingReview > 0 ? 'danger' : 'teal', onClick: () => onNavigate('submissions') },
-         ].map((kpi, i) => (
-           <div key={kpi.label} className="td-anim" style={{ animationDelay: `${i * 60}ms` }}>
-             <KpiCard {...kpi} />
-           </div>
-         ))}
-       </div>
+
+        {/* KPIs */}
+        <div className="td-kpi-grid">
+          {[
+            { label: 'Students', value: students.length, icon: <Icon.student size={16} />, tone: 'navy', dir: 'left' },
+            { label: 'Classes today', value: classesToday, icon: <Icon.calendar size={16} />, tone: classesToday > 0 ? 'info' : 'teal', dir: 'right' },
+            { label: 'Need diagnosis', value: needDiagnosis, icon: <Icon.diagnose size={16} />, tone: needDiagnosis > 0 ? 'warning' : 'teal', dir: 'left', onClick: () => setStageFilter('needs-diagnosis') },
+            { label: 'Pending review', value: pendingReview, icon: <Icon.doc size={16} />, tone: pendingReview > 0 ? 'danger' : 'teal', dir: 'right', onClick: () => onNavigate('submissions') },
+          ].map((kpi, i) => (
+            <div key={kpi.label} className={`td-anim td-anim-${kpi.dir}`} style={{ animationDelay: `${i * 100}ms` }}>
+              <KpiCard {...kpi} />
+            </div>
+          ))}
+        </div>
 
        <div className="teacher-dashboard-stack">
-         {/* Quick actions — top of stack for immediate access */}
-         <Card className="td-card-section" bezel>
-           <SectionHeader title="Quick Actions" icon={<Icon.spark size={15} />} />
+          {/* Quick actions — top of stack for immediate access */}
+          <Card className="td-card-section td-card-accent td-anim td-anim-up" bezel>
+            <SectionHeader title="Quick Actions" icon={<Icon.spark size={15} />} />
+
             <div className="grid-square">
               <QuickAction icon={<Icon.student size={24} />} label="Add new student" onClick={() => onNavigate('students')} />
               <QuickAction icon={<Icon.calendar size={24} />} label="Schedule a class" onClick={() => onNavigate('calendar')} />
@@ -175,9 +177,10 @@ export default function TeacherDashboard({ students, onNavigate, teacherName = '
             </div>
          </Card>
 
-         {/* Today's classes */}
-         <Card className="td-card-section" bezel>
-           <SectionHeader title="Today's Classes" icon={<Icon.calendar size={15} />} action={<Button variant="ghost" size="sm" onClick={() => onNavigate('calendar')}>View calendar</Button>} />
+          {/* Today's classes */}
+          <Card className="td-card-section td-card-accent td-anim td-anim-up" bezel>
+            <SectionHeader title="Today's Classes" icon={<Icon.calendar size={15} />} action={<Button variant="ghost" size="sm" onClick={() => onNavigate('calendar')}>View calendar</Button>} />
+
            {todayClasses.length === 0 ? (
              <EmptyState
                icon={<IlloNoClasses />}
@@ -216,9 +219,10 @@ export default function TeacherDashboard({ students, onNavigate, teacherName = '
            </div>
          )}
 
-         {/* Student cycle board */}
-         <Card className="td-card-section" bezel>
-           <div className="flex-wrap-row-3 items-center mb-2">
+          {/* Student cycle board */}
+          <Card className="td-card-section td-card-accent td-anim td-anim-up" bezel>
+            <div className="flex-wrap-row-3 items-center mb-2">
+
              <SectionHeader title="Student Cycle Board" icon={<Icon.student size={15} />} />
              <div className="td-filter-bar">
                <FilterChip label="All" count={students.length} active={stageFilter === 'all'} onClick={() => setStageFilter('all')} />
@@ -294,7 +298,7 @@ function getTodayPriority({ needsAttention, todayClasses }) {
 }
 
 function KpiCard({ label, value, icon, tone, onClick }) {
-  const cls = ['td-kpi-card', tone ? `td-kpi-card--${tone}` : ''].filter(Boolean).join(' ');
+  const cls = ['td-kpi-card', 'td-card-accent', tone ? `td-card-accent--${tone}` : '', tone ? `td-kpi-card--${tone}` : ''].filter(Boolean).join(' ');
   return (
     <Card className={cls} onClick={onClick}>
       <div className="td-kpi-card-inner">

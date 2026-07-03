@@ -140,23 +140,25 @@ export default function LoginScreen() {
             </div>
           )}
 
-          <div className="lp-greeting">
-            <h1>
-              {isReset ? 'Reset your password' : 'Welcome back'}
-            </h1>
-            <p>
-              {isReset
-                ? "Enter your email and we'll send you a sign-in link."
-                : 'Enter your email and password below.'}
-            </p>
-          </div>
+           <div className="lp-greeting">
+             <h1>
+               {isReset ? 'Reset your password' : 'Welcome back'}
+             </h1>
+             <p>
+               {isReset
+                 ? "Enter your email and we'll send you a sign-in link."
+                 : 'Enter your email and password below.'}
+             </p>
+           </div>
 
-          {isReset && resetSent ? (
-            <div className="lp-success" role="status">
-              <strong>Check your inbox.</strong> We sent a sign-in link to <em>{email}</em>. Open it to access your account. The link expires in 1 hour.
-            </div>
-          ) : (
-            <form onSubmit={handleSubmit} noValidate>
+
+           {isReset && resetSent ? (
+             <div className="lp-success" role="status">
+               <strong>Check your inbox.</strong> We sent a sign-in link to <em>{email}</em>. Open it to access your account. The link expires in 1 hour.
+             </div>
+           ) : (
+             <form onSubmit={handleSubmit} noValidate>
+
               <div className="form-group">
                 <label className="form-label" htmlFor="lp-email">Email</label>
                 <input
@@ -188,11 +190,12 @@ export default function LoginScreen() {
                 </div>
               )}
 
-              <Button type="submit" variant="primary" disabled={loading} block style={{ padding: '13px', fontSize: 'var(--text-base)', fontWeight: 700 }}>
-                {loading
-                  ? <><span className="lp-spinner" />{isReset ? 'Sending…' : 'Signing in…'}</>
-                  : isReset ? 'Send link' : 'Sign in'}
-              </Button>
+               <Button type="submit" variant="primary" disabled={loading} block style={{ padding: '13px', fontSize: 'var(--text-base)', fontWeight: 700 }}>
+                 {loading
+                   ? <><span className="lp-spinner" />{isReset ? 'Sending…' : 'Signing in…'}</>
+                   : isReset ? 'Send link' : 'Sign in'}
+               </Button>
+
             </form>
           )}
 
@@ -200,20 +203,22 @@ export default function LoginScreen() {
             <div className="lp-error" role="alert" aria-live="polite">{error}</div>
           )}
 
-          {!isReset && (
-            <div className="lp-forgot">
-              <button type="button" onClick={() => switchMode('reset')} disabled={loading}>
-                Forgot password?
-              </button>
-            </div>
-          )}
+           {!isReset && (
+             <div className="lp-forgot">
+               <button type="button" onClick={() => switchMode('reset')} disabled={loading}>
+                 Forgot password?
+               </button>
+             </div>
+           )}
 
-          {isReset && (
-            <div className="lp-toggle">
-              Remember it?
-              <button type="button" onClick={() => switchMode('signin')} disabled={loading}>Back to sign in</button>
-            </div>
-          )}
+
+           {isReset && (
+             <div className="lp-toggle">
+               Remember it?
+               <button type="button" onClick={() => switchMode('signin')} disabled={loading}>Back to sign in</button>
+             </div>
+           )}
+
 
           <div className="lp-footer">
             MET Proficiency Mastery · Private platform<br />

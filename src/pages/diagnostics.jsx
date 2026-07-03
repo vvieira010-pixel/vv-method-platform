@@ -9,12 +9,12 @@ export default function DiagnosticsPage({ students, onNavigate }) {
   const [filterStudent, setFilterStudent] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
 
-  useEffect(() => { load(); }, []);
-
-  async function load() {
-    const dx = await getDiagnoses();
-    setDiagnoses(dx || []);
-  }
+  useEffect(() => {
+    (async () => {
+      const dx = await getDiagnoses();
+      setDiagnoses(dx || []);
+    })();
+  }, []);
 
   const filtered = diagnoses.filter(dx => {
     if (filterStudent && dx.studentId !== filterStudent) return false;

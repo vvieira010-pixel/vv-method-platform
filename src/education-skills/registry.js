@@ -1,64 +1,60 @@
 /**
- * registry.js — Curated skill registry.
- * Imports selected education-agent-skills via Vite ?raw and exposes them
- * as parsed skill objects for prompt augmentation.
+ * registry.js — Curated skill registry with per-task dynamic loading.
+ * Each task type's SKILL.md files are loaded lazily so pages only
+ * bundle the skills they actually use.
  */
-import { parseSkillMd } from './parser.js';
+const cache = {};
 
-/* ─── DIAGNOSIS SKILLS ──────────────────────────────────────── */
-import gapAnalysisMd from '../../education-agent-skills-main/skills/curriculum-assessment/gap-analysis-from-student-work/SKILL.md?raw';
-import errorAnalysisMd from '../../education-agent-skills-main/skills/self-regulated-learning/error-analysis-protocol/SKILL.md?raw';
-import feedbackDesignMd from '../../education-agent-skills-main/skills/ai-learning-science/ai-feedback-design-principles/SKILL.md?raw';
-import rubricMd from '../../education-agent-skills-main/skills/curriculum-assessment/criterion-referenced-rubric-generator/SKILL.md?raw';
-import feedbackQualityMd from '../../education-agent-skills-main/skills/memory-learning-science/feedback-quality-analyser/SKILL.md?raw';
+/** @returns {Promise<import('./parser.js').SkillDef[]>} */
+export async function loadSkillsForTask(taskType) {
+  if (cache[taskType]) return cache[taskType];
+  let mod;
+  switch (taskType) {
+    case 'diagnosis':
+      mod = await import('./registry-diagnosis.js');
+      break;
+    case 'feedback':
+      mod = await import('./registry-feedback.js');
+      break;
+    case 'homework':
+    case 'exercise':
+      mod = await import('./registry-homework.js');
+      break;
+    case 'progress':
+      mod = await import('./registry-progress.js');
+      break;
+    default:
+      cache[taskType] = [];
+      return [];
+  }
+  cache[taskType] = mod.getAll();
+  return cache[taskType];
+}
 
-/* ─── HOMEWORK SKILLS ───────────────────────────────────────── */
-import differentiationMd from '../../education-agent-skills-main/skills/curriculum-assessment/differentiation-adapter/SKILL.md?raw';
-import scaffoldMd from '../../education-agent-skills-main/skills/eal-language-development/scaffolded-task-modifier/SKILL.md?raw';
-import practiceSequenceMd from '../../education-agent-skills-main/skills/explicit-instruction/practice-problem-sequence-designer/SKILL.md?raw';
-import workedExampleMd from '../../education-agent-skills-main/skills/memory-learning-science/worked-example-fading-designer/SKILL.md?raw';
-import retrievalPracticeMd from '../../education-agent-skills-main/skills/memory-learning-science/retrieval-practice-generator/SKILL.md?raw';
-
-/* ─── FEEDBACK SKILLS ───────────────────────────────────────── */
-import metacognitiveMd from '../../education-agent-skills-main/skills/self-regulated-learning/metacognitive-prompt-library/SKILL.md?raw';
-import selfRegMd from '../../education-agent-skills-main/skills/self-regulated-learning/self-regulation-scaffold-generator/SKILL.md?raw';
-import elaborativeMd from '../../education-agent-skills-main/skills/memory-learning-science/elaborative-interrogation-generator/SKILL.md?raw';
-import teachBackMd from '../../education-agent-skills-main/skills/student-learning/teach-back-evaluator/SKILL.md?raw';
-
-/* ─── PROGRESS / GENERAL ─────────────────────────────────────── */
-import progressionMd from '../../education-agent-skills-main/skills/curriculum-assessment/learning-progression-builder/SKILL.md?raw';
-import goalSettingMd from '../../education-agent-skills-main/skills/self-regulated-learning/goal-setting-protocol-designer/SKILL.md?raw';
-
-const RAW_IMPORTS = [
-  gapAnalysisMd, errorAnalysisMd, feedbackDesignMd, rubricMd, feedbackQualityMd,
-  differentiationMd, scaffoldMd, practiceSequenceMd, workedExampleMd, retrievalPracticeMd,
-  metacognitiveMd, selfRegMd, elaborativeMd, teachBackMd,
-  progressionMd, goalSettingMd,
+/* ─── Static helpers for metadata-only uses (settings page) ──── */
+const RAW_METADATA = [
+  { id: 'curriculum-assessment/gap-analysis-from-student-work',    name: 'Gap Analysis from Student Work',       domain: 'curriculum-assessment' },
+  { id: 'self-regulated-learning/error-analysis-protocol',         name: 'Error Analysis Protocol',               domain: 'self-regulated-learning' },
+  { id: 'ai-learning-science/ai-feedback-design-principles',       name: 'AI Feedback Design Principles',         domain: 'ai-learning-science' },
+  { id: 'curriculum-assessment/criterion-referenced-rubric-generator', name: 'Criterion-Referenced Rubric Generator', domain: 'curriculum-assessment' },
+  { id: 'memory-learning-science/feedback-quality-analyser',       name: 'Feedback Quality Analyser',             domain: 'memory-learning-science' },
+  { id: 'curriculum-assessment/differentiation-adapter',           name: 'Differentiation Adapter',               domain: 'curriculum-assessment' },
+  { id: 'eal-language-development/scaffolded-task-modifier',       name: 'Scaffolded Task Modifier',              domain: 'eal-language-development' },
+  { id: 'explicit-instruction/practice-problem-sequence-designer', name: 'Practice Problem Sequence Designer',    domain: 'explicit-instruction' },
+  { id: 'memory-learning-science/worked-example-fading-designer',  name: 'Worked Example Fading Designer',        domain: 'memory-learning-science' },
+  { id: 'memory-learning-science/retrieval-practice-generator',    name: 'Retrieval Practice Generator',          domain: 'memory-learning-science' },
+  { id: 'self-regulated-learning/metacognitive-prompt-library',    name: 'Metacognitive Prompt Library',          domain: 'self-regulated-learning' },
+  { id: 'self-regulated-learning/self-regulation-scaffold-generator', name: 'Self-Regulation Scaffold Generator', domain: 'self-regulated-learning' },
+  { id: 'memory-learning-science/elaborative-interrogation-generator', name: 'Elaborative Interrogation Generator', domain: 'memory-learning-science' },
+  { id: 'student-learning/teach-back-evaluator',                   name: 'Teach-Back Evaluator',                  domain: 'student-learning' },
+  { id: 'curriculum-assessment/learning-progression-builder',      name: 'Learning Progression Builder',          domain: 'curriculum-assessment' },
+  { id: 'self-regulated-learning/goal-setting-protocol-designer',  name: 'Goal Setting Protocol Designer',        domain: 'self-regulated-learning' },
 ];
 
-const ALL = [];
-const BY_ID = {};
-
-for (const raw of RAW_IMPORTS) {
-  const parsed = parseSkillMd(raw);
-  if (parsed && parsed.id) {
-    ALL.push(parsed);
-    BY_ID[parsed.id] = parsed;
-  }
+export function getAllSkillMetadata() {
+  return RAW_METADATA;
 }
 
-export function getAllSkills() {
-  return ALL;
-}
-
-export function getSkillById(id) {
-  return BY_ID[id] || null;
-}
-
-export function getSkillsByDomain(domain) {
-  return ALL.filter(s => s.domain === domain);
-}
-
-export function getSkillsByTag(tag) {
-  return ALL.filter(s => (s.tags || []).includes(tag));
+export function getSkillMetadataById(id) {
+  return RAW_METADATA.find(s => s.id === id) || null;
 }

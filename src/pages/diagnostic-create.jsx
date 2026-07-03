@@ -39,6 +39,7 @@ import {
 import {
   SECTION_KEYS, REQUIRED_APPROVAL_KEYS, SECTION_LABELS,
   DIAGNOSIS_DERIVED_KEYS, SECTION_GROUPS, SKILL_KEYS,
+  CAMBRIDGE_FRAMEWORK_CATEGORIES,
 } from '../domain/assessment/constants.js';
 import {
   friendlyAiError, aiText,
@@ -74,6 +75,11 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
   const [isBaseline, setIsBaseline] = useState(false);
   const [interventionNote, setInterventionNote] = useState('');
   const [inquiryHypothesis, setInquiryHypothesis] = useState('');
+
+  // Cambridge Teaching Framework self-evaluation
+  const [cambridgeSelfEval, setCambridgeSelfEval] = useState(
+    Object.fromEntries(CAMBRIDGE_FRAMEWORK_CATEGORIES.map(c => [c.id, '']))
+  );
 
   // Section approval state (extracted to domain hook)
   const {
@@ -138,6 +144,7 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
       setIsBaseline(dx.isBaseline || false);
       setInterventionNote(dx.interventionNote || '');
       setInquiryHypothesis(dx.inquiryHypothesis || '');
+      if (dx.cambridgeSelfEval) setCambridgeSelfEval(dx.cambridgeSelfEval);
       setStep('review');
     } else {
       setError('Could not load that diagnosis; it may have been deleted.');
@@ -213,11 +220,11 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
       };
 
       setGeneratingStatus('Step 2/4: Analysing errors and vocabulary targets…');
-      const errorBankRaw = await callAI(buildErrorBankPrompt({ ...promptData, diagnosis: evaluatedOnlyDx }), withSkills('diagnosis', { max_tokens: 2500 })).catch(() => null);
+      const errorBankRaw = await callAI(buildErrorBankPrompt({ ...promptData, diagnosis: evaluatedOnlyDx }), await withSkills('diagnosis', { max_tokens: 2500 })).catch(() => null);
       const parsedErrorBank = normalizeErrorTargets(errorBankRaw ? parseAiJson(getContent(errorBankRaw)) : {});
 
       setGeneratingStatus('Step 3/4: Writing student feedback…');
-      const feedbackRaw = await callAI(buildStudentFeedbackPrompt({ ...promptData, diagnosis: evaluatedOnlyDx }), withSkills('feedback', { max_tokens: 2500 })).catch(() => null);
+      const feedbackRaw = await callAI(buildStudentFeedbackPrompt({ ...promptData, diagnosis: evaluatedOnlyDx }), await withSkills('feedback', { max_tokens: 2500 })).catch(() => null);
       const parsedFeedback = feedbackRaw ? parseAiJson(getContent(feedbackRaw)) : {};
 
       setGeneratingStatus('Step 4/4: Building homework recommendation…');
@@ -226,7 +233,7 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
         diagnosis: evaluatedOnlyDx,
         errorBank: parsedErrorBank.errorBankSuggestions,
         vocabTargets: parsedErrorBank.vocabGrammarTargets,
-      }), withSkills('homework', { max_tokens: 3000 })).catch(() => null);
+      }), await withSkills('homework', { max_tokens: 3000 })).catch(() => null);
       const parsedHomework = homeworkRaw ? parseAiJson(getContent(homeworkRaw)) : {};
 
       setGeneratingStatus('Structuring results…');
@@ -275,6 +282,7 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
           isBaseline: false,
           interventionNote: '',
           inquiryHypothesis: '',
+          cambridgeSelfEval: {},
           content: {
             overall_result: typeof parsedDiagnosis.classSummary === 'string' ? parsedDiagnosis.classSummary : '',
             priorities: parsedDiagnosis.priorityDiagnosis || [],
@@ -324,7 +332,7 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
         nextClassFocus: 6000, profileUpdateSuggestions: 6000, errorBankSuggestions: 2200,
       };
       const skillMap = { skillDiagnosis:'diagnosis', studentFeedback:'feedback', homeworkRecommendation:'homework', errorBankSuggestions:'diagnosis', vocabGrammarTargets:'diagnosis' };
-      const data = await callAI(prompt, withSkills(skillMap[key] || 'diagnosis', {
+      const data = await callAI(prompt, await withSkills(skillMap[key] || 'diagnosis', {
         max_tokens: DIAGNOSIS_DERIVED_KEYS.has(key) ? Math.min(SECTION_BUDGETS[key] || 2500, 3000) : SECTION_BUDGETS[key] || 2000,
       }));
       const raw = data.content?.map(b => b.text || '').join('') || '';
@@ -393,6 +401,7 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
         isBaseline,
         interventionNote,
         inquiryHypothesis,
+        cambridgeSelfEval,
         content: {
           overall_result: (typeof sections.classSummary?.content === 'string' ? sections.classSummary.content : '') || '',
           priorities: sections.priorityDiagnosis?.content || [],
@@ -724,7 +733,7 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
                   <div className="mt-3">
                     <div className="text-2xs font-bold text-muted text-uppercase letter-spacing-01 mb-2">AI Priorities</div>
                     {sections.priorityDiagnosis.content.slice(0, 3).map((p, i) => (
-                      <div key={i} className="text-xs priority-row">{p.skill ? <strong>{p.skill}: </strong> : ''}{p.focus || p.reason || p}</div>
+                      <div key={i} className="text-xs priority-row">{p.skill ? <strong>{p.skill}: </strong> : ''}{p.area || p.focus || p.reason || '—'}</div>
                     ))}
                   </div>
                 )}
@@ -779,6 +788,46 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
                   <textarea className="dx-textarea" value={interventionNote} onChange={e => setInterventionNote(e.target.value)}
                     rows={2} placeholder="What did you do between the baseline and this diagnosis? E.g. 3 sessions focused on organizing speaking answers using PEEL structure…" />
                 </div>
+              </div>
+            </Card>
+          </div>
+
+          {/* ── Cambridge Teaching Framework Self-Evaluation ── */}
+          <div className="mt-6">
+            <SectionHeader title="Cambridge Teaching Self-Evaluation" icon={<Icon.progress size={14} />} />
+            <p className="text-xs text-muted mb-3" style={{ marginTop: 4 }}>
+              Rate yourself on each Cambridge English Teaching Framework category. This is saved with the diagnosis for your professional development record.
+            </p>
+            <Card small>
+              <div className="flex-col-gap4">
+                {CAMBRIDGE_FRAMEWORK_CATEGORIES.map(cat => (
+                  <div key={cat.id} className="cambridge-category">
+                    <div className="flex-row-gap3 mb-2">
+                      <span className="text-sm font-semibold">{cat.label}</span>
+                      {cambridgeSelfEval[cat.id] && (
+                        <Pill tone={cat.stages.find(s => s.key === cambridgeSelfEval[cat.id])?.key === 'expert' ? 'success' : cat.stages.find(s => s.key === cambridgeSelfEval[cat.id])?.key === 'proficient' ? 'accent' : cat.stages.find(s => s.key === cambridgeSelfEval[cat.id])?.key === 'developing' ? 'warning' : 'muted'}>
+                          {cat.stages.find(s => s.key === cambridgeSelfEval[cat.id])?.label}
+                        </Pill>
+                      )}
+                    </div>
+                    <p className="card-row-meta mb-2">{cat.description}</p>
+                    <div className="cambridge-stage-selector">
+                      {cat.stages.map(stage => {
+                        const selected = cambridgeSelfEval[cat.id] === stage.key;
+                        return (
+                          <button key={stage.key} type="button"
+                            className={`cambridge-stage-btn${selected ? ' cambridge-stage-btn--selected' : ''}`}
+                            onClick={() => setCambridgeSelfEval(prev => ({ ...prev, [cat.id]: stage.key }))}
+                            title={stage.description}
+                          >
+                            <span className="cambridge-stage-label">{stage.label}</span>
+                            <span className="cambridge-stage-desc">{stage.description}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
               </div>
             </Card>
           </div>

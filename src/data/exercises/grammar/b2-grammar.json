@@ -1,0 +1,458 @@
+{
+  "schemaVersion": "2.0",
+  "contentType": "met_b2_skills_bank",
+  "title": "MET B2 Skills Exercise Pack",
+  "subtitle": "Authentic B2 exercises across Listening, Reading, Writing, Speaking, and Grammar",
+  "level": "B2",
+  "modules": [
+    {
+      "id": "grammar_sentence_completion",
+      "title": "Grammar: Sentence Completion (B2)",
+      "levelRange": "B2",
+      "skill": "grammar",
+      "moduleType": "mcq_set",
+      "items": [
+        {
+          "stem": "By the time we arrived, the meeting ______.",
+          "options": [
+            "already finished",
+            "has already finished",
+            "had already finished",
+            "was already finishing"
+          ],
+          "correct": 2,
+          "explanation": "Past perfect is used for an action completed before another past event."
+        },
+        {
+          "stem": "She apologized ______ replying so late.",
+          "options": [
+            "for",
+            "of",
+            "about",
+            "to"
+          ],
+          "correct": 0,
+          "explanation": "'Apologize for + -ing' is the correct pattern."
+        },
+        {
+          "stem": "If I ______ more free time, I'd join the evening course.",
+          "options": [
+            "have",
+            "had",
+            "would have",
+            "will have"
+          ],
+          "correct": 1,
+          "explanation": "Second conditional uses 'If + past simple, would + infinitive.'"
+        },
+        {
+          "stem": "The manager suggested ______ the decision until Monday.",
+          "options": [
+            "to delay",
+            "delaying",
+            "delay",
+            "delayed"
+          ],
+          "correct": 1,
+          "explanation": "'Suggest + -ing' (gerund) is the correct pattern."
+        },
+        {
+          "stem": "This is the shop ______ I bought my laptop.",
+          "options": [
+            "which",
+            "where",
+            "who",
+            "whose"
+          ],
+          "correct": 1,
+          "explanation": "'Where' is the relative adverb used for places."
+        },
+        {
+          "stem": "The company expects its employees ______ on time.",
+          "options": [
+            "to arrive",
+            "arrive",
+            "arriving",
+            "arrived"
+          ],
+          "correct": 0,
+          "explanation": "'Expect someone to do something' is the correct structure."
+        },
+        {
+          "stem": "______ the rain, the outdoor concert went ahead as planned.",
+          "options": [
+            "Because",
+            "Despite",
+            "Although",
+            "However"
+          ],
+          "correct": 1,
+          "explanation": "'Despite + noun' is used to show contrast."
+        },
+        {
+          "stem": "I'd rather you ______ me before making the decision.",
+          "options": [
+            "tell",
+            "told",
+            "telling",
+            "have told"
+          ],
+          "correct": 1,
+          "explanation": "'I'd rather you + past simple' is used for preferences about someone else's actions."
+        }
+      ]
+    },
+    {
+      "id": "grammar_open_cloze",
+      "title": "Grammar: Open Cloze (B2)",
+      "levelRange": "B2",
+      "skill": "grammar",
+      "moduleType": "exercise_list",
+      "exercises": [
+        {
+          "type": "blank",
+          "level": "B2",
+          "skill": "grammar",
+          "template": "Last year our neighborhood started a small book exchange. At first, people were unsure ___ it would work, but within a few weeks the shelves were full. The success came partly ___ the rules were simple: take a book, leave a book. Since then, many residents ___ discovered authors they had never read before. The project is small, ___ it has changed the way people talk to one another. It has even given neighbors a reason to stop ___ chat for a few minutes.",
+          "blanks": [
+            "whether",
+            "because",
+            "have",
+            "but",
+            "and"
+          ]
+        },
+        {
+          "type": "blank",
+          "level": "B2",
+          "skill": "grammar",
+          "template": "Online courses have become extremely popular in recent years. Many students prefer them ___ they can study at their own pace. However, not everyone is suited ___ this type of learning. You need to be highly self-motivated, ___ you will quickly fall behind. Some students say they miss ___ opportunity to ask questions immediately. Others feel ___ the lack of social interaction makes learning less enjoyable.",
+          "blanks": [
+            "because",
+            "to",
+            "or",
+            "the",
+            "that"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "grammar_error_correction",
+      "title": "Grammar: Error Correction (B2)",
+      "levelRange": "B2",
+      "skill": "grammar",
+      "moduleType": "exercise_list",
+      "exercises": [
+        {
+          "type": "fix",
+          "level": "B2",
+          "skill": "grammar",
+          "errorText": "He asked me where was the station.",
+          "correctedText": "He asked me where the station was.",
+          "hint": "Reported questions use statement word order, not question word order."
+        },
+        {
+          "type": "fix",
+          "level": "B2",
+          "skill": "grammar",
+          "errorText": "I look forward to hear from you.",
+          "correctedText": "I look forward to hearing from you.",
+          "hint": "'Look forward to' is followed by a gerund (-ing form), not an infinitive."
+        },
+        {
+          "type": "fix",
+          "level": "B2",
+          "skill": "grammar",
+          "errorText": "She has less friends than her brother.",
+          "correctedText": "She has fewer friends than her brother.",
+          "hint": "Use 'fewer' with countable nouns and 'less' with uncountable nouns."
+        },
+        {
+          "type": "fix",
+          "level": "B2",
+          "skill": "grammar",
+          "errorText": "If I would know the answer, I'd tell you.",
+          "correctedText": "If I knew the answer, I'd tell you.",
+          "hint": "In second conditional, the 'if' clause uses past simple, not 'would'."
+        },
+        {
+          "type": "fix",
+          "level": "B2",
+          "skill": "grammar",
+          "errorText": "The report was wrote yesterday.",
+          "correctedText": "The report was written yesterday.",
+          "hint": "Passive voice requires 'was/were' + past participle ('written', not 'wrote')."
+        },
+        {
+          "type": "fix",
+          "level": "B2",
+          "skill": "grammar",
+          "errorText": "She is enough old to drive a car.",
+          "correctedText": "She is old enough to drive a car.",
+          "hint": "Adjective comes before \"enough\", not after it."
+        },
+        {
+          "type": "fix",
+          "level": "B2",
+          "skill": "grammar",
+          "errorText": "I used to could speak Spanish fluently.",
+          "correctedText": "I used to be able to speak Spanish fluently.",
+          "hint": "\"Used to\" is followed by the infinitive, not \"could\"."
+        }
+      ]
+    },
+    {
+      "id": "grammar_word_formation",
+      "title": "Grammar: Word Formation (B2)",
+      "levelRange": "B2",
+      "skill": "grammar",
+      "moduleType": "exercise_list",
+      "exercises": [
+        {
+          "type": "blank",
+          "level": "B2",
+          "skill": "grammar",
+          "template": "The new system was designed to improve ___ between departments. (COMMUNICATE)",
+          "blanks": [
+            "communication"
+          ]
+        },
+        {
+          "type": "blank",
+          "level": "B2",
+          "skill": "grammar",
+          "template": "Her explanation was clear and very ___. (CONVINCE)",
+          "blanks": [
+            "convincing"
+          ]
+        },
+        {
+          "type": "blank",
+          "level": "B2",
+          "skill": "grammar",
+          "template": "We were surprised by the ___ of the final results. (ACCURATE)",
+          "blanks": [
+            "accuracy"
+          ]
+        },
+        {
+          "type": "blank",
+          "level": "B2",
+          "skill": "grammar",
+          "template": "Good public transport increases the ___ of jobs and services. (ACCESS)",
+          "blanks": [
+            "accessibility"
+          ]
+        },
+        {
+          "type": "blank",
+          "level": "B2",
+          "skill": "grammar",
+          "template": "The course encourages students to think more ___. (CRITIC)",
+          "blanks": [
+            "critically"
+          ]
+        },
+        {
+          "type": "blank",
+          "level": "B2",
+          "skill": "grammar",
+          "template": "The documentary provided a detailed ___ of the problem. (EXPLAIN)",
+          "blanks": [
+            "explanation"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "grammar_mixed_tenses",
+      "title": "Grammar: Mixed Tenses (B2)",
+      "levelRange": "B2",
+      "skill": "grammar",
+      "moduleType": "exercise_list",
+      "exercises": [
+        {
+          "type": "blank",
+          "level": "B2",
+          "skill": "grammar",
+          "template": "While I ___ (walk) to work, I saw an old friend.",
+          "blanks": [
+            "was walking"
+          ]
+        },
+        {
+          "type": "blank",
+          "level": "B2",
+          "skill": "grammar",
+          "template": "They ___ (live) here since 2022.",
+          "blanks": [
+            "have lived|have been living"
+          ]
+        },
+        {
+          "type": "blank",
+          "level": "B2",
+          "skill": "grammar",
+          "template": "By next June, she ___ (finish) her degree.",
+          "blanks": [
+            "will have finished"
+          ]
+        },
+        {
+          "type": "blank",
+          "level": "B2",
+          "skill": "grammar",
+          "template": "I didn't answer because I ___ (drive).",
+          "blanks": [
+            "was driving"
+          ]
+        },
+        {
+          "type": "blank",
+          "level": "B2",
+          "skill": "grammar",
+          "template": "He said he ___ (not see) the message yet.",
+          "blanks": [
+            "had not seen|hadn't seen"
+          ]
+        },
+        {
+          "type": "blank",
+          "level": "B2",
+          "skill": "grammar",
+          "template": "I ___ (wait) for the bus for over an hour when it finally arrived.",
+          "blanks": [
+            "had been waiting"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "grammar_conditionals",
+      "title": "Grammar: Conditionals & Wishes (B2)",
+      "levelRange": "B2",
+      "skill": "grammar",
+      "moduleType": "exercise_list",
+      "exercises": [
+        {
+          "type": "blank",
+          "level": "B2",
+          "skill": "grammar",
+          "template": "If people ___ (cycle) more often, the city would be less polluted.",
+          "blanks": [
+            "cycled"
+          ]
+        },
+        {
+          "type": "blank",
+          "level": "B2",
+          "skill": "grammar",
+          "template": "I wish I ___ (have) enough time to join the course last year.",
+          "blanks": [
+            "had had"
+          ]
+        },
+        {
+          "type": "blank",
+          "level": "B2",
+          "skill": "grammar",
+          "template": "If she had left earlier, she ___ (catch) the train.",
+          "blanks": [
+            "would have caught"
+          ]
+        },
+        {
+          "type": "blank",
+          "level": "B2",
+          "skill": "grammar",
+          "template": "If I were you, I ___ (speak) to the manager directly.",
+          "blanks": [
+            "would speak"
+          ]
+        },
+        {
+          "type": "blank",
+          "level": "B2",
+          "skill": "grammar",
+          "template": "He wishes he ___ (not spend) so much money on things he didn't need.",
+          "blanks": [
+            "hadn't spent|had not spent"
+          ]
+        },
+        {
+          "type": "blank",
+          "level": "B2",
+          "skill": "grammar",
+          "template": "Unless the weather ___ (improve), the match will be cancelled.",
+          "blanks": [
+            "improves"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "grammar_modals",
+      "title": "Grammar: Modals (B2)",
+      "levelRange": "B2",
+      "skill": "grammar",
+      "moduleType": "exercise_list",
+      "exercises": [
+        {
+          "type": "blank",
+          "level": "B2",
+          "skill": "grammar",
+          "template": "You ___ bring your ID; they won't let you in without it.",
+          "blanks": [
+            "must"
+          ]
+        },
+        {
+          "type": "blank",
+          "level": "B2",
+          "skill": "grammar",
+          "template": "She looks exhausted. She ___ have slept very little.",
+          "blanks": [
+            "must"
+          ]
+        },
+        {
+          "type": "blank",
+          "level": "B2",
+          "skill": "grammar",
+          "template": "They ___ have taken the earlier train; they're already here.",
+          "blanks": [
+            "must"
+          ]
+        },
+        {
+          "type": "blank",
+          "level": "B2",
+          "skill": "grammar",
+          "template": "You ___ smoke here; it's against the rules.",
+          "blanks": [
+            "mustn't|must not"
+          ]
+        },
+        {
+          "type": "blank",
+          "level": "B2",
+          "skill": "grammar",
+          "template": "We ___ meet tomorrow if you're free, but it isn't final yet.",
+          "blanks": [
+            "might"
+          ]
+        },
+        {
+          "type": "blank",
+          "level": "B2",
+          "skill": "grammar",
+          "template": "You ___ (not need) bring anything to the party — everything is provided.",
+          "blanks": [
+            "don't need to|do not need to"
+          ]
+        }
+      ]
+    }
+  ]
+}

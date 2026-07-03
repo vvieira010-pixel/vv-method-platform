@@ -1,0 +1,1333 @@
+{
+  "exam": "MET",
+  "level": "B2",
+  "language": "en",
+  "note": "This set is designed around MET-style task types and B2 performance goals: Listening includes short conversations, longer conversations, and short talks; Reading focuses on detail, global meaning, and inference; Writing includes short personal responses and a multi-paragraph opinion essay; Speaking follows the 5 MET speaking tasks with 60-second and 90-second timing; Grammar reflects common MET structures such as modals, collocations, inversion, and complex sentence control. ",
+  "skills": {
+    "listening": {
+      "alignment_note": "These listening exercises target MET-style global, local, and inferential listening subskills through realistic social, school, and workplace topics. ",
+      "exercises": [
+        {
+          "id": "L1",
+          "type": "short_conversation_mcq",
+          "part": "MET Listening Part 1",
+          "title": "Late Lecture",
+          "audio_script": "Woman: Are you going to Professor Hall's lecture this afternoon? Man: I wanted to, but the email says it has been moved online because the speaker missed his flight. Woman: That's actually better for me. I can watch it from home.",
+          "question": "What does the man say about the lecture?",
+          "options": [
+            "A. It was canceled.",
+            "B. It will happen online.",
+            "C. It already finished.",
+            "D. It was moved to another building."
+          ],
+          "answer": "B",
+          "skill_focus": [
+            "gist",
+            "detail"
+          ]
+        },
+        {
+          "id": "L2",
+          "type": "short_conversation_mcq",
+          "part": "MET Listening Part 1",
+          "title": "Library Rule",
+          "audio_script": "Man: I'll just eat this sandwich while I finish the chapter. Woman: You'd better wait. They were giving warnings this morning, and the librarian looked serious. Man: Fine, let's go downstairs to the café first.",
+          "question": "Why does the woman respond this way?",
+          "options": [
+            "A. Food is not allowed there.",
+            "B. The café is already closed.",
+            "C. She does not like sandwiches.",
+            "D. The chapter is too difficult."
+          ],
+          "answer": "A",
+          "skill_focus": [
+            "inference"
+          ]
+        },
+        {
+          "id": "L3",
+          "type": "short_conversation_mcq",
+          "part": "MET Listening Part 1",
+          "title": "Report Problem",
+          "audio_script": "Woman: I looked over your sales report. The numbers are fine, but the last section repeats the same chart twice. Man: Oh, I copied the old file and forgot to replace that page. I'll fix it before the meeting.",
+          "question": "What is the problem with the report?",
+          "options": [
+            "A. It is missing all the sales numbers.",
+            "B. It includes the wrong date.",
+            "C. One section was duplicated.",
+            "D. It was sent to the wrong person."
+          ],
+          "answer": "C",
+          "skill_focus": [
+            "detail"
+          ]
+        },
+        {
+          "id": "L4",
+          "type": "short_conversation_mcq",
+          "part": "MET Listening Part 1",
+          "title": "Bus Choice",
+          "audio_script": "Woman: If you take the express bus, you'll have to change at Central Station. Man: Then I'll stay on your bus. It's slower, but I don't want to carry these bags through another station.",
+          "question": "Why does the man choose the woman's bus?",
+          "options": [
+            "A. It arrives first.",
+            "B. His ticket only works on that bus.",
+            "C. He wants to avoid changing buses.",
+            "D. The express bus is full."
+          ],
+          "answer": "C",
+          "skill_focus": [
+            "detail"
+          ]
+        },
+        {
+          "id": "L5",
+          "type": "long_conversation_mcq",
+          "part": "MET Listening Part 2",
+          "title": "Essay Revision",
+          "audio_script": "Professor: Your ideas are strong, but the essay feels repetitive. Student: Is the topic bad? Professor: No, the topic is fine. You need better transitions and more variety in sentence length. Student: So I shouldn't start over? Professor: Definitely not. Revise what you have, and then add one example in the second paragraph.",
+          "questions": [
+            {
+              "question": "What is the professor mainly explaining?",
+              "options": [
+                "A. How to choose a new essay topic.",
+                "B. How to improve an essay draft.",
+                "C. How to research a paper.",
+                "D. How to make an essay shorter."
+              ],
+              "answer": "B"
+            },
+            {
+              "question": "What should the student do next?",
+              "options": [
+                "A. Write a completely new paper.",
+                "B. Ask another professor for help.",
+                "C. Revise the current draft.",
+                "D. Remove the second paragraph."
+              ],
+              "answer": "C"
+            }
+          ],
+          "skill_focus": [
+            "gist",
+            "detail"
+          ]
+        },
+        {
+          "id": "L6",
+          "type": "long_conversation_mcq",
+          "part": "MET Listening Part 2",
+          "title": "Career Decision",
+          "audio_script": "Man: Have you decided whether you'll apply to the nursing program here? Woman: Not yet. It's cheaper to stay, and my family lives nearby, but I also liked the program in California. Man: I thought you wanted to work there anyway. Woman: Maybe later. First I need to finish my training and see which license requirements I can meet fastest.",
+          "questions": [
+            {
+              "question": "What is the woman still deciding?",
+              "options": [
+                "A. Where to continue her studies.",
+                "B. When to visit her family.",
+                "C. Which job to quit.",
+                "D. Whether to become a doctor."
+              ],
+              "answer": "A"
+            },
+            {
+              "question": "Why does she mention her family?",
+              "options": [
+                "A. They want to move.",
+                "B. They can help her financially.",
+                "C. They live close to one option.",
+                "D. They work in California."
+              ],
+              "answer": "C"
+            }
+          ],
+          "skill_focus": [
+            "detail",
+            "inference"
+          ]
+        },
+        {
+          "id": "L7",
+          "type": "long_conversation_mcq",
+          "part": "MET Listening Part 2",
+          "title": "Fitness Class",
+          "audio_script": "Woman: You always say you're too busy to exercise, but the new gym added a 30-minute class after work. Man: Thirty minutes sounds manageable. I just don't like committing to long sessions. Woman: Then this might be perfect. You could start twice a week. Man: You're right. If I put it on my calendar, I'll probably do it.",
+          "questions": [
+            {
+              "question": "What are the speakers mainly discussing?",
+              "options": [
+                "A. A sports competition.",
+                "B. A new exercise option.",
+                "C. A medical problem.",
+                "D. A restaurant near work."
+              ],
+              "answer": "B"
+            },
+            {
+              "question": "What does the man imply about exercise?",
+              "options": [
+                "A. He prefers long workouts.",
+                "B. He already goes every day.",
+                "C. Time is one of his main obstacles.",
+                "D. He dislikes going with friends."
+              ],
+              "answer": "C"
+            }
+          ],
+          "skill_focus": [
+            "gist",
+            "inference"
+          ]
+        },
+        {
+          "id": "L8",
+          "type": "short_talk_mcq",
+          "part": "MET Listening Part 3",
+          "title": "Office Renovation",
+          "audio_script": "Good morning, everyone. Starting next Monday, the west side of the third floor will be closed for renovation. Employees who usually work there will move temporarily into the large conference room. IT staff will set up workstations this Friday afternoon, so please remove any personal items from your desks before you leave tomorrow.",
+          "questions": [
+            {
+              "question": "Who will be most affected by this announcement?",
+              "options": [
+                "A. New employees only.",
+                "B. Employees on one section of the third floor.",
+                "C. Building visitors.",
+                "D. All company managers."
+              ],
+              "answer": "B"
+            },
+            {
+              "question": "What will probably happen next?",
+              "options": [
+                "A. Staff will move into another company.",
+                "B. A new manager will be hired.",
+                "C. Workstations will be prepared.",
+                "D. The renovation will be canceled."
+              ],
+              "answer": "C"
+            }
+          ],
+          "skill_focus": [
+            "detail",
+            "prediction"
+          ]
+        },
+        {
+          "id": "L9",
+          "type": "short_talk_mcq",
+          "part": "MET Listening Part 3",
+          "title": "Chemistry Career Talk",
+          "audio_script": "When people hear that I studied chemistry, they often assume I planned to work in a laboratory forever. Actually, my career began by accident. I accepted a short summer job in food production, and that experience showed me how chemistry could solve practical problems. As you leave today, you can pick up a brochure with information about internship opportunities in our program.",
+          "questions": [
+            {
+              "question": "What is the speaker mainly discussing?",
+              "options": [
+                "A. A failed experiment.",
+                "B. Her unexpected career path.",
+                "C. A university entrance test.",
+                "D. A new chemistry textbook."
+              ],
+              "answer": "B"
+            },
+            {
+              "question": "What can listeners do as they leave?",
+              "options": [
+                "A. Register for classes.",
+                "B. See a laboratory sample.",
+                "C. Get program information.",
+                "D. Interview industry professionals."
+              ],
+              "answer": "C"
+            }
+          ],
+          "skill_focus": [
+            "gist",
+            "detail"
+          ]
+        },
+        {
+          "id": "L10",
+          "type": "short_talk_mcq",
+          "part": "MET Listening Part 3",
+          "title": "Daylight Saving Debate",
+          "audio_script": "Some people think daylight saving time is useful only because it might reduce energy use. However, the evidence for that is mixed. In some places, people actually use more electricity in the evening. Even so, longer daylight after work may help local businesses, because people are more likely to shop, eat outside, or attend community events.",
+          "questions": [
+            {
+              "question": "What is the speaker's main point?",
+              "options": [
+                "A. Daylight saving time always saves energy.",
+                "B. Daylight saving time has no benefits.",
+                "C. The issue is more complex than energy savings alone.",
+                "D. All businesses oppose daylight saving time."
+              ],
+              "answer": "C"
+            },
+            {
+              "question": "Who may benefit economically according to the speaker?",
+              "options": [
+                "A. Local businesses.",
+                "B. Electricity companies only.",
+                "C. Factory workers only.",
+                "D. Airline passengers."
+              ],
+              "answer": "A"
+            }
+          ],
+          "skill_focus": [
+            "global meaning",
+            "inference"
+          ]
+        }
+      ]
+    },
+    "reading": {
+      "alignment_note": "These reading exercises reflect MET reading work on main idea, detail, vocabulary in context, inference, and multiple-text comparison, which are emphasized for B2 learners. ",
+      "exercises": [
+        {
+          "id": "R1",
+          "type": "single_text_mcq",
+          "title": "Urban Gardens",
+          "passage": "In many cities, community gardens have become more than places to grow vegetables. They also function as social spaces where neighbors meet, exchange advice, and organize local events. Some city officials first supported these gardens only because unused land looked unattractive. Over time, however, they noticed that the gardens also reduced minor vandalism and increased residents' sense of responsibility for the area.",
+          "questions": [
+            {
+              "question": "What is the main idea of the passage?",
+              "options": [
+                "A. Community gardens are difficult to maintain.",
+                "B. City officials dislike local projects.",
+                "C. Community gardens provide several benefits beyond food production.",
+                "D. Vegetables are expensive in many cities."
+              ],
+              "answer": "C"
+            },
+            {
+              "question": "Why did some officials first support the gardens?",
+              "options": [
+                "A. They wanted free food.",
+                "B. They wanted to improve the appearance of empty land.",
+                "C. They needed places for concerts.",
+                "D. They were gardeners themselves."
+              ],
+              "answer": "B"
+            }
+          ]
+        },
+        {
+          "id": "R2",
+          "type": "single_text_mcq",
+          "title": "Remote Work Training",
+          "passage": "When our company first introduced remote work, managers assumed productivity would drop because employees were no longer in the office. Instead, the biggest problem was communication. Staff completed tasks on time, but small misunderstandings increased because people relied too heavily on short messages. After the company added weekly video meetings and clearer written procedures, collaboration improved quickly.",
+          "questions": [
+            {
+              "question": "What problem appeared first in the company?",
+              "options": [
+                "A. Employees missed deadlines.",
+                "B. Productivity dropped sharply.",
+                "C. Communication became less effective.",
+                "D. Managers stopped using email."
+              ],
+              "answer": "C"
+            },
+            {
+              "question": "What helped solve the problem?",
+              "options": [
+                "A. Fewer meetings.",
+                "B. Better communication systems.",
+                "C. Shorter deadlines.",
+                "D. Returning to full-time office work."
+              ],
+              "answer": "B"
+            }
+          ]
+        },
+        {
+          "id": "R3",
+          "type": "single_text_vocab",
+          "title": "Museum Attendance",
+          "passage": "A local museum expected attendance to fall during the winter because the building is outside the city center. Surprisingly, visitor numbers rose after the museum launched short online videos showing how exhibits were prepared. The videos did not replace in-person visits; instead, they made people curious enough to see the objects for themselves.",
+          "questions": [
+            {
+              "question": "In the passage, the word 'launched' is closest in meaning to:",
+              "options": [
+                "A. criticized",
+                "B. started",
+                "C. filmed",
+                "D. borrowed"
+              ],
+              "answer": "B"
+            },
+            {
+              "question": "What can be inferred about the videos?",
+              "options": [
+                "A. They reduced ticket sales.",
+                "B. They were expensive to produce.",
+                "C. They increased public interest.",
+                "D. They were shown only inside the museum."
+              ],
+              "answer": "C"
+            }
+          ]
+        },
+        {
+          "id": "R4",
+          "type": "single_text_mcq",
+          "title": "Learning a Musical Instrument",
+          "passage": "People often think that progress in music depends mainly on natural talent. While talent may help at the beginning, teachers usually say that improvement depends more on regular practice. Students who practice only when they feel inspired tend to improve slowly. Those who follow a routine, even a short one, often develop better technique and confidence over time.",
+          "questions": [
+            {
+              "question": "What is the author's main argument?",
+              "options": [
+                "A. Music teachers are too strict.",
+                "B. Natural talent is the only important factor.",
+                "C. Consistent practice matters more than inspiration alone.",
+                "D. Students should practice for many hours every day."
+              ],
+              "answer": "C"
+            },
+            {
+              "question": "Which student is likely to improve faster?",
+              "options": [
+                "A. One who waits for inspiration.",
+                "B. One who follows a regular practice routine.",
+                "C. One who changes teachers often.",
+                "D. One who avoids difficult exercises."
+              ],
+              "answer": "B"
+            }
+          ]
+        },
+        {
+          "id": "R5",
+          "type": "single_text_inference",
+          "title": "City Bikes",
+          "passage": "Several years ago, the city introduced public bicycles to reduce traffic in the downtown area. At first, many residents complained that the program would be expensive and inconvenient. Today, stations are busy during rush hour, and even some of the original critics now use the bikes to travel between the train station and their offices.",
+          "questions": [
+            {
+              "question": "What changed over time?",
+              "options": [
+                "A. The city removed all bike stations.",
+                "B. Residents became more supportive of the program.",
+                "C. Train service became worse.",
+                "D. The cost of cars decreased."
+              ],
+              "answer": "B"
+            },
+            {
+              "question": "What can be inferred about the bike program?",
+              "options": [
+                "A. It was never used successfully.",
+                "B. It only helps tourists.",
+                "C. It became practical for daily commuting.",
+                "D. It replaced the train system."
+              ],
+              "answer": "C"
+            }
+          ]
+        },
+        {
+          "id": "R6",
+          "type": "multiple_text_match",
+          "title": "Three Course Reviews",
+          "texts": [
+            {
+              "label": "Text A",
+              "content": "The evening photography course is ideal for beginners. The instructor explains technical terms clearly, but students need their own camera."
+            },
+            {
+              "label": "Text B",
+              "content": "The weekend cooking workshop is fast-paced and practical. Ingredients are included, although there is little time for individual feedback."
+            },
+            {
+              "label": "Text C",
+              "content": "The online design class offers flexible study hours and detailed written feedback. However, students who prefer face-to-face discussion may find it less engaging."
+            }
+          ],
+          "questions": [
+            {
+              "question": "Which text would best suit a student who needs flexible scheduling?",
+              "answer": "Text C"
+            },
+            {
+              "question": "Which text mentions that materials are provided?",
+              "answer": "Text B"
+            },
+            {
+              "question": "Which text is most clearly designed for complete beginners?",
+              "answer": "Text A"
+            }
+          ]
+        },
+        {
+          "id": "R7",
+          "type": "single_text_mcq",
+          "title": "Public Speaking Club",
+          "passage": "A university speaking club was created for students who felt nervous about giving presentations. Instead of beginning with formal speeches, members first practiced short introductions and simple discussions in pairs. This gradual approach helped students gain confidence. By the end of the semester, many participants reported that they still felt nervous, but they were finally able to speak clearly in front of a class.",
+          "questions": [
+            {
+              "question": "Why did the club start with simple pair tasks?",
+              "options": [
+                "A. The teachers were unprepared.",
+                "B. The students were already advanced.",
+                "C. It helped build confidence step by step.",
+                "D. Formal speeches were not allowed."
+              ],
+              "answer": "C"
+            },
+            {
+              "question": "What is the best summary?",
+              "options": [
+                "A. Students joined a club to avoid presentations forever.",
+                "B. Gradual practice helped anxious students improve public speaking.",
+                "C. Pair work is the only way to teach speaking.",
+                "D. University presentations are becoming shorter."
+              ],
+              "answer": "B"
+            }
+          ]
+        },
+        {
+          "id": "R8",
+          "type": "single_text_vocab",
+          "title": "Reusable Packaging",
+          "passage": "A growing number of cafés are experimenting with reusable packaging systems. Customers pay a small deposit for a cup or container and receive the money back when they return it. Although the process requires more organization from staff, owners say it has reduced waste noticeably and improved the business's public image.",
+          "questions": [
+            {
+              "question": "What does 'noticeably' suggest in the final sentence?",
+              "options": [
+                "A. In a way that is easy to observe.",
+                "B. In a secret way.",
+                "C. In a temporary way.",
+                "D. In a careless way."
+              ],
+              "answer": "A"
+            },
+            {
+              "question": "Which statement is true according to the passage?",
+              "options": [
+                "A. Customers keep the deposit permanently.",
+                "B. Staff find the system impossible to manage.",
+                "C. The system has some environmental benefits.",
+                "D. Owners dislike the effect on public opinion."
+              ],
+              "answer": "C"
+            }
+          ]
+        },
+        {
+          "id": "R9",
+          "type": "single_text_inference",
+          "title": "New Employee Orientation",
+          "passage": "The company used to give new employees a full day of presentations during orientation. Managers later realized that most people remembered very little by the afternoon. The program has now been divided into shorter sessions across the first month, with practical tasks between meetings. New staff members still receive the same information, but they seem more confident when applying it.",
+          "questions": [
+            {
+              "question": "Why was the orientation program changed?",
+              "options": [
+                "A. Managers wanted to reduce costs.",
+                "B. Employees were forgetting too much information.",
+                "C. The company hired fewer people.",
+                "D. New workers refused to attend."
+              ],
+              "answer": "B"
+            },
+            {
+              "question": "What can be inferred about the new system?",
+              "options": [
+                "A. It is more effective for learning.",
+                "B. It includes less information.",
+                "C. It takes only one day.",
+                "D. It is only for managers."
+              ],
+              "answer": "A"
+            }
+          ]
+        },
+        {
+          "id": "R10",
+          "type": "multiple_text_match",
+          "title": "Volunteer Opportunities",
+          "texts": [
+            {
+              "label": "Text A",
+              "content": "Animal shelter volunteers work mostly on weekends. Training is provided, but volunteers must be comfortable around large dogs."
+            },
+            {
+              "label": "Text B",
+              "content": "The museum seeks weekday volunteers for visitor support. Strong communication skills are preferred, and volunteers receive free exhibition access."
+            },
+            {
+              "label": "Text C",
+              "content": "The literacy center needs online volunteers to help teenagers with reading tasks in the evening. Previous teaching experience is helpful but not required."
+            }
+          ],
+          "questions": [
+            {
+              "question": "Which opportunity is best for someone available only at night?",
+              "answer": "Text C"
+            },
+            {
+              "question": "Which opportunity offers a practical benefit related to exhibitions?",
+              "answer": "Text B"
+            },
+            {
+              "question": "Which opportunity requires comfort with animals?",
+              "answer": "Text A"
+            }
+          ]
+        }
+      ]
+    },
+    "writing": {
+      "alignment_note": "These writing prompts follow the MET writing section: short responses to three related questions and longer opinion essays that require clear organization, supporting detail, and argument development. ",
+      "exercises": [
+        {
+          "id": "W1",
+          "type": "task_1_short_responses",
+          "title": "Free-Time Routine",
+          "instructions": "Answer all 3 questions in full sentences. Write 2-4 sentences per answer.",
+          "prompts": [
+            "What do you usually do in your free time?",
+            "Why do you enjoy this activity?",
+            "Tell about the last time you did it."
+          ],
+          "scoring_focus": [
+            "task completion",
+            "grammatical accuracy",
+            "vocabulary"
+          ]
+        },
+        {
+          "id": "W2",
+          "type": "task_1_short_responses",
+          "title": "Favorite Place in Your City",
+          "instructions": "Answer all 3 questions in full sentences. Add specific details and reasons.",
+          "prompts": [
+            "What is your favorite place in your city?",
+            "Why do you like going there?",
+            "Describe what you usually do there."
+          ],
+          "scoring_focus": [
+            "relevance",
+            "detail",
+            "cohesion"
+          ]
+        },
+        {
+          "id": "W3",
+          "type": "task_1_short_responses",
+          "title": "Learning English",
+          "instructions": "Answer all 3 questions in full sentences. Use examples from your own experience.",
+          "prompts": [
+            "Why are you studying English?",
+            "What is the most difficult part of learning English for you?",
+            "Describe a moment when English helped you in real life."
+          ],
+          "scoring_focus": [
+            "task completion",
+            "organization",
+            "mechanics"
+          ]
+        },
+        {
+          "id": "W4",
+          "type": "task_1_short_responses",
+          "title": "Healthy Habits",
+          "instructions": "Write complete answers with explanations.",
+          "prompts": [
+            "What do you do to stay healthy?",
+            "How often do you do it?",
+            "Explain how this habit affects your daily life."
+          ],
+          "scoring_focus": [
+            "supporting detail",
+            "grammar",
+            "word choice"
+          ]
+        },
+        {
+          "id": "W5",
+          "type": "task_1_short_responses",
+          "title": "Technology You Use",
+          "instructions": "Answer the 3 questions clearly and stay on topic.",
+          "prompts": [
+            "What piece of technology do you use most often?",
+            "Why is it useful to you?",
+            "Describe one problem that can happen when using it."
+          ],
+          "scoring_focus": [
+            "clarity",
+            "sentence control",
+            "relevance"
+          ]
+        },
+        {
+          "id": "W6",
+          "type": "task_2_opinion_essay",
+          "title": "Exercise and Daily Life",
+          "instructions": "Write a multi-paragraph essay. Give your opinion and support it with reasons and examples. Recommended length: 220-280 words.",
+          "prompt": "According to many doctors, adults need regular physical activity to stay healthy, but many people do not exercise enough. What can be done to help adults exercise more?",
+          "suggested_structure": [
+            "introduction with clear opinion",
+            "2 body paragraphs with reasons and examples",
+            "short conclusion"
+          ],
+          "scoring_focus": [
+            "cohesion and organization",
+            "task completion",
+            "vocabulary range"
+          ]
+        },
+        {
+          "id": "W7",
+          "type": "task_2_opinion_essay",
+          "title": "School Advertising",
+          "instructions": "Write a multi-paragraph essay with a clear position and supporting details.",
+          "prompt": "Some schools are considering allowing advertisements in school buildings to raise money. Do you think this is a good idea? Why or why not?",
+          "suggested_structure": [
+            "state your opinion",
+            "give advantages or disadvantages",
+            "use one real or imagined example",
+            "end with a clear conclusion"
+          ],
+          "scoring_focus": [
+            "argument development",
+            "mechanics",
+            "organization"
+          ]
+        },
+        {
+          "id": "W8",
+          "type": "task_2_opinion_essay",
+          "title": "Volunteer Work Requirement",
+          "instructions": "Write a formal essay. Support your ideas with specific examples.",
+          "prompt": "Some high schools require students to complete volunteer work in order to graduate. What is your opinion about this requirement?",
+          "suggested_structure": [
+            "introduction",
+            "paragraph about benefits",
+            "paragraph about concerns or counterargument",
+            "conclusion"
+          ],
+          "scoring_focus": [
+            "supporting detail",
+            "cohesion",
+            "task response"
+          ]
+        },
+        {
+          "id": "W9",
+          "type": "task_2_opinion_essay",
+          "title": "Living at Home vs Living Independently",
+          "instructions": "Write an essay comparing the two options before giving your opinion.",
+          "prompt": "Some university students live at home with their families, while others move away and live on their own. Which is the better choice in your opinion?",
+          "suggested_structure": [
+            "introduce both options",
+            "explain your preferred choice",
+            "support with 2-3 reasons",
+            "conclude clearly"
+          ],
+          "scoring_focus": [
+            "comparison",
+            "clear opinion",
+            "grammar accuracy"
+          ]
+        },
+        {
+          "id": "W10",
+          "type": "task_2_opinion_essay",
+          "title": "Free Time or High Income",
+          "instructions": "Write a well-organized opinion essay with examples.",
+          "prompt": "For some people, making a lot of money is more important than having free time. For others, free time matters more. Which is more important to you?",
+          "suggested_structure": [
+            "thesis statement",
+            "reasons with examples",
+            "optional counterargument",
+            "final conclusion"
+          ],
+          "scoring_focus": [
+            "vocabulary sophistication",
+            "organization",
+            "task completion"
+          ]
+        }
+      ]
+    },
+    "speaking": {
+      "alignment_note": "These speaking prompts follow the 5 MET speaking tasks: picture description, personal experience, opinion, advantages/disadvantages, and persuasion, with 60 seconds for Tasks 1-3 and 90 seconds for Tasks 4-5. ",
+      "exercises": [
+        {
+          "id": "S1",
+          "type": "task_1_picture_description",
+          "time_sec": 60,
+          "title": "Busy Café Scene",
+          "prompt": "Describe a picture of a busy café. You can see a barista serving drinks, two students studying, a man working on a laptop, and a child looking at a cake display.",
+          "target_language": [
+            "present continuous",
+            "spatial language",
+            "descriptive adjectives"
+          ]
+        },
+        {
+          "id": "S2",
+          "type": "task_1_picture_description",
+          "time_sec": 60,
+          "title": "Outdoor Market",
+          "prompt": "Describe a picture of an outdoor market. Several customers are buying fruit, one vendor is weighing vegetables, and a woman is carrying reusable bags.",
+          "target_language": [
+            "there is/there are",
+            "location phrases",
+            "uncertainty phrases"
+          ]
+        },
+        {
+          "id": "S3",
+          "type": "task_2_personal_experience",
+          "time_sec": 60,
+          "title": "Memorable Meal",
+          "prompt": "Tell about a meal you really enjoyed. Explain where it was, who you were with, and why it was memorable.",
+          "target_language": [
+            "past simple",
+            "past continuous",
+            "sequencing phrases"
+          ]
+        },
+        {
+          "id": "S4",
+          "type": "task_2_personal_experience",
+          "time_sec": 60,
+          "title": "A Time You Helped Someone",
+          "prompt": "Tell me about a time when you helped another person. Say what happened, how you felt, and what the result was.",
+          "target_language": [
+            "narrative tenses",
+            "feelings vocabulary",
+            "time markers"
+          ]
+        },
+        {
+          "id": "S5",
+          "type": "task_3_preference_opinion",
+          "time_sec": 60,
+          "title": "Working from Home or in an Office",
+          "prompt": "Some people prefer working from home. Others prefer working in an office. What do you prefer? Give reasons to support your opinion.",
+          "target_language": [
+            "preference language",
+            "reason markers",
+            "personal examples"
+          ]
+        },
+        {
+          "id": "S6",
+          "type": "task_3_preference_opinion",
+          "time_sec": 60,
+          "title": "Reading on Paper or Screen",
+          "prompt": "Some people like reading books on paper, while others prefer reading on a screen. What do you prefer and why?",
+          "target_language": [
+            "I would rather",
+            "First of all / Another reason",
+            "contrast language"
+          ]
+        },
+        {
+          "id": "S7",
+          "type": "task_4_advantages_disadvantages",
+          "time_sec": 90,
+          "title": "Four-Day Work Week",
+          "prompt": "A company is considering changing to a four-day work week with longer hours each day. What are the advantages and disadvantages of this plan?",
+          "target_language": [
+            "on the positive side",
+            "on the other hand",
+            "cause and effect"
+          ]
+        },
+        {
+          "id": "S8",
+          "type": "task_4_advantages_disadvantages",
+          "time_sec": 90,
+          "title": "University Classes Fully Online",
+          "prompt": "A university is thinking about offering all courses online. What are the advantages and disadvantages of this decision?",
+          "target_language": [
+            "balanced discussion",
+            "present simple",
+            "consequence language"
+          ]
+        },
+        {
+          "id": "S9",
+          "type": "task_5_persuasion",
+          "time_sec": 90,
+          "title": "School Saturday Classes",
+          "prompt": "A local school is considering requiring students to attend school on Saturdays. I am the school principal. Tell me what you think and try to convince me to agree with you.",
+          "target_language": [
+            "persuasive language",
+            "conditionals",
+            "strong recommendation"
+          ]
+        },
+        {
+          "id": "S10",
+          "type": "task_5_persuasion",
+          "time_sec": 90,
+          "title": "Community Park Proposal",
+          "prompt": "A city council wants to replace a small public park with a parking lot. I am a city council member. Explain your opinion and persuade me to accept your point of view.",
+          "target_language": [
+            "I strongly believe",
+            "If this happens",
+            "formal persuasive tone"
+          ]
+        }
+      ]
+    },
+    "grammar": {
+      "alignment_note": "These grammar exercises are based on structures commonly seen in MET preparation and sample items, including modal verbs, collocations, inversion, pronouns, sentence structure, and controlled complex grammar. ",
+      "exercises": [
+        {
+          "id": "G1",
+          "type": "multiple_choice",
+          "title": "Modal Verbs",
+          "items": [
+            {
+              "question": "You ______ attend the safety meeting tomorrow; it is mandatory.",
+              "options": [
+                "A. should",
+                "B. must",
+                "C. might",
+                "D. would"
+              ],
+              "answer": "B"
+            },
+            {
+              "question": "When I lived in Canada, I ______ speak French quite well.",
+              "options": [
+                "A. can",
+                "B. could",
+                "C. should",
+                "D. must"
+              ],
+              "answer": "B"
+            },
+            {
+              "question": "It looks cloudy. It ______ rain later.",
+              "options": [
+                "A. may",
+                "B. ought",
+                "C. would",
+                "D. had better"
+              ],
+              "answer": "A"
+            },
+            {
+              "question": "______ you please send me the updated file by noon?",
+              "options": [
+                "A. Should",
+                "B. Must",
+                "C. Could",
+                "D. Might not"
+              ],
+              "answer": "C"
+            },
+            {
+              "question": "Students ______ bring their ID cards to the exam, but it is recommended.",
+              "options": [
+                "A. don't have to",
+                "B. mustn't",
+                "C. can't",
+                "D. couldn't"
+              ],
+              "answer": "A"
+            }
+          ]
+        },
+        {
+          "id": "G2",
+          "type": "gap_fill",
+          "title": "Gerund or Infinitive",
+          "items": [
+            {
+              "question": "I enjoy ______ with my coworkers after meetings.",
+              "answer": "chatting"
+            },
+            {
+              "question": "She decided ______ for the scholarship.",
+              "answer": "to apply"
+            },
+            {
+              "question": "We avoided ______ during rush hour.",
+              "answer": "driving"
+            },
+            {
+              "question": "He hopes ______ abroad next year.",
+              "answer": "to study"
+            },
+            {
+              "question": "They finished ______ the presentation before lunch.",
+              "answer": "preparing"
+            }
+          ]
+        },
+        {
+          "id": "G3",
+          "type": "multiple_choice",
+          "title": "Collocations and Phrasal Expressions",
+          "items": [
+            {
+              "question": "Please keep me ______ on the project while I am away.",
+              "options": [
+                "A. posted",
+                "B. touched",
+                "C. informed to",
+                "D. held"
+              ],
+              "answer": "A"
+            },
+            {
+              "question": "I need to catch up ______ my reading this weekend.",
+              "options": [
+                "A. for",
+                "B. with",
+                "C. at",
+                "D. by"
+              ],
+              "answer": "B"
+            },
+            {
+              "question": "Let's carry ______ with the discussion.",
+              "options": [
+                "A. out",
+                "B. over",
+                "C. on",
+                "D. back"
+              ],
+              "answer": "C"
+            },
+            {
+              "question": "She came ______ a great solution during the meeting.",
+              "options": [
+                "A. up with",
+                "B. out from",
+                "C. over with",
+                "D. through on"
+              ],
+              "answer": "A"
+            },
+            {
+              "question": "We ran ______ time before finishing the test.",
+              "options": [
+                "A. through",
+                "B. out of",
+                "C. into with",
+                "D. over of"
+              ],
+              "answer": "B"
+            }
+          ]
+        },
+        {
+          "id": "G4",
+          "type": "sentence_transformation",
+          "title": "Conditionals",
+          "items": [
+            {
+              "question": "Rewrite: If she doesn't leave early, she misses the train.",
+              "answer": "If she doesn't leave early, she will miss the train."
+            },
+            {
+              "question": "Rewrite: If I had more time, I travel more.",
+              "answer": "If I had more time, I would travel more."
+            },
+            {
+              "question": "Rewrite: If they had studied harder, they pass the exam.",
+              "answer": "If they had studied harder, they would have passed the exam."
+            },
+            {
+              "question": "Rewrite: If you heat ice, it melted.",
+              "answer": "If you heat ice, it melts."
+            },
+            {
+              "question": "Rewrite: If we had left earlier, we don't get stuck in traffic.",
+              "answer": "If we had left earlier, we wouldn't have gotten stuck in traffic."
+            }
+          ]
+        },
+        {
+          "id": "G5",
+          "type": "multiple_choice",
+          "title": "Pronouns and Reference",
+          "items": [
+            {
+              "question": "The manager spoke to Ana and ______ after the meeting.",
+              "options": [
+                "A. I",
+                "B. me",
+                "C. mine",
+                "D. my"
+              ],
+              "answer": "B"
+            },
+            {
+              "question": "This laptop is mine, and that one is ______.",
+              "options": [
+                "A. her",
+                "B. hers",
+                "C. she",
+                "D. herself"
+              ],
+              "answer": "B"
+            },
+            {
+              "question": "Everyone should bring ______ own notebook.",
+              "options": [
+                "A. his",
+                "B. her",
+                "C. their",
+                "D. its"
+              ],
+              "answer": "C"
+            },
+            {
+              "question": "The students introduced ______ to the new teacher.",
+              "options": [
+                "A. them",
+                "B. their",
+                "C. themselves",
+                "D. each other one"
+              ],
+              "answer": "C"
+            },
+            {
+              "question": "Between you and ______, this plan needs more work.",
+              "options": [
+                "A. I",
+                "B. me",
+                "C. my",
+                "D. mine"
+              ],
+              "answer": "B"
+            }
+          ]
+        },
+        {
+          "id": "G6",
+          "type": "error_correction",
+          "title": "Sentence Structure",
+          "items": [
+            {
+              "question": "Correct the sentence: People should access to clean water.",
+              "answer": "People should have access to clean water."
+            },
+            {
+              "question": "Correct the sentence: She suggested to go earlier.",
+              "answer": "She suggested going earlier."
+            },
+            {
+              "question": "Correct the sentence: He explained me the problem.",
+              "answer": "He explained the problem to me."
+            },
+            {
+              "question": "Correct the sentence: I look forward to meet you.",
+              "answer": "I look forward to meeting you."
+            },
+            {
+              "question": "Correct the sentence: The information are very useful.",
+              "answer": "The information is very useful."
+            }
+          ]
+        },
+        {
+          "id": "G7",
+          "type": "multiple_choice",
+          "title": "Inversion and Emphasis",
+          "items": [
+            {
+              "question": "Rarely ______ such a well-organized event.",
+              "options": [
+                "A. I have seen",
+                "B. have I seen",
+                "C. I saw",
+                "D. did I have seen"
+              ],
+              "answer": "B"
+            },
+            {
+              "question": "Not only ______ late, but he also forgot the documents.",
+              "options": [
+                "A. he arrived",
+                "B. did he arrive",
+                "C. he did arrive",
+                "D. arrived he"
+              ],
+              "answer": "B"
+            },
+            {
+              "question": "Seldom ______ in this region during summer.",
+              "options": [
+                "A. does it rain",
+                "B. it rains",
+                "C. rains it",
+                "D. did it rains"
+              ],
+              "answer": "A"
+            },
+            {
+              "question": "Only after the class ended ______ the instructions.",
+              "options": [
+                "A. I understood",
+                "B. understood I",
+                "C. did I understand",
+                "D. I did understood"
+              ],
+              "answer": "C"
+            },
+            {
+              "question": "Under no circumstances ______ inside the lab.",
+              "options": [
+                "A. students should eat",
+                "B. should students eat",
+                "C. students eat should",
+                "D. eat students should"
+              ],
+              "answer": "B"
+            }
+          ]
+        },
+        {
+          "id": "G8",
+          "type": "gap_fill",
+          "title": "Relative Clauses",
+          "items": [
+            {
+              "question": "The woman ______ works at the front desk is very helpful.",
+              "answer": "who"
+            },
+            {
+              "question": "This is the café ______ we first met.",
+              "answer": "where"
+            },
+            {
+              "question": "The book ______ I borrowed from the library was excellent.",
+              "answer": "that"
+            },
+            {
+              "question": "My neighbor, ______ son studies engineering, is moving next month.",
+              "answer": "whose"
+            },
+            {
+              "question": "The project ______ won the prize focused on clean energy.",
+              "answer": "that"
+            }
+          ]
+        },
+        {
+          "id": "G9",
+          "type": "multiple_choice",
+          "title": "Articles and Quantifiers",
+          "items": [
+            {
+              "question": "She gave me ______ useful advice before the interview.",
+              "options": [
+                "A. an",
+                "B. a",
+                "C. some",
+                "D. many"
+              ],
+              "answer": "C"
+            },
+            {
+              "question": "We need ______ information before making a decision.",
+              "options": [
+                "A. a few",
+                "B. many",
+                "C. another",
+                "D. more"
+              ],
+              "answer": "D"
+            },
+            {
+              "question": "He bought ______ umbrella because it was raining.",
+              "options": [
+                "A. a",
+                "B. an",
+                "C. the",
+                "D. some"
+              ],
+              "answer": "B"
+            },
+            {
+              "question": "Only ______ students completed the optional task.",
+              "options": [
+                "A. much",
+                "B. little",
+                "C. a few",
+                "D. any"
+              ],
+              "answer": "C"
+            },
+            {
+              "question": "There isn't ______ milk left in the fridge.",
+              "options": [
+                "A. many",
+                "B. much",
+                "C. a few",
+                "D. several"
+              ],
+              "answer": "B"
+            }
+          ]
+        },
+        {
+          "id": "G10",
+          "type": "mixed_review",
+          "title": "B2 MET Grammar Review",
+          "items": [
+            {
+              "question": "Choose the best answer: I'd rather ______ somewhere quieter this weekend.",
+              "options": [
+                "A. go",
+                "B. to go",
+                "C. going",
+                "D. gone"
+              ],
+              "answer": "A"
+            },
+            {
+              "question": "Choose the best answer: The report is not finished yet; ______, we have completed most of the research.",
+              "options": [
+                "A. on the contrary",
+                "B. however",
+                "C. because",
+                "D. although"
+              ],
+              "answer": "B"
+            },
+            {
+              "question": "Choose the best answer: She is capable of ______ under pressure.",
+              "options": [
+                "A. work",
+                "B. to work",
+                "C. working",
+                "D. worked"
+              ],
+              "answer": "C"
+            },
+            {
+              "question": "Choose the best answer: If my teammates had asked, I ______ them earlier.",
+              "options": [
+                "A. would help",
+                "B. would have helped",
+                "C. helped",
+                "D. had help"
+              ],
+              "answer": "B"
+            },
+            {
+              "question": "Choose the best answer: The new system seems complicated at first, but you will get used to it ______.",
+              "options": [
+                "A. eventually",
+                "B. sudden",
+                "C. lately",
+                "D. nearly not"
+              ],
+              "answer": "A"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

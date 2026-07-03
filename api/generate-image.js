@@ -1,3 +1,5 @@
+import { verifySupabaseSession } from './_supabase-auth.js';
+
 const env = (name) => process.env[name] || process.env[`VITE_${name}`] || '';
 
 async function fetchT(url, init, ms = 30000) {
@@ -9,6 +11,10 @@ async function fetchT(url, init, ms = 30000) {
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+
+  if (!await verifySupabaseSession(req)) {
+    return res.status(401).json({ error: 'Unauthorized — valid session required.' });
+  }
 
   let body = req.body;
   if (typeof body === 'string') { try { body = JSON.parse(body); } catch { body = {}; } }

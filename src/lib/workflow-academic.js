@@ -1,7 +1,7 @@
 import { K, load, loadObj, save, uid, loadWithIds, dbReady, listVia, saveVia, removeVia, upsert, removeHomeworkDrafts } from './workflow-core.js';
 import { dbList, dbGet, dbUpsert, dbRemove } from './supabase-db.js';
 import { initSchedule } from './spaced-repetition.js';
-import { updateClassEventStatus } from './workflow-roster.js';
+import { updateClassEventStatus } from './workflow-core.js';
 
 /* ─── SESSIONS ───────────────────────────────────────────────── */
 export async function getSessions(studentId) {

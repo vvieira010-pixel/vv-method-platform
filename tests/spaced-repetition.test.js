@@ -5,6 +5,7 @@
 
 import { describe, it, before, after } from 'node:test';
 import assert from 'node:assert';
+import { getAllEntries } from '../src/lib/spaced-repetition.js';
 
 // Mock localStorage
 const store = {};
@@ -41,12 +42,33 @@ describe('spaced-repetition', () => {
   });
 
   it('recordPractice advances interval on correct', () => {
-    const dueBefore = getDueCount(SID);
     const items = getDueItems(SID);
     if (items.length === 0) return; // may not be due yet depending on timing
     const entry = recordPractice(SID, items[0].id, true);
     assert.ok(entry.interval > 1 || entry.interval === 30);
     assert.equal(entry.practiceCount, (items[0].practiceCount || 0) + 1);
+  });
+
+  it('recordPractice advances interval adaptively based on confidence', () => {
+    const entryLow = initSchedule(SID, { id: 'err_low', error: 'Low confidence', correct: 'Correct' });
+    const entryHigh = initSchedule(SID, { id: 'err_high', error: 'High confidence', correct: 'Correct' });
+    
+    // Reset intervals to 1 for testing
+    entryLow.interval = 1;
+    entryHigh.interval = 1;
+
+    // Practice with low confidence (1) -> multiplier 1x -> interval remains 1
+    recordPractice(SID, entryLow.id, true, 1);
+    
+    // Practice with high confidence (5) -> multiplier 2.5x -> interval becomes 3 (ceil(1 * 2.5))
+    recordPractice(SID, entryHigh.id, true, 5);
+    
+    const all = getAllEntries(SID);
+    const updatedLow = all.find(e => e.errorId === 'err_low');
+    const updatedHigh = all.find(e => e.errorId === 'err_high');
+    
+    assert.equal(updatedLow.interval, 1);
+    assert.equal(updatedHigh.interval, 3);
   });
 
   it('recordPractice resets interval on wrong', () => {

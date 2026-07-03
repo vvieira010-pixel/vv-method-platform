@@ -3,7 +3,7 @@ import { Icon, SectionHeader } from '../components/shared.jsx';
 import { Button } from '../components/ui/Button.jsx';
 import { Card } from '../components/ui/Card.jsx';
 import { getLibraryExercises, deleteLibraryExercise } from '../lib/exercise-library.js';
-import { getB2Modules } from '../lib/met-b2-bank.js';
+import { getB2Modules, getB2ModulesWithSupabase } from '../lib/met-b2-bank.js';
 import { getLifestyleModules } from '../lib/lifestyle-pack.js';
 import { getDeepResearchModules } from '../lib/met-b2-exercises.js';
 import { EX_TYPES, exercisePreview } from '../lib/exercise-types.js';
@@ -42,6 +42,13 @@ export default function ExercisesPage({ onNavigate }) {
   const [library, setLibrary] = useState([]);
   const [libVersion, setLibVersion] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
+  const [b2Modules, setB2Modules] = useState(getB2Modules());
+
+  useEffect(() => {
+    if (tab === 'b2') {
+      getB2ModulesWithSupabase().then(setB2Modules).catch(() => {});
+    }
+  }, [tab]);
 
   const filteredLibrary = useMemo(() => {
     if (!searchQuery.trim()) return library;
@@ -83,6 +90,12 @@ export default function ExercisesPage({ onNavigate }) {
             {t.label}
           </button>
         ))}
+        <button
+          onClick={() => onNavigate('library:evaluation')}
+          className="tab-line"
+        >
+          Self Evaluation
+        </button>
       </nav>
 
       {tab === 'library' && (
@@ -114,20 +127,18 @@ export default function ExercisesPage({ onNavigate }) {
               <p className="card-row-meta">No exercises match "{searchQuery}". Try a different search.</p>
             </Card>
           ) : (() => {
-            const typeOrder = EX_TYPES.map(t => t.id);
-            const grouped = groupBy(filteredLibrary, ex => ex.type);
-            const sortedKeys = [...grouped.keys()].sort((a, b) => typeOrder.indexOf(a) - typeOrder.indexOf(b));
+            const grouped = groupBy(filteredLibrary, ex => ex.folder || ex.type);
+            const sortedKeys = [...grouped.keys()].sort();
             return (
               <div>
-                {sortedKeys.map(typeId => {
-                  const exType = EX_TYPES.find(t => t.id === typeId);
-                  const items = grouped.get(typeId);
+                {sortedKeys.map(folder => {
+                  const items = grouped.get(folder);
                   return (
-                    <div key={typeId}>
-                      <GroupHeader label={exType?.label || typeId} count={items.length} />
-                      <div className="grid-auto-fill-md" style={{ marginTop: 'var(--space-2)' }}>
+                    <div key={folder} style={{ marginBottom: 'var(--space-4)' }}>
+                      <GroupHeader label={folder} count={items.length} />
+                      <div className="grid-square" style={{ marginTop: 'var(--space-2)' }}>
                         {items.map(ex => (
-                          <Card key={ex.id} style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '12px' }}>
+                          <Card key={ex.id} className="square-card" style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '12px' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'space-between' }}>
                               <ExTypeBadge typeId={ex.type} />
                               {ex.usageCount > 0 && (
@@ -151,9 +162,6 @@ export default function ExercisesPage({ onNavigate }) {
                         ))}
                       </div>
                     </div>
-                        ))}
-                      </div>
-                    </div>
                   );
                 })}
               </div>
@@ -162,7 +170,7 @@ export default function ExercisesPage({ onNavigate }) {
         </Card>
       )}
 
-      {tab === 'b2' && <PackTab title="MET B2 Exercise Pack" modules={getB2Modules()} onNavigate={onNavigate} />}
+      {tab === 'b2' && <PackTab title="MET B2 Exercise Pack" modules={b2Modules} onNavigate={onNavigate} />}
       {tab === 'lifestyle' && <PackTab title="Everyday English Pack" modules={getLifestyleModules()} onNavigate={onNavigate} />}
       {tab === 'research' && <PackTab title="Extended Practice Pack" modules={getDeepResearchModules()} onNavigate={onNavigate} />}
     </div>
@@ -193,7 +201,7 @@ function PackTab({ title, modules, onNavigate }) {
               <GroupHeader label={skill} count={`${items.length} modules · ${skillExerciseCount} exercises`} />
               <div className="grid-auto-fill-md" style={{ marginTop: 'var(--space-2)' }}>
                 {items.map(mod => (
-                  <Card key={mod.id} style={{ padding: '12px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: 12 }}>
+                  <Card key={mod.id} className="square-card" style={{ padding: '12px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: 12 }}>
                     <div>
                       <div style={{ fontWeight: 600, fontSize: 'var(--text-sm)', color: 'var(--text)' }}>{mod.label}</div>
                       <div className="card-row-meta" style={{ fontSize: 'var(--text-xs)' }}>{mod.exercises?.length || 0} exercises</div>

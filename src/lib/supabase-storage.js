@@ -4,13 +4,26 @@ export function normalizeSupabaseUrl(url) {
   return String(url || '').trim().replace(/\/+$/, '');
 }
 
-// Public Supabase connection — HARDWIRED on purpose.
+// Public Supabase connection — env vars first, then hardcoded fallback.
 // The anon key is meant to be exposed in the browser (Row Level Security is the
-// protection). Env vars are deliberately ignored: misconfigured Vercel env vars
-// were the root cause of the 405/401 sign-in failures, so the connection no
-// longer depends on them at all. To point at a different project, edit here.
-const SUPABASE_URL = 'https://grnzzgzqizoxfcbflnwq.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdybnp6Z3pxaXpveGZjYmZsbndxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1ODQ0MzcsImV4cCI6MjA5NjE2MDQzN30.5T7xFRlbJ9GQX9WvhJ5o2nIDgp3T99fJeGk5wCpuVnI';
+// protection). Env vars were the original design; hardcoded values are a safety
+// net for misconfigured Vercel deployments. To point at a different project,
+// set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in .env or the Vercel dashboard.
+function resolveSupabaseConfig() {
+  try {
+    const envUrl = import.meta.env.VITE_SUPABASE_URL;
+    const envKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+    if (envUrl && envKey) return { url: envUrl, anonKey: envKey };
+  } catch {
+  }
+  return {
+    url: 'https://grnzzgzqizoxfcbflnwq.supabase.co',
+    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdybnp6Z3pxaXpveGZjYmZsbndxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1ODQ0MzcsImV4cCI6MjA5NjE2MDQzN30.5T7xFRlbJ9GQX9WvhJ5o2nIDgp3T99fJeGk5wCpuVnI',
+  };
+}
+const _supabaseConfig = resolveSupabaseConfig();
+const SUPABASE_URL = _supabaseConfig.url;
+const SUPABASE_ANON_KEY = _supabaseConfig.anonKey;
 
 export function getSupabaseConfig() {
   return {
@@ -208,6 +221,26 @@ export async function signInWithPassword(email, password) {
   });
   if (!res.ok) {
     let msg = `Sign-in failed (${res.status})`;
+    try { const j = await res.json(); msg = j.msg || j.error_description || j.error || msg; } catch {}
+    throw new Error(msg);
+  }
+  return res.json();
+}
+
+/**
+ * Create a new user account with email + password.
+ * Returns the session if auto-confirmed, or { ok: true } if email confirmation is required.
+ */
+export async function signUpWithPassword(email, password) {
+  const { url, anonKey, isConfigured } = getSupabaseConfig();
+  if (!isConfigured) throw new Error('Supabase is not configured.');
+  const res = await fetch(`${url}/auth/v1/signup`, {
+    method: 'POST',
+    headers: { apikey: anonKey, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: String(email).trim(), password }),
+  });
+  if (!res.ok) {
+    let msg = `Sign-up failed (${res.status})`;
     try { const j = await res.json(); msg = j.msg || j.error_description || j.error || msg; } catch {}
     throw new Error(msg);
   }

@@ -3,11 +3,11 @@
  * Supports 10 subject types: reading, listening, vocabulary, grammar, speaking, writing,
  * levelup, grammar-doctor, vocab-swapper, interactive-dialogue.
  */
-import { UNITS_1_TO_5 } from '../data/practice-units-1-5.js';
-import { UNITS_6_TO_10 } from '../data/practice-units-6-10.js';
-import { LEVEL_UP_DATA } from '../data/level-up-data.js';
-import { GRAMMAR_DOCTOR_DATA } from '../data/grammar-doctor-data.js';
-import { VOCABULARY_SWAPPER_DATA } from '../data/vocabulary-swapper-data.js';
+import { UNITS_1_TO_5 } from '../data/exercises/mixed/practice-units-1-5.js';
+import { UNITS_6_TO_10 } from '../data/exercises/mixed/practice-units-6-10.js';
+import { LEVEL_UP_DATA } from '../data/exercises/skill-tools/level-up-data.js';
+import { GRAMMAR_DOCTOR_DATA } from '../data/exercises/skill-tools/grammar-doctor-data.js';
+import { VOCABULARY_SWAPPER_DATA } from '../data/exercises/skill-tools/vocabulary-swapper-data.js';
 
 let _seq = 0;
 function uid() { return 'ub_' + Date.now().toString(36) + '_' + (++_seq).toString(36); }

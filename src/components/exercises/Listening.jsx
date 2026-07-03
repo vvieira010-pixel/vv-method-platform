@@ -30,18 +30,32 @@ const getOpenAIKey = () => lsGet('vv:openai_api_key');
 const getPiperUrl  = () => lsGet('vv:piper_server_url');
 const getGeminiKey = () => { const v = lsGet('vv:gemini_api_key'); return v ? v.split(',')[0].trim() : ''; };
 
+function getSessionToken() {
+  try {
+    const raw = localStorage.getItem('vv:supabase_session');
+    if (!raw) return '';
+    const s = JSON.parse(raw);
+    return s?.access_token || '';
+  } catch { return ''; }
+}
+
 /* ── TTS helpers ──────────────────────────────────────────────── */
 async function fetchServerAudio(text) {
+  const token = getSessionToken();
   const res = await fetch('/api/tts', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
     body: JSON.stringify({ text }),
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
     throw new Error(err.error?.message || `Server TTS error ${res.status}`);
   }
-  return URL.createObjectURL(await res.blob());
+  const blob = await res.blob();
+  if (!blob.type.startsWith('audio/')) {
+    throw new Error(`Server returned invalid audio format: ${blob.type}`);
+  }
+  return URL.createObjectURL(blob);
 }
 
 async function fetchElevenLabsAudio(text, apiKey) {
@@ -125,17 +139,58 @@ async function fetchPiperAudio(text, serverUrl) {
 
 /** Server proxy → ElevenLabs → Deepgram → OpenAI TTS → Gemini TTS → Piper (local) → null */
 async function fetchAudio(text) {
-  try { return await fetchServerAudio(text); } catch (e) { console.warn('[tts] server proxy failed:', e.message); }
+  try { 
+    return await fetchServerAudio(text); 
+  } catch (e) { 
+    console.warn('[tts] Server proxy failed:', e.message); 
+  }
+  
   const elKey = getElKey();
-  if (elKey) return fetchElevenLabsAudio(text, elKey);
+  if (elKey) {
+    try {
+      return await fetchElevenLabsAudio(text, elKey);
+    } catch (e) {
+      console.warn('[tts] ElevenLabs failed:', e.message);
+    }
+  }
+  
   const deepgramKey = getDeepgramKey();
-  if (deepgramKey) return fetchDeepgramAudio(text, deepgramKey);
+  if (deepgramKey) {
+    try {
+      return await fetchDeepgramAudio(text, deepgramKey);
+    } catch (e) {
+      console.warn('[tts] Deepgram failed:', e.message);
+    }
+  }
+  
   const oaiKey = getOpenAIKey();
-  if (oaiKey) return fetchOpenAIAudio(text, oaiKey);
+  if (oaiKey) {
+    try {
+      return await fetchOpenAIAudio(text, oaiKey);
+    } catch (e) {
+      console.warn('[tts] OpenAI failed:', e.message);
+    }
+  }
+  
   const geminiKey = getGeminiKey();
-  if (geminiKey) return fetchGeminiAudio(text, geminiKey);
+  if (geminiKey) {
+    try {
+      return await fetchGeminiAudio(text, geminiKey);
+    } catch (e) {
+      console.warn('[tts] Gemini failed:', e.message);
+    }
+  }
+  
   const piperUrl = getPiperUrl();
-  if (piperUrl) return fetchPiperAudio(text, piperUrl);
+  if (piperUrl) {
+    try {
+      return await fetchPiperAudio(text, piperUrl);
+    } catch (e) {
+      console.warn('[tts] Piper failed:', e.message);
+    }
+  }
+  
+  console.warn('[tts] All AI providers failed. Falling back to browser speechSynthesis.');
   return null;
 }
 
@@ -235,14 +290,24 @@ export default function Listening({ exercise, onComplete }) {
       setPlaying(true);
       setPlayCount(c => c + 1);
 
-      if (url) {
-        const audio = new Audio(url);
-        audioRef.current = audio;
-        audio.playbackRate = playbackRate;
-        audio.onended = () => { setPlaying(false); setRevealed(true); };
-        audio.onerror = () => { setPlaying(false); setError('Playback failed — try again.'); };
-        await audio.play();
-      } else {
+       if (url) {
+         try {
+           const audio = new Audio(url);
+           audioRef.current = audio;
+           audio.playbackRate = playbackRate;
+           audio.onended = () => { setPlaying(false); setRevealed(true); };
+           audio.onerror = (e) => { 
+             setPlaying(false); 
+             setError('Audio format not supported or file corrupted. Try again.'); 
+             console.error('Audio playback error:', e);
+           };
+           await audio.play();
+         } catch (e) {
+           setPlaying(false);
+           setError(`Playback blocked: ${e.message}`);
+         }
+       } else {
+
         // Browser TTS fallback — no API key configured
         await speakBrowser(audioText);
         setPlaying(false);
@@ -346,13 +411,19 @@ export default function Listening({ exercise, onComplete }) {
 
       {/* Picture hint (context clue before listening) */}
       {pictureHint && (
-        <div style={{
-          padding: '8px 12px', marginBottom: 16, borderRadius: 'var(--radius-sm)',
-          background: 'var(--accent-subtle)', color: 'var(--muted)',
-          fontSize: 13, fontStyle: 'italic', lineHeight: 1.5, border: '1px solid var(--accent-soft)',
-        }}>
-          <Icon.image size={14} /> {pictureHint}
-        </div>
+        /^https?:\/\//.test(pictureHint) || pictureHint.startsWith('/') ? (
+          <div style={{ marginBottom: 16 }}>
+            <img src={pictureHint} alt="Listening context" style={{ width: '100%', maxWidth: 480, borderRadius: 'var(--radius-sm)', display: 'block', margin: '0 auto' }} />
+          </div>
+        ) : (
+          <div style={{
+            padding: '8px 12px', marginBottom: 16, borderRadius: 'var(--radius-sm)',
+            background: 'var(--accent-subtle)', color: 'var(--muted)',
+            fontSize: 13, fontStyle: 'italic', lineHeight: 1.5, border: '1px solid var(--accent-soft)',
+          }}>
+            <Icon.image size={14} /> {pictureHint}
+          </div>
+        )
       )}
 
       {/* Audio player */}

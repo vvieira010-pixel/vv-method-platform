@@ -24,6 +24,7 @@ export const K = {
   vocabularyBank:      'vv:vocabularyBank',
   progressNotes:       'vv:progressNotes',
   seedsStages:         'vv:seedsStages',
+  practiceScaffold:    'vv:practicescaffold',
 };
 
 export function load(key)     { try { return JSON.parse(localStorage.getItem(key) || '[]'); } catch { return []; } }
@@ -98,7 +99,10 @@ export async function saveVia(entityKey, lsKey, data, defaults = {}) {
   if (dbReady(entityKey)) {
     try {
       const saved = await dbUpsert(entityKey, record);
-      if (saved) return saved;
+      if (saved) {
+        save(lsKey, load(lsKey).concat(record));
+        return saved;
+      }
     } catch (e) {
       console.warn(`[workflow] ${entityKey} save via Supabase failed, using localStorage:`, e.message);
     }
@@ -117,6 +121,25 @@ export async function removeVia(entityKey, lsKey, id) {
     catch (e) { console.warn(`[workflow] ${entityKey} delete via Supabase failed, using localStorage:`, e.message); }
   }
   save(lsKey, load(lsKey).filter(r => r.id !== id));
+}
+
+export async function updateClassEventStatus(id, patch) {
+  if (dbReady('classEvents')) {
+    try {
+      const all = await listVia('classEvents', K.classEvents);
+      const ev = all.find(e => e.id === id);
+      if (!ev) return null;
+      return await dbUpsert('classEvents', { ...ev, ...patch });
+    } catch (e) {
+      console.warn('[workflow] updateClassEventStatus via Supabase failed, using localStorage:', e.message);
+    }
+  }
+  const all = load(K.classEvents);
+  const idx = all.findIndex(e => e.id === id);
+  if (idx < 0) return null;
+  all[idx] = { ...all[idx], ...patch, updatedAt: new Date().toISOString() };
+  save(K.classEvents, all);
+  return all[idx];
 }
 
 export async function clearWorkflowData() {

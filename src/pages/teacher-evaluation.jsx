@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card } from '../components/ui/Card.jsx';
 import { SectionHeader } from '../components/ui/SectionHeader.jsx';
 import { Button } from '../components/ui/Button.jsx';
 import { FormField } from '../components/ui/FormField.jsx';
+import { getDiagnoses } from '../lib/workflow.js';
 
 const EVALUATION_CATEGORIES = [
   {
@@ -104,7 +105,7 @@ const EVALUATION_CATEGORIES = [
   {
     id: 'level',
     title: '9. Alignment With Level',
-    description: 'I check whether my lesson matched the learner’s CEFR level and needs.',
+    description: 'I check whether my lesson matched the learner\'s CEFR level and needs.',
     questions: [
       'Was the level appropriate for the student?',
       'Did I expect too much or too little?',
@@ -118,7 +119,7 @@ const EVALUATION_CATEGORIES = [
     title: '10. Reflection and Next Step',
     description: 'I evaluate whether I finished the lesson with a clear next action.',
     questions: [
-      'Did I identify the student’s main weakness?',
+      'Did I identify the student\'s main weakness?',
       'Did I set one clear target for the next class?',
       'Did I record progress clearly?',
       'Did I leave the student knowing what to practice next?',
@@ -127,7 +128,21 @@ const EVALUATION_CATEGORIES = [
   },
 ];
 
-export default function TeacherEvaluationPage() {
+function getPriorityItems(dx) {
+  if (!dx) return [];
+  return Array.isArray(dx?.priorityDiagnosis)
+    ? dx.priorityDiagnosis
+    : Array.isArray(dx?.sections?.priorityDiagnosis?.content)
+      ? dx.sections.priorityDiagnosis.content
+      : [];
+}
+
+function getClassSummary(dx) {
+  if (!dx) return '';
+  return dx.classSummary || dx.sections?.classSummary?.content || dx.content?.classSummary || '';
+}
+
+export default function TeacherEvaluationPage({ students = [], onNavigate }) {
   const [ratings, setRatings] = useState(
     EVALUATION_CATEGORIES.reduce((acc, cat) => ({ ...acc, [cat.id]: 0 }), {})
   );
@@ -136,6 +151,18 @@ export default function TeacherEvaluationPage() {
     toImprove: '',
     studentTarget: '',
   });
+  const [selectedStudent, setSelectedStudent] = useState('');
+  const [dx, setDx] = useState(null);
+
+  useEffect(() => {
+    if (!selectedStudent) { setDx(null); return; }
+    getDiagnoses(selectedStudent).then(list => {
+      setDx(list?.[0] || null);
+    }).catch(() => setDx(null));
+  }, [selectedStudent]);
+
+  const priorities = getPriorityItems(dx);
+  const summary = getClassSummary(dx);
 
   const totalScore = Object.values(ratings).reduce((sum, r) => sum + r, 0);
 
@@ -155,8 +182,9 @@ export default function TeacherEvaluationPage() {
   };
 
   const handleSave = () => {
-    // For now, just show a toast and log it.
-    console.warn('Saving evaluation:', { ratings, reflections });
+    const payload = { ratings, reflections };
+    if (selectedStudent) payload.studentId = selectedStudent;
+    console.warn('Saving evaluation:', payload);
     if (window.toast) {
       window.toast('Evaluation saved successfully (simulated)', 'success');
     } else {
@@ -164,28 +192,113 @@ export default function TeacherEvaluationPage() {
     }
   };
 
+  const urgencyColor = (u) => {
+    if (u === 'Critical') return 'var(--danger)';
+    if (u === 'Developing') return 'var(--warning)';
+    return 'var(--success)';
+  };
+
   return (
     <div className="page-shell">
       <SectionHeader
         title="Teacher Self-Evaluation"
-        sub="Evaluate your MET/Cambridge-style teaching performance"
+        sub={selectedStudent
+          ? `Evaluating lesson for ${students.find(s => s.id === selectedStudent)?.name || selectedStudent}`
+          : 'Select a student below to ground your evaluation in their diagnostic, or rate yourself generically'}
         action={<Button variant="primary" onClick={handleSave}>Save Evaluation</Button>}
       />
 
       <div className="teacher-evaluation-container">
+        <Card className="mb-4">
+          <div className="flex items-center" style={{ gap: 12, padding: 'var(--space-3) var(--space-4)' }}>
+            <label style={{ fontSize: 'var(--text-sm)', fontWeight: 600, whiteSpace: 'nowrap', color: 'var(--text)' }}>
+              Student:
+            </label>
+            <select
+              className="input"
+              value={selectedStudent}
+              onChange={e => setSelectedStudent(e.target.value)}
+              style={{ maxWidth: 300 }}
+            >
+              <option value="">— No student (generic evaluation) —</option>
+              {students.map(s => (
+                <option key={s.id} value={s.id}>
+                  {s.name} {s.level ? `(${s.level})` : ''}
+                </option>
+              ))}
+            </select>
+            {dx && (
+              <span style={{ fontSize: 'var(--text-xs)', color: 'var(--success)' }}>
+                <IconCheck /> Latest diagnosis loaded
+              </span>
+            )}
+          </div>
+        </Card>
+
+        {dx && (
+          <Card className="mb-6">
+            <div style={{ padding: 'var(--space-4)' }}>
+              <h3 className="section-title" style={{ marginBottom: 8 }}>
+                Diagnostic Context — {students.find(s => s.id === selectedStudent)?.name}
+              </h3>
+              {summary && (
+                <p className="section-sub" style={{ marginBottom: 12, lineHeight: 1.6 }}>
+                  {summary}
+                </p>
+              )}
+              {priorities.length > 0 && (
+                <div className="stack-list-lg">
+                  {priorities.map((p, i) => (
+                    <div key={i} style={{
+                      padding: 12,
+                      background: 'var(--bg)',
+                      borderRadius: 'var(--radius-sm)',
+                      borderLeft: `3px solid ${urgencyColor(p.urgency)}`
+                    }}>
+                      <div className="flex items-center" style={{ gap: 8, marginBottom: 4 }}>
+                        <span style={{
+                          fontSize: 10, fontWeight: 700, textTransform: 'uppercase',
+                          padding: '2px 8px', borderRadius: 'var(--radius-pill)',
+                          background: p.urgency === 'Critical' ? 'var(--danger-subtle)' : p.urgency === 'Developing' ? 'var(--warning-bg)' : 'var(--success-bg)',
+                          color: urgencyColor(p.urgency)
+                        }}>
+                          #{p.rank} {p.urgency}
+                        </span>
+                        <strong style={{ fontSize: 'var(--text-sm)' }}>{p.area}</strong>
+                      </div>
+                      <div style={{ fontSize: 'var(--text-sm)', lineHeight: 1.5, color: 'var(--text-2)' }}>
+                        {p.whatToImprove}
+                      </div>
+                      {p.howToImprove && (
+                        <div style={{ fontSize: 'var(--text-xs)', color: 'var(--accent)', marginTop: 4 }}>
+                          Try: {p.howToImprove}
+                        </div>
+                      )}
+                      {p.evidence && (
+                        <div style={{ fontSize: 'var(--text-xs)', fontStyle: 'italic', color: 'var(--muted)', marginTop: 4 }}>
+                          Evidence: "{p.evidence}"
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+              {priorities.length === 0 && (
+                <p className="card-row-meta">No priority items in this diagnosis.</p>
+              )}
+            </div>
+          </Card>
+        )}
+
         <Card className="mb-6">
           <div className="text-center" style={{ padding: 'var(--space-4)' }}>
-            <h3 style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+            <p className="text-xs text-uppercase" style={{ letterSpacing: '0.1em', color: 'var(--muted)' }}>
               Current Score
-            </h3>
-            <div style={{ fontSize: 'var(--text-4xl)', fontWeight: 'var(--weight-bold)', color: 'var(--text)' }}>
-              {totalScore} <span style={{ fontSize: 'var(--text-lg)', color: 'var(--muted)' }}>/ 40</span>
+            </p>
+            <div className="text-4xl font-bold" style={{ color: 'var(--text)' }}>
+              {totalScore} <span className="text-lg" style={{ color: 'var(--muted)' }}>/ 40</span>
             </div>
-            <p style={{ 
-              marginTop: 'var(--space-2)', 
-              fontWeight: 'var(--weight-semibold)', 
-              color: getScoreInterpretation(totalScore).color 
-            }}>
+            <p className="mt-2 font-semibold" style={{ color: getScoreInterpretation(totalScore).color }}>
               {getScoreInterpretation(totalScore).text}
             </p>
           </div>
@@ -209,19 +322,17 @@ export default function TeacherEvaluationPage() {
                 </ul>
               </div>
 
-              <div className="rating-selector" style={{ 
-                display: 'flex', 
-                justifyContent: 'space-between', 
-                alignItems: 'center',
-                padding: 'var(--space-4)',
-                background: 'var(--bg)',
-                borderRadius: 'var(--radius-sm)',
-                border: '1px solid var(--border)'
-              }}>
-                <span style={{ fontSize: 'var(--text-xs)', fontWeight: 'var(--weight-bold)', color: 'var(--muted)' }}>
+              <div className="rating-selector flex justify-between items-center"
+                style={{
+                  padding: 'var(--space-4)',
+                  background: 'var(--bg)',
+                  borderRadius: 'var(--radius-sm)',
+                  border: '1px solid var(--border)'
+                }}>
+                <span className="text-xs font-bold" style={{ color: 'var(--muted)', letterSpacing: '0.05em' }}>
                   RATING
                 </span>
-                <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
+                <div className="flex gap-2">
                   {[1, 2, 3, 4].map(num => (
                     <button
                       key={num}
@@ -242,11 +353,11 @@ export default function TeacherEvaluationPage() {
                     </button>
                   ))}
                 </div>
-                <span style={{ 
-                  fontSize: 'var(--text-xs)', 
-                  fontStyle: 'italic',
-                  color: ratings[cat.id] > 0 ? 'var(--text)' : 'var(--muted)'
-                }}>
+                <span className="text-xs"
+                  style={{
+                    fontStyle: 'italic',
+                    color: ratings[cat.id] > 0 ? 'var(--text)' : 'var(--muted)'
+                  }}>
                   {ratings[cat.id] > 0 ? cat.ratingLabels[ratings[cat.id]] : '--'}
                 </span>
               </div>
@@ -278,7 +389,7 @@ export default function TeacherEvaluationPage() {
                 />
               </FormField>
 
-              <FormField label="What is the student’s main target now?">
+              <FormField label="What is the student's main target now?">
                 <textarea
                   className="input dx-edit-textarea"
                   rows={3}
@@ -291,35 +402,14 @@ export default function TeacherEvaluationPage() {
           </Card>
         </div>
       </div>
-
-      <style dangerouslySetInnerHTML={{ __html: `
-        .mb-4 { margin-bottom: var(--space-4); }
-        .mb-6 { margin-bottom: var(--space-6); }
-        .mb-12 { margin-bottom: var(--space-12); }
-        .mt-8 { margin-top: var(--space-8); }
-        .mt-2 { margin-top: var(--space-2); }
-        .text-center { text-align: center; }
-        .text-uppercase { text-transform: uppercase; }
-        .text-xs { font-size: var(--text-xs); }
-        .text-sm { font-size: var(--text-sm); }
-        .text-lg { font-size: var(--text-lg); }
-        .text-xl { font-size: var(--text-xl); }
-        .text-2xl { font-size: var(--text-2xl); }
-        .text-3xl { font-size: var(--text-3xl); }
-        .text-4xl { font-size: var(--text-4xl); }
-        .font-bold { font-weight: var(--weight-bold); }
-        .font-semibold { font-weight: var(--weight-semibold); }
-        .font-italic { font-style: italic; }
-        .flex { display: flex; }
-        .flex-col { flex-direction: column; }
-        .justify-between { justify-content: space-between; }
-        .items-center { align-items: center; }
-        .gap-2 { gap: var(--space-2); }
-        .gap-4 { gap: var(--space-4); }
-        .gap-6 { gap: var(--space-6); }
-        .gap-8 { gap: var(--space-8); }
-        .w-full { width: 100%; }
-      ` }} />
     </div>
+  );
+}
+
+function IconCheck() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ verticalAlign: 'middle', marginRight: 4 }}>
+      <polyline points="20 6 9 17 4 12" />
+    </svg>
   );
 }

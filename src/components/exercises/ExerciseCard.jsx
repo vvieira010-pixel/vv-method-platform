@@ -16,6 +16,8 @@ function arrowBtnStyle(disabled) {
 export default function ExerciseCard({ exercise, index, total, isExpanded, onToggle, onChange, onRemove, onMove, onSaveToLibrary }) {
   const previewText = exercisePreview(exercise);
   const cardRef = useRef(null);
+
+  const imageSrc = exercise.imageUrl || (exercise.pictureHint && (/^https?:\/\//.test(exercise.pictureHint) || exercise.pictureHint.startsWith('/')) ? exercise.pictureHint : null);
   const [showNotes, setShowNotes] = useState(false);
 
   const isAiGen = exercise.aiGenerated;
@@ -64,13 +66,18 @@ export default function ExerciseCard({ exercise, index, total, isExpanded, onTog
           {index + 1}
         </span>
         <ExTypeBadge typeId={exercise.type} />
+        {imageSrc && (
+          <span style={{ width: 32, height: 24, borderRadius: 'var(--radius-sm)', overflow: 'hidden', flexShrink: 0, border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg)' }}>
+            <img src={imageSrc} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+          </span>
+        )}
         {isAiGen && (
           <span style={{
             fontSize: 10, fontWeight: 700, textTransform: 'uppercase',
             letterSpacing: '0.04em', padding: '1px 6px', borderRadius: 'var(--radius-pill)',
-            background: isVerified ? '#D1FAE5' : '#FEF3C7',
-            color: isVerified ? '#065F46' : '#92400E',
-            border: isVerified ? '1px solid #A7F3D0' : '1px solid #FDE68A',
+            background: 'var(--surface)',
+            color: isVerified ? 'var(--success)' : 'var(--warning)',
+            border: isVerified ? '1px solid var(--success)' : '1px solid var(--warning)',
             lineHeight: '16px', flexShrink: 0,
           }}>
             {isVerified ? '✓ Verified' : 'AI'}
@@ -154,16 +161,16 @@ export default function ExerciseCard({ exercise, index, total, isExpanded, onTog
 
             {/* Teacher review section */}
             {isAiGen && (
-              <div style={{ marginTop: 12, padding: '10px 12px', border: '1px solid #FDE68A', borderRadius: 'var(--radius-sm)', background: '#FFFBEB' }}>
+              <div style={{ marginTop: 12, padding: '10px 12px', border: '1px solid var(--warning-soft)', borderRadius: 'var(--radius-sm)', background: 'var(--warning-bg)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: showNotes ? 8 : 0 }}>
-                  <span style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: '#92400E' }}>
+                  <span style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--warning)' }}>
                     {isVerified ? '✓ Reviewed' : '⚠ Needs review'}
                   </span>
                   <div style={{ display: 'flex', gap: 6 }}>
                     <button onClick={(e) => { e.stopPropagation(); onChange({ _teacherVerified: !isVerified }); }}
                       style={{
                         padding: '3px 10px', borderRadius: 'var(--radius-sm)', border: 'none',
-                        background: isVerified ? '#FEF3C7' : '#10B981', color: isVerified ? '#92400E' : '#fff',
+                        background: isVerified ? 'var(--warning-bg)' : 'var(--success)', color: isVerified ? 'var(--warning)' : '#fff',
                         cursor: 'pointer', fontWeight: 600, fontSize: 'var(--text-xs)',
                         fontFamily: 'var(--font-sans)',
                       }}>
@@ -171,8 +178,8 @@ export default function ExerciseCard({ exercise, index, total, isExpanded, onTog
                     </button>
                     <button onClick={(e) => { e.stopPropagation(); setShowNotes(!showNotes); }}
                       style={{
-                        padding: '3px 10px', borderRadius: 'var(--radius-sm)', border: '1px solid #FDE68A',
-                        background: 'transparent', color: '#92400E',
+                        padding: '3px 10px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--warning-soft)',
+                        background: 'transparent', color: 'var(--warning)',
                         cursor: 'pointer', fontWeight: 600, fontSize: 'var(--text-xs)',
                         fontFamily: 'var(--font-sans)',
                       }}>

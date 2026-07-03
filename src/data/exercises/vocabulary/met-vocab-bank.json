@@ -2607,13 +2607,23 @@
           "type": "speak",
           "title": "Picture 1 — Ski Resort",
           "difficulty": "B1-B2",
-          "skillFocus": ["Speaking", "Description", "Speculation"],
+          "skillFocus": [
+            "Speaking",
+            "Description",
+            "Speculation"
+          ],
           "imageUrl": "/exercises/speaking/speaking_picture_01_ski_resort.png",
           "imageAlt": "A busy ski resort with people on the slopes and a lodge in the background",
           "prompt": "Look at the picture. Describe what you can see, what the people might be doing, and why someone might choose to spend time in a place like this.",
           "targetSeconds": 60,
           "scaffolding": {
-            "vocabulary": ["slopes", "crowded", "leisure", "outdoors", "equipment"],
+            "vocabulary": [
+              "slopes",
+              "crowded",
+              "leisure",
+              "outdoors",
+              "equipment"
+            ],
             "structure": [
               "In this picture, I can see…",
               "The people appear to be…",
@@ -2627,13 +2637,23 @@
           "type": "speak",
           "title": "Picture 2 — Airport Check-in",
           "difficulty": "B1-B2",
-          "skillFocus": ["Speaking", "Description", "Speculation"],
+          "skillFocus": [
+            "Speaking",
+            "Description",
+            "Speculation"
+          ],
           "imageUrl": "/exercises/speaking/speaking_picture_02_airport_check_in.png",
           "imageAlt": "People queuing at an airport check-in desk with luggage",
           "prompt": "Look at the picture. Describe what is happening, how the people might be feeling, and talk about a time you or someone you know experienced a situation like this.",
           "targetSeconds": 60,
           "scaffolding": {
-            "vocabulary": ["queue", "luggage", "departure", "anxious", "organised"],
+            "vocabulary": [
+              "queue",
+              "luggage",
+              "departure",
+              "anxious",
+              "organised"
+            ],
             "structure": [
               "The picture shows…",
               "The people look as if they are…",
@@ -2647,13 +2667,23 @@
           "type": "speak",
           "title": "Picture 3 — Beach Cleanup",
           "difficulty": "B1-B2",
-          "skillFocus": ["Speaking", "Description", "Opinion"],
+          "skillFocus": [
+            "Speaking",
+            "Description",
+            "Opinion"
+          ],
           "imageUrl": "/exercises/speaking/speaking_picture_03_beach_cleanup.png",
           "imageAlt": "Volunteers collecting rubbish on a beach",
           "prompt": "Look at the picture. Describe what the people are doing and explain why activities like this are important. Do you think individuals or governments should be responsible for protecting the environment?",
           "targetSeconds": 60,
           "scaffolding": {
-            "vocabulary": ["volunteer", "pollution", "environment", "responsibility", "community"],
+            "vocabulary": [
+              "volunteer",
+              "pollution",
+              "environment",
+              "responsibility",
+              "community"
+            ],
             "structure": [
               "In this image, I can see people who are…",
               "This activity is important because…",
@@ -2667,13 +2697,23 @@
           "type": "speak",
           "title": "Picture 4 — City Café",
           "difficulty": "B1-B2",
-          "skillFocus": ["Speaking", "Description", "Comparison"],
+          "skillFocus": [
+            "Speaking",
+            "Description",
+            "Comparison"
+          ],
           "imageUrl": "/exercises/speaking/speaking_picture_04_city_cafe.png",
           "imageAlt": "People sitting in a busy city café, some working on laptops",
           "prompt": "Look at the picture. Describe the scene and the different things people are doing. Would you prefer to work or study in a place like this, or do you prefer somewhere quieter? Give reasons for your answer.",
           "targetSeconds": 60,
           "scaffolding": {
-            "vocabulary": ["atmosphere", "distraction", "productive", "social", "concentrate"],
+            "vocabulary": [
+              "atmosphere",
+              "distraction",
+              "productive",
+              "social",
+              "concentrate"
+            ],
             "structure": [
               "The picture shows a… where people are…",
               "Some people appear to be… while others are…",
@@ -2689,26 +2729,106 @@
       "title": "Science and Research",
       "levelRange": "B1-B2",
       "targetVocabulary": [
-        { "word": "discovery", "partOfSpeech": "noun", "definition": "something new that is found or learned" },
-        { "word": "research", "partOfSpeech": "noun", "definition": "careful study to learn new information" },
-        { "word": "evidence", "partOfSpeech": "noun", "definition": "facts or information that show something is true" },
-        { "word": "experiment", "partOfSpeech": "noun", "definition": "a test done to learn or prove something" },
-        { "word": "observe", "partOfSpeech": "verb", "definition": "to watch or study something carefully" },
-        { "word": "theory", "partOfSpeech": "noun", "definition": "an explanation based on evidence and study" },
-        { "word": "analyze", "partOfSpeech": "verb", "definition": "to study something carefully to understand it" },
-        { "word": "data", "partOfSpeech": "noun", "definition": "information collected for study or analysis" },
-        { "word": "pattern", "partOfSpeech": "noun", "definition": "a repeated form, behavior, or result" },
-        { "word": "behavior", "partOfSpeech": "noun", "definition": "the way a person, animal, or thing acts" },
-        { "word": "develop", "partOfSpeech": "verb", "definition": "to grow, change, or improve over time" },
-        { "word": "invention", "partOfSpeech": "noun", "definition": "a new machine, tool, or method" },
-        { "word": "investigate", "partOfSpeech": "verb", "definition": "to examine something carefully to find the truth" },
-        { "word": "explain", "partOfSpeech": "verb", "definition": "to make something clear or easy to understand" },
-        { "word": "result", "partOfSpeech": "noun", "definition": "what happens because of an action or process" },
-        { "word": "process", "partOfSpeech": "noun", "definition": "a series of steps or changes" },
-        { "word": "accurate", "partOfSpeech": "adjective", "definition": "correct and exact" },
-        { "word": "significant", "partOfSpeech": "adjective", "definition": "important or large enough to notice" },
-        { "word": "complex", "partOfSpeech": "adjective", "definition": "having many connected parts; not simple" },
-        { "word": "predict", "partOfSpeech": "verb", "definition": "to say what will probably happen in the future" }
+        {
+          "word": "discovery",
+          "partOfSpeech": "noun",
+          "definition": "something new that is found or learned"
+        },
+        {
+          "word": "research",
+          "partOfSpeech": "noun",
+          "definition": "careful study to learn new information"
+        },
+        {
+          "word": "evidence",
+          "partOfSpeech": "noun",
+          "definition": "facts or information that show something is true"
+        },
+        {
+          "word": "experiment",
+          "partOfSpeech": "noun",
+          "definition": "a test done to learn or prove something"
+        },
+        {
+          "word": "observe",
+          "partOfSpeech": "verb",
+          "definition": "to watch or study something carefully"
+        },
+        {
+          "word": "theory",
+          "partOfSpeech": "noun",
+          "definition": "an explanation based on evidence and study"
+        },
+        {
+          "word": "analyze",
+          "partOfSpeech": "verb",
+          "definition": "to study something carefully to understand it"
+        },
+        {
+          "word": "data",
+          "partOfSpeech": "noun",
+          "definition": "information collected for study or analysis"
+        },
+        {
+          "word": "pattern",
+          "partOfSpeech": "noun",
+          "definition": "a repeated form, behavior, or result"
+        },
+        {
+          "word": "behavior",
+          "partOfSpeech": "noun",
+          "definition": "the way a person, animal, or thing acts"
+        },
+        {
+          "word": "develop",
+          "partOfSpeech": "verb",
+          "definition": "to grow, change, or improve over time"
+        },
+        {
+          "word": "invention",
+          "partOfSpeech": "noun",
+          "definition": "a new machine, tool, or method"
+        },
+        {
+          "word": "investigate",
+          "partOfSpeech": "verb",
+          "definition": "to examine something carefully to find the truth"
+        },
+        {
+          "word": "explain",
+          "partOfSpeech": "verb",
+          "definition": "to make something clear or easy to understand"
+        },
+        {
+          "word": "result",
+          "partOfSpeech": "noun",
+          "definition": "what happens because of an action or process"
+        },
+        {
+          "word": "process",
+          "partOfSpeech": "noun",
+          "definition": "a series of steps or changes"
+        },
+        {
+          "word": "accurate",
+          "partOfSpeech": "adjective",
+          "definition": "correct and exact"
+        },
+        {
+          "word": "significant",
+          "partOfSpeech": "adjective",
+          "definition": "important or large enough to notice"
+        },
+        {
+          "word": "complex",
+          "partOfSpeech": "adjective",
+          "definition": "having many connected parts; not simple"
+        },
+        {
+          "word": "predict",
+          "partOfSpeech": "verb",
+          "definition": "to say what will probably happen in the future"
+        }
       ],
       "learningObjectives": [
         "Use B1-B2 science and research vocabulary accurately in context.",
@@ -2722,10 +2842,19 @@
           "type": "fill_in_the_blank",
           "title": "Science Words in Context",
           "difficulty": "B1-B2",
-          "skillFocus": ["Vocabulary", "Grammar in Context"],
+          "skillFocus": [
+            "Vocabulary",
+            "Grammar in Context"
+          ],
           "platformInteraction": "text_input_or_dropdown",
           "instructions": "Complete each sentence with one word from the word bank.",
-          "wordBank": ["evidence", "experiment", "accurate", "predict", "significant"],
+          "wordBank": [
+            "evidence",
+            "experiment",
+            "accurate",
+            "predict",
+            "significant"
+          ],
           "items": [
             {
               "id": "q1",
@@ -2764,7 +2893,10 @@
           "type": "multiple_choice_single",
           "title": "Choose the Right Word",
           "difficulty": "B1-B2",
-          "skillFocus": ["Vocabulary", "Reading Comprehension"],
+          "skillFocus": [
+            "Vocabulary",
+            "Reading Comprehension"
+          ],
           "platformInteraction": "radio_buttons",
           "instructions": "Choose the best word to complete each sentence.",
           "items": [
@@ -2772,60 +2904,130 @@
               "id": "q1",
               "prompt": "Researchers ______ the birds for six months and wrote detailed notes about their habits.",
               "options": [
-                { "id": "A", "text": "invented" },
-                { "id": "B", "text": "observed" },
-                { "id": "C", "text": "predicted" },
-                { "id": "D", "text": "developed" }
+                {
+                  "id": "A",
+                  "text": "invented"
+                },
+                {
+                  "id": "B",
+                  "text": "observed"
+                },
+                {
+                  "id": "C",
+                  "text": "predicted"
+                },
+                {
+                  "id": "D",
+                  "text": "developed"
+                }
               ],
-              "correctOptionIds": ["B"],
+              "correctOptionIds": [
+                "B"
+              ],
               "explanation": "'Observed' means to watch or study something carefully, which matches 'wrote detailed notes about their habits'."
             },
             {
               "id": "q2",
               "prompt": "The ______ showed a clear link between diet and energy levels.",
               "options": [
-                { "id": "A", "text": "invention" },
-                { "id": "B", "text": "theory" },
-                { "id": "C", "text": "data" },
-                { "id": "D", "text": "behavior" }
+                {
+                  "id": "A",
+                  "text": "invention"
+                },
+                {
+                  "id": "B",
+                  "text": "theory"
+                },
+                {
+                  "id": "C",
+                  "text": "data"
+                },
+                {
+                  "id": "D",
+                  "text": "behavior"
+                }
               ],
-              "correctOptionIds": ["C"],
+              "correctOptionIds": [
+                "C"
+              ],
               "explanation": "Data means information collected for study or analysis — data can show a link or pattern."
             },
             {
               "id": "q3",
               "prompt": "The human brain is ______ — scientists are still learning how it works.",
               "options": [
-                { "id": "A", "text": "accurate" },
-                { "id": "B", "text": "significant" },
-                { "id": "C", "text": "complex" },
-                { "id": "D", "text": "observable" }
+                {
+                  "id": "A",
+                  "text": "accurate"
+                },
+                {
+                  "id": "B",
+                  "text": "significant"
+                },
+                {
+                  "id": "C",
+                  "text": "complex"
+                },
+                {
+                  "id": "D",
+                  "text": "observable"
+                }
               ],
-              "correctOptionIds": ["C"],
+              "correctOptionIds": [
+                "C"
+              ],
               "explanation": "'Complex' means having many connected parts; not simple — this fits a brain that is not fully understood."
             },
             {
               "id": "q4",
               "prompt": "Scientists ______ the causes of the disease for several years before finding a treatment.",
               "options": [
-                { "id": "A", "text": "explained" },
-                { "id": "B", "text": "developed" },
-                { "id": "C", "text": "investigated" },
-                { "id": "D", "text": "analyzed" }
+                {
+                  "id": "A",
+                  "text": "explained"
+                },
+                {
+                  "id": "B",
+                  "text": "developed"
+                },
+                {
+                  "id": "C",
+                  "text": "investigated"
+                },
+                {
+                  "id": "D",
+                  "text": "analyzed"
+                }
               ],
-              "correctOptionIds": ["C"],
+              "correctOptionIds": [
+                "C"
+              ],
               "explanation": "'Investigated' fits because the scientists were examining the disease carefully to find the truth over time."
             },
             {
               "id": "q5",
               "prompt": "The ______ of the printing press changed how information was shared across the world.",
               "options": [
-                { "id": "A", "text": "experiment" },
-                { "id": "B", "text": "invention" },
-                { "id": "C", "text": "discovery" },
-                { "id": "D", "text": "process" }
+                {
+                  "id": "A",
+                  "text": "experiment"
+                },
+                {
+                  "id": "B",
+                  "text": "invention"
+                },
+                {
+                  "id": "C",
+                  "text": "discovery"
+                },
+                {
+                  "id": "D",
+                  "text": "process"
+                }
               ],
-              "correctOptionIds": ["B"],
+              "correctOptionIds": [
+                "B"
+              ],
               "explanation": "The printing press was created — it is an invention (a new machine, tool, or method)."
             }
           ]
@@ -2835,18 +3037,44 @@
           "type": "drag_and_drop_matching",
           "title": "Match Word to Definition",
           "difficulty": "B1",
-          "skillFocus": ["Vocabulary Recognition"],
+          "skillFocus": [
+            "Vocabulary Recognition"
+          ],
           "platformInteraction": "matching_columns",
           "instructions": "Match each word on the left to its correct definition on the right.",
           "pairs": [
-            { "word": "theory", "definition": "an explanation based on evidence and study" },
-            { "word": "pattern", "definition": "a repeated form, behavior, or result" },
-            { "word": "result", "definition": "what happens because of an action or process" },
-            { "word": "process", "definition": "a series of steps or changes" },
-            { "word": "behavior", "definition": "the way a person, animal, or thing acts" },
-            { "word": "analyze", "definition": "to study something carefully to understand it" },
-            { "word": "develop", "definition": "to grow, change, or improve over time" },
-            { "word": "research", "definition": "careful study to learn new information" }
+            {
+              "word": "theory",
+              "definition": "an explanation based on evidence and study"
+            },
+            {
+              "word": "pattern",
+              "definition": "a repeated form, behavior, or result"
+            },
+            {
+              "word": "result",
+              "definition": "what happens because of an action or process"
+            },
+            {
+              "word": "process",
+              "definition": "a series of steps or changes"
+            },
+            {
+              "word": "behavior",
+              "definition": "the way a person, animal, or thing acts"
+            },
+            {
+              "word": "analyze",
+              "definition": "to study something carefully to understand it"
+            },
+            {
+              "word": "develop",
+              "definition": "to grow, change, or improve over time"
+            },
+            {
+              "word": "research",
+              "definition": "careful study to learn new information"
+            }
           ]
         },
         {
@@ -2854,7 +3082,10 @@
           "type": "short_answer_reflection",
           "title": "Your Opinion: Should Science Be Taught Differently?",
           "difficulty": "B2",
-          "skillFocus": ["Speaking/Writing", "Opinion and Argument"],
+          "skillFocus": [
+            "Speaking/Writing",
+            "Opinion and Argument"
+          ],
           "platformInteraction": "text_area_with_model_response",
           "prompt": "Some people think science should be taught mostly through experiments and real-world investigations. Others think it is better to study theory and data in class first. Which approach do you think is better, and why? Use at least four words from this module in your answer.",
           "instructions": "Write 4–6 sentences. Give your opinion, one reason, and one example. Use at least four words from this module.",
@@ -2865,6 +3096,285 @@
             "Correct use of at least four module words",
             "Logical sentence structure",
             "B2-level vocabulary and grammar"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "media_entertainment",
+      "title": "Media and Entertainment",
+      "levelRange": "B1-B2+",
+      "targetVocabulary": [
+        {
+          "word": "audience",
+          "partOfSpeech": "noun",
+          "definition": "the people who watch, read, or listen to something"
+        },
+        {
+          "word": "broadcast",
+          "partOfSpeech": "verb",
+          "definition": "to send out programs on television or radio"
+        },
+        {
+          "word": "channel",
+          "partOfSpeech": "noun",
+          "definition": "a television or radio station"
+        },
+        {
+          "word": "episode",
+          "partOfSpeech": "noun",
+          "definition": "one part of a series of programs or stories"
+        },
+        {
+          "word": "genre",
+          "partOfSpeech": "noun",
+          "definition": "a category or type of art, music, or literature"
+        },
+        {
+          "word": "stream",
+          "partOfSpeech": "verb",
+          "definition": "to watch or listen to content online without downloading"
+        },
+        {
+          "word": "subscription",
+          "partOfSpeech": "noun",
+          "definition": "a payment to receive a service regularly"
+        },
+        {
+          "word": "review",
+          "partOfSpeech": "noun",
+          "definition": "a written or spoken opinion about a product or show"
+        },
+        {
+          "word": "entertain",
+          "partOfSpeech": "verb",
+          "definition": "to keep someone interested or amused"
+        },
+        {
+          "word": "perform",
+          "partOfSpeech": "verb",
+          "definition": "to act, sing, or play for an audience"
+        },
+        {
+          "word": "release",
+          "partOfSpeech": "verb",
+          "definition": "to make a film, album, or product available to the public"
+        },
+        {
+          "word": "produce",
+          "partOfSpeech": "verb",
+          "definition": "to create or make something for public consumption"
+        },
+        {
+          "word": "popular",
+          "partOfSpeech": "adjective",
+          "definition": "liked by many people"
+        },
+        {
+          "word": "entertainment",
+          "partOfSpeech": "noun",
+          "definition": "things such as films, music, or shows that amuse people"
+        },
+        {
+          "word": "commentary",
+          "partOfSpeech": "noun",
+          "definition": "spoken description of an event, especially sports"
+        },
+        {
+          "word": "live",
+          "partOfSpeech": "adjective",
+          "definition": "happening at the same time as it is watched or heard"
+        },
+        {
+          "word": "record",
+          "partOfSpeech": "verb",
+          "definition": "to capture sound or images for later use"
+        },
+        {
+          "word": "screen",
+          "partOfSpeech": "noun",
+          "definition": "a flat surface where images or data are shown"
+        },
+        {
+          "word": "volume",
+          "partOfSpeech": "noun",
+          "definition": "the level of sound produced by a device"
+        },
+        {
+          "word": "platform",
+          "partOfSpeech": "noun",
+          "definition": "a website or app used for streaming content"
+        }
+      ],
+      "learningObjectives": [
+        "Use vocabulary about media, entertainment, and content consumption.",
+        "Discuss preferences for different types of shows and music.",
+        "Give opinions about films, series, and streaming platforms."
+      ],
+      "exerciseCount": 3,
+      "exercises": [
+        {
+          "id": "media_entertainment_fill_blank",
+          "type": "fill_in_the_blank",
+          "title": "Media Words in Context",
+          "difficulty": "B1-B2",
+          "skillFocus": [
+            "Vocabulary",
+            "Grammar in Context"
+          ],
+          "platformInteraction": "text_input_or_dropdown",
+          "instructions": "Complete each sentence with one word from the word bank.",
+          "wordBank": [
+            "genre",
+            "stream",
+            "subscription",
+            "audience",
+            "episode"
+          ],
+          "items": [
+            {
+              "id": "q1",
+              "sentence": "My favorite ______ of music is jazz, but I also enjoy classical.",
+              "correctAnswer": "genre",
+              "explanation": "Genre means a category or type of art, music, or literature."
+            },
+            {
+              "id": "q2",
+              "sentence": "Many people now ______ movies on their phones instead of watching television.",
+              "correctAnswer": "stream",
+              "explanation": "Stream means to watch content online without downloading."
+            },
+            {
+              "id": "q3",
+              "sentence": "The show's first ______ was so popular that millions of people watched it.",
+              "correctAnswer": "episode",
+              "explanation": "An episode is one part of a series."
+            },
+            {
+              "id": "q4",
+              "sentence": "The live concert had a large ______ cheering throughout the performance.",
+              "correctAnswer": "audience",
+              "explanation": "Audience refers to the people watching or listening."
+            },
+            {
+              "id": "q5",
+              "sentence": "A monthly ______ gives you access to thousands of films and shows.",
+              "correctAnswer": "subscription",
+              "explanation": "A subscription is a regular payment to receive a service."
+            }
+          ]
+        },
+        {
+          "id": "media_entertainment_mc",
+          "type": "multiple_choice_single",
+          "title": "Media Vocabulary in Context",
+          "difficulty": "B2",
+          "skillFocus": [
+            "Vocabulary",
+            "Reading"
+          ],
+          "platformInteraction": "radio_buttons",
+          "instructions": "Choose the best answer.",
+          "items": [
+            {
+              "id": "q1",
+              "prompt": "The concert was ______, so fans around the world watched it at the same time.",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "recorded"
+                },
+                {
+                  "id": "B",
+                  "text": "live"
+                },
+                {
+                  "id": "C",
+                  "text": "reviewed"
+                },
+                {
+                  "id": "D",
+                  "text": "produced"
+                }
+              ],
+              "correctOptionIds": [
+                "B"
+              ],
+              "explanation": "'Live' means happening at the same time it is watched."
+            },
+            {
+              "id": "q2",
+              "prompt": "The actor will ______ in a new play at the city theater next month.",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "release"
+                },
+                {
+                  "id": "B",
+                  "text": "broadcast"
+                },
+                {
+                  "id": "C",
+                  "text": "perform"
+                },
+                {
+                  "id": "D",
+                  "text": "comment"
+                }
+              ],
+              "correctOptionIds": [
+                "C"
+              ],
+              "explanation": "'Perform' means to act for an audience."
+            },
+            {
+              "id": "q3",
+              "prompt": "The film received excellent ______ from both critics and viewers.",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "reviews"
+                },
+                {
+                  "id": "B",
+                  "text": "screens"
+                },
+                {
+                  "id": "C",
+                  "text": "genres"
+                },
+                {
+                  "id": "D",
+                  "text": "volumes"
+                }
+              ],
+              "correctOptionIds": [
+                "A"
+              ],
+              "explanation": "A review is a written or spoken opinion about a product or show."
+            }
+          ]
+        },
+        {
+          "id": "media_entertainment_short_answer",
+          "type": "short_answer_reflection",
+          "title": "MET-Style Opinion: Media",
+          "difficulty": "B2",
+          "skillFocus": [
+            "Writing",
+            "Vocabulary",
+            "MET Speaking/Writing Support"
+          ],
+          "platformInteraction": "text_area",
+          "instructions": "Answer in 3–5 sentences. Use at least three target vocabulary words.",
+          "prompt": "What type of films, series, or music do you enjoy most? Explain why you prefer this genre and recommend something specific.",
+          "modelResponse": "I mostly enjoy comedy series because they entertain me after a long day. My favorite recent show is about a group of friends who start a small business, and each episode has a funny situation that feels realistic. I would recommend it to anyone who wants to relax and laugh without thinking too hard.",
+          "successCriteria": [
+            "Clear preference",
+            "Reason and example",
+            "At least three target words",
+            "Natural B2 vocabulary"
           ]
         }
       ]

@@ -409,6 +409,7 @@ Write like a real teacher talking TO this student right after class — warm, sp
 • BANNED OPENERS: "Great work", "Well done", "Excellent", "Good job", "It is important", "Furthermore", "Additionally", "Moreover", "In addition", "Going forward", "In conclusion", "Overall".
 • BANNED PHRASES: "This demonstrates", "Your performance", "You demonstrated", "You exhibited", "This is crucial for", "This is essential", "This shows that you", "Continue to", "Keep up".
 • BANNED CERTAINTY PHRASES: "This will help", "This will improve", "This will make", "Doing X will Y" — these state pedagogical outcomes as proven fact. Instead, frame improvement advice as a testable hypothesis: "Try X and see if it helps", "One thing to experiment with is Y", "If you try Z next class, notice whether...". The goal is a suggestion the student can test, not a guaranteed result.
+• STRATEGIC FEEDBACK (for recurring errors): When a student repeats an error, move beyond simple correction. Provide a "mental model" or a simple "check" (e.g., "Imagine a photo of that day") that helps the student notice the error in real-time. The goal is to teach them how to self-correct, not just to fix the specific sentence.
 • BREVITY: if a thought is one sentence, stop. No padding, no restating.
 • MET BUDGET: at most 2 sentences in the whole feedback may mention the MET exam, and each must be concrete (e.g., "examiners weight delivery in the third descriptor...").
 

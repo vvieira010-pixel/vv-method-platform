@@ -10,13 +10,14 @@ export default function SubmissionsPage({ students, onNavigate }) {
   const [reviews, setReviews] = useState([]);
   const [filter, setFilter] = useState('pending');
 
-  useEffect(() => { load(); }, []);
-  async function load() {
-    const [subs, hw, revs] = await Promise.all([getAllSubmissions(), getHomework(), getReviews()]);
-    setSubmissions(subs || []);
-    setHomework(hw || []);
-    setReviews(revs || []);
-  }
+  useEffect(() => {
+    (async () => {
+      const [subs, hw, revs] = await Promise.all([getAllSubmissions(), getHomework(), getReviews()]);
+      setSubmissions(subs || []);
+      setHomework(hw || []);
+      setReviews(revs || []);
+    })();
+  }, []);
 
   const reviewedIds = new Set(reviews.map(r => r.submissionId));
   const filtered = submissions.filter(s => {

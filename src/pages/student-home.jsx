@@ -263,6 +263,7 @@ export default function StudentHome({ student, onTab }) {
 
       <Card bezel className="memo-board fade-up" style={{ '--delay': '0.1s' }}>
         <div className="memo-board-text">
+          <span className="memo-board-kicker">General Memo</span>
           {memo ? (
             <p>{memo}</p>
           ) : (

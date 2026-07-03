@@ -1,5 +1,9 @@
-import bankData from '../data/met-b2-skills-bank.json';
-import { listeningModules } from './met-listening-bank.js';
+import listeningData from '../data/exercises/listening/b2-listening.json';
+import readingData from '../data/exercises/reading/b2-reading.json';
+import writingData from '../data/exercises/writing/b2-writing.json';
+import speakingData from '../data/exercises/speaking/b2-speaking.json';
+import grammarData from '../data/exercises/grammar/b2-grammar.json';
+import { listeningModules, getSupabaseListeningModules } from './met-listening-bank.js';
 
 let _counter = 0;
 function bankId() {
@@ -76,27 +80,48 @@ function buildModule(mod) {
     id: mod.id,
     label: mod.title,
     skill: mod.skill,
+    topic: mod.topic || mod.title.split(':')[0].trim() || mod.title,
     level: mod.levelRange || 'B2',
     exercises,
   };
 }
 
-const _modules = [...bankData.modules.map(buildModule), ...listeningModules];
+const _allModules = [
+  ...listeningData.modules.map(buildModule),
+  ...readingData.modules.map(buildModule),
+  ...writingData.modules.map(buildModule),
+  ...speakingData.modules.map(buildModule),
+  ...grammarData.modules.map(buildModule),
+  ...listeningModules,
+];
 
 export const b2BankMeta = {
   id: 'met_b2_skills',
-  title: bankData.title,
-  subtitle: bankData.subtitle,
-  level: bankData.level,
-  moduleCount: _modules.length,
-  exerciseCount: _modules.reduce((n, m) => n + m.exercises.length, 0),
+  title: 'MET B2 Skills Exercise Pack',
+  subtitle: 'Authentic B2 exercises across Listening, Reading, Writing, Speaking, and Grammar',
+  level: 'B2',
+  moduleCount: _allModules.length,
+  exerciseCount: _allModules.reduce((n, m) => n + m.exercises.length, 0),
 };
 
 export function getB2Modules() {
-  return _modules;
+  return _allModules;
 }
 
 export function getB2ModuleExercises(moduleId) {
-  const mod = _modules.find(m => m.id === moduleId);
+  const mod = _allModules.find(m => m.id === moduleId);
+  return mod ? mod.exercises : [];
+}
+
+export async function getB2ModulesWithSupabase() {
+  const supabaseMods = await getSupabaseListeningModules();
+  return [..._allModules, ...supabaseMods];
+}
+
+export async function getB2ModuleExercisesWithSupabase(moduleId) {
+  const local = getB2ModuleExercises(moduleId);
+  if (local.length > 0) return local;
+  const all = await getB2ModulesWithSupabase();
+  const mod = all.find(m => m.id === moduleId);
   return mod ? mod.exercises : [];
 }

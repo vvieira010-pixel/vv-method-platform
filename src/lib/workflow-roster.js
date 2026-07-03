@@ -1,4 +1,5 @@
 import { K, load, loadObj, save, uid, loadWithIds, dbReady, listVia, saveVia, removeVia, upsert } from './workflow-core.js';
+export { updateClassEventStatus } from './workflow-core.js';
 import { dbList, dbUpsert, dbRemove, getDbContext } from './supabase-db.js';
 import { initSchedule, markSRMastered } from './spaced-repetition.js';
 import { getDiagnoses, getHomework, getSubmissions, getReviews, getFeedback } from './workflow-academic.js';
@@ -360,18 +361,6 @@ export async function saveClassEvent(data) {
   else all.unshift(record);
   save(K.classEvents, all);
   return record;
-}
-export async function updateClassEventStatus(id, patch) {
-  if (dbReady('classEvents')) {
-    try { const ev = (await getClassEvents()).find(e => e.id === id); if (!ev) return null; return await dbUpsert('classEvents', { ...ev, ...patch }); }
-    catch (e) { console.warn('[workflow] updateClassEventStatus via Supabase failed, using localStorage:', e.message); }
-  }
-  const all = load(K.classEvents);
-  const idx = all.findIndex(e => e.id === id);
-  if (idx < 0) return null;
-  all[idx] = { ...all[idx], ...patch, updatedAt: new Date().toISOString() };
-  save(K.classEvents, all);
-  return all[idx];
 }
 export async function deleteClassEvent(id) {
   return removeVia('classEvents', K.classEvents, id);

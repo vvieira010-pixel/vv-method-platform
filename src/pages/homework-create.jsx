@@ -496,14 +496,6 @@ function getPriorityItems(dx) {
     window.toast?.(`"${newEx.title || 'Exercise'}" added.`, 'ok');
   }
 
-  function addModuleFromLibrary(mod) {
-    const exercises = getModuleExercises(mod.id);
-    if (!exercises.length) { window.toast?.('No exercises in this module.', 'warn'); return; }
-    setForm(f => ({ ...f, exercises: [...f.exercises, ...exercises] }));
-    window.toast?.(`Added ${exercises.length} exercises from "${mod.title}".`, 'ok');
-    setShowLibrary(false);
-  }
-
   async function addModuleFromB2Bank(mod) {
     const exercises = await getB2ModuleExercises(mod.id);
     if (!exercises.length) { window.toast?.('No exercises in this module.', 'warn'); return; }
@@ -543,36 +535,6 @@ function getPriorityItems(dx) {
     } catch {
       window.toast?.('Could not copy printable Markdown from this browser.', 'warn');
     }
-  }
-
-  async function addB2Pack() {
-    const exercises = (await Promise.all(getB2Modules().map(mod => getB2ModuleExercises(mod.id)))).flat();
-    if (!exercises.length) {
-      window.toast?.('No MET B2 pack exercises found.', 'warn');
-      return;
-    }
-    setForm(f => ({ ...f, exercises: [...f.exercises, ...exercises] }));
-    window.toast?.(`Added ${exercises.length} MET B2 pack exercises.`, 'ok');
-  }
-
-  function addLifestylePack() {
-    const exercises = getLifestyleModules().flatMap(mod => getLifestyleModuleExercises(mod.id));
-    if (!exercises.length) {
-      window.toast?.('No Everyday English exercises found.', 'warn');
-      return;
-    }
-    setForm(f => ({ ...f, exercises: [...f.exercises, ...exercises] }));
-    window.toast?.(`Added ${exercises.length} Everyday English exercises.`, 'ok');
-  }
-
-  function addDeepResearchPack() {
-    const exercises = getDeepResearchModules().flatMap(mod => getDeepResearchModuleExercises(mod.id));
-    if (!exercises.length) {
-      window.toast?.('No Extended Practice exercises found.', 'warn');
-      return;
-    }
-    setForm(f => ({ ...f, exercises: [...f.exercises, ...exercises] }));
-    window.toast?.(`Added ${exercises.length} Extended Practice exercises.`, 'ok');
   }
 
   function addUnitBankPack() {
@@ -681,10 +643,6 @@ function getPriorityItems(dx) {
     onNavigate('homework');
   }
 
-  function addUnitBankExercise(ex) {
-    const newId = generateId('ub_');
-    setForm(f => ({ ...f, exercises: [...f.exercises, { ...ex, id: newId }] }));
-  }
   function handleWizardComplete({ level, skill }) {
     setSelectedLevel(level);
     setSelectedSkill(skill);

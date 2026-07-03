@@ -156,7 +156,7 @@ Return JSON:
 }`;
 
     try {
-      const data = await callAI(prompt, withSkills('feedback', { max_tokens: 2500, temperature: 0.7 }));
+      const data = await callAI(prompt, await withSkills('feedback', { max_tokens: 2500, temperature: 0.7 }));
       const raw = data.content?.map(b => b.text || '').join('') || '';
       const parsed = parseAiJson(raw);
       setAiComparison(parsed);
@@ -225,7 +225,7 @@ Return JSON:
 }`;
 
     try {
-      const data = await callAI(prompt, withSkills('feedback', { max_tokens: 900, temperature: 0.65 }));
+      const data = await callAI(prompt, await withSkills('feedback', { max_tokens: 900, temperature: 0.65 }));
       const raw = data.content?.map(b => b.text || '').join('') || '';
       const parsed = parseAiJson(raw);
       setQuestionEvals(q => ({

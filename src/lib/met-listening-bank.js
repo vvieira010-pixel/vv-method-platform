@@ -1,4 +1,5 @@
-import listeningData from '../data/met-listening-skills-bank.json';
+import listeningData from '../data/exercises/listening/met-listening-skills-bank.json';
+import { dbList, dbEnabled } from './supabase-db.js';
 
 function buildModule(mod) {
   let exercises;
@@ -9,7 +10,7 @@ function buildModule(mod) {
         type: 'listen',
         level: 'B2',
         audioText: item.script,
-        audioSrc: item.audioFile ? `/audio/${item.audioFile}` : '',
+        audioSrc: item.audioFile ? `/Listenings/${encodeURIComponent(item.audioFile)}` : '',
         plays: 2,
         question: q.stem,
         options: q.options,
@@ -33,3 +34,32 @@ function buildModule(mod) {
 }
 
 export const listeningModules = listeningData.modules.map(buildModule);
+
+export async function getSupabaseListeningModules() {
+  if (!dbEnabled()) return [];
+  try {
+    const records = await dbList('listeningExercises');
+    if (!records || records.length === 0) return [];
+    return [{
+      id: 'supabase_listening',
+      label: 'Custom Listening Exercises',
+      skill: 'listening',
+      level: 'B2',
+      exercises: records.map((ex, i) => ({
+        id: ex.id || `sb_listen_${i}`,
+        type: 'listen',
+        level: ex.level || 'B2',
+        audioText: ex.audioText || ex.content?.audioText || '',
+        audioSrc: ex.audioSrc || '',
+        plays: ex.plays || 2,
+        question: ex.question || ex.content?.question || '',
+        options: ex.options || ex.content?.options || [],
+        correct: ex.correct ?? ex.content?.correct ?? 0,
+        explanation: ex.explanation || ex.content?.explanation || '',
+        pictureHint: ex.pictureHint || '',
+      })),
+    }];
+  } catch {
+    return [];
+  }
+}

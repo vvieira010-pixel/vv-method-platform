@@ -1,7 +1,7 @@
 /**
  * active-skills.js — Reads currently enabled education skill augmentations
- * from localStorage (saved by the settings page) and prepares them for
- * injection into callAI calls.
+ * from localStorage and prepares them for injection into callAI calls.
+ * Returns Promises because skill content is loaded lazily per task type.
  */
 import { getEnabledSkillsForTask } from './selectors.js';
 
@@ -20,13 +20,13 @@ function loadToggleState() {
   return null;
 }
 
-export function getSkillsForTask(taskType) {
+export async function getSkillsForTask(taskType) {
   const activeIds = loadToggleState() || [];
-  return getEnabledSkillsForTask(taskType, activeIds);
+  return await getEnabledSkillsForTask(taskType, activeIds);
 }
 
-export function withSkills(taskType, options = {}) {
-  const skills = getSkillsForTask(taskType);
+export async function withSkills(taskType, options = {}) {
+  const skills = await getSkillsForTask(taskType);
   if (skills.length === 0) return options;
   return { ...options, skills };
 }

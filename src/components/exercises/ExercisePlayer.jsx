@@ -2,6 +2,7 @@ import { useState, useCallback, useRef, useEffect } from 'react'; // ExercisePla
 import { motion } from 'motion/react';
 import { Icon } from '../shared.jsx';
 import { loadExercises } from './validateExercise.js';
+import { hintLimit, recallGateActive } from '../../lib/fading-manager.js';
 import MultipleChoice from './MultipleChoice.jsx';
 import FillBlank from './FillBlank.jsx';
 import ShortAnswer from './ShortAnswer.jsx';
@@ -9,6 +10,7 @@ import OrderSentences from './OrderSentences.jsx';
 import ErrorCorrection from './ErrorCorrection.jsx';
 import Listening from './Listening.jsx';
 import ReadExercise from './ReadExercise.jsx';
+import EmbeddedLesson from './EmbeddedLesson.jsx';
 
 const TEAL = 'var(--accent)';
 const NAVY = 'var(--accent-text)';
@@ -32,6 +34,7 @@ const TYPE_LABELS = {
   fix: 'Level Up',
   listen: 'Listening',
   read: 'Reading',
+  embed: 'Embedded Lesson',
 };
 
 function InvalidExercise({ reason }) {
@@ -67,6 +70,13 @@ function deriveHints(exercise) {
       exercise.rubric ? `Key criteria: ${String(exercise.rubric).slice(0, 100)}` : 'Aim for 2–3 complete sentences with clear reasoning.',
     ];
   }
+  if (type === 'embed') {
+    return [
+      'Watch the video carefully.',
+      'Follow the interactive prompts within the lesson.',
+      'Reflect on how the concepts apply to your professional practice.',
+    ];
+  }
   if (type === 'fix' || type === 'error_correction') {
     return [
       'Read each sentence aloud. Does anything sound unnatural?',
@@ -88,15 +98,22 @@ function deriveHints(exercise) {
   ];
 }
 
-function ExerciseCard({ exercise, index, total, result, onComplete, onNext, onBack, onSkip, recallMode }) {
+function ExerciseCard({ exercise, index, total, result, onComplete, onNext, onBack, onSkip, scaffoldLevel = 4, onHintLevelChange }) {
   const label = TYPE_LABELS[exercise.type] || exercise.type;
   const skill = exercise.skill || exercise.focus || null;
   const done = result != null;
 
-  const [recallText, setRecallText] = useState('');
-  const [recallDone, setRecallDone] = useState(!recallMode);
   const [hintLevel, setHintLevel] = useState(0);
-  const hints = deriveHints(exercise);
+  const maxHints = hintLimit(scaffoldLevel);
+  const hints = deriveHints(exercise).slice(0, maxHints);
+
+  const handleHintClick = useCallback(() => {
+    setHintLevel(l => {
+      const next = l + 1;
+      onHintLevelChange?.(next);
+      return next;
+    });
+  }, [onHintLevelChange]);
 
   function renderExercise() {
     const props = { exercise, onComplete };
@@ -117,6 +134,7 @@ function ExerciseCard({ exercise, index, total, result, onComplete, onNext, onBa
       case 'fix':        return <ErrorCorrection {...props} />;
       case 'listen':     return <Listening {...props} />;
       case 'read':       return <ReadExercise {...props} />;
+      case 'embed':      return <EmbeddedLesson {...props} />;
       // New types (stubs for now)
       case 'drag_and_drop_matching':
       case 'true_false_with_explanation':
@@ -162,42 +180,13 @@ function ExerciseCard({ exercise, index, total, result, onComplete, onNext, onBa
         </span>
       </div>
 
-      {/* Recall gate — shown before exercise when recallMode is on */}
-      {!recallDone && (
-        <div style={{ padding: '20px 20px 24px', borderBottom: '1px solid var(--divider)' }}>
-          <div style={{ fontSize: 'var(--text-sm)', fontWeight: 600, color: NAVY, marginBottom: 6 }}>
-            Before you begin — what do you already know?
-          </div>
-          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginBottom: 10, lineHeight: 1.5 }}>
-            Try to recall what you know about this topic before seeing the question. Even partial ideas are useful.
-          </div>
-          <textarea
-            value={recallText}
-            onChange={e => setRecallText(e.target.value)}
-            placeholder="Write anything you remember — words, rules, examples…"
-            rows={3}
-            style={{ width: '100%', padding: '8px 10px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm, 6px)', fontSize: 'var(--text-sm)', lineHeight: 1.6, resize: 'vertical', fontFamily: 'var(--font-sans)', boxSizing: 'border-box' }}
-          />
-          <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
-            <button
-              onClick={() => setRecallDone(true)}
-              style={{ padding: '8px 18px', borderRadius: 'var(--radius-sm, 6px)', border: 'none', cursor: 'pointer', background: `linear-gradient(120deg, ${TEAL} 0%, ${NAVY} 100%)`, color: '#fff', fontWeight: 600, fontSize: 13, fontFamily: 'var(--font-sans)' }}
-            >
-              {recallText.trim() ? "I'm ready — show the exercise" : 'Skip recall — show the exercise'}
-            </button>
-          </div>
-        </div>
-      )}
-
       {/* Exercise body */}
-      {recallDone && (
-        <div style={{ padding: '20px 20px 24px' }}>
-          {renderExercise()}
-        </div>
-      )}
+      <div style={{ padding: '20px 20px 24px' }}>
+        {renderExercise()}
+      </div>
 
-      {/* Progressive hint ladder */}
-      {recallDone && !done && (
+      {/* Progressive hint ladder — controlled by scaffold level */}
+      {!done && maxHints > 0 && (
         <div style={{ padding: '0 20px 16px' }}>
           {hintLevel > 0 && (
             <div role="status" aria-live="polite" style={{ marginBottom: 8, padding: '8px 12px', background: 'var(--ex-hint-bg)', border: '1px solid var(--ex-hint-border)', borderRadius: 'var(--radius-sm, 6px)', fontSize: 'var(--text-xs)', color: 'var(--ex-hint-text)', lineHeight: 1.5 }}>
@@ -206,7 +195,7 @@ function ExerciseCard({ exercise, index, total, result, onComplete, onNext, onBa
           )}
           {hintLevel < hints.length && (
             <button
-              onClick={() => setHintLevel(l => l + 1)}
+              onClick={handleHintClick}
               style={{ minHeight: 44, padding: '8px 16px', borderRadius: 'var(--radius-sm, 6px)', border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text-2)', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-sans)' }}
             >
               {hintLevel === 0 ? 'Need a hint?' : 'Next hint →'}
@@ -322,20 +311,28 @@ function ScoreSummary({ results }) {
  *   title — optional session title
  *   onSessionComplete — called with { results, score } when all done
  */
-export default function ExercisePlayer({ exercises: raw, title, onSessionComplete, recallMode = false }) {
+export default function ExercisePlayer({ exercises: raw, title, onSessionComplete, scaffoldLevel = 4 }) {
   const { exercises, errors } = loadExercises(Array.isArray(raw) ? raw : (raw || []));
+  const recallMode = recallGateActive(scaffoldLevel);
 
   const [current, setCurrent] = useState(0);
   const [results, setResults] = useState([]);
   const [done, setDone] = useState(false);
+  const [sessionRecallText, setSessionRecallText] = useState('');
+  const [sessionRecallDone, setSessionRecallDone] = useState(!recallMode);
   const currentRef = useRef(current);
   const totalRef = useRef(exercises.length);
   const onDoneRef = useRef(onSessionComplete);
   const resultsRef = useRef(results);
+  const maxHintLevelRef = useRef(0);
   useEffect(() => { currentRef.current = current; });
   useEffect(() => { totalRef.current = exercises.length; });
   useEffect(() => { onDoneRef.current = onSessionComplete; });
   useEffect(() => { resultsRef.current = results; });
+
+  const handleHintLevelChange = useCallback((level) => {
+    if (level > maxHintLevelRef.current) maxHintLevelRef.current = level;
+  }, []);
 
   const handleComplete = useCallback((result) => {
     setResults(prev => {
@@ -355,9 +352,16 @@ export default function ExercisePlayer({ exercises: raw, title, onSessionComplet
       if (cb) {
         const live = resultsRef.current.filter(r => r && r.correct !== null && r.correct !== undefined);
         const score = live.length > 0 ? Math.round((live.filter(r => r.correct).length / live.length) * 100) : null;
-        cb({ results: resultsRef.current, score });
+        const maxHL = maxHintLevelRef.current;
+        cb({
+          results: resultsRef.current,
+          score,
+          maxHintLevel: maxHL,
+          hintUsed: maxHL > 0,
+        });
       }
     } else {
+      maxHintLevelRef.current = 0;
       setCurrent(nextIdx);
     }
   }, [setCurrent, setDone]);
@@ -408,7 +412,34 @@ export default function ExercisePlayer({ exercises: raw, title, onSessionComplet
 
       <ProgressBar current={completedCount} total={exercises.length} />
 
-      {!done ? (
+      {/* Session recall gate — once per session */}
+      {recallMode && !sessionRecallDone && (
+        <div style={{ padding: '20px 20px 24px', marginBottom: 16, border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', background: 'var(--surface)' }}>
+          <div style={{ fontSize: 'var(--text-sm)', fontWeight: 600, color: NAVY, marginBottom: 6 }}>
+            Before you begin — what do you already know?
+          </div>
+          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginBottom: 10, lineHeight: 1.5 }}>
+            Try to recall what you know about this topic before seeing the questions. Even partial ideas are useful.
+          </div>
+          <textarea
+            value={sessionRecallText}
+            onChange={e => setSessionRecallText(e.target.value)}
+            placeholder="Write anything you remember — words, rules, examples…"
+            rows={3}
+            style={{ width: '100%', padding: '8px 10px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm, 6px)', fontSize: 'var(--text-sm)', lineHeight: 1.6, resize: 'vertical', fontFamily: 'var(--font-sans)', boxSizing: 'border-box' }}
+          />
+          <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+            <button
+              onClick={() => setSessionRecallDone(true)}
+              style={{ padding: '8px 18px', borderRadius: 'var(--radius-sm, 6px)', border: 'none', cursor: 'pointer', background: `linear-gradient(120deg, ${TEAL} 0%, ${NAVY} 100%)`, color: '#fff', fontWeight: 600, fontSize: 13, fontFamily: 'var(--font-sans)' }}
+            >
+              {sessionRecallText.trim() ? "I'm ready — show the exercises" : 'Skip recall — show exercises'}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {recallMode && !sessionRecallDone ? null : !done ? (
         <motion.div
           key={current}
           initial={{ opacity: 0, y: 8 }}
@@ -424,7 +455,8 @@ export default function ExercisePlayer({ exercises: raw, title, onSessionComplet
             onNext={handleNext}
             onBack={handleBack}
             onSkip={handleSkip}
-            recallMode={recallMode}
+            scaffoldLevel={scaffoldLevel}
+            onHintLevelChange={handleHintLevelChange}
           />
         </motion.div>
       ) : (

@@ -391,6 +391,9 @@ const ENTITIES = {
       };
     },
   },
+
+  /* listening exercises — teacher-managed exercise bank */
+  listeningExercises: contentEntity('listening_exercises', { student: false }),
 };
 
 export function dbHasEntity(key) { return Boolean(ENTITIES[key]); }
@@ -466,6 +469,76 @@ export async function dbRemove(entityKey, appId) {
   return true;
 }
 
+/* ─── Realtime subscriptions ────────────────────────────────── */
+
+/**
+ * Subscribe to realtime changes on a table via Supabase WebSocket.
+ * Calls `onChange` with { eventType, new, old } for each matching change.
+ * Returns an unsubscribe function.
+ * Works only when a Supabase session is active.
+ */
+export function subscribeToTable(table, onChange, { event, filter } = {}) {
+  const ctx = getDbContext();
+  if (!ctx) return () => {};
+
+  const channelName = `${table}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+  const subUrl = `${ctx.url}/realtime/v1/websocket?apikey=${ctx.anonKey}&token=${ctx.token}`;
+
+  let ws = null;
+  let closed = false;
+
+  function connect() {
+    if (closed) return;
+    try {
+      ws = new WebSocket(subUrl);
+    } catch {
+      return;
+    }
+
+    ws.onopen = () => {
+      const subscribeMsg = {
+        topic: `realtime:${table}`,
+        event: 'phx_join',
+        payload: { config: { broadcast: { self: false } } },
+        ref: '1',
+      };
+      ws.send(JSON.stringify(subscribeMsg));
+    };
+
+    ws.onmessage = (msg) => {
+      try {
+        const data = JSON.parse(msg.data);
+        if (data.event === 'postgres_changes' && data.payload) {
+          const change = data.payload;
+          if (!event || change.type === event) {
+            onChange({
+              eventType: change.type,
+              new: change.record || change.new,
+              old: change.old_record || change.old,
+            });
+          }
+        }
+      } catch {
+      }
+    };
+
+    ws.onclose = () => {
+      if (!closed) setTimeout(connect, 5000);
+    };
+
+    ws.onerror = () => {
+      ws?.close();
+    };
+  }
+
+  connect();
+
+  return () => {
+    closed = true;
+    ws?.close();
+  };
+}
+
 /* ─── Storage (student speaking audio) ───────────────────────── */
 
 const AUDIO_BUCKET = 'submission-audio';
@@ -476,12 +549,12 @@ export async function uploadSubmissionAudio(blob, path) {
   if (!ctx) throw new Error('Not signed in.');
   const res = await fetch(`${ctx.url}/storage/v1/object/${AUDIO_BUCKET}/${path}`, {
     method: 'POST',
-    headers: {
-      apikey: ctx.anonKey,
-      Authorization: `Bearer ${ctx.token}`,
-      'Content-Type': blob.type || 'audio/webm',
-      'x-upsert': 'true',
-    },
+      headers: {
+        apikey: ctx.anonKey,
+        Authorization: `Bearer ${ctx.token}`,
+        'Content-Type': blob.type || 'audio/webm',
+      },
+
     body: blob,
   });
   if (!res.ok) throw new Error(`audio upload → ${res.status} ${await res.text().catch(() => '')}`);
@@ -769,4 +842,18 @@ export async function deleteTeacherResource(path) {
     headers: { apikey: ctx.anonKey, Authorization: `Bearer ${ctx.token}` },
   });
   if (!res.ok) throw new Error(`delete → ${res.status}`);
+}
+
+/* ─── Listening Exercises ──────────────────────────────────── */
+
+export async function addListeningExercise(exercise) {
+  return dbUpsert('listeningExercises', {
+    id: exercise.id || crypto.randomUUID(),
+    ...exercise,
+    createdAt: new Date().toISOString(),
+  });
+}
+
+export async function getListeningExercises() {
+  return dbList('listeningExercises');
 }

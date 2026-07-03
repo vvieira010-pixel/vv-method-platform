@@ -78,16 +78,17 @@ export function markSRMastered(studentId, errorId) {
  * @param {string} scheduleId
  * @param {boolean} correct — whether the student answered correctly
  */
-export function recordPractice(studentId, scheduleId, correct) {
+export function recordPractice(studentId, scheduleId, correct, confidence) {
   const list = load(studentId);
   const idx = list.findIndex(e => e.id === scheduleId);
   if (idx < 0) return null;
   const entry = list[idx];
   if (correct) {
-    const intervalIdx = REVIEW_INTERVALS.indexOf(entry.interval);
-    entry.interval = intervalIdx >= 0 && intervalIdx < REVIEW_INTERVALS.length - 1
-      ? REVIEW_INTERVALS[intervalIdx + 1]
-      : REVIEW_INTERVALS[REVIEW_INTERVALS.length - 1];
+    const multiplier = confidence ? (1 + (confidence - 1) * 0.375) : 1.5;
+    const nextVal = Math.ceil(entry.interval * multiplier);
+    entry.interval = REVIEW_INTERVALS.reduce((prev, curr) => 
+      Math.abs(curr - nextVal) < Math.abs(prev - nextVal) ? curr : prev
+    );
   } else {
     entry.interval = 1;
   }

@@ -1,10 +1,10 @@
 /**
  * selectors.js — Maps task types to relevant education-agent-skills.
  * Uses both tag-based matching and explicit curation.
+ * Skill content is loaded lazily per task type.
  */
-import { getAllSkills, getSkillById } from './registry.js';
+import { loadSkillsForTask } from './registry.js';
 
-/* ─── TASK TYPE DEFINITIONS ─────────────────────────────────── */
 const TASK_TYPES = {
   diagnosis: {
     id: 'diagnosis',
@@ -79,17 +79,20 @@ export function getTaskType(id) {
  * Get skill prompts for a given task type, respecting teacher toggles.
  * @param {string} taskType - 'diagnosis' | 'feedback' | 'homework' | 'exercise' | 'progress'
  * @param {string[]} enabledSkillIds - Array of skill IDs the teacher has enabled
- * @returns {object[]} Array of { id, name, prompt } for enabled skills
+ * @returns {Promise<object[]>} Array of { id, name, prompt } for enabled skills
  */
-export function getEnabledSkillsForTask(taskType, enabledSkillIds = []) {
+export async function getEnabledSkillsForTask(taskType, enabledSkillIds = []) {
   const task = TASK_TYPES[taskType];
   if (!task) return [];
   const allIds = task.skillIds;
   const activeIds = enabledSkillIds.length > 0
     ? allIds.filter(id => enabledSkillIds.includes(id))
     : task.defaultEnabled ? allIds : [];
+  if (activeIds.length === 0) return [];
+
+  const skills = await loadSkillsForTask(taskType);
   return activeIds
-    .map(id => getSkillById(id))
+    .map(id => skills.find(s => s.id === id))
     .filter(Boolean)
     .map(s => ({ id: s.id, name: s.name, prompt: s.prompt }));
 }
@@ -98,8 +101,8 @@ export function getEnabledSkillsForTask(taskType, enabledSkillIds = []) {
  * Build a system prompt augmentation string from enabled skills.
  * Returns empty string if no skills apply.
  */
-export function buildSkillAugmentation(taskType, enabledSkillIds = []) {
-  const skills = getEnabledSkillsForTask(taskType, enabledSkillIds);
+export async function buildSkillAugmentation(taskType, enabledSkillIds = []) {
+  const skills = await getEnabledSkillsForTask(taskType, enabledSkillIds);
   if (skills.length === 0) return '';
 
   const parts = skills.map(s => {

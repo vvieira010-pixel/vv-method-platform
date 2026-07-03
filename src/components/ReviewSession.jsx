@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Modal, Icon, Button } from './shared.jsx';
 import { recordPractice } from '../lib/spaced-repetition.js';
+import { exercisePreview } from '../lib/exercise-types.js';
 
 export default function ReviewSession({ exercises, studentId, onClose }) {
   const [idx, setIdx] = useState(0);
@@ -9,6 +10,8 @@ export default function ReviewSession({ exercises, studentId, onClose }) {
 
   const ex = exercises[idx];
   const remaining = exercises.length - idx - 1;
+  const isMcq = ex && (ex.type === 'mcq' || ex.type === 'listen' || (ex.options && ex.correct != null));
+  const isBlank = ex && ex.type === 'blank';
 
   const handleSelect = useCallback(optionIndex => {
     setAnswers(prev => ({ ...prev, [ex.id]: optionIndex }));
@@ -26,7 +29,8 @@ export default function ReviewSession({ exercises, studentId, onClose }) {
 
   // Keyboard shortcuts: 1–4 selects option, Enter advances
   useEffect(() => {
-    if (finished) return;
+    if (finished || !ex) return;
+    if (!isMcq) return; // keyboard shortcuts only for MCQ-like
     function onKey(e) {
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
       const num = parseInt(e.key, 10);
@@ -40,7 +44,23 @@ export default function ReviewSession({ exercises, studentId, onClose }) {
     }
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [finished, ex, answers, idx, handleSelect, handleNext]);
+  }, [finished, ex, answers, idx, handleSelect, handleNext, isMcq]);
+
+  if (ex && !isMcq && !isBlank) {
+    return (
+      <Modal open onClose={onClose} kicker="Spaced Review" title={`Item ${idx + 1} of ${exercises.length}`} maxWidth={560}>
+        <div style={{ padding: '20px 0', textAlign: 'center' }}>
+          <p style={{ color: 'var(--muted)', marginBottom: 16 }}>
+            Review for &ldquo;{ex.question || ex.prompt || ex.instruction || exercisePreview(ex)}&rdquo;
+          </p>
+          <Button variant="primary" onClick={handleNext}>Mark as reviewed &rarr;</Button>
+          <p style={{ fontSize: 'var(--text-xs)', color: 'var(--faint)', marginTop: 12 }}>
+            Non-MCQ items can be marked reviewed without answering.
+          </p>
+        </div>
+      </Modal>
+    );
+  }
 
   return (
     <Modal

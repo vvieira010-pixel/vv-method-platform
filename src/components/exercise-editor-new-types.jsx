@@ -36,6 +36,11 @@ export function DialogueEditor({ ex, update }) {
 
   return (
     <div>
+      <div style={fieldWrap}>
+        <label style={fieldLabel}>Instruction (optional, shown to student before dialogue)</label>
+        <input className="input" value={ex.instruction || ''} onChange={e => update({ instruction: e.target.value })}
+          placeholder="e.g. Practice reading this dialogue between a nurse and a patient." />
+      </div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 4 }}>
         <div style={fieldWrap}>
           <label style={fieldLabel}>Speaker A role</label>
@@ -112,6 +117,11 @@ export function SwapEditor({ ex, update }) {
   return (
     <div>
       <div style={fieldWrap}>
+        <label style={fieldLabel}>Instruction (optional, shown to student)</label>
+        <input className="input" value={ex.instruction || ''} onChange={e => update({ instruction: e.target.value })}
+          placeholder="e.g. Upgrade the highlighted words to B2-level synonyms." />
+      </div>
+      <div style={fieldWrap}>
         <label style={fieldLabel}>Sentence: wrap words in [brackets] to make them swappable</label>
         <textarea className="input" rows={3}
           value={ex.sentence || ''}
@@ -121,7 +131,7 @@ export function SwapEditor({ ex, update }) {
         {ex.sentence && (
           <div style={{ marginTop: 8, padding: '8px 12px', background: 'var(--bg)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-sm)', lineHeight: 2 }}>
             {segments.map((seg, i) => /^\[.*\]$/.test(seg)
-              ? <span key={i} style={{ background: 'rgba(90,44,92,.15)', color: '#5A2C5C', padding: '2px 8px', borderRadius: 0, fontWeight: 600, margin: '0 2px' }}>{seg.slice(1,-1)}</span>
+              ? <span key={i} style={{ background: 'var(--accent-subtle)', color: 'var(--accent-text)', padding: '2px 8px', borderRadius: 'var(--radius-sm)', fontWeight: 600, margin: '0 2px' }}>{seg.slice(1,-1)}</span>
               : <span key={i}>{seg}</span>
             )}
           </div>
@@ -129,7 +139,7 @@ export function SwapEditor({ ex, update }) {
       </div>
       {swaps.map(swap => (
         <div key={swap.id} style={{ marginBottom: 12, padding: 12, border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', background: 'var(--bg)' }}>
-          <div style={{ ...fieldLabel, marginBottom: 8 }}>Word: <strong style={{ color: '#5A2C5C' }}>[{swap.word}]</strong>: options (radio for correct B2 upgrade)</div>
+          <div style={{ ...fieldLabel, marginBottom: 8 }}>Word: <strong style={{ color: 'var(--accent-text)' }}>[{swap.word}]</strong>: options (radio for correct B2 upgrade)</div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
             {[0, 1, 2, 3].map(i => (
               <div key={i} style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
@@ -160,6 +170,11 @@ export function LevelUpEditor({ ex, update }) {
 
   return (
     <div>
+      <div style={fieldWrap}>
+        <label style={fieldLabel}>Instruction (optional, shown to student)</label>
+        <input className="input" value={ex.instruction || ''} onChange={e => update({ instruction: e.target.value })}
+          placeholder="e.g. Choose the sentence that uses more sophisticated B2-level English." />
+      </div>
       <div style={{ display: 'grid', gap: 8, marginBottom: 4 }}>
         <div style={fieldWrap}>
           <label style={fieldLabel}>B1 sentence (original)</label>
@@ -233,6 +248,18 @@ export function ReadEditor({ ex, update }) {
         <label style={fieldLabel}>Source (optional)</label>
         <input className="input" value={ex.source || ''} onChange={e => update({ source: e.target.value })}
           placeholder="e.g. Adapted from The Guardian, 2024" />
+      </div>
+      <div style={fieldWrap}>
+        <label style={fieldLabel}>Image (optional)</label>
+        <input className="input" value={ex.imageUrl || ''} onChange={e => update({ imageUrl: e.target.value })}
+          placeholder="https://…/image.png" style={{ marginBottom: 4 }} />
+        {ex.imageUrl && (
+          <div>
+            <img src={ex.imageUrl} alt={ex.imageAlt || 'preview'} loading="lazy" style={{ maxWidth: '100%', maxHeight: 120, borderRadius: 'var(--radius-sm)', marginTop: 4 }} />
+            <input className="input" value={ex.imageAlt || ''} onChange={e => update({ imageAlt: e.target.value })}
+              placeholder="Alt text for image" style={{ marginTop: 4 }} />
+          </div>
+        )}
       </div>
       <div style={fieldWrap}>
         <label style={fieldLabel}>

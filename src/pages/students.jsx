@@ -22,25 +22,25 @@ export default function StudentsPage({ onNavigate }) {
   const [setup, setSetup] = useState(null); // { id, pwd, busy, result }
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => { load(); }, []);
-
-  async function load() {
-    try {
-      const [s, diagnoses, homework, submissions, classEvents] = await Promise.all([
-        getStudents(),
-        getDiagnoses(),
-        getHomework(),
-        getAllSubmissions(),
-        getClassEvents(),
-      ]);
-      setStudents(s);
-      setStudentActions(buildStudentActions(s, { diagnoses, homework, submissions, classEvents }));
-    } catch (e) {
-      window.toast?.(`Failed to load students: ${e.message}`, 'warn');
-    } finally {
-      setLoading(false);
-    }
-  }
+  useEffect(() => {
+    (async () => {
+      try {
+        const [s, diagnoses, homework, submissions, classEvents] = await Promise.all([
+          getStudents(),
+          getDiagnoses(),
+          getHomework(),
+          getAllSubmissions(),
+          getClassEvents(),
+        ]);
+        setStudents(s);
+        setStudentActions(buildStudentActions(s, { diagnoses, homework, submissions, classEvents }));
+      } catch (e) {
+        window.toast?.(`Failed to load students: ${e.message}`, 'warn');
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, []);
 
   function openAdd() {
     setEditStudent(null);

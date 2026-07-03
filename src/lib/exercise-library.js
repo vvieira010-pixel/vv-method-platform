@@ -24,6 +24,7 @@ import {
   readStoredSupabaseSession,
   buildSupabaseHeaders,
 } from './supabase-storage.js';
+import { EX_TYPES } from './exercise-types.js';
 
 const LIBRARY_KEY = 'vv:exerciseLibrary';
 
@@ -63,6 +64,14 @@ function contentHash(ex) {
   ].filter(Boolean).join('::').trim().toLowerCase();
 }
 
+/** Derive a skill-based folder path from the exercise type for library grouping. */
+function deriveFolder(ex) {
+  const exType = EX_TYPES.find(t => t.id === ex.type);
+  const skill = exType?.metSkill?.split(',')[0] || 'other';
+  const level = ex.level || '';
+  return level ? `${skill}/${level}` : skill;
+}
+
 /** Derive a readable title from an exercise's primary text field. */
 function deriveTitle(ex) {
   const raw = ex.title || ex.question || ex.prompt || ex.template || ex.errorText
@@ -75,12 +84,13 @@ function deriveTitle(ex) {
 
 /** Split a saved exercise into { meta, fields } where fields are the type-specific platform fields. */
 function splitExercise(exercise, meta = {}) {
-  const { id, title, tags, level, createdAt, usageCount, ...fields } = exercise;
+  const { id, title, tags, level, createdAt, usageCount, folder, ...fields } = exercise;
   return {
     fields,
     title: meta.title || deriveTitle(exercise),
     tags: Array.isArray(meta.tags) ? meta.tags : (Array.isArray(tags) ? tags : []),
     level: meta.level || level || '',
+    folder: meta.folder || folder || deriveFolder(exercise),
   };
 }
 
@@ -93,9 +103,16 @@ function rowToExercise(row) {
     title: row.title || '',
     tags: row.tags || [],
     level: row.level || '',
+    folder: row.folder || '',
     createdAt: row.created_at,
     usageCount: row.usage_count || 0,
   };
+}
+
+/** Derive folder for exercises loaded from Supabase that lack the column. */
+function ensureFolder(ex) {
+  if (ex.folder) return ex;
+  return { ...ex, folder: deriveFolder(ex) };
 }
 
 /* ─── Supabase REST ──────────────────────────────────────────── */
@@ -115,12 +132,12 @@ async function sbFetch(ctx, path, init = {}) {
 
 /** All saved exercises, newest first. Merges Supabase + localStorage for resilience. */
 export async function getLibraryExercises() {
-  const local = lsLoad();
+  const local = lsLoad().map(ensureFolder);
   const ctx = supabaseCtx();
   if (!ctx) return local;
   try {
     const res = await sbFetch(ctx, 'exercises?select=*&order=created_at.desc');
-    const remote = (await res.json()).map(rowToExercise);
+    const remote = (await res.json()).map(rowToExercise).map(ensureFolder);
     // Merge — localStorage items supplement any that Supabase didn't return
     // (e.g. when the session was missing at save time).
     const remoteSigs = new Set(remote.map(contentHash));
@@ -139,14 +156,14 @@ export async function getLibraryExercises() {
  */
 export async function saveExerciseToLibrary(exercise, meta = {}) {
   if (!exercise || !exercise.type) return null;
-  const { fields, title, tags, level } = splitExercise(exercise, meta);
+  const { fields, title, tags, level, folder } = splitExercise(exercise, meta);
   const ctx = supabaseCtx();
 
   // Always mirror to localStorage so exercises survive Supabase session expiry.
   function saveLocal() {
     const list = lsLoad();
     const sig = contentHash(exercise);
-    const base = { ...fields, type: exercise.type, title, tags, level };
+    const base = { ...fields, type: exercise.type, title, tags, level, folder };
     const idx = list.findIndex(e => contentHash(e) === sig);
     if (idx >= 0) {
       const prev = list[idx];

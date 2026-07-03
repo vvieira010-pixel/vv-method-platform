@@ -239,6 +239,18 @@ function MCQEditor({ ex, update }) {
         </div>
       )}
       <div style={fieldWrap}>
+        <label style={fieldLabel}>Image (optional)</label>
+        <input className="input" value={ex.imageUrl || ''} onChange={e => update({ imageUrl: e.target.value })}
+          placeholder="https://…/image.png" style={{ marginBottom: 4 }} />
+        {ex.imageUrl && (
+          <div>
+            <img src={ex.imageUrl} alt={ex.imageAlt || 'preview'} loading="lazy" style={{ maxWidth: '100%', maxHeight: 120, borderRadius: 'var(--radius-sm)', marginTop: 4 }} />
+            <input className="input" value={ex.imageAlt || ''} onChange={e => update({ imageAlt: e.target.value })}
+              placeholder="Alt text for image" style={{ marginTop: 4 }} />
+          </div>
+        )}
+      </div>
+      <div style={fieldWrap}>
         <label style={fieldLabel}>Explanation (optional)</label>
         <textarea
           className="input" rows={2} value={ex.explanation || ''}
@@ -300,6 +312,12 @@ function BlankEditor({ ex, update }) {
           <div style={hintText}>Use | to separate accepted alternatives (e.g. "have been working|have worked").</div>
         </div>
       )}
+      <div style={fieldWrap}>
+        <label style={fieldLabel}>Explanation (shown after answering)</label>
+        <textarea className="input" rows={2} value={ex.explanation || ''}
+          onChange={e => update({ explanation: e.target.value })}
+          placeholder="Each blank: the verb should be in present perfect continuous to show ongoing action." />
+      </div>
     </div>
   );
 }
@@ -341,6 +359,13 @@ function ShortEditor({ ex, update }) {
             style={{ width: 80 }}
           />
         </div>
+      </div>
+      <div style={fieldWrap}>
+        <label style={fieldLabel}>Vocabulary scaffolding (shown to student, comma-separated)</label>
+        <input className="input" value={(ex.scaffolding?.vocabulary || []).join(', ')}
+          onChange={e => update({ scaffolding: { ...ex.scaffolding, vocabulary: e.target.value.split(',').map(v => v.trim()).filter(Boolean) } })}
+          placeholder="stance, consequence, argue, evidence" />
+        <div style={hintText}>Optional B2 keywords to display as a word bank.</div>
       </div>
     </div>
   );
@@ -392,6 +417,13 @@ function SpeakEditor({ ex, update }) {
           <option value="">– None (generic speaking prompt) –</option>
           {metTaskOptions('speak').map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
         </select>
+      </div>
+      <div style={fieldWrap}>
+        <label style={fieldLabel}>Vocabulary scaffolding (shown to student, comma-separated)</label>
+        <input className="input" value={(ex.scaffolding?.vocabulary || []).join(', ')}
+          onChange={e => update({ scaffolding: { ...ex.scaffolding, vocabulary: e.target.value.split(',').map(v => v.trim()).filter(Boolean) } })}
+          placeholder="rush hour, commute, pedestrian, impatient" />
+        <div style={hintText}>Optional B2 keywords to display as a word bank before speaking.</div>
       </div>
       <div style={fieldWrap}>
         <label style={fieldLabel}>Picture description (shown to student as a scene to describe or react to)</label>
@@ -522,6 +554,12 @@ function OrderEditor({ ex, update }) {
           Write sentences in their correct order. Student sees them shuffled.
         </div>
       </div>
+      <div style={fieldWrap}>
+        <label style={fieldLabel}>Explanation (shown after correct order)</label>
+        <textarea className="input" rows={2} value={ex.explanation || ''}
+          onChange={e => update({ explanation: e.target.value })}
+          placeholder="The sequence follows the clinical handover protocol: identify patient, state reason for visit, describe findings, note interventions." />
+      </div>
     </div>
   );
 }
@@ -553,6 +591,12 @@ function FixEditor({ ex, update }) {
           onChange={e => update({ hint: e.target.value })}
           placeholder="Look at: verb tenses, missing articles, possessive form, singular/plural"
         />
+      </div>
+      <div style={fieldWrap}>
+        <label style={fieldLabel}>Explanation (shown after revealing corrections)</label>
+        <textarea className="input" rows={2} value={ex.explanation || ''}
+          onChange={e => update({ explanation: e.target.value })}
+          placeholder="'She went' is past simple for completed actions. 'Spoke' is irregular past of 'speak'." />
       </div>
     </div>
   );
@@ -644,6 +688,21 @@ function ListenEditor({ ex, update }) {
         </div>
       </div>
 
+      <div style={fieldWrap}>
+        <label style={fieldLabel}>MET part (P1/P2/P3, optional — adds strategy banner)</label>
+        <select className="input" value={ex.metPart || ''} onChange={e => update({ metPart: e.target.value || '' })}>
+          <option value="">– None –</option>
+          <option value="P1">Part 1 — Short Conversation</option>
+          <option value="P2">Part 2 — Longer Conversation</option>
+          <option value="P3">Part 3 — Short Talk</option>
+        </select>
+      </div>
+      <div style={fieldWrap}>
+        <label style={fieldLabel}>Vocabulary preview (comma-separated, shown before listening)</label>
+        <input className="input" value={(ex.vocabulary || []).join(', ')}
+          onChange={e => update({ vocabulary: e.target.value.split(',').map(v => v.trim()).filter(Boolean) })}
+          placeholder="symptoms, pharmacy, prescription" />
+      </div>
       <div style={fieldWrap}>
         <label style={fieldLabel}>Picture hint (optional, context clue shown before listening)</label>
         <div style={{ display: 'flex', gap: 6 }}>

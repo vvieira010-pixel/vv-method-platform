@@ -37,8 +37,7 @@ export default function HomeworkPage({ students, onNavigate }) {
   const [filterLevel, setFilterLevel] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
 
-  async function loadHomework() { setHomework((await getHomework()) || []); }
-  useEffect(() => { loadHomework(); }, []);
+  useEffect(() => { (async () => { setHomework((await getHomework()) || []); })(); }, []);
   async function handleDelete(id) {
     if (!confirm('Delete this homework assignment?')) return;
     try {

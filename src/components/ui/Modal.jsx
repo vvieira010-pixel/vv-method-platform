@@ -1,4 +1,5 @@
 import { useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 
 const FOCUSABLE = 'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
@@ -40,21 +41,17 @@ export function Modal({ open, onClose, kicker, title, subtitle, maxWidth = 680, 
     if (e.target === e.currentTarget) onClose();
   }
 
-  if (variant === 'fullscreen') {
-    return (
-      <div className="modal-fullscreen" onClick={handleBackdrop}>
-        <div ref={dialogRef} role="dialog" aria-modal="true" aria-label={title || kicker}>
-          <div className="modal-fullscreen-header">
-            <div className="modal-fullscreen-title">{title || kicker}</div>
-            <button onClick={onClose} className="modal-fullscreen-close">Close preview</button>
-          </div>
-          <div className="modal-fullscreen-body">{children}</div>
+  const content = variant === 'fullscreen' ? (
+    <div className="modal-fullscreen" onClick={handleBackdrop}>
+      <div ref={dialogRef} role="dialog" aria-modal="true" aria-label={title || kicker}>
+        <div className="modal-fullscreen-header">
+          <div className="modal-fullscreen-title">{title || kicker}</div>
+          <button onClick={onClose} className="modal-fullscreen-close">Close preview</button>
         </div>
+        <div className="modal-fullscreen-body">{children}</div>
       </div>
-    );
-  }
-
-  return (
+    </div>
+  ) : (
     <div className="modal-overlay-enter modal-overlay" onClick={handleBackdrop}>
       <div
         ref={dialogRef}
@@ -81,4 +78,6 @@ export function Modal({ open, onClose, kicker, title, subtitle, maxWidth = 680, 
       </div>
     </div>
   );
+
+  return createPortal(content, document.body);
 }

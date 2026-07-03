@@ -1,0 +1,622 @@
+{
+  "schemaVersion": "2.0",
+  "contentType": "met_b2_skills_bank",
+  "title": "MET B2 Skills Exercise Pack",
+  "subtitle": "Authentic B2 exercises across Listening, Reading, Writing, Speaking, and Grammar",
+  "level": "B2",
+  "modules": [
+    {
+      "id": "reading_single_mcq",
+      "title": "Reading: Single Texts – Multiple Choice (B2)",
+      "levelRange": "B2",
+      "skill": "reading",
+      "moduleType": "reading_set",
+      "items": [
+        {
+          "id": "R01",
+          "passage": "For years, people have complained that modern products are made to be replaced, not repaired. A broken toaster or lamp is often cheaper to throw away than to fix, especially if spare parts are expensive or difficult to find. In response, many cities have seen the growth of \"repair cafés,\" informal events where volunteers help local residents examine damaged objects and, when possible, repair them. At first glance, these gatherings may look like a practical way to save money. In reality, their biggest effect may be social rather than financial.\n\nAt a typical repair café, visitors bring household items, clothing, toys, or small electronics. They sit with volunteers who have experience in sewing, wiring, woodworking, or basic mechanical repair. The atmosphere is usually patient rather than hurried. Nobody promises that every object can be saved, and even when something cannot be fixed, the owner often leaves with a better understanding of why it failed. That educational aspect matters. In everyday life, many people interact with devices only as users, not as problem-solvers. A repair café slows that relationship down.\n\nThe financial side is more complicated than many supporters admit. Some products are so poorly designed that opening them does more damage. Others require parts that simply are not available. In such cases, a repair café cannot compete with mass retail. Even so, people continue to attend. Organizers say that visitors often return with a second or third object, not because they expect every repair to succeed, but because they value the process itself. They enjoy meeting people with useful skills and seeing that practical knowledge still exists within their community.\n\nThere is also an emotional element. When an item has been in a family for years, replacing it can feel like giving up on a small part of personal history. A lamp from a grandparent's house or a jacket repaired several times already may not be valuable in the market, but it can still matter to its owner. Repair cafés make space for that attitude.\n\nCritics sometimes argue that repair culture is too small to make a real difference in global waste. Yet it would be a mistake to judge these events only by the number of objects they save. Their larger contribution may be the habit they promote — the habit of pausing before replacing, asking questions before buying, and seeing broken things as problems to understand rather than reasons to consume again.",
+          "questions": [
+            {
+              "stem": "What is the main idea of the article?",
+              "options": [
+                "Repair cafés are mainly successful because they reduce shopping costs.",
+                "Repair cafés matter as much for community learning and attitudes as for repair itself.",
+                "Repair cafés should receive government funding in every city.",
+                "Modern devices are impossible to repair."
+              ],
+              "correct": 1,
+              "explanation": "The article says the biggest effect is 'social rather than financial' and their contribution is 'the habit they promote.'"
+            },
+            {
+              "stem": "Why does the author mention people returning with a second or third object?",
+              "options": [
+                "To show that repairs always succeed.",
+                "To suggest that volunteers charge low prices.",
+                "To support the idea that visitors value the process, not only the result.",
+                "To prove that old products are better made."
+              ],
+              "correct": 2,
+              "explanation": "People return 'not because they expect every repair to succeed, but because they value the process itself.'"
+            },
+            {
+              "stem": "What does \"slows that relationship down\" most nearly mean in context?",
+              "options": [
+                "It makes people buy fewer devices for a short time.",
+                "It gives people more time to understand how objects work.",
+                "It forces volunteers to work more carefully.",
+                "It delays the opening of the event."
+              ],
+              "correct": 1,
+              "explanation": "In context, a repair café slows the user-device relationship, giving people time to engage with and understand their objects."
+            },
+            {
+              "stem": "Which statement would the author most likely agree with?",
+              "options": [
+                "Repair cafés are useful even when they do not fix every item.",
+                "Repair cafés should focus only on expensive objects.",
+                "Emotional attachment makes repair decisions irrational.",
+                "Community events should avoid dealing with electronics."
+              ],
+              "correct": 0,
+              "explanation": "The author says 'it would be a mistake to judge these events only by the number of objects they save.'"
+            },
+            {
+              "stem": "What is the author's attitude toward repair cafés?",
+              "options": [
+                "Strongly negative.",
+                "Cautiously supportive.",
+                "Completely impartial.",
+                "Mainly disappointed."
+              ],
+              "correct": 1,
+              "explanation": "The author acknowledges critics but ultimately defends the value of repair cafés."
+            }
+          ]
+        },
+        {
+          "id": "R02",
+          "passage": "Libraries are often imagined as places defined by silence. For some users, that expectation is exactly the point. They want an environment where conversation is limited and attention can settle. Yet many modern libraries are rethinking what silence should mean. Instead of separating people completely, some are creating spaces that encourage what designers call \"quiet togetherness\": being in the presence of others without being required to speak to them.\n\nThis idea has grown partly because of changes in work and study habits. More people now divide their day between home, cafés, transport, and temporary study spaces. Working alone at home may be comfortable, but it can also feel isolating. Busy cafés solve the loneliness problem, although they create a different one: noise, movement, and the expectation that customers keep buying something. Libraries occupy a useful middle position. They can offer a public environment where people feel accompanied by others while still being protected from the pressure to socialize or consume.\n\nQuiet togetherness is not simply another name for a silent room. In some libraries, it appears through layout decisions rather than rules. Tables are placed in ways that allow people to notice one another without interrupting concentration. Lighting is warm rather than severe. There may be soft indicators that remind users to lower their voices, but staff do not try to remove every sound from the space. The goal is not total silence; it is a shared understanding that everyone is there for focused activity.\n\nSupporters say this approach has psychological value. Seeing others reading, writing, or studying can make difficult tasks feel more manageable. People often work longer when they sense a collective purpose around them. In other words, quiet togetherness offers companionship without demand.\n\nNot everyone likes the concept. Some traditional users worry that any move away from strict silence weakens the identity of the library. Others say the term is too vague to guide policy. Still, the most successful examples seem to rely on balance rather than replacement. They keep silent rooms for those who want them while also designing other zones where social presence is possible without becoming intrusive.",
+          "questions": [
+            {
+              "stem": "The article is mainly about",
+              "options": [
+                "why cafés are better than libraries for studying.",
+                "how libraries are adapting public study space for modern users.",
+                "why strict silence should return to libraries.",
+                "how urban design affects transportation."
+              ],
+              "correct": 1,
+              "explanation": "The article describes how libraries are redesigning spaces around 'quiet togetherness' for modern needs."
+            },
+            {
+              "stem": "Why does the author mention cafés?",
+              "options": [
+                "To argue that libraries should sell drinks.",
+                "To show that cafés are more affordable than libraries.",
+                "To contrast a social but noisy option with the library model.",
+                "To explain where librarians prefer to work."
+              ],
+              "correct": 2,
+              "explanation": "Cafés are mentioned as a noisy alternative that forces consumption, contrasted with the library's middle-ground position."
+            },
+            {
+              "stem": "What is true of \"quiet togetherness\" according to the article?",
+              "options": [
+                "It requires users to work in groups.",
+                "It removes all sound from a space.",
+                "It allows social presence without demanding conversation.",
+                "It is only useful for school students."
+              ],
+              "correct": 2,
+              "explanation": "The article says quiet togetherness 'offers companionship without demand.'"
+            },
+            {
+              "stem": "Which concern do critics raise?",
+              "options": [
+                "The concept may be too unclear to guide decisions.",
+                "Libraries are spending too much on furniture.",
+                "Silent rooms have become unpopular.",
+                "Staff members are unwilling to enforce rules."
+              ],
+              "correct": 0,
+              "explanation": "Critics say the term is 'too vague to guide policy.'"
+            },
+            {
+              "stem": "What is the author's attitude?",
+              "options": [
+                "Supportive, while recognizing possible limits.",
+                "Opposed to any change in library design.",
+                "Uncertain because there is no evidence.",
+                "Mostly amused by a passing trend."
+              ],
+              "correct": 0,
+              "explanation": "The author supports the concept but acknowledges valid concerns — a balanced, cautiously positive view."
+            }
+          ]
+        },
+        {
+          "id": "R09",
+          "passage": "When people talk about hybrid work, they often focus on productivity. They ask whether staff do more at home, whether meetings become shorter, or whether offices should shrink. A quieter concern receives less attention: friendship. Many workers say that what has changed most is not their task list but the social texture of their day.\n\nOffice friendships once grew through repeated, low-pressure contact. People chatted while making coffee, noticed each other's moods, or solved small problems side by side. None of these interactions looked important on their own. Together, however, they built familiarity and trust. In a hybrid system, those moments become less predictable. A person may come in on Tuesday while their closest colleague works from home. After a few months, both people still collaborate, yet they may feel less informed about each other's lives.\n\nSome managers respond by creating more formal social events. Team lunches, online quizzes, and scheduled \"connection sessions\" are intended to replace what used to happen naturally. These efforts are not useless, but they often feel artificial when overused. Friendship rarely grows because a calendar invitation says it should. It tends to emerge from shared routines and small, repeated exchanges.\n\nThat does not mean hybrid work inevitably weakens relationships. Some employees say that seeing colleagues less often makes in-person time feel more valuable, so conversations become more intentional. Others appreciate the reduced pressure to appear sociable every day.\n\nThe challenge is not to recreate the old office exactly. It is to notice what kinds of interaction are disappearing and decide which ones matter enough to support. A team may simply need overlap in schedules, enough common time for informal talk, and managers who understand that culture is built partly in the unplanned spaces between tasks.",
+          "questions": [
+            {
+              "stem": "What is the article mainly about?",
+              "options": [
+                "Why productivity matters more than friendship.",
+                "How hybrid work can affect workplace friendships.",
+                "Why offices should return to full-time schedules.",
+                "How managers can organize better quizzes."
+              ],
+              "correct": 1,
+              "explanation": "The article focuses on the 'quieter concern' of friendship in hybrid work environments."
+            },
+            {
+              "stem": "What does the author suggest about office friendships in the past?",
+              "options": [
+                "They were usually caused by formal team-building events.",
+                "They depended on salary incentives.",
+                "They often developed through ordinary repeated contact.",
+                "They distracted workers from serious tasks."
+              ],
+              "correct": 2,
+              "explanation": "Friendships grew through 'repeated, low-pressure contact' like chatting while making coffee."
+            },
+            {
+              "stem": "Why are \"connection sessions\" mentioned?",
+              "options": [
+                "As an example of a forced substitute for natural interaction.",
+                "As proof that hybrid work has failed.",
+                "As a low-cost way to reduce office space.",
+                "As something employees strongly prefer."
+              ],
+              "correct": 0,
+              "explanation": "They are described as feeling 'artificial when overused' — a poor substitute for natural interaction."
+            },
+            {
+              "stem": "Which statement would the author most likely agree with?",
+              "options": [
+                "Cultural problems disappear if people meet less often.",
+                "Intentional schedule overlap may matter more than social games.",
+                "Friendship at work is unprofessional.",
+                "Hybrid work affects all employees in exactly the same way."
+              ],
+              "correct": 1,
+              "explanation": "The author says teams need 'overlap in schedules' and 'common time for informal talk' rather than formal events."
+            },
+            {
+              "stem": "The word \"texture\" in paragraph 1 most nearly refers to",
+              "options": [
+                "the physical design of a building.",
+                "the speed of office internet.",
+                "the social feel of everyday experience.",
+                "a written company policy."
+              ],
+              "correct": 2,
+              "explanation": "\"Social texture\" means the quality and character of day-to-day social experience."
+            }
+          ]
+        },
+        {
+          "id": "R11",
+          "passage": "In many countries, people are living longer than ever before. This increase in life expectancy is a sign of progress in medicine, nutrition, and public health. However, it also creates challenges for societies, particularly in the areas of healthcare and pensions. When more people live into their eighties and nineties, the demand for medical services rises, and retirement systems must support people for longer periods.\n\nSome governments have responded by raising the retirement age, encouraging people to work a few extra years before receiving full pension benefits. Others have introduced incentives for older workers to remain in the workforce part-time. Many companies are also beginning to see the value of experienced employees and are creating flexible roles for those who prefer not to retire completely.\n\nAt the community level, some towns are developing programs that connect older adults with younger generations. For example, volunteer tutoring programs allow retirees to share their knowledge with schoolchildren. Such programs benefit both groups: older adults feel valued and active, while younger people receive guidance and support.\n\nDespite these efforts, there is still debate about how best to manage the financial costs of an aging population. Some argue that increasing taxes is the only realistic solution, while others believe that encouraging private savings should be the priority. Whatever the approach, it is clear that the aging population will remain a major topic for policymakers in the coming decades.",
+          "questions": [
+            {
+              "stem": "What is the article mainly about?",
+              "options": [
+                "The benefits of modern medicine.",
+                "The challenges and responses to longer life expectancy.",
+                "How to reduce healthcare costs.",
+                "Why retirement age should be lowered."
+              ],
+              "correct": 1,
+              "explanation": "The article discusses the challenges of longer life expectancy and various responses to them."
+            },
+            {
+              "stem": "What is one way companies are adapting to an aging workforce?",
+              "options": [
+                "Replacing older workers with younger staff.",
+                "Creating flexible roles for experienced employees.",
+                "Increasing pension contributions.",
+                "Shortening the workday for all employees."
+              ],
+              "correct": 1,
+              "explanation": "Companies are creating flexible roles for those who prefer not to retire completely."
+            },
+            {
+              "stem": "According to the article, what is a benefit of intergenerational programs?",
+              "options": [
+                "They reduce healthcare costs.",
+                "They help older adults feel valued.",
+                "They increase company profits.",
+                "They replace formal education."
+              ],
+              "correct": 1,
+              "explanation": "Intergenerational programs help older adults feel valued and active while younger people receive guidance."
+            },
+            {
+              "stem": "The word \"incentives\" in paragraph 2 most nearly means",
+              "options": [
+                "warnings.",
+                "rewards or encouragements.",
+                "rules or regulations.",
+                "penalties."
+              ],
+              "correct": 1,
+              "explanation": "Incentives are rewards or encouragements designed to motivate certain behavior."
+            },
+            {
+              "stem": "Which statement would the author most likely agree with?",
+              "options": [
+                "Solutions to aging population challenges are simple.",
+                "The aging population will require ongoing policy attention.",
+                "Raising taxes is clearly the best solution.",
+                "Older workers should be required to retire at sixty-five."
+              ],
+              "correct": 1,
+              "explanation": "The author concludes that the aging population will remain a major topic for policymakers."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "reading_multi_mcq",
+      "title": "Reading: Multiple Texts – Multiple Choice (B2)",
+      "levelRange": "B2",
+      "skill": "reading",
+      "moduleType": "reading_set",
+      "items": [
+        {
+          "id": "R03",
+          "passage": "TEXT A — Rail company brochure\nNight travel gives you a full day at your destination instead of a long journey in daylight. On our new Moonline route, passengers can choose standard seats, shared sleeper cabins, or private cabins with breakfast included. Free Wi-Fi is available in all cars, and bicycles may be transported for an additional fee if booked in advance.\n\nTEXT B — Travel blog\nI took the Moonline last month and was surprised by how rested I felt on arrival. The cabin was small, but much quieter than I expected. The only real inconvenience was breakfast, which was delivered too early for me. I would definitely choose the train again over a budget flight, especially because I didn't lose half a day getting to and from airports.\n\nTEXT C — News report\nRegional officials say the return of overnight rail could reduce short domestic flights if prices remain competitive. However, transport analysts warn that the service will only attract regular users if reliability improves. In earlier trials, delays on morning arrival made the option less appealing to business travelers. Operators insist the new timetable includes greater recovery time to avoid that problem.",
+          "questions": [
+            {
+              "stem": "What is the purpose of Text A?",
+              "options": [
+                "To criticize airline travel.",
+                "To describe and promote a service.",
+                "To report on transport policy.",
+                "To compare train companies."
+              ],
+              "correct": 1,
+              "explanation": "Text A is a rail company brochure — it describes and promotes the Moonline service."
+            },
+            {
+              "stem": "What complaint does the writer of Text B mention?",
+              "options": [
+                "The train was noisy.",
+                "Breakfast came too early.",
+                "Wi-Fi was unreliable.",
+                "The cabin was expensive."
+              ],
+              "correct": 1,
+              "explanation": "The writer says 'The only real inconvenience was breakfast, which was delivered too early for me.'"
+            },
+            {
+              "stem": "According to Text C, what condition is important for long-term success?",
+              "options": [
+                "Free bicycle transport.",
+                "Fewer sleeper cabins.",
+                "Competitive prices and reliable arrival times.",
+                "Later evening departures."
+              ],
+              "correct": 2,
+              "explanation": "Analysts say the service needs competitive prices and improved reliability."
+            },
+            {
+              "stem": "Which text is most positive in tone?",
+              "options": [
+                "Text A.",
+                "Text B.",
+                "Text C.",
+                "All are equally neutral."
+              ],
+              "correct": 1,
+              "explanation": "Text B expresses personal enthusiasm: 'I would definitely choose the train again.'"
+            },
+            {
+              "stem": "Which idea appears in more than one text?",
+              "options": [
+                "Airport security is stressful.",
+                "Night trains appeal partly because they save daytime hours.",
+                "Private cabins should be removed.",
+                "Breakfast quality determines user satisfaction."
+              ],
+              "correct": 1,
+              "explanation": "Text A says you get 'a full day at your destination'; Text B says the blogger 'didn't lose half a day getting to and from airports.'"
+            }
+          ]
+        },
+        {
+          "id": "R04",
+          "passage": "TEXT A — Festival volunteer notice\nVolunteers are needed for the Riverside Food Festival next month. Tasks include greeting visitors, checking tickets, and helping stall owners move light equipment before opening. Morning and evening shifts are available. Volunteers receive a festival T-shirt, free entry on one day, and a reference letter on request.\n\nTEXT B — Email from a volunteer coordinator\nThanks for your interest in helping at the festival. Since you said you're comfortable speaking to the public, the greeting team might suit you best. Please note that the morning shift starts at 7:30 a.m., earlier than many first-time volunteers expect. If that is a problem, let me know and I can assign you to an afternoon role instead.\n\nTEXT C — Volunteer review\nI volunteered last year and ended up enjoying it more than I expected. The work was tiring at times, especially before the gates opened, but the team leaders explained things clearly and everyone was friendly. What I appreciated most was being trusted to solve small problems instead of waiting for instructions all the time.",
+          "questions": [
+            {
+              "stem": "Which text is mainly designed to recruit people?",
+              "options": [
+                "Text A.",
+                "Text B.",
+                "Text C.",
+                "Texts A and C."
+              ],
+              "correct": 0,
+              "explanation": "Text A is a volunteer notice asking for people to sign up — it is designed to recruit."
+            },
+            {
+              "stem": "What does Text B suggest about the candidate?",
+              "options": [
+                "They asked for office work only.",
+                "They may be well suited to greeting visitors.",
+                "They volunteered the previous year.",
+                "They are not available in the afternoon."
+              ],
+              "correct": 1,
+              "explanation": "The coordinator says 'the greeting team might suit you best' based on comfort with speaking to the public."
+            },
+            {
+              "stem": "What is the reviewer's overall opinion in Text C?",
+              "options": [
+                "Mostly negative.",
+                "Positive despite some tiring moments.",
+                "Unclear because of missing details.",
+                "Frustrated with management."
+              ],
+              "correct": 1,
+              "explanation": "The reviewer says they 'ended up enjoying it more than I expected' — positive, despite some tiring moments."
+            },
+            {
+              "stem": "Which text mentions a possible scheduling issue?",
+              "options": [
+                "Text A only.",
+                "Text B only.",
+                "Text C only.",
+                "Texts A and B."
+              ],
+              "correct": 3,
+              "explanation": "Text A lists morning and evening shifts; Text B flags the 7:30 a.m. start as potentially early for first-timers."
+            },
+            {
+              "stem": "Which statement is supported by the set as a whole?",
+              "options": [
+                "Festival volunteering is unpaid but may bring other benefits.",
+                "New volunteers cannot speak to the public.",
+                "All roles begin before 8:00 a.m.",
+                "Team leaders expect volunteers to work independently immediately."
+              ],
+              "correct": 0,
+              "explanation": "Text A lists a T-shirt, free entry, and reference letter — non-pay benefits."
+            }
+          ]
+        },
+        {
+          "id": "R10",
+          "passage": "TEXT A — Community sports flyer\nTry a new activity this summer at Eastside Sports Center. Adults can choose beginner tennis, evening running groups, and low-impact fitness classes. Reduced prices are available for residents over sixty and for students with valid identification. Registration opens online on Monday.\n\nTEXT B — Interview excerpt\nCoach Marina Lopez says the biggest challenge for adult beginners is not physical ability but confidence. \"People think everyone else already knows what they're doing,\" she says. \"Once they realize the class is designed for first-timers, they usually relax.\"\n\nTEXT C — Local news item\nCity health officials welcomed the expansion of low-cost sports programs, saying that access matters as much as motivation. Previous surveys showed strong interest in exercise classes, but cost and travel distance often prevented residents from joining.",
+          "questions": [
+            {
+              "stem": "Which text mainly provides practical sign-up information?",
+              "options": [
+                "Text A.",
+                "Text B.",
+                "Text C.",
+                "Texts B and C."
+              ],
+              "correct": 0,
+              "explanation": "Text A is a flyer with activities, prices, and registration details."
+            },
+            {
+              "stem": "According to Text B, what stops many adult beginners?",
+              "options": [
+                "Lack of free time.",
+                "Fear of not being good enough.",
+                "High equipment costs.",
+                "Limited bus service."
+              ],
+              "correct": 1,
+              "explanation": "Coach Lopez says the challenge is 'confidence' — people worry that everyone else knows what they're doing."
+            },
+            {
+              "stem": "What point is made in Text C?",
+              "options": [
+                "Coaches should design harder classes.",
+                "Motivation is the only real problem.",
+                "Access barriers can prevent participation.",
+                "Tennis is more popular than running."
+              ],
+              "correct": 2,
+              "explanation": "Text C says cost and travel distance 'often prevented residents from joining' — access barriers."
+            },
+            {
+              "stem": "Which text would be most useful to someone deciding whether classes suit a novice?",
+              "options": [
+                "Text A.",
+                "Text B.",
+                "Text C.",
+                "None of them."
+              ],
+              "correct": 1,
+              "explanation": "Text B specifically addresses beginners and says classes are designed for first-timers."
+            },
+            {
+              "stem": "Which idea connects Texts A and C most clearly?",
+              "options": [
+                "Discounts and affordability can influence participation.",
+                "Running groups should be moved online.",
+                "Surveys are more useful than coaching.",
+                "Programs should only target older residents."
+              ],
+              "correct": 0,
+              "explanation": "Text A mentions reduced prices; Text C notes that cost 'often prevented residents from joining.'"
+            }
+          ]
+        },
+        {
+          "id": "R12",
+          "passage": "TEXT A — Community notice\nGreenwood Neighborhood Association is organizing a Clean-Up Day on Saturday, April 22, from 9 a.m. to 1 p.m. Volunteers are needed to pick up litter, plant flowers in the public garden, and paint benches in the park. Gloves, paint, and garbage bags will be provided. Volunteers should bring their own water bottles. A free lunch will be served at noon.\n\nTEXT B — Email newsletter\nLast year's neighborhood clean-up was a great success, with over sixty volunteers participating. Organizers are hoping for an even bigger turnout this spring. New this year: a children's planting corner where young residents can learn about gardening. If you plan to join, please register online so the team can order enough supplies. The weather forecast looks favorable, so we expect a productive day.\n\nTEXT C — Online comment from a resident\nI attended the clean-up last year and really enjoyed it. The atmosphere was friendly, and it felt good to see the park looking better afterward. The only downside was that we ran out of paint for the benches by late morning. I hope this year they bring more supplies. Overall, though, I would definitely recommend joining.",
+          "questions": [
+            {
+              "stem": "What is the purpose of Text A?",
+              "options": [
+                "To report on a past event.",
+                "To announce and invite people to an event.",
+                "To criticize the neighborhood association.",
+                "To compare different volunteer activities."
+              ],
+              "correct": 1,
+              "explanation": "Text A is a notice announcing the Clean-Up Day and calling for volunteers."
+            },
+            {
+              "stem": "What does Text B mention that is new this year?",
+              "options": [
+                "A free lunch for volunteers.",
+                "A children's planting corner.",
+                "Longer working hours.",
+                "A different meeting location."
+              ],
+              "correct": 1,
+              "explanation": "Text B says new this year is a children's planting corner."
+            },
+            {
+              "stem": "What concern does the writer of Text C raise?",
+              "options": [
+                "The event started too late.",
+                "There was not enough paint.",
+                "The weather was bad.",
+                "Not enough people attended."
+              ],
+              "correct": 1,
+              "explanation": "Text C says they ran out of paint for the benches."
+            },
+            {
+              "stem": "Which text is most likely to persuade someone to join for the first time?",
+              "options": [
+                "Text A.",
+                "Text B.",
+                "Text C.",
+                "All equally."
+              ],
+              "correct": 2,
+              "explanation": "Text C gives a first-person positive experience, which is persuasive for newcomers."
+            },
+            {
+              "stem": "Which detail appears in Text A but NOT in Text B or C?",
+              "options": [
+                "Volunteers should bring water bottles.",
+                "There will be a children's activity.",
+                "Registration is online.",
+                "Lunch will be served."
+              ],
+              "correct": 0,
+              "explanation": "Only Text A mentions bringing water bottles."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "reading_tfng",
+      "title": "Reading: True / False / Not Given (B2)",
+      "levelRange": "B2",
+      "skill": "reading",
+      "moduleType": "tfng_set",
+      "items": [
+        {
+          "id": "R05",
+          "passage": "In many offices, long emails are treated as signs of seriousness. A detailed message can look thoughtful and complete, especially when a topic is complicated. Yet communication researchers have increasingly questioned whether length improves workplace understanding. In many cases, the opposite seems to be true: when readers are busy, they often respond more effectively to shorter emails with a clear structure and one obvious purpose.\n\nThis does not mean all emails should be extremely brief. Some decisions require explanation, and some messages need context. The problem appears when writers include too many small points in one message. Readers then have to decide what matters most. If they miss the real request, both sides lose time.\n\nA more effective strategy is often to divide communication by function. One email can ask for a decision. Another can provide background information. Shorter emails may even sound more polite. A reader who receives a focused message may feel that the writer has respected their time.\n\nHowever, this trend has limits. In highly sensitive situations, very short emails can appear cold or abrupt. Tone matters, and so does the relationship between the people involved. Good email practice is not about making every message short. It is about matching length and structure to purpose.",
+          "statements": [
+            {
+              "text": "The text says long emails are always ineffective.",
+              "correct": 1,
+              "explanation": "False. The article says 'This does not mean all emails should be extremely brief.'"
+            },
+            {
+              "text": "Researchers have questioned the value of length in workplace emails.",
+              "correct": 0,
+              "explanation": "True. The article states that 'communication researchers have increasingly questioned whether length improves workplace understanding.'"
+            },
+            {
+              "text": "The writer thinks one email should contain only one clear purpose whenever possible.",
+              "correct": 0,
+              "explanation": "True. The article recommends dividing communication by function so each email has one obvious purpose."
+            },
+            {
+              "text": "The text says short emails are always more polite.",
+              "correct": 1,
+              "explanation": "False. Short emails 'may even sound more polite' but can also appear 'cold or abrupt' in sensitive situations."
+            },
+            {
+              "text": "Very short emails can sometimes sound unfriendly.",
+              "correct": 0,
+              "explanation": "True. The article says 'very short emails can appear cold or abrupt' in sensitive situations."
+            },
+            {
+              "text": "The article states that customers prefer bullet points to short paragraphs.",
+              "correct": 2,
+              "explanation": "Not Given. The article mentions bullet points but does not state any customer preference for one format over another."
+            }
+          ]
+        },
+        {
+          "id": "R13",
+          "passage": "Urban farming is becoming increasingly popular in cities around the world. Rooftop gardens, community plots, and vertical farms are appearing in places where traditional agriculture would seem impossible. Supporters argue that growing food in cities reduces transportation costs, provides fresh produce, and creates green spaces that improve air quality.\n\nHowever, urban farming is not without its difficulties. Space is limited, soil quality can be poor, and city regulations sometimes restrict what residents can grow. Despite these challenges, many cities have begun supporting urban agriculture through grants and policy changes. Some have even converted empty lots into community gardens that residents can use for free.\n\nCritics point out that urban farming cannot replace large-scale agriculture. The amount of food grown in cities is small compared to what rural farms produce. But advocates argue that this misses the point. Urban farming is not meant to replace rural agriculture. Instead, it is meant to complement it by improving food access in neighborhoods that lack grocery stores.\n\nIn the end, urban farming may be most valuable for its social benefits. Community gardens bring neighbors together, teach valuable skills, and encourage healthier eating habits. These effects, though hard to measure, may be just as important as the food itself.",
+          "statements": [
+            {
+              "text": "Urban farming is only possible in warm climates.",
+              "correct": 2,
+              "explanation": "Not Given. The article does not discuss climate requirements for urban farming."
+            },
+            {
+              "text": "Some cities provide financial support for urban agriculture.",
+              "correct": 0,
+              "explanation": "True. The article says cities support urban agriculture through grants and policy changes."
+            },
+            {
+              "text": "The article says urban farming can replace traditional rural agriculture.",
+              "correct": 1,
+              "explanation": "False. The article says urban farming is not meant to replace rural agriculture."
+            },
+            {
+              "text": "Community gardens can help build social connections.",
+              "correct": 0,
+              "explanation": "True. The article says community gardens bring neighbors together."
+            },
+            {
+              "text": "Urban farming produces more food than rural farms.",
+              "correct": 1,
+              "explanation": "False. Critics point out the amount grown in cities is small compared to rural farms."
+            }
+          ]
+        },
+        {
+          "id": "R14",
+          "passage": "The way we communicate has changed dramatically over the past twenty years. Text messages, instant messaging, and social media have largely replaced phone calls and letters for everyday communication. While this has made communication faster and more convenient, some researchers worry that important conversational skills are being lost.\n\nOne concern is that people are becoming less comfortable with real-time conversation. When messaging, you have time to think before responding. In face-to-face or phone conversations, you need to listen, process, and respond immediately. Young people who have grown up with texting may find this more challenging.\n\nAnother issue is that written messages lack tone of voice, facial expressions, and body language. This can lead to misunderstandings. A simple message like \"Fine\" can mean agreement, annoyance, or resignation depending on how it is said. Online, the reader has to guess.\n\nHowever, defenders of digital communication point out that it allows for more thoughtful responses. People can edit their messages, research their answers, and express ideas more precisely. They argue that different situations call for different communication methods, and that being skilled at both written and spoken communication is the real goal.",
+          "statements": [
+            {
+              "text": "Phone calls have become more popular than texting.",
+              "correct": 1,
+              "explanation": "False. The article says texting and messaging have largely replaced phone calls."
+            },
+            {
+              "text": "Real-time conversation requires immediate responses.",
+              "correct": 0,
+              "explanation": "True. The article says you need to listen, process, and respond immediately."
+            },
+            {
+              "text": "Online messages always carry the intended tone correctly.",
+              "correct": 1,
+              "explanation": "False. The article says written messages lack tone of voice and can lead to misunderstandings."
+            },
+            {
+              "text": "The article mentions that digital communication allows people to edit their responses.",
+              "correct": 0,
+              "explanation": "True. Defenders of digital communication say people can edit their messages."
+            },
+            {
+              "text": "The author believes everyone should stop using text messages.",
+              "correct": 2,
+              "explanation": "Not Given. The author presents both sides but does not state a personal preference."
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

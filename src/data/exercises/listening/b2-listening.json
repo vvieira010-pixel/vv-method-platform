@@ -1,0 +1,508 @@
+{
+  "schemaVersion": "2.0",
+  "contentType": "met_b2_skills_bank",
+  "title": "MET B2 Skills Exercise Pack",
+  "subtitle": "Authentic B2 exercises across Listening, Reading, Writing, Speaking, and Grammar",
+  "level": "B2",
+  "modules": [
+    {
+      "id": "listening_part1",
+      "title": "Listening Part 1: Short Conversations",
+      "levelRange": "B2",
+      "skill": "listening",
+      "moduleType": "listening_set",
+      "items": [
+        {
+          "id": "L01",
+          "script": "W: Are you going to the careers workshop this afternoon?\nM: Not today. They moved it to next Thursday because the guest speaker missed her flight.\nW: I'm glad you told me. I was about to leave for the hall.\nN: What does the man say about the workshop?",
+          "questions": [
+            {
+              "stem": "What does the man say about the workshop?",
+              "options": [
+                "It has started late.",
+                "It will happen on another day.",
+                "It is only for new students.",
+                "It has changed rooms."
+              ],
+              "correct": 1,
+              "explanation": "The man says they moved it to next Thursday — it will happen on a different day."
+            }
+          ]
+        },
+        {
+          "id": "L02",
+          "script": "W: Did you print the handouts for the meeting?\nM: I tried, but the printer is out of paper, so I emailed everyone a copy instead.\nW: Fine. That should work for today.\nN: What problem did the man have?",
+          "questions": [
+            {
+              "stem": "What problem did the man have?",
+              "options": [
+                "He forgot the handouts at home.",
+                "The printer had no paper.",
+                "He sent the wrong file.",
+                "The meeting started early."
+              ],
+              "correct": 1,
+              "explanation": "The man says the printer is out of paper."
+            }
+          ]
+        },
+        {
+          "id": "L03",
+          "script": "M: I can't believe your phone still works after all these years.\nW: Barely. I'm keeping it until next month, when the newer model goes on sale.\nN: What will the woman probably do next month?",
+          "questions": [
+            {
+              "stem": "What will the woman probably do next month?",
+              "options": [
+                "Repair her old phone.",
+                "Borrow a phone from a friend.",
+                "Change her phone plan.",
+                "Buy a new phone."
+              ],
+              "correct": 3,
+              "explanation": "She is keeping her old phone until the newer model goes on sale — she will buy a new phone."
+            }
+          ]
+        },
+        {
+          "id": "L04",
+          "script": "W: Could you close the window? The traffic is really loud today.\nM: I'd rather leave it open because it's warm in here, but if the noise is bothering you, I can shut it.\nN: What does the man mean?",
+          "questions": [
+            {
+              "stem": "What does the man mean?",
+              "options": [
+                "He thinks the room is already too cold.",
+                "He wants the woman to move seats.",
+                "He prefers the window open but is willing to close it.",
+                "He cannot hear the traffic at all."
+              ],
+              "correct": 2,
+              "explanation": "The man prefers it open but says he can shut it if the noise is bothering her."
+            }
+          ]
+        },
+        {
+          "id": "L11",
+          "script": "M: Are you free this Saturday to help me move my furniture?\nW: I wish I could, but I'm driving my sister to the airport that morning.\nM: What about Sunday?\nW: Sunday should be fine. Just text me the address.\nN: What will the woman do on Saturday?",
+          "questions": [
+            {
+              "stem": "What will the woman do on Saturday?",
+              "options": [
+                "Help the man move furniture.",
+                "Drive her sister to the airport.",
+                "Text the man the address.",
+                "Clean her own apartment."
+              ],
+              "correct": 1,
+              "explanation": "She says she is driving her sister to the airport on Saturday."
+            }
+          ]
+        },
+        {
+          "id": "L12",
+          "script": "W: Did you check the bus schedule for tomorrow?\nM: Yes, the first bus leaves at 6:15, but on weekends it starts at 7:30.\nW: I forgot tomorrow is Sunday. So we have an extra hour to get ready.\nN: What time does the first bus leave on weekdays?",
+          "questions": [
+            {
+              "stem": "What time does the first bus leave on weekdays?",
+              "options": [
+                "6:15",
+                "7:30",
+                "7:15",
+                "6:30"
+              ],
+              "correct": 0,
+              "explanation": "The man says the first bus leaves at 6:15, but on weekends it starts at 7:30."
+            }
+          ]
+        },
+        {
+          "id": "L13",
+          "script": "W: I heard the library is going digital with most of its journals next month.\nM: That is going to be a problem for some of the older faculty members who prefer print.\nW: The library is offering a workshop to help them.\nN: Why might some faculty members have difficulty?",
+          "questions": [
+            {
+              "stem": "Why might some faculty members have difficulty?",
+              "options": [
+                "The library is closing early.",
+                "They prefer printed journals.",
+                "The workshop is fully booked.",
+                "The library is charging new fees."
+              ],
+              "correct": 1,
+              "explanation": "The man says older faculty members prefer print."
+            }
+          ]
+        },
+        {
+          "id": "L14",
+          "script": "M: I need to renew my passport before my conference in July.\nW: Then you should apply soon. The processing time is about six weeks.\nM: That is cutting it close. I will submit the application today.\nN: What does the woman advise?",
+          "questions": [
+            {
+              "stem": "What does the woman advise?",
+              "options": [
+                "Cancel the conference.",
+                "Apply for the passport soon.",
+                "Use an express service.",
+                "Travel with the old passport."
+              ],
+              "correct": 1,
+              "explanation": "She says he should apply soon because processing takes six weeks."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "listening_part2",
+      "title": "Listening Part 2: Longer Conversations",
+      "levelRange": "B2",
+      "skill": "listening",
+      "moduleType": "listening_set",
+      "items": [
+        {
+          "id": "L05",
+          "script": "N: Listen to a conversation between a student and an academic advisor.\nAdvisor: So, you're thinking about taking Introduction to Marketing next term?\nStudent: Yes, but the only section I can see is on Tuesday evenings, and that's when I usually work.\nAdvisor: There is an online section, but it fills up quickly. If you want that one, you should register today.\nStudent: I was hoping to take the in-person class because I learn better when I can ask questions right away.\nAdvisor: That makes sense. Still, the online section might be the better choice if your work schedule can't change.\nStudent: True. I'll call my manager this afternoon and see whether I can switch shifts. If not, I'll take the online class.",
+          "questions": [
+            {
+              "stem": "Why is the student worried about the course?",
+              "options": [
+                "He has already failed it once.",
+                "He may not be free at the class time.",
+                "He cannot find the classroom.",
+                "He thinks the teacher is too strict."
+              ],
+              "correct": 1,
+              "explanation": "The student says the only section is on Tuesday evenings, when he usually works."
+            },
+            {
+              "stem": "What will the student probably do first?",
+              "options": [
+                "Drop the course completely.",
+                "Register for a different subject.",
+                "Ask his manager about his work hours.",
+                "Join the online class immediately."
+              ],
+              "correct": 2,
+              "explanation": "He says he will call his manager this afternoon to ask about switching shifts."
+            }
+          ]
+        },
+        {
+          "id": "L06",
+          "script": "N: Listen to a conversation in a bike rental shop.\nAssistant: Are you renting for the city or for the trails?\nCustomer: For the trails. My brother is visiting, and we planned a ride for Saturday.\nAssistant: In that case, I should tell you that the hill trail is partly closed after last week's heavy rain.\nCustomer: Oh. Is there another route you'd recommend?\nAssistant: Yes. The river route is open, and it's easier too. I'd also suggest helmets and a repair kit.\nCustomer: We definitely need helmets. Do they come with the bikes?\nAssistant: They do, but the repair kit costs extra.\nCustomer: That's fine. Let's do two bikes, two helmets, and one repair kit.",
+          "questions": [
+            {
+              "stem": "Why does the assistant mention the hill trail?",
+              "options": [
+                "To explain why the shop is busy.",
+                "To warn the customer about a route problem.",
+                "To suggest a more expensive bike.",
+                "To ask whether the customer is experienced."
+              ],
+              "correct": 1,
+              "explanation": "The assistant warns that the hill trail is partly closed after heavy rain."
+            },
+            {
+              "stem": "What will the customer probably rent?",
+              "options": [
+                "Two bikes and one helmet.",
+                "One bike and one repair kit.",
+                "Two bikes, helmets, and a repair kit.",
+                "Two bikes only."
+              ],
+              "correct": 2,
+              "explanation": "The customer says 'Let's do two bikes, two helmets, and one repair kit.'"
+            }
+          ]
+        },
+        {
+          "id": "L07",
+          "script": "N: Listen to two roommates talking about an apartment.\nW: I like the apartment on Green Street. It's cheaper than the others, and the kitchen is much nicer.\nM: I liked that one too, but it's pretty far from the train station.\nW: That's true, although the bus stop is right outside.\nM: Did you notice how small the bedrooms were? I'm not sure my desk would fit.\nW: Mine probably would, but just barely. On the other hand, internet is included in the rent, which would save us money every month.\nM: Good point. Why don't we visit it again on Friday and measure the rooms?\nW: That sounds like the best plan.",
+          "questions": [
+            {
+              "stem": "What does the woman see as an advantage of the apartment?",
+              "options": [
+                "It is close to the train station.",
+                "It has larger bedrooms.",
+                "It costs less and has a better kitchen.",
+                "It has new furniture included."
+              ],
+              "correct": 2,
+              "explanation": "The woman says it is cheaper and the kitchen is much nicer."
+            },
+            {
+              "stem": "What do the speakers decide to do?",
+              "options": [
+                "Sign the contract that day.",
+                "Visit the apartment again.",
+                "Look for a third roommate.",
+                "Cancel all future viewings."
+              ],
+              "correct": 1,
+              "explanation": "The man suggests visiting again on Friday and the woman agrees."
+            }
+          ]
+        },
+        {
+          "id": "L15",
+          "script": "N: Listen to a conversation between a tenant and a landlord.\nLandlord: So, you mentioned there is a problem with the heating?\nTenant: Yes, the radiator in the bedroom has not been working for three days now.\nLandlord: Did you check whether the valve is open? Sometimes that is all it is.\nTenant: I did, but there is no heat coming through at all.\nLandlord: All right. I will call a repair person tomorrow morning.\nTenant: Is there any chance they could come today? It is really cold at night.\nLandlord: I will ask if they can fit you in this evening, but I cannot promise anything.",
+          "questions": [
+            {
+              "stem": "What did the tenant already do before calling the landlord?",
+              "options": [
+                "Called another repair service.",
+                "Checked the valve on the radiator.",
+                "Bought a new heater.",
+                "Moved to a different room."
+              ],
+              "correct": 1,
+              "explanation": "The tenant says he checked whether the valve is open."
+            },
+            {
+              "stem": "What does the landlord promise?",
+              "options": [
+                "To send a repair person today.",
+                "To ask about an earlier appointment.",
+                "To reduce the rent.",
+                "To replace the radiator."
+              ],
+              "correct": 1,
+              "explanation": "The landlord says she will ask if they can come this evening but cannot promise."
+            }
+          ]
+        },
+        {
+          "id": "L16",
+          "script": "N: Listen to a conversation at a pharmacy.\nCustomer: Hello, I need to pick up a prescription for Dr. Miller.\nPharmacist: Let me check. What is your date of birth?\nCustomer: February 14, 1992.\nPharmacist: Here it is. However, this medication needs to be taken with food, or it may upset your stomach.\nCustomer: Good to know. Should I take it in the morning or at night?\nPharmacist: The prescription says once daily, so whenever is most convenient for you, as long as you have eaten something recently.\nCustomer: I will take it with breakfast then. How much do I owe you?\nPharmacist: Your insurance covers most of it. That will be twelve dollars.",
+          "questions": [
+            {
+              "stem": "What important information does the pharmacist give?",
+              "options": [
+                "The medication is out of stock.",
+                "The prescription must be taken with food.",
+                "The price has increased.",
+                "The doctor needs to be called."
+              ],
+              "correct": 1,
+              "explanation": "The pharmacist says the medication needs to be taken with food."
+            },
+            {
+              "stem": "When does the customer decide to take the medication?",
+              "options": [
+                "At lunchtime.",
+                "Before bed.",
+                "With breakfast.",
+                "After dinner."
+              ],
+              "correct": 2,
+              "explanation": "The customer decides to take it with breakfast."
+            }
+          ]
+        },
+        {
+          "id": "L17",
+          "script": "N: Listen to two colleagues discussing a presentation.\nM: So, I have finished the slides for the quarterly review.\nW: Great. Did you include the sales figures for the last three months?\nM: Yes, I put them in a chart. But I am concerned the chart is too detailed.\nW: Maybe you could show the highlights and mention that the full data is in the handout.\nM: That is a good idea. I will simplify the chart and prepare a separate handout.\nW: Also, remember that we only have twenty minutes, so we should practice timing.",
+          "questions": [
+            {
+              "stem": "What is the man worried about?",
+              "options": [
+                "The sales figures are not ready.",
+                "The chart may be too detailed.",
+                "The meeting room is not booked.",
+                "The handout is too short."
+              ],
+              "correct": 1,
+              "explanation": "The man says he is concerned the chart is too detailed."
+            },
+            {
+              "stem": "What does the woman suggest?",
+              "options": [
+                "Remove the chart completely.",
+                "Show highlights and mention the handout.",
+                "Extend the presentation time.",
+                "Ask someone else to present."
+              ],
+              "correct": 1,
+              "explanation": "She suggests showing highlights and mentioning the full data is in the handout."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "listening_part3",
+      "title": "Listening Part 3: Short Talks",
+      "levelRange": "B2",
+      "skill": "listening",
+      "moduleType": "listening_set",
+      "items": [
+        {
+          "id": "L08",
+          "script": "N: Listen to a volunteer coordinator speaking at a museum.\nCoordinator: Welcome, everyone, and thank you for volunteering at the City Museum this weekend. Please arrive fifteen minutes before your shift starts so you have time to collect your name badge and leave your bags in the staff room. During the event, most of you will be helping visitors find the correct galleries. If a visitor asks you a question you cannot answer, do not guess. Instead, send the visitor to the information desk near the main entrance. Finally, remember that food and drinks are not allowed in the exhibition rooms, so please finish them before you begin your shift.",
+          "questions": [
+            {
+              "stem": "What is the main purpose of the talk?",
+              "options": [
+                "To invite people to a new museum exhibition.",
+                "To explain weekend procedures to volunteers.",
+                "To describe the history of the museum.",
+                "To advertise paid positions."
+              ],
+              "correct": 1,
+              "explanation": "The coordinator explains procedures volunteers should follow during the weekend event."
+            },
+            {
+              "stem": "What should volunteers do if they do not know an answer?",
+              "options": [
+                "Ask another visitor.",
+                "Look it up on their phones.",
+                "Send the visitor to the information desk.",
+                "Write the question down for later."
+              ],
+              "correct": 2,
+              "explanation": "The coordinator says to send the visitor to the information desk near the main entrance."
+            }
+          ]
+        },
+        {
+          "id": "L09",
+          "script": "N: Listen to a public service announcement.\nAnnouncer: This is a reminder for residents of North Park. Water service will be temporarily interrupted tonight from ten p.m. until approximately six a.m. while the city replaces an old underground pipe. Residents are advised to store enough water for drinking and basic cleaning before ten p.m. If possible, avoid using washing machines or dishwashers until service is fully restored in the morning. A supply tank with bottled water will be available at the North Park Community Center for elderly residents and others with urgent needs.",
+          "questions": [
+            {
+              "stem": "Why will the water service be interrupted?",
+              "options": [
+                "Because of unusually hot weather.",
+                "Because the city is replacing a pipe.",
+                "Because the community center is being repaired.",
+                "Because residents used too much water."
+              ],
+              "correct": 1,
+              "explanation": "The announcement says the city is replacing an old underground pipe."
+            },
+            {
+              "stem": "Who is the bottled water especially intended for?",
+              "options": [
+                "Visitors from outside the area.",
+                "Families with school-age children.",
+                "Residents with urgent needs, including older people.",
+                "City workers on the night shift."
+              ],
+              "correct": 2,
+              "explanation": "The announcement says 'for elderly residents and others with urgent needs.'"
+            }
+          ]
+        },
+        {
+          "id": "L10",
+          "script": "N: Listen to part of a podcast.\nHost: When people feel stuck on a problem, they often assume they should stay at their desks and try harder. In fact, short walks can be surprisingly productive. Movement changes your environment and can interrupt repetitive thinking. One design team I interviewed now holds ten-minute walking meetings whenever they cannot agree on a solution. They say the conversations become calmer, and people tend to suggest more creative ideas. Of course, walking is not a replacement for focused work. You still need time to sit down, review options, and make a decision. But if your thinking starts to go in circles, getting up may be exactly what helps.",
+          "questions": [
+            {
+              "stem": "What is the speaker's main point?",
+              "options": [
+                "Good ideas only come from group discussions.",
+                "Walking can help people think more effectively.",
+                "Meetings should always take place outdoors.",
+                "Designers are more creative than other workers."
+              ],
+              "correct": 1,
+              "explanation": "The speaker says walking 'can interrupt repetitive thinking' and 'getting up may be exactly what helps.'"
+            },
+            {
+              "stem": "Why does the speaker mention the design team?",
+              "options": [
+                "To show an example of the strategy in practice.",
+                "To criticize the way they make decisions.",
+                "To explain why meetings waste time.",
+                "To argue against working at a desk."
+              ],
+              "correct": 0,
+              "explanation": "The design team is given as an example of walking meetings working in practice."
+            }
+          ]
+        },
+        {
+          "id": "L18",
+          "script": "N: Listen to a university librarian giving a talk.\nLibrarian: I want to tell you about a new service we are offering this semester. Starting next week, you will be able to book private study rooms online. There are eight rooms available on the second floor, each equipped with a whiteboard and power outlets. You can book a room for up to three hours per day. We ask that you do not leave personal belongings unattended, as the library cannot be responsible for lost items. To book, simply visit the library website and select \"Study Room Reservation.\" You will receive a confirmation email with the room number and access code.",
+          "questions": [
+            {
+              "stem": "What is the main purpose of the talk?",
+              "options": [
+                "To announce changes to library hours.",
+                "To explain a new study room booking system.",
+                "To introduce new library staff.",
+                "To promote a book sale."
+              ],
+              "correct": 1,
+              "explanation": "The librarian is announcing a new service for booking private study rooms."
+            },
+            {
+              "stem": "How can students book a room?",
+              "options": [
+                "By visiting the library desk.",
+                "By calling the library office.",
+                "Through the library website.",
+                "By emailing a librarian."
+              ],
+              "correct": 2,
+              "explanation": "The librarian says to visit the library website and select \"Study Room Reservation.\""
+            }
+          ]
+        },
+        {
+          "id": "L19",
+          "script": "N: Listen to a city council member giving an update.\nCouncilor: Good evening, everyone. I have an update on the Riverside Park renovation project. The playground equipment has been installed and will open to the public next Saturday. Unfortunately, the new walking paths are taking longer than expected because of recent rain. We now expect them to be completed by the end of next month. However, the good news is that the community garden plots are ready for registration. Residents can sign up starting tomorrow at the community center. Each plot costs twenty dollars for the season, and all tools are provided.",
+          "questions": [
+            {
+              "stem": "When will the playground open?",
+              "options": [
+                "Next month.",
+                "Next Saturday.",
+                "Tomorrow.",
+                "At the end of the season."
+              ],
+              "correct": 1,
+              "explanation": "The councilor says the playground will open to the public next Saturday."
+            },
+            {
+              "stem": "Why have the walking paths been delayed?",
+              "options": [
+                "Lack of funding.",
+                "Recent rainy weather.",
+                "Staff shortages.",
+                "Problems with suppliers."
+              ],
+              "correct": 1,
+              "explanation": "The walking paths are delayed because of recent rain."
+            }
+          ]
+        },
+        {
+          "id": "L20",
+          "script": "N: Listen to a health advice segment on the radio.\nPresenter: Many of us spend hours sitting at desks, and this can lead to back and neck pain over time. A simple solution is to take what I call \"movement breaks.\" Every thirty minutes, stand up, stretch your arms above your head, and walk around your workspace for about a minute. Studies show that people who take regular movement breaks report twenty percent less discomfort at the end of the day. Another tip is to adjust your screen so the top of the monitor is at eye level. This prevents you from leaning forward and straining your neck. Small changes like these can make a big difference to your long-term health.",
+          "questions": [
+            {
+              "stem": "How often does the presenter suggest taking movement breaks?",
+              "options": [
+                "Every hour.",
+                "Every thirty minutes.",
+                "Every fifteen minutes.",
+                "At the start and end of the day."
+              ],
+              "correct": 1,
+              "explanation": "The presenter suggests taking movement breaks every thirty minutes."
+            },
+            {
+              "stem": "What is one benefit mentioned about regular movement breaks?",
+              "options": [
+                "Higher productivity at work.",
+                "Less discomfort at the end of the day.",
+                "Better sleep quality.",
+                "Improved concentration."
+              ],
+              "correct": 1,
+              "explanation": "Studies show people who take breaks report twenty percent less discomfort at the end of the day."
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

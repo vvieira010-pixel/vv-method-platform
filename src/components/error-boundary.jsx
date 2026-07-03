@@ -1,4 +1,5 @@
 import { Component } from 'react';
+import { logError } from '../lib/error-logger.js';
 
 export default class ErrorBoundary extends Component {
   constructor(props) {
@@ -9,7 +10,9 @@ export default class ErrorBoundary extends Component {
     return { hasError: true, error };
   }
   componentDidCatch(error, info) {
-    console.error('[ErrorBoundary]', this.props.label || '', error, info);
+    const label = this.props.label || '';
+    console.error('[ErrorBoundary]', label, error, info);
+    logError(error, { component: label, source: 'ErrorBoundary' });
   }
   render() {
     if (this.state.hasError) {

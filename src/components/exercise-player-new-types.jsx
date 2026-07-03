@@ -115,7 +115,7 @@ export function DialoguePlayer({ ex, res, update, readOnly }) {
               flexDirection: isA ? 'row' : 'row-reverse',
               alignItems: 'flex-start',
               background: isActive ? 'rgba(14,95,107,0.06)' : 'transparent',
-              borderRadius: 0, padding: '4px 6px',
+              borderRadius: 'var(--radius-sm)', padding: '4px 6px',
               transition: 'background .2s',
             }}>
               <div style={{
@@ -210,14 +210,14 @@ export function SwapPlayer({ ex, res, update, readOnly }) {
 
           const chipBg = result === 'correct' ? 'rgba(34,139,34,.12)' : result === 'wrong' ? 'rgba(200,50,50,.1)' : 'rgba(197,160,89,.15)';
           const chipColor = result === 'correct' ? '#226B22' : result === 'wrong' ? '#C03030' : '#7A5C10';
-          const chipBorder = result === 'correct' ? '1.5px solid #3CB371' : result === 'wrong' ? '1.5px solid #C03030' : '1.5px dashed #C5A059';
+          const chipBorder = result === 'correct' ? '1.5px solid var(--success)' : result === 'wrong' ? '1.5px solid #C03030' : '1.5px dashed #C5A059';
 
           return (
             <span key={i} style={{ position: 'relative', display: 'inline-block' }}>
               <button
                 onClick={() => !readOnly && !result && setOpen(isOpen ? null : swap.id)}
                 style={{
-                  padding: '3px 10px', borderRadius: 0, cursor: result || readOnly ? 'default' : 'pointer',
+                  padding: '3px 10px', borderRadius: 'var(--radius-sm)', cursor: result || readOnly ? 'default' : 'pointer',
                   border: chipBorder, background: chipBg, color: chipColor,
                   fontWeight: 600, fontSize: 'var(--text-sm)', fontFamily: 'inherit',
                   transition: 'all .15s',
@@ -228,7 +228,7 @@ export function SwapPlayer({ ex, res, update, readOnly }) {
                 <div style={{
                   position: 'absolute', top: '110%', left: '50%', transform: 'translateX(-50%)',
                   background: 'var(--surface)', border: '1px solid var(--border)',
-                  borderRadius: 0, padding: 8, zIndex: 50, boxShadow: '0 8px 24px rgba(0,0,0,.15)',
+                  borderRadius: 'var(--radius-sm)', padding: 8, zIndex: 50, boxShadow: '0 8px 24px rgba(0,0,0,.15)',
                   minWidth: 180,
                 }}>
                   {(swap.options || []).filter(Boolean).map((opt, j) => (
@@ -253,7 +253,7 @@ export function SwapPlayer({ ex, res, update, readOnly }) {
       </div>
 
       {allDone && swaps.every(s => getResult(s.id) === 'correct') && (
-        <div style={{ marginTop: 16, padding: '10px 16px', borderRadius: 0, background: 'rgba(34,139,34,.1)', border: '1px solid #3CB371', color: '#1A6B1A', fontWeight: 700, fontSize: 'var(--text-sm)', textAlign: 'center' }}>
+        <div style={{ marginTop: 16, padding: '10px 16px', borderRadius: 0, background: 'var(--success-bg)', border: '1px solid var(--success)', color: 'var(--success)', fontWeight: 700, fontSize: 'var(--text-sm)', textAlign: 'center' }}>
           Sentence upgraded to B2!
         </div>
       )}
@@ -311,7 +311,7 @@ export function LevelUpPlayer({ ex, res, update, readOnly }) {
           );
         })}
       </div>
-      <div style={{ padding: '12px 16px', borderRadius: 0, marginBottom: 16, background: levelConfig[levelShown].bg, border: '1px solid', borderColor: levelConfig[levelShown].color + '40', fontSize: 'var(--text-sm)', lineHeight: 1.6, color: 'var(--text)' }}>
+      <div style={{ padding: '12px 16px', borderRadius: 'var(--radius-sm)', marginBottom: 16, background: levelConfig[levelShown].bg, border: '1px solid', borderColor: levelConfig[levelShown].color + '40', fontSize: 'var(--text-sm)', lineHeight: 1.6, color: 'var(--text)' }}>
         {levelConfig[levelShown].text || <em style={{ color: 'var(--muted)' }}>No {levelShown.toUpperCase()} sentence defined.</em>}
       </div>
 
@@ -326,14 +326,14 @@ export function LevelUpPlayer({ ex, res, update, readOnly }) {
             const isRight = i === correct;
             let bg = 'var(--surface)', border = '1px solid var(--border)', color = 'var(--text)';
             if (submitted) {
-              if (isRight) { bg = 'rgba(34,139,34,.1)'; border = '1.5px solid #3CB371'; color = '#226B22'; }
+              if (isRight) { bg = 'var(--success-bg)'; border = '1.5px solid var(--success)'; color = '#226B22'; }
               else if (isSelected) { bg = 'rgba(200,50,50,.08)'; border = '1.5px solid #C03030'; color = '#C03030'; }
             } else if (isSelected) {
               bg = 'var(--accent-subtle)'; border = '1.5px solid var(--primary)'; color = 'var(--primary)';
             }
             return (
               <button key={i} onClick={() => pick(i)}
-                style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '10px 14px', borderRadius: 0, border, background: bg, cursor: submitted || readOnly ? 'default' : 'pointer', textAlign: 'left', fontFamily: 'inherit', color, transition: 'all .15s' }}>
+                style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '10px 14px', borderRadius: 'var(--radius-sm)', border, background: bg, cursor: submitted || readOnly ? 'default' : 'pointer', textAlign: 'left', fontFamily: 'inherit', color, transition: 'all .15s' }}>
                 <span style={{ fontWeight: 700, flexShrink: 0, marginTop: 1 }}>{String.fromCharCode(65 + i)}.</span>
                 <span style={{ fontSize: 'var(--text-sm)', lineHeight: 1.45 }}>{opt}</span>
                 {submitted && isRight && <span style={{ marginLeft: 'auto', flexShrink: 0 }}><Icon.check size={12} color="var(--success)" /></span>}
@@ -373,7 +373,7 @@ export function LevelUpPlayer({ ex, res, update, readOnly }) {
                   padding: '3px 10px', borderRadius: 0, fontSize: 'var(--text-xs)', fontWeight: 600,
                   background: found ? 'rgba(34,139,34,.12)' : 'var(--bg)',
                   color: found ? '#226B22' : 'var(--muted)',
-                  border: found ? '1px solid #3CB371' : '1px solid var(--border)',
+                  border: found ? '1px solid var(--success)' : '1px solid var(--border)',
                   transition: 'all .2s',
                 }}>
                   {found ? <Icon.check size={10} color="var(--success)" /> : ''}{kw}

@@ -5,10 +5,12 @@
  * { text, provider? } and receives an audio stream.
  */
 
+import { verifySupabaseSession } from './_supabase-auth.js';
+
 const env = (name) => process.env[name] || process.env[`VITE_${name}`] || '';
 
 const ELEVENLABS_VOICE = env('ELEVENLABS_VOICE_ID') || '21m00Tcm4TlvDq8ikWAM';
-const ELEVENLABS_MODEL = env('ELEVENLABS_MODEL') || 'eleven_multilingual_v2';
+const ELEVENLABS_MODEL = env('ELEVENLABS_MODEL') || 'eleven_monolingual_v1';
 const DEEPGRAM_MODEL = env('DEEPGRAM_TTS_MODEL') || 'aura-2-thalia-en';
 const OPENAI_TTS_MODEL = env('OPENAI_TTS_MODEL') || 'tts-1';
 const OPENAI_TTS_VOICE = env('OPENAI_TTS_VOICE') || 'nova';
@@ -127,6 +129,10 @@ async function deepgramTts(text) {
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: { message: 'Method not allowed' } });
+  }
+
+  if (!await verifySupabaseSession(req)) {
+    return res.status(401).json({ error: { message: 'Unauthorized — valid session required.' } });
   }
 
   const body = await readBody(req);

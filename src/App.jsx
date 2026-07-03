@@ -2,6 +2,7 @@ import { shadeColor, softColor } from './lib/color-utils.js';
 import { useState, useEffect, lazy, Suspense } from 'react'; // Removed Suspense, it's used by the renderer
 import LoginScreen from './pages/login.jsx';
 import ErrorBoundary from './components/error-boundary.jsx';
+import { logError } from './lib/error-logger.js';
 import { TweaksPanel, TweakSection, TweakRadio, TweakColor, TweakToggle } from './components/tweaks-panel.jsx';
 import { Icon, Shell } from './components/shared.jsx';
 const getStudentsData = () => import('./data/students.jsx').then(m => m.STUDENTS);
@@ -18,7 +19,7 @@ import {
   fetchSupabaseUser,
   refreshSupabaseSession,
 } from './lib/supabase-storage.js';
-import { claimStudentByEmail, ensureProfile, setSessionRole, upsertReviewSchedule, loadReviewSchedule } from './lib/supabase-db.js';
+import { claimStudentByEmail, ensureProfile, setSessionRole, upsertReviewSchedule, loadReviewSchedule, subscribeToTable } from './lib/supabase-db.js';
 import { enableSync } from './lib/spaced-repetition.js';
 import { lazyWithRetry } from './lib/utils.js'; // Imported from utils.js
 
@@ -49,6 +50,21 @@ const TeacherEvaluationPage = lazyWithRetry(() => import('./pages/teacher-evalua
 
 export default function App() {
   const [auth, setAuth] = useState(null);
+
+  // Global error handler — catches unhandled rejections and window.onerror
+  useEffect(() => {
+    const onRejection = (e) => logError(e.reason, { source: 'unhandledRejection' });
+    const onError = (e) => {
+      if (e.error) logError(e.error, { source: 'window.onerror' });
+    };
+    window.addEventListener('unhandledrejection', onRejection);
+    window.addEventListener('error', onError);
+    return () => {
+      window.removeEventListener('unhandledrejection', onRejection);
+      window.removeEventListener('error', onError);
+    };
+  }, []);
+
   const [view, setView] = useState('dashboard');
   // Sub-view params: { studentId?, classEventId?, diagnosisId?, homeworkId?, submissionId? }
   const [viewParams, setViewParams] = useState({});
@@ -197,16 +213,22 @@ export default function App() {
     });
   }, []);
 
-   // Pending submissions badge (teacher shell). Declared here, above the
+  // Pending submissions badge (teacher shell). Declared here, above the
 
    // role-based early returns, so the hook order stays stable across the
 
-  // logged-out → logged-in transition (otherwise React throws "Rendered more
-  // hooks than during the previous render" and blanks the app on sign in).
-  useEffect(() => {
+   // logged-out → logged-in transition (otherwise React throws "Rendered more
+   // hooks than during the previous render" and blanks the app on sign in).
+  function refreshPending() {
     getAllSubmissions().then(list => {
       setPendingSubmissions((list || []).filter(s => s.status === 'submitted').length);
     }).catch(e => console.warn('[submissions] failed to load:', e));
+  }
+
+  useEffect(() => {
+    refreshPending();
+    const unsub = subscribeToTable('submissions', () => { refreshPending(); });
+    return () => unsub();
   }, []);
 
   // Re-load students on updates
@@ -251,10 +273,56 @@ export default function App() {
   }, []);
 
 
+  function parseHash(hash) {
+    const h = (hash || '').replace(/^#/, '');
+    if (!h) return null;
+    const parts = h.split('?');
+    const view = parts[0] || '';
+    const params = {};
+    if (parts[1]) {
+      new URLSearchParams(parts[1]).forEach((v, k) => { params[k] = v; });
+    }
+    return { view, params };
+  }
+
+  function buildHash(target, params = {}) {
+    const qs = Object.keys(params).length
+      ? '?' + new URLSearchParams(params).toString()
+      : '';
+    return `#${target}${qs}`;
+  }
+
   const navigate = (target, params = {}) => {
+    const hash = buildHash(target, params);
+    if (window.location.hash !== hash) {
+      history.pushState(null, '', hash);
+    }
     setView(target);
     setViewParams(params);
   };
+
+  // Restore view from hash on back/forward navigation
+  useEffect(() => {
+    const onHashChange = () => {
+      const parsed = parseHash(window.location.hash);
+      if (parsed && parsed.view && parsed.view !== view) {
+        setView(parsed.view);
+        setViewParams(parsed.params);
+      }
+    };
+    window.addEventListener('hashchange', onHashChange);
+    return () => window.removeEventListener('hashchange', onHashChange);
+  }, [view]);
+
+  // Initialize view from URL hash after auth resolves
+  useEffect(() => {
+    if (!auth) return;
+    const parsed = parseHash(window.location.hash);
+    if (parsed && parsed.view) {
+      setView(parsed.view);
+      setViewParams(parsed.params);
+    }
+  }, [auth]);
 
   // Move focus to main content area on SPA navigation so screen readers
   // announce the new page without the user having to manually explore.
@@ -282,9 +350,7 @@ export default function App() {
   useEffect(() => {
     if (auth?.role !== 'teacher') return;
     requestInboxNotificationPermission();
-    getAllSubmissions().then(list => {
-      setPendingSubmissions((list || []).filter(s => s.status === 'submitted').length);
-    }).catch(e => console.warn('[submissions badge] failed:', e));
+    refreshPending();
   }, [auth]);
 
   if (!auth) {
@@ -434,18 +500,18 @@ function renderTeacherPage(view, params, ctx) {
      case 'mock-test':
        return <MockTestPage onNavigate={navigate} />;
 
-     case 'evaluation':
-       return <TeacherEvaluationPage onNavigate={navigate} />;
+      case 'evaluation':
+        return <TeacherEvaluationPage students={students} onNavigate={navigate} />;
 
-     case 'library':
-     case 'library:exercises':
-       return <ExercisesPage onNavigate={navigate} />;
+      case 'library':
+      case 'library:exercises':
+        return <ExercisesPage onNavigate={navigate} />;
 
-     case 'library:mock-test':
-       return <MockTestPage onNavigate={navigate} />;
+      case 'library:mock-test':
+        return <MockTestPage onNavigate={navigate} />;
 
-     case 'library:evaluation':
-       return <TeacherEvaluationPage onNavigate={navigate} />;
+      case 'library:evaluation':
+        return <TeacherEvaluationPage students={students} onNavigate={navigate} />;
 
      case 'library:reports':
        return <ReportsPage students={students} onNavigate={navigate} />;
