@@ -11,7 +11,10 @@ import {
   getSpeakingExercises,
   getWritingExercises,
   getListeningExercises,
+  getListeningAudioGroups,
 } from '../lib/vocab-homework-bank.js';
+import { savePracticeSession } from '../lib/workflow.js';
+import { getExamMode, getExamModeLabel, getDaysUntilExam, MODE_SPRINT, MODE_BUILDING } from '../lib/exam-window.js';
 import {
   getScaffoldLevel,
   setScaffoldLevel,
@@ -45,14 +48,16 @@ const KIND_OPTIONS = [
   { id: 'listening', label: 'Listening' },
 ];
 
-export default function PracticeSession({ mode, onClose, onSessionComplete }) {
+export default function PracticeSession({ mode, studentId, onClose, onSessionComplete }) {
   const [selectedTopic, setSelectedTopic] = useState(null);
   const [selectedKind, setSelectedKind] = useState(mode);
   const [sessionKey, setSessionKey] = useState(0);
   const [exercises, setExercises] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const topics = getTopicList();
+  const daysLeft = getDaysUntilExam();
+  const examMode = getExamMode();
+  const [topics, setTopics] = useState([]);
   const topicKey = selectedTopic || selectedKind;
 
   const [scaffoldLevel, setScaffoldLevelState] = useState(4);
@@ -68,6 +73,18 @@ export default function PracticeSession({ mode, onClose, onSessionComplete }) {
   }, [mode]);
 
   useEffect(() => {
+    async function loadTopics() {
+      if (selectedKind === 'listening') {
+        const listeningTopics = await getListeningAudioGroups();
+        setTopics(listeningTopics);
+      } else {
+        setTopics(getTopicList(selectedKind));
+      }
+    }
+    loadTopics();
+  }, [selectedKind]);
+
+  useEffect(() => {
     const level = getScaffoldLevel(selectedKind, selectedTopic);
     setScaffoldLevelState(level);
   }, [selectedKind, selectedTopic]);
@@ -79,16 +96,20 @@ export default function PracticeSession({ mode, onClose, onSessionComplete }) {
     setSessionScore(null);
     async function load() {
       let ex = [];
-      if (selectedKind === 'grammar') {
-        ex = await getGrammarExercises();
-      } else if (selectedKind === 'vocab' && selectedTopic) {
-        ex = await getVocabExercises(selectedTopic);
-      } else if (selectedKind === 'speaking' && selectedTopic) {
-        ex = await getSpeakingExercises(selectedTopic);
-      } else if (selectedKind === 'writing' && selectedTopic) {
-        ex = await getWritingExercises(selectedTopic);
-      } else if (selectedKind === 'listening' && selectedTopic) {
-        ex = await getListeningExercises(selectedTopic);
+      try {
+        if (selectedKind === 'grammar') {
+          ex = await getGrammarExercises();
+        } else if (selectedKind === 'vocab' && selectedTopic) {
+          ex = await getVocabExercises(selectedTopic);
+        } else if (selectedKind === 'speaking' && selectedTopic) {
+          ex = await getSpeakingExercises(selectedTopic);
+        } else if (selectedKind === 'writing' && selectedTopic) {
+          ex = await getWritingExercises(selectedTopic);
+        } else if (selectedKind === 'listening') {
+          ex = await getListeningExercises(selectedTopic);
+        }
+      } catch (e) {
+        console.warn('[PracticeSession] Failed to load exercises:', e);
       }
       if (!cancelled) {
         setExercises(ex);
@@ -107,12 +128,14 @@ export default function PracticeSession({ mode, onClose, onSessionComplete }) {
     setSessionKey(k => k + 1);
   }
 
-  const handleSessionComplete = useCallback((summary) => {
-    const { score, maxHintLevel, hintUsed, results } = summary;
+  function handleSessionComplete(summary) {
+    const { score, maxHintLevel, hintUsed, results, confidenceBefore } = summary;
     setSessionScore(score);
 
-    if (score !== null) {
+    if (score !== null && studentId) {
       const quality = classifyRetrieval(maxHintLevel || 0, hintUsed || false, score);
+      const correctCount = results?.filter(r => r?.correct === true).length || 0;
+      const errorCategories = results?.filter(r => r?.errorCategory).map(r => r.errorCategory) || null;
       logSession(selectedKind, selectedTopic, {
         score,
         maxHintLevel: maxHintLevel || 0,
@@ -120,8 +143,24 @@ export default function PracticeSession({ mode, onClose, onSessionComplete }) {
         quality,
         unassisted: !hintUsed,
         exerciseCount: exercises.length,
-        correctCount: results?.filter(r => r?.correct === true).length || 0,
+        correctCount,
         totalScored: results?.filter(r => r?.correct !== null && r?.correct !== undefined).length || 0,
+        confidenceBefore: confidenceBefore ?? null,
+      });
+
+      savePracticeSession(studentId, {
+        mode: selectedKind,
+        topicId: selectedTopic,
+        topicTitle: selectedTopicTitle,
+        score,
+        maxHintLevel: maxHintLevel || 0,
+        hintUsed: hintUsed || false,
+        quality,
+        exerciseCount: exercises.length,
+        correctCount,
+        results,
+        confidenceBefore: confidenceBefore ?? null,
+        errorCategories,
       });
 
       const result = evaluateFading(selectedKind, selectedTopic);
@@ -140,15 +179,15 @@ export default function PracticeSession({ mode, onClose, onSessionComplete }) {
       topicTitle: selectedTopicTitle,
       exerciseCount: exercises.length,
     });
-  }, [selectedKind, selectedTopic, exercises.length, selectedTopicTitle, onSessionComplete]);
+  }
 
   return (
     <Modal
       open
       onClose={onClose}
-      kicker="Practice Studio"
+      kicker={examMode === MODE_SPRINT ? `Practice Studio · ${daysLeft}d to exam` : 'Practice Studio'}
       title={MODE_LABELS[selectedKind] + (selectedTopicTitle ? `: ${selectedTopicTitle}` : '')}
-      subtitle={MODE_SUBTITLES[selectedKind]}
+      subtitle={examMode === MODE_SPRINT ? `${MODE_SUBTITLES[selectedKind]} · Exam Sprint mode` : MODE_SUBTITLES[selectedKind]}
     >
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
         {KIND_OPTIONS.map(k => (
