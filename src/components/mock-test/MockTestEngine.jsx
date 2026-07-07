@@ -231,6 +231,6 @@ function MockTestHome({ sections, completedSections, onStart, onBack }) {
         }
         @media (max-width: 600px) { .mte-home__grid { grid-template-columns: 1fr; } }
       `}</style>
-    </div>
+    </motion.div>
   );
 }
