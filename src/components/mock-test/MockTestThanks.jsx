@@ -214,7 +214,7 @@ export default function MockTestThanks({ answers, student, onBack }) {
         .mtr-bar__lbl { display: block; font-size: 0.9rem; }
         .mtr-bar__desc { display: block; font-size: 0.6rem; opacity: 0.85; margin-top: 2px; }
 
-        .mtr-message { background: #eaf6ff; border-left: 4px solid #3498db; border-radius: 0 12px 12px 0; padding: 16px 20px; margin: 0 24px 20px; font-size: 0.9rem; line-height: 1.6; }
+        .mtr-message { background: #eaf6ff; border: 1px solid #cce4ff; border-radius: 12px; padding: 16px 20px; margin: 0 24px 20px; font-size: 0.9rem; line-height: 1.6; }
 
         .mtr-skills { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; padding: 0 24px 20px; }
         .mtr-skill { background: var(--bg, #f8f9fa); border-radius: 12px; padding: 20px; }

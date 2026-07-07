@@ -137,7 +137,7 @@ export default function SpeakingSection({ onComplete }) {
             <div className="ss__countdown ss__countdown--prep">
               <div className="ss__countdown-label">Prepare</div>
               <div className="ss__countdown-time">{prepRemaining}s</div>
-              <div className="ss__countdown-bar"><div className="ss__countdown-fill" style={{ width: `${(prepRemaining / task.prepSeconds) * 100}%` }} /></div>
+               <div className="ss__countdown-bar"><div className="ss__countdown-fill" style={{ transform: `scaleX(${(prepRemaining / task.prepSeconds)})` }} /></div>
             </div>
           </div>
         )}
@@ -147,7 +147,7 @@ export default function SpeakingSection({ onComplete }) {
             <div className="ss__countdown ss__countdown--speak">
               <div className="ss__countdown-label">{isRecording ? 'Recording' : 'Speaking'}</div>
               <div className="ss__countdown-time">{speakRemaining}s</div>
-              <div className="ss__countdown-bar"><div className="ss__countdown-fill" style={{ width: `${(speakRemaining / task.speakSeconds) * 100}%` }} /></div>
+               <div className="ss__countdown-bar"><div className="ss__countdown-fill" style={{ transform: `scaleX(${(speakRemaining / task.speakSeconds)})` }} /></div>
             </div>
             <div className="ss__waveform">{isRecording ? '\u{1F3B5}' : ''} {isRecording ? 'Recording...' : 'Preparing microphone...'}</div>
           </div>
@@ -178,7 +178,7 @@ export default function SpeakingSection({ onComplete }) {
         .ss__countdown-label { font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 4px; }
         .ss__countdown-time { font-size: 36px; font-weight: 800; color: var(--text); font-variant-numeric: tabular-nums; }
         .ss__countdown-bar { height: 6px; background: var(--bg); border-radius: 3px; margin-top: 8px; }
-        .ss__countdown-fill { height: 100%; border-radius: 3px; transition: width 1s linear; background: var(--primary); }
+         .ss__countdown-fill { height: 100%; width: 100%; border-radius: 3px; transition: transform 1s linear; transform-origin: left; background: var(--primary); }
         .ss__countdown--prep .ss__countdown-fill { background: var(--accent); }
         .ss__waveform { text-align: center; font-size: 14px; color: var(--text-muted); }
         .ss__done-msg { font-size: 16px; font-weight: 600; color: var(--text); text-align: center; padding: 20px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); }

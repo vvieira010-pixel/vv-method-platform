@@ -217,7 +217,7 @@ function MockTestHome({ sections, completedSections, onStart, onBack }) {
         .mte-home__card { 
           display: flex; flex-direction: column; align-items: center; gap: 12px; 
           padding: 32px 24px; border: 1px solid var(--border); border-radius: var(--radius-md); 
-          background: var(--surface); cursor: pointer; transition: all .2s var(--transition-fast); 
+           background: var(--surface); cursor: pointer; transition: background-color, border-color, color, opacity, transform .2s var(--transition-fast); 
           position: relative; overflow: hidden;
         }
         .mte-home__card:hover:not(:disabled) { border-color: var(--primary); box-shadow: var(--shadow-md); }

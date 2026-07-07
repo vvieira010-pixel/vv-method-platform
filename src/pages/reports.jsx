@@ -327,14 +327,14 @@ function ExerciseStatusBars({ row }) {
       <div className="status-line">
         <span>Submitted</span>
         <div className="progress-track">
-          <div className="progress-fill-submitted" style={{ width: `${row.submittedRate}%` }} />
+           <div className="progress-fill-submitted" style={{ transform: `scaleX(${row.submittedRate / 100})` }} />
         </div>
         <strong>{row.submittedRate}%</strong>
       </div>
       <div className="status-line">
         <span>Reviewed</span>
         <div className="progress-track">
-          <div className="progress-fill-reviewed" style={{ width: `${row.reviewedRate}%` }} />
+           <div className="progress-fill-reviewed" style={{ transform: `scaleX(${row.reviewedRate / 100})` }} />
         </div>
         <strong>{row.reviewedRate}%</strong>
       </div>

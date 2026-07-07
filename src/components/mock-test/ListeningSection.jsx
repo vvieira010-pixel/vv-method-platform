@@ -1,21 +1,68 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { LISTENING_PART1, LISTENING_PART2, LISTENING_PART3 } from '../../data/mock-test-1/listening.js';
+import { callAI } from '../../lib/callAI.js';
+import { fetchConversationAudio, fetchAudioWithGender } from '../../lib/tts-utils.js';
+
+const PART3_VOICE_MAP = { 0: 'female', 1: 'male', 2: 'female', 3: 'male' };
 
 function flattenQuestions() {
   const qs = [];
-  LISTENING_PART1.questions.forEach(q => qs.push({ ...q, audio: q.audio }));
-  LISTENING_PART2.conversations.forEach(c => c.questions.forEach(q => qs.push({ ...q, audio: c.audio })));
-  LISTENING_PART3.talks.forEach(t => t.questions.forEach(q => qs.push({ ...q, audio: t.audio })));
+  LISTENING_PART1.questions.forEach(q => qs.push({
+    ...q, audio: q.audio, isConversation: true, conversationId: `part1_${q.id}`,
+    scriptContext: q.text + ' ' + q.options.join(' ')
+  }));
+  LISTENING_PART2.conversations.forEach(c => {
+    const ctx = (c.questions || []).map(q => q.text + ' ' + q.options.join(' ')).join(' ');
+    c.questions.forEach(q => qs.push({
+      ...q, audio: c.audio, isConversation: true, conversationId: c.title,
+      scriptContext: ctx
+    }));
+  });
+  LISTENING_PART3.talks.forEach((t, i) => {
+    const ctx = (t.questions || []).map(q => q.text + ' ' + q.options.join(' ')).join(' ');
+    t.questions.forEach(q => qs.push({
+      ...q, audio: t.audio, isConversation: false, conversationId: t.title,
+      scriptContext: ctx, talkVoice: PART3_VOICE_MAP[i] || 'female'
+    }));
+  });
   return qs;
 }
 
 const QUESTIONS = flattenQuestions();
+const CACHE_PREFIX = 'met:listening:audio:';
+
+async function generateScript(context) {
+  const prompt = `Write a very short, natural English conversation (2-4 lines) between two speakers for a listening test. Use "A:" and "B:" prefixes. The conversation should relate to this context: ${context}. Keep each line under 15 words. Output ONLY the script lines, one per line.`;
+  const res = await callAI(prompt, { system: 'You write short natural English conversation scripts for language tests. Output only the script lines.', temperature: 0.5, max_tokens: 500 });
+  const text = res?.content?.[0]?.text || res?.text || '';
+  return text.split('\n').filter(l => l.trim()).map(l => {
+    const m = l.trim().match(/^([AB]):\s*(.+)/i);
+    if (!m) return null;
+    return { speaker: m[1].toUpperCase(), text: m[2] };
+  }).filter(Boolean);
+}
+
+function utterancesFromScript(script) {
+  return script.map(u => ({
+    text: u.text,
+    gender: u.speaker === 'A' ? 'female' : 'male'
+  }));
+}
+
+async function generateTalkAudio(context, gender) {
+  const prompt = `Write a short English monologue (3-5 sentences) for a listening test. Topic context: ${context}. Keep it natural and under 60 words.`;
+  const res = await callAI(prompt, { system: 'You write short natural English monologues for language tests. Output only the monologue text.', temperature: 0.5, max_tokens: 500 });
+  const text = res?.content?.[0]?.text || res?.text || '';
+  const clean = text.replace(/^["']|["']$/g, '').trim();
+  return fetchAudioWithGender(clean, gender);
+}
 
 export default function ListeningSection({ onComplete }) {
   const [currentIdx, setCurrentIdx] = useState(0);
   const [selected, setSelected] = useState({});
   const [answered, setAnswered] = useState({});
   const [playing, setPlaying] = useState(null);
+  const [generating, setGenerating] = useState(null);
   const audioRef = useRef(null);
 
   const q = QUESTIONS[currentIdx];
@@ -34,6 +81,12 @@ export default function ListeningSection({ onComplete }) {
     } catch {}
   }, []);
 
+  useEffect(() => {
+    return () => {
+      if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; }
+    };
+  }, []);
+
   const persistAnswer = useCallback((qId, optIdx) => {
     setSelected(prev => ({ ...prev, [qId]: optIdx }));
     setAnswered(prev => ({ ...prev, [qId]: true }));
@@ -44,14 +97,72 @@ export default function ListeningSection({ onComplete }) {
     } catch {}
   }, []);
 
-  const handlePlay = useCallback((audioSrc) => {
+  const playAudio = useCallback(async (src) => {
     if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; }
-    const audio = new Audio(audioSrc);
-    audioRef.current = audio;
-    setPlaying(audioSrc);
-    audio.play().catch(() => {});
-    audio.addEventListener('ended', () => setPlaying(null));
+    setPlaying(src);
+
+    try {
+      const audio = new Audio(src);
+      audioRef.current = audio;
+      await audio.play();
+      audio.addEventListener('ended', () => setPlaying(null));
+    } catch {
+      setPlaying(null);
+    }
   }, []);
+
+  const handlePlay = useCallback(async (q) => {
+    if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; }
+
+    const cacheKey = CACHE_PREFIX + q.id;
+    let cachedUrl = null;
+    try { cachedUrl = sessionStorage.getItem(cacheKey); } catch {}
+
+    if (cachedUrl) {
+      await playAudio(cachedUrl);
+      return;
+    }
+
+    setGenerating(q.id);
+
+    try {
+      let url = null;
+
+      if (q.isConversation) {
+        const scriptCacheKey = CACHE_PREFIX + 'script:' + q.conversationId;
+        let script = null;
+        try {
+          const cached = sessionStorage.getItem(scriptCacheKey);
+          if (cached) script = JSON.parse(cached);
+        } catch {}
+
+        if (!script) {
+          script = await generateScript(q.scriptContext);
+          if (script && script.length > 0) {
+            try { sessionStorage.setItem(scriptCacheKey, JSON.stringify(script)); } catch {}
+          }
+        }
+
+        if (script && script.length > 0) {
+          const utterances = utterancesFromScript(script);
+          url = await fetchConversationAudio(utterances);
+        }
+      } else {
+        url = await generateTalkAudio(q.scriptContext, q.talkVoice || 'female');
+      }
+
+      if (url) {
+        try { sessionStorage.setItem(cacheKey, url); } catch {}
+        await playAudio(url);
+      } else {
+        await playAudio(q.audio);
+      }
+    } catch {
+      await playAudio(q.audio);
+    }
+
+    setGenerating(null);
+  }, [playAudio]);
 
   const handleFinish = useCallback(() => {
     const all = {};
@@ -64,11 +175,11 @@ export default function ListeningSection({ onComplete }) {
       <div className="ls__sidebar">
         <div className="ls__sidebar-header">Questions</div>
         <div className="ls__sidebar-grid">
-          {QUESTIONS.map((q, i) => (
+          {QUESTIONS.map((qq, i) => (
             <button
-              key={q.id}
-              className={`ls__sq ${currentIdx === i ? 'ls__sq--cur' : ''} ${answered[q.id] ? 'ls__sq--done' : ''}`}
-              onClick={() => setCurrentIdx(i)}
+              key={qq.id}
+              className={`ls__sq ${currentIdx === i ? 'ls__sq--cur' : ''} ${answered[qq.id] ? 'ls__sq--done' : ''}`}
+              onClick={() => { if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; setPlaying(null); } setCurrentIdx(i); }}
             >{i + 1}</button>
           ))}
         </div>
@@ -78,11 +189,15 @@ export default function ListeningSection({ onComplete }) {
 
         <div className="ls__audio-row">
           <button
-            className={`ls__play-btn ${playing === q.audio ? 'ls__play-btn--playing' : ''}`}
-            onClick={() => handlePlay(q.audio)}
+            className={`ls__play-btn ${playing ? 'ls__play-btn--playing' : ''}`}
+            onClick={() => handlePlay(q)}
+            disabled={generating === q.id}
           >
-            {playing === q.audio ? '\u{1F3B5}' : '\u{25B6}'} {playing === q.audio ? 'Playing' : 'Play Audio'}
+            {generating === q.id ? '\u23F3' : playing ? '\uD83C\uDFB5' : '\u25B6'} {generating === q.id ? 'Generating...' : playing ? 'Playing' : 'Play Audio'}
           </button>
+          {q.isConversation && (
+            <span className="ls__voice-badge">Multi-voice</span>
+          )}
         </div>
 
         <p className="ls__q-text">{q.text}</p>
@@ -101,10 +216,10 @@ export default function ListeningSection({ onComplete }) {
         </div>
 
         <div className="ls__nav">
-          <button className="ls__nav-btn" disabled={currentIdx === 0} onClick={() => setCurrentIdx(i => i - 1)}>&larr; Previous</button>
+          <button className="ls__nav-btn" disabled={currentIdx === 0} onClick={() => { if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; setPlaying(null); } setCurrentIdx(i => i - 1); }}>&larr; Previous</button>
           <span className="ls__nav-progress">{answeredCount}/{total} answered</span>
           {currentIdx < total - 1 ? (
-            <button className="ls__nav-btn ls__nav-btn--primary" onClick={() => setCurrentIdx(i => i + 1)}>Next &rarr;</button>
+            <button className="ls__nav-btn ls__nav-btn--primary" onClick={() => { if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; setPlaying(null); } setCurrentIdx(i => i + 1); }}>Next &rarr;</button>
           ) : (
             <button className="ls__nav-btn ls__nav-btn--finish" onClick={handleFinish}>Finish Section</button>
           )}
@@ -120,10 +235,12 @@ export default function ListeningSection({ onComplete }) {
         .ls__sq--done { background: var(--primary-light); border-color: var(--primary); }
         .ls__main { flex: 1; padding: 24px; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; }
         .ls__q-label { font-size: 12px; font-weight: 700; color: var(--primary); }
-        .ls__audio-row { margin: 4px 0; }
-        .ls__play-btn { padding: 8px 20px; border: 1px solid var(--primary); border-radius: var(--radius-pill); background: var(--surface); color: var(--primary); cursor: pointer; font: inherit; font-size: 13px; font-weight: 700; transition: all .12s; }
-        .ls__play-btn:hover { background: var(--primary-light); }
+        .ls__audio-row { margin: 4px 0; display: flex; align-items: center; gap: 8px; }
+         .ls__play-btn { padding: 8px 20px; border: 1px solid var(--primary); border-radius: var(--radius-pill); background: var(--surface); color: var(--primary); cursor: pointer; font: inherit; font-size: 13px; font-weight: 700; transition: background-color, border-color, color, opacity, transform .12s; display: inline-flex; align-items: center; gap: 6px; }
+        .ls__play-btn:hover:not(:disabled) { background: var(--primary-light); }
+        .ls__play-btn:disabled { opacity: .6; cursor: wait; }
         .ls__play-btn--playing { background: var(--primary); color: #fff; }
+        .ls__voice-badge { display: inline-flex; align-items: center; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; padding: 2px 8px; border-radius: 99px; background: #7c3aed1a; color: #7c3aed; border: 1px solid #7c3aed33; }
         .ls__q-text { font-size: 15px; font-weight: 600; color: var(--text); margin: 0; line-height: 1.5; }
         .ls__options { display: flex; flex-direction: column; gap: 8px; }
         .ls__opt { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border: 1.5px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); cursor: pointer; text-align: left; font: inherit; font-size: 14px; }

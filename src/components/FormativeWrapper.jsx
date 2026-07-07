@@ -197,7 +197,7 @@ export default function FormativeWrapper({ exercise, response, onResponse, child
           background: var(--warning-bg);
           padding: 12px;
           border-radius: var(--radius-sm);
-          border-left: 3px solid var(--warning);
+           border: 1px solid var(--warning-soft);
         }
         .formative-success-pill {
           display: inline-flex;

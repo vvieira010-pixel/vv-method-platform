@@ -38,13 +38,13 @@ export default function MockTestTimer({ totalSeconds, onTimeUp, running }) {
   return (
     <div className="mtt">
       <div className="mtt__bar-bg">
-        <div className="mtt__bar-fill" style={{ width: `${pct}%` }} />
+        <div className="mtt__bar-fill" style={{ transform: `scaleX(${pct / 100})` }} />
       </div>
       <span className={`mtt__time ${remaining < 60 ? 'mtt__time--warn' : ''}`}>{display}</span>
       <style>{`
         .mtt { display: flex; align-items: center; gap: 10px; }
         .mtt__bar-bg { flex: 1; height: 6px; background: rgba(255,255,255,.2); border-radius: 3px; }
-        .mtt__bar-fill { height: 100%; background: var(--accent); border-radius: 3px; transition: width 1s linear; }
+        .mtt__bar-fill { height: 100%; width: 100%; background: var(--accent); border-radius: 3px; transition: transform 1s linear; transform-origin: left; }
         .mtt__time { font-variant-numeric: tabular-nums; font-weight: 700; font-size: 15px; color: #fff; min-width: 5em; text-align: right; }
         .mtt__time--warn { color: #fca5a5; }
       `}</style>

@@ -1253,6 +1253,20 @@
   transition: transform 0.3s;
 }
 
+.progress-fill-submitted, .progress-fill-reviewed {
+  height: 100%;
+  transform-origin: left;
+  transition: transform 0.3s;
+}
+
+.progress-fill-submitted {
+  background: var(--primary);
+}
+
+.progress-fill-reviewed {
+  background: var(--accent);
+}
+
 /* ── Section card, diagnosis review section ──────────────────── */
 .section-header-bar {
   padding: var(--space-3) var(--space-4);
@@ -4285,8 +4299,8 @@
 
 /* ── Priority Card Special Styling ────────────────────────────────── */
 .td-priority-card-premium {
-  border-left: 6px solid var(--accent);
-  background: linear-gradient(to right, var(--accent-subtle), transparent);
+  border: 1px solid var(--accent);
+  background: var(--accent-subtle);
 }
 .bg-grain {
   position: relative;
@@ -6040,7 +6054,7 @@ textarea:focus, .textarea:focus {
   background: var(--bg);
   cursor: pointer;
   text-align: left;
-  transition: all 0.15s;
+  transition: background-color, border-color, color, opacity, transform 0.15s;
 }
 
 .cambridge-stage-btn:hover {

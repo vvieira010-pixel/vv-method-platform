@@ -49,6 +49,7 @@ const ExercisesPage     = lazyWithRetry(() => import('./pages/exercises.jsx'));
 const MockTestPage      = lazyWithRetry(() => import('./pages/mock-test.jsx'));
 const MockTestResults   = lazyWithRetry(() => import('./pages/mock-test-results.jsx'));
 const TeacherEvaluationPage = lazyWithRetry(() => import('./pages/teacher-evaluation.jsx'));
+const MockTestEvalPage = lazyWithRetry(() => import('./pages/mock-test-eval.jsx'));
 
 export default function App() {
   const [auth, setAuth] = useState(null);
@@ -314,6 +315,7 @@ export default function App() {
     { id: 'library', label: 'Resources', target: 'library', icon: <Icon.book size={16} />, keywords: ['library', 'materials'] },
     { id: 'settings', label: 'Settings', target: 'settings', icon: <Icon.settings size={16} />, keywords: ['config', 'profile'] },
     { id: 'errors', label: 'Error Bank', target: 'diagnostics:errors', icon: <Icon.warning size={16} />, keywords: ['mistakes', 'bank'] },
+    { id: 'mock-test-eval', label: 'Question Evaluator', target: 'mock-test-eval', icon: <Icon.diagnose size={16} />, keywords: ['mock test', 'questions', 'evaluate', 'analysis'] },
     { id: 'inbox', label: 'Inbox', target: 'inbox', icon: <Icon.inbox size={16} />, keywords: ['messages', 'notifications'] },
   ];
 
@@ -551,6 +553,9 @@ function renderTeacherPage(view, params, ctx) {
       case 'mock-test-results':
       case 'library:mock-test-results':
         return <MockTestResults />;
+
+      case 'mock-test-eval':
+        return <MockTestEvalPage />;
 
       case 'library:evaluation':
         return <TeacherEvaluationPage students={students} onNavigate={navigate} />;

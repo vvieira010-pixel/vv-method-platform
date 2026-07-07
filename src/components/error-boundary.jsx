@@ -4,13 +4,15 @@ import { logError } from '../lib/error-logger.js';
 export default class ErrorBoundary extends Component {
   constructor(props) {
     super(props);
-    this.state = { hasError: false, error: null, retryCount: 0 };
+    this.state = { hasError: false, error: null, componentStack: '', retryCount: 0 };
   }
   static getDerivedStateFromError(error) {
     return { hasError: true, error };
   }
   componentDidCatch(error, info) {
     const label = this.props.label || '';
+    const stack = info?.componentStack || '';
+    this.setState({ componentStack: stack });
     console.error('[ErrorBoundary]', label, error, info);
     logError(error, { component: label, source: 'ErrorBoundary' });
   }
@@ -26,6 +28,14 @@ export default class ErrorBoundary extends Component {
           <div style={{ fontSize: 12.5, opacity: 0.75, fontFamily: 'monospace', whiteSpace: 'pre-wrap' }}>
             {this.state.error?.message}
           </div>
+          {this.state.componentStack && (
+            <details style={{ marginTop: 10 }}>
+              <summary style={{ cursor: 'pointer', fontSize: 12, opacity: 0.6 }}>Component stack</summary>
+              <pre style={{ fontSize: 11, marginTop: 6, whiteSpace: 'pre-wrap', opacity: 0.5 }}>
+                {this.state.componentStack}
+              </pre>
+            </details>
+          )}
           <button
             onClick={() => this.setState(prev => ({ hasError: false, error: null, retryCount: prev.retryCount + 1 }))}
             style={{

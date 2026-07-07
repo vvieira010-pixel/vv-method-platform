@@ -155,7 +155,7 @@ export default function CommandPalette({ isOpen, onClose, onExecute, actions }) 
           padding: 10px 12px;
           border-radius: 8px;
           cursor: pointer;
-          transition: all 0.1s;
+           transition: background-color, border-color, color, opacity, transform 0.1s;
           margin-bottom: 2px;
         }
         .cp-item:hover, .cp-item.active {
