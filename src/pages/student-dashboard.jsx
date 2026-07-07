@@ -5,6 +5,7 @@ import { hasVisibleApprovedStudentFeedback, asArray } from './student-helpers.js
 import StudentHome from './student-home.jsx';
 import StudentSettings from './student-settings.jsx';
 import MockTestPage from './mock-test.jsx';
+import MockTestEvalPage from './mock-test-eval.jsx';
 import { StudentInbox, MessageTeacherDock } from '../components/message-center.jsx';
 
 const StudentHomework = lazy(() => import('./student-homework.jsx'));
@@ -13,14 +14,15 @@ const StudentProgress = lazy(() => import('./student-progress.jsx'));
 const StudentResources = lazy(() => import('./student-resources.jsx'));
 
 const TABS = [
-  { id: 'home',     label: 'Home',      icon: <Icon.home size={16} /> },
-  { id: 'homework', label: 'Homework',  icon: <Icon.homework size={16} /> },
-  { id: 'mock-test', label: 'Mock Tests', icon: <Icon.practice size={16} /> },
-  { id: 'feedback', label: 'Feedback',  icon: <Icon.inbox size={16} /> },
-  { id: 'progress', label: 'Progress',  icon: <Icon.progress size={16} /> },
-  { id: 'resources', label: 'Resources', icon: <Icon.book size={16} /> },
-  { id: 'messages', label: 'Messages',  icon: <Icon.feedback size={16} /> },
-  { id: 'settings', label: 'Settings',  icon: <Icon.settings size={16} /> },
+  { id: 'home',       label: 'Home',          icon: <Icon.home size={16} /> },
+  { id: 'homework',   label: 'Homework',      icon: <Icon.homework size={16} /> },
+  { id: 'mock-test',  label: 'Mock Tests',    icon: <Icon.practice size={16} /> },
+  { id: 'eval',       label: 'Question Eval', icon: <Icon.diagnose size={16} /> },
+  { id: 'feedback',   label: 'Feedback',      icon: <Icon.inbox size={16} /> },
+  { id: 'progress',   label: 'Progress',      icon: <Icon.progress size={16} /> },
+  { id: 'resources',  label: 'Resources',     icon: <Icon.book size={16} /> },
+  { id: 'messages',   label: 'Messages',      icon: <Icon.feedback size={16} /> },
+  { id: 'settings',   label: 'Settings',      icon: <Icon.settings size={16} /> },
 ];
 
 export default function StudentDashboard({ student, onSignOut }) {
@@ -90,6 +92,15 @@ export default function StudentDashboard({ student, onSignOut }) {
           <div className="dash-brand">
             <span className="dash-brand-name">MET Proficiency Mastery</span>
           </div>
+          <nav className="dash-top-nav">
+            {TABS.map(t => (
+              <button key={t.id} onClick={() => handleTabChange(t.id)} className={'dash-nav-btn' + (tab === t.id ? ' active' : '')}>
+                <span className="dash-nav-icon">{t.icon}</span>
+                <span className="dash-nav-label">{t.label}</span>
+                {dots[t.id] && <span className="dash-nav-dot" />}
+              </button>
+            ))}
+          </nav>
           <div className="dash-topbar-right">
             <span className="dash-topbar-name">{student.firstName}</span>
             <Avatar name={student.name} size={30} tone="auto" />
@@ -102,6 +113,7 @@ export default function StudentDashboard({ student, onSignOut }) {
             <Suspense fallback={<div className="student-suspense-fallback">Loading…</div>}>
               {tab === 'homework' && <StudentHomework student={student} />}
               {tab === 'mock-test' && <MockTestPage student={student} />}
+              {tab === 'eval' && <MockTestEvalPage />}
               {tab === 'feedback' && <StudentFeedback student={student} onTab={setTab} />}
               {tab === 'progress' && <StudentProgress student={student} />}
               {tab === 'resources' && <StudentResources />}

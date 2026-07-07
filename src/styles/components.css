@@ -1907,6 +1907,10 @@
   padding-top: 56px;
 }
 
+.dash-bottom-nav {
+  display: none;
+}
+
 .dash-topbar {
   position: fixed;
   top: 0;
@@ -1976,6 +1980,9 @@
 }
 
 .dash-nav-dot {
+  position: absolute;
+  top: 6px;
+  right: 6px;
   width: 7px;
   height: 7px;
   border-radius: 50%;
