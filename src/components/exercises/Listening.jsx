@@ -15,185 +15,13 @@
  */
 import { useState, useRef, useCallback } from 'react';
 import { Icon } from '../shared.jsx';
+import { fetchAudio, fetchConversationAudio, fetchAudioWithGender } from '../../lib/tts-utils.js';
+import { callAI } from '../../lib/callAI.js';
 
 const TEAL = 'var(--accent)';
 const NAVY = 'var(--accent-text)';
-const EL_VOICE    = '21m00Tcm4TlvDq8ikWAM'; // ElevenLabs — Rachel, natural American English
-const DEEPGRAM_MODEL = 'aura-2-thalia-en';    // Deepgram Aura-2 — clear American English
-const OPENAI_VOICE = 'nova';                  // OpenAI TTS — nova (female, clear, neutral)
 
-/* ── Key helpers ──────────────────────────────────────────────── */
-function lsGet(key) { try { return localStorage.getItem(key) || ''; } catch { return ''; } }
-const getElKey     = () => lsGet('vv:elevenlabs_api_key');
-const getDeepgramKey = () => lsGet('vv:deepgram_api_key');
-const getOpenAIKey = () => lsGet('vv:openai_api_key');
-const getPiperUrl  = () => lsGet('vv:piper_server_url');
-const getGeminiKey = () => { const v = lsGet('vv:gemini_api_key'); return v ? v.split(',')[0].trim() : ''; };
-
-function getSessionToken() {
-  try {
-    const raw = localStorage.getItem('vv:supabase_session');
-    if (!raw) return '';
-    const s = JSON.parse(raw);
-    return s?.access_token || '';
-  } catch { return ''; }
-}
-
-/* ── TTS helpers ──────────────────────────────────────────────── */
-async function fetchServerAudio(text) {
-  const token = getSessionToken();
-  const res = await fetch('/api/tts', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
-    body: JSON.stringify({ text }),
-  });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.error?.message || `Server TTS error ${res.status}`);
-  }
-  const blob = await res.blob();
-  if (!blob.type.startsWith('audio/')) {
-    throw new Error(`Server returned invalid audio format: ${blob.type}`);
-  }
-  return URL.createObjectURL(blob);
-}
-
-async function fetchElevenLabsAudio(text, apiKey) {
-  const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${EL_VOICE}`, {
-    method: 'POST',
-    headers: { 'xi-api-key': apiKey, 'Content-Type': 'application/json', Accept: 'audio/mpeg' },
-    body: JSON.stringify({
-      text,
-      model_id: 'eleven_multilingual_v2',
-      voice_settings: { stability: 0.5, similarity_boost: 0.75 },
-    }),
-  });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.detail?.message || `ElevenLabs error ${res.status}`);
-  }
-  return URL.createObjectURL(await res.blob());
-}
-
-async function fetchOpenAIAudio(text, apiKey) {
-  const res = await fetch('https://api.openai.com/v1/audio/speech', {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ model: 'tts-1', input: text, voice: OPENAI_VOICE }),
-  });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.error?.message || `OpenAI TTS error ${res.status}`);
-  }
-  return URL.createObjectURL(await res.blob());
-}
-
-async function fetchDeepgramAudio(text, apiKey) {
-  const res = await fetch(`https://api.deepgram.com/v1/speak?model=${encodeURIComponent(DEEPGRAM_MODEL)}`, {
-    method: 'POST',
-    headers: { Authorization: `Token ${apiKey}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ text }),
-  });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.err_msg || err.message || `Deepgram TTS error ${res.status}`);
-  }
-  return URL.createObjectURL(await res.blob());
-}
-
-async function fetchGeminiAudio(text, apiKey) {
-  const res = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${apiKey}`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text }] }],
-        generationConfig: {
-          responseModalities: ['AUDIO'],
-          speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Kore' } } },
-        },
-      }),
-    }
-  );
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.error?.message || `Gemini TTS error ${res.status}`);
-  }
-  const data = await res.json();
-  const part = data.candidates?.[0]?.content?.parts?.[0]?.inlineData;
-  if (!part?.data) throw new Error('Gemini TTS: no audio in response');
-  const bytes = Uint8Array.from(atob(part.data), c => c.charCodeAt(0));
-  return URL.createObjectURL(new Blob([bytes], { type: part.mimeType || 'audio/wav' }));
-}
-
-async function fetchPiperAudio(text, serverUrl) {
-  const res = await fetch(`${serverUrl}/tts`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ text }),
-  });
-  if (!res.ok) throw new Error(`Piper TTS error ${res.status}`);
-  return URL.createObjectURL(await res.blob());
-}
-
-/** Server proxy → ElevenLabs → Deepgram → OpenAI TTS → Gemini TTS → Piper (local) → null */
-async function fetchAudio(text) {
-  try { 
-    return await fetchServerAudio(text); 
-  } catch (e) { 
-    console.warn('[tts] Server proxy failed:', e.message); 
-  }
-  
-  const elKey = getElKey();
-  if (elKey) {
-    try {
-      return await fetchElevenLabsAudio(text, elKey);
-    } catch (e) {
-      console.warn('[tts] ElevenLabs failed:', e.message);
-    }
-  }
-  
-  const deepgramKey = getDeepgramKey();
-  if (deepgramKey) {
-    try {
-      return await fetchDeepgramAudio(text, deepgramKey);
-    } catch (e) {
-      console.warn('[tts] Deepgram failed:', e.message);
-    }
-  }
-  
-  const oaiKey = getOpenAIKey();
-  if (oaiKey) {
-    try {
-      return await fetchOpenAIAudio(text, oaiKey);
-    } catch (e) {
-      console.warn('[tts] OpenAI failed:', e.message);
-    }
-  }
-  
-  const geminiKey = getGeminiKey();
-  if (geminiKey) {
-    try {
-      return await fetchGeminiAudio(text, geminiKey);
-    } catch (e) {
-      console.warn('[tts] Gemini failed:', e.message);
-    }
-  }
-  
-  const piperUrl = getPiperUrl();
-  if (piperUrl) {
-    try {
-      return await fetchPiperAudio(text, piperUrl);
-    } catch (e) {
-      console.warn('[tts] Piper failed:', e.message);
-    }
-  }
-  
-  console.warn('[tts] All AI providers failed. Falling back to browser speechSynthesis.');
-  return null;
-}
-
+/* ── Browser speech synthesis fallback */
 let _synthVoices = [];
 if (typeof window !== 'undefined' && window.speechSynthesis) {
   _synthVoices = speechSynthesis.getVoices();
@@ -242,11 +70,34 @@ const MET_LISTENING_CONFIG = {
   },
 };
 
+/* ── AI script generation for multi-voice conversations ──────── */
+const CACHE_PREFIX = 'prac:listening:script:';
+const CONVERSATION_PARTS = ['P1', 'P2'];
+
+async function generateScript(context) {
+  const prompt = `Write a very short natural English conversation (2-4 lines) between two speakers for a listening test. Use "A:" and "B:" prefixes. The conversation should relate to this context: ${context}. Keep each line under 15 words. Output ONLY the script lines, one per line.`;
+  const res = await callAI(prompt, { system: 'You write short natural English conversation scripts for language tests. Output only the script lines.', temperature: 0.5, max_tokens: 500 });
+  const text = res?.content?.[0]?.text || res?.text || '';
+  return text.split('\n').filter(l => l.trim()).map(l => {
+    const m = l.trim().match(/^([AB]):\s*(.+)/i);
+    if (!m) return null;
+    return { speaker: m[1].toUpperCase(), text: m[2] };
+  }).filter(Boolean);
+}
+
+function utterancesFromScript(script) {
+  return script.map(u => ({
+    text: u.text,
+    gender: u.speaker === 'A' ? 'female' : 'male'
+  }));
+}
+
 /* ── Component ────────────────────────────────────────────────── */
-export default function Listening({ exercise, onComplete }) {
+export default function Listening({ exercise = {}, onComplete }) {
   const {
     audioText = '',
     audioSrc = '',   // pre-recorded URL — skips TTS when set
+    script = null,   // optional multi-speaker script [{ speaker: 'A'|'B', text: '...' }]
     question = '',
     options = [],
     correct = null,
@@ -260,8 +111,9 @@ export default function Listening({ exercise, onComplete }) {
 
   const [playCount, setPlayCount] = useState(0);
   const [loading, setLoading]     = useState(false);
+  const [generating, setGenerating] = useState(false);
   const [error, setError]         = useState('');
-  const [audioUrl, setAudioUrl]   = useState(null); // cached blob URL from ElevenLabs
+  const [audioUrl, setAudioUrl]   = useState(null);
   const [playing, setPlaying]     = useState(false);
   const [revealed, setRevealed]   = useState(false);
   const [selected, setSelected]   = useState(null);
@@ -269,6 +121,7 @@ export default function Listening({ exercise, onComplete }) {
   const [playbackRate, setPlaybackRate] = useState(1);
   const audioRef = useRef(null);
 
+  const isMultiVoice = script && script.length > 0;
   const maxPlays = plays === 0 ? Infinity : plays;
   const canPlay  = !playing && !submitted && playCount < maxPlays;
 
@@ -280,9 +133,40 @@ export default function Listening({ exercise, onComplete }) {
     try {
       let url = audioUrl;
 
-      // Fetch from TTS once, then reuse cached blob URL for replays
       if (!url) {
-        url = audioSrc || await fetchAudio(audioText); // pre-recorded URL → TTS cascade → null
+        if (script && script.length > 0) {
+          // Multi-voice conversation from predefined script
+          const utterances = utterancesFromScript(script);
+          url = await fetchConversationAudio(utterances);
+        } else if (audioSrc) {
+          url = audioSrc;
+        } else {
+          // Try generating conversation script for conversation parts
+          if (CONVERSATION_PARTS.includes(metPart) && audioText && !script) {
+            setGenerating(true);
+            const cacheKey = CACHE_PREFIX + (exercise.text || exercise.question || audioText || '').slice(0, 40);
+            let generated = null;
+            try {
+              const cached = sessionStorage.getItem(cacheKey);
+              if (cached) generated = JSON.parse(cached);
+            } catch {}
+            if (!generated) {
+              generated = await generateScript(exercise.question || audioText);
+              if (generated && generated.length > 0) {
+                try { sessionStorage.setItem(cacheKey, JSON.stringify(generated)); } catch {}
+              }
+            }
+            setGenerating(false);
+            if (generated && generated.length > 0) {
+              const utterances = utterancesFromScript(generated);
+              url = await fetchConversationAudio(utterances);
+            }
+          }
+          // Fallback to single-voice TTS
+          if (!url) {
+            url = await fetchAudio(audioText);
+          }
+        }
         if (url) setAudioUrl(url);
       }
 
@@ -290,36 +174,35 @@ export default function Listening({ exercise, onComplete }) {
       setPlaying(true);
       setPlayCount(c => c + 1);
 
-       if (url) {
-         try {
-           const audio = new Audio(url);
-           audioRef.current = audio;
-           audio.playbackRate = playbackRate;
-           audio.onended = () => { setPlaying(false); setRevealed(true); };
-           audio.onerror = (e) => { 
-             setPlaying(false); 
-             setError('Audio format not supported or file corrupted. Try again.'); 
-             console.error('Audio playback error:', e);
-           };
-           await audio.play();
-         } catch (e) {
-           setPlaying(false);
-           setError(`Playback blocked: ${e.message}`);
-         }
-       } else {
-
-        // Browser TTS fallback — no API key configured
+      if (url) {
+        try {
+          const audio = new Audio(url);
+          audioRef.current = audio;
+          audio.playbackRate = playbackRate;
+          audio.onended = () => { setPlaying(false); setRevealed(true); };
+          audio.onerror = (e) => {
+            setPlaying(false);
+            setError('Audio format not supported or file corrupted. Try again.');
+            console.error('Audio playback error:', e);
+          };
+          await audio.play();
+        } catch (e) {
+          setPlaying(false);
+          setError(`Playback blocked: ${e.message}`);
+        }
+      } else {
         await speakBrowser(audioText);
         setPlaying(false);
         setRevealed(true);
       }
     } catch (e) {
       setLoading(false);
+      setGenerating(false);
       setPlaying(false);
       setError(e.message || 'Could not play audio.');
       setRevealed(true);
     }
-  }, [canPlay, audioText, audioSrc, audioUrl, playbackRate]);
+  }, [canPlay, audioText, audioSrc, audioUrl, playbackRate, script, metPart, exercise]);
 
   function handleStop() {
     if (audioRef.current) {
@@ -447,26 +330,26 @@ export default function Listening({ exercise, onComplete }) {
         {/* Play / Stop button */}
         <button
           onClick={playing ? handleStop : handlePlay}
-          disabled={loading || (!canPlay && !playing)}
-          aria-label={loading ? 'Loading audio…' : playing ? 'Stop' : 'Play audio'}
+          disabled={loading || generating || (!canPlay && !playing)}
+          aria-label={loading ? 'Loading audio…' : generating ? 'Generating script…' : playing ? 'Stop' : 'Play audio'}
           style={{
             width: 64, height: 64, borderRadius: '50%', border: 'none',
             background: loading ? 'var(--border)' : playing ? '#EF4444' : TEAL,
             color: '#fff',
-            cursor: (loading || (!canPlay && !playing)) ? 'not-allowed' : 'pointer',
+            cursor: (loading || generating || (!canPlay && !playing)) ? 'not-allowed' : 'pointer',
             fontSize: 24, display: 'grid', placeItems: 'center',
             boxShadow: playing ? '0 0 0 6px rgba(239,68,68,.15)' : '0 4px 14px rgba(13,148,136,.3)',
             transition: 'all 0.18s var(--ease)',
-            opacity: (loading || (!canPlay && !playing)) ? 0.45 : 1,
+            opacity: (loading || generating || (!canPlay && !playing)) ? 0.45 : 1,
           }}
         >
-          {loading ? '...' : playing ? <Icon.stop size={20} /> : <Icon.play size={20} />}
+          {loading || generating ? '...' : playing ? <Icon.stop size={20} /> : <Icon.play size={20} />}
         </button>
 
         {/* Play status */}
         <div style={{ fontSize: 12.5, color: 'var(--muted)', textAlign: 'center', lineHeight: 1.5 }}>
-          {loading
-            ? (audioSrc ? 'Loading audio…' : 'Generating audio…')
+          {loading || generating
+            ? (generating ? 'Generating conversation script...' : audioSrc ? 'Loading audio…' : 'Generating audio…')
             : playing
               ? 'Playing — press Stop to stop'
               : playCount === 0
@@ -475,6 +358,14 @@ export default function Listening({ exercise, onComplete }) {
                   ? 'Maximum plays reached'
                   : `${playsLeft} play${playsLeft > 1 ? 's' : ''} remaining — press Play to replay`}
         </div>
+
+        {isMultiVoice && (
+          <span style={{
+            fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em',
+            padding: '2px 8px', borderRadius: 99, background: '#7c3aed1a', color: '#7c3aed',
+            border: '1px solid #7c3aed33',
+          }}>Multi-voice</span>
+        )}
 
         {error && (
           <div style={{ fontSize: 12.5, color: 'var(--danger)', textAlign: 'center' }}>
@@ -509,24 +400,7 @@ export default function Listening({ exercise, onComplete }) {
         )}
       </div>
 
-      {/* Transcript — shown after answering (learning moment) or when audio fails
-          (accessibility fallback). Hidden during the normal listening challenge. */}
-      {audioText && (submitted || error) && (
-        <div style={{
-          padding: '12px 14px', marginBottom: 16, borderRadius: 'var(--radius-sm)',
-          background: 'var(--bg)', border: '1px solid var(--border)',
-        }}>
-          <div style={{
-            fontSize: 11, fontWeight: 700, letterSpacing: '0.06em',
-            color: 'var(--muted)', textTransform: 'uppercase', marginBottom: 6,
-          }}>
-            Transcript
-          </div>
-          <div style={{ fontSize: 14, lineHeight: 1.65, color: 'var(--text)' }}>
-            {audioText}
-          </div>
-        </div>
-      )}
+
 
       {/* Question — revealed after first listen */}
       {revealed ? (
@@ -609,4 +483,5 @@ export default function Listening({ exercise, onComplete }) {
     </div>
   );
 }
+
 
