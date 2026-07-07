@@ -57,6 +57,8 @@ export default [
         TextEncoder: 'readonly',
         TextDecoder: 'readonly',
         URLSearchParams: 'readonly',
+        WebSocket: 'readonly',
+        sessionStorage: 'readonly',
       },
     },
   },

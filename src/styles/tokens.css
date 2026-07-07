@@ -59,11 +59,11 @@
   --warning-bg-rgb: 255, 251, 235;
   --warning-soft: #FDE68A;
   
-  --error: #DC2626;
-  --error-rgb: 220, 38, 38;
-  --error-bg: #FEF2F2;
-  --error-bg-rgb: 254, 242, 242;
-  --error-soft: #FECACA;
+  --error: #64748b;
+  --error-rgb: 100, 116, 139;
+  --error-bg: #f1f5f9;
+  --error-bg-rgb: 241, 245, 249;
+  --error-soft: #cbd5e1;
   --danger: var(--error);
   --danger-bg: var(--error-bg);
   --danger-soft: var(--error-soft);
@@ -100,8 +100,8 @@
   --weight-bold: 700;
   
   /* ── Typography ────────────────────────────────────────────── */
-  --font-display: 'Sora', sans-serif;
-  --font-sans: 'Outfit', sans-serif;
+  --font-display: 'Aptos', sans-serif;
+  --font-sans: 'Aptos', sans-serif;
   --font-mono: 'SF Mono', 'JetBrains Mono', monospace;
   
   /* ── Spacing & Motion ──────────────────────────────────────── */

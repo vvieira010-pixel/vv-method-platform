@@ -74,40 +74,86 @@
     display: grid;
     grid-template-columns: 1fr auto;
     gap: 8px;
-    padding: 8px 12px;
-    background: rgba(15, 27, 45, 0.97);
-    -webkit-backdrop-filter: blur(10px);
+    padding: 12px 16px;
+    background: rgba(244, 249, 252, 0.8);
     backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border);
+    align-items: center;
   }
-
+  
   .dash-brand-name {
+    font-weight: 600;
     font-size: var(--text-base);
+    color: var(--text);
   }
-
-  .dash-top-nav {
-    grid-column: 1 / -1;
-    order: 3;
-    gap: 6px;
-    overflow-x: auto;
-    padding-bottom: 2px;
-    scrollbar-width: none;
-  }
-
-  .dash-top-nav::-webkit-scrollbar { display: none; }
-
-  .dash-nav-btn {
-    flex: 0 0 auto;
-    min-height: 44px;
-    padding: 6px 10px;
-    white-space: nowrap;
-  }
-
-  .dash-topbar-right { min-width: 0; }
-  .dash-topbar-name { display: none; }
-
+  
   .dash-body {
-    padding: 12px 12px 70px;
+    padding: 64px 16px calc(70px + env(safe-area-inset-bottom));
   }
+  
+  .dash-bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: var(--z-fixed);
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
+    background: rgba(7, 21, 39, 0.95);
+    backdrop-filter: blur(12px);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  .dash-nav-btn {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 8px 0;
+    color: rgba(255, 255, 255, 0.6);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    transition: var(--transition-fast);
+    min-height: 48px;
+  }
+  
+  .dash-nav-btn.active {
+    color: #fff;
+  }
+  
+  .dash-nav-btn .dash-nav-icon {
+    color: inherit;
+  }
+  
+  .dash-nav-btn .dash-nav-label {
+    font-size: var(--text-2xs);
+    font-weight: 500;
+  }
+  
+  .dash-nav-dot {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 6px;
+    height: 6px;
+    background: var(--primary);
+    border-radius: 50%;
+    box-shadow: 0 0 4px var(--primary);
+  }
+  
+  .dash-topbar-right { 
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  
+  .dash-topbar-name { display: block; font-size: var(--text-sm); color: var(--text-muted); }
+
 
   .student-home { gap: 14px; }
 
@@ -222,6 +268,28 @@
 
 /* ── Teacher mobile (≤768px) ───────────────────────────────────── */
 @media (max-width: 768px) {
+  .td-student-grid {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+  .td-student-card {
+    aspect-ratio: auto !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    text-align: left !important;
+    padding: 12px !important;
+    gap: var(--space-4);
+  }
+  .td-student-card > div {
+    margin: 0 !important;
+    text-align: left !important;
+  }
+  .td-student-card .btn {
+    width: auto !important;
+    margin-left: auto;
+  }
   .shell { display: flex; flex-direction: column; }
 
   .shell-topbar {

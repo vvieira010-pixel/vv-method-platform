@@ -196,6 +196,59 @@ export { Select } from './ui/Select.jsx';
 /* ─── callAI (see src/lib/callAI.js) ────────────────────────── */
 export { callAI, summarizeTranscript } from '../lib/callAI.js';
 
+export function Tooltip({ children, content }) {
+  if (!content) return children;
+  return (
+    <div className="vv-tooltip-wrap">
+      {children}
+      <span className="vv-tooltip-text">{content}</span>
+      <style>{`
+        .vv-tooltip-wrap {
+          position: relative;
+          display: inline-block;
+          cursor: help;
+        }
+        .vv-tooltip-text {
+          visibility: hidden;
+          width: 200px;
+          background-color: var(--primary);
+          color: #fff;
+          text-align: center;
+          border-radius: 6px;
+          padding: 6px 10px;
+          position: absolute;
+          z-index: 1000;
+          bottom: 125%;
+          left: 50%;
+          transform: translateX(-50%);
+          opacity: 0;
+          transition: opacity 0.2s;
+          font-size: 12px;
+          font-weight: 500;
+          line-height: 1.4;
+          pointer-events: none;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        .vv-tooltip-text::after {
+          content: "";
+          position: absolute;
+          top: 100%;
+          left: 50%;
+          margin-left: -5px;
+          border-width: 5px;
+          border-style: solid;
+          border-color: var(--primary) transparent transparent transparent;
+        }
+        .vv-tooltip-wrap:hover .vv-tooltip-text {
+          visibility: visible;
+          opacity: 1;
+        }
+      `}</style>
+    </div>
+  );
+}
+
+
 
 
 

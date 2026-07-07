@@ -41,13 +41,11 @@ function SubskillRadar({ sectionData }) {
           {sectionData.length < 3 ? (
             <BarChart data={sectionData} margin={{ top: 8, right: 16, bottom: 8, left: -8 }} layout="vertical">
               <CartesianGrid strokeDasharray="3 3" stroke="var(--divider)" horizontal={false} />
-              <XAxis type="number" domain={[0, domainMax]} tick={{ fill: 'var(--muted)', fontSize: 11 }} tickCount={5} />
+              <XAxis type="number" domain={[0, domainMax]} tick={false} />
               <YAxis type="category" dataKey="skill" tick={{ fill: 'var(--text-2)', fontSize: 12, fontFamily: 'var(--font-sans)' }} width={60} />
               <Tooltip />
               <Legend wrapperStyle={{ fontSize: 12, fontFamily: 'var(--font-sans)', color: 'var(--text-2)', paddingTop: 8 }} />
-              <Bar name="Current" dataKey="current" fill="var(--accent)" radius={[0, 3, 3, 0]} isAnimationActive animationDuration={1000} animationBegin={300}>
-                <LabelList dataKey="current" position="right" fill="var(--accent)" fontSize={11} fontWeight={700} />
-              </Bar>
+              <Bar name="Current" dataKey="current" fill="var(--accent)" radius={[0, 3, 3, 0]} isAnimationActive animationDuration={1000} animationBegin={300} />
               {sectionData.some(d => d.previous != null) && (
                 <Bar name="Previous" dataKey="previous" fill="var(--muted)" fillOpacity={0.5} radius={[0, 3, 3, 0]} isAnimationActive animationDuration={800} animationBegin={0} />
               )}
@@ -57,7 +55,7 @@ function SubskillRadar({ sectionData }) {
             <RadarChart data={sectionData} cx="50%" cy="50%" outerRadius="70%">
               <PolarGrid stroke="var(--divider)" />
               <PolarAngleAxis dataKey="skill" tick={{ fill: 'var(--text-2)', fontSize: 12, fontFamily: 'var(--font-sans)' }} />
-              <PolarRadiusAxis domain={[0, domainMax]} tick={{ fill: 'var(--muted)', fontSize: 11 }} tickCount={5} />
+              <PolarRadiusAxis domain={[0, domainMax]} tick={false} />
               {sectionData.some(d => d.previous != null) && (
                 <Radar name="Previous" dataKey="previous" stroke="var(--muted)" strokeWidth={1.5} strokeDasharray="5 5" fill="var(--muted)" fillOpacity={0.22} isAnimationActive animationDuration={900} animationBegin={0} />
               )}
@@ -69,19 +67,6 @@ function SubskillRadar({ sectionData }) {
           )}
         </ResponsiveContainer>
       </div>
-      <table className="sr-only" aria-label="Radar chart data">
-        <thead><tr><th>Skill</th><th>Current</th><th>Previous</th><th>Target</th></tr></thead>
-        <tbody>
-          {sectionData.map(d => (
-            <tr key={d.skill}>
-              <td>{d.skill}</td>
-              <td>{d.current}</td>
-              <td>{d.previous ?? '—'}</td>
-              <td>{d.target}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
     </div>
   );
 }
@@ -235,7 +220,6 @@ export default function StudentProgress({ student }) {
                     <span className="student-panel-kicker">Focus Area</span>
                     <h2>{lowestSkill.section.replace(/_/g, ' ')}</h2>
                   </div>
-                  <span className="student-skill-score">{lowScore}/80</span>
                 </div>
                 <p className="text-sm lh-1_6" style={{ color: 'var(--text)', margin: '8px 0 0' }}>
                   This skill needs the most attention. Focus on it in your next class or practice session.

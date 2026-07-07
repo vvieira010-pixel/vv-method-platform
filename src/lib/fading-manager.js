@@ -130,3 +130,39 @@ export function recallGateActive(level) {
 export function getLevelInfo(level) {
   return SCAFFOLD_LEVELS[level] || SCAFFOLD_LEVELS[4];
 }
+
+/* ─── Confidence calibration tracking ───────────────────── */
+
+export function computeCalibration(sessions) {
+  if (!sessions || sessions.length === 0) return null;
+  const data = [];
+  for (const s of sessions) {
+    if (s.confidenceBefore != null && s.score != null) {
+      data.push({ before: s.confidenceBefore, score: s.score });
+    }
+  }
+  if (data.length === 0) return null;
+  const avgConf = data.reduce((sum, d) => sum + d.before, 0) / data.length;
+  const avgScore = data.reduce((sum, d) => sum + d.score, 0) / data.length;
+  const gap = avgConf * 10 - avgScore;
+  return {
+    avgConfidence: avgConf,
+    avgScore,
+    gap,
+    trend: gap > 15 ? 'overconfident' : gap < -15 ? 'underconfident' : 'calibrated',
+    data,
+  };
+}
+
+export function extractErrorCategories(sessions) {
+  if (!sessions || sessions.length === 0) return [];
+  const cats = {};
+  for (const s of sessions) {
+    if (s.errorCategories) {
+      for (const c of s.errorCategories) {
+        cats[c] = (cats[c] || 0) + 1;
+      }
+    }
+  }
+  return Object.entries(cats).map(([category, count]) => ({ category, count }));
+}

@@ -257,7 +257,101 @@ const SOMEWHERE = [
     explanation: '"Somewhere else" = another place (affirmative context). "Anyplace" is informal; "where else" and "other place" are grammatically incorrect here.' },
 ];
 
+const COMMON_MISTAKES = [
+  { id: gId(), type: 'mcq', level: 'B2', skill: 'Grammar',
+    question: 'Choose the sentence that uses the most natural and correct word combination (collocation).',
+    options: [
+      'I need to do a quick phone call before the strategy session begins.',
+      'We made a lot of progress on the software migration this week.',
+      'The guest speaker did an inspiring speech at the annual conference.',
+      'She took a new business with her international partners.'
+    ], correct: 1,
+    feedbackCorrect: 'Excellent! In English, we always "make progress," never "do progress."',
+    feedbackIncorrect: 'Look closely at the verbs paired with the nouns. We make a phone call (not do), we give or deliver a speech (not do), and we start or set up a business (not take).' },
+  { id: gId(), type: 'mcq', level: 'B2', skill: 'Grammar',
+    question: 'Select the sentence that handles countable or uncountable nouns correctly.',
+    options: [
+      'The security gate agent told us that we had too many luggages.',
+      'There is a lot of traffic on the city bridge this morning.',
+      'She gave me two very useful informations for my upcoming trip.',
+      'We need to order some new office furnitures before next month.'
+    ], correct: 1,
+    feedbackCorrect: 'Correct! Traffic is an uncountable mass noun and is properly paired with the singular verb "is" and the modifier "a lot of."',
+    feedbackIncorrect: 'Watch out for pluralizing mass nouns. Words like luggage, information, and furniture are strictly uncountable in English. They can never take a plural "-s" or be counted with individual numbers.' },
+  { id: gId(), type: 'mcq', level: 'B2', skill: 'Grammar',
+    question: 'Identify the sentence that uses determiners (all, every, most, other) correctly.',
+    options: [
+      'Most of people prefer working from a quiet environment these days.',
+      'I spent all day reviewing the financial spreadsheets for accuracy.',
+      'This is a my close colleague from the design department.',
+      'He carefully washed his both hands before preparing the food.'
+    ], correct: 1,
+    feedbackCorrect: 'Spot on! "All day" is the correct determinative phrase to show the entire duration of a single day.',
+    feedbackIncorrect: 'Option A should be "Most people" (we only use most of before pronouns or specific determiners like most of the people). Option C incorrectly stacks an article and a possessive pronoun ("a my friend" should just be "my friend" or "a friend of mine"). Option D should put the determiner first: "both his hands."' },
+  { id: gId(), type: 'mcq', level: 'B2', skill: 'Grammar',
+    question: 'Choose the sentence that uses word forms (nouns, verbs, adjectives, adverbs) correctly.',
+    options: [
+      'The client presentation was so bored that two people fell asleep.',
+      'She speaks conversational German very fluent because she lived in Berlin.',
+      'We received an official written complaint from an unhappy user.',
+      'The engineering team pulled off a completely successfully product launch.'
+    ], correct: 2,
+    feedbackCorrect: 'Great job! Complaint is the correct noun form used here as the object of the verb "received."',
+    feedbackIncorrect: 'Check your modifiers. Option A should use the adjective boring to describe the presentation (the presentation causes the boredom; people feel bored). Option B needs the adverb fluently to modify the verb "speaks." Option D needs the adjective successful to modify the noun phrase "product launch."' },
+  { id: gId(), type: 'mcq', level: 'B2', skill: 'Grammar',
+    question: 'Choose the sentence that uses dependent or structural prepositions correctly.',
+    options: [
+      'He is incredibly good in solving complex data architecture issues.',
+      'She has been happily married with her husband for over ten years.',
+      'The overall success of the project depends on your participation.',
+      'Our regional team arrived to the hotel late last night due to bad weather.'
+    ], correct: 2,
+    feedbackCorrect: 'Perfect! The verb depend is strictly tied to the preposition on.',
+    feedbackIncorrect: 'Review your dependent preposition pairings. We are good at an activity (not in), someone is married to a person (not with), and we arrive at a specific building or location like a hotel (not to).' },
+  { id: gId(), type: 'mcq', level: 'B2', skill: 'Grammar',
+    question: 'Select the sentence that contains absolutely NO spelling errors in a professional context.',
+    options: [
+      'We will definitely receive the new testing equipment tomorrow morning.',
+      'I am writing to formally complain about the terrible accomodation.',
+      'Please wait untill the line manager gives you authorization to leave.',
+      'It is crucial to keep your personal life completely seperate from work.'
+    ], correct: 0,
+    feedbackCorrect: 'Well done! Both definitely (often misspelled as definately) and receive (remember: "i before e except after c") are spelled flawlessly.',
+    feedbackIncorrect: 'Option B is missing a letter; it should be spelled accommodation (with a double c and double m). Option C should be until with a single l. Option D should be spelled separate (remember there is an "a" in the middle: se-par-ate).' },
+  { id: gId(), type: 'mcq', level: 'B2', skill: 'Grammar',
+    question: 'Select the sentence that uses words with similar meanings correctly based on context.',
+    options: [
+      'Please remember me to call the client before the 3 PM deadline.',
+      'This classic song always reminds me of my early childhood holidays.',
+      'I had a great possibility to visit our corporate headquarters last summer.',
+      'The team building event yesterday evening was very fun; I couldn\'t stop laughing.'
+    ], correct: 1,
+    feedbackCorrect: 'Spot on! Remind means to cause someone to remember something, which fits this context perfectly.',
+    feedbackIncorrect: 'Option A should use remind ("Please remind me to call..."). Option C should use opportunity (a favorable chance to do something) instead of possibility (the likelihood of something happening). Option D should use funny if it caused you to laugh out loud, as fun just means enjoyable.' },
+  { id: gId(), type: 'mcq', level: 'B2', skill: 'Grammar',
+    question: 'Choose the sentence that features correct, natural English word order.',
+    options: [
+      'Do you know what time does the express train to London leave?',
+      'Could you tell me where the nearest conference room is?',
+      'I honestly wonder why did she leave the meeting so early yesterday.',
+      'Can you explain to the team how can we access the cloud network?'
+    ], correct: 1,
+    feedbackCorrect: 'Excellent! This is an indirect question. When a question is embedded inside another phrase ("Could you tell me..."), the word order swaps back to normal statement order (Subject + Verb: where the nearest conference room is).',
+    feedbackIncorrect: 'Options A, C, and D are all indirect structures that incorrectly keep the question word order format (does the train leave, did she leave, can we access). They should read: what time the express train leaves, why she left, and how we can access.' },
+  { id: gId(), type: 'mcq', level: 'B2', skill: 'Grammar',
+    question: 'Identify the sentence that follows the correct underlying grammatical verb pattern.',
+    options: [
+      'My project manager wants that I finish this data report by tonight.',
+      'I am really looking forward to visit the new office next month.',
+      'He decided to stop smoking because of his changing health priorities.',
+      'She thoroughly enjoys to read historical novels in her spare time.'
+    ], correct: 2,
+    feedbackCorrect: 'Perfect choice. The verb decide is systematically followed by an infinitive construction (to stop).',
+    feedbackIncorrect: 'Look closely at the verb demands. The verb want follows the pattern want + someone + to do something (not "wants that I finish"). The phrase look forward to contains a preposition, meaning it must take a gerund (looking forward to visiting). The verb enjoy must be followed by a gerund (enjoys reading).' },
+];
+
 const MODULES = [
+  { id: 'gm_common_mistakes', label: 'Common Mistakes (Cambridge Index)', skill: 'Grammar', level: 'B2', note: 'Nine core error categories: collocation, countability, determiners, parts of speech, prepositions, spelling, word choice, word order, and verb patterns.', exercises: COMMON_MISTAKES },
   { id: 'gm_conditionals', label: 'Conditionals (Types 1, 2 & 3)', skill: 'Grammar', level: 'B2', note: 'If-clauses for real, hypothetical, and unreal past situations. Type 3 = had + pp → would have + pp.', exercises: CONDITIONALS },
   { id: 'gm_passive', label: 'Passive Voice', skill: 'Grammar', level: 'B2', note: 'Shift focus from doer to receiver. Structure: be + past participle. Common with reporting verbs (believe, report, say).', exercises: PASSIVE_VOICE },
   { id: 'gm_modals', label: 'Modal Verbs', skill: 'Grammar', level: 'B2', note: 'Ability (can/could), obligation (must/should), deduction (must have). Modal + have + pp for past meanings.', exercises: MODAL_VERBS },

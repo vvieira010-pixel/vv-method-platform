@@ -482,12 +482,14 @@ Return JSON:
                 <div className="section-label text-primary flex-row-gap2">
                   <Icon.check size={12} /> Per-question review
                 </div>
-                {submissionEvidence.entries.map((entry, idx) => {
-                  const activity = activityById[entry.id] || {};
-                  const skill = TYPE_SKILL[activity.type || entry.type] || 'Response';
-                  const qe = questionEvals[entry.id] || {};
-                  const audioUrl = audioUrls[entry.id];
-                  return (
+                 {submissionEvidence.entries.map((entry, idx) => {
+                   const activity = activityById[entry.id] || {};
+                   const skill = TYPE_SKILL[activity.type || entry.type] || 'Response';
+                   const qe = questionEvals[entry.id] || {};
+                   const res = submission.responses?.[entry.id] || {};
+                   const audioUrl = audioUrls[entry.id];
+                   return (
+
                     <Card key={entry.id} className="card-p-4">
                       <div className="flex-row-gap2 mb-2">
                         <span className="text-xs font-bold text-muted">Q{idx + 1}</span>
@@ -534,18 +536,37 @@ Return JSON:
                         <div className="text-xs text-muted mb-2">No response recorded.</div>
                       )}
 
-                      {/* AI result */}
-                      {qe.aiResult && (
-                        <div className="sr-ai-result mb-2">
-                          <div className="text-xs font-bold text-primary mb-1">AI assessment</div>
-                          <p className="text-body" style={{ margin: 0 }}>{qe.aiResult.assessment}</p>
-                          {qe.aiResult.questionNote && (
-                            <p style={{ margin: '6px 0 0', fontSize: 'var(--text-xs)', color: 'var(--text-2)', fontStyle: 'italic', borderTop: '1px solid var(--border)', paddingTop: 6 }}>
-                              Suggested note: {qe.aiResult.questionNote}
-                            </p>
-                          )}
-                        </div>
-                      )}
+                       {/* AI result */}
+                       {qe.aiResult && (
+                         <div className="sr-ai-result mb-2">
+                           <div className="text-xs font-bold text-primary mb-1">AI assessment</div>
+                           <p className="text-body" style={{ margin: 0 }}>{qe.aiResult.assessment}</p>
+                           {qe.aiResult.questionNote && (
+                             <p style={{ margin: '6px 0 0', fontSize: 'var(--text-xs)', color: 'var(--text-2)', fontStyle: 'italic', borderTop: '1px solid var(--border)', paddingTop: 6 }}>
+                               Suggested note: {qe.aiResult.questionNote}
+                             </p>
+                           )}
+                         </div>
+                       )}
+
+                       {/* Student Reasoning Probe */}
+                       {res?.reasoning && (
+                         <div style={{ marginTop: 12, padding: '10px 12px', background: 'var(--bg)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)' }}>
+                           <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+                             <Icon.spark size={12} color="var(--accent)" />
+                             <span style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase' }}>Student Reasoning</span>
+                           </div>
+                           <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-2)', lineHeight: 1.5, fontStyle: 'italic' }}>
+                             "{res.reasoning}"
+                           </p>
+                           {res.reasoningSolved && (
+                             <div style={{ marginTop: 6, fontSize: 'var(--text-xs)', color: 'var(--success)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
+                               <Icon.check size={10} /> Reasoning validated by AI
+                             </div>
+                           )}
+                         </div>
+                       )}
+
 
                       {/* Per-question teacher note */}
                       <textarea

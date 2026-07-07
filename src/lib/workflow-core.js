@@ -25,6 +25,7 @@ export const K = {
   progressNotes:       'vv:progressNotes',
   seedsStages:         'vv:seedsStages',
   practiceScaffold:    'vv:practicescaffold',
+  mockTestResults:     'vv:mockTestResults',
 };
 
 export function load(key)     { try { return JSON.parse(localStorage.getItem(key) || '[]'); } catch { return []; } }
@@ -140,6 +141,16 @@ export async function updateClassEventStatus(id, patch) {
   all[idx] = { ...all[idx], ...patch, updatedAt: new Date().toISOString() };
   save(K.classEvents, all);
   return all[idx];
+}
+
+export async function saveMockTestResult(data) {
+  return saveVia('mockTestResults', K.mockTestResults, data);
+}
+
+export async function getMockTestResults(studentId) {
+  const all = await listVia('mockTestResults', K.mockTestResults);
+  if (studentId) return all.filter(r => r.studentId === studentId);
+  return all;
 }
 
 export async function clearWorkflowData() {

@@ -23,6 +23,9 @@ export async function loadSkillsForTask(taskType) {
     case 'progress':
       mod = await import('./registry-progress.js');
       break;
+    case 'practice':
+      mod = await import('./registry-practice.js');
+      break;
     default:
       cache[taskType] = [];
       return [];
@@ -49,6 +52,12 @@ const RAW_METADATA = [
   { id: 'student-learning/teach-back-evaluator',                   name: 'Teach-Back Evaluator',                  domain: 'student-learning' },
   { id: 'curriculum-assessment/learning-progression-builder',      name: 'Learning Progression Builder',          domain: 'curriculum-assessment' },
   { id: 'self-regulated-learning/goal-setting-protocol-designer',  name: 'Goal Setting Protocol Designer',        domain: 'self-regulated-learning' },
+  { id: 'student-learning/confidence-calibration-check',          name: 'Confidence Calibration Check',          domain: 'student-learning' },
+  { id: 'student-learning/progressive-hint-ladder',               name: 'Progressive Hint Ladder',               domain: 'student-learning' },
+  { id: 'student-learning/stuck-and-error-diagnosis-coach',       name: 'Stuck & Error Diagnosis Coach',         domain: 'student-learning' },
+  { id: 'student-learning/retrieve-first-gate',                   name: 'Retrieve-First Gate',                   domain: 'student-learning' },
+  { id: 'student-learning/transfer-bridge',                       name: 'Transfer Bridge',                       domain: 'student-learning' },
+  { id: 'student-learning/ai-claim-checker',                      name: 'AI Claim Checker',                      domain: 'student-learning' },
 ];
 
 export function getAllSkillMetadata() {

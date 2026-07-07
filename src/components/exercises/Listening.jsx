@@ -355,15 +355,12 @@ export default function Listening({ exercise, onComplete }) {
         ? { ...base, borderColor: TEAL, background: 'var(--ex-selected-bg)', color: NAVY }
         : { ...base, borderColor: 'var(--border)', background: 'var(--surface)', color: 'var(--text)' };
     }
-    if (i === correct) return { ...base, borderColor: 'var(--ex-correct-strong)', background: 'var(--ex-correct-bg)', color: 'var(--ex-correct-text)' };
-    if (i === selected && !isCorrect) return { ...base, borderColor: 'var(--danger)', background: 'var(--ex-wrong-bg)', color: 'var(--ex-wrong-text)' };
+    if (i === correct) return { ...base, borderColor: 'var(--ex-panel-border)', background: 'var(--ex-panel-bg)', color: 'var(--text)' };
     return { ...base, borderColor: 'var(--divider)', background: 'var(--surface)', color: 'var(--muted)', opacity: 0.6 };
   }
 
   function markerLabel(i) {
     if (!submitted) return selected === i ? '◉' : '○';
-    if (i === correct) return '✓';
-    if (i === selected && !isCorrect) return '✗';
     return String.fromCharCode(65 + i);
   }
 
@@ -372,6 +369,13 @@ export default function Listening({ exercise, onComplete }) {
 
   return (
     <div style={{ padding: '16px 20px' }} onKeyDown={e => { if (e.key === 'Enter' && !submitted && selected != null) { e.preventDefault(); handleSubmit(); } }}>
+
+      {/* Exercise Title */}
+      {exercise.title && (
+        <div style={{ fontSize: 22, fontWeight: 800, color: 'var(--text)', marginBottom: 16, lineHeight: 1.2 }}>
+          {exercise.title}
+        </div>
+      )}
 
       {/* MET part banner */}
       {partConfig && (
@@ -437,7 +441,7 @@ export default function Listening({ exercise, onComplete }) {
           fontSize: 11, fontWeight: 700, letterSpacing: '0.08em',
           color: 'var(--accent)', textTransform: 'uppercase',
         }}>
-          <Icon.headphones size={14} /> Listening Exercise
+          <Icon.headphones size={14} /> Listening Practice Studio
         </div>
 
         {/* Play / Stop button */}
@@ -543,14 +547,8 @@ export default function Listening({ exercise, onComplete }) {
                   width: 24, height: 24, borderRadius: '50%',
                   display: 'grid', placeItems: 'center',
                   fontSize: 13, fontWeight: 700, flexShrink: 0,
-                  background: submitted && i === correct
-                    ? 'var(--ex-correct-strong)'
-                    : submitted && i === selected && !isCorrect
-                      ? 'var(--danger)'
-                      : 'transparent',
-                  color: submitted && (i === correct || (i === selected && !isCorrect))
-                    ? '#fff'
-                    : 'inherit',
+                  background: 'transparent',
+                  color: 'inherit',
                 }}>
                   {markerLabel(i)}
                 </span>
@@ -577,18 +575,18 @@ export default function Listening({ exercise, onComplete }) {
               Submit answer
             </button>
           ) : (
-            <div role="status" aria-live="polite" style={{
+            <div style={{
               padding: '12px 16px', borderRadius: 'var(--radius-sm)',
-              background: isCorrect ? 'var(--ex-correct-bg)' : 'var(--ex-wrong-bg)',
-              border: `1px solid ${isCorrect ? 'var(--ex-correct-border)' : 'var(--ex-wrong-border)'}`,
+              background: 'var(--ex-panel-bg)',
+              border: '1px solid var(--ex-panel-border)',
               fontSize: 14,
             }}>
               <div style={{
-                color: isCorrect ? 'var(--ex-correct-text)' : 'var(--ex-wrong-text)',
+                color: 'var(--text)',
                 fontWeight: 600,
                 marginBottom: explanation ? 6 : 0,
               }}>
-                {isCorrect ? '✓ Correct — well done.' : '✗ Not quite. Review the correct answer above.'}
+                Answer shown above
               </div>
               {explanation && (
                 <div style={{ color: 'var(--ex-panel-text)', fontWeight: 400, fontSize: 13.5, lineHeight: 1.65 }}>

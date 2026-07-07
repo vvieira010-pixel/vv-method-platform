@@ -65,6 +65,20 @@ const TASK_TYPES = {
     ],
     defaultEnabled: false,
   },
+  practice: {
+    id: 'practice',
+    label: 'Practice Studio',
+    description: 'AI-augmented hints, confidence calibration, error diagnosis, and retrieval during practice sessions',
+    skillIds: [
+      'student-learning/confidence-calibration-check',
+      'student-learning/progressive-hint-ladder',
+      'student-learning/stuck-and-error-diagnosis-coach',
+      'student-learning/retrieve-first-gate',
+      'student-learning/transfer-bridge',
+      'student-learning/ai-claim-checker',
+    ],
+    defaultEnabled: true,
+  },
 };
 
 export function getAllTaskTypes() {

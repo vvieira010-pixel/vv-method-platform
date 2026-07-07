@@ -54,15 +54,12 @@ export default function MultipleChoice({ exercise, onComplete }) {
       if (selected === i) return { ...base, borderColor: TEAL, background: 'var(--ex-selected-bg)', color: NAVY };
       return { ...base, borderColor: 'var(--border)', background: 'var(--surface)', color: 'var(--text)' };
     }
-    if (i === correct) return { ...base, borderColor: 'var(--ex-correct-strong)', background: 'var(--ex-correct-bg)', color: 'var(--ex-correct-text)' };
-    if (i === selected) return { ...base, borderColor: 'var(--danger)', background: 'var(--ex-wrong-bg)', color: 'var(--ex-wrong-text)' };
+    if (i === correct) return { ...base, borderColor: 'var(--ex-panel-border)', background: 'var(--ex-panel-bg)', color: 'var(--text)' };
     return { ...base, borderColor: 'var(--divider)', background: 'var(--surface)', color: 'var(--muted)', opacity: 0.6 };
   }
 
   function getMarker(i) {
     if (!submitted) return selected === i ? '◉' : '○';
-    if (i === correct) return '✓';
-    if (i === selected) return '✗';
     return String.fromCharCode(65 + i);
   }
 
@@ -125,8 +122,8 @@ export default function MultipleChoice({ exercise, onComplete }) {
             <span style={{
               width: 24, height: 24, borderRadius: '50%', display: 'grid', placeItems: 'center',
               fontSize: 'var(--text-sm)', fontWeight: 700, flexShrink: 0,
-              background: submitted && i === correct ? 'var(--ex-correct-strong)' : submitted && i === selected && !isCorrect ? 'var(--danger)' : 'transparent',
-              color: submitted && (i === correct || (i === selected && !isCorrect)) ? '#fff' : 'inherit',
+              background: 'transparent',
+              color: 'inherit',
             }}>
               {getMarker(i)}
             </span>
@@ -151,29 +148,22 @@ export default function MultipleChoice({ exercise, onComplete }) {
         </button>
       ) : (
         <>
-          <div role="status" aria-live="polite" style={{
+          <div style={{
             borderRadius: 'var(--radius-sm, 6px)', overflow: 'hidden',
-            border: `1px solid ${isCorrect ? 'var(--ex-correct-border)' : 'var(--ex-wrong-border)'}`,
+            border: '1px solid var(--ex-panel-border)',
             animation: 'fadeUp 0.22s ease-out both',
           }}>
             <div style={{
               padding: '10px 14px',
-              background: isCorrect ? 'var(--ex-correct-bg)' : 'var(--ex-wrong-bg)',
+              background: 'var(--ex-panel-bg)',
               fontSize: 'var(--text-sm)', fontWeight: 600,
-              color: isCorrect ? 'var(--ex-correct-text)' : 'var(--ex-wrong-text)',
-              borderBottom: `1px solid ${isCorrect ? 'var(--ex-correct-border)' : 'var(--ex-wrong-border)'}`,
+              color: 'var(--text)',
+              borderBottom: '1px solid var(--ex-panel-border)',
             }}>
-              {isCorrect ? '✓ Correct' : '✗ Not quite'}
+              Answer
             </div>
             <div style={{ padding: '10px 14px', background: 'var(--surface)', fontSize: 'var(--text-sm)', lineHeight: 1.7 }}>
-              {!isCorrect && (
-                <div style={{ marginBottom: 6 }}>
-                  <span style={{ fontWeight: 600, color: 'var(--ex-wrong-text)' }}>Your answer: </span>
-                  <span style={{ color: 'var(--ex-panel-text)' }}>{options[selected]}</span>
-                </div>
-              )}
               <div>
-                <span style={{ fontWeight: 600, color: 'var(--ex-correct-text)' }}>Correct answer: </span>
                 <span style={{ color: 'var(--ex-panel-text)' }}>{options[correct]}</span>
               </div>
             </div>

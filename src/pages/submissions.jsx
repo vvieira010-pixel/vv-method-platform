@@ -11,13 +11,19 @@ export default function SubmissionsPage({ students, onNavigate }) {
   const [filter, setFilter] = useState('pending');
 
   useEffect(() => {
-    (async () => {
+    load();
+  }, []);
+
+  async function load() {
+    try {
       const [subs, hw, revs] = await Promise.all([getAllSubmissions(), getHomework(), getReviews()]);
       setSubmissions(subs || []);
       setHomework(hw || []);
       setReviews(revs || []);
-    })();
-  }, []);
+    } catch (e) {
+      window.toast?.(`Failed to load submissions: ${e.message}`, 'warn');
+    }
+  }
 
   const reviewedIds = new Set(reviews.map(r => r.submissionId));
   const filtered = submissions.filter(s => {

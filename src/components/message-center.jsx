@@ -81,7 +81,7 @@ const CSS = `
   @media (max-width: 640px) {
     .mc-dock {
       right: max(12px, env(safe-area-inset-right));
-      bottom: max(12px, env(safe-area-inset-bottom));
+      bottom: calc(70px + env(safe-area-inset-bottom));
     }
     .mc-dock-btn {
       width: 40px;
@@ -90,7 +90,7 @@ const CSS = `
     .mc-popup {
       right: 0;
       width: calc(100vw - 24px);
-      max-height: min(390px, calc(100dvh - 92px));
+      max-height: min(390px, calc(100dvh - 160px));
     }
     .si-root {
       padding: 16px;

@@ -435,9 +435,10 @@
         }
       ]
     },
-    {
-      "id": "P3_04",
-      "audioFile": "TTS Task 6-27-2026, 10-12-05 AM.mp3",
+        {
+          "id": "P3_04",
+          "title": "Performance Optimization: The Science of Getting Unstuck",
+          "audioFile": "TTS Task 6-27-2026, 10-12-05 AM.mp3",
       "script": "When we feel stuck on a problem, many of us tend to stay at our desks and try even harder to find a solution. However, this often leads to repetitive thinking, where we just keep circling the same wrong ideas. Short walks can be a powerful tool to break this cycle. By changing your physical environment, you interrupt that repetitive loop and allow your brain to approach the problem from a new angle. For example, a design team I know holds ten-minute walking meetings whenever they cannot agree on a solution. They've found that moving together makes the conversation calmer and more creative. Now, a word of caution: walking is not a replacement for focused work at a desk. It is simply one tool among others. Once you've had your breakthrough during a walk, you must still return to your desk to do the actual work of implementing the solution. So, the next time your thinking starts to go in circles, just stand up and take a short walk.",
       "questions": [
         {

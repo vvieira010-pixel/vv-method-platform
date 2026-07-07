@@ -78,7 +78,6 @@ export function SkillRow({ skill, trend, onClick }) {
       <div className="student-skill-top">
         <strong style={{ textTransform: 'capitalize' }}>{skill.section}</strong>
         <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          {score > 0 && <span className="student-skill-score">{score}/80</span>}
           <span className="student-skill-stage">{stage.label}</span>
         </span>
       </div>

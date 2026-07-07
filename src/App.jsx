@@ -5,6 +5,7 @@ import ErrorBoundary from './components/error-boundary.jsx';
 import { logError } from './lib/error-logger.js';
 import { TweaksPanel, TweakSection, TweakRadio, TweakColor, TweakToggle } from './components/tweaks-panel.jsx';
 import { Icon, Shell } from './components/shared.jsx';
+import CommandPalette from './components/CommandPalette.jsx';
 const getStudentsData = () => import('./data/students.jsx').then(m => m.STUDENTS);
 import { seedStudentsIfEmpty, getStudents, requestInboxNotificationPermission } from './lib/workflow-roster.js';
 import { getAllSubmissions } from './lib/workflow.js';
@@ -46,6 +47,7 @@ const InboxPage         = lazyWithRetry(() => import('./tools/tool-inbox.jsx'));
 const PerspectiveDesigner = lazyWithRetry(() => import('./tools/tool-perspective-designer.jsx'));
 const ExercisesPage     = lazyWithRetry(() => import('./pages/exercises.jsx'));
 const MockTestPage      = lazyWithRetry(() => import('./pages/mock-test.jsx'));
+const MockTestResults   = lazyWithRetry(() => import('./pages/mock-test-results.jsx'));
 const TeacherEvaluationPage = lazyWithRetry(() => import('./pages/teacher-evaluation.jsx'));
 
 export default function App() {
@@ -66,6 +68,7 @@ export default function App() {
   }, []);
 
   const [view, setView] = useState('dashboard');
+  const [isPaletteOpen, setIsPaletteOpen] = useState(false);
   // Sub-view params: { studentId?, classEventId?, diagnosisId?, homeworkId?, submissionId? }
   const [viewParams, setViewParams] = useState({});
   const [tweaks, setTweaksState] = useState(() => ({
@@ -301,6 +304,35 @@ export default function App() {
     setViewParams(params);
   };
 
+  const paletteActions = [
+    { id: 'dashboard', label: 'Today', target: 'dashboard', icon: <Icon.home size={16} />, keywords: ['home', 'today', 'main'] },
+    { id: 'students', label: 'Students', target: 'students', icon: <Icon.student size={16} />, keywords: ['roster', 'list'] },
+    { id: 'calendar', label: 'Calendar', target: 'calendar', icon: <Icon.calendar size={16} />, keywords: ['schedule', 'events'] },
+    { id: 'diagnostics', label: 'Diagnose', target: 'diagnostics', icon: <Icon.diagnose size={16} />, keywords: ['assessment', 'test'] },
+    { id: 'homework', label: 'Homework', target: 'homework', icon: <Icon.homework size={16} />, keywords: ['assignments', 'practice'] },
+    { id: 'submissions', label: 'Review Submissions', target: 'submissions', icon: <Icon.doc size={16} />, keywords: ['grade', 'feedback'] },
+    { id: 'library', label: 'Resources', target: 'library', icon: <Icon.book size={16} />, keywords: ['library', 'materials'] },
+    { id: 'settings', label: 'Settings', target: 'settings', icon: <Icon.settings size={16} />, keywords: ['config', 'profile'] },
+    { id: 'errors', label: 'Error Bank', target: 'diagnostics:errors', icon: <Icon.warning size={16} />, keywords: ['mistakes', 'bank'] },
+    { id: 'inbox', label: 'Inbox', target: 'inbox', icon: <Icon.inbox size={16} />, keywords: ['messages', 'notifications'] },
+  ];
+
+  const executePaletteAction = (action) => {
+    navigate(action.target);
+    setIsPaletteOpen(false);
+  };
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setIsPaletteOpen(prev => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   // Restore view from hash on back/forward navigation
   useEffect(() => {
     const onHashChange = () => {
@@ -417,6 +449,12 @@ export default function App() {
       </Shell>
       <TweaksUI tweaks={tweaks} setTweak={setTweak} />
       <ToastHost />
+      <CommandPalette 
+        isOpen={isPaletteOpen} 
+        onClose={() => setIsPaletteOpen(false)} 
+        onExecute={executePaletteAction} 
+        actions={paletteActions}
+      />
     </>
   );
 }
@@ -509,6 +547,10 @@ function renderTeacherPage(view, params, ctx) {
 
       case 'library:mock-test':
         return <MockTestPage onNavigate={navigate} />;
+
+      case 'mock-test-results':
+      case 'library:mock-test-results':
+        return <MockTestResults />;
 
       case 'library:evaluation':
         return <TeacherEvaluationPage students={students} onNavigate={navigate} />;

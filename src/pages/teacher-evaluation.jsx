@@ -4,6 +4,8 @@ import { SectionHeader } from '../components/ui/SectionHeader.jsx';
 import { Button } from '../components/ui/Button.jsx';
 import { FormField } from '../components/ui/FormField.jsx';
 import { getDiagnoses } from '../lib/workflow.js';
+import { callAI } from '../lib/callAI.js';
+import { buildTeacherSelfEvaluationReviewPrompt } from '../lib/prompts.js';
 
 const EVALUATION_CATEGORIES = [
   {
@@ -153,6 +155,8 @@ export default function TeacherEvaluationPage({ students = [], onNavigate }) {
   });
   const [selectedStudent, setSelectedStudent] = useState('');
   const [dx, setDx] = useState(null);
+  const [aiReview, setAiReview] = useState(null);
+  const [isReviewing, setIsReviewing] = useState(false);
 
   useEffect(() => {
     if (!selectedStudent) { setDx(null); return; }
@@ -192,6 +196,34 @@ export default function TeacherEvaluationPage({ students = [], onNavigate }) {
     }
   };
 
+  const handleAIReview = async () => {
+    if (!selectedStudent || !dx) {
+      window.toast?.('Please select a student to ground the AI review in their diagnostic', 'warn');
+      return;
+    }
+
+    setIsReviewing(true);
+    setAiReview(null);
+    try {
+      const student = students.find(s => s.id === selectedStudent);
+      const prompt = buildTeacherSelfEvaluationReviewPrompt({
+        student,
+        dx,
+        ratings,
+        reflections
+      });
+      const result = await callAI(prompt);
+      const parsed = JSON.parse(result);
+      setAiReview(parsed);
+      window.toast?.('AI Review generated', 'success');
+    } catch (e) {
+      console.error('AI Review failed:', e);
+      window.toast?.('AI Review failed to generate', 'error');
+    } finally {
+      setIsReviewing(false);
+    }
+  };
+
   const urgencyColor = (u) => {
     if (u === 'Critical') return 'var(--danger)';
     if (u === 'Developing') return 'var(--warning)';
@@ -200,13 +232,21 @@ export default function TeacherEvaluationPage({ students = [], onNavigate }) {
 
   return (
     <div className="page-shell">
-      <SectionHeader
-        title="Teacher Self-Evaluation"
-        sub={selectedStudent
-          ? `Evaluating lesson for ${students.find(s => s.id === selectedStudent)?.name || selectedStudent}`
-          : 'Select a student below to ground your evaluation in their diagnostic, or rate yourself generically'}
-        action={<Button variant="primary" onClick={handleSave}>Save Evaluation</Button>}
-      />
+       <SectionHeader
+         title="Teacher Self-Evaluation"
+         sub={selectedStudent
+           ? `Evaluating lesson for ${students.find(s => s.id === selectedStudent)?.name || selectedStudent}`
+           : 'Select a student below to ground your evaluation in their diagnostic, or rate yourself generically'}
+         action={
+           <div className="flex gap-2">
+             <Button variant="secondary" onClick={handleAIReview} disabled={isReviewing}>
+               {isReviewing ? 'Analyzing...' : 'AI Review'}
+             </Button>
+             <Button variant="primary" onClick={handleSave}>Save Evaluation</Button>
+           </div>
+         }
+       />
+
 
       <div className="teacher-evaluation-container">
         <Card className="mb-4">
@@ -290,19 +330,72 @@ export default function TeacherEvaluationPage({ students = [], onNavigate }) {
           </Card>
         )}
 
-        <Card className="mb-6">
-          <div className="text-center" style={{ padding: 'var(--space-4)' }}>
-            <p className="text-xs text-uppercase" style={{ letterSpacing: '0.1em', color: 'var(--muted)' }}>
-              Current Score
-            </p>
-            <div className="text-4xl font-bold" style={{ color: 'var(--text)' }}>
-              {totalScore} <span className="text-lg" style={{ color: 'var(--muted)' }}>/ 40</span>
-            </div>
-            <p className="mt-2 font-semibold" style={{ color: getScoreInterpretation(totalScore).color }}>
-              {getScoreInterpretation(totalScore).text}
-            </p>
-          </div>
-        </Card>
+         <Card className="mb-6">
+           <div className="text-center" style={{ padding: 'var(--space-4)' }}>
+             <p className="text-xs text-uppercase" style={{ letterSpacing: '0.1em', color: 'var(--muted)' }}>
+               Current Score
+             </p>
+             <div className="text-4xl font-bold" style={{ color: 'var(--text)' }}>
+               {totalScore} <span className="text-lg" style={{ color: 'var(--muted)' }}>/ 40</span>
+             </div>
+             <p className="mt-2 font-semibold" style={{ color: getScoreInterpretation(totalScore).color }}>
+               {getScoreInterpretation(totalScore).text}
+             </p>
+           </div>
+         </Card>
+
+         {aiReview && (
+           <Card className="mb-6" style={{ border: '2px solid var(--accent)' }}>
+             <div style={{ padding: 'var(--space-4)' }}>
+               <div className="flex items-center" style={{ gap: 8, marginBottom: 16 }}>
+                 <div style={{ background: 'var(--accent)', color: 'white', padding: '2px 8px', borderRadius: 'var(--radius-pill)', fontSize: 'var(--text-xs)', fontWeight: 700 }}>
+                   AI COACH REVIEW
+                 </div>
+                 <h3 className="section-title" style={{ margin: 0 }}>Pedagogical Analysis</h3>
+               </div>
+               
+               <div className="mb-6" style={{ padding: 'var(--space-3)', background: 'var(--bg)', borderRadius: 'var(--radius-sm)', borderLeft: '4px solid var(--accent)' }}>
+                 <p style={{ fontSize: 'var(--text-sm)', fontStyle: 'italic', lineHeight: 1.6 }}>
+                   "{aiReview.overallVerdict}"
+                 </p>
+               </div>
+
+               <div className="grid-square" style={{ gap: 16, marginBottom: 20 }}>
+                 <div className="col-span-1">
+                   <h4 className="text-xs font-bold text-uppercase" style={{ marginBottom: 8, color: 'var(--muted)' }}>Blind Spots</h4>
+                   <div className="stack-list">
+                     {aiReview.blindSpots.map((bs, i) => (
+                       <div key={i} style={{ fontSize: 'var(--text-sm)', marginBottom: 12, padding: 'var(--space-3)', background: 'var(--surface)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)' }}>
+                         <strong style={{ color: 'var(--danger)' }}>{bs.area}</strong>: {bs.observation}
+                         <div style={{ fontSize: 'var(--text-xs)', marginTop: 4, color: 'var(--accent)' }}>
+                           Try: {bs.suggestion}
+                         </div>
+                       </div>
+                     ))}
+                   </div>
+                 </div>
+                 <div className="col-span-1">
+                   <h4 className="text-xs font-bold text-uppercase" style={{ marginBottom: 8, color: 'var(--muted)' }}>Strengths</h4>
+                   <div className="stack-list">
+                     {aiReview.strengths.map((s, i) => (
+                       <div key={i} style={{ fontSize: 'var(--text-sm)', marginBottom: 12, padding: 'var(--space-3)', background: 'var(--surface)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)' }}>
+                         <strong style={{ color: 'var(--success)' }}>{s.point}</strong>: {s.impact}
+                       </div>
+                     ))}
+                   </div>
+                 </div>
+               </div>
+
+               <div style={{ padding: 'var(--space-4)', background: 'var(--accent-subtle)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--accent)' }}>
+                 <h4 className="text-xs font-bold text-uppercase" style={{ marginBottom: 8, color: 'var(--accent)' }}>Strategic Next Step</h4>
+                 <p style={{ fontSize: 'var(--text-sm)', fontWeight: 600, lineHeight: 1.5 }}>
+                   {aiReview.strategicNextStep}
+                 </p>
+               </div>
+             </div>
+           </Card>
+         )}
+
 
         <div className="stack-list-lg">
           {EVALUATION_CATEGORIES.map(cat => (

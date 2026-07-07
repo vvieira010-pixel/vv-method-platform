@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion } from 'motion/react';
 import { Button } from '../components/ui/Button.jsx';
 import { SkeletonCard } from '../components/ui/Skeleton.jsx';
-import { getHomework, submitHomework, getReviews, getSubmissions, getDraft, saveDraft } from '../lib/workflow.js';
+import { Card } from '../components/ui/Card.jsx';
+import { getHomework, submitHomework, getReviews, getSubmissions, getDraft, saveDraft, saveHomework, removeHomeworkDrafts, loadObj, save, K } from '../lib/workflow.js';
 import { isStructuredExercise, autoGrade } from '../lib/exercise-types.js';
 import { ExercisePlayer, HomeworkStepThrough } from '../components/exercise-player.jsx';
 import { ExTypeBadge } from '../components/exercise-badge.jsx';
@@ -10,6 +11,7 @@ import { recordPractice } from '../lib/spaced-repetition.js';
 import { printHomework } from '../lib/print-homework.js';
 import { asArray, exerciseSearchText } from './student-helpers.jsx';
 import { TopicContentRenderer } from '../components/topic-explanations.jsx';
+import { Icon } from '../components/shared.jsx';
 
 function CorrectionNote({ c }) {
   return (
@@ -19,6 +21,32 @@ function CorrectionNote({ c }) {
       {c.improved && <span className="hw-correction-improved">{c.improved}</span>}
       {c.note && <span className="hw-correction-note-text">({c.note})</span>}
     </div>
+  );
+}
+
+function ConceptBridge({ exercise, onResolve }) {
+  return (
+    <Card style={{ 
+      padding: '20px', 
+      marginBottom: 20, 
+      background: 'var(--accent-subtle)', 
+      border: '2px solid var(--accent)',
+      animation: 'fadeIn 0.3s ease-out' 
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+        <Icon.spark size={18} color="var(--accent)" />
+        <strong style={{ fontSize: 'var(--text-sm)', color: 'var(--accent)' }}>Concept Bridge</strong>
+      </div>
+      <p style={{ fontSize: 'var(--text-sm)', lineHeight: 1.6, color: 'var(--text)', marginBottom: 16 }}>
+        It looks like you're having some trouble with the logic here. Let's take a step back. 
+        <strong>{exercise.title || 'This concept'}</strong> is about {exercise.explanation?.slice(0, 100) || 'the core principle of this exercise'}.
+      </p>
+      <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+        <Button variant="primary" size="sm" onClick={onResolve}>
+          I've got it, let's try again
+        </Button>
+      </div>
+    </Card>
   );
 }
 
@@ -36,6 +64,9 @@ export default function StudentHomework({ student }) {
   const [selfAssessed, setSelfAssessed] = useState({});
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
+  const exerciseTimersRef = useRef({});
+  const dirtyHomeworkIdRef = useRef(null);
+  const currentExerciseRef = useRef(null);
 
   function selfCheckKey(hwId) { return `vv:hw_selfcheck:${student.id}:${hwId}`; }
   function getSelfChecks(hwId) {
@@ -46,6 +77,56 @@ export default function StudentHomework({ student }) {
     const next = { ...getSelfChecks(hwId), [idx]: !getSelfChecks(hwId)[idx] };
     setSelfChecks(prev => ({ ...prev, [hwId]: next }));
     try { localStorage.setItem(selfCheckKey(hwId), JSON.stringify(next)); } catch { /* storage unavailable */ }
+  }
+
+  function exerciseDraftKey(hwId, exerciseId) {
+    return `student-homework:${student.id}:${hwId}:${exerciseId}`;
+  }
+
+  function saveExerciseDraft(hwId, exerciseId, response) {
+    saveDraft(exerciseDraftKey(hwId, exerciseId), { response, updatedAt: new Date().toISOString() });
+  }
+
+  function loadExerciseDrafts(hwId) {
+    const prefix = `student-homework:${student.id}:${hwId}:`;
+    const legacyKey = homeworkDraftKey(hwId);
+    const drafts = loadObj(K.drafts);
+    const exerciseDrafts = {};
+    let latestTs = null;
+    let lastExId = null;
+
+    Object.keys(drafts).forEach(key => {
+      if (key.startsWith(prefix)) {
+        const exId = key.slice(prefix.length);
+        const entry = drafts[key];
+        if (entry?.response) {
+          exerciseDrafts[exId] = entry.response;
+          if (!latestTs || entry.updatedAt > latestTs) {
+            latestTs = entry.updatedAt;
+            lastExId = exId;
+          }
+        }
+      }
+    });
+
+    const legacy = drafts[legacyKey];
+    const now = new Date().toISOString();
+    if (legacy?.responses) {
+      Object.entries(legacy.responses).forEach(([exId, res]) => {
+        if (!exerciseDrafts[exId]) {
+          exerciseDrafts[exId] = res;
+          drafts[`${prefix}${exId}`] = { response: res, updatedAt: now };
+        }
+      });
+      delete drafts[legacyKey];
+      save(K.drafts, drafts);
+    }
+
+    return {
+      responses: exerciseDrafts,
+      currentExerciseId: lastExId || legacy?.currentExerciseId || null,
+      updatedAt: latestTs || legacy?.updatedAt || null,
+    };
   }
 
   useEffect(() => {
@@ -68,6 +149,17 @@ export default function StudentHomework({ student }) {
     return () => { cancelled = true; };
   }, [student.id]);
 
+  useEffect(() => {
+    const handler = (e) => {
+      if (dirtyHomeworkIdRef.current) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+    window.addEventListener('beforeunload', handler);
+    return () => window.removeEventListener('beforeunload', handler);
+  }, []);
+
   function hasStructuredExercises(h) {
     return (h.activities || []).some(a => isStructuredExercise(a));
   }
@@ -80,8 +172,8 @@ export default function StudentHomework({ student }) {
     const willOpen = expanded !== h.id;
     setExpanded(willOpen ? h.id : null);
     if (!willOpen || h.status === 'submitted') return;
-    const draft = await getDraft(homeworkDraftKey(h.id));
-    if (draft?.responses && typeof draft.responses === 'object') {
+    const draft = loadExerciseDrafts(h.id);
+    if (draft && Object.keys(draft.responses).length > 0) {
       setResponses(prev => ({ ...prev, ...draft.responses }));
       setDraftMeta(prev => ({
         ...prev,
@@ -128,7 +220,8 @@ export default function StudentHomework({ student }) {
       const grade = autoGrade(ex, exerciseResponses[ex.id]);
       if (grade) recordPractice(student.id, ex.reviewItemId, grade.correct);
     });
-    await saveDraft(homeworkDraftKey(hwId), null);
+    removeHomeworkDrafts(hwId);
+    dirtyHomeworkIdRef.current = null;
     const hwList = await getHomework(student.id);
     setHomework(hwList || []);
     setResponses({});
@@ -139,18 +232,31 @@ export default function StudentHomework({ student }) {
   }
 
   function updateResponse(exerciseId, updatedRes) {
+    dirtyHomeworkIdRef.current = expanded;
     setResponses(prev => ({ ...prev, [exerciseId]: updatedRes }));
+    if (exerciseTimersRef.current[exerciseId]) clearTimeout(exerciseTimersRef.current[exerciseId]);
+    exerciseTimersRef.current[exerciseId] = setTimeout(() => {
+      saveExerciseDraft(expanded, exerciseId, updatedRes);
+      const hw = homework.find(h => h.id === expanded);
+      if (hw?.status === 'not-started') {
+        saveHomework({ ...hw, status: 'in-progress' }).then(() => {
+          setHomework(prev => prev.map(h => h.id === expanded ? { ...h, status: 'in-progress' } : h));
+        });
+      }
+      setDraftMeta(prev => ({ ...prev, [expanded]: { ...prev[expanded], updatedAt: new Date().toISOString(), currentExerciseId: exerciseId } }));
+      exerciseTimersRef.current[exerciseId] = null;
+    }, 2000);
   }
 
   async function saveStructuredProgress(hwId, currentExerciseId) {
     const hw = homework.find(h => h.id === hwId);
     const exerciseIds = new Set((hw?.activities || []).filter(a => isStructuredExercise(a)).map(ex => ex.id));
-    const exerciseResponses = Object.fromEntries(
-      Object.entries(responses).filter(([exerciseId]) => exerciseIds.has(exerciseId))
-    );
-    const draft = { responses: exerciseResponses, currentExerciseId, updatedAt: new Date().toISOString() };
-    await saveDraft(homeworkDraftKey(hwId), draft);
-    setDraftMeta(prev => ({ ...prev, [hwId]: draft }));
+    exerciseIds.forEach(exId => {
+      const res = responses[exId];
+      if (res) saveExerciseDraft(hwId, exId, res);
+    });
+    setDraftMeta(prev => ({ ...prev, [hwId]: { updatedAt: new Date().toISOString(), currentExerciseId } }));
+    dirtyHomeworkIdRef.current = null;
     window.toast?.('Progress saved. You can continue later.', 'ok');
   }
 
@@ -322,27 +428,41 @@ export default function StudentHomework({ student }) {
                   </div>
                 )}
                 {isStructured && !submitted && !review && (
-                  <div className="student-panel student-panel--primary" style={{ marginBottom: 18 }}>
-                    <div className="student-panel-head">
-                      <h2 style={{ margin: 0, fontSize: 'var(--text-sm)', fontWeight: 700 }}>Practice Session</h2>
+                  <>
+                    {/* Concept Bridge Trigger */}
+                    {structuredExercises.some(ex => (responses[ex.id]?.reasoningFailures || 0) >= 3) && (
+                      <ConceptBridge 
+                        exercise={structuredExercises.find(ex => (responses[ex.id]?.reasoningFailures || 0) >= 3)} 
+                        onResolve={() => {
+                          // Reset failures for that exercise to let them try again
+                          const exId = structuredExercises.find(ex => (responses[ex.id]?.reasoningFailures || 0) >= 3).id;
+                          updateResponse(exId, { ...responses[exId], reasoningFailures: 0 });
+                          window.toast?.('Glad to hear it! Let\'s put it into practice.', 'ok');
+                        }} 
+                      />
+                    )}
+                    <div className="student-panel student-panel--primary" style={{ marginBottom: 18 }}>
+                      <div className="student-panel-head">
+                        <h2 style={{ margin: 0, fontSize: 'var(--text-sm)', fontWeight: 700 }}>Practice Session</h2>
+                      </div>
+                      <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-2)', lineHeight: 1.7 }}>
+                        <strong>How it works:</strong>
+                        <ol style={{ margin: '4px 0 10px', paddingLeft: 18 }}>
+                          <li>Work through each exercise one at a time</li>
+                          <li>Progress saves automatically — leave and come back anytime</li>
+                          <li>After the last exercise, rate your confidence before submitting</li>
+                          <li>Your teacher reviews and returns feedback</li>
+                        </ol>
+                        <strong>Why this format:</strong>
+                        <ul style={{ margin: '4px 0 0', paddingLeft: 18 }}>
+                          <li>Matches the MET exam structure to build familiarity</li>
+                          <li>Targets skills identified from your progress</li>
+                          <li>Reinforces past errors at the right time for long-term retention</li>
+                          <li>The confidence check helps you track what you really know</li>
+                        </ul>
+                      </div>
                     </div>
-                    <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-2)', lineHeight: 1.7 }}>
-                      <strong>How it works:</strong>
-                      <ol style={{ margin: '4px 0 10px', paddingLeft: 18 }}>
-                        <li>Work through each exercise one at a time</li>
-                        <li>Progress saves automatically — leave and come back anytime</li>
-                        <li>After the last exercise, rate your confidence before submitting</li>
-                        <li>Your teacher reviews and returns feedback</li>
-                      </ol>
-                      <strong>Why this format:</strong>
-                      <ul style={{ margin: '4px 0 0', paddingLeft: 18 }}>
-                        <li>Matches the MET exam structure to build familiarity</li>
-                        <li>Targets skills identified from your progress</li>
-                        <li>Reinforces past errors at the right time for long-term retention</li>
-                        <li>The confidence check helps you track what you really know</li>
-                      </ul>
-                    </div>
-                  </div>
+                  </>
                 )}
                 {isStructured && !submitted && !review && (
                   <HomeworkStepThrough
@@ -352,6 +472,11 @@ export default function StudentHomework({ student }) {
                     onSave={(exerciseId) => saveStructuredProgress(h.id, exerciseId)}
                     onSubmit={(confidence) => handleStructuredSubmit(h.id, confidence)}
                     initialExerciseId={draftMeta[h.id]?.currentExerciseId}
+                    currentExerciseRef={currentExerciseRef}
+                    onNavigate={(exerciseId) => {
+                      const res = responses[exerciseId];
+                      if (res) saveExerciseDraft(h.id, exerciseId, res);
+                    }}
                     readOnly={false}
                   />
                 )}

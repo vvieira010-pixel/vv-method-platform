@@ -10,11 +10,17 @@ export default function DiagnosticsPage({ students, onNavigate }) {
   const [filterStatus, setFilterStatus] = useState('');
 
   useEffect(() => {
-    (async () => {
+    load();
+  }, []);
+
+  async function load() {
+    try {
       const dx = await getDiagnoses();
       setDiagnoses(dx || []);
-    })();
-  }, []);
+    } catch (e) {
+      window.toast?.(`Failed to load diagnoses: ${e.message}`, 'warn');
+    }
+  }
 
   const filtered = diagnoses.filter(dx => {
     if (filterStudent && dx.studentId !== filterStudent) return false;

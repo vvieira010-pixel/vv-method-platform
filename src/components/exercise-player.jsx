@@ -12,6 +12,7 @@ import { ExTypeBadge } from './exercise-badge.jsx';
 import Listening from './exercises/Listening.jsx';
 import { getDbContext, uploadSubmissionAudio, createSignedAudioUrl } from '../lib/supabase-db.js';
 import { DialoguePlayer, SwapPlayer, LevelUpPlayer } from './exercise-player-new-types.jsx';
+import FormativeWrapper from './FormativeWrapper.jsx';
 
 /**
  * ExercisePlayer — switches on exercise.type, renders the right interactive UI.
@@ -148,7 +149,17 @@ function MCQPlayer({ ex, res, update, readOnly }) {
           Answer shown after {wrongLimit} {wrongLimit === 1 ? 'try' : 'tries'} — the correct option is highlighted above.
         </div>
       )}
-      {(solved || revealed) && ex.explanation && (
+      {solved && ex.feedbackCorrect && (
+        <div className="exercise-callout exercise-callout--explanation" style={{ marginTop: 10 }}>
+          {ex.feedbackCorrect}
+        </div>
+      )}
+      {!solved && revealed && ex.feedbackIncorrect && (
+        <div className="exercise-callout exercise-callout--explanation" style={{ marginTop: 10 }}>
+          {ex.feedbackIncorrect}
+        </div>
+      )}
+      {(solved || revealed) && !ex.feedbackCorrect && !ex.feedbackIncorrect && ex.explanation && (
         <div className="exercise-callout exercise-callout--explanation" style={{ marginTop: 10 }}>
           <strong className="exercise-callout-kicker">Explanation</strong>
           {ex.explanation}
@@ -975,8 +986,8 @@ function FlashPlayer({ ex, res, update, readOnly }) {
                   <button key={origIdx} onClick={() => !readOnly && handleMatchDef(origIdx)}
                     style={{
                       padding: '10px 14px', borderRadius: 0, border: '1.5px solid',
-                      borderColor: isWrong ? '#C03030' : selectedTerm !== null ? 'var(--primary)' : 'var(--border)',
-                      background: isWrong ? 'rgba(200,50,50,.08)' : selectedTerm !== null ? 'rgba(61,166,166,.06)' : 'var(--surface)',
+                       borderColor: isWrong ? 'var(--error)' : selectedTerm !== null ? 'var(--primary)' : 'var(--border)',
+                       background: isWrong ? 'var(--error-bg)' : selectedTerm !== null ? 'rgba(61,166,166,.06)' : 'var(--surface)',
                       cursor: selectedTerm !== null ? 'pointer' : 'default',
                       fontFamily: 'inherit', fontSize: 'var(--text-sm)', color: 'var(--text)',
                       textAlign: 'left', transition: 'all .15s',
@@ -1224,7 +1235,7 @@ const CONFIDENCE_LEVELS = [
   { value: 3, label: 'Very sure', desc: 'I am confident I did well' },
 ];
 
-export function HomeworkStepThrough({ exercises, responses, onResponse, onSubmit, onSave, initialExerciseId, readOnly = false }) {
+export function HomeworkStepThrough({ exercises, responses, onResponse, onSubmit, onSave, initialExerciseId, currentExerciseRef, onNavigate, readOnly = false }) {
   const [currentIdx, setCurrentIdx] = useState(0);
   const [confidence, setConfidence] = useState(null);
   const [showConfidence, setShowConfidence] = useState(false);
@@ -1235,6 +1246,12 @@ export function HomeworkStepThrough({ exercises, responses, onResponse, onSubmit
     if (idx >= 0) setCurrentIdx(idx);
   }, [initialExerciseId, exercises]);
 
+  useEffect(() => {
+    if (currentExerciseRef && exercises?.[currentIdx]?.id) {
+      currentExerciseRef.current = exercises[currentIdx].id;
+    }
+  }, [currentIdx, exercises, currentExerciseRef]);
+
   if (!exercises || exercises.length === 0) return null;
 
   const total = exercises.length;
@@ -1242,8 +1259,14 @@ export function HomeworkStepThrough({ exercises, responses, onResponse, onSubmit
   const currentRes = responses?.[current?.id] || {};
   const progress = ((currentIdx + 1) / total) * 100;
 
-  const goPrev = () => setCurrentIdx(i => Math.max(i - 1, 0));
-  const goNext = () => setCurrentIdx(i => Math.min(i + 1, total - 1));
+  const goPrev = () => {
+    if (onNavigate && exercises[currentIdx]?.id) onNavigate(exercises[currentIdx].id);
+    setCurrentIdx(i => Math.max(i - 1, 0));
+  };
+  const goNext = () => {
+    if (onNavigate && exercises[currentIdx]?.id) onNavigate(exercises[currentIdx].id);
+    setCurrentIdx(i => Math.min(i + 1, total - 1));
+  };
   const isLast = currentIdx === total - 1;
 
   function handleSubmitClick() {

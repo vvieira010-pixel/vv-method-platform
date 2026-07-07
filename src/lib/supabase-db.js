@@ -394,6 +394,9 @@ const ENTITIES = {
 
   /* listening exercises — teacher-managed exercise bank */
   listeningExercises: contentEntity('listening_exercises', { student: false }),
+
+  /* mock test results — per-student mock test submissions */
+  mockTestResults: contentEntity('mock_test_results'),
 };
 
 export function dbHasEntity(key) { return Boolean(ENTITIES[key]); }
@@ -542,6 +545,7 @@ export function subscribeToTable(table, onChange, { event, filter } = {}) {
 /* ─── Storage (student speaking audio) ───────────────────────── */
 
 const AUDIO_BUCKET = 'submission-audio';
+const MOCK_AUDIO_BUCKET = 'mock-test-audio';
 
 /** Upload a recorded audio Blob to the private bucket. Returns the object path. Throws on failure. */
 export async function uploadSubmissionAudio(blob, path) {
@@ -567,6 +571,45 @@ export async function createSignedAudioUrl(path, expiresIn = 3600) {
   if (!ctx || !path) return null;
   try {
     const res = await fetch(`${ctx.url}/storage/v1/object/sign/${AUDIO_BUCKET}/${path}`, {
+      method: 'POST',
+      headers: { apikey: ctx.anonKey, Authorization: `Bearer ${ctx.token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ expiresIn }),
+    });
+    if (!res.ok) return null;
+    const { signedURL } = await res.json();
+    return signedURL ? `${ctx.url}/storage/v1${signedURL}` : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Upload a mock test speaking recording blob to the mock-test-audio bucket. Returns the object path. */
+export async function uploadMockTestAudio(blob, path) {
+  const ctx = getDbContext();
+  if (!ctx) throw new Error('Not signed in.');
+  const res = await fetch(`${ctx.url}/storage/v1/object/${MOCK_AUDIO_BUCKET}/${path}`, {
+    method: 'POST',
+    headers: {
+      apikey: ctx.anonKey,
+      Authorization: `Bearer ${ctx.token}`,
+      'Content-Type': blob.type || 'audio/webm',
+    },
+    body: blob,
+  });
+  if (!res.ok) throw new Error(`mock audio upload → ${res.status} ${await res.text().catch(() => '')}`);
+  return path;
+}
+
+/** Get a signed URL for a mock test audio file. */
+export async function getMockTestAudioUrl(path, expiresIn = 86400) {
+  return createSignedAudioUrlFromBucket(MOCK_AUDIO_BUCKET, path, expiresIn);
+}
+
+async function createSignedAudioUrlFromBucket(bucket, path, expiresIn = 3600) {
+  const ctx = getDbContext();
+  if (!ctx || !path) return null;
+  try {
+    const res = await fetch(`${ctx.url}/storage/v1/object/sign/${bucket}/${path}`, {
       method: 'POST',
       headers: { apikey: ctx.anonKey, Authorization: `Bearer ${ctx.token}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ expiresIn }),

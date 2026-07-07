@@ -23,15 +23,17 @@ export default function CalendarPage({ students, onNavigate }) {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    (async () => {
-      try {
-        const ev = await getClassEvents();
-        setEvents(ev);
-      } catch (e) {
-        window.toast?.(`Failed to load calendar: ${e.message}`, 'warn');
-      }
-    })();
+    load();
   }, []);
+
+  async function load() {
+    try {
+      const ev = await getClassEvents();
+      setEvents(ev);
+    } catch (e) {
+      window.toast?.(`Failed to load calendar: ${e.message}`, 'warn');
+    }
+  }
 
   function openSchedule(date) {
     setForm({ ...EMPTY_FORM, date: date || new Date().toISOString().slice(0, 10) });

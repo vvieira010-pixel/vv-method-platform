@@ -37,27 +37,25 @@ export async function getListeningAudioGroups() {
   const { LISTENING } = await import('./met-b2-exercises.js');
 
   const allListening = [
-    ...vocabTopics.flatMap(t => t.exercises.filter(e => e.type === 'listen' || e.type === 'embed')),
+    ...vocabTopics.flatMap(t => t.exercises.filter(e => e.type === 'listen')),
     ...LISTENING
   ];
 
   const groups = new Map();
 
   allListening.forEach(ex => {
-    const audioId = ex.audioSrc || ex.url || `embed-${ex.id}`;
+    const audioId = ex.audioSrc || `embed-${ex.id}`;
     if (!audioId) return;
 
-    let title = '';
+    let title;
     if (ex.audioSrc) {
-      // Extract title from filename: /exercises/audio/listening/listening-L12-urban-planning.mp3 -> Urban Planning
       const filename = ex.audioSrc.split('/').pop() || '';
       title = filename
-        .replace(/^listening-/, '')
+        .replace(/^listening-(L\d+-)?/, '')
         .replace(/\.mp3$/, '')
-        .replace(/[_-]/g, ' ')
-        .replace(/^\w/, c => c.toUpperCase());
-    } else if (ex.url) {
-      title = ex.title || 'Embedded Lesson';
+        .split(/[-_]/)
+        .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+        .join(' ');
     } else {
       title = ex.title || 'Special Exercise';
     }

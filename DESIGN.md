@@ -12,8 +12,7 @@ A calm, focused, and expert interface designed for healthcare professionals. The
 - **Medical Teal** (#148891) — Single accent for primary CTAs, active states, and focus rings. Saturation kept below 80% for professional restraint.
 
 ## 3. Typography Rules
-- **Display:** Sora — Bold, geometric, and track-tight. Used for page headings and hero text to communicate authority and expertise.
-- **Body:** Outfit — Clean, professional, and highly legible. Relaxed leading with a maximum width of 65ch for prose.
+- **Primary Font:** Aptos — Professional, clean, and highly legible. Used for all headings, body text, and UI elements.
 - **Mono:** SF Mono / JetBrains Mono — Used exclusively for high-density numbers, timestamps, and metadata to ensure tabular alignment.
 - **Banned:** Inter is strictly banned for premium surfaces. Generic serifs are banned in all dashboard and software UI.
 

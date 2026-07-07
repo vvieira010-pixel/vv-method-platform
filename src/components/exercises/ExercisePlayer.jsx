@@ -3,6 +3,8 @@ import { motion } from 'motion/react';
 import { Icon } from '../shared.jsx';
 import { loadExercises } from './validateExercise.js';
 import { hintLimit, recallGateActive } from '../../lib/fading-manager.js';
+import { callAI } from '../../lib/callAI.js';
+import { withSkills } from '../../education-skills/active-skills.js';
 import MultipleChoice from './MultipleChoice.jsx';
 import FillBlank from './FillBlank.jsx';
 import ShortAnswer from './ShortAnswer.jsx';
@@ -11,6 +13,8 @@ import ErrorCorrection from './ErrorCorrection.jsx';
 import Listening from './Listening.jsx';
 import ReadExercise from './ReadExercise.jsx';
 import EmbeddedLesson from './EmbeddedLesson.jsx';
+import ConfidenceSlider from '../ConfidenceSlider.jsx';
+import ErrorDiagnosisGate from '../ErrorDiagnosisGate.jsx';
 
 const TEAL = 'var(--accent)';
 const NAVY = 'var(--accent-text)';
@@ -45,69 +49,91 @@ function InvalidExercise({ reason }) {
   );
 }
 
-function deriveHints(exercise) {
-  if (exercise.hints?.length > 0) return exercise.hints;
-  const type = exercise.type;
-  if (type === 'mcq' || type === 'multiple_choice' || type === 'multiple_choice_single' || type === 'multiple_choice_multiple') {
-    return [
-      'What key concept or rule does this question test?',
-      'Try eliminating options that are clearly wrong. What makes each remaining option plausible or not?',
-      'The correct answer addresses the main point — not just a familiar-sounding word.',
-    ];
-  }
-  if (type === 'blank' || type === 'fill_blank') {
-    const firstAnswer = exercise.blanks?.[0]?.answer || '';
-    return [
-      'What type of word fits here — verb, noun, adjective, or connector?',
-      'Think about the grammar structure around the blank. What form is needed?',
-      firstAnswer ? `The first missing word begins with: "${firstAnswer[0].toUpperCase()}…"` : 'Re-read the full sentence for context clues.',
-    ];
-  }
-  if (type === 'short' || type === 'short_answer' || type === 'speak') {
-    return [
-      'Start with one clear main point, then support it with a reason or example.',
-      'Use vocabulary that is specific and relevant to the topic.',
-      exercise.rubric ? `Key criteria: ${String(exercise.rubric).slice(0, 100)}` : 'Aim for 2–3 complete sentences with clear reasoning.',
-    ];
-  }
-  if (type === 'embed') {
-    return [
-      'Watch the video carefully.',
-      'Follow the interactive prompts within the lesson.',
-      'Reflect on how the concepts apply to your professional practice.',
-    ];
-  }
-  if (type === 'fix' || type === 'error_correction') {
-    return [
-      'Read each sentence aloud. Does anything sound unnatural?',
-      'Common error types: verb tense, missing or wrong article (a/an/the), wrong preposition.',
-      'Check subject–verb agreement and word form (noun vs. adjective vs. verb).',
-    ];
-  }
-  if (type === 'order' || type === 'order_sentences' || type === 'ordering_sequencing') {
-    return [
-      'Think about logical flow: introduction → main points → conclusion.',
-      'Look for connecting words (first, then, however, therefore) that signal position.',
-      'Which sentence introduces the overall topic? Start there.',
-    ];
-  }
-  return [
-    'What key concept or vocabulary does this exercise test?',
-    'Look for context clues in the question itself.',
-    'Think about grammar rules or vocabulary you have practised recently.',
-  ];
+function useAIPoweredHints(exercise, scaffoldLevel) {
+  const [hints, setHints] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const maxHints = hintLimit(scaffoldLevel);
+
+  useEffect(() => {
+    if (exercise.hints?.length > 0) {
+      setHints(exercise.hints.slice(0, maxHints));
+      return;
+    }
+    if (maxHints === 0) return;
+
+    let cancelled = false;
+    setLoading(true);
+    (async () => {
+      try {
+        const prompt = [
+          `You are a MET tutor. Generate up to ${maxHints} progressive hints for this exercise.`,
+          `Exercise type: ${exercise.type}`,
+          `Question: ${exercise.prompt || exercise.question || ''}`,
+          exercise.options ? `Options: ${JSON.stringify(exercise.options)}` : '',
+          exercise.blanks ? `Blanks: ${JSON.stringify(exercise.blanks.map(b => ({ before: b.before, after: b.after })))}` : '',
+          exercise.text ? `Text: ${exercise.text}` : '',
+          `Correct answer: ${exercise.correct || exercise.answer || ''}`,
+          '',
+          'Rules:',
+          '- Hint 1: conceptual nudge only — what concept or rule this tests',
+          '- Hint 2: procedural guidance — how to approach solving it',
+          '- Hint 3: concrete pointer — without giving the answer directly',
+          'Return ONLY a JSON array of hint strings. Example: ["Hint one...", "Hint two...", "Hint three..."]',
+        ].filter(Boolean).join('\n');
+
+        const data = await callAI(prompt, await withSkills('practice', { temperature: 0.4, max_tokens: 500 }));
+        const raw = data.content?.map(b => b.text || '').join('') || '';
+        const match = raw.match(/\[[\s\S]*?\]/);
+        const parsed = match ? JSON.parse(match[0]) : null;
+
+        if (!cancelled) {
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setHints(parsed.slice(0, maxHints));
+          } else {
+            setHints(null);
+          }
+          setLoading(false);
+        }
+      } catch {
+        if (!cancelled) { setHints(null); setLoading(false); }
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [exercise.prompt, exercise.question, exercise.type, maxHints]);
+
+  return { hints, loading };
 }
 
-function ExerciseCard({ exercise, index, total, result, onComplete, onNext, onBack, onSkip, scaffoldLevel = 4, onHintLevelChange }) {
+function ExerciseCard({ exercise, index, total, result, onComplete, onNext, onBack, onSkip, scaffoldLevel = 4, onHintLevelChange, confidenceBefore, onConfidenceBefore }) {
   const label = TYPE_LABELS[exercise.type] || exercise.type;
   const skill = exercise.skill || exercise.focus || null;
   const done = result != null;
 
   const [hintLevel, setHintLevel] = useState(0);
+  const [showErrorGate, setShowErrorGate] = useState(false);
+  const [errorCategory, setErrorCategory] = useState(null);
+  const [confidenceAfter, setConfidenceAfter] = useState(null);
+  const [showConfidenceAfter, setShowConfidenceAfter] = useState(false);
+  const { hints, loading: hintsLoading } = useAIPoweredHints(exercise, scaffoldLevel);
   const maxHints = hintLimit(scaffoldLevel);
-  const hints = deriveHints(exercise).slice(0, maxHints);
+  const actualHints = (hints || []).length > 0 ? hints : [];
+  const hintCount = actualHints.length;
 
   const handleHintClick = useCallback(() => {
+    if (!result || result.correct === false) {
+      setShowErrorGate(true);
+      return;
+    }
+    setHintLevel(l => {
+      const next = l + 1;
+      onHintLevelChange?.(next);
+      return next;
+    });
+  }, [result, onHintLevelChange]);
+
+  const handleDiagnose = useCallback((category) => {
+    setErrorCategory(category);
+    setShowErrorGate(false);
     setHintLevel(l => {
       const next = l + 1;
       onHintLevelChange?.(next);
@@ -115,8 +141,35 @@ function ExerciseCard({ exercise, index, total, result, onComplete, onNext, onBa
     });
   }, [onHintLevelChange]);
 
+  const handleSkipGate = useCallback(() => {
+    setShowErrorGate(false);
+    setHintLevel(l => {
+      const next = l + 1;
+      onHintLevelChange?.(next);
+      return next;
+    });
+  }, [onHintLevelChange]);
+
+  const handleComplete = useCallback((answerResult) => {
+    onComplete?.({ ...answerResult, errorCategory: errorCategory || null });
+    if (answerResult && answerResult.correct !== null) {
+      setShowConfidenceAfter(true);
+    }
+  }, [onComplete, errorCategory]);
+
+  const handleConfidenceAfter = useCallback((val) => {
+    setConfidenceAfter(val);
+  }, []);
+
+  const handleConfirmConfidence = useCallback(() => {
+    setShowConfidenceAfter(false);
+    if (confidenceAfter !== null && onComplete) {
+      onComplete({ ...result, confidenceAfter });
+    }
+  }, [confidenceAfter, result, onComplete]);
+
   function renderExercise() {
-    const props = { exercise, onComplete };
+    const props = { exercise, onComplete: handleComplete };
     switch (exercise.type) {
       case 'multiple_choice':
       case 'multiple_choice_single':
@@ -185,20 +238,42 @@ function ExerciseCard({ exercise, index, total, result, onComplete, onNext, onBa
         {renderExercise()}
       </div>
 
-      {/* Progressive hint ladder — controlled by scaffold level */}
-      {!done && maxHints > 0 && (
+      {/* Error diagnosis gate — shown when wrong answer + hint clicked */}
+      {!done && showErrorGate && (
+        <div style={{ padding: '0 20px' }}>
+          <ErrorDiagnosisGate onDiagnose={handleDiagnose} onSkip={handleSkipGate} />
+        </div>
+      )}
+
+      {/* Confidence after — shown after submission */}
+      {showConfidenceAfter && confidenceAfter === null && (
+        <div style={{ padding: '0 20px 16px' }}>
+          <ConfidenceSlider label="After seeing the answer, how confident are you in this topic?" onConfidence={handleConfidenceAfter} />
+          <button
+            type="button"
+            onClick={handleConfirmConfidence}
+            style={{ padding: '8px 18px', borderRadius: 'var(--radius-sm)', border: 'none', background: 'var(--accent)', color: '#fff', fontWeight: 600, fontSize: 'var(--text-xs)', cursor: 'pointer', fontFamily: 'var(--font-sans)' }}
+          >
+            Confirm
+          </button>
+        </div>
+      )}
+
+      {/* Progressive hint ladder — AI-powered, controlled by scaffold level */}
+      {!done && !showErrorGate && maxHints > 0 && (
         <div style={{ padding: '0 20px 16px' }}>
           {hintLevel > 0 && (
             <div role="status" aria-live="polite" style={{ marginBottom: 8, padding: '8px 12px', background: 'var(--ex-hint-bg)', border: '1px solid var(--ex-hint-border)', borderRadius: 'var(--radius-sm, 6px)', fontSize: 'var(--text-xs)', color: 'var(--ex-hint-text)', lineHeight: 1.5 }}>
-              <strong>Hint {hintLevel}:</strong> {hints[hintLevel - 1]}
+              <strong>Hint {hintLevel}:</strong> {actualHints[hintLevel - 1] || 'Think about what rule or concept applies here.'}
             </div>
           )}
-          {hintLevel < hints.length && (
+          {hintLevel < hintCount && (
             <button
               onClick={handleHintClick}
-              style={{ minHeight: 44, padding: '8px 16px', borderRadius: 'var(--radius-sm, 6px)', border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text-2)', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-sans)' }}
+              disabled={hintsLoading}
+              style={{ minHeight: 44, padding: '8px 16px', borderRadius: 'var(--radius-sm, 6px)', border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text-2)', fontSize: 13, fontWeight: 600, cursor: hintsLoading ? 'default' : 'pointer', fontFamily: 'var(--font-sans)', opacity: hintsLoading ? 0.5 : 1 }}
             >
-              {hintLevel === 0 ? 'Need a hint?' : 'Next hint →'}
+              {hintsLoading ? 'Generating hints…' : hintLevel === 0 ? 'Need a hint?' : 'Next hint →'}
             </button>
           )}
         </div>
@@ -273,10 +348,7 @@ function ProgressBar({ current, total }) {
 }
 
 function ScoreSummary({ results }) {
-  const closed = results.filter(r => r.correct !== null && r.correct !== undefined);
-  const correct = closed.filter(r => r.correct === true).length;
-  const open = results.filter(r => r.submitted && r.correct === null).length;
-  const pct = closed.length > 0 ? Math.round((correct / closed.length) * 100) : null;
+  const total = results.length;
 
   return (
     <div style={{
@@ -286,18 +358,8 @@ function ScoreSummary({ results }) {
       <div style={{ fontSize: 13, fontWeight: 700, color: TEAL, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 12 }}>
         Session Complete
       </div>
-      {pct !== null && (
-        <div style={{ fontSize: 48, fontWeight: 800, color: NAVY, lineHeight: 1, marginBottom: 4 }}>
-          {pct}%
-        </div>
-      )}
-      <div style={{ fontSize: 13.5, color: 'var(--muted)', marginBottom: 16 }}>
-        {closed.length > 0 && <span>{correct} of {closed.length} scored exercises correct</span>}
-        {open > 0 && closed.length > 0 && <span> · </span>}
-        {open > 0 && <span>{open} open-response {open === 1 ? 'task' : 'tasks'} submitted for review</span>}
-      </div>
-      <div style={{ fontSize: 14, color: 'var(--ex-correct-text)', fontWeight: 500 }}>
-        {pct === 100 ? 'Perfect score — excellent work!' : pct >= 70 ? 'Good work. Review any missed answers above.' : 'Keep practising — consistency builds confidence.'}
+      <div style={{ fontSize: 14, color: 'var(--ex-panel-text)', fontWeight: 500, lineHeight: 1.6 }}>
+        You answered {total} {total === 1 ? 'question' : 'questions'}. Review the answers and explanations above to keep improving.
       </div>
     </div>
   );
@@ -320,11 +382,13 @@ export default function ExercisePlayer({ exercises: raw, title, onSessionComplet
   const [done, setDone] = useState(false);
   const [sessionRecallText, setSessionRecallText] = useState('');
   const [sessionRecallDone, setSessionRecallDone] = useState(!recallMode);
+  const [confidenceBefore, setConfidenceBefore] = useState(5);
   const currentRef = useRef(current);
   const totalRef = useRef(exercises.length);
   const onDoneRef = useRef(onSessionComplete);
   const resultsRef = useRef(results);
   const maxHintLevelRef = useRef(0);
+  const exerciseConfidenceAfterRef = useRef({});
   useEffect(() => { currentRef.current = current; });
   useEffect(() => { totalRef.current = exercises.length; });
   useEffect(() => { onDoneRef.current = onSessionComplete; });
@@ -338,7 +402,8 @@ export default function ExercisePlayer({ exercises: raw, title, onSessionComplet
     setResults(prev => {
       const next = [...prev];
       const idx = currentRef.current;
-      next[idx] = { ...result, index: idx };
+      const confAfter = exerciseConfidenceAfterRef.current[idx];
+      next[idx] = { ...result, index: idx, confidenceAfter: confAfter || null };
       return next;
     });
   }, [setResults]);
@@ -358,13 +423,14 @@ export default function ExercisePlayer({ exercises: raw, title, onSessionComplet
           score,
           maxHintLevel: maxHL,
           hintUsed: maxHL > 0,
+          confidenceBefore,
         });
       }
     } else {
       maxHintLevelRef.current = 0;
       setCurrent(nextIdx);
     }
-  }, [setCurrent, setDone]);
+  }, [setCurrent, setDone, confidenceBefore]);
 
   const handleBack = useCallback(() => {
     if (currentRef.current > 0) setCurrent(c => c - 1);
@@ -412,14 +478,14 @@ export default function ExercisePlayer({ exercises: raw, title, onSessionComplet
 
       <ProgressBar current={completedCount} total={exercises.length} />
 
-      {/* Session recall gate — once per session */}
+      {/* Session recall gate with confidence calibration — once per session */}
       {recallMode && !sessionRecallDone && (
         <div style={{ padding: '20px 20px 24px', marginBottom: 16, border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', background: 'var(--surface)' }}>
           <div style={{ fontSize: 'var(--text-sm)', fontWeight: 600, color: NAVY, marginBottom: 6 }}>
-            Before you begin — what do you already know?
+            Before you begin — what do you already know about this topic?
           </div>
           <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginBottom: 10, lineHeight: 1.5 }}>
-            Try to recall what you know about this topic before seeing the questions. Even partial ideas are useful.
+            Try to recall what you know before seeing the questions. Even partial ideas are useful — the act of recalling strengthens your memory.
           </div>
           <textarea
             value={sessionRecallText}
@@ -428,6 +494,7 @@ export default function ExercisePlayer({ exercises: raw, title, onSessionComplet
             rows={3}
             style={{ width: '100%', padding: '8px 10px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm, 6px)', fontSize: 'var(--text-sm)', lineHeight: 1.6, resize: 'vertical', fontFamily: 'var(--font-sans)', boxSizing: 'border-box' }}
           />
+          <ConfidenceSlider label="How confident are you in this topic right now?" onConfidence={setConfidenceBefore} />
           <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
             <button
               onClick={() => setSessionRecallDone(true)}
@@ -457,6 +524,8 @@ export default function ExercisePlayer({ exercises: raw, title, onSessionComplet
             onSkip={handleSkip}
             scaffoldLevel={scaffoldLevel}
             onHintLevelChange={handleHintLevelChange}
+            confidenceBefore={confidenceBefore}
+            onConfidenceBefore={setConfidenceBefore}
           />
         </motion.div>
       ) : (

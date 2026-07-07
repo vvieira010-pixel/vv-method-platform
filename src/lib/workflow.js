@@ -18,6 +18,7 @@ export {
   K, load, loadObj, save, uid, removeHomeworkDrafts, upsert, loadWithIds,
   dbReady, listVia, saveVia, removeVia,
   clearWorkflowData,
+  saveMockTestResult, getMockTestResults,
 } from './workflow-core.js';
 
 export {
@@ -43,7 +44,7 @@ export {
   getReports, saveReport,
   getPracticeAssignments, savePracticeAssignment, deletePracticeAssignment,
   getPracticeResources, savePracticeResource, deletePracticeResource,
-  getPracticeSubmissions, savePracticeSubmission,
+  getPracticeSubmissions, savePracticeSubmission, savePracticeSession,
   getErrorBank, promoteErrorToLongTerm, markErrorPracticed, markErrorSolved,
   incrementErrorAppearance,
   seedErrorBankFromProfile,

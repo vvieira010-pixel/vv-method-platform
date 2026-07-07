@@ -57,8 +57,7 @@ export default function FillBlank({ exercise, onComplete }) {
       transition: 'border-color 0.15s',
     };
     if (!submitted) return { ...base, borderColor: values[i] ? TEAL : 'var(--border)' };
-    if (results[i]?.correct) return { ...base, borderColor: 'var(--ex-correct-strong)', background: 'var(--ex-correct-bg)', color: 'var(--ex-correct-text)' };
-    return { ...base, borderColor: 'var(--danger)', background: 'var(--ex-wrong-bg)', color: 'var(--ex-wrong-text)' };
+    return { ...base, borderColor: 'var(--ex-panel-border)', background: 'var(--ex-panel-bg)', color: 'var(--text)' };
   }
 
   function renderBlankInput(i) {
@@ -75,8 +74,7 @@ export default function FillBlank({ exercise, onComplete }) {
             let border = 'var(--border)';
             let color = NAVY;
             if (!submitted && selected) { bg = 'var(--ex-selected-bg)'; border = TEAL; color = TEAL; }
-            if (isResult && isCorrectChoice) { bg = 'var(--ex-correct-bg)'; border = 'var(--ex-correct-strong)'; color = 'var(--ex-correct-text)'; }
-            if (isWrongSelected) { bg = 'var(--ex-wrong-bg)'; border = 'var(--danger)'; color = 'var(--ex-wrong-text)'; }
+            if (isResult && isCorrectChoice) { bg = 'var(--ex-panel-bg)'; border = 'var(--ex-panel-border)'; color = 'var(--text)'; }
             return (
               <button
                 key={ci}
@@ -147,48 +145,20 @@ export default function FillBlank({ exercise, onComplete }) {
           Check answers
         </button>
       ) : (
-        <div role="status" aria-live="polite" style={{ display: 'flex', flexDirection: 'column', gap: 8, animation: 'fadeUp 0.22s ease-out both' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, animation: 'fadeUp 0.22s ease-out both' }}>
           {results.map((r, i) => (
             <div key={i} style={{ borderRadius: 'var(--radius-sm, 6px)', overflow: 'hidden' }}>
               <div style={{
                 display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px',
-                background: r.correct ? 'var(--ex-correct-bg)' : 'var(--ex-wrong-bg)',
-                border: `1px solid ${r.correct ? 'var(--ex-correct-border)' : 'var(--ex-wrong-border)'}`,
+                background: 'var(--ex-panel-bg)',
+                border: '1px solid var(--ex-panel-border)',
                 fontSize: 'var(--text-sm)',
               }}>
-                <span style={{ fontWeight: 700, color: r.correct ? 'var(--ex-correct-strong)' : 'var(--danger)', flexShrink: 0 }}>
-                  {r.correct ? '✓' : '✗'}
-                </span>
-                <span style={{ color: 'var(--muted)' }}>Blank {i + 1}:</span>
-                {!r.correct && (
-                  <>
-                    <span style={{ color: 'var(--ex-wrong-text)' }}>{r.given || '(empty)'}</span>
-                    <span style={{ color: 'var(--muted)' }}>→</span>
-                    <span style={{ fontWeight: 600, color: 'var(--ex-correct-text)' }}>{r.expected}</span>
-                  </>
-                )}
-                {r.correct && <span style={{ fontWeight: 600, color: 'var(--ex-correct-text)' }}>{r.expected}</span>}
+                <span style={{ color: 'var(--text)' }}>Blank {i + 1}:</span>
+                <span style={{ fontWeight: 600, color: 'var(--text)' }}>{r.expected}</span>
               </div>
-              {!r.correct && (
-                <div style={{ padding: '9px 14px', background: 'var(--ex-hint-bg)', border: '1px solid var(--ex-hint-border)', borderTop: 'none', fontSize: 'var(--text-xs)', color: 'var(--ex-hint-text)', lineHeight: 1.6 }}>
-                  <strong>Your answer:</strong> "{r.given}" &nbsp;→&nbsp; <strong>Correct:</strong> "{r.expected}"
-                  {r.isChoice && r.choiceExplanation && (
-                    <div style={{ marginTop: 4 }}><strong>Why:</strong> {r.choiceExplanation}</div>
-                  )}
-                </div>
-              )}
             </div>
           ))}
-          <div style={{
-            marginTop: 4, padding: '10px 14px', borderRadius: 'var(--radius-sm, 6px)', fontSize: 'var(--text-sm)', fontWeight: 500,
-            background: results.every(r => r.correct) ? 'var(--ex-correct-bg)' : 'var(--ex-hint-bg)',
-            color: results.every(r => r.correct) ? 'var(--ex-correct-text)' : 'var(--ex-hint-text)',
-            border: `1px solid ${results.every(r => r.correct) ? 'var(--ex-correct-border)' : 'var(--ex-hint-border)'}`,
-          }}>
-            {results.every(r => r.correct)
-              ? '✓ All correct — well done.'
-              : `${results.filter(r => r.correct).length} of ${results.length} correct. Review below.`}
-          </div>
           {exercise.explanation && (
             <div style={{
               fontSize: 'var(--text-sm)', color: 'var(--ex-panel-text)', lineHeight: 1.65,

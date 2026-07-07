@@ -1,6 +1,7 @@
 import { useState, useEffect, lazy, Suspense, useMemo } from 'react';
 import { Icon, SkeletonCard, EmptyState, Card } from '../components/shared.jsx';
-import { getHomework, getDiagnoses, getClassEvents, getReviews, getSubmissions, getStudentSeedsStage } from '../lib/workflow.js';
+import { getHomework, getDiagnoses, getClassEvents, getReviews, getSubmissions, getPracticeSubmissions, getStudentSeedsStage } from '../lib/workflow.js';
+import { getExamMode, getExamModeLabel, getExamModeDescription, MODE_BUILDING, MODE_SPRINT, MODE_NONE } from '../lib/exam-window.js';
 import { getDueCount, getDueItems, toMCQ, getAllEntries } from '../lib/spaced-repetition.js';
 import { getTeacherSetting } from '../lib/supabase-db.js';
 import { asArray, getSkillTrend, hasVisibleApprovedStudentFeedback } from './student-helpers.jsx';
@@ -76,6 +77,7 @@ export default function StudentHome({ student, onTab }) {
   const [reviewCount, setReviewCount] = useState(0);
   const [reviewMode, setReviewMode] = useState(false);
   const [submissions, setSubmissions] = useState([]);
+  const [practiceSessions, setPracticeSessions] = useState([]);
   const [reviewExercises, setReviewExercises] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
@@ -99,16 +101,18 @@ export default function StudentHome({ student, onTab }) {
   useEffect(() => {
     (async () => {
       try {
-      const [hw, diagnoses, classEvents, reviews, subs] = await Promise.all([
+      const [hw, diagnoses, classEvents, reviews, subs, practiceSubs] = await Promise.all([
         getHomework(student.id),
         getDiagnoses(student.id),
         getClassEvents(student.id),
         getReviews(student.id),
         getSubmissions(student.id),
+        getPracticeSubmissions({ studentId: student.id }),
       ]);
       setHomework(hw || []);
       setReviews(reviews || []);
       setSubmissions(subs || []);
+      setPracticeSessions(practiceSubs || []);
       setReviewCount(getDueCount(student.id));
       const doneStatuses = new Set(['submitted', 'reviewed', 'completed', 'corrected']);
       setPendingHw((hw || []).filter(h => !doneStatuses.has(h.status)));
@@ -182,8 +186,18 @@ export default function StudentHome({ student, onTab }) {
         });
       }
     });
+    (practiceSessions || []).filter(s => s.type === 'free_practice' && s.score != null).forEach(s => {
+      const date = new Date(s.submittedAt || 0);
+      points.push({
+        name: 'Practice ' + date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }),
+        development: s.score,
+        confidence: null,
+        date,
+        type: 'Practice'
+      });
+    });
     return points.sort((a, b) => a.date - b.date);
-  }, [homework, reviews, submissions, approvedHistory]);
+  }, [homework, reviews, submissions, approvedHistory, practiceSessions]);
 
   function timeOfDay() {
     const h = new Date().getHours();
@@ -243,6 +257,7 @@ export default function StudentHome({ student, onTab }) {
 
   const daysLeft = daysUntilExam();
   const examDateStr = (() => { try { return localStorage.getItem('vv:met_exam_date') || ''; } catch { return ''; } })();
+  const examMode = getExamMode();
 
   const lowestSkill = evaluatedSkills.length > 1
     ? [...evaluatedSkills].sort((a, b) => (Number(a.score_0_80) || 80) - (Number(b.score_0_80) || 80))[0]
@@ -253,7 +268,7 @@ export default function StudentHome({ student, onTab }) {
       <section className="student-hero bg-grain fade-up" style={{ '--delay': '0s' }}>
         <div>
           <h1>Good {timeOfDay()}, {student.firstName}.</h1>
-          <p>{student.currentLevel || student.band || 'Current level'} to {student.targetLevel || student.bandTarget || 'target level'} · Session {student.session || 1}/{student.totalSessions || 24}</p>
+          <p>{student.currentLevel || student.band || 'Current level'} to {student.targetLevel || student.bandTarget || 'target level'} · Session {student.session || 1}/{student.totalSessions || 24} · <span className="student-pill">{getExamModeLabel(examMode)}</span></p>
         </div>
          <button className="student-hero-action" onClick={() => onTab(heroAction.tab)}>
            {heroAction.icon}
@@ -272,26 +287,30 @@ export default function StudentHome({ student, onTab }) {
         </div>
         <div className="memo-board-chips">
           {reviewCount > 0 && (
-            <StatChip icon={<Icon.refresh size={15} />} label="Due" value={`${reviewCount}`} sub="spaced repetition" tone="urgent" onClick={handleOpenReview} />
+            <StatChip icon={<Icon.refresh size={15} />} label="Due" value={`${reviewCount}`} sub="spaced repetition" tone="teal" onClick={handleOpenReview} />
           )}
           <StatChip icon={<Icon.homework size={15} />} label="Homework" value={String(pendingHw.length)} sub={pendingHw.length === 1 ? 'task pending' : 'tasks pending'} tone="teal" onClick={() => onTab('homework')} />
           <StatChip icon={<Icon.calendar size={15} />} label="Next class" value={nextDate} sub={nextTime} tone="teal" onClick={() => onTab('schedule')} />
           <StatChip icon={<Icon.progress size={15} />} label="Focus" value={focusSkill.length > 18 ? focusSkill.slice(0, 18) + '…' : focusSkill} sub={focusTrend.dir !== 'none' ? focusTrend.label : 'next practice'} tone="navy" onClick={() => onTab('progress')} />
+          <StatChip icon={<Icon.star size={15} />} label="Practice" value={String(practiceSessions.filter(s => s.type === 'free_practice').length)} sub="sessions done" tone="teal" />
           <StatChip icon={<Icon.inbox size={15} />} label="Feedback" value={latestFeedback ? 'Ready' : 'Waiting'} sub={latestFeedback ? 'teacher approved' : 'after diagnosis'} tone="teal" onClick={() => latestFeedback && onTab('feedback')} />
           {daysLeft !== null && (
-            <StatChip icon={<Icon.calendar size={15} />} label="MET exam" value={daysLeft > 0 ? `${daysLeft}d` : daysLeft === 0 ? 'Today!' : 'Done'} sub={daysLeft > 0 ? new Date(examDateStr + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : daysLeft === 0 ? 'Good luck!' : 'Passed'} tone={daysLeft <= 30 ? 'urgent' : 'exam'} />
+            <StatChip icon={<Icon.calendar size={15} />} label="MET exam" value={daysLeft > 0 ? `${daysLeft}d` : daysLeft === 0 ? 'Today!' : 'Done'} sub={daysLeft > 0 ? new Date(examDateStr + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : daysLeft === 0 ? 'Good luck!' : 'Passed'} tone="teal" />
           )}
         </div>
       </Card>
 
       <Suspense fallback={null}>
         {practiceMode && (
-          <PracticeSession 
-            mode={practiceMode} 
-            onClose={() => setPracticeMode(null)} 
-            onSessionComplete={(summary) => {
-              window.toast?.(`Session complete! Score: ${summary.score ?? 'N/A'}%`, 'ok');
+          <PracticeSession
+            mode={practiceMode}
+            studentId={student.id}
+            onClose={() => setPracticeMode(null)}
+            onSessionComplete={async () => {
+              window.toast?.('Session saved!', 'ok');
               setPracticeMode(null);
+              const updated = await getPracticeSubmissions({ studentId: student.id });
+              setPracticeSessions(updated || []);
             }}
           />
         )}
@@ -391,7 +410,7 @@ export default function StudentHome({ student, onTab }) {
                   </div>
                 </div>
                 <p>
-                  This skill needs the most attention ({Number(lowestSkill.score_0_80) || 0}/80). Focus on it in your next class or practice session.
+                  This skill needs the most attention. Focus on it in your next class or practice session.
                 </p>
                 {lowestSkill.next_step && (
                   <p><strong>Next step:</strong> {lowestSkill.next_step}</p>

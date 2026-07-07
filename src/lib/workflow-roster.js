@@ -130,6 +130,27 @@ export async function savePracticeSubmission(data) {
   return record;
 }
 
+export async function savePracticeSession(studentId, data) {
+  const record = {
+    id: uid(), studentId, type: 'free_practice',
+    mode: data?.mode || null, topicId: data?.topicId || null, topicTitle: data?.topicTitle || null,
+    score: data?.score ?? null,
+    exerciseCount: data?.exerciseCount || 0, correctCount: data?.correctCount || 0,
+    maxHintLevel: data?.maxHintLevel || 0, hintUsed: !!data?.hintUsed, quality: data?.quality || null,
+    results: data?.results || null, submittedAt: new Date().toISOString(),
+    confidenceBefore: data?.confidenceBefore ?? null,
+    errorCategories: data?.errorCategories || null,
+  };
+  if (dbReady('practiceSubmissions')) {
+    try { const saved = await dbUpsert('practiceSubmissions', record); if (saved) return saved; }
+    catch (e) { console.warn('[workflow] savePracticeSession via Supabase failed, using localStorage:', e.message); }
+  }
+  const all = load(K.practiceSubmissions);
+  all.unshift(record);
+  save(K.practiceSubmissions, all);
+  return record;
+}
+
 /* ─── ERROR BANK ─────────────────────────────────────────────── */
 export async function getErrorBank(studentId) {
   if (dbReady('errorBank')) { try { return (await dbList('errorBank') || []).filter(e => e.studentId === studentId); } catch (e) { console.warn('[workflow] getErrorBank via Supabase failed, using localStorage:', e.message); } }
@@ -263,7 +284,7 @@ export async function saveStudent(data) {
   const now = new Date().toISOString();
   const existing = all.findIndex(s => s.id === data.id);
   const previous = existing >= 0 ? all[existing] : {};
-  const record = { id: data.id || uid(), name: data.name || '', firstName: data.firstName || (data.name || '').split(' ')[0] || '', email: data.email || '', currentLevel: data.currentLevel || data.band || 'B1', targetLevel: data.targetLevel || data.bandTarget || 'B2', examGoal: data.examGoal || data.goal || 'Pass MET B2', professionalContext: data.professionalContext || '', notes: data.notes || '', activeTargetProfileId: data.activeTargetProfileId || null, band: data.currentLevel || data.band || 'B1', bandTarget: data.targetLevel || data.bandTarget || 'B2', goal: data.examGoal || data.goal || 'Pass MET B2', session: data.session || 1, totalSessions: data.totalSessions || 24, track: data.track || 'MET', timezone: data.timezone || 'America/Sao_Paulo', createdAt: data.createdAt || now, updatedAt: now };
+  const record = { id: data.id || uid(), name: data.name || '', firstName: data.firstName || (typeof data.name === 'string' ? data.name.split(' ')[0] : '') || '', email: data.email || '', currentLevel: data.currentLevel || data.band || 'B1', targetLevel: data.targetLevel || data.bandTarget || 'B2', examGoal: data.examGoal || data.goal || 'Pass MET B2', professionalContext: data.professionalContext || '', notes: data.notes || '', activeTargetProfileId: data.activeTargetProfileId || null, band: data.currentLevel || data.band || 'B1', bandTarget: data.targetLevel || data.bandTarget || 'B2', goal: data.examGoal || data.goal || 'Pass MET B2', session: data.session || 1, totalSessions: data.totalSessions || 24, track: data.track || 'MET', timezone: data.timezone || 'America/Sao_Paulo', createdAt: data.createdAt || now, updatedAt: now };
   if (dbReady('studentsCrud')) { try { const saved = await dbUpsert('studentsCrud', record); if (saved) return saved; } catch (e) { console.warn('[workflow] saveStudent via Supabase failed, using localStorage:', e.message); } }
   if (existing >= 0) all[existing] = { ...withoutRosterPassword(all[existing]), ...record };
   else all.unshift(record);

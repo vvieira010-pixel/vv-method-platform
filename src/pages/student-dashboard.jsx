@@ -10,15 +10,17 @@ import { StudentInbox, MessageTeacherDock } from '../components/message-center.j
 const StudentHomework = lazy(() => import('./student-homework.jsx'));
 const StudentFeedback = lazy(() => import('./student-feedback.jsx'));
 const StudentProgress = lazy(() => import('./student-progress.jsx'));
+const StudentResources = lazy(() => import('./student-resources.jsx'));
 
 const TABS = [
-  { id: 'home',     label: 'Home',     icon: <Icon.home size={16} /> },
-  { id: 'homework', label: 'Homework', icon: <Icon.homework size={16} /> },
+  { id: 'home',     label: 'Home',      icon: <Icon.home size={16} /> },
+  { id: 'homework', label: 'Homework',  icon: <Icon.homework size={16} /> },
   { id: 'mock-test', label: 'Mock Tests', icon: <Icon.practice size={16} /> },
-  { id: 'feedback', label: 'Feedback', icon: <Icon.inbox size={16} /> },
-  { id: 'progress', label: 'Progress', icon: <Icon.progress size={16} /> },
-  { id: 'messages', label: 'Messages', icon: <Icon.feedback size={16} /> },
-  { id: 'settings', label: 'Settings', icon: <Icon.settings size={16} /> },
+  { id: 'feedback', label: 'Feedback',  icon: <Icon.inbox size={16} /> },
+  { id: 'progress', label: 'Progress',  icon: <Icon.progress size={16} /> },
+  { id: 'resources', label: 'Resources', icon: <Icon.book size={16} /> },
+  { id: 'messages', label: 'Messages',  icon: <Icon.feedback size={16} /> },
+  { id: 'settings', label: 'Settings',  icon: <Icon.settings size={16} /> },
 ];
 
 export default function StudentDashboard({ student, onSignOut }) {
@@ -82,23 +84,33 @@ export default function StudentDashboard({ student, onSignOut }) {
     return <div className="student-loading"><p>Loading your dashboard…</p></div>;
   }
 
-  return (
-    <div className="dash">
-      <header className="dash-topbar">
-        <div className="dash-brand">
-          <span className="dash-brand-name">MET Proficiency Mastery</span>
+    return (
+      <div className="dash">
+        <header className="dash-topbar">
+          <div className="dash-brand">
+            <span className="dash-brand-name">MET Proficiency Mastery</span>
+          </div>
+          <div className="dash-topbar-right">
+            <span className="dash-topbar-name">{student.firstName}</span>
+            <Avatar name={student.name} size={30} tone="auto" />
+            <button className="student-sign-out" onClick={onSignOut}>Sign out</button>
+          </div>
+        </header>
+        
+        <div className="dash-body">
+            {tab === 'home' && <StudentHome student={student} onTab={setTab} />}
+            <Suspense fallback={<div className="student-suspense-fallback">Loading…</div>}>
+              {tab === 'homework' && <StudentHomework student={student} />}
+              {tab === 'mock-test' && <MockTestPage student={student} />}
+              {tab === 'feedback' && <StudentFeedback student={student} onTab={setTab} />}
+              {tab === 'progress' && <StudentProgress student={student} />}
+              {tab === 'resources' && <StudentResources />}
+              {tab === 'messages' && <StudentInbox student={student} />}
+              {tab === 'settings' && <StudentSettings student={student} onSignOut={onSignOut} />}
+            </Suspense>
         </div>
-        <nav className="dash-top-nav" aria-label="Student sections" role="tablist" onKeyDown={(e) => {
-          const tabs = Array.from(e.currentTarget.querySelectorAll('[role="tab"]'));
-          const currentIdx = tabs.indexOf(document.activeElement);
-          if (currentIdx === -1) return;
-          const dir = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
-          if (!dir) return;
-          e.preventDefault();
-          const nextIdx = (currentIdx + dir + tabs.length) % tabs.length;
-          tabs[nextIdx].focus();
-          tabs[nextIdx].click();
-        }}>
+
+        <nav className="dash-bottom-nav" aria-label="Student sections" role="tablist">
           {TABS.map(t => (
             <button key={t.id} role="tab" aria-selected={tab === t.id} aria-controls={`tabpanel-${t.id}`} onClick={() => handleTabChange(t.id)} className={'dash-nav-btn' + (tab === t.id ? ' active' : '')}>
               <span className="dash-nav-icon" aria-hidden="true">{t.icon}</span>
@@ -107,26 +119,8 @@ export default function StudentDashboard({ student, onSignOut }) {
             </button>
           ))}
         </nav>
-        <div className="dash-topbar-right">
-          <span className="dash-topbar-name">{student.firstName}</span>
-          <Avatar name={student.name} size={30} tone="auto" />
-          <button className="student-sign-out" onClick={onSignOut}>Sign out</button>
-        </div>
-      </header>
-
-      <div className="dash-body">
-          {tab === 'home' && <StudentHome student={student} onTab={setTab} />}
-          <Suspense fallback={<div className="student-suspense-fallback">Loading…</div>}>
-            {tab === 'homework' && <StudentHomework student={student} />}
-            {tab === 'mock-test' && <MockTestPage />}
-            {tab === 'feedback' && <StudentFeedback student={student} onTab={setTab} />}
-            {tab === 'progress' && <StudentProgress student={student} />}
-            {tab === 'messages' && <StudentInbox student={student} />}
-            {tab === 'settings' && <StudentSettings student={student} onSignOut={onSignOut} />}
-          </Suspense>
-
+        
+        <MessageTeacherDock student={student} onSent={() => setTab('messages')} />
       </div>
-      <MessageTeacherDock student={student} onSent={() => setTab('messages')} />
-    </div>
-  );
+    );
 }

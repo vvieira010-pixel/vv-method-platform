@@ -225,9 +225,10 @@ ${SHARED_MET_DATA}
 3. Never create a score estimate for unevaluated skills.
 4. Use the exact scoreConfidenceLevel strings from the reference.
 5. For speaking with transcript only: score0to4 for Intelligibility/Delivery must be null and note "audio required."
-6. subskillsAssessed should only list subskills you have actual evidence for.
-7. ratingBreakdown for speaking and writing must align with the official MET rating scales.
-8. priorityDiagnosis: 3–5 ranked items. urgency "Critical" = blocks the target; "Developing" = active growth area; "Strength" = cite one genuine strength. Every "evidence" MUST be a real quote from the evidence above — never invent. Base priorities only on evaluated skills.
+  6. subskillsAssessed should only list subskills you have actual evidence for.
+  7. ratingBreakdown for speaking and writing must align with the official MET rating scales.
+  8. For Listening: explicitly identify if weaknesses are caused by one of the 4 Critical Obstacles (Mid-Stream Information Shifts, Lexical Distractors, Note-Taking Overload, or Discourse Signpost failure). Match the weakness to its specific Strategic Intervention.
+  9. priorityDiagnosis: 3–5 ranked items. urgency "Critical" = blocks the target; "Developing" = active growth area; "Strength" = cite one genuine strength. Every "evidence" MUST be a real quote from the evidence above — never invent. Base priorities only on evaluated skills.
 9. classSummary, nextClassFocus, targetScoreRelevance, profileUpdateSuggestions: base ONLY on what was actually evaluated — never fabricate progress for an unevaluated skill. If almost nothing was evaluated, say so plainly.
 10. profileUpdateSuggestions.progressNote is shown directly to the STUDENT — keep it plain, specific, and honest (no empty praise, no jargon).
 11. HONEST OUTPUT — If you have enough evidence to evaluate a skill, provide substantive content. If you lack evidence, return null or "Not enough evidence" rather than fabricating or guessing. Never invent scores, progress, or observations for unevaluated skills.
@@ -409,7 +410,7 @@ Write like a real teacher talking TO this student right after class — warm, sp
 • BANNED OPENERS: "Great work", "Well done", "Excellent", "Good job", "It is important", "Furthermore", "Additionally", "Moreover", "In addition", "Going forward", "In conclusion", "Overall".
 • BANNED PHRASES: "This demonstrates", "Your performance", "You demonstrated", "You exhibited", "This is crucial for", "This is essential", "This shows that you", "Continue to", "Keep up".
 • BANNED CERTAINTY PHRASES: "This will help", "This will improve", "This will make", "Doing X will Y" — these state pedagogical outcomes as proven fact. Instead, frame improvement advice as a testable hypothesis: "Try X and see if it helps", "One thing to experiment with is Y", "If you try Z next class, notice whether...". The goal is a suggestion the student can test, not a guaranteed result.
-• STRATEGIC FEEDBACK (for recurring errors): When a student repeats an error, move beyond simple correction. Provide a "mental model" or a simple "check" (e.g., "Imagine a photo of that day") that helps the student notice the error in real-time. The goal is to teach them how to self-correct, not just to fix the specific sentence.
+• STRATEGIC FEEDBACK (for recurring errors): When a student repeats an error, move beyond simple correction. Provide a "mental model" or a simple "check" (e.g., "Imagine a photo of that day"). For Listening, explicitly use the Strategic Interventions (e.g., if they fall for lexical distractors, suggest prioritizing semantic equivalence over verbatim matching). The goal is to teach them how to self-correct, not just to fix the specific sentence.
 • BREVITY: if a thought is one sentence, stop. No padding, no restating.
 • MET BUDGET: at most 2 sentences in the whole feedback may mention the MET exam, and each must be concrete (e.g., "examiners weight delivery in the third descriptor...").
 
@@ -529,7 +530,50 @@ export function buildSectionRegenPrompt(key, data) {
   return buildSkillDiagnosisPrompt(data); 
 }
 
-// (Other existing build functions can be kept or deprecated)
+export const buildTeacherSelfEvaluationReviewPrompt = (data) => {
+  const { student, dx, ratings, reflections } = data;
+  const priorities = (dx?.priorityDiagnosis || dx?.sections?.priorityDiagnosis?.content || []);
+  const summary = dx?.classSummary || dx?.sections?.classSummary?.content || dx?.content?.classSummary || 'no summary provided';
+
+  return `You are a Master Pedagogical Coach for MET English teachers.
+Your goal is to review a teacher's self-evaluation of a lesson and provide a strategic, honest, and supportive critique.
+
+━━━ STUDENT CONTEXT ━━━
+Name: ${student?.name || 'Student'}
+Current Level: ${student?.currentLevel || 'B1'} → Target: ${student?.targetLevel || 'B2'}
+Diagnostic Summary: ${summary}
+Key Student Needs:
+${priorities.map(p => `- [${p.urgency}] ${p.area}: ${p.whatToImprove}`).join('\n') || 'No specific priorities recorded.'}
+
+━━━ TEACHER'S SELF-EVALUATION ━━━
+Ratings (1-4 scale):
+${Object.entries(ratings).map(([cat, val]) => `- ${cat}: ${val}`).join('\n')}
+
+Reflections:
+- What worked: ${reflections.workedWell || 'not provided'}
+- To improve: ${reflections.toImprove || 'not provided'}
+- Student target: ${reflections.studentTarget || 'not provided'}
+
+━━━ REVIEW RULES ━━━
+1. CRITICAL ALIGNMENT: Compare the teacher's perceived successes/failures with the student's actual diagnosed needs.
+   - If the teacher rated "Feedback Quality" as 4, but the student has "Critical" needs in "Grammar Accuracy" that weren't addressed in the reflection, point out the gap.
+   - If the teacher missed a key student priority in their "To improve" section, flag it as a blind spot.
+2. AVOID THE POSITIVITY TRAP: Do not use empty praise ("Great job!", "Excellent reflection"). Be specific and actionable.
+3. PEDAGOGICAL RIGOUR: Suggest specific teaching moves (e.g., "Instead of just correcting the error, try a 'notice-and-repair' prompt next time").
+4. TONE: Professional, supportive, and coaching-oriented.
+
+RETURN ONLY VALID JSON:
+{
+  "overallVerdict": "1-2 sentences summarizing the alignment between teacher perception and student needs.",
+  "blindSpots": [
+    { "area": "category or priority", "observation": "why this is a gap", "suggestion": "specific teaching move to try" }
+  ],
+  "strengths": [
+    { "point": "what the teacher did well", "impact": "how it specifically helps this student's B1→B2 transition" }
+  ],
+  "strategicNextStep": "The single most important action the teacher should take in the next lesson to move this student forward."
+}`;
+};
 
 /* ══════════════════════════════════════════════════════════════
    CASCADE GENERATION PROMPTS — 3-step homework building
