@@ -51,6 +51,14 @@ export default function SpeakingSection({ onComplete }) {
   const startSpeaking = useCallback(async () => {
     setPhase('speak');
     setSpeakRemaining(task.speakSeconds);
+
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      const msg = 'Your browser does not support audio recording. Please use a modern browser and ensure you are using HTTPS.';
+      window.toast?.(msg, 'warn') || alert(msg);
+      setPhase('done');
+      return;
+    }
+
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       streamRef.current = stream;
@@ -77,7 +85,12 @@ export default function SpeakingSection({ onComplete }) {
           return prev - 1;
         });
       }, 1000);
-    } catch { setPhase('done'); }
+    } catch (e) {
+      console.error('[SpeakingSection] startSpeaking failed:', e);
+      const msg = 'Microphone access denied or not available. Please check your browser permissions.';
+      window.toast?.(msg, 'warn') || alert(msg);
+      setPhase('done');
+    }
   }, [currentIdx, task.speakSeconds]);
 
   useEffect(() => { startSpeakingRef.current = startSpeaking; }, [startSpeaking]);
