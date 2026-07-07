@@ -470,7 +470,13 @@ function SpeakPlayer({ ex, res, update, readOnly }) {
         const ctx = getDbContext();
         if (ctx) {
           // Signed-in: upload to private Storage, persist only the object path.
-          try {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      const msg = 'Your browser does not support audio recording. Please use a modern browser (Chrome, Firefox, Safari) and ensure you are using HTTPS.';
+      window.toast?.(msg, 'warn') || alert(msg);
+      return;
+    }
+
+    try {
             const rand = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now());
             const path = `${ctx.authUid}/${rand}/${ex.id || 'audio'}.webm`;
             await uploadSubmissionAudio(blob, path);
@@ -483,7 +489,8 @@ function SpeakPlayer({ ex, res, update, readOnly }) {
               reader.onloadend = () => update({ audioB64: reader.result, audioPath: null, transcript: currentTranscript });
               reader.readAsDataURL(blob);
             } else {
-              window.toast?.('Audio upload failed. Recording is too large for local storage.', 'warn');
+              const msg = 'Audio upload failed. Recording is too large for local storage.';
+              window.toast?.(msg, 'warn') || alert(msg);
               update({ audioB64: null, audioPath: null, transcript: currentTranscript });
             }
           }
@@ -499,8 +506,10 @@ function SpeakPlayer({ ex, res, update, readOnly }) {
       setStatus('recording');
       setSeconds(0);
       timerRef.current = setInterval(() => setSeconds(s => s + 1), 1000);
-    } catch {
-      window.toast?.('Microphone access denied.', 'warn');
+    } catch (e) {
+      console.error('[speak] start failed:', e);
+      const msg = 'Microphone access denied or not available. Please check your browser permissions.';
+      window.toast?.(msg, 'warn') || alert(msg);
     }
   };
 
