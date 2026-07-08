@@ -42,27 +42,32 @@ export default function TeacherDashboard({ students, onNavigate, teacherName = '
   useEffect(() => {
     let live = true;
     async function load() {
-      const todayStr = new Date().toISOString().slice(0, 10);
-      const results = await Promise.allSettled([
-        getClassEvents(),
-        getAllSubmissions(),
-        getReviews(),
-        Promise.allSettled(students.map(s =>
-          getStudentCycleState(s.id).then(state => [s.id, state]).catch(() => [s.id, null])
-        )),
-      ]);
-      if (!live) return;
-      const events = results[0].status === 'fulfilled' ? results[0].value : [];
-      const entries = results[3].status === 'fulfilled'
-        ? results[3].value.filter(r => r.status === 'fulfilled' && r.value[1]).map(r => r.value)
-        : [];
-      const todays = (events || []).filter(e => e.date === todayStr && e.status !== 'canceled');
-      setTodayClasses(todays);
-      setClassesToday(todays.length);
-      setCycleStates(Object.fromEntries(entries));
-      const seedsArray = await getSeedsStages();
-      setSeedsStages(Object.fromEntries(seedsArray.map(s => [s.studentId, s])));
-      setLoading(false);
+      try {
+        const todayStr = new Date().toISOString().slice(0, 10);
+        const results = await Promise.allSettled([
+          getClassEvents(),
+          getAllSubmissions(),
+          getReviews(),
+          Promise.allSettled(students.map(s =>
+            getStudentCycleState(s.id).then(state => [s.id, state]).catch(() => [s.id, null])
+          )),
+        ]);
+        if (!live) return;
+        const events = results[0].status === 'fulfilled' ? results[0].value : [];
+        const entries = results[3].status === 'fulfilled'
+          ? results[3].value.filter(r => r.status === 'fulfilled' && r.value[1]).map(r => r.value)
+          : [];
+        const todays = (events || []).filter(e => e.date === todayStr && e.status !== 'canceled');
+        setTodayClasses(todays);
+        setClassesToday(todays.length);
+        setCycleStates(Object.fromEntries(entries));
+        const seedsArray = await getSeedsStages();
+        setSeedsStages(Object.fromEntries(seedsArray.map(s => [s.studentId, s])));
+      } catch (error) {
+        console.error('Failed to load teacher dashboard:', error);
+      } finally {
+        setLoading(false);
+      }
     }
     void load();
     window.addEventListener('vv:seeds-updated', async () => {
@@ -242,7 +247,7 @@ export default function TeacherDashboard({ students, onNavigate, teacherName = '
            ) : urgencySorted.length === 0 ? (
              <EmptyState icon={<Icon.student size={20} />} title="No students match this filter" text="Try selecting a different filter above or check the Students page." action="View all students" onAction={() => setStageFilter('all')} />
             ) : (
-              <div className="grid-square">
+              <div className="cycle-board-scroll">
                 {urgencySorted.map(s => (
                   <StudentRow key={s.id} student={s} onNavigate={onNavigate} onAction={handleAction} seedsStages={seedsStages} onSetSeedsStage={handleSetSeedsStage} />
                 ))}
@@ -300,7 +305,7 @@ function getTodayPriority({ needsAttention, todayClasses }) {
 function KpiCard({ label, value, icon, tone, onClick }) {
   const cls = ['td-kpi-card', 'td-card-accent', tone ? `td-card-accent--${tone}` : '', tone ? `td-kpi-card--${tone}` : ''].filter(Boolean).join(' ');
   return (
-    <Card className={cls} onClick={onClick}>
+    <Card className={cls} onClick={onClick} aria-label={`${label}: ${value}`}>
       <div className="td-kpi-card-inner">
         <span className="td-kpi-icon">{icon}</span>
         <span className="td-kpi-label">{label}</span>
@@ -330,7 +335,7 @@ function StudentRow({ student: s, onNavigate, onAction, seedsStages, onSetSeedsS
       onClick={() => onNavigate('students:profile', { studentId: s.id })}
     >
       <Avatar name={s.name} size={48} />
-      <div style={{ fontWeight: 600, fontSize: 'var(--text-sm)', textAlign: 'center', marginTop: 8 }}>{s.name}</div>
+      <div style={{ fontWeight: 600, fontSize: 'var(--text-sm)', textAlign: 'center', marginTop: 8, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.name}</div>
       <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', textAlign: 'center' }}>
         {currentBand} → {targetBand}
       </div>
@@ -354,6 +359,7 @@ function FilterChip({ label, count, active, onClick }) {
     <button
       type="button"
       onClick={onClick}
+      aria-pressed={active}
       className={`td-filter-chip${active ? ' td-filter-chip--active' : ''}`}
     >
       {label}{count > 0 && <span>({count})</span>}
@@ -363,7 +369,7 @@ function FilterChip({ label, count, active, onClick }) {
 
 function QuickAction({ icon, label, onClick }) {
   return (
-    <button onClick={onClick} className="square-card td-quick-action" style={{ border: '1px solid var(--border)', background: 'var(--surface)', cursor: 'pointer', transition: 'all 0.2s' }}>
+    <button onClick={onClick} className="square-card td-quick-action" aria-label={label} style={{ border: '1px solid var(--border)', background: 'var(--surface)', cursor: 'pointer', transition: 'all 0.2s' }}>
       <span className="td-quick-action-icon" style={{ marginBottom: 8, color: 'var(--accent)' }}>{icon}</span>
       <span style={{ fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--text)', textAlign: 'center' }}>{label}</span>
     </button>

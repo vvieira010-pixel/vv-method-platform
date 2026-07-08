@@ -7,6 +7,15 @@ import { WorkflowStageStrip } from './domain-ui.jsx';
 
 /* ─── CSS CUSTOM PROPERTIES (injected once) ─────────────────── */
 
+export const COLORS = {
+  TEAL: 'var(--accent)',
+  NAVY: 'var(--accent-text)',
+};
+
+export const GRADIENTS = {
+  TEAL_NAVY: 'linear-gradient(120deg, var(--accent) 0%, var(--accent-text) 100%)',
+};
+
 
 
 
@@ -173,7 +182,7 @@ export function Shell({ tabs = [], active, onTab, children, rightSlot, workflowA
       </header>
       <main id="main-content" className="shell-main">{children}</main>
       <nav className="shell-mobile-nav" aria-label="Mobile navigation">
-        {tabs.filter(t => t.mobile !== false && ['dashboard','students','diagnostics','homework','submissions','library'].includes(t.id)).map(tab => (
+        {tabs.filter(t => t.mobile !== false && ['dashboard','students','diagnostics','homework','submissions','library','mock-test-results'].includes(t.id)).map(tab => (
           <button key={tab.id}
             className={`shell-mobile-nav-btn${active === tab.id ? ' active' : ''}`}
             aria-current={active === tab.id ? 'page' : undefined}
@@ -201,7 +210,7 @@ export function Tooltip({ children, content }) {
   return (
     <div className="vv-tooltip-wrap">
       {children}
-      <span className="vv-tooltip-text">{content}</span>
+      <span className="vv-tooltip-text" role="tooltip">{content}</span>
       <style>{`
         .vv-tooltip-wrap {
           position: relative;
