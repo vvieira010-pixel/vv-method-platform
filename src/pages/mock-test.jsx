@@ -12,9 +12,9 @@ export default function MockTestPage({ student }) {
 
   useEffect(() => {
     if (student?.id) {
-      getMockTestResults(student.id).then(setPastResults).catch(() => {});
-    } else if (student?.local_id) {
-      getMockTestResults(student.local_id).then(setPastResults).catch(() => {});
+      getMockTestResults(student.id).then(setPastResults).catch(e => console.warn('[mock-test] failed to load results:', e));
+    } else if (student.local_id) {
+      getMockTestResults(student.local_id).then(setPastResults).catch(e => console.warn('[mock-test] failed to load results:', e));
     }
   }, [student]);
 

@@ -97,7 +97,7 @@ export default function SpeakingSection({ onComplete }) {
 
   const handlePlayPrompt = useCallback(() => {
     const audio = new Audio(task.audio);
-    audio.play().catch(() => {});
+    audio.play().catch(e => console.warn('[speaking] audio playback failed:', e));
     setPromptPlayed(true);
     audio.addEventListener('ended', () => startPrep());
   }, [task.audio]);

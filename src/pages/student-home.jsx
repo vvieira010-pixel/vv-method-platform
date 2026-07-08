@@ -89,7 +89,7 @@ export default function StudentHome({ student, onTab }) {
     if (stored) setMemo(stored);
     getTeacherSetting('general_memo').then(text => {
       if (text) { setMemo(text); localStorage.setItem('vv:student_general_memo', text); }
-    }).catch(() => {});
+    }).catch(e => console.warn('[student-home] failed to load showcase:', e));
     const handler = () => {
       const updated = localStorage.getItem('vv:student_general_memo');
       setMemo(updated || '');

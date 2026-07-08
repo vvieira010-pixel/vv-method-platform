@@ -46,7 +46,7 @@ export default function ExercisesPage({ onNavigate }) {
 
   useEffect(() => {
     if (tab === 'b2') {
-      getB2ModulesWithSupabase().then(setB2Modules).catch(() => {});
+      getB2ModulesWithSupabase().then(setB2Modules).catch(e => console.warn('[exercises] failed to load B2 modules:', e));
     }
   }, [tab]);
 

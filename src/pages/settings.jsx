@@ -17,38 +17,9 @@ const SENSITIVE_LOCAL_KEYS = new Set([
   'vv:deepgram_api_key',
 ]);
 
-function SecretInput({ value, onChange, placeholder }) {
-  const [show, setShow] = useState(false);
-  return (
-    <div className="secret-input">
-      <input
-        className="input"
-        type={show ? 'text' : 'password'}
-        value={value}
-        onChange={onChange}
-        placeholder={placeholder}
-      />
-      <button
-        type="button"
-        onClick={() => setShow(s => !s)}
-        aria-label={show ? 'Hide key' : 'Show key'}
-        title={show ? 'Hide' : 'Show'}
-        className={`secret-toggle${show ? ' active' : ''}`}
-      >
-        <Icon.eye size={16} />
-      </button>
-    </div>
-  );
-}
+
 
 export default function SettingsPage({ onNavigate }) {
-  const [groqKey, setGroqKey] = useState(() => localStorage.getItem('vv:groq_api_key') || '');
-  const [geminiKey, setGeminiKey] = useState(() => localStorage.getItem('vv:gemini_api_key') || '');
-  const [anthropicKey, setAnthropicKey] = useState(() => localStorage.getItem('vv:anthropic_api_key') || '');
-  const [openaiKey, setOpenaiKey] = useState(() => localStorage.getItem('vv:openai_api_key') || '');
-  const [openrouterKey, setOpenrouterKey] = useState(() => localStorage.getItem('vv:openrouter_api_key') || '');
-  const [elevenlabsKey, setElevenlabsKey] = useState(() => localStorage.getItem('vv:elevenlabs_api_key') || '');
-  const [deepgramKey, setDeepgramKey] = useState(() => localStorage.getItem('vv:deepgram_api_key') || '');
   const [piperUrl, setPiperUrl] = useState(() => localStorage.getItem('vv:piper_server_url') || '');
   const [generalMemo, setGeneralMemo] = useState(() => localStorage.getItem('vv:student_general_memo') || '');
   const [examDate, setExamDate] = useState(() => localStorage.getItem('vv:met_exam_date') || '');
@@ -143,26 +114,12 @@ export default function SettingsPage({ onNavigate }) {
     setSyncing(false);
   }
 
-  function saveKeys() {
-    if (groqKey.trim()) localStorage.setItem('vv:groq_api_key', groqKey.trim());
-    else localStorage.removeItem('vv:groq_api_key');
-    if (geminiKey.trim()) localStorage.setItem('vv:gemini_api_key', geminiKey.trim());
-    else localStorage.removeItem('vv:gemini_api_key');
-    if (anthropicKey.trim()) localStorage.setItem('vv:anthropic_api_key', anthropicKey.trim());
-    else localStorage.removeItem('vv:anthropic_api_key');
-    if (openaiKey.trim()) localStorage.setItem('vv:openai_api_key', openaiKey.trim());
-    else localStorage.removeItem('vv:openai_api_key');
-    if (openrouterKey.trim()) localStorage.setItem('vv:openrouter_api_key', openrouterKey.trim());
-    else localStorage.removeItem('vv:openrouter_api_key');
-    if (elevenlabsKey.trim()) localStorage.setItem('vv:elevenlabs_api_key', elevenlabsKey.trim());
-    else localStorage.removeItem('vv:elevenlabs_api_key');
-    if (deepgramKey.trim()) localStorage.setItem('vv:deepgram_api_key', deepgramKey.trim());
-    else localStorage.removeItem('vv:deepgram_api_key');
+  function savePiperUrl() {
     if (piperUrl.trim()) localStorage.setItem('vv:piper_server_url', piperUrl.trim());
     else localStorage.removeItem('vv:piper_server_url');
-    setSaved('Keys saved!');
+    setSaved('Saved!');
     setTimeout(() => setSaved(''), 2000);
-    window.toast?.('API keys saved.', 'ok');
+    window.toast?.('Piper server URL saved.', 'ok');
   }
 
   function saveExamDate() {
@@ -276,75 +233,20 @@ export default function SettingsPage({ onNavigate }) {
     <div className="page-shell-narrow">
       <SectionHeader title="Settings" />
 
-      {/* API Keys */}
-      <Card style={{ marginTop: 'var(--space-5)' }}>
-        <SectionHeader title="AI Provider Keys" icon={<Icon.spark size={15} />} />
-        <p className="card-row-meta" style={{ margin: 'var(--space-2) 0 var(--space-4)', lineHeight: 1.6 }}>
-          Keys are stored in your browser only. Priority: Gemini (free) → OpenRouter (free models, auto-cascade) → Groq (free, fast) → Anthropic → OpenAI.
-          Any one key is enough. <strong>Tip:</strong> paste several keys in a field (comma-separated) and the app rotates to the next one when a key hits its limit. Keys are not included in platform backups.
-        </p>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-          <Field label="Groq API Key (recommended, free)">
-            <SecretInput value={groqKey} onChange={e => setGroqKey(e.target.value)} placeholder="gsk_…" />
-            <a href="https://console.groq.com/keys" target="_blank" rel="noopener noreferrer" style={{ fontSize: 'var(--text-xs)', color: 'var(--accent)', marginTop: 3 }}>Get a free Groq key →</a>
-          </Field>
-          <Field label="Gemini API Key (free, cascades through Gemini + Gemma)">
-            <SecretInput value={geminiKey} onChange={e => setGeminiKey(e.target.value)} placeholder="AIza… (add more, comma-separated, to rotate)" />
-            <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener noreferrer" style={{ fontSize: 'var(--text-xs)', color: 'var(--accent)', marginTop: 3 }}>Get a free Gemini key →</a>
-            <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: 3, lineHeight: 1.5 }}>
-              One key tries: Gemini 2.5 Pro → 2.5 Flash → 2.5 Flash-Lite → 2.0 Flash → 2.0 Flash-Lite → Gemma 4 → Gemma 3, until one answers. Add several keys (comma-separated) to rotate when one is rate-limited.
-            </span>
-          </Field>
-          <Field label="OpenRouter API Key (free models, auto-cascade)">
-            <SecretInput value={openrouterKey} onChange={e => setOpenrouterKey(e.target.value)} placeholder="sk-or-…" />
-            <a href="https://openrouter.ai/keys" target="_blank" rel="noopener noreferrer" style={{ fontSize: 'var(--text-xs)', color: 'var(--accent)', marginTop: 3 }}>Get a free OpenRouter key →</a>
-            <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: 3, lineHeight: 1.5 }}>
-              Tries free models best-first (DeepSeek R1 → Qwen3 235B → DeepSeek V3 → Llama 3.3 70B → Nemotron 70B → Nemotron Super 49B → Qwen 2.5 72B → Llama 4 Scout → Mistral Small → Gemma 3 27B → …) until one answers.
-            </span>
-          </Field>
-          <Field label="Anthropic API Key (fallback)">
-            <SecretInput value={anthropicKey} onChange={e => setAnthropicKey(e.target.value)} placeholder="sk-ant-…" />
-          </Field>
-          <Field label="OpenAI API Key (fallback)">
-            <SecretInput value={openaiKey} onChange={e => setOpenaiKey(e.target.value)} placeholder="sk-…" />
-          </Field>
-          <div style={{ display: 'flex', gap: 'var(--space-2)', alignItems: 'center', marginTop: 'var(--space-1)' }}>
-            <Button variant="primary" onClick={saveKeys}>Save Keys</Button>
-            {saved && <span style={{ color: 'var(--success)', fontSize: 'var(--text-sm)' }}>{saved}</span>}
-          </div>
-        </div>
-      </Card>
-
-      {/* TTS Keys */}
+      {/* TTS, Listening Exercise Audio */}
       <Card style={{ marginTop: 'var(--space-4)' }}>
         <SectionHeader title="TTS, Listening Exercise Audio" icon={<Icon.mic size={15} />} />
         <p className="card-row-meta" style={{ margin: 'var(--space-2) 0 var(--space-1)', lineHeight: 1.6 }}>
-          Audio for listening exercises is generated in this order:
+          Audio for listening exercises is generated server-side. API keys are configured in the server environment.
+          The server tries providers in this order:
         </p>
         <ol style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', margin: '4px 0 16px', paddingLeft: 18, lineHeight: 1.8 }}>
-          <li><strong>ElevenLabs</strong>: highest quality (priority)</li>
-          <li><strong>Deepgram</strong>: fast fallback voice for listening practice</li>
-          <li><strong>OpenAI TTS</strong>: good quality, uses your OpenAI key from the AI section above</li>
-          <li><strong>Gemini TTS</strong>: free, uses your Gemini key from the AI section above</li>
-          <li><strong>Piper</strong>: offline/local, if server URL is set below</li>
-          <li><strong>Browser speech</strong>: always available, no key needed</li>
+          <li><strong>Camb.ai</strong> (default)</li>
+          <li><strong>ElevenLabs</strong></li>
+          <li><strong>OpenAI TTS</strong></li>
+          <li><strong>Deepgram</strong></li>
         </ol>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-          <Field label="ElevenLabs API Key (priority)">
-            <SecretInput value={elevenlabsKey} onChange={e => setElevenlabsKey(e.target.value)} placeholder="sk_…" />
-            <a href="https://elevenlabs.io/app/settings/api-keys" target="_blank" rel="noopener noreferrer" style={{ fontSize: 'var(--text-xs)', color: 'var(--accent)', marginTop: 3 }}>Get your ElevenLabs key →</a>
-          </Field>
-          <Field label="Deepgram API Key (fallback)">
-            <SecretInput value={deepgramKey} onChange={e => setDeepgramKey(e.target.value)} placeholder="dg_… or Deepgram key" />
-            <a href="https://console.deepgram.com/" target="_blank" rel="noopener noreferrer" style={{ fontSize: 'var(--text-xs)', color: 'var(--accent)', marginTop: 3 }}>Get your Deepgram key →</a>
-          </Field>
-          <div className="note-box">
-            <strong>Voice note</strong>: use one woman voice and one man voice for listening variety. The default server setup uses an ElevenLabs woman voice first, Deepgram's Aura fallback, then OpenAI <em>nova</em>. You can change voices with <code>ELEVENLABS_VOICE_ID</code>, <code>DEEPGRAM_TTS_MODEL</code>, or <code>OPENAI_TTS_VOICE</code> in the server environment.
-          </div>
-          <div className="note-box">
-            <strong>OpenAI TTS</strong>: uses your OpenAI key from the AI section above. No extra key needed.
-            Voices: <em>alloy</em> (neutral), <em>nova</em> (female), <em>onyx</em> (male). Active automatically if ElevenLabs and Deepgram are not set or fail.
-          </div>
           <Field label="Piper server URL (optional, local/offline)">
             <input
               className="input"
@@ -355,12 +257,12 @@ export default function SettingsPage({ onNavigate }) {
             />
             <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: 3, lineHeight: 1.5 }}>
               Run <code>python scripts/piper-server.py --model path/to/voice.onnx</code> on your machine.
-              Free, fully offline, no API key needed. Use one woman voice and one man voice for listening variety; Piper voices require both the <code>.onnx</code> file and matching <code>.onnx.json</code>. From your voices list, good starting points are <code>en_US-lessac-medium</code> or <code>en_US-amy-medium</code> for a US woman voice, <code>en_US-ryan-medium</code> or <code>en_US-hfc_male-medium</code> for a US man voice, <code>en_GB-southern_english_female-low</code> for a UK woman voice, and <code>en_GB-northern_english_male-medium</code> for a UK man voice.
-              Listen to samples at <a href="https://rhasspy.github.io/piper-samples" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)' }}>Piper samples</a> and download models from <a href="https://huggingface.co/rhasspy/piper-voices/tree/main" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)' }}>Piper voices</a>. Used only when ElevenLabs, Deepgram, OpenAI, and Gemini are not configured.
+              Free, fully offline, no API key needed. From your voices list, good starting points are <code>en_US-lessac-medium</code> or <code>en_US-amy-medium</code> for a US woman voice, <code>en_US-ryan-medium</code> or <code>en_US-hfc_male-medium</code> for a US man voice.
+              Listen to samples at <a href="https://rhasspy.github.io/piper-samples" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)' }}>Piper samples</a> and download models from <a href="https://huggingface.co/rhasspy/piper-voices/tree/main" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)' }}>Piper voices</a>.
             </span>
           </Field>
           <div style={{ display: 'flex', gap: 'var(--space-2)', alignItems: 'center' }}>
-            <Button variant="primary" onClick={saveKeys}>Save TTS Keys</Button>
+            <Button variant="primary" onClick={savePiperUrl}>Save Piper URL</Button>
             {saved && <span style={{ color: 'var(--success)', fontSize: 'var(--text-sm)' }}>{saved}</span>}
           </div>
         </div>

@@ -2,6 +2,7 @@
  * tool-inbox.jsx — Teacher inbox workspace
  */
 import { useMemo, useState, useEffect } from 'react';
+import clsx from 'clsx';
 import { SectionHeader, Avatar, Icon } from '../components/shared.jsx';
 import { Button } from '../components/ui/Button.jsx';
 import { Card } from '../components/ui/Card.jsx';
@@ -148,10 +149,10 @@ export default function ToolInbox({ students = [], onNavigate, workspaceQuery = 
       <Card className="card-p-3 mb-2">
         <div className="filter-bar">
           <div className="flex gap-2">
-            <button type="button" onClick={() => setTab('inbox')} className={`tab-btn${tab === 'inbox' ? ' tab-btn--active' : ''}`}>
+             <button type="button" onClick={() => setTab('inbox')} className={clsx('tab-btn', tab === 'inbox' && 'tab-btn--active')}>
               Inbox ({inboxMessages.length})
             </button>
-            <button type="button" onClick={() => setTab('outbox')} className={`tab-btn${tab === 'outbox' ? ' tab-btn--active' : ''}`}>
+             <button type="button" onClick={() => setTab('outbox')} className={clsx('tab-btn', tab === 'outbox' && 'tab-btn--active')}>
               Outbox ({outboxMessages.length})
             </button>
           </div>

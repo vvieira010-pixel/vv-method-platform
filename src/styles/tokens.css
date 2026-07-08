@@ -118,8 +118,8 @@
   --space-12: 4.5rem;
   --space-16: 6rem;
   
-  --transition-base: all 0.25s cubic-bezier(0.32, 0.72, 0, 1);
-  --transition-fast: all 0.18s cubic-bezier(0.32, 0.72, 0, 1);
+  --transition-base: 0.25s cubic-bezier(0.32, 0.72, 0, 1);
+  --transition-fast: 0.18s cubic-bezier(0.32, 0.72, 0, 1);
 
   /* ── Semantic composite tokens (light-mode defaults) ──────────── */
   --accent-subtle: rgba(var(--primary-rgb), 0.08);  /* hover/active backgrounds */

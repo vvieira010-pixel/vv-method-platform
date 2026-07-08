@@ -123,7 +123,7 @@ export default function HomeworkCreate({ diagnosisId, studentId, students, onNav
 
   useEffect(() => {
     let cancelled = false;
-    getLibraryExercises().then(list => { if (!cancelled) setLibraryExercises(list); }).catch(() => {});
+    getLibraryExercises().then(list => { if (!cancelled) setLibraryExercises(list); }).catch(e => console.warn('[homework-create] failed to load library:', e));
     return () => { cancelled = true; };
   }, [libVersion]);
 

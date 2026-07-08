@@ -137,7 +137,7 @@ export default function OrderSentences({ exercise, onComplete }) {
                   <button
                     onClick={() => move(pos, -1)}
                     disabled={pos === 0}
-                    aria-label="Move up"
+                    aria-label={`Move "${sentences[origIdx].slice(0, 20)}..." up`}
                     style={{
                       width: 44, height: 36, border: '1px solid var(--border)', borderRadius: 5,
                       background: pos === 0 ? 'var(--divider)' : 'var(--surface)', cursor: pos === 0 ? 'not-allowed' : 'pointer',
@@ -148,7 +148,7 @@ export default function OrderSentences({ exercise, onComplete }) {
                   <button
                     onClick={() => move(pos, 1)}
                     disabled={pos === order.length - 1}
-                    aria-label="Move down"
+                    aria-label={`Move "${sentences[origIdx].slice(0, 20)}..." down`}
                     style={{
                       width: 44, height: 36, border: '1px solid var(--border)', borderRadius: 5,
                       background: pos === order.length - 1 ? 'var(--divider)' : 'var(--surface)',
