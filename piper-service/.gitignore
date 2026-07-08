@@ -1,0 +1,12 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# Model files — too big to commit (>100 MB)
+models/*.onnx
+models/*.onnx.json
+
+# Local audio output
+*.wav
+!**/test_fixtures/*.wav

@@ -141,6 +141,26 @@ class DeepgramProvider extends TtsProvider {
   }
 }
 
+class PiperLocalProvider extends TtsProvider {
+  getId() { return 'piper-local'; }
+  _isEnabled() { return Boolean(env('PIPER_LOCAL_URL')); }
+  async generate(text) {
+    const base = env('PIPER_LOCAL_URL');
+    if (!base) throw new Error('Piper local URL is not configured.');
+    const g = this._gender === 'male' ? 'male' : 'female';
+    const r = await fetchT(`${base.replace(/\/$/, '')}/synthesize`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text, gender: g }),
+    }, 30000);
+    if (!r.ok) {
+      const e = await r.json().catch(() => ({}));
+      throw new Error(e.detail || `Piper local error ${r.status}`);
+    }
+    return { bytes: Buffer.from(await r.arrayBuffer()), contentType: r.headers.get('content-type') || 'audio/wav' };
+  }
+}
+
 class TtsService {
   constructor() {
     this.providers = [
@@ -148,6 +168,7 @@ class TtsService {
       new DeepgramProvider(),
       new CambAiProvider(),
       new OpenAiProvider(),
+      new PiperLocalProvider(),
     ];
   }
 
@@ -160,6 +181,7 @@ class TtsService {
       ? this.providers.filter(p => p.getId() === preferredProviderId)
       : this.providers;
     for (const provider of attempts) {
+      if (provider.getId() === 'piper-local' && !provider._isEnabled()) continue;
       try {
         return await provider.generate(text);
       } catch (e) {
