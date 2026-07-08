@@ -54,7 +54,7 @@ export default function SpeakingSection({ onComplete }) {
 
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
       const msg = 'Your browser does not support audio recording. Please use a modern browser and ensure you are using HTTPS.';
-      window.toast?.(msg, 'warn') || alert(msg);
+      window.toast?.(msg, 'warn') || window.alert(msg);
       setPhase('done');
       return;
     }
@@ -88,7 +88,7 @@ export default function SpeakingSection({ onComplete }) {
     } catch (e) {
       console.error('[SpeakingSection] startSpeaking failed:', e);
       const msg = 'Microphone access denied or not available. Please check your browser permissions.';
-      window.toast?.(msg, 'warn') || alert(msg);
+      window.toast?.(msg, 'warn') || window.alert(msg);
       setPhase('done');
     }
   }, [currentIdx, task.speakSeconds]);

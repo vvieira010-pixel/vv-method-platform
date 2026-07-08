@@ -1,0 +1,524 @@
+{
+  "schemaVersion": "2.0",
+  "contentType": "dialogue_bank",
+  "title": "Dialogue Practice Bank",
+  "subtitle": "B2-level conversations between a woman and a man on everyday topics",
+  "level": "B2",
+  "modules": [
+    {
+      "id": "dialogue_practice",
+      "title": "Dialogue Practice: Woman & Man Conversations",
+      "levelRange": "B2",
+      "skill": "listening",
+      "moduleType": "dialogue_set",
+      "items": [
+        {
+          "id": "DL01",
+          "title": "Urban Planning",
+          "script": [
+            { "speaker": "A", "text": "Did you see the new urban plan for the city centre?" },
+            { "speaker": "B", "text": "I did. They want to reduce car traffic and add more bike lanes." },
+            { "speaker": "A", "text": "That sounds good, but shop owners are worried customers won't come." },
+            { "speaker": "B", "text": "That's what they said in other cities, but foot traffic actually increased." }
+          ],
+          "questions": [
+            {
+              "stem": "What concern do shop owners have about the urban plan?",
+              "options": [
+                "Bike lanes are too expensive to build.",
+                "Fewer customers will visit their shops.",
+                "The construction will take too long.",
+                "They prefer more parking spaces."
+              ],
+              "correct": 1,
+              "explanation": "The woman says shop owners are worried customers won't come if car traffic is reduced."
+            }
+          ]
+        },
+        {
+          "id": "DL02",
+          "title": "Careers Workshop",
+          "script": [
+            { "speaker": "A", "text": "Are you going to the careers workshop this afternoon?" },
+            { "speaker": "B", "text": "I was planning to, but they moved it to next Thursday." },
+            { "speaker": "A", "text": "Oh really? I was about to leave for the hall." },
+            { "speaker": "B", "text": "Yeah, the guest speaker missed her flight, so they rescheduled." }
+          ],
+          "questions": [
+            {
+              "stem": "Why was the careers workshop rescheduled?",
+              "options": [
+                "The hall was already booked.",
+                "The guest speaker missed her flight.",
+                "Not enough students signed up.",
+                "The organiser was sick."
+              ],
+              "correct": 1,
+              "explanation": "The man says the guest speaker missed her flight, so they moved it to next Thursday."
+            }
+          ]
+        },
+        {
+          "id": "DL03",
+          "title": "Printer Handouts",
+          "script": [
+            { "speaker": "A", "text": "Did you manage to print the handouts for the meeting?" },
+            { "speaker": "B", "text": "I tried, but the printer is completely out of paper." },
+            { "speaker": "A", "text": "That's frustrating. Did you check the supply cupboard?" },
+            { "speaker": "B", "text": "Empty too. I ended up emailing everyone a digital copy instead." }
+          ],
+          "questions": [
+            {
+              "stem": "How did the man solve the printing problem?",
+              "options": [
+                "He borrowed paper from another office.",
+                "He bought paper from the shop downstairs.",
+                "He emailed everyone a digital copy.",
+                "He postponed the meeting."
+              ],
+              "correct": 2,
+              "explanation": "The man says he emailed everyone a digital copy instead of printing handouts."
+            }
+          ]
+        },
+        {
+          "id": "DL04",
+          "title": "Old Phone",
+          "script": [
+            { "speaker": "A", "text": "I can't believe your phone still works after all these years." },
+            { "speaker": "B", "text": "Barely. The battery dies by midday, and the screen is cracked." },
+            { "speaker": "A", "text": "Why don't you just get a new one?" },
+            { "speaker": "B", "text": "I'm waiting for next month when the newest model goes on sale." }
+          ],
+          "questions": [
+            {
+              "stem": "What will the woman probably do next month?",
+              "options": [
+                "Repair her current phone.",
+                "Buy the newest phone model.",
+                "Switch to a different phone brand.",
+                "Wait for the price to drop further."
+              ],
+              "correct": 1,
+              "explanation": "The woman is waiting for next month when the newest model goes on sale."
+            }
+          ]
+        },
+        {
+          "id": "DL05",
+          "title": "Noisy Window",
+          "script": [
+            { "speaker": "A", "text": "Could you close the window? The traffic noise is really bothering me." },
+            { "speaker": "B", "text": "I'd rather leave it open — it's quite warm in here." },
+            { "speaker": "A", "text": "I understand, but I can barely concentrate on my work." },
+            { "speaker": "B", "text": "Alright, I'll close it. We can open it again later when it cools down." }
+          ],
+          "questions": [
+            {
+              "stem": "What does the man initially want to do?",
+              "options": [
+                "Keep the window open.",
+                "Move to a quieter room.",
+                "Close the window partway.",
+                "Finish work outside."
+              ],
+              "correct": 0,
+              "explanation": "The man says he'd rather leave it open because it's warm."
+            }
+          ]
+        },
+        {
+          "id": "DL06",
+          "title": "Academic Advisor",
+          "script": [
+            { "speaker": "A", "text": "How did your meeting with the academic advisor go?" },
+            { "speaker": "B", "text": "Really well. She helped me choose courses for next semester." },
+            { "speaker": "A", "text": "Did you ask her about the internship programme?" },
+            { "speaker": "B", "text": "Yes, and she said I should apply by the end of this month." }
+          ],
+          "questions": [
+            {
+              "stem": "What did the woman learn about the internship programme?",
+              "options": [
+                "It was cancelled for this year.",
+                "She needs more credits to apply.",
+                "She should apply by the end of the month.",
+                "The advisor will nominate her directly."
+              ],
+              "correct": 2,
+              "explanation": "The woman says the advisor told her to apply by the end of this month."
+            }
+          ]
+        },
+        {
+          "id": "DL07",
+          "title": "Bike Rental",
+          "script": [
+            { "speaker": "A", "text": "I'm thinking of renting a bike to get around the city." },
+            { "speaker": "B", "text": "That's a good idea. There's a rental shop near the station." },
+            { "speaker": "A", "text": "Do you know how much it costs per day?" },
+            { "speaker": "B", "text": "Around fifteen dollars, and they include a helmet and lock." }
+          ],
+          "questions": [
+            {
+              "stem": "What does the man say about the bike rental?",
+              "options": [
+                "It is cheaper for weekly rentals.",
+                "It includes a helmet and lock.",
+                "It requires a deposit.",
+                "It is located near the park."
+              ],
+              "correct": 1,
+              "explanation": "The man says the rental includes a helmet and lock."
+            }
+          ]
+        },
+        {
+          "id": "DL08",
+          "title": "Apartment Roommates",
+          "script": [
+            { "speaker": "A", "text": "How are things going with your new roommates?" },
+            { "speaker": "B", "text": "Mostly good, but one of them never does the dishes." },
+            { "speaker": "A", "text": "Have you talked to them about it?" },
+            { "speaker": "B", "text": "I left a note on the fridge. If it doesn't improve, I'll bring it up directly." }
+          ],
+          "questions": [
+            {
+              "stem": "What has the woman done about the dishes problem so far?",
+              "options": [
+                "She spoke to the roommate directly.",
+                "She asked the landlord to intervene.",
+                "She left a note on the fridge.",
+                "She decided to let it go."
+              ],
+              "correct": 2,
+              "explanation": "The woman says she left a note on the fridge about the dishes."
+            }
+          ]
+        },
+        {
+          "id": "DL09",
+          "title": "Museum Volunteer",
+          "script": [
+            { "speaker": "A", "text": "I heard you started volunteering at the museum. How is it?" },
+            { "speaker": "B", "text": "It's fascinating. I'm helping them catalogue old photographs." },
+            { "speaker": "A", "text": "That sounds like detailed work. How many hours a week do you do?" },
+            { "speaker": "B", "text": "Only six, but I wish I had more time to spend there." }
+          ],
+          "questions": [
+            {
+              "stem": "What does the woman do as a museum volunteer?",
+              "options": [
+                "She gives guided tours to visitors.",
+                "She helps catalogue old photographs.",
+                "She organises special exhibitions.",
+                "She works at the ticket counter."
+              ],
+              "correct": 1,
+              "explanation": "The woman says she is helping them catalogue old photographs."
+            }
+          ]
+        },
+        {
+          "id": "DL10",
+          "title": "Water Service",
+          "script": [
+            { "speaker": "A", "text": "The water in my apartment has been brown all morning." },
+            { "speaker": "B", "text": "That sounds like a pipe issue. Did you call the building manager?" },
+            { "speaker": "A", "text": "I did, but he said several units are having the same problem." },
+            { "speaker": "B", "text": "There must be maintenance work on the mainline. It should clear by evening." }
+          ],
+          "questions": [
+            {
+              "stem": "What does the man suspect is causing the water problem?",
+              "options": [
+                "A leak in the woman's apartment.",
+                "Maintenance work on the main water line.",
+                "The building manager turned off the water.",
+                "A storm damaged the pipes."
+              ],
+              "correct": 1,
+              "explanation": "The man suspects maintenance work on the mainline is causing the issue."
+            }
+          ]
+        },
+        {
+          "id": "DL11",
+          "title": "Nurse Handoff",
+          "script": [
+            { "speaker": "A", "text": "I'm taking over the night shift. How is the patient in room 204?" },
+            { "speaker": "B", "text": "Stable, but he had a fever spike around two this afternoon." },
+            { "speaker": "A", "text": "Did the doctor adjust his medication?" },
+            { "speaker": "B", "text": "Yes, and his temperature has been normal since about four o'clock." }
+          ],
+          "questions": [
+            {
+              "stem": "What change occurred with the patient's condition?",
+              "options": [
+                "He was moved to a different room.",
+                "He had a fever spike in the afternoon.",
+                "He was discharged from the hospital.",
+                "He refused to take his medication."
+              ],
+              "correct": 1,
+              "explanation": "The nurse reports the patient had a fever spike around two in the afternoon."
+            }
+          ]
+        },
+        {
+          "id": "DL12",
+          "title": "Walking Podcast",
+          "script": [
+            { "speaker": "A", "text": "What are you listening to while you walk?" },
+            { "speaker": "B", "text": "A podcast about urban farming. It's really interesting." },
+            { "speaker": "A", "text": "I've been meaning to get into podcasts, but I never know where to start." },
+            { "speaker": "B", "text": "Try this one — I can send you a link. It's only twenty minutes per episode." }
+          ],
+          "questions": [
+            {
+              "stem": "What does the man offer to do?",
+              "options": [
+                "Walk with the woman tomorrow.",
+                "Recommend a different podcast.",
+                "Send the woman a link to the podcast.",
+                "Lend the woman his headphones."
+              ],
+              "correct": 2,
+              "explanation": "The man offers to send the woman a link to the podcast."
+            }
+          ]
+        },
+        {
+          "id": "DL13",
+          "title": "Office Relocation",
+          "script": [
+            { "speaker": "A", "text": "Have you heard about the office relocation?" },
+            { "speaker": "B", "text": "Yes, we're moving to the third floor next month." },
+            { "speaker": "A", "text": "I hope the new space has better lighting. It's so dark in here." },
+            { "speaker": "B", "text": "Apparently the new office has large windows and a view of the river." }
+          ],
+          "questions": [
+            {
+              "stem": "What does the woman complain about in the current office?",
+              "options": [
+                "It is too noisy.",
+                "It has poor lighting.",
+                "It is too small.",
+                "It is far from public transport."
+              ],
+              "correct": 1,
+              "explanation": "The woman says the lighting in the current office is dark."
+            }
+          ]
+        },
+        {
+          "id": "DL14",
+          "title": "Guest Lecture",
+          "script": [
+            { "speaker": "A", "text": "Are you going to the guest lecture on climate policy tonight?" },
+            { "speaker": "B", "text": "I really want to, but I have a group project meeting at the same time." },
+            { "speaker": "A", "text": "That's too bad. The speaker is a well-known environmental scientist." },
+            { "speaker": "B", "text": "I know. I'll try to watch the recording if they post it online." }
+          ],
+          "questions": [
+            {
+              "stem": "Why can't the man attend the guest lecture?",
+              "options": [
+                "He has to study for an exam.",
+                "He has a group project meeting.",
+                "He is not interested in the topic.",
+                "He has to work late."
+              ],
+              "correct": 1,
+              "explanation": "The man says he has a group project meeting at the same time as the lecture."
+            }
+          ]
+        },
+        {
+          "id": "DL15",
+          "title": "Museum Closure",
+          "script": [
+            { "speaker": "A", "text": "I tried to visit the museum today, but it was closed." },
+            { "speaker": "B", "text": "They're closed on Mondays for maintenance. It says so on their website." },
+            { "speaker": "A", "text": "I should have checked before walking all the way there." },
+            { "speaker": "B", "text": "At least it's free entry on the first Sunday of every month." }
+          ],
+          "questions": [
+            {
+              "stem": "Why was the museum closed?",
+              "options": [
+                "It is being renovated.",
+                "It is closed on Mondays for maintenance.",
+                "There is a staff shortage today.",
+                "It is closed for a private event."
+              ],
+              "correct": 1,
+              "explanation": "The man says the museum is closed on Mondays for maintenance."
+            }
+          ]
+        },
+        {
+          "id": "DL16",
+          "title": "Safety Procedures",
+          "script": [
+            { "speaker": "A", "text": "We need to review the safety procedures before the lab opens." },
+            { "speaker": "B", "text": "I already read the manual, but a quick recap would help." },
+            { "speaker": "A", "text": "The main thing is to wear goggles at all times and know where the fire exit is." },
+            { "speaker": "B", "text": "And we should never leave chemicals unattended. I remember that one." }
+          ],
+          "questions": [
+            {
+              "stem": "What is the woman's main safety instruction?",
+              "options": [
+                "Keep the lab door locked.",
+                "Wear goggles and know the fire exit location.",
+                "Read the manual before each session.",
+                "Store chemicals in labelled containers."
+              ],
+              "correct": 1,
+              "explanation": "The woman says the main thing is to wear goggles at all times and know where the fire exit is."
+            }
+          ]
+        },
+        {
+          "id": "DL17",
+          "title": "Bird Sleep",
+          "script": [
+            { "speaker": "A", "text": "Did you know that some birds sleep while they're flying?" },
+            { "speaker": "B", "text": "Really? How is that possible without crashing?" },
+            { "speaker": "A", "text": "They shut down one half of their brain at a time. It's called unihemispheric sleep." },
+            { "speaker": "B", "text": "That's amazing. I wish I could do that during long study sessions." }
+          ],
+          "questions": [
+            {
+              "stem": "What does the woman explain about bird sleep?",
+              "options": [
+                "Birds sleep more during winter.",
+                "Birds sleep with one half of their brain at a time.",
+                "Birds only sleep on the ground.",
+                "Birds need less sleep than mammals."
+              ],
+              "correct": 1,
+              "explanation": "The woman explains that birds shut down one half of their brain at a time."
+            }
+          ]
+        },
+        {
+          "id": "DL18",
+          "title": "Stress Immune",
+          "script": [
+            { "speaker": "A", "text": "I've been getting sick a lot lately. I wonder why." },
+            { "speaker": "B", "text": "You've been under a lot of stress with your thesis deadline." },
+            { "speaker": "A", "text": "Does stress really weaken your immune system that much?" },
+            { "speaker": "B", "text": "Absolutely. Chronic stress raises cortisol levels, which lowers your body's defences." }
+          ],
+          "questions": [
+            {
+              "stem": "What does the man say about the link between stress and illness?",
+              "options": [
+                "Stress only affects mental health, not physical health.",
+                "Chronic stress raises cortisol levels, weakening defences.",
+                "Exercise can completely prevent stress-related illness.",
+                "Getting sick is unrelated to stress levels."
+              ],
+              "correct": 1,
+              "explanation": "The man explains that chronic stress raises cortisol levels, which lowers the body's defences."
+            }
+          ]
+        },
+        {
+          "id": "DL19",
+          "title": "Printing Press",
+          "script": [
+            { "speaker": "A", "text": "We're studying the printing press in my history class. It's fascinating." },
+            { "speaker": "B", "text": "Invented by Gutenberg, right? It revolutionised access to books." },
+            { "speaker": "A", "text": "Exactly. Before that, books were copied by hand and only the wealthy could afford them." },
+            { "speaker": "B", "text": "It's hard to imagine a world without printed books now." }
+          ],
+          "questions": [
+            {
+              "stem": "According to the conversation, why was the printing press so important?",
+              "options": [
+                "It made books cheaper and more accessible.",
+                "It was the first machine to use ink.",
+                "It helped authors write faster.",
+                "It eliminated the need for libraries."
+              ],
+              "correct": 0,
+              "explanation": "The woman says before the printing press, books were copied by hand and only the wealthy could afford them, implying it made books more accessible."
+            }
+          ]
+        },
+        {
+          "id": "DL20",
+          "title": "Cooking Class",
+          "script": [
+            { "speaker": "A", "text": "I signed up for a cooking class next weekend." },
+            { "speaker": "B", "text": "That sounds fun. What kind of cuisine?" },
+            { "speaker": "A", "text": "Italian. We're learning to make pasta from scratch and a classic tomato sauce." },
+            { "speaker": "B", "text": "Can I come with you? I've always wanted to learn homemade pasta." }
+          ],
+          "questions": [
+            {
+              "stem": "What will the cooking class focus on?",
+              "options": [
+                "French pastry techniques.",
+                "Italian pasta and tomato sauce.",
+                "Asian stir-fry dishes.",
+                "Basic knife skills."
+              ],
+              "correct": 1,
+              "explanation": "The woman says they are learning to make pasta from scratch and a classic tomato sauce."
+            }
+          ]
+        },
+        {
+          "id": "DL21",
+          "title": "Online Ordering",
+          "script": [
+            { "speaker": "A", "text": "My online order still hasn't arrived, and it's been two weeks." },
+            { "speaker": "B", "text": "Did you get a tracking number when you placed the order?" },
+            { "speaker": "A", "text": "No, I chose the standard shipping option. I'm starting to regret it." },
+            { "speaker": "B", "text": "You should contact customer support. They might offer a refund or replacement." }
+          ],
+          "questions": [
+            {
+              "stem": "What does the man advise the woman to do?",
+              "options": [
+                "Cancel the order and buy from another store.",
+                "Contact customer support about the situation.",
+                "Wait another week for the delivery.",
+                "Choose express shipping next time."
+              ],
+              "correct": 1,
+              "explanation": "The man advises the woman to contact customer support for a refund or replacement."
+            }
+          ]
+        },
+        {
+          "id": "DL22",
+          "title": "Urban Gardens",
+          "script": [
+            { "speaker": "A", "text": "Have you seen the new community garden on Fifth Street?" },
+            { "speaker": "B", "text": "Yes, it's lovely. They turned an empty lot into vegetable beds." },
+            { "speaker": "A", "text": "I heard local residents can rent a plot for a small fee." },
+            { "speaker": "B", "text": "Exactly. It's a great way to grow fresh food and meet neighbours." }
+          ],
+          "questions": [
+            {
+              "stem": "What is special about the new community garden?",
+              "options": [
+                "It is run by a professional landscaping company.",
+                "It was built on an empty lot and residents can rent plots.",
+                "It only grows flowers, not vegetables.",
+                "It is free for anyone to use without registration."
+              ],
+              "correct": 1,
+              "explanation": "The garden was created on an empty lot, and residents can rent a plot for a small fee."
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

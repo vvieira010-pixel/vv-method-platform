@@ -6,14 +6,17 @@ import { getLibraryExercises, deleteLibraryExercise } from '../lib/exercise-libr
 import { getB2Modules, getB2ModulesWithSupabase } from '../lib/met-b2-bank.js';
 import { getLifestyleModules } from '../lib/lifestyle-pack.js';
 import { getDeepResearchModules } from '../lib/met-b2-exercises.js';
+import { getDialogueModules } from '../lib/dialogue-bank.js';
 import { EX_TYPES, exercisePreview } from '../lib/exercise-types.js';
 import { ExTypeBadge } from '../components/exercise-editor.jsx';
 
 const PACK_TABS = [
   { id: 'library', label: 'My Library' },
+  { id: 'practice_studio', label: 'Practice Studio' },
   { id: 'b2', label: 'MET B2 Pack' },
   { id: 'lifestyle', label: 'Everyday English' },
   { id: 'research', label: 'Extended Practice' },
+  { id: 'dialogues', label: 'Dialogue Practice' },
 ];
 
 const SKILL_ORDER = ['speaking', 'listening', 'reading', 'writing', 'grammar', 'vocabulary', 'pronunciation', 'test strategy'];
@@ -79,6 +82,19 @@ export default function ExercisesPage({ onNavigate }) {
         sub="Browse packs and saved exercises. Assign via Create Homework."
         action={<Button variant="primary" onClick={() => onNavigate('homework:create')}><Icon.plus size={14} /> Create Homework</Button>}
       />
+
+      <Card className="card-p-3" style={{ marginBottom: 'var(--space-3)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--space-3)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <Icon.practice size={28} />
+          <div>
+            <div style={{ fontWeight: 700, fontSize: 'var(--text-md)', color: 'var(--text)' }}>MET Mock Test 1</div>
+            <div className="card-row-meta">Full-length practice exam · ~2 h 35 min</div>
+          </div>
+        </div>
+        <Button variant="primary" onClick={() => onNavigate('library:mock-test')}>
+          <Icon.practice size={14} /> Start Mock Test
+        </Button>
+      </Card>
 
       <nav className="tabs-line">
         {PACK_TABS.map(t => (
@@ -170,9 +186,11 @@ export default function ExercisesPage({ onNavigate }) {
         </Card>
       )}
 
-      {tab === 'b2' && <PackTab title="MET B2 Exercise Pack" modules={b2Modules} onNavigate={onNavigate} />}
-      {tab === 'lifestyle' && <PackTab title="Everyday English Pack" modules={getLifestyleModules()} onNavigate={onNavigate} />}
-      {tab === 'research' && <PackTab title="Extended Practice Pack" modules={getDeepResearchModules()} onNavigate={onNavigate} />}
+       {tab === 'b2' && <PackTab title="MET B2 Exercise Pack" modules={b2Modules} onNavigate={onNavigate} />}
+       {tab === 'practice_studio' && <PackTab title="Practice Studio (Listening Focus)" modules={getB2Modules().filter(m => m.skill === 'listening')} onNavigate={onNavigate} />}
+       {tab === 'lifestyle' && <PackTab title="Everyday English Pack" modules={getLifestyleModules()} onNavigate={onNavigate} />}
+       {tab === 'research' && <PackTab title="Extended Practice Pack" modules={getDeepResearchModules()} onNavigate={onNavigate} />}
+       {tab === 'dialogues' && <PackTab title="Dialogue Practice Bank" modules={getDialogueModules()} onNavigate={onNavigate} />}
     </div>
   );
 }

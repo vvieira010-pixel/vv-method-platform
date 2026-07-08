@@ -1,11 +1,10 @@
-import { shadeColor, softColor } from './lib/color-utils.js';
-import { useState, useEffect, lazy, Suspense } from 'react'; // Removed Suspense, it's used by the renderer
+import { useState, useEffect, lazy, Suspense } from 'react';
 import LoginScreen from './pages/login.jsx';
 import ErrorBoundary from './components/error-boundary.jsx';
 import { logError } from './lib/error-logger.js';
-import { TweaksPanel, TweakSection, TweakRadio, TweakColor, TweakToggle } from './components/tweaks-panel.jsx';
 import { Icon, Shell } from './components/shared.jsx';
 import CommandPalette from './components/CommandPalette.jsx';
+import { ToastHost } from './lib/toast-host.jsx';
 const getStudentsData = () => import('./data/students.jsx').then(m => m.STUDENTS);
 import { seedStudentsIfEmpty, getStudents, requestInboxNotificationPermission } from './lib/workflow-roster.js';
 import { getAllSubmissions } from './lib/workflow.js';
@@ -50,6 +49,7 @@ const MockTestPage      = lazyWithRetry(() => import('./pages/mock-test.jsx'));
 const MockTestResults   = lazyWithRetry(() => import('./pages/mock-test-results.jsx'));
 const TeacherEvaluationPage = lazyWithRetry(() => import('./pages/teacher-evaluation.jsx'));
 const MockTestEvalPage = lazyWithRetry(() => import('./pages/mock-test-eval.jsx'));
+const WritingPracticePage = lazyWithRetry(() => import('./pages/writing-practice.jsx'));
 
 export default function App() {
   const [auth, setAuth] = useState(null);
@@ -72,15 +72,14 @@ export default function App() {
   const [isPaletteOpen, setIsPaletteOpen] = useState(false);
   // Sub-view params: { studentId?, classEventId?, diagnosisId?, homeworkId?, submissionId? }
   const [viewParams, setViewParams] = useState({});
-  const [tweaks, setTweaksState] = useState(() => ({
-    cardStyle: 'bordered',
-    accent: '#148891',
-    darkMode: false,
-    ...window.TWEAK_DEFAULTS,
-  }));
+  const [darkMode, setDarkMode] = useState(() => window.TWEAK_DEFAULTS?.darkMode === true);
   const [students, setStudents] = useState([]);
   const [pendingSubmissions, setPendingSubmissions] = useState(0);
-  const [inboxUnread, setInboxUnread] = useState(0);
+
+  const workflowActive = view.startsWith('diagnostics:create') ? 'diagnose'
+    : view.startsWith('homework:create') ? 'homework'
+    : view.startsWith('submissions:review') ? 'feedback'
+    : null;
 
   // ── Supabase auth: handle implicit-flow hash redirect + restore stored session ──
   useEffect(() => {
@@ -242,40 +241,9 @@ export default function App() {
     return () => window.removeEventListener('vv:students-updated', reload);
   }, []);
 
-   // Inbox unread badge: poll every 15s + react to events
-
   useEffect(() => {
-    const check = () => {
-      const v = Number(localStorage.getItem('vv:inbox_unread') || 0);
-      setInboxUnread(Number.isFinite(v) && v > 0 ? v : 0);
-    };
-    check();
-    const interval = setInterval(check, 15000);
-    window.addEventListener('vv:inbox-unread-changed', check);
-    window.addEventListener('storage', check);
-    return () => {
-      clearInterval(interval);
-      window.removeEventListener('vv:inbox-unread-changed', check);
-      window.removeEventListener('storage', check);
-    };
-  }, []);
-
-  useEffect(() => {
-    document.documentElement.setAttribute('data-cards', tweaks.cardStyle);
-    document.documentElement.setAttribute('data-theme', tweaks.darkMode ? 'dark' : 'light');
-    document.documentElement.style.setProperty('--accent', tweaks.accent);
-    document.documentElement.style.setProperty('--primary', shadeColor(tweaks.accent, -22));
-    document.documentElement.style.setProperty('--accent-soft', softColor(tweaks.accent));
-  }, [tweaks]);
-
-  useEffect(() => {
-    window.vvGo = (target, params = {}) => {
-      setView(target);
-      setViewParams(params);
-    };
-    return () => { delete window.vvGo; };
-  }, []);
-
+    document.documentElement.setAttribute('data-theme', darkMode ? 'dark' : 'light');
+  }, [darkMode]);
 
   function parseHash(hash) {
     const h = (hash || '').replace(/^#/, '');
@@ -304,6 +272,11 @@ export default function App() {
     setView(target);
     setViewParams(params);
   };
+  const onWorkflowStage = (stageId) => {
+    if (stageId === 'diagnose') navigate('diagnostics:create');
+    else if (stageId === 'homework') navigate('homework:create');
+    else if (stageId === 'feedback') navigate('submissions:review');
+  };
 
   const paletteActions = [
     { id: 'dashboard', label: 'Today', target: 'dashboard', icon: <Icon.home size={16} />, keywords: ['home', 'today', 'main'] },
@@ -316,7 +289,9 @@ export default function App() {
     { id: 'settings', label: 'Settings', target: 'settings', icon: <Icon.settings size={16} />, keywords: ['config', 'profile'] },
     { id: 'errors', label: 'Error Bank', target: 'diagnostics:errors', icon: <Icon.warning size={16} />, keywords: ['mistakes', 'bank'] },
     { id: 'mock-test-eval', label: 'Question Evaluator', target: 'mock-test-eval', icon: <Icon.diagnose size={16} />, keywords: ['mock test', 'questions', 'evaluate', 'analysis'] },
+    { id: 'mock-test-results', label: 'Mock Test Results', target: 'mock-test-results', icon: <Icon.practice size={16} />, keywords: ['mock test', 'submissions', 'results', 'scores'] },
     { id: 'inbox', label: 'Inbox', target: 'inbox', icon: <Icon.inbox size={16} />, keywords: ['messages', 'notifications'] },
+    { id: 'writing-practice', label: 'Writing Practice', target: 'library:writing', icon: <Icon.doc size={16} />, keywords: ['writing', 'met', 'essay', 'grammar', 'practice'] },
   ];
 
   const executePaletteAction = (action) => {
@@ -329,11 +304,21 @@ export default function App() {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault();
         setIsPaletteOpen(prev => !prev);
+        return;
+      }
+
+      if (auth?.role === 'teacher' && !isPaletteOpen) {
+        if (e.target.closest('input, textarea, [contenteditable]')) return;
+        const key = e.key.toLowerCase();
+        if (key === 'd') { navigate('diagnostics'); }
+        else if (key === 'h') { navigate('homework'); }
+        else if (key === 'r') { navigate('submissions'); }
+        else if (key === 's') { navigate('students'); }
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  }, [auth, isPaletteOpen, navigate]);
 
   // Restore view from hash on back/forward navigation
   useEffect(() => {
@@ -365,11 +350,7 @@ export default function App() {
     if (main) { main.setAttribute('tabindex', '-1'); main.focus({ preventScroll: true }); }
   }, [view]);
 
-  const setTweak = (key, value) => {
-    const next = { ...tweaks, [key]: value };
-    setTweaksState(next);
-    window.parent.postMessage({ type: '__edit_mode_set_keys', edits: { [key]: value } }, getSafeOrigin());
-  };
+  const toggleDarkMode = () => setDarkMode(d => !d);
 
   const handleSignIn = (payload) => setAuth(payload);
   const handleSignOut = () => {
@@ -411,11 +392,12 @@ export default function App() {
   const teacherTabs = [
     { id: 'dashboard',   label: 'Today',        icon: <Icon.home size={16} /> },
     { id: 'students',    label: 'Students',     icon: <Icon.student size={16} /> },
-    { id: 'calendar',    label: 'Calendar',     icon: <Icon.calendar size={16} />, badge: inboxUnread },
+    { id: 'calendar',    label: 'Calendar',     icon: <Icon.calendar size={16} /> },
     { id: 'diagnostics', label: 'Diagnose',     icon: <Icon.diagnose size={16} /> },
     { id: 'homework',    label: 'Homework',     icon: <Icon.homework size={16} /> },
     { id: 'submissions', label: 'Review',       icon: <Icon.doc size={16} />,     badge: pendingSubmissions || 0 },
     { id: 'library',     label: 'Resources',    icon: <Icon.book size={16} /> },
+    { id: 'mock-test-results', label: 'Mock Tests', icon: <Icon.practice size={16} /> },
   ];
 
   const rightSlot = (
@@ -431,7 +413,7 @@ export default function App() {
         <Icon.settings size={15} />
       </button>
       <button type="button" onClick={handleSignOut} className="shell-settings-btn" aria-label="Sign out" title="Sign out">
-        <Icon.close size={14} />
+        <Icon.arrowL size={14} />
       </button>
     </div>
   );
@@ -440,7 +422,7 @@ export default function App() {
     <>
       <OfflineBar />
       <a href="#teacher-main" className="skip-nav">Skip to content</a>
-      <Shell tabs={teacherTabs} active={view} onTab={(id) => navigate(id)} rightSlot={rightSlot}>
+      <Shell tabs={teacherTabs} active={view} onTab={(id) => navigate(id)} rightSlot={rightSlot} workflowActive={workflowActive} onWorkflowStage={onWorkflowStage}>
         <ErrorBoundary label="Page unavailable">
           <Suspense fallback={<PageLoader />}>
             <div key={view} className="page-enter">
@@ -449,7 +431,6 @@ export default function App() {
           </Suspense>
         </ErrorBoundary>
       </Shell>
-      <TweaksUI tweaks={tweaks} setTweak={setTweak} />
       <ToastHost />
       <CommandPalette 
         isOpen={isPaletteOpen} 
@@ -543,6 +524,9 @@ function renderTeacherPage(view, params, ctx) {
       case 'evaluation':
         return <TeacherEvaluationPage students={students} onNavigate={navigate} />;
 
+      case 'library:writing':
+        return <WritingPracticePage onNavigate={navigate} />;
+
       case 'library':
       case 'library:exercises':
         return <ExercisesPage onNavigate={navigate} />;
@@ -568,65 +552,14 @@ function renderTeacherPage(view, params, ctx) {
   }
 }
 
-/* ─── Helpers ────────────────────────────────────────────────── */
-function getSafeOrigin() {
-  try { if (document.referrer) return new URL(document.referrer).origin; } catch {}
-  return window.location.origin;
-}
-
-
-
 function PageLoader() {
   return (
-    <div style={{ padding: 40, display: 'flex', flexDirection: 'column', gap: 16 }}>
+    <div className="skeleton-page">
       <div className="skeleton skeleton-card" />
-      <div className="skeleton skeleton-text" style={{ width: '80%' }} />
+      <div className="skeleton skeleton-text skeleton-text--wide" />
       <div className="skeleton skeleton-text" />
       <div className="skeleton skeleton-text-short" />
     </div>
-  );
-}
-
-const TOAST_GLYPHS = { ok: '+', info: 'i', warn: '!', go: '→' };
-
-function ToastHost() {
-  const [toasts, setToasts] = useState([]);
-  useEffect(() => {
-    const onToast = (e) => {
-      const id = Math.random().toString(36).slice(2);
-      setToasts(arr => [...arr, { id, msg: e.detail.msg, kind: e.detail.kind || 'ok' }]);
-      setTimeout(() => setToasts(arr => arr.filter(x => x.id !== id)), 3200);
-    };
-    window.addEventListener('vv-toast', onToast);
-    window.toast = (msg, kind) => window.dispatchEvent(new CustomEvent('vv-toast', { detail: { msg, kind } }));
-    return () => { window.removeEventListener('vv-toast', onToast); delete window.toast; };
-  }, []);
-
-  return (
-    <div className="toast-host" aria-live="polite" aria-atomic="true">
-      {toasts.map(t => (
-        <div key={t.id} className={`toast toast-${t.kind || 'ok'}`}>
-          <span className="toast-glyph">{TOAST_GLYPHS[t.kind] || '+'}</span>
-          <span className="toast-msg">{t.msg}</span>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function TweaksUI({ tweaks, setTweak }) {
-  return (
-    <TweaksPanel title="Tweaks">
-      <TweakSection label="Theme">
-        <TweakToggle label="Dark mode" value={tweaks.darkMode} onChange={v => setTweak('darkMode', v)} />
-      </TweakSection>
-      <TweakSection label="Card style">
-        <TweakRadio options={[{ label: 'Flat', value: 'flat' }, { label: 'Bordered', value: 'bordered' }, { label: 'Shadowed', value: 'shadowed' }]} value={tweaks.cardStyle} onChange={v => setTweak('cardStyle', v)} />
-      </TweakSection>
-      <TweakSection label="Accent color">
-        <TweakColor value={tweaks.accent} onChange={v => setTweak('accent', v)} options={['#0f1b2d','#0f6b73','#148891','#c86607','#5bbcb8']} />
-      </TweakSection>
-    </TweaksPanel>
   );
 }
 

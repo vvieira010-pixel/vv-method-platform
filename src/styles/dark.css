@@ -34,7 +34,7 @@
 
 [data-theme="dark"] .student-metric--teal   .student-metric-icon { background: rgba(20,136,145,0.14); color: var(--accent-soft); }
 [data-theme="dark"] .student-metric--navy   .student-metric-icon { background: rgba(15,27,45,0.14); color: var(--text); }
-[data-theme="dark"] .student-metric--amber  .student-metric-icon { background: rgba(200,102,7,0.14);  color: var(--warning); }
+[data-theme="dark"] .student-metric--amber  .student-metric-icon { background: rgba(168,93,0,0.14);  color: var(--warning); }
 [data-theme="dark"] .student-metric--exam   .student-metric-icon { background: rgba(26,140,95,0.14);  color: var(--success); }
 [data-theme="dark"] .student-metric--urgent .student-metric-icon { background: rgba(185,28,28,0.14);  color: var(--danger); }
 [data-theme="dark"] .student-metric--exam   { border-top-color: rgba(26,140,95,0.4); }

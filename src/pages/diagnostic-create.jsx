@@ -501,7 +501,7 @@ export default function DiagnosticCreate({ studentId, classEventId, diagnosisId,
             </Button>
           </div>
         </Card>
-        <Button variant="primary" onClick={() => onNavigate('diagnostics:list', {})}>
+        <Button variant="primary" onClick={() => onNavigate('diagnostics', {})}>
           <Icon.check size={14} /> Done. View All Diagnoses
         </Button>
       </div>

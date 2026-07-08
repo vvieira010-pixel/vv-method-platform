@@ -36,12 +36,14 @@ import { getModuleExercises } from '../lib/exercise-bank.js';
 import { getB2Modules, getB2ModuleExercises } from '../lib/met-b2-bank.js';
 import { getLifestyleModules, getLifestyleModuleExercises, lifestylePackMeta } from '../lib/lifestyle-pack.js';
 import { getDeepResearchModules, getDeepResearchModuleExercises } from '../lib/met-b2-exercises.js';
+import { getDialogueModules } from '../lib/dialogue-bank.js';
 import { getGrammarModules, getGrammarModuleExercises } from '../lib/met-grammar-bank.js';
 import { getLibraryExercises, saveExerciseToLibrary, deleteLibraryExercise, incrementUsage } from '../lib/exercise-library.js';
 import { generateExerciseImage } from '../lib/image-generation.js';
 import { generateId, generateShortId } from '../lib/utils.js';
 import HomeworkSetWizard from '../components/homework-set-wizard.jsx';
 import { getUnitsByLevel, getSkillExercises, SUBJECT_OPTIONS } from '../lib/unit-bank.js';
+import { getTopicList } from '../lib/vocab-homework-bank.js';
 import { TopicExplanationsEditor } from '../components/topic-explanations.jsx';
 import ResourcePicker from '../components/resource-picker.jsx';
 
@@ -566,7 +568,6 @@ function getPriorityItems(dx) {
     const { id, title, tags, level, createdAt, usageCount, ...fields } = libEx;
     const fresh = { ...fields, id: generateId('ex_') };
     setForm(f => ({ ...f, exercises: [...f.exercises, fresh] }));
-    setShowLibrary(false);
     window.toast?.(`"${title}" added.`, 'ok');
     try { await incrementUsage(id); } catch { /* non-critical */ }
   }
@@ -686,6 +687,11 @@ Format:
       window.toast?.(`Generation failed: ${e.message}`, 'warn');
     }
   }
+
+  const topicBank = [
+    ...getGrammarModules().map(m => ({ id: m.id, title: m.label, category: 'Grammar' })),
+    ...getTopicList().map(t => ({ id: t.id, title: t.title, category: 'Vocabulary' })),
+  ];
 
   const AI_EXERCISE_PROMPTS = {
     mcq: `Create one B1-level multiple choice question for an MET student.
@@ -932,7 +938,7 @@ Error Bank: Active Patterns
                     ))}
                   </div>
                 )}
-                <TopicExplanationsEditor topics={topicExplanations} onChange={setTopicExplanations} onAiGenerate={handleTopicAiGenerate} />
+                <TopicExplanationsEditor topics={topicExplanations} onChange={setTopicExplanations} onAiGenerate={handleTopicAiGenerate} topicBank={topicBank} />
                 <div className="homework-gen-toolbar">
                   <Button variant="ghost" size="sm" onClick={() => setShowResourcePicker(true)}>
                     <Icon.image size={12} /> Media Library
@@ -948,7 +954,8 @@ Error Bank: Active Patterns
                   const lifeMods = getLifestyleModules().map(m => ({ ...m, pack:'Everyday English', packLevel:'B1-B2', level:'B1-B2' }));
                   const drMods = getDeepResearchModules().map(m => ({ ...m, pack:'Extended Practice', packLevel:'B2', level:'B2' }));
                   const grMods = getGrammarModules().map(m => ({ ...m, pack:'Grammar Drill Bank', packLevel:'B2', level:'B2' }));
-                  const allPrebuilt = [...b2Mods, ...lifeMods, ...drMods, ...grMods];
+                  const dlgMods = getDialogueModules().map(m => ({ ...m, pack:'Dialogue Practice', packLevel:'B2', level:'B2' }));
+                  const allPrebuilt = [...b2Mods, ...lifeMods, ...drMods, ...dlgMods, ...grMods];
                   const filtered = packFilter === 'all' ? allPrebuilt : allPrebuilt.filter(m => m.skill === packFilter);
                   return (
                     <div className="homework-packs-section">

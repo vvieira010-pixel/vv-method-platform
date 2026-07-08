@@ -10,8 +10,8 @@
   --primary-hover: #0f766e;
   --primary-light: #f0fdfa;
   
-  --accent: #c86607;                         /* Interaction Bronze */
-  --accent-rgb: 200, 102, 7;
+  --accent: #A85D00;                         /* Interaction Bronze (darkened for WCAG AA) */
+  --accent-rgb: 168, 93, 0;
   --accent-hover: #92400e;
   --accent-light: #fef3c7;
   
@@ -59,22 +59,28 @@
   --warning-bg-rgb: 255, 251, 235;
   --warning-soft: #FDE68A;
   
-  --error: #64748b;
-  --error-rgb: 100, 116, 139;
-  --error-bg: #f1f5f9;
-  --error-bg-rgb: 241, 245, 249;
-  --error-soft: #cbd5e1;
+  --error: #DC2626;
+  --error-rgb: 220, 38, 38;
+  --error-bg: #FEF2F2;
+  --error-bg-rgb: 254, 242, 242;
+  --error-soft: #FECACA;
   --danger: var(--error);
   --danger-bg: var(--error-bg);
   --danger-soft: var(--error-soft);
   
-  --info: #0E7490;
-  --info-rgb: 14, 116, 144;
-  --info-bg: #ECFEFF;
-  --info-bg-rgb: 236, 254, 255;
-  --info-soft: #A5F3FC;
-  
-  /* ── Geometry: Squircle Scale ──────────────────────────────── */
+   --info: #0E7490;
+   --info-rgb: 14, 116, 144;
+   --info-bg: #ECFEFF;
+   --info-bg-rgb: 236, 254, 255;
+   --info-soft: #A5F3FC;
+
+   --purple: #7c3aed;
+   --purple-rgb: 124, 58, 237;
+   --purple-soft: rgba(124, 58, 237, 0.1);
+   --purple-border: rgba(124, 58, 237, 0.2);
+   
+   /* ── Geometry: Squircle Scale ──────────────────────────────── */
+
   --radius-sm: 12px;
   --radius-md: 18px;
   --radius-lg: 24px;

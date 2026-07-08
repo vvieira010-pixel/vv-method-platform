@@ -16,9 +16,9 @@ ALTER TABLE error_logs ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Teachers can read error logs"
   ON error_logs FOR SELECT
   TO authenticated
-  USING (true);
+  USING (EXISTS (SELECT 1 FROM teacher_settings WHERE teacher_id = auth.uid()));
 
-CREATE POLICY "Anyone can insert error logs"
+CREATE POLICY "Authenticated users can insert error logs"
   ON error_logs FOR INSERT
-  TO anon, authenticated
-  WITH CHECK (true);
+  TO authenticated
+  WITH CHECK (auth.uid() IS NOT NULL);

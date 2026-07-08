@@ -367,6 +367,12 @@ function ShortEditor({ ex, update }) {
           placeholder="stance, consequence, argue, evidence" />
         <div style={hintText}>Optional B2 keywords to display as a word bank.</div>
       </div>
+      <div style={fieldWrap}>
+        <label style={fieldLabel}>Explanation (shown after submission)</label>
+        <textarea className="input" rows={2} value={ex.explanation || ''}
+          onChange={e => update({ explanation: e.target.value })}
+          placeholder="e.g. A strong response opens with a clear stance, supports it with one concrete example, and closes with a consequence." />
+      </div>
     </div>
   );
 }
@@ -503,6 +509,12 @@ function SpeakEditor({ ex, update }) {
         <div style={hintText}>
           Student sees: "Target: {ex.targetSeconds || 60} seconds"
         </div>
+      </div>
+      <div style={fieldWrap}>
+        <label style={fieldLabel}>Explanation (shown after submission)</label>
+        <textarea className="input" rows={2} value={ex.explanation || ''}
+          onChange={e => update({ explanation: e.target.value })}
+          placeholder="e.g. A strong response uses at least two B2 phrases and addresses all parts of the prompt." />
       </div>
   </>);
 }
@@ -649,6 +661,12 @@ function FlashEditor({ ex, update }) {
         <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>
           {filledCount} card{filledCount !== 1 ? 's' : ''} ready
         </span>
+      </div>
+      <div style={fieldWrap}>
+        <label style={fieldLabel}>Explanation (shown after reviewing cards)</label>
+        <textarea className="input" rows={2} value={ex.explanation || ''}
+          onChange={e => update({ explanation: e.target.value })}
+          placeholder="e.g. These are the most common symptoms vocabulary items from the MET B2 health unit." />
       </div>
     </div>
   );

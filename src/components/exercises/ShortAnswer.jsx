@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { MET_TASK_CONFIG } from '../../lib/met-task-spec.js';
+import { getDbContext, uploadSubmissionAudio } from '../../lib/supabase-db.js';
 
 const TEAL = 'var(--accent)';
 const NAVY = 'var(--accent-text)';
@@ -45,12 +46,33 @@ function SpeakingRecorder({ exercise, taskConfig, reflectionChecks, onComplete }
       mediaRef.current = new MediaRecorder(stream);
       chunksRef.current = [];
       mediaRef.current.ondataavailable = e => { if (e.data.size > 0) chunksRef.current.push(e.data); };
-      mediaRef.current.onstop = () => {
+      mediaRef.current.onstop = async () => {
         const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
         setPlaybackUrl(URL.createObjectURL(blob));
         stream.getTracks().forEach(t => t.stop());
         setStatus('done');
-        if (onComplete) onComplete({ submitted: true, correct: null });
+        const ctx = getDbContext();
+        if (ctx) {
+          const rand = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now());
+          const path = `${ctx.authUid}/${rand}/${exercise.id || 'speaking'}.webm`;
+          try {
+            await uploadSubmissionAudio(blob, path);
+            if (onComplete) onComplete({ submitted: true, correct: null, audioPath: path, audioB64: null });
+          } catch (e) {
+            console.warn('[speak] audio upload failed:', e.message);
+            if (blob.size < 500_000) {
+              const reader = new FileReader();
+              reader.onloadend = () => { if (onComplete) onComplete({ submitted: true, correct: null, audioB64: reader.result, audioPath: null }); };
+              reader.readAsDataURL(blob);
+            } else {
+              if (onComplete) onComplete({ submitted: true, correct: null, audioB64: null, audioPath: null });
+            }
+          }
+        } else {
+          const reader = new FileReader();
+          reader.onloadend = () => { if (onComplete) onComplete({ submitted: true, correct: null, audioB64: reader.result }); };
+          reader.readAsDataURL(blob);
+        }
       };
       mediaRef.current.start();
       setStatus('recording');
@@ -378,7 +400,8 @@ export default function ShortAnswer({ exercise, onComplete }) {
             cursor: text.trim() ? 'pointer' : 'not-allowed',
             background: text.trim() ? `linear-gradient(120deg, ${TEAL} 0%, ${NAVY} 100%)` : 'var(--border)',
             color: '#fff', fontWeight: 600, fontSize: 'var(--text-sm)', fontFamily: 'var(--font-sans)',
-            opacity: text.trim() ? 1 : 0.5, transition: 'all 0.15s',
+             opacity: text.trim() ? 1 : 0.5, transition: 'opacity 0.15s',
+
           }}
         >
           Submit response

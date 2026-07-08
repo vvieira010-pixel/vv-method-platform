@@ -141,7 +141,7 @@ export default function MultipleChoice({ exercise, onComplete }) {
             cursor: selected == null ? 'not-allowed' : 'pointer',
             background: selected == null ? 'var(--border)' : `linear-gradient(120deg, ${TEAL} 0%, ${NAVY} 100%)`,
             color: '#fff', fontWeight: 600, fontSize: 'var(--text-sm)', fontFamily: 'var(--font-sans)',
-            opacity: selected == null ? 0.5 : 1, transition: 'all 0.15s',
+             opacity: selected == null ? 0.5 : 1, transition: 'opacity 0.15s',
           }}
         >
           Submit answer

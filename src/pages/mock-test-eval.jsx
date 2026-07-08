@@ -8,7 +8,7 @@ import { getPoints } from '../data/mock-test-1/index.js';
 
 const SECTIONS = [
   { id: 'reading', label: 'Reading & Grammar', color: '#148891' },
-  { id: 'listening', label: 'Listening', color: '#c86607' },
+  { id: 'listening', label: 'Listening', color: '#A85D00' },
   { id: 'speaking', label: 'Speaking', color: '#7c3aed' },
   { id: 'writing', label: 'Writing', color: '#2563eb' },
 ];
@@ -111,7 +111,7 @@ function TypeBadge({ type, level }) {
     detail: '#7c3aed',
     inference: '#dc2626',
   };
-  const levelColors = { b1: '#16a34a', b2: '#c86607' };
+  const levelColors = { b1: '#16a34a', b2: '#A85D00' };
   return (
     <span style={{ display: 'inline-flex', gap: 4, alignItems: 'center' }}>
       {type && (

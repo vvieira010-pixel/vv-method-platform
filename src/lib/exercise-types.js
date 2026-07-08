@@ -39,16 +39,16 @@ export function exId() {
 const FACTORIES = {
   mcq:    () => ({ id: exId(), type: 'mcq',    instruction: '', question: '', options: ['', '', '', ''], correct: null }),
   blank:  () => ({ id: exId(), type: 'blank',  instruction: '', template: '', blanks: [] }),
-  short:  () => ({ id: exId(), type: 'short',  instruction: '', prompt: '', rubric: '', targetWords: 120, scaffolding: { vocabulary: [], structure: [] } }),
-  speak:  () => ({ id: exId(), type: 'speak',  metTask: '', instruction: '', prompt: '', imageDescription: '', imageUrl: '', imageAlt: '', targetSeconds: 60, scaffolding: { vocabulary: [], structure: [] } }),
+  short:  () => ({ id: exId(), type: 'short',  instruction: '', prompt: '', rubric: '', targetWords: 120, scaffolding: { vocabulary: [], structure: [] }, explanation: '' }),
+  speak:  () => ({ id: exId(), type: 'speak',  metTask: '', instruction: '', prompt: '', imageDescription: '', imageUrl: '', imageAlt: '', targetSeconds: 60, scaffolding: { vocabulary: [], structure: [] }, explanation: '' }),
   order:  () => ({ id: exId(), type: 'order',  instruction: '', sentences: [''] }),
   fix:    () => ({ id: exId(), type: 'fix',    instruction: '', errorText: '', correctedText: '', hint: '' }),
-  flash:  () => ({ id: exId(), type: 'flash',  instruction: '', pairs: [{ term: '', def: '' }] }),
+  flash:  () => ({ id: exId(), type: 'flash',  instruction: '', pairs: [{ term: '', def: '' }], explanation: '' }),
   listen:   () => ({ id: exId(), type: 'listen',   instruction: '', audioText: '', plays: 0, question: '', options: ['', '', '', ''], correct: null, explanation: '', pictureHint: '' }),
-  dialogue: () => ({ id: exId(), type: 'dialogue', instruction: '', speakerA: 'Speaker A', speakerB: 'Speaker B', lines: [{ id: exId(), speaker: 'A', text: '' }, { id: exId(), speaker: 'B', text: '' }] }),
-  swap:     () => ({ id: exId(), type: 'swap',     instruction: '', sentence: '', swaps: [] }),
+  dialogue: () => ({ id: exId(), type: 'dialogue', instruction: '', speakerA: 'Speaker A', speakerB: 'Speaker B', lines: [{ id: exId(), speaker: 'A', text: '' }, { id: exId(), speaker: 'B', text: '' }], explanation: '' }),
+  swap:     () => ({ id: exId(), type: 'swap',     instruction: '', sentence: '', swaps: [], explanation: '' }),
   levelup:  () => ({ id: exId(), type: 'levelup',  instruction: '', b1: '', b2: '', c1: '', options: ['', '', ''], correct: 0, keywords: [], explanation: '' }),
-  read: () => ({ id: exId(), type: 'read', instruction: '', passage: '', source: '', questions: [{ id: exId(), question: '', options: ['', '', '', ''], correct: null }] }),
+  read: () => ({ id: exId(), type: 'read', instruction: '', passage: '', source: '', questions: [{ id: exId(), question: '', options: ['', '', '', ''], correct: null }], explanation: '' }),
 };
 
 /**

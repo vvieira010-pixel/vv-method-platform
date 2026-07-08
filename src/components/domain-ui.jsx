@@ -1,4 +1,5 @@
-import { Icon, Pill } from './shared.jsx';
+import { Icon } from './ui/icons.jsx';
+import { Pill } from './ui/Pill.jsx';
 
 /* ─── REVIEW STATUS BADGE ────────────────────────────────────── */
 const STATUS_TONE = {

@@ -67,21 +67,23 @@ export default function OrderSentences({ exercise, onComplete }) {
 
   function itemStyle(origIdx, pos) {
     if (!submitted) {
-      return {
-        display: 'flex', alignItems: 'center', gap: 12,
-        padding: '12px 14px', borderRadius: 'var(--radius-sm)',
-        border: '1.5px solid var(--border)', background: 'var(--surface)',
-        cursor: 'grab', transition: 'all 0.15s',
-      };
+         return {
+           display: 'flex', alignItems: 'center', gap: 12,
+           padding: '12px 14px', borderRadius: 'var(--radius-sm)',
+           border: '1.5px solid var(--border)', background: 'var(--surface)',
+           cursor: 'grab', transition: 'border-color 0.15s, background 0.15s',
+         };
+
     }
     const correct = origIdx === pos;
-    return {
-      display: 'flex', alignItems: 'center', gap: 12,
-      padding: '12px 14px', borderRadius: 'var(--radius-sm)',
-      border: `1.5px solid ${correct ? 'var(--ex-correct-border)' : 'var(--ex-wrong-border)'}`,
-      background: correct ? 'var(--ex-correct-bg)' : 'var(--ex-wrong-bg)',
-      transition: 'all 0.15s',
-    };
+       return {
+         display: 'flex', alignItems: 'center', gap: 12,
+         padding: '12px 14px', borderRadius: 'var(--radius-sm)',
+         border: `1.5px solid ${correct ? 'var(--ex-correct-border)' : 'var(--ex-wrong-border)'}`,
+         background: correct ? 'var(--ex-correct-bg)' : 'var(--ex-wrong-bg)',
+         transition: 'border-color 0.15s, background 0.15s',
+       };
+
   }
 
   const allCorrect = submitted && order.every((origIdx, pos) => origIdx === pos);

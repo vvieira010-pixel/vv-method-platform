@@ -1,14 +1,12 @@
 import { useState } from 'react';
-
-const TEAL = 'var(--accent)';
-const NAVY = 'var(--accent-text)';
+import { TEAL, NAVY } from './shared.js';
 
 function optionBase(submitted, selected, correct, i) {
   const base = {
     display: 'flex', alignItems: 'center', gap: 12,
           padding: '12px 16px', borderRadius: 'var(--radius-sm)',
     border: '1.5px solid', cursor: submitted ? 'default' : 'pointer',
-    transition: 'all 0.15s', fontSize: 14.5, lineHeight: 1.5,
+    transition: 'border-color 0.15s, background 0.15s, color 0.15s', fontSize: 14.5, lineHeight: 1.5,
     fontFamily: 'var(--font-sans)', textAlign: 'left', width: '100%',
     background: 'var(--surface)',
   };
@@ -117,22 +115,23 @@ export default function Reading({ exercise, onComplete }) {
 
       {/* Submit / Feedback */}
       {!submitted ? (
-        <button
-          onClick={handleSubmit}
-          disabled={selected == null}
-          style={{
-            padding: '10px 24px', borderRadius: 'var(--radius-sm)', border: 'none',
-            cursor: selected == null ? 'not-allowed' : 'pointer',
-            background: selected == null
-              ? 'var(--border)'
-              : `linear-gradient(120deg, ${TEAL} 0%, ${NAVY} 100%)`,
-            color: '#fff', fontWeight: 600, fontSize: 14,
-            fontFamily: 'var(--font-sans)',
-            opacity: selected == null ? 0.5 : 1, transition: 'all 0.15s',
-          }}
-        >
-          Submit answer
-        </button>
+          <button
+            onClick={handleSubmit}
+            disabled={selected == null}
+            style={{
+              padding: '10px 24px', borderRadius: 'var(--radius-sm)', border: 'none',
+              cursor: selected == null ? 'not-allowed' : 'pointer',
+              background: selected == null
+                ? 'var(--border)'
+                : `linear-gradient(120deg, ${TEAL} 0%, ${NAVY} 100%)`,
+              color: '#fff', fontWeight: 600, fontSize: 14,
+              fontFamily: 'var(--font-sans)',
+              opacity: selected == null ? 0.5 : 1, transition: 'opacity 0.15s',
+            }}
+          >
+            Submit answer
+          </button>
+
       ) : (
         <div style={{
     padding: '12px 16px', borderRadius: 'var(--radius-sm)',

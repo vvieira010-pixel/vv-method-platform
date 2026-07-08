@@ -10,7 +10,7 @@ export default function PreviewExercise({ exercise }) {
         <div>
           {exercise.imageUrl && (
             <div style={{ marginBottom: 10, textAlign: 'center' }}>
-              <img src={exercise.imageUrl} alt={exercise.imageAlt || ''} style={{ maxWidth: '100%', maxHeight: 200, borderRadius: 'var(--radius-sm)', objectFit: 'contain' }} />
+              <img src={exercise.imageUrl} alt={exercise.imageAlt || ''} loading="lazy" style={{ maxWidth: '100%', maxHeight: 200, borderRadius: 'var(--radius-sm)', objectFit: 'contain' }} />
             </div>
           )}
           <p style={{ fontWeight: 600, marginBottom: 10 }}>{exercise.question || 'Question…'}</p>
@@ -128,7 +128,7 @@ export default function PreviewExercise({ exercise }) {
         <div>
           {(exercise.pictureHint && (/^https?:\/\//.test(exercise.pictureHint) || exercise.pictureHint.startsWith('/'))) ? (
             <div style={{ marginBottom: 10, textAlign: 'center' }}>
-              <img src={exercise.pictureHint} alt="Listening context" style={{ maxWidth: '100%', maxHeight: 200, borderRadius: 'var(--radius-sm)', objectFit: 'contain' }} />
+              <img src={exercise.pictureHint} alt="Listening context" loading="lazy" style={{ maxWidth: '100%', maxHeight: 200, borderRadius: 'var(--radius-sm)', objectFit: 'contain' }} />
             </div>
           ) : null}
           <div style={{
@@ -173,7 +173,7 @@ export default function PreviewExercise({ exercise }) {
         <div>
           {exercise.imageUrl && (
             <div style={{ marginBottom: 10, textAlign: 'center' }}>
-              <img src={exercise.imageUrl} alt={exercise.imageAlt || ''} style={{ maxWidth: '100%', maxHeight: 200, borderRadius: 'var(--radius-sm)', objectFit: 'contain' }} />
+              <img src={exercise.imageUrl} alt={exercise.imageAlt || ''} loading="lazy" style={{ maxWidth: '100%', maxHeight: 200, borderRadius: 'var(--radius-sm)', objectFit: 'contain' }} />
             </div>
           )}
           <div style={{

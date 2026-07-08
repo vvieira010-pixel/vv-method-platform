@@ -2,7 +2,7 @@ import { useState } from 'react';
 
 const TEAL = 'var(--accent)';
 const NAVY = 'var(--accent-text)';
-const GREEN = '#1A5C2A';
+const GREEN = 'var(--success)';
 
 export default function LevelUp({ exercise, onComplete }) {
   const {
@@ -89,8 +89,9 @@ export default function LevelUp({ exercise, onComplete }) {
                 padding: '12px 16px', borderRadius: 'var(--radius-sm)',
                 border: `1.5px solid ${borderColor}`,
                 cursor: submitted ? 'default' : 'pointer',
-                background: bg, color,
-                transition: 'all 0.15s', fontSize: 14, lineHeight: 1.55,
+                 background: bg, color,
+                                              transition: 'border-color 0.15s, background 0.15s, color 0.15s', fontSize: 14, lineHeight: 1.55,
+
                 fontFamily: 'var(--font-sans)', textAlign: 'left', width: '100%',
                 opacity: submitted && i !== correct && i !== selected ? 0.55 : 1,
               }}
@@ -127,7 +128,8 @@ export default function LevelUp({ exercise, onComplete }) {
               : `linear-gradient(120deg, ${TEAL} 0%, ${NAVY} 100%)`,
             color: '#fff', fontWeight: 600, fontSize: 14,
             fontFamily: 'var(--font-sans)',
-            opacity: selected == null ? 0.5 : 1, transition: 'all 0.15s',
+             opacity: selected == null ? 0.5 : 1, transition: 'opacity 0.15s',
+
           }}
         >
           Submit answer

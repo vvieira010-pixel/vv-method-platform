@@ -48,7 +48,7 @@ export function IlloNoStudents() {
       <path d="M32 52c0-6 5.4-11 12-11s12 5 12 11" stroke="#148891" strokeWidth="1.5" fill="rgba(20,136,145,0.04)" />
       <circle cx="76" cy="38" r="8" stroke="rgba(15,27,45,0.15)" strokeWidth="1.5" fill="rgba(15,27,45,0.04)" />
       <path d="M68 52c0-4 3.6-7 8-7s8 3 8 7" stroke="rgba(15,27,45,0.15)" strokeWidth="1.5" fill="rgba(15,27,45,0.03)" />
-      <path d="M28 62c0-5 4-9 9-9h14c5 0 9 4 9 9" stroke="#c86607" strokeWidth="1.5" fill="rgba(200,102,7,0.05)" strokeLinecap="round" />
+      <path d="M28 62c0-5 4-9 9-9h14c5 0 9 4 9 9" stroke="#A85D00" strokeWidth="1.5" fill="rgba(168,93,0,0.05)" strokeLinecap="round" />
     </IlloWrap>
   );
 }

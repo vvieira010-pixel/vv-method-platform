@@ -1,7 +1,5 @@
 import { useState } from 'react';
-
-const TEAL = 'var(--accent)';
-const NAVY = 'var(--accent-text)';
+import { TEAL, NAVY } from './shared.js';
 
 function normalize(str) {
   return (str || '').toLowerCase().trim();
@@ -69,7 +67,6 @@ export default function FillBlank({ exercise, onComplete }) {
             const selected = values[i] === choice;
             const isResult = submitted && results[i];
             const isCorrectChoice = isResult && normalize(choice) === normalize(blank.correct);
-            const isWrongSelected = isResult && selected && !results[i].correct;
             let bg = 'var(--surface)';
             let border = 'var(--border)';
             let color = NAVY;
@@ -87,7 +84,7 @@ export default function FillBlank({ exercise, onComplete }) {
                   background: selected || (isResult && isCorrectChoice) ? bg : 'var(--surface)',
                   color: selected || (isResult && isCorrectChoice) ? color : 'var(--text)',
                   fontWeight: selected ? 600 : 400, fontSize: 'var(--text-sm)', fontFamily: 'var(--font-sans)',
-                  cursor: submitted ? 'default' : 'pointer', transition: 'all 0.12s',
+                  cursor: submitted ? 'default' : 'pointer', transition: 'border-color 0.15s, background 0.15s, color 0.15s',
                 }}
               >
                 {choice}
@@ -139,7 +136,7 @@ export default function FillBlank({ exercise, onComplete }) {
             cursor: allFilled ? 'pointer' : 'not-allowed',
             background: allFilled ? `linear-gradient(120deg, ${TEAL} 0%, ${NAVY} 100%)` : 'var(--border)',
             color: '#fff', fontWeight: 600, fontSize: 'var(--text-sm)', fontFamily: 'var(--font-sans)',
-            opacity: allFilled ? 1 : 0.5, transition: 'all 0.15s',
+            opacity: allFilled ? 1 : 0.5, transition: 'opacity 0.15s, background 0.15s',
           }}
         >
           Check answers

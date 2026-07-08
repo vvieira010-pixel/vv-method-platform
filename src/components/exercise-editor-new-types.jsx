@@ -84,6 +84,12 @@ export function DialogueEditor({ ex, update }) {
         </div>
         <Button variant="ghost" size="sm" onClick={addLine} style={{ marginTop: 8 }}>+ Add line</Button>
       </div>
+      <div style={fieldWrap}>
+        <label style={fieldLabel}>Explanation (shown after practice)</label>
+        <textarea className="input" rows={2} value={ex.explanation || ''}
+          onChange={e => update({ explanation: e.target.value })}
+          placeholder="e.g. Notice how the nurse uses open-ended questions to gather patient history." />
+      </div>
     </div>
   );
 }
@@ -159,6 +165,12 @@ export function SwapEditor({ ex, update }) {
       {swaps.length === 0 && ex.sentence && (
         <p style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontStyle: 'italic' }}>No [bracketed] words in the sentence yet.</p>
       )}
+      <div style={fieldWrap}>
+        <label style={fieldLabel}>Explanation (shown after answering)</label>
+        <textarea className="input" rows={2} value={ex.explanation || ''}
+          onChange={e => update({ explanation: e.target.value })}
+          placeholder="e.g. 'Examine' is more clinical than 'check' — preferred in medical documentation." />
+      </div>
     </div>
   );
 }
@@ -302,6 +314,12 @@ export function ReadEditor({ ex, update }) {
             </div>
           ))}
         </div>
+      </div>
+      <div style={fieldWrap}>
+        <label style={fieldLabel}>Explanation (shown after all questions answered)</label>
+        <textarea className="input" rows={2} value={ex.explanation || ''}
+          onChange={e => update({ explanation: e.target.value })}
+          placeholder="e.g. The passage tests inferencing — the answer isn't stated directly but implied by the third paragraph." />
       </div>
     </div>
   );

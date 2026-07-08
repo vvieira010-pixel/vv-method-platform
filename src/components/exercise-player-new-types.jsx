@@ -209,7 +209,7 @@ export function SwapPlayer({ ex, res, update, readOnly }) {
           const isOpen = open === swap.id;
 
           const chipBg = result === 'correct' ? 'rgba(34,139,34,.12)' : result === 'wrong' ? 'rgba(200,50,50,.1)' : 'rgba(197,160,89,.15)';
-          const chipColor = result === 'correct' ? '#226B22' : result === 'wrong' ? '#C03030' : '#7A5C10';
+           const chipColor = result === 'correct' ? 'var(--success)' : result === 'wrong' ? 'var(--danger)' : 'var(--warning)';
           const chipBorder = result === 'correct' ? '1.5px solid var(--success)' : result === 'wrong' ? '1.5px solid #C03030' : '1.5px dashed #C5A059';
 
           return (

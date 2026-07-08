@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Icon } from './shared.jsx';
 import { Button } from '../components/ui/Button.jsx';
 
@@ -79,11 +79,14 @@ export function TopicContentRenderer({ content }) {
 /* ── TopicExplanationsEditor — teacher-facing editor for Step 1 ── */
 function uid() { return 'tp_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 6); }
 
-export function TopicExplanationsEditor({ topics = [], onChange, onAiGenerate }) {
+export function TopicExplanationsEditor({ topics = [], onChange, onAiGenerate, topicBank = [] }) {
   const [expanded, setExpanded] = useState(null);
+  const [showBank, setShowBank] = useState(false);
+  const [bankSearch, setBankSearch] = useState('');
 
-  const addTopic = () => {
-    const topic = { id: uid(), title: '', content: '', aiPrompt: '' };
+  const addTopic = (prefillTitle) => {
+    const title = prefillTitle || '';
+    const topic = { id: uid(), title, content: '', aiPrompt: '' };
     onChange([...topics, topic]);
     setExpanded(topic.id);
   };
@@ -108,7 +111,6 @@ export function TopicExplanationsEditor({ topics = [], onChange, onAiGenerate })
   const wrapBold = (id) => {
     const topic = topics.find(t => t.id === id);
     if (!topic) return;
-    // Wrap ** around selected text in the textarea
     const el = document.getElementById(`topic-content-${id}`);
     if (!el) return;
     const start = el.selectionStart, end = el.selectionEnd;
@@ -135,6 +137,24 @@ export function TopicExplanationsEditor({ topics = [], onChange, onAiGenerate })
     setTimeout(() => { el.focus(); el.selectionStart = el.selectionEnd = lineStart + prefix.length + 1; }, 10);
   };
 
+  const existingTitles = new Set(topics.map(t => t.title.toLowerCase()));
+  const filteredBank = useMemo(() => {
+    const q = bankSearch.toLowerCase();
+    return topicBank.filter(t =>
+      !existingTitles.has(t.title.toLowerCase()) &&
+      (!q || t.title.toLowerCase().includes(q) || t.category.toLowerCase().includes(q))
+    );
+  }, [topicBank, bankSearch, existingTitles]);
+
+  const groupedBank = useMemo(() => {
+    const map = {};
+    filteredBank.forEach(t => {
+      if (!map[t.category]) map[t.category] = [];
+      map[t.category].push(t);
+    });
+    return map;
+  }, [filteredBank]);
+
   return (
     <div style={{ marginTop: 18, padding: 14, background: 'var(--surface)', border: '1px solid var(--accent-soft)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-sm)' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
@@ -146,8 +166,43 @@ export function TopicExplanationsEditor({ topics = [], onChange, onAiGenerate })
             {topics.length} topic{topics.length !== 1 ? 's' : ''} — students see these before the exercises
           </div>
         </div>
-        <Button variant="primary" size="sm" onClick={addTopic}><Icon.plus size={12} /> Add Topic</Button>
+        <div style={{ display: 'flex', gap: 6 }}>
+          {topicBank.length > 0 && (
+            <Button variant="ghost" size="sm" onClick={() => setShowBank(!showBank)}>
+              <Icon.book size={12} /> From Topic Bank
+            </Button>
+          )}
+          <Button variant="primary" size="sm" onClick={() => addTopic()}><Icon.plus size={12} /> Add Topic</Button>
+        </div>
       </div>
+
+      {showBank && (
+        <div style={{ marginBottom: 12, padding: 10, background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)' }}>
+          <input className="input" value={bankSearch} onChange={e => setBankSearch(e.target.value)}
+            placeholder="Search topics..." autoFocus
+            style={{ marginBottom: 8 }} />
+          {Object.keys(groupedBank).length === 0 && (
+            <div style={{ padding: '8px 0', textAlign: 'center', color: 'var(--muted)', fontSize: 'var(--text-sm)' }}>
+              {bankSearch ? 'No matching topics.' : 'All topics already added.'}
+            </div>
+          )}
+          {Object.entries(groupedBank).map(([cat, items]) => (
+            <div key={cat} style={{ marginBottom: 6 }}>
+              <div style={{ fontSize: 'var(--text-2xs)', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>{cat}</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                {items.map(t => (
+                  <button key={t.id} onClick={() => { addTopic(t.title); setShowBank(false); setBankSearch(''); }}
+                    style={{ textAlign: 'left', background: 'none', border: 'none', cursor: 'pointer', padding: '4px 6px', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-sm)', color: 'var(--text)', fontFamily: 'var(--font-sans)' }}
+                    onMouseEnter={e => e.target.style.background = 'var(--surface)'}
+                    onMouseLeave={e => e.target.style.background = 'none'}>
+                    {t.title}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
       {topics.length === 0 && (
         <div style={{ padding: '20px 0', textAlign: 'center', color: 'var(--muted)', fontSize: 'var(--text-sm)' }}>

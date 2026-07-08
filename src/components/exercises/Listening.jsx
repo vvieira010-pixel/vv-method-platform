@@ -15,11 +15,15 @@
  */
 import { useState, useRef, useCallback } from 'react';
 import { Icon } from '../shared.jsx';
+import { COLORS } from '../shared.jsx';
 import { fetchAudio, fetchConversationAudio, fetchAudioWithGender } from '../../lib/tts-utils.js';
+const STORAGE_KEY = 'vv:listening_voice';
+function loadGender() { try { return localStorage.getItem(STORAGE_KEY) || 'female'; } catch { return 'female'; } }
+function saveGender(v) { try { localStorage.setItem(STORAGE_KEY, v); } catch {} }
 import { callAI } from '../../lib/callAI.js';
 
-const TEAL = 'var(--accent)';
-const NAVY = 'var(--accent-text)';
+const TEAL = COLORS.TEAL;
+const NAVY = COLORS.NAVY;
 
 /* ── Browser speech synthesis fallback */
 let _synthVoices = [];
@@ -119,6 +123,7 @@ export default function Listening({ exercise = {}, onComplete }) {
   const [selected, setSelected]   = useState(null);
   const [submitted, setSubmitted] = useState(false);
   const [playbackRate, setPlaybackRate] = useState(1);
+  const [gender, setGender] = useState(loadGender);
   const audioRef = useRef(null);
 
   const isMultiVoice = script && script.length > 0;
@@ -162,9 +167,9 @@ export default function Listening({ exercise = {}, onComplete }) {
               url = await fetchConversationAudio(utterances);
             }
           }
-          // Fallback to single-voice TTS
+          // Fallback to single-voice TTS with selected gender
           if (!url) {
-            url = await fetchAudio(audioText);
+            url = await fetchAudioWithGender(audioText, gender);
           }
         }
         if (url) setAudioUrl(url);
@@ -202,7 +207,7 @@ export default function Listening({ exercise = {}, onComplete }) {
       setError(e.message || 'Could not play audio.');
       setRevealed(true);
     }
-  }, [canPlay, audioText, audioSrc, audioUrl, playbackRate, script, metPart, exercise]);
+  }, [canPlay, audioText, audioSrc, audioUrl, playbackRate, gender, script, metPart, exercise]);
 
   function handleStop() {
     if (audioRef.current) {
@@ -226,13 +231,15 @@ export default function Listening({ exercise = {}, onComplete }) {
   const isCorrect = selected === correct;
 
   function optionStyle(i) {
-    const base = {
-      display: 'flex', alignItems: 'center', gap: 12,
-      padding: '12px 16px', borderRadius: 'var(--radius-sm)',
-      border: '1.5px solid', cursor: submitted ? 'default' : 'pointer',
-      transition: 'all 0.15s', fontSize: 14.5, lineHeight: 1.5,
-      fontFamily: 'var(--font-sans)', textAlign: 'left', width: '100%',
-    };
+     const base = {
+       display: 'flex', alignItems: 'center', gap: 12,
+             padding: '12px 16px', borderRadius: 'var(--radius-sm)',
+       border: '1.5px solid', cursor: submitted ? 'default' : 'pointer',
+       transition: 'border-color 0.15s, background 0.15s, color 0.15s', fontSize: 14.5, lineHeight: 1.5,
+       fontFamily: 'var(--font-sans)', textAlign: 'left', width: '100%',
+       background: 'var(--surface)',
+     };
+
     if (!submitted) {
       return selected === i
         ? { ...base, borderColor: TEAL, background: 'var(--ex-selected-bg)', color: NAVY }
@@ -300,7 +307,7 @@ export default function Listening({ exercise = {}, onComplete }) {
       {pictureHint && (
         /^https?:\/\//.test(pictureHint) || pictureHint.startsWith('/') ? (
           <div style={{ marginBottom: 16 }}>
-            <img src={pictureHint} alt="Listening context" style={{ width: '100%', maxWidth: 480, borderRadius: 'var(--radius-sm)', display: 'block', margin: '0 auto' }} />
+             <img src={pictureHint} alt="Listening context" loading="lazy" style={{ width: '100%', maxWidth: 480, borderRadius: 'var(--radius-sm)', display: 'block', margin: '0 auto' }} />
           </div>
         ) : (
           <div style={{
@@ -334,13 +341,14 @@ export default function Listening({ exercise = {}, onComplete }) {
           aria-label={loading ? 'Loading audio…' : generating ? 'Generating script…' : playing ? 'Stop' : 'Play audio'}
           style={{
             width: 64, height: 64, borderRadius: '50%', border: 'none',
-            background: loading ? 'var(--border)' : playing ? '#EF4444' : TEAL,
-            color: '#fff',
+            background: loading ? 'var(--border)' : playing ? 'var(--error)' : TEAL,
+            color: 'var(--on-dark)',
             cursor: (loading || generating || (!canPlay && !playing)) ? 'not-allowed' : 'pointer',
             fontSize: 24, display: 'grid', placeItems: 'center',
-            boxShadow: playing ? '0 0 0 6px rgba(239,68,68,.15)' : '0 4px 14px rgba(13,148,136,.3)',
-            transition: 'all 0.18s var(--ease)',
-            opacity: (loading || generating || (!canPlay && !playing)) ? 0.45 : 1,
+             boxShadow: playing ? '0 0 0 6px rgba(239,68,68,.15)' : '0 4px 14px rgba(13,148,136,.3)',
+             transition: 'transform 0.18s var(--ease), box-shadow 0.18s var(--ease), background 0.18s var(--ease), color 0.18s var(--ease)',
+             opacity: (loading || generating || (!canPlay && !playing)) ? 0.45 : 1,
+
           }}
         >
           {loading || generating ? '...' : playing ? <Icon.stop size={20} /> : <Icon.play size={20} />}
@@ -362,8 +370,9 @@ export default function Listening({ exercise = {}, onComplete }) {
         {isMultiVoice && (
           <span style={{
             fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em',
-            padding: '2px 8px', borderRadius: 99, background: '#7c3aed1a', color: '#7c3aed',
-            border: '1px solid #7c3aed33',
+             padding: '2px 8px', borderRadius: 99, background: 'rgba(var(--purple-rgb), 0.1)', color: 'var(--purple)',
+             border: '1px solid rgba(var(--purple-rgb), 0.2)',
+
           }}>Multi-voice</span>
         )}
 
@@ -373,29 +382,52 @@ export default function Listening({ exercise = {}, onComplete }) {
           </div>
         )}
 
-        {/* Speed control */}
+        {/* Speed control + Voice gender toggle */}
         {!submitted && !error && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--muted)' }}>
-            <span>Speed:</span>
-            {[0.75, 1, 1.25, 1.5].map(s => (
-              <button
-                key={s}
-                onClick={() => {
-                  setPlaybackRate(s);
-                  if (audioRef.current) audioRef.current.playbackRate = s;
-                }}
-                aria-pressed={playbackRate === s}
-                style={{
-                  padding: '2px 8px', borderRadius: 'var(--radius-sm)',
-                  border: `1px solid ${playbackRate === s ? 'var(--accent)' : 'var(--border)'}`,
-                  background: playbackRate === s ? 'var(--accent-subtle)' : 'transparent',
-                  color: playbackRate === s ? 'var(--primary)' : 'var(--muted)',
-                  cursor: 'pointer', fontWeight: playbackRate === s ? 700 : 400,
-                  fontFamily: 'var(--font-sans)', fontSize: 11,
-                  transition: 'all 0.12s',
-                }}
-              >{s}x</button>
-            ))}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 12, color: 'var(--muted)', flexWrap: 'wrap', justifyContent: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span>Speed:</span>
+              {[0.75, 1, 1.25, 1.5].map(s => (
+                <button
+                  key={s}
+                  onClick={() => {
+                    setPlaybackRate(s);
+                    if (audioRef.current) audioRef.current.playbackRate = s;
+                  }}
+                  aria-pressed={playbackRate === s}
+                  style={{
+                    padding: '2px 8px', borderRadius: 'var(--radius-sm)',
+                    border: `1px solid ${playbackRate === s ? 'var(--accent)' : 'var(--border)'}`,
+                    background: playbackRate === s ? 'var(--accent-subtle)' : 'transparent',
+                     color: playbackRate === s ? 'var(--primary)' : 'var(--muted)',
+                     cursor: 'pointer', fontWeight: playbackRate === s ? 700 : 400,
+                     fontFamily: 'var(--font-sans)', fontSize: 11,
+                     transition: 'background-color 0.12s, color 0.12s, border-color 0.12s',
+                   }}
+
+                >{s}x</button>
+              ))}
+            </div>
+            <div style={{ width: 1, height: 18, background: 'var(--border)' }} />
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+              <span>Voice:</span>
+              {['female', 'male'].map(g => (
+                <button
+                  key={g}
+                  onClick={() => { setGender(g); saveGender(g); }}
+                  aria-pressed={gender === g}
+                  style={{
+                    padding: '2px 10px', borderRadius: 'var(--radius-sm)',
+                    border: `1px solid ${gender === g ? 'var(--accent)' : 'var(--border)'}`,
+                    background: gender === g ? 'var(--accent-subtle)' : 'transparent',
+                    color: gender === g ? 'var(--primary)' : 'var(--muted)',
+                    cursor: 'pointer', fontWeight: gender === g ? 700 : 400,
+                    fontFamily: 'var(--font-sans)', fontSize: 11, textTransform: 'capitalize',
+                    transition: 'all 0.12s',
+                  }}
+                >{g === 'female' ? '♀ Woman' : '♂ Man'}</button>
+              ))}
+            </div>
           </div>
         )}
       </div>
@@ -441,9 +473,10 @@ export default function Listening({ exercise = {}, onComplete }) {
                 background: selected == null
                   ? 'var(--border)'
                   : `linear-gradient(120deg, ${TEAL} 0%, ${NAVY} 100%)`,
-                color: '#fff', fontWeight: 600, fontSize: 14,
+                            color: 'var(--on-dark)',
+ fontWeight: 600, fontSize: 14,
                 fontFamily: 'var(--font-sans)',
-                opacity: selected == null ? 0.5 : 1, transition: 'all 0.15s',
+                opacity: selected == null ? 0.5 : 1, transition: 'opacity 0.15s',
               }}
             >
               Submit answer

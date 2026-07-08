@@ -76,7 +76,7 @@ function MCQPlayer({ ex, res, update, readOnly }) {
     <div>
       {ex.imageUrl && (
         <div style={{ marginBottom: 14, textAlign: 'center' }}>
-          <img src={ex.imageUrl} alt={ex.imageAlt || ''} style={{ maxWidth: '100%', maxHeight: 240, borderRadius: 'var(--radius-sm)', objectFit: 'contain' }} />
+           <img src={ex.imageUrl} alt={ex.imageAlt || ''} loading="lazy" style={{ maxWidth: '100%', maxHeight: 240, borderRadius: 'var(--radius-sm)', objectFit: 'contain' }} />
         </div>
       )}
       <p style={{ margin: '0 0 14px', fontSize: 'var(--text-base)', fontWeight: 600, color: 'var(--text)', lineHeight: 1.55 }}>
@@ -123,7 +123,7 @@ function MCQPlayer({ ex, res, update, readOnly }) {
                 background: selected ? 'var(--primary)' : 'transparent',
                 display: 'grid', placeItems: 'center', flexShrink: 0,
               }}>
-                {selected && <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#fff' }} />}
+                {selected && <div style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--on-dark)' }} />}
               </div>
               <span style={{ fontSize: 'var(--text-sm)', color: 'var(--text)', flex: 1 }}>{opt}</span>
               {showCorrect && isRight && <><Icon.check size={16} color="var(--success)" /><span className="sr-only">Correct answer</span></>}
@@ -472,7 +472,7 @@ function SpeakPlayer({ ex, res, update, readOnly }) {
           // Signed-in: upload to private Storage, persist only the object path.
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
       const msg = 'Your browser does not support audio recording. Please use a modern browser (Chrome, Firefox, Safari) and ensure you are using HTTPS.';
-      window.toast?.(msg, 'warn') || alert(msg);
+      window.toast?.(msg, 'warn') || window.alert(msg);
       return;
     }
 
@@ -490,7 +490,8 @@ function SpeakPlayer({ ex, res, update, readOnly }) {
               reader.readAsDataURL(blob);
             } else {
               const msg = 'Audio upload failed. Recording is too large for local storage.';
-              window.toast?.(msg, 'warn') || alert(msg);
+               window.toast?.(msg, 'warn') || window.alert(msg);
+
               update({ audioB64: null, audioPath: null, transcript: currentTranscript });
             }
           }
@@ -509,7 +510,7 @@ function SpeakPlayer({ ex, res, update, readOnly }) {
     } catch (e) {
       console.error('[speak] start failed:', e);
       const msg = 'Microphone access denied or not available. Please check your browser permissions.';
-      window.toast?.(msg, 'warn') || alert(msg);
+      window.toast?.(msg, 'warn') || window.alert(msg);
     }
   };
 
@@ -662,7 +663,7 @@ function SpeakPlayer({ ex, res, update, readOnly }) {
       {status === 'recording' && (
         <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
           <Button variant="danger" onClick={stop}>
-            <span style={{ width: 8, height: 8, background: '#fff', display: 'inline-block', borderRadius: 2 }} />
+            <span style={{ width: 8, height: 8, background: 'var(--on-dark)', display: 'inline-block', borderRadius: 2 }} />
             Stop · {fmt(seconds)}
           </Button>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 'var(--text-sm)', color: 'var(--danger)' }}>
@@ -1021,7 +1022,7 @@ function FlashPlayer({ ex, res, update, readOnly }) {
             aria-label={flipped ? 'Card showing definition, click to flip back' : 'Card showing term, click to flip'}
             style={{
               background: flipped ? 'var(--primary)' : 'var(--surface)',
-              color: flipped ? '#F0F6FC' : 'var(--text)',
+              color: flipped ? 'var(--accent-subtle)' : 'var(--text)',
               border: `2px solid ${flipped ? 'var(--primary)' : 'var(--border)'}`,
               borderRadius: 0, padding: '40px 28px', textAlign: 'center',
               minHeight: 160, cursor: 'pointer',
@@ -1098,8 +1099,8 @@ function ReadPlayer({ ex, res, update, readOnly }) {
       {/* Skimming & Scanning strategy guide */}
       <div style={{
         padding: '12px 14px', marginBottom: 14,
-        background: 'var(--ex-selected-bg, #f0f5ff)', borderRadius: 'var(--radius-sm)',
-        border: '1px solid var(--accent-soft, #b8d4e3)',
+        background: 'var(--ex-selected-bg, var(--accent-subtle))', borderRadius: 'var(--radius-sm)',
+        border: '1px solid var(--accent-soft, var(--accent-light))',
         fontSize: 'var(--text-xs)', color: 'var(--text)',
       }}>
         <div style={{ fontWeight: 700, fontSize: 'var(--text-sm)', marginBottom: 6, color: 'var(--primary)' }}>
@@ -1114,7 +1115,7 @@ function ReadPlayer({ ex, res, update, readOnly }) {
           </div>
         </div>
         <div style={{ marginTop: 6, padding: '6px 10px', background: 'rgba(184,118,26,.08)', borderRadius: 'var(--radius-sm)', border: '1px solid rgba(184,118,26,.2)' }}>
-          <strong style={{ color: 'var(--warning-text, #b8761a)' }}>Pro tip:</strong> Read the question first, then skim the passage, then scan for the evidence. MET questions follow the order of the text — answer them in sequence.
+          <strong style={{ color: 'var(--warning-text, var(--warning))' }}>Pro tip:</strong> Read the question first, then skim the passage, then scan for the evidence. MET questions follow the order of the text — answer them in sequence.
         </div>
       </div>
 
@@ -1139,7 +1140,7 @@ function ReadPlayer({ ex, res, update, readOnly }) {
 
       {ex.imageUrl && (
         <div style={{ marginBottom: 14, textAlign: 'center' }}>
-          <img src={ex.imageUrl} alt={ex.imageAlt || ''} style={{ maxWidth: '100%', maxHeight: 240, borderRadius: 'var(--radius-sm)', objectFit: 'contain' }} />
+           <img src={ex.imageUrl} alt={ex.imageAlt || ''} loading="lazy" style={{ maxWidth: '100%', maxHeight: 240, borderRadius: 'var(--radius-sm)', objectFit: 'contain' }} />
         </div>
       )}
 

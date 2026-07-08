@@ -144,10 +144,10 @@ class DeepgramProvider extends TtsProvider {
 class TtsService {
   constructor() {
     this.providers = [
-      new CambAiProvider(),
       new ElevenLabsProvider(),
-      new OpenAiProvider(),
       new DeepgramProvider(),
+      new CambAiProvider(),
+      new OpenAiProvider(),
     ];
   }
 

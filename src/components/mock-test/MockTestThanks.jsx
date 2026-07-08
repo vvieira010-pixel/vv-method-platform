@@ -5,10 +5,10 @@ import { saveMockTestResult } from '../../lib/workflow.js';
 import { uploadMockTestAudio } from '../../lib/supabase-db.js';
 
 const CEFR_LEVELS = [
-  { id: 'Below B1', label: 'A1–A2', desc: 'Beginner / Elementary', color: '#e74c3c' },
-  { id: 'B1', label: 'B1', desc: 'Intermediate', color: '#f1c40f' },
-  { id: 'B2', label: 'B2', desc: 'Upper-Intermediate', color: '#2ecc71' },
-  { id: 'C1', label: 'C1', desc: 'Advanced', color: '#3498db' },
+  { id: 'Below B1', label: 'A1–A2', desc: 'Beginner / Elementary', color: 'var(--danger)' },
+  { id: 'B1', label: 'B1', desc: 'Intermediate', color: 'var(--warning)' },
+  { id: 'B2', label: 'B2', desc: 'Upper-Intermediate', color: 'var(--success)' },
+  { id: 'C1', label: 'C1', desc: 'Advanced', color: 'var(--info)' },
 ];
 
 const CEFR_DESCRIPTIONS = {
@@ -107,7 +107,8 @@ export default function MockTestThanks({ answers, student, onBack }) {
       : status === 'error' ? `Error: ${error}` : '';
     return (
       <div className="mtr-container">
-        <div className="mtr-header"><p style={{ color: '#7f8c8d', padding: '40px 0', textAlign: 'center' }}>{msg}</p></div>
+         <div className="mtr-header"><p style={{ color: 'var(--text-muted)', padding: '40px 0', textAlign: 'center' }}>{msg}</p></div>
+
       </div>
     );
   }
@@ -198,46 +199,57 @@ export default function MockTestThanks({ answers, student, onBack }) {
       </div>
 
       <style>{`
-        .mtr-container { max-width: 800px; margin: 0 auto; padding: 20px; font-family: 'Segoe UI', system-ui, sans-serif; color: var(--text, #2c3e50); }
-        .mtr { background: var(--surface, #fff); border-radius: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); overflow: hidden; }
+         .mtr-container { max-width: 800px; margin: 0 auto; padding: 20px; font-family: 'Segoe UI', system-ui, sans-serif; color: var(--text); }
+
+         .mtr { background: var(--surface); border-radius: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); overflow: hidden; }
+
 
         .mtr-header { padding: 32px 24px 20px; text-align: center; }
         .mtr-header__title { font-size: 1.5rem; margin: 0 0 4px; font-weight: 800; }
-        .mtr-header__sub { color: var(--text-muted, #7f8c8d); font-size: 0.95rem; margin: 0 0 20px; }
-        .mtr-badge { display: inline-block; padding: 12px 36px; border-radius: 50px; font-size: 1.8rem; font-weight: 800; color: #fff; }
+         .mtr-header__sub { color: var(--text-muted); font-size: 0.95rem; margin: 0 0 20px; }
+
+         .mtr-badge { display: inline-block; padding: 12px 36px; border-radius: 50px; font-size: 1.8rem; font-weight: 800; color: var(--on-dark); }
+
         .mtr-score { font-size: 2.2rem; font-weight: 800; margin-top: 8px; }
-        .mtr-label { font-size: 0.85rem; color: var(--text-muted, #7f8c8d); margin-top: 6px; }
+         .mtr-label { font-size: 0.85rem; color: var(--text-muted); margin-top: 6px; }
+
 
         .mtr-bar { display: flex; gap: 4px; margin-top: 20px; border-radius: 10px; overflow: hidden; }
-        .mtr-bar__level { flex: 1; padding: 10px 4px; text-align: center; font-size: 0.75rem; font-weight: 700; color: #fff; position: relative; transition: transform 0.2s; }
+        .mtr-bar__level { flex: 1; padding: 10px 4px; text-align: center; font-size: 0.75rem; font-weight: 700; color: var(--on-dark); position: relative; transition: transform 0.2s; }
         .mtr-bar__level--active { transform: scaleY(1.15); box-shadow: 0 -2px 8px rgba(0,0,0,0.2); z-index: 1; }
         .mtr-bar__lbl { display: block; font-size: 0.9rem; }
         .mtr-bar__desc { display: block; font-size: 0.6rem; opacity: 0.85; margin-top: 2px; }
 
-        .mtr-message { background: #eaf6ff; border: 1px solid #cce4ff; border-radius: 12px; padding: 16px 20px; margin: 0 24px 20px; font-size: 0.9rem; line-height: 1.6; }
+         .mtr-message { background: var(--info-bg); border: 1px solid var(--info-soft); border-radius: 12px; padding: 16px 20px; margin: 0 24px 20px; font-size: 0.9rem; line-height: 1.6; }
+
 
         .mtr-skills { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; padding: 0 24px 20px; }
-        .mtr-skill { background: var(--bg, #f8f9fa); border-radius: 12px; padding: 20px; }
+         .mtr-skill { background: var(--bg-deep); border-radius: 12px; padding: 20px; }
+
         .mtr-skill__header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font-size: 1rem; font-weight: 700; }
-        .mtr-skill__badge { padding: 4px 14px; border-radius: 20px; font-size: 0.8rem; font-weight: 700; color: #fff; }
+        .mtr-skill__badge { padding: 4px 14px; border-radius: 20px; font-size: 0.8rem; font-weight: 700; color: var(--on-dark); }
         .mtr-skill__score { font-size: 1.4rem; font-weight: 800; margin-bottom: 8px; }
-        .mtr-skill__bar { height: 10px; border-radius: 5px; background: #eee; overflow: hidden; margin-bottom: 8px; }
+         .mtr-skill__bar { height: 10px; border-radius: 5px; background: var(--border); overflow: hidden; margin-bottom: 8px; }
+
         .mtr-skill__fill { height: 100%; border-radius: 5px; }
-        .mtr-skill__desc { font-size: 0.8rem; color: var(--text-muted, #7f8c8d); line-height: 1.4; }
+        .mtr-skill__desc { font-size: 0.8rem; color: var(--text-muted); line-height: 1.4; }
 
         .mtr-action { padding: 0 24px 20px; }
         .mtr-action__title { font-size: 1.2rem; margin: 0 0 16px; font-weight: 700; }
-        .mtr-action__item { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--border, #e0e0e0); }
+         .mtr-action__item { display: flex; align-items: flex-start; 
+gap: 12px; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+
         .mtr-action__item:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
-        .mtr-action__priority { padding: 4px 10px; border-radius: 6px; font-size: 0.7rem; font-weight: 700; color: #fff; white-space: nowrap; }
-        .mtr-action__priority--high { background: #e74c3c; }
-        .mtr-action__priority--med { background: #f1c40f; color: #333; }
-        .mtr-action__priority--low { background: #2ecc71; }
+        .mtr-action__priority { padding: 4px 10px; border-radius: 6px; font-size: 0.7rem; font-weight: 700; color: var(--on-dark); white-space: nowrap; }
+         .mtr-action__priority--high { background: var(--danger); }
+         .mtr-action__priority--med { background: var(--warning); color: var(--text); }
+         .mtr-action__priority--low { background: var(--success); }
+
         .mtr-action__text { font-size: 0.88rem; line-height: 1.4; }
         .mtr-action__text strong { display: block; margin-bottom: 2px; }
 
-        .mtr-btn { display: block; width: calc(100% - 48px); margin: 0 24px 24px; padding: 12px 0; border: none; border-radius: 12px; background: var(--primary, #148891); color: #fff; cursor: pointer; font: inherit; font-size: 15px; font-weight: 700; text-align: center; }
-        .mtr-btn:hover { background: var(--primary-hover, #0f6b73); }
+        .mtr-btn { display: block; width: calc(100% - 48px); margin: 0 24px 24px; padding: 12px 0; border: none; border-radius: 12px; background: var(--primary); color: var(--on-dark); cursor: pointer; font: inherit; font-size: 15px; font-weight: 700; text-align: center; }
+        .mtr-btn:hover { background: var(--primary-hover); }
 
         @media (max-width: 600px) {
           .mtr-skills { grid-template-columns: 1fr; }

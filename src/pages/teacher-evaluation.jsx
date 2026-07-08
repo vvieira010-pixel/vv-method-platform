@@ -289,12 +289,7 @@ export default function TeacherEvaluationPage({ students = [], onNavigate }) {
               {priorities.length > 0 && (
                 <div className="stack-list-lg">
                   {priorities.map((p, i) => (
-                    <div key={i} style={{
-                      padding: 12,
-                      background: 'var(--bg)',
-                      borderRadius: 'var(--radius-sm)',
-                      borderLeft: `3px solid ${urgencyColor(p.urgency)}`
-                    }}>
+<div key={i} className="eval-priority-item" style={{ '--accent-color': urgencyColor(p.urgency) }}>
                       <div className="flex items-center" style={{ gap: 8, marginBottom: 4 }}>
                         <span style={{
                           fontSize: 10, fontWeight: 700, textTransform: 'uppercase',
@@ -354,7 +349,7 @@ export default function TeacherEvaluationPage({ students = [], onNavigate }) {
                  <h3 className="section-title" style={{ margin: 0 }}>Pedagogical Analysis</h3>
                </div>
                
-               <div className="mb-6" style={{ padding: 'var(--space-3)', background: 'var(--bg)', borderRadius: 'var(--radius-sm)', borderLeft: '4px solid var(--accent)' }}>
+               <div className="mb-6 eval-verdict" style={{ padding: 'var(--space-3)', background: 'var(--bg)', borderRadius: 'var(--radius-sm)' }}>
                  <p style={{ fontSize: 'var(--text-sm)', fontStyle: 'italic', lineHeight: 1.6 }}>
                    "{aiReview.overallVerdict}"
                  </p>

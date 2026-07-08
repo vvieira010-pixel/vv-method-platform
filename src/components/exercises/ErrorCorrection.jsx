@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { Icon } from '../shared.jsx';
+import { COLORS } from '../shared.jsx';
 
-const TEAL = 'var(--accent)';
-const NAVY = 'var(--accent-text)';
+const TEAL = COLORS.TEAL;
+const NAVY = COLORS.NAVY;
 
 const RUBRIC_CATEGORIES = [
   { id: 'grammatical_accuracy', label: 'Grammatical Accuracy', description: 'Tense, agreement, sentence structure' },
@@ -95,8 +96,8 @@ export default function ErrorCorrection({ exercise, onComplete }) {
             padding: '10px 24px', borderRadius: 'var(--radius-sm)', border: 'none',
             cursor: answer.trim() ? 'pointer' : 'not-allowed',
             background: answer.trim() ? `linear-gradient(120deg, ${TEAL} 0%, ${NAVY} 100%)` : 'var(--border)',
-            color: '#fff', fontWeight: 600, fontSize: 14, fontFamily: 'var(--font-sans)',
-            opacity: answer.trim() ? 1 : 0.5, transition: 'all 0.15s',
+                         color: 'var(--on-dark)', fontWeight: 600, fontSize: 14, fontFamily: 'var(--font-sans)',
+             opacity: answer.trim() ? 1 : 0.5, transition: 'opacity 0.15s',
           }}
         >
           Submit correction
@@ -164,7 +165,7 @@ export default function ErrorCorrection({ exercise, onComplete }) {
                       border: `1.5px solid ${isSelected || (isRevealed && isActualAnswer) ? border : 'var(--border)'}`,
                       background: isRevealed && (isSelected || isActualAnswer) ? bg : isSelected ? 'var(--ex-selected-bg)' : 'var(--surface)',
                       cursor: categoryGuess ? 'default' : 'pointer',
-                      textAlign: 'left', transition: 'all 0.15s',
+                      textAlign: 'left', transition: 'color 0.15s',
                     }}
                   >
                     <span style={{ fontWeight: 700, fontSize: 13.5, color: isRevealed && (isSelected || isActualAnswer) ? labelColor : NAVY, flexShrink: 0 }}>

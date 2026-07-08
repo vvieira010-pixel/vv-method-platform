@@ -6,8 +6,8 @@
   "level": "B2",
   "modules": [
     {
-      "id": "writing_tasks",
-      "title": "Writing Tasks (B2)",
+      "id": "writing_q1",
+      "title": "Writing – Q1: Opinion & Argument (B2)",
       "levelRange": "B2",
       "skill": "writing",
       "moduleType": "exercise_list",
@@ -16,15 +16,9 @@
           "type": "short",
           "level": "B2",
           "skill": "writing",
-          "prompt": "Many companies now allow some employees to work from home several days a week. What are the advantages and disadvantages of this change? Give reasons and examples to support your answer. (180–250 words)",
-          "rubric": "Task Completion, Grammar, Vocabulary, Cohesion & Organisation. Use formal register.",
-          "targetWords": 200
-        },
-        {
-          "type": "short",
-          "level": "B2",
-          "skill": "writing",
-          "prompt": "Some people believe schools should start later in the morning. Do you agree or disagree? Give reasons and examples. (180–250 words)",
+          "question": "q1",
+          "metTask": "Opinion essay",
+          "prompt": "Some people believe schools should start later in the morning. Do you agree or disagree? Give reasons and examples. (180\u2013250 words)",
           "rubric": "State your opinion clearly. Support with reasons and examples. Use formal register.",
           "targetWords": 200
         },
@@ -32,7 +26,9 @@
           "type": "short",
           "level": "B2",
           "skill": "writing",
-          "prompt": "Should cities offer cheaper public transportation to students and young workers? Give your opinion and support it with examples. (180–250 words)",
+          "question": "q1",
+          "metTask": "Opinion essay",
+          "prompt": "Should cities offer cheaper public transportation to students and young workers? Give your opinion and support it with examples. (180\u2013250 words)",
           "rubric": "Develop a clear argument with supporting points. Use formal vocabulary and logical connectors.",
           "targetWords": 200
         },
@@ -40,7 +36,9 @@
           "type": "short",
           "level": "B2",
           "skill": "writing",
-          "prompt": "Do companies have a responsibility to limit work messages outside normal working hours? Explain your opinion. (180–250 words)",
+          "question": "q1",
+          "metTask": "Opinion essay",
+          "prompt": "Do companies have a responsibility to limit work messages outside normal working hours? Explain your opinion. (180\u2013250 words)",
           "rubric": "Present your position with reasons, possible counter-arguments, and a conclusion.",
           "targetWords": 200
         },
@@ -48,7 +46,9 @@
           "type": "short",
           "level": "B2",
           "skill": "writing",
-          "prompt": "Some universities want to make community service a required part of graduation. Is this a good idea? Why or why not? (180–250 words)",
+          "question": "q1",
+          "metTask": "Opinion essay",
+          "prompt": "Some universities want to make community service a required part of graduation. Is this a good idea? Why or why not? (180\u2013250 words)",
           "rubric": "Discuss advantages and disadvantages. Provide a clear personal stance with supporting evidence.",
           "targetWords": 200
         },
@@ -56,7 +56,9 @@
           "type": "short",
           "level": "B2",
           "skill": "writing",
-          "prompt": "Should online stores be required to use simpler, reusable, or recyclable packaging whenever possible? Give your opinion. (180–250 words)",
+          "question": "q1",
+          "metTask": "Opinion essay",
+          "prompt": "Should online stores be required to use simpler, reusable, or recyclable packaging whenever possible? Give your opinion. (180\u2013250 words)",
           "rubric": "Support your opinion with reasons. Acknowledge counterarguments where appropriate.",
           "targetWords": 200
         },
@@ -64,7 +66,9 @@
           "type": "short",
           "level": "B2",
           "skill": "writing",
-          "prompt": "Is taking a gap year before university a good idea for most students? Explain your view. (180–250 words)",
+          "question": "q1",
+          "metTask": "Opinion essay",
+          "prompt": "Is taking a gap year before university a good idea for most students? Explain your view. (180\u2013250 words)",
           "rubric": "Balance advantages and disadvantages. Write a well-supported conclusion.",
           "targetWords": 200
         },
@@ -72,7 +76,9 @@
           "type": "short",
           "level": "B2",
           "skill": "writing",
-          "prompt": "Should phones be completely banned in classrooms? Give reasons for your answer. (180–250 words)",
+          "question": "q1",
+          "metTask": "Opinion essay",
+          "prompt": "Should phones be completely banned in classrooms? Give reasons for your answer. (180\u2013250 words)",
           "rubric": "Present both sides of the argument. State your view clearly and defend it.",
           "targetWords": 200
         },
@@ -80,7 +86,9 @@
           "type": "short",
           "level": "B2",
           "skill": "writing",
-          "prompt": "Do you think a four-day working week is a good idea for most businesses? Explain your answer. (180–250 words)",
+          "question": "q1",
+          "metTask": "Opinion essay",
+          "prompt": "Do you think a four-day working week is a good idea for most businesses? Explain your answer. (180\u2013250 words)",
           "rubric": "Discuss with specific reasoning. Use formal vocabulary and varied grammar.",
           "targetWords": 200
         },
@@ -88,15 +96,9 @@
           "type": "short",
           "level": "B2",
           "skill": "writing",
-          "prompt": "Tourism can help small towns, but it can also create problems. Discuss the advantages and disadvantages. (180–250 words)",
-          "rubric": "Develop both sides equally. Provide a balanced conclusion with your overall view.",
-          "targetWords": 200
-        },
-        {
-          "type": "short",
-          "level": "B2",
-          "skill": "writing",
-          "prompt": "Some people believe that online shopping will completely replace physical stores in the future. Do you agree or disagree? Give reasons and examples. (180–250 words)",
+          "question": "q1",
+          "metTask": "Opinion essay",
+          "prompt": "Some people believe that online shopping will completely replace physical stores in the future. Do you agree or disagree? Give reasons and examples. (180\u2013250 words)",
           "rubric": "State your position clearly, provide reasons, and discuss counterarguments.",
           "targetWords": 200
         },
@@ -104,7 +106,9 @@
           "type": "short",
           "level": "B2",
           "skill": "writing",
-          "prompt": "Should all students be required to learn a second language in school? Discuss the advantages and give your opinion. (180–250 words)",
+          "question": "q1",
+          "metTask": "Opinion essay",
+          "prompt": "Should all students be required to learn a second language in school? Discuss the advantages and give your opinion. (180\u2013250 words)",
           "rubric": "Discuss both sides, provide examples, and state your conclusion clearly.",
           "targetWords": 200
         },
@@ -112,15 +116,9 @@
           "type": "short",
           "level": "B2",
           "skill": "writing",
-          "prompt": "Many cities are creating more car-free zones in their downtown areas. What are the benefits of this approach, and are there any downsides? (180–250 words)",
-          "rubric": "Balance pros and cons, provide specific examples, and give a reasoned conclusion.",
-          "targetWords": 200
-        },
-        {
-          "type": "short",
-          "level": "B2",
-          "skill": "writing",
-          "prompt": "Should companies be required to offer paid volunteer days to their employees? Give your opinion and support it. (180–250 words)",
+          "question": "q1",
+          "metTask": "Opinion essay",
+          "prompt": "Should companies be required to offer paid volunteer days to their employees? Give your opinion and support it. (180\u2013250 words)",
           "rubric": "Develop a clear argument with reasons and consider opposing views.",
           "targetWords": 200
         },
@@ -128,7 +126,9 @@
           "type": "short",
           "level": "B2",
           "skill": "writing",
-          "prompt": "Is it better to specialize in one career or to try different types of jobs during your life? Explain your view. (180–250 words)",
+          "question": "q1",
+          "metTask": "Opinion essay",
+          "prompt": "Is it better to specialize in one career or to try different types of jobs during your life? Explain your view. (180\u2013250 words)",
           "rubric": "Compare both approaches, provide examples, and state your preference with reasons.",
           "targetWords": 200
         },
@@ -136,15 +136,9 @@
           "type": "short",
           "level": "B2",
           "skill": "writing",
-          "prompt": "Some people say that social media brings people closer together, while others say it pushes them apart. What is your opinion? (180–250 words)",
-          "rubric": "Discuss both arguments, support with specific examples, and give a balanced conclusion.",
-          "targetWords": 200
-        },
-        {
-          "type": "short",
-          "level": "B2",
-          "skill": "writing",
-          "prompt": "Should governments invest more in public transportation or in roads for private cars? Explain your position. (180–250 words)",
+          "question": "q1",
+          "metTask": "Opinion essay",
+          "prompt": "Should governments invest more in public transportation or in roads for private cars? Explain your position. (180\u2013250 words)",
           "rubric": "Compare the two options with reasoning and examples. State your preference clearly.",
           "targetWords": 200
         },
@@ -152,7 +146,9 @@
           "type": "short",
           "level": "B2",
           "skill": "writing",
-          "prompt": "Do you think learning practical skills like cooking and budgeting should be taught in schools? Why or why not? (180–250 words)",
+          "question": "q1",
+          "metTask": "Opinion essay",
+          "prompt": "Do you think learning practical skills like cooking and budgeting should be taught in schools? Why or why not? (180\u2013250 words)",
           "rubric": "Present your opinion with clear reasoning. Address possible counterarguments.",
           "targetWords": 200
         },
@@ -160,7 +156,9 @@
           "type": "short",
           "level": "B2",
           "skill": "writing",
-          "prompt": "Some professionals, such as doctors and teachers, are paid less than entertainers and athletes. Is this fair? Discuss. (180–250 words)",
+          "question": "q1",
+          "metTask": "Opinion essay",
+          "prompt": "Some professionals, such as doctors and teachers, are paid less than entertainers and athletes. Is this fair? Discuss. (180\u2013250 words)",
           "rubric": "Compare the value of different professions. Provide reasons and examples.",
           "targetWords": 200
         },
@@ -168,8 +166,59 @@
           "type": "short",
           "level": "B2",
           "skill": "writing",
-          "prompt": "Should museums and historical sites offer free admission to all visitors? Give reasons for your answer. (180–250 words)",
+          "question": "q1",
+          "metTask": "Opinion essay",
+          "prompt": "Should museums and historical sites offer free admission to all visitors? Give reasons for your answer. (180\u2013250 words)",
           "rubric": "Discuss advantages and disadvantages. Give a clear personal opinion with support.",
+          "targetWords": 200
+        }
+      ]
+    },
+    {
+      "id": "writing_q2",
+      "title": "Writing – Q2: Discussion & Balanced Argument (B2)",
+      "levelRange": "B2",
+      "skill": "writing",
+      "moduleType": "exercise_list",
+      "exercises": [
+        {
+          "type": "short",
+          "level": "B2",
+          "skill": "writing",
+          "question": "q2",
+          "metTask": "Discussion essay",
+          "prompt": "Many companies now allow some employees to work from home several days a week. What are the advantages and disadvantages of this change? Give reasons and examples to support your answer. (180\u2013250 words)",
+          "rubric": "Task Completion, Grammar, Vocabulary, Cohesion & Organisation. Use formal register.",
+          "targetWords": 200
+        },
+        {
+          "type": "short",
+          "level": "B2",
+          "skill": "writing",
+          "question": "q2",
+          "metTask": "Discussion essay",
+          "prompt": "Tourism can help small towns, but it can also create problems. Discuss the advantages and disadvantages. (180\u2013250 words)",
+          "rubric": "Develop both sides equally. Provide a balanced conclusion with your overall view.",
+          "targetWords": 200
+        },
+        {
+          "type": "short",
+          "level": "B2",
+          "skill": "writing",
+          "question": "q2",
+          "metTask": "Discussion essay",
+          "prompt": "Some people say that social media brings people closer together, while others say it pushes them apart. What is your opinion? (180\u2013250 words)",
+          "rubric": "Discuss both arguments, support with specific examples, and give a balanced conclusion.",
+          "targetWords": 200
+        },
+        {
+          "type": "short",
+          "level": "B2",
+          "skill": "writing",
+          "question": "q2",
+          "metTask": "Discussion essay",
+          "prompt": "Many cities are creating more car-free zones in their downtown areas. What are the benefits of this approach, and are there any downsides? (180\u2013250 words)",
+          "rubric": "Balance pros and cons, provide specific examples, and give a reasoned conclusion.",
           "targetWords": 200
         }
       ]

@@ -68,7 +68,7 @@ export default function ExerciseCard({ exercise, index, total, isExpanded, onTog
         <ExTypeBadge typeId={exercise.type} />
         {imageSrc && (
           <span style={{ width: 32, height: 24, borderRadius: 'var(--radius-sm)', overflow: 'hidden', flexShrink: 0, border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg)' }}>
-            <img src={imageSrc} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+             <img src={imageSrc} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
           </span>
         )}
         {isAiGen && (
