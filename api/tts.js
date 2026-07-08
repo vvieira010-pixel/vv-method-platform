@@ -164,11 +164,11 @@ class PiperLocalProvider extends TtsProvider {
 class TtsService {
   constructor() {
     this.providers = [
+      new PiperLocalProvider(),
       new ElevenLabsProvider(),
       new DeepgramProvider(),
       new CambAiProvider(),
       new OpenAiProvider(),
-      new PiperLocalProvider(),
     ];
   }
 

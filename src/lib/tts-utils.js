@@ -120,17 +120,22 @@ async function fetchGeminiAudio(text, apiKey, gender = 'female') {
   return URL.createObjectURL(new Blob([bytes], { type: part.mimeType || 'audio/wav' }));
 }
 
-async function fetchPiperAudio(text, serverUrl) {
-  const res = await fetch(`${serverUrl}/tts`, {
+async function fetchPiperAudio(text, serverUrl, gender) {
+  const res = await fetch(`${serverUrl.replace(/\/$/, '')}/synthesize`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ text }),
+    body: JSON.stringify({ text, gender: gender || 'female' }),
   });
-  if (!res.ok) throw new Error(`Piper TTS error ${res.status}`);
+  if (!res.ok) {
+    const e = await res.json().catch(() => ({}));
+    throw new Error(e.detail || `Piper TTS error ${res.status}`);
+  }
   return URL.createObjectURL(await res.blob());
 }
 
 export async function fetchAudio(text) {
+  const piperUrl = getPiperUrl();
+  if (piperUrl) { try { return await fetchPiperAudio(text, piperUrl); } catch (e) { console.warn('[tts] Piper failed:', e.message); } }
   try { return await fetchServerAudio(text); } catch (e) { console.warn('[tts] Server proxy failed:', e.message); }
   const elKey = getElKey();
   if (elKey) { try { return await fetchElevenLabsAudio(text, elKey); } catch (e) { console.warn('[tts] ElevenLabs failed:', e.message); } }
@@ -140,12 +145,12 @@ export async function fetchAudio(text) {
   if (oaiKey) { try { return await fetchOpenAIAudio(text, oaiKey); } catch (e) { console.warn('[tts] OpenAI failed:', e.message); } }
   const geminiKey = getGeminiKey();
   if (geminiKey) { try { return await fetchGeminiAudio(text, geminiKey); } catch (e) { console.warn('[tts] Gemini failed:', e.message); } }
-  const piperUrl = getPiperUrl();
-  if (piperUrl) { try { return await fetchPiperAudio(text, piperUrl); } catch (e) { console.warn('[tts] Piper failed:', e.message); } }
   return null;
 }
 
 export async function fetchAudioWithGender(text, gender = 'female') {
+  const piperUrl = getPiperUrl();
+  if (piperUrl) { try { return await fetchPiperAudio(text, piperUrl, gender); } catch (e) { console.warn('[tts] Piper failed:', e.message); } }
   try { return await fetchServerAudio(text, gender); } catch (e) { console.warn('[tts] Server proxy failed:', e.message); }
   const elKey = getElKey();
   if (elKey) { try { return await fetchElevenLabsAudio(text, elKey, gender); } catch (e) { console.warn('[tts] ElevenLabs failed:', e.message); } }
@@ -155,8 +160,6 @@ export async function fetchAudioWithGender(text, gender = 'female') {
   if (oaiKey) { try { return await fetchOpenAIAudio(text, oaiKey, gender); } catch (e) { console.warn('[tts] OpenAI failed:', e.message); } }
   const geminiKey = getGeminiKey();
   if (geminiKey) { try { return await fetchGeminiAudio(text, geminiKey, gender); } catch (e) { console.warn('[tts] Gemini failed:', e.message); } }
-  const piperUrl = getPiperUrl();
-  if (piperUrl) { try { return await fetchPiperAudio(text, piperUrl); } catch (e) { console.warn('[tts] Piper failed:', e.message); } }
   return null;
 }
 
