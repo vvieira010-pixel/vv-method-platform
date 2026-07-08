@@ -13,7 +13,7 @@ import {
   storeSupabaseSession, getSupabaseConfig,
   resetPasswordForEmail,
 } from '../lib/supabase-storage.js';
-import { Icon, Button } from '../components/shared.jsx';
+import { Icon, Button, Card } from '../components/shared.jsx';
 
 
 
