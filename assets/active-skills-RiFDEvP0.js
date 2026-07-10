@@ -1,0 +1,1 @@
+import{a}from"./selectors-B7BWJBSk.js";const l="vv:skills_enabled";function n(){try{const t=localStorage.getItem(l);if(t){const e=JSON.parse(t);return Object.entries(e).filter(([,s])=>s!==!1).map(([s])=>s)}}catch{}return null}async function r(t){const e=n()||[];return await a(t,e)}async function i(t,e={}){const s=await r(t);return s.length===0?e:{...e,skills:s}}export{i as w};

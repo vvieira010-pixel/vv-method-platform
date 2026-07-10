@@ -1,0 +1,1 @@
+import{j as s}from"./vendor-react-Bot66cZp.js";function l({title:n,sub:e,action:c,right:t}){const i=c||t||null;return s.jsxs("h2",{className:"section-header",children:[s.jsxs("div",{children:[s.jsx("div",{className:"section-title",children:n}),e&&s.jsx("div",{className:"section-sub",children:e})]}),i&&s.jsx("div",{children:i})]})}export{l as S};

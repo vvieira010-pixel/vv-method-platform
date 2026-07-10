@@ -1,0 +1,40 @@
+<!doctype html>
+<!-- MET Practice Platform -->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MET Proficiency Mastery</title>
+    <meta name="description" content="MET test prep platform for nurses and healthcare professionals. AI-powered diagnosis, homework, and feedback cycle for the Michigan English Test." />
+    <meta property="og:title" content="MET Proficiency Mastery" />
+    <meta property="og:description" content="MET test prep platform for nurses and healthcare professionals." />
+    <meta property="og:type" content="website" />
+    <script type="module" crossorigin src="/assets/index-DqpQSxZk.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/vendor-react-Bot66cZp.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-M5K6BGkc.css">
+  </head>
+  <body>
+    <div id="root"></div>
+    <script>
+      (function() {
+        var dictWin = null;
+        document.addEventListener('dblclick', function(e) {
+          var sel = window.getSelection();
+          var word = (sel.toString() || '').trim();
+          if (!word || word.length < 2 || word.length > 30 || /\s/.test(word) || /\d/.test(word)) return;
+          var url = 'https://dictionary.cambridge.org/dictionary/english/' + encodeURIComponent(word.toLowerCase());
+          var w = 520, h = 700;
+          var left = Math.round(screen.width / 2 - w / 2);
+          var top = Math.round(screen.height / 2 - h / 2);
+          if (dictWin && !dictWin.closed) {
+            dictWin.location.href = url;
+            dictWin.focus();
+          } else {
+            dictWin = window.open(url, 'vv_cambridge', 'width=' + w + ',height=' + h + ',left=' + left + ',top=' + top + ',scrollbars=yes,resizable=yes');
+          }
+        });
+      })();
+    </script>
+  </body>
+</html>
